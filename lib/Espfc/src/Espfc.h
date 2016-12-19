@@ -5,6 +5,7 @@
 #include <Controller.h>
 #include <Input.h>
 #include <Sensor.h>
+#include <Fusion.h>
 #include <Mixer.h>
 
 namespace Espfc {
@@ -12,10 +13,9 @@ namespace Espfc {
 class Espfc
 {
   public:
-    Espfc() {}
+    Espfc(): _model(), _controller(_model), _input(_model), _sensor(_model), _fusion(_model), _mixer(_model) {}
     int begin()
     {
-      _model.begin();
       _controller.begin();
       _input.begin();
       _sensor.begin();
@@ -24,7 +24,6 @@ class Espfc
 
     int update()
     {
-      _model.update();
       _controller.update();
       _input.update();
       _sensor.update();
@@ -36,6 +35,7 @@ class Espfc
     Controller _controller;
     Input _input;
     Sensor _sensor;
+    Fusion _fusion;
     Mixer _mixer;
 };
 

@@ -9,6 +9,7 @@ Espfc::Espfc espfc;
 void setup()
 {
   Wire.begin();
+  Wire.setClock(400000);
   espfc.begin();
 }
 

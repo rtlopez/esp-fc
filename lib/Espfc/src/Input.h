@@ -1,16 +1,19 @@
-#ifndef _ESPFC_MIXER_H_
-#define _ESPFC_MIXER_H_
+#ifndef _ESPFC_INPUT_H_
+#define _ESPFC_INPUT_H_
+
+#include "Model.h"
 
 namespace Espfc {
 
-class Mixer
+class Input
 {
   public:
-    Mixer() {}
+    Input(Model& model): _model(model) {}
     int begin() {}
     int update() {}
 
   private:
+    Model& _model;
 
 };
 
