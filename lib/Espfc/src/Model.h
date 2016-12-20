@@ -7,14 +7,24 @@
 
 namespace Espfc {
 
+enum GyroRate {
+  GYRO_RATE_50  = 50,
+  GYRO_RATE_100 = 100,
+  GYRO_RATE_150 = 150,
+  GYRO_RATE_200 = 200,
+  GYRO_RATE_250 = 250,
+  GYRO_RATE_333 = 333,
+  GYRO_RATE_500 = 500
+};
+
 enum GyroDlpf {
-  DLPF_256 = 0x00,
-  DLPF_188 = 0x01,
-  DLPF_98  = 0x02,
-  DLPF_42  = 0x03,
-  DLPF_20  = 0x04,
-  DLPF_10  = 0x05,
-  DLPF_5   = 0x06
+  GYRO_DLPF_256 = 0x00,
+  GYRO_DLPF_188 = 0x01,
+  GYRO_DLPF_98  = 0x02,
+  GYRO_DLPF_42  = 0x03,
+  GYRO_DLPF_20  = 0x04,
+  GYRO_DLPF_10  = 0x05,
+  GYRO_DLPF_5   = 0x06
 };
 
 enum GyroFsr {
@@ -29,6 +39,32 @@ enum AccelFsr {
   ACCEL_FS_4  = 0x01,
   ACCEL_FS_8  = 0x02,
   ACCEL_FS_16 = 0x03
+};
+
+enum MagGain {
+  MAG_GAIN_1370 = 0x00,
+  MAG_GAIN_1090 = 0x01,
+  MAG_GAIN_820  = 0x02,
+  MAG_GAIN_660  = 0x03,
+  MAG_GAIN_440  = 0x04,
+  MAG_GAIN_390  = 0x05,
+  MAG_GAIN_330  = 0x06,
+  MAG_GAIN_220  = 0x07,
+};
+
+enum MagRate {
+  MAG_RATE_3    = 0x02,
+  MAG_RATE_7P5  = 0x03,
+  MAG_RATE_15   = 0x04,
+  MAG_RATE_30   = 0x05,
+  MAG_RATE_75   = 0x06,
+};
+
+enum MagAvg {
+  MAG_AVERAGING_1 = 0x00,
+  MAG_AVERAGING_2 = 0x01,
+  MAG_AVERAGING_4 = 0x02,
+  MAG_AVERAGING_8 = 0x03
 };
 
 struct ModelState
@@ -68,7 +104,10 @@ struct ModelState
   bool gyroBiasValid;
 
   int gyroSampleInterval;
+
   int magSampleInterval;
+  int magSampleRate;
+  uint32_t magTimestamp;
 };
 
 struct ModelConfig
@@ -78,7 +117,10 @@ struct ModelConfig
   int gyroFsr;
   int accelFsr;
   int gyroSampleRate;
+
   int magSampleRate;
+  int magFsr;
+  int magAvr;
 
   int inputMin[8];
   int inputNeutral[8];

@@ -24,13 +24,14 @@ void setup()
   Serial.println();
 
   espfc.model().config.gyroFifo = true;
-  espfc.model().config.gyroDlpf = Espfc::DLPF_188;
+  espfc.model().config.gyroDlpf = Espfc::GYRO_DLPF_188;
   espfc.model().config.gyroFsr  = Espfc::GYRO_FS_2000;
   espfc.model().config.accelFsr = Espfc::ACCEL_FS_8;
-  espfc.model().config.gyroSampleRate = 500; // 100, 200, 250, 333, 500
-  espfc.model().config.magSampleRate  = 50;
+  espfc.model().config.gyroSampleRate = Espfc::GYRO_RATE_500;
+  espfc.model().config.magSampleRate = Espfc::MAG_RATE_75;
+  espfc.model().config.magAvr = Espfc::MAG_AVERAGING_1;
   espfc.model().config.telemetry = true;
-  espfc.model().config.telemetryInterval = 40;
+  espfc.model().config.telemetryInterval = 50;
 
   espfc.begin();
 

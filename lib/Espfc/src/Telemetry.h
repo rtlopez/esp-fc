@@ -21,19 +21,12 @@ class Telemetry
       {
         (*this)
           //<< _model.state.timestamp
-          //<< _model.state.accelRaw.x
-          //<< _model.state.accelRaw.y
-          //<< _model.state.accelRaw.z
-          //<< _model.state.gyroRaw.x
-          //<< _model.state.gyroRaw.y
-          //<< _model.state.gyroRaw.z
-          //<< _model.state.accel.x
-          //<< _model.state.accel.y
-          //<< _model.state.accel.z
-          //<< _model.state.gyro.x
-          //<< _model.state.gyro.y
-          //<< _model.state.gyro.z
-          << _model.state.gyro
+          //<< _model.state.accelRaw.x << _model.state.accelRaw.y << _model.state.accelRaw.z
+          //<< _model.state.gyroRaw.x << _model.state.gyroRaw.y << _model.state.gyroRaw.z
+          //<< _model.state.accel.x << _model.state.accel.y << _model.state.accel.z
+          //<< _model.state.gyro.x << _model.state.gyro.y << _model.state.gyro.z
+          //<< _model.state.gyro
+          << _model.state.magRaw.x << _model.state.magRaw.y << _model.state.magRaw.z
         ;
         println();
         _model.config.telemetryTimestamp = now;
