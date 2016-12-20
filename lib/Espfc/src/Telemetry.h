@@ -17,7 +17,7 @@ class Telemetry
     int update()
     {
       int32_t now = millis();
-      if(_model.config.telemetry && _model.config.telemetryInterval > 20 && now - _model.config.telemetryTimestamp > _model.config.telemetryInterval)
+      if(_model.config.telemetry && _model.config.telemetryInterval > 10 && now - _model.config.telemetryTimestamp > _model.config.telemetryInterval)
       {
         (*this)
           //<< _model.state.timestamp
@@ -27,12 +27,13 @@ class Telemetry
           //<< _model.state.gyroRaw.x
           //<< _model.state.gyroRaw.y
           //<< _model.state.gyroRaw.z
-          << _model.state.accel.x
-          << _model.state.accel.y
-          << _model.state.accel.z
-          << _model.state.gyro.x
-          << _model.state.gyro.y
-          << _model.state.gyro.z
+          //<< _model.state.accel.x
+          //<< _model.state.accel.y
+          //<< _model.state.accel.z
+          //<< _model.state.gyro.x
+          //<< _model.state.gyro.y
+          //<< _model.state.gyro.z
+          << _model.state.gyro
         ;
         println();
         _model.config.telemetryTimestamp = now;
@@ -52,6 +53,12 @@ class Telemetry
     Telemetry& operator<<(float v)
     {
       Serial.print(v, 4); Serial.print(' ');
+      return *this;
+    }
+
+    Telemetry& operator<<(const VectorFloat& v)
+    {
+      (*this) << v.x << v.y << v.z;
       return *this;
     }
 

@@ -19,7 +19,7 @@ void setup()
   ticker.attach(0.05, blink_led);
 
   Wire.begin();
-  //Wire.setClock(400000);
+  Wire.setClock(400000);
   Serial.begin(115200);
   Serial.println();
 
@@ -27,10 +27,10 @@ void setup()
   espfc.model().config.gyroDlpf = Espfc::DLPF_188;
   espfc.model().config.gyroFsr  = Espfc::GYRO_FS_2000;
   espfc.model().config.accelFsr = Espfc::ACCEL_FS_8;
-  espfc.model().config.gyroSampleRate = 50;
+  espfc.model().config.gyroSampleRate = 500; // 100, 200, 250, 333, 500
   espfc.model().config.magSampleRate  = 50;
   espfc.model().config.telemetry = true;
-  espfc.model().config.telemetryInterval = 50;
+  espfc.model().config.telemetryInterval = 40;
 
   espfc.begin();
 

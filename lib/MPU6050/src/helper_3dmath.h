@@ -42,21 +42,11 @@ class Quaternion {
         float y;
         float z;
 
-        Quaternion() {
-            w = 1.0f;
-            x = 0.0f;
-            y = 0.0f;
-            z = 0.0f;
-        }
+        Quaternion(): w(1.f), x(0.f), y(0.f), z(0.f) {}
 
-        Quaternion(float nw, float nx, float ny, float nz) {
-            w = nw;
-            x = nx;
-            y = ny;
-            z = nz;
-        }
+        Quaternion(float nw, float nx, float ny, float nz): w(nw), x(nw), y(nw), z(nw) {}
 
-        Quaternion getProduct(Quaternion q) {
+        Quaternion getProduct(const Quaternion& q) const {
             // Quaternion multiplication is defined by:
             //     (Q1 * Q2).w = (w1w2 - x1x2 - y1y2 - z1z2)
             //     (Q1 * Q2).x = (w1x2 + x1w2 + y1z2 - z1y2)
@@ -69,11 +59,11 @@ class Quaternion {
                 w*q.z + x*q.y - y*q.x + z*q.w); // new z
         }
 
-        Quaternion getConjugate() {
+        Quaternion getConjugate() const {
             return Quaternion(w, -x, -y, -z);
         }
 
-        float getMagnitude() {
+        float getMagnitude() const {
             return sqrt(w*w + x*x + y*y + z*z);
         }
 
@@ -85,135 +75,141 @@ class Quaternion {
             z /= m;
         }
 
-        Quaternion getNormalized() {
+        Quaternion getNormalized() const {
             Quaternion r(w, x, y, z);
             r.normalize();
             return r;
         }
 };
 
-class VectorInt16 {
-    public:
-        int16_t x;
-        int16_t y;
-        int16_t z;
+template<typename T>
+class VectorBase {
+public:
+    T x;
+    T y;
+    T z;
 
-        VectorInt16() {
-            x = 0;
-            y = 0;
-            z = 0;
-        }
+    VectorBase<T>(): x(), y(), z() {}
+    VectorBase<T>(T nx, T ny, T nz): x(nx), y(ny), z(nz) {}
+    VectorBase<T>(const VectorBase<T>& o): x(o.x), y(o.y), z(o.z) {}
 
-        VectorInt16(int16_t nx, int16_t ny, int16_t nz) {
-            x = nx;
-            y = ny;
-            z = nz;
-        }
+    VectorBase<T>& operator =(const VectorBase<T>& o) {
+      if(this == &o) return *this;
+      x = o.x;
+      y = o.y;
+      z = o.z;
+      return *this;
+    }
 
-        float getMagnitude() {
-            return sqrt(x*x + y*y + z*z);
-        }
+    operator VectorBase<float>() {
+      return VectorBase<float>(x, y, z);
+    }
 
-        void normalize() {
-            float m = getMagnitude();
-            x /= m;
-            y /= m;
-            z /= m;
-        }
+    float getMagnitude() {
+      return sqrt(x * x + y * y + z * z);
+    }
 
-        VectorInt16 getNormalized() {
-            VectorInt16 r(x, y, z);
-            r.normalize();
-            return r;
-        }
+    void normalize() {
+        float m = getMagnitude();
+        x /= m;
+        y /= m;
+        z /= m;
+    }
 
-        void rotate(Quaternion *q) {
-            // http://www.cprogramming.com/tutorial/3d/quaternions.html
-            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
-            // http://content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation
-            // ^ or: http://webcache.googleusercontent.com/search?q=cache:xgJAp3bDNhQJ:content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation&hl=en&gl=us&strip=1
+    VectorBase<T> getNormalized() {
+        VectorBase<T> r(x, y, z);
+        r.normalize();
+        return r;
+    }
 
-            // P_out = q * P_in * conj(q)
-            // - P_out is the output vector
-            // - q is the orientation quaternion
-            // - P_in is the input vector (a*aReal)
-            // - conj(q) is the conjugate of the orientation quaternion (q=[w,x,y,z], q*=[w,-x,-y,-z])
-            Quaternion p(0, x, y, z);
+    void rotate(const Quaternion& q) {
+        // http://www.cprogramming.com/tutorial/3d/quaternions.html
+        // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
+        // http://content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation
+        // ^ or: http://webcache.googleusercontent.com/search?q=cache:xgJAp3bDNhQJ:content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation&hl=en&gl=us&strip=1
 
-            // quaternion multiplication: q * p, stored back in p
-            p = q -> getProduct(p);
+        // P_out = q * P_in * conj(q)
+        // - P_out is the output vector
+        // - q is the orientation quaternion
+        // - P_in is the input vector (a*aReal)
+        // - conj(q) is the conjugate of the orientation quaternion (q=[w,x,y,z], q*=[w,-x,-y,-z])
+        Quaternion p(0, x, y, z);
 
-            // quaternion multiplication: p * conj(q), stored back in p
-            p = p.getProduct(q -> getConjugate());
+        // quaternion multiplication: q * p, stored back in p
+        p = q.getProduct(p);
 
-            // p quaternion is now [0, x', y', z']
-            x = p.x;
-            y = p.y;
-            z = p.z;
-        }
+        // quaternion multiplication: p * conj(q), stored back in p
+        p = p.getProduct(q.getConjugate());
 
-        VectorInt16 getRotated(Quaternion *q) {
-            VectorInt16 r(x, y, z);
-            r.rotate(q);
-            return r;
-        }
+        // p quaternion is now [0, x', y', z']
+        x = p.x;
+        y = p.y;
+        z = p.z;
+    }
+
+    VectorBase<T> getRotated(const Quaternion& q) const {
+        VectorBase<T> r(x, y, z);
+        r.rotate(q);
+        return r;
+    }
+
+    // vector arithmetics
+    VectorBase<T>& operator+=(const VectorBase<T>& o) {
+      x += o.x;
+      y += o.y;
+      z += o.z;
+      return *this;
+    }
+
+    VectorBase<T> operator+(const VectorBase<T>& o) {
+      VectorBase<T> r(*this);
+      r += o;
+      return r;
+    }
+
+    VectorBase<T>& operator-=(const VectorBase<T>& o) {
+      x -= o.x;
+      y -= o.y;
+      z -= o.z;
+      return *this;
+    }
+
+    VectorBase<T> operator-(const VectorBase<T>& o) {
+      VectorBase<T> r(*this);
+      r -= o;
+      return r;
+    }
+
+    // scalar operations
+    VectorBase<T>& operator*=(T o) {
+      x *= o;
+      y *= o;
+      z *= o;
+      return *this;
+    }
+
+    VectorBase<T> operator*(T o) {
+      VectorBase<T> r(*this);
+      r *= o;
+      return r;
+    }
+
+    VectorBase<T>& operator/=(T o) {
+      x /= o;
+      y /= o;
+      z /= o;
+      return *this;
+    }
+
+    VectorBase<T> operator/(T o) {
+      VectorBase<T> r(*this);
+      r /= o;
+      return r;
+    }
 };
 
-class VectorFloat {
-    public:
-        float x;
-        float y;
-        float z;
+typedef VectorBase<float> VectorFloat;
+typedef VectorBase<int16_t> VectorInt16;
 
-        VectorFloat() {
-            x = 0;
-            y = 0;
-            z = 0;
-        }
-
-        VectorFloat(float nx, float ny, float nz) {
-            x = nx;
-            y = ny;
-            z = nz;
-        }
-
-        float getMagnitude() {
-            return sqrt(x*x + y*y + z*z);
-        }
-
-        void normalize() {
-            float m = getMagnitude();
-            x /= m;
-            y /= m;
-            z /= m;
-        }
-
-        VectorFloat getNormalized() {
-            VectorFloat r(x, y, z);
-            r.normalize();
-            return r;
-        }
-
-        void rotate(Quaternion *q) {
-            Quaternion p(0, x, y, z);
-
-            // quaternion multiplication: q * p, stored back in p
-            p = q -> getProduct(p);
-
-            // quaternion multiplication: p * conj(q), stored back in p
-            p = p.getProduct(q -> getConjugate());
-
-            // p quaternion is now [0, x', y', z']
-            x = p.x;
-            y = p.y;
-            z = p.z;
-        }
-
-        VectorFloat getRotated(Quaternion *q) {
-            VectorFloat r(x, y, z);
-            r.rotate(q);
-            return r;
-        }
-};
 
 #endif /* _HELPER_3DMATH_H_ */
