@@ -20,16 +20,21 @@ G   | Ground           | GND          | Ground
 3V3 | 3.3V             | 3.3V         | 3.3V power - to I2C devices
 RST | Reset            | RST          | Reset switch (optional)
 ```
+
 ## Legend:
+```
  PU - 10k pull up
  PD - 10k pull down
  RXD0 - UART0 hardware RX
  TXD0 - UART0 hardware TX
  TXD1 - UART1 hardware TX only
+```
 
 ## Notice:
+```
  A0 - In ESP-8266 is 1.0V range, divider may be required
  D3, GPIO0 - if low at boot, then enter to flashing mode
+```
 
 ## Wemos D1 mini board layout:
 ```
