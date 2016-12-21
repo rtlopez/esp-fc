@@ -1,5 +1,6 @@
 # WEMOS D1 MINI connections
 
+```
 Pin | Function         | ESP-8266 Pin | ESPFC external device
 ----+------------------+--------------+----------------------------------------------
 TX  | TXD0             | TXD, GPIO1   | Debug or Telemetry, Blackbox, Osd
@@ -18,7 +19,7 @@ G   | Ground           | GND          | Ground
 5V  | 5V               | N/A          | 5V power
 3V3 | 3.3V             | 3.3V         | 3.3V power - to I2C devices
 RST | Reset            | RST          | Reset switch (optional)
-
+```
 ## Legend:
  PU - 10k pull up
  PD - 10k pull down
@@ -31,6 +32,7 @@ RST | Reset            | RST          | Reset switch (optional)
  D3, GPIO0 - if low at boot, then enter to flashing mode
 
 ## Wemos D1 mini board layout:
+```
       +-----------+
    TX |           | RST
    RX |           | A0
@@ -42,3 +44,4 @@ RST | Reset            | RST          | Reset switch (optional)
    5v |           | 3.3V
       +---|---|---+
          USB
+```
