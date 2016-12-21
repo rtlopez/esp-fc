@@ -23,6 +23,7 @@ void setup()
   Serial.begin(115200);
   Serial.println();
 
+  // configure model
   espfc.model().config.gyroFifo = true;
   espfc.model().config.gyroDlpf = Espfc::GYRO_DLPF_188;
   espfc.model().config.gyroFsr  = Espfc::GYRO_FS_2000;
@@ -33,6 +34,9 @@ void setup()
   espfc.model().config.telemetry = true;
   espfc.model().config.telemetryInterval = 50;
 
+  Serial.print("sizeof long: "); Serial.println(sizeof(long));
+  Serial.print("sizeof float: "); Serial.println(sizeof(float));
+
   espfc.begin();
 
   ticker.attach(0.2, blink_led);
@@ -41,16 +45,6 @@ void setup()
 void loop()
 {
   espfc.update();
-  int now = millis();
-  static int prev = 0;
-  if(false && now - prev > 500)
-  {
-    Serial.print("echo ");
-    Serial.print(espfc.model().config.telemetry); Serial.print(' ');
-    Serial.print(espfc.model().state.timestamp); Serial.print(' ');
-    Serial.println();
-    prev = now;
-  }
 }
 
 int main()

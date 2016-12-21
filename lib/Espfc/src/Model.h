@@ -8,13 +8,13 @@
 namespace Espfc {
 
 enum GyroRate {
-  GYRO_RATE_50  = 50,
-  GYRO_RATE_100 = 100,
-  GYRO_RATE_150 = 150,
-  GYRO_RATE_200 = 200,
-  GYRO_RATE_250 = 250,
-  GYRO_RATE_333 = 333,
-  GYRO_RATE_500 = 500
+  GYRO_RATE_500 = 0x00,
+  GYRO_RATE_333 = 0x01,
+  GYRO_RATE_250 = 0x02,
+  GYRO_RATE_200 = 0x03,
+  GYRO_RATE_166 = 0x04,
+  GYRO_RATE_100 = 0x05,
+  GYRO_RATE_50  = 0x06
 };
 
 enum GyroDlpf {
@@ -53,11 +53,11 @@ enum MagGain {
 };
 
 enum MagRate {
-  MAG_RATE_3    = 0x02,
-  MAG_RATE_7P5  = 0x03,
-  MAG_RATE_15   = 0x04,
-  MAG_RATE_30   = 0x05,
-  MAG_RATE_75   = 0x06,
+  MAG_RATE_3    = 0x00,
+  MAG_RATE_7P5  = 0x01,
+  MAG_RATE_15   = 0x02,
+  MAG_RATE_30   = 0x03,
+  MAG_RATE_75   = 0x04,
 };
 
 enum MagAvg {
@@ -67,9 +67,13 @@ enum MagAvg {
   MAG_AVERAGING_8 = 0x03
 };
 
+enum ModelFrame {
+  FRAME_QUAD_X = 0x01
+};
+
 struct ModelState
 {
-  uint32_t timestamp;
+  unsigned long timestamp;
 
   VectorInt16 gyroRaw;
   VectorInt16 accelRaw;
@@ -90,51 +94,54 @@ struct ModelState
   float input[8];
   float output[3];
 
-  int channel[4];
-  Kalman kalman[3];
+  long channel[4];
 
+  // other state
+  Kalman kalman[3];
   VectorFloat accelPrev;
 
-  float gyroScale;
   float accelScale;
-
+  float gyroScale;
   VectorFloat gyroBias;
   float gyroBiasAlpha;
   float gyroBiasSamples;
-  bool gyroBiasValid;
+  long gyroBiasValid;
 
-  int gyroSampleInterval;
+  long gyroSampleRate;
+  long gyroSampleInterval;
 
-  int magSampleInterval;
-  int magSampleRate;
-  uint32_t magTimestamp;
+  long magSampleInterval;
+  long magSampleRate;
+  unsigned long magTimestamp;
+
+  unsigned long telemetryTimestamp;
 };
 
 struct ModelConfig
 {
-  int gyroFifo;
-  int gyroDlpf;
-  int gyroFsr;
-  int accelFsr;
-  int gyroSampleRate;
+  long gyroFifo;
+  long gyroDlpf;
+  long gyroFsr;
+  long accelFsr;
+  long gyroSampleRate;
 
-  int magSampleRate;
-  int magFsr;
-  int magAvr;
+  long magSampleRate;
+  long magFsr;
+  long magAvr;
 
-  int inputMin[8];
-  int inputNeutral[8];
-  int inputMax[8];
+  long modelFrame;
+  long inputMin[8];
+  long inputNeutral[8];
+  long inputMax[8];
 
-  int channelMin[4];
-  int channelNeutral[4];
-  int channelMax[4];
+  long channelMin[4];
+  long channelNeutral[4];
+  long channelMax[4];
 
   Pid pid[3];
 
-  int telemetry;
-  int telemetryInterval;
-  uint32_t telemetryTimestamp;
+  long telemetry;
+  long telemetryInterval;
 };
 
 class Model

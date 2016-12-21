@@ -16,8 +16,8 @@ class Telemetry
 
     int update()
     {
-      int32_t now = millis();
-      if(_model.config.telemetry && _model.config.telemetryInterval > 10 && now - _model.config.telemetryTimestamp > _model.config.telemetryInterval)
+      unsigned long now = millis();
+      if(_model.config.telemetry && _model.config.telemetryInterval > 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)
       {
         (*this)
           //<< _model.state.timestamp
@@ -29,7 +29,7 @@ class Telemetry
           << _model.state.magRaw.x << _model.state.magRaw.y << _model.state.magRaw.z
         ;
         println();
-        _model.config.telemetryTimestamp = now;
+        _model.state.telemetryTimestamp = now;
         return 1;
       }
       return 0;

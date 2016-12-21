@@ -82,7 +82,7 @@ class Sensor
       {
         VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
         _model.state.accelPrev = _model.state.accel;
-        if((deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO) && (_model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO))
+        if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO && _model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
         {
           // what we are seeing on the gyros should be bias only so learn from this
           _model.state.gyroBias = (_model.state.gyroBias * (1.0 - _model.state.gyroBiasAlpha)) + (_model.state.gyro * _model.state.gyroBiasAlpha);
@@ -109,13 +109,7 @@ class Sensor
     void initGyro()
     {
       _gyro.initialize();
-
       Serial.print("gyro init: "); Serial.print(_gyro.getDeviceID()); Serial.print(' '); Serial.println(_gyro.testConnection());
-
-      _gyro.setFullScaleGyroRange(_model.config.gyroFsr);
-      _gyro.setFullScaleAccelRange(_model.config.accelFsr);
-      _gyro.setDLPFMode(_model.config.gyroDlpf);
-
       setSampleRate();
       setGyroScale();
       setAccelScale();
@@ -130,19 +124,36 @@ class Sensor
         _gyro.resetFIFO();
         _gyro.setFIFOEnabled(true);
       }
-   }
+    }
 
-   void setSampleRate()
-   {
+    void setSampleRate()
+    {
+      // sample rate = clock / ( divider + 1)
       int clock = 1000;
       if(_model.config.gyroDlpf == GYRO_DLPF_256) clock = 8000;
-      int r = clock / (_model.config.gyroSampleRate + 1);
-      _model.config.gyroSampleRate = clock / (r + 1); // update to real sample rate
-      _model.state.gyroSampleInterval = 1000 / _model.config.gyroSampleRate;
-      _model.state.gyroBiasAlpha = 2.0f / _model.config.gyroSampleRate;
+      int rate = -1;
+      switch(_model.config.gyroSampleRate)
+      {
+        case GYRO_RATE_500: rate = 500; break;
+        case GYRO_RATE_333: rate = 333; break;
+        case GYRO_RATE_250: rate = 250; break;
+        case GYRO_RATE_200: rate = 200; break;
+        case GYRO_RATE_166: rate = 166; break;
+        case GYRO_RATE_100: rate = 100; break;
+        case GYRO_RATE_50:  rate =  50; break;
+        default: rate = 100;
+      }
+
+      int divider = clock / (rate + 1);
+      _model.state.gyroSampleRate = clock / (divider + 1); // update to real sample rate
+      _model.state.gyroSampleInterval = 1000 / _model.state.gyroSampleRate;
+
+      _model.state.gyroBiasAlpha = 5.0f / rate;
       _model.state.gyroBiasSamples = 0;
-      Serial.print("gyro rate: "); Serial.print(r); Serial.print(' '); Serial.print(_model.config.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.println();
-      _gyro.setRate(r);
+
+      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.config.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.println();
+      _gyro.setDLPFMode(_model.config.gyroDlpf);
+      _gyro.setRate(divider);
     }
 
     void setGyroScale()
@@ -154,6 +165,7 @@ class Sensor
         case GYRO_FS_500:  _model.state.gyroScale = M_PI /  (65.535 * 180.0); break;
         case GYRO_FS_250:  _model.state.gyroScale = M_PI / (131.072 * 180.0); break;
       }
+      _gyro.setFullScaleGyroRange(_model.config.gyroFsr);
     }
 
     void setAccelScale()
@@ -165,6 +177,7 @@ class Sensor
         case ACCEL_FS_4:  _model.state.accelScale = 1.0 /  8192.0; break;
         case ACCEL_FS_2:  _model.state.accelScale = 1.0 / 16384.0; break;
       }
+      _gyro.setFullScaleAccelRange(_model.config.accelFsr);
     }
 
     void initMag()
@@ -178,17 +191,19 @@ class Sensor
 
     void setMagSampleRate()
     {
+      int rate = -1;
       switch(_model.config.magSampleRate)
       {
-        case MAG_RATE_3:    _model.state.magSampleInterval = 1000 / 3; break;
-        case MAG_RATE_7P5:  _model.state.magSampleInterval = 1000 / 7.5; break;
-        case MAG_RATE_15:   _model.state.magSampleInterval = 1000 / 15; break;
-        case MAG_RATE_30:   _model.state.magSampleInterval = 1000 / 30; break;
-        case MAG_RATE_75:   _model.state.magSampleInterval = 1000 / 75; break;
-        default: _model.state.magSampleInterval = 1000 / 15; _model.state.magSampleRate = 1000 / _model.state.magSampleInterval; return;
+        case MAG_RATE_3:    rate = 3; break;
+        case MAG_RATE_7P5:  rate = 7; break;
+        case MAG_RATE_15:   rate = 15; break;
+        case MAG_RATE_30:   rate = 30; break;
+        case MAG_RATE_75:   rate = 75; break;
+        default: rate = 15; return;
       }
-      _model.state.magSampleRate = 1000 / _model.state.magSampleInterval;
-      _mag.setDataRate(_model.config.magSampleRate);
+      _model.state.magSampleRate = rate;
+      _model.state.magSampleInterval = 1000 / rate;
+      _mag.setDataRate(_model.config.magSampleRate + 0x02);
       Serial.print("mag rate: "); Serial.print(_model.config.magSampleRate); Serial.print(' '); Serial.print(_model.state.magSampleRate); Serial.print(' '); Serial.println(_model.state.magSampleInterval);
     }
 
