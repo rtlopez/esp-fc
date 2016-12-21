@@ -151,7 +151,7 @@ class Sensor
       _model.state.gyroBiasAlpha = 5.0f / rate;
       _model.state.gyroBiasSamples = 0;
 
-      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.config.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.println();
+      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.println();
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(divider);
     }

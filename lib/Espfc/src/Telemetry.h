@@ -26,7 +26,7 @@ class Telemetry
           //<< _model.state.accel.x << _model.state.accel.y << _model.state.accel.z
           //<< _model.state.gyro.x << _model.state.gyro.y << _model.state.gyro.z
           //<< _model.state.gyro
-          << _model.state.magRaw.x << _model.state.magRaw.y << _model.state.magRaw.z
+          //<< _model.state.magRaw.x << _model.state.magRaw.y << _model.state.magRaw.z
         ;
         println();
         _model.state.telemetryTimestamp = now;
