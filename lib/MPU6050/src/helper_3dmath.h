@@ -59,12 +59,16 @@ class Quaternion {
                 w*q.z + x*q.y - y*q.x + z*q.w); // new z
         }
 
+        Quaternion operator*(const Quaternion& q) const {
+          return this->getProduct(q);
+        }
+
         Quaternion getConjugate() const {
             return Quaternion(w, -x, -y, -z);
         }
 
         float getMagnitude() const {
-            return sqrt(w*w + x*x + y*y + z*z);
+            return sqrt(w * w + x * x + y * y + z * z);
         }
 
         void normalize() {
@@ -101,11 +105,11 @@ public:
       return *this;
     }
 
-    operator VectorBase<float>() {
+    operator VectorBase<float>() const {
       return VectorBase<float>(x, y, z);
     }
 
-    float getMagnitude() {
+    float getMagnitude() const {
       return sqrt(x * x + y * y + z * z);
     }
 
@@ -116,7 +120,7 @@ public:
         z /= m;
     }
 
-    VectorBase<T> getNormalized() {
+    VectorBase<T> getNormalized() const {
         VectorBase<T> r(x, y, z);
         r.normalize();
         return r;
@@ -151,6 +155,34 @@ public:
         VectorBase<T> r(x, y, z);
         r.rotate(q);
         return r;
+    }
+
+    VectorBase<T> accelToEuler() const
+    {
+      VectorBase<T> rpy; // roll pitch yaw
+      VectorBase<T> na = this->getNormalized();
+      rpy.x = atan2(na.y, na.z);
+      rpy.y = -atan2(na.x, sqrt(na.y * na.y + na.z * na.z));
+      rpy.z = 0.f;
+      return rpy;
+    }
+
+    Quaternion eulerToQuaternion() const
+    {
+      Quaternion q;
+      float cosX2 = cos(x / 2.0f);
+      float sinX2 = sin(x / 2.0f);
+      float cosY2 = cos(y / 2.0f);
+      float sinY2 = sin(y / 2.0f);
+      float cosZ2 = cos(z / 2.0f);
+      float sinZ2 = sin(z / 2.0f);
+
+      q.w = cosX2 * cosY2 * cosZ2 + sinX2 * sinY2 * sinZ2;
+      q.x = sinX2 * cosY2 * cosZ2 - cosX2 * sinY2 * sinZ2;
+      q.y = cosX2 * sinY2 * cosZ2 + sinX2 * cosY2 * sinZ2;
+      q.z = cosX2 * cosY2 * sinZ2 - sinX2 * sinY2 * cosZ2;
+      q.normalize();
+      return q;
     }
 
     // vector arithmetics
@@ -210,6 +242,5 @@ public:
 
 typedef VectorBase<float> VectorFloat;
 typedef VectorBase<int16_t> VectorInt16;
-
 
 #endif /* _HELPER_3DMATH_H_ */

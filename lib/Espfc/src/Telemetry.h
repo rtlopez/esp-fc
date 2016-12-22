@@ -23,10 +23,16 @@ class Telemetry
           //<< _model.state.timestamp
           //<< _model.state.accelRaw.x << _model.state.accelRaw.y << _model.state.accelRaw.z
           //<< _model.state.gyroRaw.x << _model.state.gyroRaw.y << _model.state.gyroRaw.z
-          //<< _model.state.accel.x << _model.state.accel.y << _model.state.accel.z
-          //<< _model.state.gyro.x << _model.state.gyro.y << _model.state.gyro.z
-          //<< _model.state.gyro
           //<< _model.state.magRaw.x << _model.state.magRaw.y << _model.state.magRaw.z
+          << _model.state.accel
+          //<< _model.state.accelQ
+          //<< _model.state.mag
+          //<< _model.state.pose
+          << _model.state.magAccel
+          << -atan2(_model.state.magAccel.y, _model.state.magAccel.x)
+
+          //<< _model.state.gyro
+          //<< _model.state.mag.accelToEuler()
         ;
         println();
         _model.state.telemetryTimestamp = now;
@@ -52,6 +58,12 @@ class Telemetry
     Telemetry& operator<<(const VectorFloat& v)
     {
       (*this) << v.x << v.y << v.z;
+      return *this;
+    }
+
+    Telemetry& operator<<(const Quaternion& v)
+    {
+      (*this) << v.w << v.x << v.y << v.z;
       return *this;
     }
 

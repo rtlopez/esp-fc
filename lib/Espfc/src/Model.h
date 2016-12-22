@@ -71,6 +71,7 @@ enum ModelFrame {
   FRAME_QUAD_X = 0x01
 };
 
+// working data
 struct ModelState
 {
   unsigned long timestamp;
@@ -82,7 +83,10 @@ struct ModelState
   VectorFloat gyro;
   VectorFloat accel;
   VectorFloat mag;
+  VectorFloat magAccel;
   VectorFloat pose;
+
+  Quaternion accelQ;
 
   VectorFloat rate;
   VectorFloat angle;
@@ -112,11 +116,13 @@ struct ModelState
 
   long magSampleInterval;
   long magSampleRate;
+  float magScale;
   unsigned long magTimestamp;
 
   unsigned long telemetryTimestamp;
 };
 
+// persistent data
 struct ModelConfig
 {
   long gyroFifo;
@@ -129,7 +135,12 @@ struct ModelConfig
   long magFsr;
   long magAvr;
 
+  float gyroFilterAlpha;
+  float accelFilterAlpha;
+  float magFilterAlpha;
+
   long modelFrame;
+
   long inputMin[8];
   long inputNeutral[8];
   long inputMax[8];
@@ -147,7 +158,22 @@ struct ModelConfig
 class Model
 {
   public:
-    Model() {}
+    Model() {
+      config.gyroFifo = true;
+      config.gyroDlpf = GYRO_DLPF_256;
+      config.gyroFsr  = GYRO_FS_2000;
+      config.accelFsr = ACCEL_FS_8;
+      config.gyroSampleRate = GYRO_RATE_500;
+      config.magSampleRate = MAG_RATE_75;
+      config.magAvr = MAG_AVERAGING_1;
+
+      config.accelFilterAlpha = 1.f;
+      config.gyroFilterAlpha = 1.f;
+      config.magFilterAlpha = 1.f;
+
+      config.telemetry = true;
+      config.telemetryInterval = 200;
+    }
     union {
       ModelState state;
       char * stateAddr;

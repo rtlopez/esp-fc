@@ -26,6 +26,15 @@ class Sensor
 
     int update()
     {
+      if(!readSensors()) return 0;
+      updateModel();
+      updateGyroBias();
+      return 1;
+    }
+
+  private:
+    int readSensors()
+    {
       uint8_t buf[FIFO_SIZE];
       bool fetched = false;
       uint32_t now = millis();
@@ -62,18 +71,17 @@ class Sensor
         now -= _model.state.gyroSampleInterval * (numSamples - 1);
       }
       _model.state.timestamp = now;
-
-      updateModel();
-      updateGyroBias();
-
       return 1;
     }
 
-  private:
     void updateModel()
     {
-      _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
-      _model.state.gyro  = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
+      VectorFloat accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
+      VectorFloat gyro  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
+      VectorFloat mag   = (VectorFloat)_model.state.magRaw   * _model.state.magScale;
+      _model.state.accel = _model.state.accel * (1.f - _model.config.accelFilterAlpha) + accel * _model.config.accelFilterAlpha;
+      _model.state.gyro  = _model.state.gyro  * (1.f - _model.config.gyroFilterAlpha)  + gyro  * _model.config.gyroFilterAlpha;
+      _model.state.mag   = _model.state.mag   * (1.f - _model.config.magFilterAlpha)   + mag   * _model.config.magFilterAlpha;
     }
 
     void updateGyroBias()
@@ -187,6 +195,7 @@ class Sensor
       _mag.setSampleAveraging(_model.config.magAvr);
       _mag.setMode(HMC5883L_MODE_CONTINUOUS);
       setMagSampleRate();
+      setMagScale();
     }
 
     void setMagSampleRate()
@@ -199,12 +208,29 @@ class Sensor
         case MAG_RATE_15:   rate = 15; break;
         case MAG_RATE_30:   rate = 30; break;
         case MAG_RATE_75:   rate = 75; break;
-        default: rate = 15; return;
+        default: _model.config.magSampleRate = MAG_RATE_15; rate = 15; return;
       }
       _model.state.magSampleRate = rate;
       _model.state.magSampleInterval = 1000 / rate;
       _mag.setDataRate(_model.config.magSampleRate + 0x02);
       Serial.print("mag rate: "); Serial.print(_model.config.magSampleRate); Serial.print(' '); Serial.print(_model.state.magSampleRate); Serial.print(' '); Serial.println(_model.state.magSampleInterval);
+    }
+
+    void setMagScale()
+    {
+      const float base = 1000.0;
+      switch(_model.config.magFsr)
+      {
+        case MAG_GAIN_1370: _model.state.magScale = base / 1370; break;
+        case MAG_GAIN_1090: _model.state.magScale = base / 1090; break;
+        case MAG_GAIN_820:  _model.state.magScale = base / 820; break;
+        case MAG_GAIN_660:  _model.state.magScale = base / 660; break;
+        case MAG_GAIN_440:  _model.state.magScale = base / 440; break;
+        case MAG_GAIN_390:  _model.state.magScale = base / 390; break;
+        case MAG_GAIN_330:  _model.state.magScale = base / 330; break;
+        case MAG_GAIN_220:  _model.state.magScale = base / 220; break;
+      }
+      _mag.setGain(_model.config.magFsr);
     }
 
     void initPresure()
