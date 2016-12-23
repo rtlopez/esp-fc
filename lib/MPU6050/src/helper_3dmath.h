@@ -44,7 +44,7 @@ class Quaternion {
 
         Quaternion(): w(1.f), x(0.f), y(0.f), z(0.f) {}
 
-        Quaternion(float nw, float nx, float ny, float nz): w(nw), x(nw), y(nw), z(nw) {}
+        Quaternion(float nw, float nx, float ny, float nz): w(nw), x(nx), y(ny), z(nz) {}
 
         Quaternion getProduct(const Quaternion& q) const {
             // Quaternion multiplication is defined by:
@@ -105,6 +105,10 @@ public:
       return *this;
     }
 
+    T get(size_t i) const { return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T())); }
+
+    void set(size_t i, T v) { i == 0 ? x = v : (i == 1 ? y = v : (i == 2 ? z = v : false)); }
+
     operator VectorBase<float>() const {
       return VectorBase<float>(x, y, z);
     }
@@ -140,10 +144,12 @@ public:
         Quaternion p(0, x, y, z);
 
         // quaternion multiplication: q * p, stored back in p
-        p = q.getProduct(p);
+        //p = q.getProduct(p);
 
         // quaternion multiplication: p * conj(q), stored back in p
-        p = p.getProduct(q.getConjugate());
+        //p = p.getProduct(q.getConjugate());
+
+        p = q * p * q.getConjugate();
 
         // p quaternion is now [0, x', y', z']
         x = p.x;
@@ -183,6 +189,15 @@ public:
       q.z = cosX2 * cosY2 * sinZ2 - sinX2 * sinY2 * cosZ2;
       q.normalize();
       return q;
+    }
+
+    VectorBase<T> eulerFromQuaternion(const Quaternion& q)
+    {
+      VectorBase<T> vec;
+      x = atan2(2.0 * (q.y * q.z + q.w * q.x), 1 - 2.0 * (q.x * q.x + q.y * q.y));
+      y = asin(2.0 * (q.w * q.y - q.x * q.z));
+      z = atan2(2.0 * (q.x * q.y + q.w * q.z), 1 - 2.0 * (q.y * q.y + q.z * q.z));
+      return *this;
     }
 
     // vector arithmetics

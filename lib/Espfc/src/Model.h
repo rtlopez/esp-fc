@@ -81,15 +81,17 @@ struct ModelState
   VectorInt16 magRaw;
 
   VectorFloat gyro;
+  VectorFloat gyroPose;
   VectorFloat accel;
+  VectorFloat accelPose;
   VectorFloat mag;
-  VectorFloat magAccel;
+  VectorFloat magPose;
   VectorFloat pose;
-
-  Quaternion accelQ;
+  Quaternion poseQ;
 
   VectorFloat rate;
   VectorFloat angle;
+  Quaternion angleQ;
 
   float altitude;
   float altitudeVelocity;
@@ -113,6 +115,7 @@ struct ModelState
 
   long gyroSampleRate;
   long gyroSampleInterval;
+  float gyroSampleIntervalFloat;
 
   long magSampleInterval;
   long magSampleRate;
@@ -160,19 +163,25 @@ class Model
   public:
     Model() {
       config.gyroFifo = true;
-      config.gyroDlpf = GYRO_DLPF_256;
+      config.gyroDlpf = GYRO_DLPF_188;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_500;
+      config.gyroSampleRate = GYRO_RATE_200;
       config.magSampleRate = MAG_RATE_75;
-      config.magAvr = MAG_AVERAGING_1;
+      config.magAvr = MAG_AVERAGING_2;
 
-      config.accelFilterAlpha = 1.f;
-      config.gyroFilterAlpha = 1.f;
-      config.magFilterAlpha = 1.f;
+      config.accelFilterAlpha = 0.99f;
+      config.gyroFilterAlpha = 0.99f;
+      config.magFilterAlpha = 0.99f;
 
       config.telemetry = true;
-      config.telemetryInterval = 200;
+      config.telemetryInterval = 50;
+
+      for(size_t i = 0; i < 3; i++)
+      {
+        state.kalman[i] = Kalman();
+        state.pid[i] = PidState();
+      }
     }
     union {
       ModelState state;

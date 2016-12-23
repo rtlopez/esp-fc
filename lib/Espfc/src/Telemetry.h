@@ -24,15 +24,10 @@ class Telemetry
           //<< _model.state.accelRaw.x << _model.state.accelRaw.y << _model.state.accelRaw.z
           //<< _model.state.gyroRaw.x << _model.state.gyroRaw.y << _model.state.gyroRaw.z
           //<< _model.state.magRaw.x << _model.state.magRaw.y << _model.state.magRaw.z
-          << _model.state.accel
-          //<< _model.state.accelQ
-          //<< _model.state.mag
-          //<< _model.state.pose
-          << _model.state.magAccel
-          << -atan2(_model.state.magAccel.y, _model.state.magAccel.x)
-
-          //<< _model.state.gyro
-          //<< _model.state.mag.accelToEuler()
+          << _model.state.gyroPose
+          << _model.state.accelPose
+          << _model.state.pose
+          << _model.state.angle
         ;
         println();
         _model.state.telemetryTimestamp = now;

@@ -155,11 +155,12 @@ class Sensor
       int divider = clock / (rate + 1);
       _model.state.gyroSampleRate = clock / (divider + 1); // update to real sample rate
       _model.state.gyroSampleInterval = 1000 / _model.state.gyroSampleRate;
+      _model.state.gyroSampleIntervalFloat = 1.0 / _model.state.gyroSampleRate;
 
       _model.state.gyroBiasAlpha = 5.0f / rate;
       _model.state.gyroBiasSamples = 0;
 
-      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.println();
+      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.print(_model.state.gyroSampleIntervalFloat, 3); Serial.println();
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(divider);
     }
