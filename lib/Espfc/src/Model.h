@@ -67,9 +67,23 @@ enum MagAvg {
   MAG_AVERAGING_8 = 0x03
 };
 
+enum FlightMode {
+  MODE_DISARMED = 0x01,
+  MODE_RATE = 0x02,
+  MODE_ANGLE = 0x03,
+};
+
 enum ModelFrame {
   FRAME_QUAD_X = 0x01
 };
+const size_t OUTPUT_CHANNELS = 4;
+const size_t INPUT_CHANNELS = 8;
+
+const size_t AXES = 4;
+const size_t AXIS_ROLL   = 0;  // x
+const size_t AXIS_PITH   = 1;  // y
+const size_t AXIS_YAW    = 2;  // z
+const size_t AXIS_THRUST = 3;  // throttle channel index
 
 // working data
 struct ModelState
@@ -93,17 +107,28 @@ struct ModelState
   VectorFloat angle;
   Quaternion angleQ;
 
+  long flightMode;
+
   float altitude;
   float altitudeVelocity;
 
-  PidState pid[3];
-  float input[8];
-  float output[3];
+  PidState innerPid[AXES];
+  PidState outerPid[AXES];
 
-  long channel[4];
+  long inputUs[INPUT_CHANNELS];
+  float input[INPUT_CHANNELS];
+
+  float rateDesired[AXES];
+  float angleDesired[AXES];
+
+  float rateMax[AXES];
+  float angleMax[AXES];
+
+  float output[OUTPUT_CHANNELS];
+  long outputUs[OUTPUT_CHANNELS];
 
   // other state
-  Kalman kalman[3];
+  Kalman kalman[AXES];
   VectorFloat accelPrev;
 
   float accelScale;
@@ -120,14 +145,16 @@ struct ModelState
   long magSampleInterval;
   long magSampleRate;
   float magScale;
-  unsigned long magTimestamp;
 
+  unsigned long magTimestamp;
+  unsigned long controllerTimestamp;
   unsigned long telemetryTimestamp;
 };
 
 // persistent data
 struct ModelConfig
 {
+  long ppmPin;
   long gyroFifo;
   long gyroDlpf;
   long gyroFsr;
@@ -143,16 +170,23 @@ struct ModelConfig
   float magFilterAlpha;
 
   long modelFrame;
+  long flightModeChannel;
 
-  long inputMin[8];
-  long inputNeutral[8];
-  long inputMax[8];
+  long inputMin[INPUT_CHANNELS];
+  long inputNeutral[INPUT_CHANNELS];
+  long inputMax[INPUT_CHANNELS];
+  long inputMap[INPUT_CHANNELS];
 
-  long channelMin[4];
-  long channelNeutral[4];
-  long channelMax[4];
+  long outputMin[OUTPUT_CHANNELS];
+  long outputNeutral[OUTPUT_CHANNELS];
+  long outputMax[OUTPUT_CHANNELS];
 
-  Pid pid[3];
+  long outputPin[OUTPUT_CHANNELS];
+
+  Pid innerPid[AXES];
+  Pid outerPid[AXES];
+  float rateMax[AXES];
+  float angleMax[AXES];
 
   long telemetry;
   long telemetryInterval;
@@ -162,26 +196,63 @@ class Model
 {
   public:
     Model() {
+      config.ppmPin = D4; // GPIO2
       config.gyroFifo = true;
       config.gyroDlpf = GYRO_DLPF_188;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSampleRate = GYRO_RATE_200;
       config.magSampleRate = MAG_RATE_75;
-      config.magAvr = MAG_AVERAGING_2;
+      config.magAvr = MAG_AVERAGING_1;
 
       config.accelFilterAlpha = 0.99f;
-      config.gyroFilterAlpha = 0.99f;
-      config.magFilterAlpha = 0.99f;
+      config.gyroFilterAlpha = 0.5f;
+      config.magFilterAlpha = 0.5f;
 
       config.telemetry = true;
       config.telemetryInterval = 50;
 
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        config.outputMin[i] = 1000;
+        config.outputNeutral[i] = 1050;
+        config.outputMax[i] = 2000;
+      }
+      config.outputPin[0] = D5;
+      config.outputPin[1] = D6;
+      config.outputPin[2] = D7;
+      config.outputPin[3] = D8;
+
+      config.inputMap[0] = 0; // roll
+      config.inputMap[1] = 1; // pitch
+      config.inputMap[2] = 3; // yaw
+      config.inputMap[3] = 2; // throttle
+      config.inputMap[4] = 4; // flight mode
+      config.inputMap[5] = 5; // free
+      config.inputMap[6] = 6; // free
+      config.inputMap[7] = 7; // free
+      config.flightModeChannel = 4;
+
+      for(size_t i = 0; i < INPUT_CHANNELS; i++)
+      {
+        config.inputMin[i] = 1000;
+        config.inputNeutral[i] = 1500;
+        config.inputMax[i] = 2000;
+      }
+      config.inputNeutral[AXIS_THRUST] = 1050; // override for thrust
+
+      for(size_t i = 0; i < AXES; i++)
       {
         state.kalman[i] = Kalman();
-        state.pid[i] = PidState();
+        state.outerPid[i] = PidState();
+        state.innerPid[i] = PidState();
+        config.outerPid[i] = Pid(1, 0, 0, 0.3);
+        config.innerPid[i] = Pid(1, 0, 0, 0.3);
       }
+
+      config.rateMax[AXIS_PITH] = config.rateMax[AXIS_ROLL] = 200; // deg/s
+      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 35; // deg
+      config.rateMax[AXIS_YAW] = 200; // deg/s
     }
     union {
       ModelState state;
