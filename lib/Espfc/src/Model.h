@@ -70,11 +70,12 @@ enum MagAvg {
 enum FlightMode {
   MODE_DISARMED = 0x01,
   MODE_RATE = 0x02,
-  MODE_ANGLE = 0x03,
+  MODE_ANGLE = 0x03
 };
 
 enum ModelFrame {
-  FRAME_QUAD_X = 0x01
+  FRAME_DISARMED = 0x01,
+  FRAME_QUAD_X   = 0x02
 };
 const size_t OUTPUT_CHANNELS = 4;
 const size_t INPUT_CHANNELS = 8;
@@ -149,6 +150,7 @@ struct ModelState
   unsigned long magTimestamp;
   unsigned long controllerTimestamp;
   unsigned long telemetryTimestamp;
+  unsigned long mixerTimestamp;
 };
 
 // persistent data
@@ -182,6 +184,7 @@ struct ModelConfig
   long outputMax[OUTPUT_CHANNELS];
 
   long outputPin[OUTPUT_CHANNELS];
+  long pwmRate;
 
   Pid innerPid[AXES];
   Pid outerPid[AXES];
@@ -210,7 +213,7 @@ class Model
       config.magFilterAlpha = 0.5f;
 
       config.telemetry = true;
-      config.telemetryInterval = 50;
+      config.telemetryInterval = 100;
 
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -222,6 +225,7 @@ class Model
       config.outputPin[1] = D6;
       config.outputPin[2] = D7;
       config.outputPin[3] = D8;
+      config.modelFrame = FRAME_DISARMED;
 
       config.inputMap[0] = 0; // roll
       config.inputMap[1] = 1; // pitch
@@ -253,6 +257,18 @@ class Model
       config.rateMax[AXIS_PITH] = config.rateMax[AXIS_ROLL] = 200; // deg/s
       config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 35; // deg
       config.rateMax[AXIS_YAW] = 200; // deg/s
+
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        config.outputMin[i] = 1000;
+        config.outputNeutral[i] = 1050;
+        config.outputMax[i] = 1900;
+      }
+      config.outputPin[0] = D5;
+      config.outputPin[1] = D6;
+      config.outputPin[2] = D7;
+      config.outputPin[3] = D8;
+      config.pwmRate = 100;
     }
     union {
       ModelState state;

@@ -31,6 +31,7 @@ void setup()
 void loop()
 {
   espfc.update();
+  yield();
 }
 
 int main()

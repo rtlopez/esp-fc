@@ -25,6 +25,7 @@ class Espfc
       _controller.begin();
       _mixer.begin();
       _telemetry.begin();
+      return 1;
     }
 
     int update()
@@ -37,9 +38,10 @@ class Espfc
       _controller.update();
       _mixer.update();
       _telemetry.update();
+      return 1;
     }
     Model& model() { return _model; }
-    
+
   private:
     Model _model;
     Controller _controller;

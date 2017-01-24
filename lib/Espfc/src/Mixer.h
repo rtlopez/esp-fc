@@ -2,6 +2,7 @@
 #define _ESPFC_MIXER_H_
 
 #include "Model.h"
+#include "OutputPWM.h"
 
 namespace Espfc {
 
@@ -9,18 +10,46 @@ class Mixer
 {
   public:
     Mixer(Model& model): _model(model) {}
-    int begin() {}
+    int begin()
+    {
+      for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
+      {
+        PWM.attach(i, _model.config.outputPin[i],  _model.config.outputMin[i]);
+      }
+      PWM.begin(_model.config.pwmRate);
+    }
+
     int update()
     {
+      unsigned long now = millis();
+      if(_model.state.mixerTimestamp + _model.state.gyroSampleInterval > now) return 0;
+
       switch(_model.config.modelFrame)
       {
+        case FRAME_DISARMED:
+          updateDisarmed();
+          break;
         case FRAME_QUAD_X:
           updateQuadX();
           break;
         default:
           break;
       }
+      for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
+      {
+        PWM.write(i, _model.state.outputUs[i]);
+      }
+      _model.state.mixerTimestamp = now;
+
       return 1;
+    }
+
+    void updateDisarmed()
+    {
+      _model.state.outputUs[0] = 1000;
+      _model.state.outputUs[1] = 1000;
+      _model.state.outputUs[2] = 1000;
+      _model.state.outputUs[3] = 1000;
     }
 
     void updateQuadX()
@@ -45,7 +74,6 @@ class Mixer
 
   private:
     Model& _model;
-
 };
 
 }
