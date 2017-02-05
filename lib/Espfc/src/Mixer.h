@@ -32,6 +32,9 @@ class Mixer
         case FRAME_QUAD_X:
           updateQuadX();
           break;
+        case FRAME_BALANCE_ROBOT:
+          updateBalancingRobot();
+          break;
         default:
           break;
       }
@@ -46,10 +49,25 @@ class Mixer
 
     void updateDisarmed()
     {
-      _model.state.outputUs[0] = 1000;
-      _model.state.outputUs[1] = 1000;
-      _model.state.outputUs[2] = 1000;
-      _model.state.outputUs[3] = 1000;
+      float out[4];
+      out[0] = -1.f;
+      out[1] = -1.f;
+      out[2] = -1.f;
+      out[3] = -1.f;
+
+      writeOutput(out, 4);
+    }
+
+    void updateBalancingRobot()
+    {
+      float p = _model.state.output[AXIS_PITH];
+      float t = _model.state.output[AXIS_THRUST];
+
+      float out[2];
+      out[0] = t + p;
+      out[1] = t - p;
+
+      writeOutput(out, 2);
     }
 
     void updateQuadX()
@@ -65,13 +83,17 @@ class Mixer
       out[2] = t - r - p + y;
       out[3] = t + r - p - y;
 
-      for(size_t i = 0; i < 4; i++)
-      {
-        long val = (long)Math::map3(out[i], -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
-        _model.state.outputUs[0] = Math::bound(val, _model.config.outputMin[i], _model.config.outputMax[i]);
-      }
+      writeOutput(out, 4);
     }
 
+    void writeOutput(float * out, int axes)
+    {
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        long val = (long)Math::map3(out[i], -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+        _model.state.outputUs[i] = i < axes ? Math::bound(val, _model.config.outputMin[i], _model.config.outputMax[i]) : _model.config.outputMin[i];
+      }
+    }
   private:
     Model& _model;
 };

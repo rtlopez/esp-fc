@@ -19,9 +19,11 @@ void setup()
   ticker.attach(0.05, blink_led);
 
   Wire.begin();
-  Wire.setClock(400000);
+  //Wire.setClock(400000);
+  Wire.setClock(1000000);
   Serial.begin(115200);
   Serial.println();
+  Serial.println(sizeof(long));
 
   espfc.begin();
 

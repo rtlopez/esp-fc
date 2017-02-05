@@ -37,7 +37,9 @@ class Controller
       {
         switch(_model.state.flightMode)
         {
+          case MODE_DIRECT:
           case MODE_RATE:
+            _model.state.rateDesired[i] = _model.state.input[i];
             _model.state.rateDesired[i] = _model.state.input[i];
             break;
           case MODE_ANGLE:
@@ -48,6 +50,10 @@ class Controller
             _model.state.rateDesired[i] = -1.f;
         }
       }
+      if(_model.state.flightMode != MODE_DISARMED)
+      {
+        _model.state.rateDesired[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
+      }
     }
 
     void innerLoop()
@@ -57,6 +63,8 @@ class Controller
         float rate = _model.state.rate[i] / _model.state.rateMax[i];
         switch(_model.state.flightMode)
         {
+          case MODE_DIRECT:
+            _model.state.output[i] = _model.state.rateDesired[i];
           case MODE_ANGLE:
           case MODE_RATE:
             _model.state.output[i] = _model.config.innerPid[i].update(_model.state.rateDesired[i], rate, _model.state.gyroSampleIntervalFloat, _model.state.innerPid[i]);
@@ -73,7 +81,6 @@ class Controller
         _model.state.output[AXIS_YAW] = _model.config.innerPid[AXIS_YAW].update(_model.state.rateDesired[AXIS_YAW], rate, _model.state.gyroSampleIntervalFloat, _model.state.innerPid[AXIS_YAW]);
 
         // manual thrust
-        _model.state.rateDesired[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
         _model.state.output[AXIS_THRUST] = _model.state.rateDesired[AXIS_THRUST];
       }
     }

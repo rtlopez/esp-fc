@@ -142,6 +142,7 @@ class Sensor
       int rate = -1;
       switch(_model.config.gyroSampleRate)
       {
+        case GYRO_RATE_1000: rate = 1000; break;
         case GYRO_RATE_500: rate = 500; break;
         case GYRO_RATE_333: rate = 333; break;
         case GYRO_RATE_250: rate = 250; break;

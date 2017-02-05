@@ -8,13 +8,14 @@
 namespace Espfc {
 
 enum GyroRate {
-  GYRO_RATE_500 = 0x00,
-  GYRO_RATE_333 = 0x01,
-  GYRO_RATE_250 = 0x02,
-  GYRO_RATE_200 = 0x03,
-  GYRO_RATE_166 = 0x04,
-  GYRO_RATE_100 = 0x05,
-  GYRO_RATE_50  = 0x06
+  GYRO_RATE_1000 = 0x00,
+  GYRO_RATE_500 = 0x01,
+  GYRO_RATE_333 = 0x02,
+  GYRO_RATE_250 = 0x03,
+  GYRO_RATE_200 = 0x04,
+  GYRO_RATE_166 = 0x05,
+  GYRO_RATE_100 = 0x06,
+  GYRO_RATE_50  = 0x07
 };
 
 enum GyroDlpf {
@@ -69,14 +70,17 @@ enum MagAvg {
 
 enum FlightMode {
   MODE_DISARMED = 0x01,
-  MODE_RATE = 0x02,
-  MODE_ANGLE = 0x03
+  MODE_DIRECT   = 0x02,
+  MODE_RATE     = 0x03,
+  MODE_ANGLE    = 0x04
 };
 
 enum ModelFrame {
   FRAME_DISARMED = 0x01,
-  FRAME_QUAD_X   = 0x02
+  FRAME_QUAD_X   = 0x02,
+  FRAME_BALANCE_ROBOT = 0x03
 };
+
 const size_t OUTPUT_CHANNELS = 4;
 const size_t INPUT_CHANNELS = 8;
 
@@ -204,7 +208,7 @@ class Model
       config.gyroDlpf = GYRO_DLPF_188;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_200;
+      config.gyroSampleRate = GYRO_RATE_1000;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
 
@@ -215,6 +219,7 @@ class Model
       config.telemetry = true;
       config.telemetryInterval = 100;
 
+      // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         config.outputMin[i] = 1000;
@@ -226,7 +231,9 @@ class Model
       config.outputPin[2] = D7;
       config.outputPin[3] = D8;
       config.modelFrame = FRAME_DISARMED;
+      config.pwmRate = 100;
 
+      // input config
       config.inputMap[0] = 0; // roll
       config.inputMap[1] = 1; // pitch
       config.inputMap[2] = 3; // yaw
@@ -245,6 +252,7 @@ class Model
       }
       config.inputNeutral[AXIS_THRUST] = 1050; // override for thrust
 
+      // controller config
       for(size_t i = 0; i < AXES; i++)
       {
         state.kalman[i] = Kalman();
@@ -257,18 +265,6 @@ class Model
       config.rateMax[AXIS_PITH] = config.rateMax[AXIS_ROLL] = 200; // deg/s
       config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 35; // deg
       config.rateMax[AXIS_YAW] = 200; // deg/s
-
-      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
-      {
-        config.outputMin[i] = 1000;
-        config.outputNeutral[i] = 1050;
-        config.outputMax[i] = 1900;
-      }
-      config.outputPin[0] = D5;
-      config.outputPin[1] = D6;
-      config.outputPin[2] = D7;
-      config.outputPin[3] = D8;
-      config.pwmRate = 100;
     }
     union {
       ModelState state;

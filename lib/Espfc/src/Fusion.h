@@ -15,8 +15,8 @@ class Fusion
        //if(!_model.state.gyroBiasValid) return 0;
        updatePoseFromAccelMag(_model.state.accel, _model.state.mag);
        _model.state.gyroPose += _model.state.gyro * _model.state.gyroSampleIntervalFloat;
-       //kalmanFusion();
-       slerpFusion();
+       kalmanFusion();
+       //slerpFusion();
        return 1;
     }
 

@@ -33,7 +33,7 @@ RST | Reset            | RST          | Reset switch (optional)
 ## Notice:
 ```
  A0 - In ESP-8266 is 1.0V range, divider may be required
- D3, GPIO0 - if low at boot, then enter to flashing mode
+ D3, GPIO0 - if low at boot, then board enters to flashing mode
 ```
 
 ## Wemos D1 mini board layout:

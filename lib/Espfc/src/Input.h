@@ -23,9 +23,10 @@ class Input
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {
         long us = ppm.getTime(_model.config.inputMap[i]);
+        _model.state.inputUs[i] = us;
+
         float v = Math::map3((float)us, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1, 0, 1);
         v = Math::bound(v, -1.f, 1.f);
-        _model.state.inputUs[i] = us;
         _model.state.input[i] = v;
       }
 
