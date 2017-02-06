@@ -10,24 +10,25 @@
 #include "Fusion.h"
 #include "Mixer.h"
 #include "Telemetry.h"
+#include "Cli.h"
 
 namespace Espfc {
 
 class Espfc
 {
   public:
-    Espfc(): _model(), _controller(_model), _input(_model), _sensor(_model), _fusion(_model), _mixer(_model), _telemetry(_model) {}
+    Espfc(): _model(), _controller(_model), _input(_model), _sensor(_model), _fusion(_model), _mixer(_model), _telemetry(_model, Serial), _cli(_model, Serial) {}
     int begin()
     {
-      pinMode(DEBUG_PIN, OUTPUT);
-      digitalWrite(DEBUG_PIN, LOW);
-
+      //pinMode(DEBUG_PIN, OUTPUT);
+      //digitalWrite(DEBUG_PIN, LOW);
       _sensor.begin();
       _fusion.begin();
       _input.begin();
       _controller.begin();
       _mixer.begin();
       _telemetry.begin();
+      _cli.begin();
       return 1;
     }
 
@@ -36,9 +37,9 @@ class Espfc
       bool updated = false;
       while(_sensor.update())
       {
-        digitalWrite(DEBUG_PIN, HIGH);
+        //digitalWrite(DEBUG_PIN, HIGH);
         _fusion.update();
-        digitalWrite(DEBUG_PIN, LOW);
+        //digitalWrite(DEBUG_PIN, LOW);
         updated = true;
       }
       if(_input.update())
@@ -47,12 +48,13 @@ class Espfc
       }
       if(updated)
       {
-        digitalWrite(DEBUG_PIN, HIGH);
+        //digitalWrite(DEBUG_PIN, HIGH);
         _controller.update();
         _mixer.update();
-        digitalWrite(DEBUG_PIN, LOW);
+        //digitalWrite(DEBUG_PIN, LOW);
       }
       _telemetry.update();
+      _cli.update();
 
       return 1;
     }
@@ -66,6 +68,7 @@ class Espfc
     Fusion _fusion;
     Mixer _mixer;
     Telemetry _telemetry;
+    Cli _cli;
     static const int DEBUG_PIN = D3;
 };
 

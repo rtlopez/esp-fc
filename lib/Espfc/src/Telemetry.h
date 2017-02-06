@@ -8,7 +8,7 @@ namespace Espfc {
 class Telemetry
 {
   public:
-    Telemetry(Model& model): _model(model) {}
+    Telemetry(Model& model, Stream& stream): _model(model), _stream(stream) {}
     int begin()
     {
 
@@ -55,13 +55,13 @@ class Telemetry
     template<typename T>
     Telemetry& operator<<(T v)
     {
-      Serial.print(v); Serial.print(' ');
+      _stream.print(v); _stream.print(' ');
       return *this;
     }
 
     Telemetry& operator<<(float v)
     {
-      Serial.print(v, 4); Serial.print(' ');
+      _stream.print(v, 4); _stream.print(' ');
       return *this;
     }
 
@@ -79,10 +79,11 @@ class Telemetry
 
     void println()
     {
-      Serial.println();
+      _stream.println();
     }
 
     Model& _model;
+    Stream& _stream;
 };
 
 }

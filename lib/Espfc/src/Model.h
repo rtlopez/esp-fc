@@ -216,7 +216,7 @@ class Model
       config.gyroFilterAlpha = 0.5f;
       config.magFilterAlpha = 0.5f;
 
-      config.telemetry = true;
+      config.telemetry = false;
       config.telemetryInterval = 100;
 
       // output config
