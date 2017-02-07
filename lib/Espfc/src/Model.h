@@ -120,7 +120,7 @@ struct ModelState
   PidState innerPid[AXES];
   PidState outerPid[AXES];
 
-  long inputUs[INPUT_CHANNELS];
+  short inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
 
   float rateDesired[AXES];
@@ -130,7 +130,7 @@ struct ModelState
   float angleMax[AXES];
 
   float output[OUTPUT_CHANNELS];
-  long outputUs[OUTPUT_CHANNELS];
+  short outputUs[OUTPUT_CHANNELS];
 
   // other state
   Kalman kalman[AXES];
@@ -141,7 +141,7 @@ struct ModelState
   VectorFloat gyroBias;
   float gyroBiasAlpha;
   float gyroBiasSamples;
-  long gyroBiasValid;
+  bool gyroBiasValid;
 
   long gyroSampleRate;
   long gyroSampleInterval;
@@ -151,10 +151,15 @@ struct ModelState
   long magSampleRate;
   float magScale;
 
+  float magCalibrationData[3][2];
+  bool magCalibrationValid;
+
   unsigned long magTimestamp;
   unsigned long controllerTimestamp;
   unsigned long telemetryTimestamp;
   unsigned long mixerTimestamp;
+
+  bool newInputData;
 };
 
 // persistent data
@@ -175,7 +180,9 @@ struct ModelConfig
   float accelFilterAlpha;
   float magFilterAlpha;
 
-  long magCalibration;
+  short magCalibration;
+  VectorFloat magCalibrationScale;
+  VectorFloat magCalibrationOffset;
 
   long modelFrame;
   long flightModeChannel;
@@ -218,6 +225,12 @@ class Model
       config.accelFilterAlpha = 0.99f;
       config.gyroFilterAlpha = 0.5f;
       config.magFilterAlpha = 0.5f;
+
+      for(size_t i = 0; i < 3; i++)
+      {
+        config.magCalibrationOffset.set(i, 0.f);
+        config.magCalibrationScale.set(i, 1.f);
+      }
 
       config.telemetry = false;
       config.telemetryInterval = 100;

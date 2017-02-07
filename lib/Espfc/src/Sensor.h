@@ -27,8 +27,9 @@ class Sensor
     int update()
     {
       if(!readSensors()) return 0;
-      updateModel();
+      updateGyro();
       updateGyroBias();
+      updateMagBias();
       return 1;
     }
 
@@ -70,11 +71,12 @@ class Sensor
       {
         now -= _model.state.gyroSampleInterval * (numSamples - 1);
       }
+      _model.state.newInputData = true;
       _model.state.timestamp = now;
       return 1;
     }
 
-    void updateModel()
+    void updateGyro()
     {
       VectorFloat accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       VectorFloat gyro  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
@@ -106,6 +108,78 @@ class Sensor
       }
       _model.state.gyro -= _model.state.gyroBias;
     }
+
+    void updateMagBias()
+    {
+      if(_model.state.magCalibrationValid && !_model.config.magCalibration)
+      {
+        _model.state.mag -= _model.config.magCalibrationOffset;
+        _model.state.mag *= _model.config.magCalibrationScale;
+      }
+      collectMagCalibration();
+    }
+
+    void collectMagCalibration()
+    {
+      if(_model.config.magCalibration == 1)
+      {
+        resetMagCalibration();
+        _model.config.magCalibration = 2;
+      }
+
+      if(_model.config.magCalibration == 0) return;
+      for(int i = 0; i < 3; i++)
+      {
+        _model.state.magCalibrationData[i][0] = _model.state.mag.get(i) < _model.state.magCalibrationData[i][0] ? _model.state.mag.get(i) : _model.state.magCalibrationData[i][0];
+        _model.state.magCalibrationData[i][1] = _model.state.mag.get(i) > _model.state.magCalibrationData[i][1] ? _model.state.mag.get(i) : _model.state.magCalibrationData[i][1];
+      }
+      updateMagCalibration();
+    }
+
+    void resetMagCalibration()
+    {
+      for(int i = 0; i < 3; i++)
+      {
+        _model.state.magCalibrationData[i][0] = 0;
+        _model.state.magCalibrationData[i][1] = 0;
+      }
+      updateMagCalibration();
+    }
+
+    void updateMagCalibration()
+    {
+      // just in case when the calibration data is not valid
+      _model.state.magCalibrationValid = false;
+      for(int i = 0; i < 3; i++)
+      {
+        _model.config.magCalibrationOffset.set(i, 0.f);
+        _model.config.magCalibrationScale.set(i, 1.f);
+      }
+
+      // find biggest range
+      float maxDelta = -1;
+      for(int i = 0; i < 3; i++)
+      {
+        if((_model.state.magCalibrationData[i][1] - _model.state.magCalibrationData[i][0]) > maxDelta)
+        {
+          maxDelta = _model.state.magCalibrationData[i][1] - _model.state.magCalibrationData[i][0];
+        }
+      }
+
+      if(maxDelta <= 0) return;
+      const float epsilon = 0.001f;
+      maxDelta /= 2;                                         // this is the max +/- range
+      for (int i = 0; i < 3; i++)
+      {
+        float delta = (_model.state.magCalibrationData[i][1] - _model.state.magCalibrationData[i][0]) / 2.f;
+        if(delta < epsilon && delta > -epsilon) return;
+        float offset = (_model.state.magCalibrationData[i][1] + _model.state.magCalibrationData[i][0]) / 2.f;
+        _model.config.magCalibrationScale.set(i, maxDelta / delta);     // makes everything the same range
+        _model.config.magCalibrationOffset.set(i, offset);
+      }
+      _model.state.magCalibrationValid = true;
+    }
+
 
     void toVector(VectorInt16& v, uint8_t * buf)
     {

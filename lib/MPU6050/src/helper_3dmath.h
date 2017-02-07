@@ -228,6 +228,19 @@ public:
       return r;
     }
 
+    VectorBase<T>& operator*=(const VectorBase<T>& o) {
+      x *= o.x;
+      y *= o.y;
+      z *= o.z;
+      return *this;
+    }
+
+    VectorBase<T> operator*(const VectorBase<T>& o) {
+      VectorBase<T> r(*this);
+      r *= o;
+      return r;
+    }
+
     // scalar operations
     VectorBase<T>& operator*=(T o) {
       x *= o;

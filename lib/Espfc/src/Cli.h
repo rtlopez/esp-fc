@@ -4,6 +4,12 @@
 #include <cstring>
 #include <cctype>
 
+#ifdef ESP8266
+extern "C" {
+#include "user_interface.h"
+}
+#endif
+
 #include "Model.h"
 
 namespace Espfc {
@@ -25,7 +31,8 @@ class Cli
       PARAM_BYTE,   // 8 bit int
       PARAM_SHORT,  // 16 bit int
       PARAM_INT,    // 32 bit int
-      PARAM_FLOAT   // 32 bit float
+      PARAM_FLOAT,   // 32 bit float
+      PARAM_VECTOR_FLOAT   // 32 bit float vector
     };
 
     class Param
@@ -39,7 +46,7 @@ class Cli
         {
           if(!addr)
           {
-            stream.print("UNDEF");
+            stream.print(F("UNSET"));
             return;
           }
           switch(type)
@@ -50,6 +57,12 @@ class Cli
             case PARAM_SHORT: stream.print(*reinterpret_cast<short*>(addr)); break;
             case PARAM_INT:   stream.print(*reinterpret_cast<int*>(addr)); break;
             case PARAM_FLOAT: stream.print(*reinterpret_cast<float*>(addr), 4); break;
+            case PARAM_VECTOR_FLOAT:
+              {
+                const VectorFloat * v = reinterpret_cast<VectorFloat*>(addr);
+                stream.print(v->x, 4); stream.print(' '); stream.print(v->y, 4); stream.print(' '); stream.print(v->z, 4);
+              }
+              break;
           }
         }
 
@@ -73,9 +86,11 @@ class Cli
               break;
             case PARAM_FLOAT:
               {
-                String tmp = v;
-                *addr = tmp.toFloat();
+                //String tmp = v;
+                *addr = String(v).toFloat();
               }
+              break;
+            case PARAM_VECTOR_FLOAT:
               break;
           }
         }
@@ -93,7 +108,9 @@ class Cli
       _params[i++] = Param(PSTR("gyro_fifo"), (char*)&c->gyroFifo, PARAM_BOOL);
       _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_INT);
       _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_INT);
-      _params[i++] = Param(PSTR("compass_calibration"), (char*)&c->magCalibration, PARAM_BOOL);
+      _params[i++] = Param(PSTR("compass_calibration"), (char*)&c->magCalibration, PARAM_BYTE);
+      _params[i++] = Param(PSTR("compass_calibration_offset"), (char*)&c->magCalibrationOffset, PARAM_VECTOR_FLOAT);
+      _params[i++] = Param(PSTR("compass_calibration_scale"), (char*)&c->magCalibrationScale, PARAM_VECTOR_FLOAT);
       _params[i++] = Param(PSTR("rate_pitch_max"), (char*)&c->rateMax[AXIS_PITH], PARAM_FLOAT);
       _params[i++] = Param(PSTR("rate_roll_max"), (char*)&c->rateMax[AXIS_ROLL], PARAM_FLOAT);
       _params[i++] = Param(PSTR("rate_yaw_max"), (char*)&c->rateMax[AXIS_YAW], PARAM_FLOAT);
@@ -170,6 +187,43 @@ class Cli
         _stream.print(F("  int: ")); _stream.println(sizeof(int));
         _stream.print(F(" long: ")); _stream.println(sizeof(long));
         _stream.print(F("float: ")); _stream.println(sizeof(float));
+
+
+        const rst_info * resetInfo = system_get_rst_info();
+        _stream.print(F("system_get_rst_info() reset reason: "));
+        _stream.println(resetInfo->reason);
+
+        _stream.print(F("system_get_free_heap_size(): "));
+        _stream.println(system_get_free_heap_size());
+
+        _stream.print(F("system_get_os_print(): "));
+        _stream.println(system_get_os_print());
+
+        //system_print_meminfo();
+
+        _stream.print(F("system_get_chip_id(): 0x"));
+        _stream.println(system_get_chip_id(), HEX);
+
+        _stream.print(F("system_get_sdk_version(): "));
+        _stream.println(system_get_sdk_version());
+
+        _stream.print(F("system_get_boot_version(): "));
+        _stream.println(system_get_boot_version());
+
+        _stream.print(F("system_get_userbin_addr(): 0x"));
+        _stream.println(system_get_userbin_addr(), HEX);
+
+        _stream.print(F("system_get_boot_mode(): "));
+        _stream.println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
+
+        _stream.print(F("system_get_cpu_freq(): "));
+        _stream.println(system_get_cpu_freq());
+
+        _stream.print(F("system_get_flash_size_map(): "));
+        _stream.println(system_get_flash_size_map());
+
+        _stream.print(F("system_get_time(): "));
+        _stream.println(system_get_time() / 1000000);
       }
       else if(strcmp_P(_cmd.args[0], PSTR("get")) == 0)
       {
