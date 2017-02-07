@@ -13,16 +13,16 @@ class Input
     Input(Model& model): _model(model) {}
     int begin()
     {
-      ppm.begin(_model.config.ppmPin);
+      PPM.begin(_model.config.ppmPin);
     }
 
     int update()
     {
-      if(!ppm.hasNewData()) return 0;// avoid multiple reading channels
+      if(!PPM.hasNewData()) return 0;// avoid multiple reading channels
 
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {
-        long us = ppm.getTime(_model.config.inputMap[i]);
+        long us = PPM.getTime(_model.config.inputMap[i]);
         _model.state.inputUs[i] = us;
 
         float v = Math::map3((float)us, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1, 0, 1);
@@ -35,7 +35,7 @@ class Input
       else if(fm > 0.3) _model.state.flightMode = MODE_RATE;
       else _model.state.flightMode = MODE_ANGLE;
 
-      ppm.resetNewData();
+      PPM.resetNewData();
       return 1;
     }
 

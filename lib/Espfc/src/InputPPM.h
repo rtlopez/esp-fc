@@ -33,7 +33,7 @@ class InputPPM
     volatile uint16_t _channels[CHANNELS * 2];
 };
 
-extern InputPPM ppm;
+extern InputPPM PPM;
 
 }
 

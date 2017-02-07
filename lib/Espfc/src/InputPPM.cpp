@@ -51,11 +51,11 @@ void InputPPM::handle()
   }
 }
 
-InputPPM ppm;
+InputPPM PPM;
 
 static void _ppm_input_handler_callback()
 {
-  ppm.handle();
+  PPM.handle();
 }
 
 }
