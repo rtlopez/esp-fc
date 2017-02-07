@@ -175,6 +175,8 @@ struct ModelConfig
   float accelFilterAlpha;
   float magFilterAlpha;
 
+  long magCalibration;
+
   long modelFrame;
   long flightModeChannel;
 
@@ -204,13 +206,14 @@ class Model
   public:
     Model() {
       config.ppmPin = D4; // GPIO2
-      config.gyroFifo = true;
+      config.gyroFifo = 1;
       config.gyroDlpf = GYRO_DLPF_188;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSampleRate = GYRO_RATE_1000;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
+      config.magCalibration = 0;
 
       config.accelFilterAlpha = 0.99f;
       config.gyroFilterAlpha = 0.5f;
