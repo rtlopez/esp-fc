@@ -26,7 +26,7 @@ void InputPPM::handle()
 
   if(_value == old) return; // pin not changed, do nothing, sanity
 
-  // TODO: detect broken link and set fail-safe here
+  // TODO: detect broken link and set fail-safe
   // TODO: handle inversed PPM?
 
   unsigned long time = now - _start;

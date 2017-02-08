@@ -5,7 +5,7 @@
 #include <Espfc.h>
 
 Espfc::Espfc espfc;
-Ticker ticker;
+//Ticker ticker;
 
 static void blink_led()
 {
@@ -15,19 +15,19 @@ static void blink_led()
 
 void setup()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
-  ticker.attach(0.05, blink_led);
+  //pinMode(LED_BUILTIN, OUTPUT);
+  //ticker.attach(0.05, blink_led);
 
   Wire.begin();
   //Wire.setClock(400000);
-  Wire.setClock(1000000);
+  Wire.setClock(1000000); // in real ~640kHz
   Serial.begin(115200);
   Serial.println();
   Serial.println(sizeof(long));
 
   espfc.begin();
 
-  ticker.attach(0.2, blink_led);
+  //ticker.attach(0.2, blink_led);
 }
 
 void loop()

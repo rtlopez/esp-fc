@@ -17,18 +17,22 @@ class Telemetry
     int update()
     {
       unsigned long now = millis();
-      if(_model.config.telemetry && _model.config.telemetryInterval > 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)
+      if(_model.config.telemetry && _model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)
       {
         (*this)
           //<< _model.state.timestamp
 
           //<< _model.state.accelRaw.x << _model.state.accelRaw.y << _model.state.accelRaw.z
-          //<< _model.state.gyroRaw.x << _model.state.gyroRaw.y << _model.state.gyroRaw.z
-          //<< _model.state.magRaw.x << _model.state.magRaw.y << _model.state.magRaw.z
+          //<< _model.state.gyroRaw.x  << _model.state.gyroRaw.y  << _model.state.gyroRaw.z
+          //<< _model.state.magRaw.x   << _model.state.magRaw.y   << _model.state.magRaw.z
           //<< _model.state.gyroPose
           //<< _model.state.accelPose
-          //<< _model.state.pose
-          //<< _model.state.angle
+          << _model.state.pose
+          << _model.state.angle
+
+          //<< _model.state.flightMode
+          //<< _model.state.rateDesired[0]
+          //<< _model.state.rateDesired[1]
 
           //<< _model.state.outputUs[0]
           //<< _model.state.outputUs[1]

@@ -68,6 +68,12 @@ enum MagAvg {
   MAG_AVERAGING_8 = 0x03
 };
 
+enum FusionMode {
+  FUSION_COMPLEMENTARY = 0x01,
+  FUSION_KALMAN        = 0x02,
+  FUSION_SLERP         = 0x03
+};
+
 enum FlightMode {
   MODE_DISARMED = 0x01,
   MODE_DIRECT   = 0x02,
@@ -112,7 +118,7 @@ struct ModelState
   VectorFloat angle;
   Quaternion angleQ;
 
-  long flightMode;
+  short flightMode;
 
   float altitude;
   float altitudeVelocity;
@@ -165,16 +171,16 @@ struct ModelState
 // persistent data
 struct ModelConfig
 {
-  long ppmPin;
-  long gyroFifo;
+  short ppmPin;
+  bool gyroFifo;
   long gyroDlpf;
   long gyroFsr;
   long accelFsr;
-  long gyroSampleRate;
+  short gyroSampleRate;
 
-  long magSampleRate;
-  long magFsr;
-  long magAvr;
+  short magSampleRate;
+  short magFsr;
+  short magAvr;
 
   float gyroFilterAlpha;
   float accelFilterAlpha;
@@ -184,28 +190,30 @@ struct ModelConfig
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
 
-  long modelFrame;
-  long flightModeChannel;
+  short modelFrame;
+  short flightModeChannel;
 
-  long inputMin[INPUT_CHANNELS];
-  long inputNeutral[INPUT_CHANNELS];
-  long inputMax[INPUT_CHANNELS];
-  long inputMap[INPUT_CHANNELS];
+  short inputMin[INPUT_CHANNELS];
+  short inputNeutral[INPUT_CHANNELS];
+  short inputMax[INPUT_CHANNELS];
+  short inputMap[INPUT_CHANNELS];
 
-  long outputMin[OUTPUT_CHANNELS];
-  long outputNeutral[OUTPUT_CHANNELS];
-  long outputMax[OUTPUT_CHANNELS];
+  short outputMin[OUTPUT_CHANNELS];
+  short outputNeutral[OUTPUT_CHANNELS];
+  short outputMax[OUTPUT_CHANNELS];
 
-  long outputPin[OUTPUT_CHANNELS];
-  long pwmRate;
+  short outputPin[OUTPUT_CHANNELS];
+  short pwmRate;
 
   Pid innerPid[AXES];
   Pid outerPid[AXES];
   float rateMax[AXES];
   float angleMax[AXES];
 
-  long telemetry;
-  long telemetryInterval;
+  bool telemetry;
+  short telemetryInterval;
+
+  short fusionMode;
 };
 
 class Model
@@ -217,14 +225,15 @@ class Model
       config.gyroDlpf = GYRO_DLPF_188;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_1000;
+      config.gyroSampleRate = GYRO_RATE_250;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
 
-      config.accelFilterAlpha = 0.99f;
+      config.accelFilterAlpha = 0.5f;
       config.gyroFilterAlpha = 0.5f;
       config.magFilterAlpha = 0.5f;
+      config.fusionMode = FUSION_SLERP;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -232,8 +241,8 @@ class Model
         config.magCalibrationScale.set(i, 1.f);
       }
 
-      config.telemetry = false;
-      config.telemetryInterval = 100;
+      config.telemetry = 1;
+      config.telemetryInterval = 20;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)

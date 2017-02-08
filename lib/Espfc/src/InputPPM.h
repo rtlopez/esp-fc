@@ -14,7 +14,7 @@ class InputPPM
     uint16_t getTime(uint8_t i) const { return _channels[i * 2] + _channels[i * 2 + 1]; }
     unsigned long getStart() const { return _start; }
     boolean hasNewData() const { return _new_data; }
-    boolean resetNewData() { _new_data = 0; }
+    boolean resetNewData() { _new_data = false; }
 
     static const uint8_t CHANNELS     = 12;
     static const uint16_t TICK_SPACE  = 400;

@@ -14,8 +14,8 @@ public:
   float static map3(float x, float in_min, float in_neutral, float in_max, float out_min, float out_neutral, float out_max)
   {
     return (x < in_neutral)
-      ? map(x, in_min, in_neutral, out_min, out_neutral)
-      : map(x, in_neutral, in_max, out_neutral, out_max)
+      ? Math::map(x, in_min, in_neutral, out_min, out_neutral)
+      : Math::map(x, in_neutral, in_max, out_neutral, out_max)
     ;
   }
 

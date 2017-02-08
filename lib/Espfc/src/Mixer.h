@@ -90,8 +90,15 @@ class Mixer
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        long val = (long)Math::map3(out[i], -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
-        _model.state.outputUs[i] = i < axes ? Math::bound(val, _model.config.outputMin[i], _model.config.outputMax[i]) : _model.config.outputMin[i];
+        if(i >= axes)
+        {
+          _model.state.outputUs[i] = _model.config.outputMin[i];
+        }
+        else
+        {
+          float v = Math::bound(out[i], -1.f, 1.f);
+          _model.state.outputUs[i] = (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+        }
       }
     }
   private:

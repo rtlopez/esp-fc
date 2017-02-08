@@ -14,6 +14,11 @@ class Input
     int begin()
     {
       PPM.begin(_model.config.ppmPin);
+      for(size_t i = 0; i < INPUT_CHANNELS; ++i)
+      {
+        _model.state.input[i] = 0.f;
+      }
+      _model.state.flightMode = MODE_ANGLE;
     }
 
     int update()
@@ -25,14 +30,14 @@ class Input
         long us = PPM.getTime(_model.config.inputMap[i]);
         _model.state.inputUs[i] = us;
 
-        float v = Math::map3((float)us, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1, 0, 1);
+        float v = Math::map3((float)us, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
         v = Math::bound(v, -1.f, 1.f);
         _model.state.input[i] = v;
       }
 
       float fm = _model.state.input[_model.config.flightModeChannel];
-      if(fm < -0.3) _model.state.flightMode = MODE_DISARMED;
-      else if(fm > 0.3) _model.state.flightMode = MODE_RATE;
+      if(fm < -0.3) _model.state.flightMode = MODE_ANGLE;
+      else if(fm > 0.3) _model.state.flightMode = MODE_ANGLE;
       else _model.state.flightMode = MODE_ANGLE;
 
       PPM.resetNewData();

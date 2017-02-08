@@ -12,11 +12,20 @@ class Fusion
     int begin() {}
     int update()
     {
-       //if(!_model.state.gyroBiasValid) return 0;
        updatePoseFromAccelMag(_model.state.accel, _model.state.mag);
        _model.state.gyroPose += _model.state.gyro * _model.state.gyroSampleIntervalFloat;
-       kalmanFusion();
-       //slerpFusion();
+       switch(_model.config.fusionMode)
+       {
+         case FUSION_SLERP:
+           slerpFusion();
+           break;
+         case FUSION_KALMAN:
+           kalmanFusion();
+           break;
+         case FUSION_COMPLEMENTARY:
+         default:
+           complementaryFusion(); break;
+       }
        return 1;
     }
 
@@ -28,16 +37,20 @@ class Fusion
         _model.state.angle.set(i, angle);
         _model.state.rate.set(i, _model.state.kalman[i].getRate());
       }
+      _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
 
     void complementaryFusion()
     {
-      //TODO: implement complementary filter
+      float alpha = 0.02f;
+      _model.state.angle = (_model.state.angle + _model.state.gyro * _model.state.gyroSampleIntervalFloat) * (1.f - alpha) + _model.state.pose * alpha;
+      _model.state.rate  = _model.state.gyro;
+      _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
 
     void slerpFusion()
     {
-      float slerpPower = 0.02;
+      float slerpPower = 0.02f;
       if(_first)
       {
         _model.state.angle = _model.state.pose;
