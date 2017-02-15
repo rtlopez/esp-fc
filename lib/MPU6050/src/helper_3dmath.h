@@ -84,6 +84,24 @@ class Quaternion {
             r.normalize();
             return r;
         }
+
+        float get(size_t i) const {
+          return i == 0 ? w :
+                (i == 1 ? x :
+                (i == 2 ? y :
+                (i == 3 ? z :
+                 0
+          )));
+        }
+
+        Quaternion operator*(float v) const {
+          return Quaternion(w * v, x * v, y * v, z * v);
+        }
+
+        Quaternion operator+(const Quaternion q) const {
+          return Quaternion(w + q.w, x + q.x, y + q.y, z + q.z);
+        }
+
 };
 
 template<typename T>
@@ -167,8 +185,8 @@ public:
     VectorBase<T> accelToEuler() const
     {
       VectorBase<T> rpy; // roll pitch yaw
-      VectorBase<T> na = this->getNormalized();
-      rpy.x = atan2(na.y, na.z);
+      VectorBase<T> na = getNormalized();
+      rpy.x =  atan2(na.y, na.z);
       rpy.y = -atan2(na.x, sqrt(na.y * na.y + na.z * na.z));
       rpy.z = 0.f;
       return rpy;
@@ -194,9 +212,8 @@ public:
 
     VectorBase<T> eulerFromQuaternion(const Quaternion& q)
     {
-      VectorBase<T> vec;
       x = atan2(2.0 * (q.y * q.z + q.w * q.x), 1 - 2.0 * (q.x * q.x + q.y * q.y));
-      y = asin(2.0 * (q.w * q.y - q.x * q.z));
+      y =  asin(2.0 * (q.w * q.y - q.x * q.z));
       z = atan2(2.0 * (q.x * q.y + q.w * q.z), 1 - 2.0 * (q.y * q.y + q.z * q.z));
       return *this;
     }

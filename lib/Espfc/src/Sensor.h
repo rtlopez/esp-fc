@@ -60,7 +60,7 @@ class Sensor
       }
 
       // read compas
-      if(_model.state.magTimestamp + _model.state.magSampleInterval < now)
+      if(_model.config.magEnable && _model.state.magTimestamp + _model.state.magSampleInterval < now)
       {
         _mag.getHeading(&_model.state.magRaw.x, &_model.state.magRaw.y, &_model.state.magRaw.z);
         _model.state.magTimestamp = now;
@@ -71,19 +71,29 @@ class Sensor
       {
         now -= _model.state.gyroSampleInterval * (numSamples - 1);
       }
-      _model.state.newInputData = true;
+      _model.state.newGyroData = true;
       _model.state.timestamp = now;
       return 1;
     }
 
     void updateGyro()
     {
+      //  sort out accel, gyro and mag axes
+      _model.state.accelRaw.x = -_model.state.accelRaw.x;
+      _model.state.gyroRaw.y  = -_model.state.gyroRaw.y;
+      _model.state.gyroRaw.z  = -_model.state.gyroRaw.z;
+
       VectorFloat accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       VectorFloat gyro  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
-      VectorFloat mag   = (VectorFloat)_model.state.magRaw   * _model.state.magScale;
       _model.state.accel = _model.state.accel * (1.f - _model.config.accelFilterAlpha) + accel * _model.config.accelFilterAlpha;
       _model.state.gyro  = _model.state.gyro  * (1.f - _model.config.gyroFilterAlpha)  + gyro  * _model.config.gyroFilterAlpha;
-      _model.state.mag   = _model.state.mag   * (1.f - _model.config.magFilterAlpha)   + mag   * _model.config.magFilterAlpha;
+      if(_model.config.magEnable)
+      {
+        _model.state.magRaw.y = -_model.state.magRaw.y;
+        _model.state.magRaw.z = -_model.state.magRaw.z;
+        VectorFloat mag   = (VectorFloat)_model.state.magRaw   * _model.state.magScale;
+        _model.state.mag   = _model.state.mag   * (1.f - _model.config.magFilterAlpha)   + mag   * _model.config.magFilterAlpha;
+      }
     }
 
     void updateGyroBias()
@@ -96,10 +106,10 @@ class Sensor
         {
           // what we are seeing on the gyros should be bias only so learn from this
           _model.state.gyroBias = (_model.state.gyroBias * (1.0 - _model.state.gyroBiasAlpha)) + (_model.state.gyro * _model.state.gyroBiasAlpha);
-          if(_model.state.gyroBiasSamples < (5 * _model.config.gyroSampleRate))
+          if(_model.state.gyroBiasSamples < (5 * _model.state.gyroSampleRate))
           {
               _model.state.gyroBiasSamples++;
-              if(_model.state.gyroBiasSamples == (5 * _model.config.gyroSampleRate))
+              if(_model.state.gyroBiasSamples == (5 * _model.state.gyroSampleRate))
               {
                 _model.state.gyroBiasValid = true;
               }
@@ -111,6 +121,7 @@ class Sensor
 
     void updateMagBias()
     {
+      if(!_model.config.magEnable) return;
       if(_model.state.magCalibrationValid && !_model.config.magCalibration)
       {
         _model.state.mag -= _model.config.magCalibrationOffset;
@@ -121,6 +132,7 @@ class Sensor
 
     void collectMagCalibration()
     {
+      if(!_model.config.magEnable) return;
       if(_model.config.magCalibration == 1)
       {
         resetMagCalibration();
@@ -138,6 +150,7 @@ class Sensor
 
     void resetMagCalibration()
     {
+      if(!_model.config.magEnable) return;
       for(int i = 0; i < 3; i++)
       {
         _model.state.magCalibrationData[i][0] = 0;
@@ -148,6 +161,7 @@ class Sensor
 
     void updateMagCalibration()
     {
+      if(!_model.config.magEnable) return;
       // just in case when the calibration data is not valid
       _model.state.magCalibrationValid = false;
       for(int i = 0; i < 3; i++)
@@ -180,12 +194,11 @@ class Sensor
       _model.state.magCalibrationValid = true;
     }
 
-
     void toVector(VectorInt16& v, uint8_t * buf)
     {
-      v.x = ((uint16_t)buf[0] << 8) | buf[1];
-      v.y = ((uint16_t)buf[2] << 8) | buf[3];
-      v.z = ((uint16_t)buf[4] << 8) | buf[5];
+      v.x = (int16_t)(((uint16_t)buf[0] << 8) | (uint16_t)buf[1]);
+      v.y = (int16_t)(((uint16_t)buf[2] << 8) | (uint16_t)buf[3]);
+      v.z = (int16_t)(((uint16_t)buf[4] << 8) | (uint16_t)buf[5]);
     }
 
     void initGyro()
@@ -232,7 +245,7 @@ class Sensor
       _model.state.gyroSampleInterval = 1000 / _model.state.gyroSampleRate;
       _model.state.gyroSampleIntervalFloat = 1.0 / _model.state.gyroSampleRate;
 
-      _model.state.gyroBiasAlpha = 5.0f / rate;
+      _model.state.gyroBiasAlpha = 2.0f / rate;
       _model.state.gyroBiasSamples = 0;
 
       Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.print(_model.state.gyroSampleIntervalFloat, 3); Serial.println();
@@ -266,6 +279,7 @@ class Sensor
 
     void initMag()
     {
+      if(!_model.config.magEnable) return;
       _mag.initialize();
       Serial.print("mag init: "); Serial.println(_mag.testConnection());
       _mag.setSampleAveraging(_model.config.magAvr);
@@ -294,7 +308,7 @@ class Sensor
 
     void setMagScale()
     {
-      const float base = 1000.0;
+      const float base = 1.0f;//1000.0;
       switch(_model.config.magFsr)
       {
         case MAG_GAIN_1370: _model.state.magScale = base / 1370; break;

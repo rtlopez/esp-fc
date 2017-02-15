@@ -71,7 +71,7 @@ enum MagAvg {
 enum FusionMode {
   FUSION_COMPLEMENTARY = 0x01,
   FUSION_KALMAN        = 0x02,
-  FUSION_SLERP         = 0x03
+  FUSION_RTQF          = 0x03
 };
 
 enum FlightMode {
@@ -107,10 +107,15 @@ struct ModelState
 
   VectorFloat gyro;
   VectorFloat gyroPose;
+  Quaternion gyroPoseQ;
+
   VectorFloat accel;
   VectorFloat accelPose;
+  Quaternion accelPoseQ;
+
   VectorFloat mag;
   VectorFloat magPose;
+
   VectorFloat pose;
   Quaternion poseQ;
 
@@ -146,7 +151,7 @@ struct ModelState
   float gyroScale;
   VectorFloat gyroBias;
   float gyroBiasAlpha;
-  float gyroBiasSamples;
+  long gyroBiasSamples;
   bool gyroBiasValid;
 
   long gyroSampleRate;
@@ -165,6 +170,7 @@ struct ModelState
   unsigned long telemetryTimestamp;
   unsigned long mixerTimestamp;
 
+  bool newGyroData;
   bool newInputData;
 };
 
@@ -187,6 +193,8 @@ struct ModelConfig
   float magFilterAlpha;
 
   short magCalibration;
+  short magEnable;
+
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
 
@@ -220,20 +228,20 @@ class Model
 {
   public:
     Model() {
-      config.ppmPin = D4; // GPIO2
       config.gyroFifo = 1;
-      config.gyroDlpf = GYRO_DLPF_188;
+      config.gyroDlpf = GYRO_DLPF_98;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_250;
+      config.gyroSampleRate = GYRO_RATE_333;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
+      config.magEnable = 0;
 
-      config.accelFilterAlpha = 0.5f;
-      config.gyroFilterAlpha = 0.5f;
-      config.magFilterAlpha = 0.5f;
-      config.fusionMode = FUSION_SLERP;
+      config.accelFilterAlpha = 1;
+      config.gyroFilterAlpha = 1;
+      config.magFilterAlpha = 1;
+      config.fusionMode = FUSION_RTQF;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -242,7 +250,7 @@ class Model
       }
 
       config.telemetry = 1;
-      config.telemetryInterval = 20;
+      config.telemetryInterval = 50;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -259,6 +267,7 @@ class Model
       config.pwmRate = 100;
 
       // input config
+      config.ppmPin = D4; // GPIO2
       config.inputMap[0] = 0; // roll
       config.inputMap[1] = 1; // pitch
       config.inputMap[2] = 3; // yaw
@@ -288,7 +297,7 @@ class Model
       }
 
       config.rateMax[AXIS_PITH] = config.rateMax[AXIS_ROLL] = 200; // deg/s
-      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 35; // deg
+      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 30; // deg
       config.rateMax[AXIS_YAW] = 200; // deg/s
     }
     union {

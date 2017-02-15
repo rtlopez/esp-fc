@@ -21,6 +21,8 @@ class Mixer
 
     int update()
     {
+      if(!_model.state.newGyroData && !_model.state.newInputData) return 0;
+      
       unsigned long now = millis();
       if(_model.state.mixerTimestamp + _model.state.gyroSampleInterval > now) return 0;
 

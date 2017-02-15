@@ -40,6 +40,8 @@ class Input
       else if(fm > 0.3) _model.state.flightMode = MODE_ANGLE;
       else _model.state.flightMode = MODE_ANGLE;
 
+      _model.state.newInputData = true;
+      
       PPM.resetNewData();
       return 1;
     }

@@ -22,13 +22,18 @@ class Telemetry
         (*this)
           //<< _model.state.timestamp
 
-          //<< _model.state.accelRaw.x << _model.state.accelRaw.y << _model.state.accelRaw.z
-          //<< _model.state.gyroRaw.x  << _model.state.gyroRaw.y  << _model.state.gyroRaw.z
-          //<< _model.state.magRaw.x   << _model.state.magRaw.y   << _model.state.magRaw.z
-          //<< _model.state.gyroPose
-          //<< _model.state.accelPose
-          << _model.state.pose
           << _model.state.angle
+          << _model.state.gyroPose
+          << _model.state.accelPose
+          //<< _model.state.accelRaw
+          //<< _model.state.gyroRaw
+          //<< _model.state.magRaw
+          //<< _model.state.gyro
+          //<< _model.state.rate
+          //<< _model.state.accel
+          //<< _model.state.mag
+          //<< _model.state.magPose
+          << _model.state.pose
 
           //<< _model.state.flightMode
           //<< _model.state.rateDesired[0]
@@ -39,14 +44,14 @@ class Telemetry
           //<< _model.state.outputUs[2]
           //<< _model.state.outputUs[3]
 
-          //<< _model.state.input[0]
-          //<< _model.state.input[1]
-          //<< _model.state.input[2]
-          //<< _model.state.input[3]
-          //<< _model.state.input[4]
-          //<< _model.state.input[5]
-          //<< _model.state.input[6]
-          //<< _model.state.input[7]
+          //<< _model.state.inputUs[0]
+          //<< _model.state.inputUs[1]
+          //<< _model.state.inputUs[2]
+          //<< _model.state.inputUs[3]
+          //<< _model.state.inputUs[4]
+          //<< _model.state.inputUs[5]
+          //<< _model.state.inputUs[6]
+          //<< _model.state.inputUs[7]
         ;
         println();
         _model.state.telemetryTimestamp = now;
@@ -58,6 +63,12 @@ class Telemetry
   private:
     template<typename T>
     Telemetry& operator<<(T v)
+    {
+      _stream.print(v); _stream.print(' ');
+      return *this;
+    }
+
+    Telemetry& operator<<(long v)
     {
       _stream.print(v); _stream.print(' ');
       return *this;
@@ -75,9 +86,15 @@ class Telemetry
       return *this;
     }
 
-    Telemetry& operator<<(const Quaternion& v)
+    Telemetry& operator<<(const VectorInt16& v)
     {
-      (*this) << v.w << v.x << v.y << v.z;
+      (*this) << v.x << v.y << v.z;
+      return *this;
+    }
+
+    Telemetry& operator<<(const Quaternion& q)
+    {
+      (*this) << q.w << q.x << q.y << q.z;
       return *this;
     }
 

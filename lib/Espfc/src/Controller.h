@@ -20,6 +20,8 @@ class Controller
 
     int update()
     {
+      if(!_model.state.newGyroData && !_model.state.newInputData) return 0;
+
       unsigned long now = millis();
 
       if(_model.state.controllerTimestamp + _model.state.gyroSampleInterval > now) return 0;

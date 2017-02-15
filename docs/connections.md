@@ -23,17 +23,20 @@ RST | Reset            | RST          | Reset switch (optional)
 
 ## Legend:
 ```
- PU - 10k pull up
- PD - 10k pull down
+   PU - 10k pull up
+   PD - 10k pull down
  RXD0 - UART0 hardware RX
  TXD0 - UART0 hardware TX
  TXD1 - UART1 hardware TX only
+   LD - builtin LED
 ```
 
 ## Notice:
 ```
  A0 - In ESP-8266 is 1.0V range, divider may be required
+ D0 - No iterrupts
  D3, GPIO0 - if low at boot, then board enters to flashing mode
+ D4, GPIO2 - must be high during flashing, PPM must be disconnected
 ```
 
 ## Wemos D1 mini board layout:
