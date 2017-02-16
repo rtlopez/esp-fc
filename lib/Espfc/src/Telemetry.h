@@ -25,6 +25,7 @@ class Telemetry
           << _model.state.angle
           << _model.state.gyroPose
           << _model.state.accelPose
+          //<< _model.state.accelPose2
           //<< _model.state.accelRaw
           //<< _model.state.gyroRaw
           //<< _model.state.magRaw

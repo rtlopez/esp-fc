@@ -9,7 +9,11 @@ class Fusion
 {
   public:
     Fusion(Model& model): _model(model), _first(true), _gyro_first(true) {}
-    int begin() {}
+    int begin()
+    {
+      _model.state.gyroPoseQ = Quaternion();
+    }
+
     int update()
     {
       if(!_model.state.newGyroData) return 0;
@@ -68,7 +72,7 @@ class Fusion
 
     void rtqfFusion()
     {
-      float slerpPower = 0.015f;
+      float slerpPower = 0.001f;
       if(_first)
       {
         _model.state.angle = _model.state.pose;
@@ -130,11 +134,11 @@ class Fusion
     void updatePoseFromAccelMag()
     {
       _model.state.pose = _model.state.accel.accelToEuler();
-      _model.state.accelPose = _model.state.pose;
+      //_model.state.accelPose = _model.state.pose;
 
       if(_model.config.magEnable)
       {
-        // Quaternion q = r.eulerToQuaternion();
+        // Quaternion q = _model.state.pose.eulerToQuaternion();
         // since Z is always 0, it can be optimized a bit
         float cosX2 = cos(_model.state.pose.x / 2.0f);
         float sinX2 = sin(_model.state.pose.x / 2.0f);
@@ -155,11 +159,6 @@ class Fusion
       {
         _model.state.pose.z = _model.state.angle.z;
       }
-
-      //_model.state.accelPose.z = _model.state.gyroPose.z;
-      _model.state.accelPoseQ = _model.state.accelPose.eulerToQuaternion();
-      _model.state.accelPose.eulerFromQuaternion(_model.state.accelPoseQ);
-
       _model.state.poseQ = _model.state.pose.eulerToQuaternion();
       _model.state.pose.eulerFromQuaternion(_model.state.poseQ);
 
@@ -191,37 +190,34 @@ class Fusion
     // experimental
     void updateGyroPose()
     {
-      /*
-      _model.state.gyroPose += _model.state.gyro * _model.state.gyroSampleIntervalFloat;
-      if(_model.state.gyroPose.x >  PI) _model.state.gyroPose.x -= TWO_PI;
-      if(_model.state.gyroPose.x < -PI) _model.state.gyroPose.x += TWO_PI;
-      if(_model.state.gyroPose.y >  PI) _model.state.gyroPose.y -= TWO_PI;
-      if(_model.state.gyroPose.y < -PI) _model.state.gyroPose.y += TWO_PI;
-      if(_model.state.gyroPose.z >  PI) _model.state.gyroPose.z -= TWO_PI;
-      if(_model.state.gyroPose.z < -PI) _model.state.gyroPose.z += TWO_PI;
-      */
-      //_model.state.gyroPoseQ = _model.state.gyroPose.eulerToQuaternion();
+      float correctionAlpha = 0.001f; // 0 - 1 => gyro - accel
 
-      if(_gyro_first)
+      _model.state.accelPose = _model.state.accel.accelToEuler();
+      _model.state.accelPoseQ = _model.state.accelPose.eulerToQuaternion();
+
+      if(_model.config.magEnable)
       {
-        _model.state.gyroPoseQ = _model.state.gyroPose.eulerToQuaternion();
-        _gyro_first = false;
+        // use yaw from mag
+        VectorFloat mag = _model.state.mag.getRotated(_model.state.accelPoseQ);
+        _model.state.accelPose.z = -atan2(mag.y, mag.x);
       }
+      else
+      {
+        _model.state.accelPose.z = _model.state.gyroPose.z;
+      }
+      _model.state.accelPoseQ = _model.state.accelPose.eulerToQuaternion();
+
+      //_model.state.accelPose.eulerFromQuaternion(_model.state.accelPoseQ);
+
+      // predict new state
       Quaternion rotation = (_model.state.gyro * _model.state.gyroSampleIntervalFloat).eulerToQuaternion();
-      _model.state.gyroPoseQ = _model.state.gyroPoseQ * rotation;
+      _model.state.gyroPoseQ = (_model.state.gyroPoseQ * rotation).getNormalized();
 
-      Quaternion delta = _model.state.gyroPoseQ.getConjugate() * _model.state.poseQ;
-      Quaternion zero;
-      Quaternion apply = lerp(zero, delta, 0.01);
+      // drift compensation
+      _model.state.gyroPoseQ = Quaternion::lerp(_model.state.gyroPoseQ, _model.state.accelPoseQ, correctionAlpha);
 
-      _model.state.gyroPoseQ = _model.state.gyroPoseQ * apply;
-
+      // calculate euler vectors for accel and position
       _model.state.gyroPose.eulerFromQuaternion(_model.state.gyroPoseQ);
-    }
-
-    Quaternion lerp(const Quaternion &q1, const Quaternion &q2, float t)
-    {
-      return (q1 * (1-t) + q2 * t).getNormalized();
     }
 
   private:

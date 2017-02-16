@@ -35,6 +35,9 @@ THE SOFTWARE.
 #include "Arduino.h"
 #include <math.h>
 
+template<typename T>
+class VectorBase;
+
 class Quaternion {
     public:
         float w;
@@ -98,8 +101,98 @@ class Quaternion {
           return Quaternion(w * v, x * v, y * v, z * v);
         }
 
-        Quaternion operator+(const Quaternion q) const {
+        Quaternion operator/(float v) const {
+          return Quaternion(w / v, x / v, y / v, z / v);
+        }
+
+        Quaternion operator+(const Quaternion& q) const {
           return Quaternion(w + q.w, x + q.x, y + q.y, z + q.z);
+        }
+
+        float static dot(const Quaternion& q1, const Quaternion& q2) {
+          return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+        }
+
+        /**
+         * Linear interpolation
+         * actually it is nlerp (normalised lerp)
+         */
+        Quaternion static lerp(const Quaternion &q1, const Quaternion &q2, float t)
+        {
+          return (q1 * (1.f - t) + q2 * t).getNormalized();
+        }
+
+        /**
+         * Spherical linear interpolation, references:
+         * http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+         * https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/
+         * http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
+         * https://en.wikipedia.org/wiki/Slerp
+         */
+        Quaternion static slerp(const Quaternion& q1, const Quaternion& q2, float pc)
+        {
+          Quaternion qa = q1.getNormalized();
+          Quaternion qb = q2.getNormalized();
+
+          // If the dot product is negative, the quaternions
+          // have opposite handed-ness and slerp won't take
+          // the shorter path. Fix by reversing one quaternion.
+          float cosHalfTheta = dot(qa, qb);
+          if(cosHalfTheta < 0)
+          {
+            qb = qb * -1.f;
+            cosHalfTheta = -cosHalfTheta;
+          }
+
+          // if qa = qb or qa =- qb then theta = 0 and we can return qa
+          if(abs(cosHalfTheta) >= 0.995f)
+          {
+            return lerp(qa, qb, pc);
+          }
+
+          // Calculate temporary values.
+          float halfTheta = acos(cosHalfTheta);
+          float sinHalfTheta = sqrt(1.0 - cosHalfTheta * cosHalfTheta);
+
+          // if theta = 180 degrees then result is not fully defined
+          // we could rotate around any axis normal to q1 or q2
+          if(abs(sinHalfTheta) < 0.001)
+          {
+            return (qa + qb) / 2.f;
+          }
+
+          // calculate result
+          float ra = sin((1.f - pc) * halfTheta) / sinHalfTheta;
+          float rb = sin(pc * halfTheta) / sinHalfTheta;
+
+          return qa * ra + qb * rb;
+        }
+
+        template<typename T>
+        void toAngleVector(float& angle, VectorBase<T>& v) const
+        {
+          float halfTheta = acos(w);
+          float sinHalfTheta = sin(halfTheta);
+          angle = 2.0 * halfTheta;
+          if (sinHalfTheta == 0) {
+            v.x = 1.0;
+            v.y = 0;
+            v.z = 0;
+          } else {
+            v.x = x / sinHalfTheta;
+            v.y = y / sinHalfTheta;
+            v.z = z / sinHalfTheta;
+          }
+        }
+
+        template<typename T>
+        void fromAngleVector(float angle, const VectorBase<T>& v)
+        {
+          float sinHalfTheta = sin(angle / 2.0);
+          w = cos(angle / 2.0);
+          x = v.x * sinHalfTheta;
+          y = v.y * sinHalfTheta;
+          z = v.z * sinHalfTheta;
         }
 
 };
@@ -182,6 +275,20 @@ public:
         return r;
     }
 
+    float static dotProduct(const VectorBase<T>& a, const VectorBase<T>& b)
+    {
+      return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+
+    VectorBase<T> static crossProduct(const VectorBase<T>& a, const VectorBase<T>& b)
+    {
+      VectorBase<T> r;
+      r.x = a.y * b.z - a.z * b.y;
+      r.y = a.z * b.x - a.x * b.z;
+      r.z = a.x * b.y - a.y * b.x;
+      return r;
+    }
+
     VectorBase<T> accelToEuler() const
     {
       VectorBase<T> rpy; // roll pitch yaw
@@ -190,6 +297,17 @@ public:
       rpy.y = -atan2(na.x, sqrt(na.y * na.y + na.z * na.z));
       rpy.z = 0.f;
       return rpy;
+    }
+
+    Quaternion accelToQuaternion() const
+    {
+       VectorBase<T> na = getNormalized();
+       VectorBase<T> gravity(0, 0, 1.0);
+       float angle = acos(dotProduct(gravity, na));
+       VectorBase<T> v = crossProduct(na, gravity).getNormalized();
+       Quaternion q;
+       q.fromAngleVector(angle, v);
+       return q;
     }
 
     Quaternion eulerToQuaternion() const

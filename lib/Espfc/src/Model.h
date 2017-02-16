@@ -111,6 +111,7 @@ struct ModelState
 
   VectorFloat accel;
   VectorFloat accelPose;
+  VectorFloat accelPose2;
   Quaternion accelPoseQ;
 
   VectorFloat mag;
@@ -229,7 +230,7 @@ class Model
   public:
     Model() {
       config.gyroFifo = 1;
-      config.gyroDlpf = GYRO_DLPF_98;
+      config.gyroDlpf = GYRO_DLPF_188;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSampleRate = GYRO_RATE_333;
@@ -238,7 +239,7 @@ class Model
       config.magCalibration = 0;
       config.magEnable = 0;
 
-      config.accelFilterAlpha = 1;
+      config.accelFilterAlpha = .125;
       config.gyroFilterAlpha = 1;
       config.magFilterAlpha = 1;
       config.fusionMode = FUSION_RTQF;

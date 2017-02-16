@@ -79,9 +79,9 @@ class Sensor
     void updateGyro()
     {
       //  sort out accel, gyro and mag axes
-      _model.state.accelRaw.x = -_model.state.accelRaw.x;
-      _model.state.gyroRaw.y  = -_model.state.gyroRaw.y;
-      _model.state.gyroRaw.z  = -_model.state.gyroRaw.z;
+      //_model.state.accelRaw.x = -_model.state.accelRaw.x;
+      //_model.state.gyroRaw.y  = -_model.state.gyroRaw.y;
+      //_model.state.gyroRaw.z  = -_model.state.gyroRaw.z;
 
       VectorFloat accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       VectorFloat gyro  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
@@ -89,8 +89,8 @@ class Sensor
       _model.state.gyro  = _model.state.gyro  * (1.f - _model.config.gyroFilterAlpha)  + gyro  * _model.config.gyroFilterAlpha;
       if(_model.config.magEnable)
       {
-        _model.state.magRaw.y = -_model.state.magRaw.y;
-        _model.state.magRaw.z = -_model.state.magRaw.z;
+        //_model.state.magRaw.y = -_model.state.magRaw.y;
+        //_model.state.magRaw.z = -_model.state.magRaw.z;
         VectorFloat mag   = (VectorFloat)_model.state.magRaw   * _model.state.magScale;
         _model.state.mag   = _model.state.mag   * (1.f - _model.config.magFilterAlpha)   + mag   * _model.config.magFilterAlpha;
       }
@@ -121,6 +121,7 @@ class Sensor
 
     void updateMagBias()
     {
+      return;
       if(!_model.config.magEnable) return;
       if(_model.state.magCalibrationValid && !_model.config.magCalibration)
       {
