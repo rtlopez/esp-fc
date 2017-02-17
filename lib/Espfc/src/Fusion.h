@@ -2,6 +2,7 @@
 #define _ESPFC_FUSION_H_
 
 #include "Model.h"
+#include "MadgwickAHRS.h"
 
 namespace Espfc {
 
@@ -12,23 +13,31 @@ class Fusion
     int begin()
     {
       _model.state.gyroPoseQ = Quaternion();
+      _madgwick.begin(_model.state.gyroSampleRate);
     }
 
     int update()
     {
       if(!_model.state.newGyroData) return 0;
-      updateGyroPose();
-      updatePoseFromAccelMag();
       switch(_model.config.fusionMode)
       {
+        case FUSION_MADGWICK:
+          madgwickFusion();
+          break;
+        case FUSION_LERP:
+          updateGyroPose();
+          break;
         case FUSION_RTQF:
+          updatePoseFromAccelMag();
           rtqfFusion();
           break;
         case FUSION_KALMAN:
+          updatePoseFromAccelMag();
           kalmanFusion();
           break;
         case FUSION_COMPLEMENTARY:
         default:
+          updatePoseFromAccelMag();
           complementaryFusion();
           break;
        }
@@ -220,10 +229,35 @@ class Fusion
       _model.state.gyroPose.eulerFromQuaternion(_model.state.gyroPoseQ);
     }
 
+    void madgwickFusion()
+    {
+      if(_model.config.magEnable)
+      {
+        _madgwick.update(
+          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.accel.x, _model.state.accel.y, _model.state.accel.z,
+          _model.state.mag.x,   _model.state.mag.y,   _model.state.mag.z
+        );
+      }
+      else
+      {
+        _madgwick.updateIMU(
+          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
+        );
+      }
+      _model.state.angleQ.w = _madgwick.q0;
+      _model.state.angleQ.x = _madgwick.q1;
+      _model.state.angleQ.y = _madgwick.q2;
+      _model.state.angleQ.z = _madgwick.q3;
+      _model.state.angle.eulerFromQuaternion(_model.state.angleQ);
+    }
+
   private:
     Model& _model;
     bool _first;
     bool _gyro_first;
+    ::MadgwickAHRS _madgwick;
 };
 
 }

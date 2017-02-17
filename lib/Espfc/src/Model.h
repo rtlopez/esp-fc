@@ -71,7 +71,9 @@ enum MagAvg {
 enum FusionMode {
   FUSION_COMPLEMENTARY = 0x01,
   FUSION_KALMAN        = 0x02,
-  FUSION_RTQF          = 0x03
+  FUSION_RTQF          = 0x03,
+  FUSION_LERP          = 0x04,
+  FUSION_MADGWICK      = 0x05,
 };
 
 enum FlightMode {
@@ -237,12 +239,12 @@ class Model
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
-      config.magEnable = 0;
+      config.magEnable = 1;
 
       config.accelFilterAlpha = .125;
       config.gyroFilterAlpha = 1;
       config.magFilterAlpha = 1;
-      config.fusionMode = FUSION_RTQF;
+      config.fusionMode = FUSION_MADGWICK;
 
       for(size_t i = 0; i < 3; i++)
       {
