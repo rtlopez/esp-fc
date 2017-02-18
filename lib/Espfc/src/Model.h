@@ -4,6 +4,7 @@
 #include "helper_3dmath.h"
 #include "Pid.h"
 #include "Kalman.h"
+#include "EEPROM.h"
 
 namespace Espfc {
 
@@ -239,9 +240,9 @@ class Model
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
-      config.magEnable = 1;
+      config.magEnable = 0;
 
-      config.accelFilterAlpha = .125;
+      config.accelFilterAlpha = 1;
       config.gyroFilterAlpha = 1;
       config.magFilterAlpha = 1;
       config.fusionMode = FUSION_MADGWICK;
@@ -253,7 +254,7 @@ class Model
       }
 
       config.telemetry = 1;
-      config.telemetryInterval = 50;
+      config.telemetryInterval = 40;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -311,6 +312,46 @@ class Model
       ModelConfig config;
       char * configAddr;
     };
+
+    int load()
+    {
+      int addr = 0;
+      uint8_t magic = EEPROM.read(addr++);
+      if(EEPROM_MAGIC != magic) return -1;
+
+      uint8_t version = EEPROM.read(addr++);
+
+      uint8_t * begin = reinterpret_cast<uint8_t*>(&config.magCalibrationScale);
+      uint8_t * end = begin + sizeof(VectorFloat) * 2;
+      for(uint8_t * it = begin; it < end; ++it)
+      {
+        *it = EEPROM.read(addr++);
+      }
+      return 1;
+    }
+
+    void save()
+    {
+      int addr = 0;
+      EEPROM.write(addr++, EEPROM_MAGIC);
+      EEPROM.write(addr++, EEPROM_VERSION);
+
+      uint8_t * begin = reinterpret_cast<uint8_t*>(&config.magCalibrationScale);
+      uint8_t * end = begin + sizeof(VectorFloat) * 2;
+      for(uint8_t * it = begin; it < end; ++it)
+      {
+        EEPROM.write(addr++, *it);
+      }
+      EEPROM.commit();
+    }
+
+    void reset()
+    {
+      config = ModelConfig();
+    }
+
+    static const uint8_t EEPROM_MAGIC   = 0xA5;
+    static const uint8_t EEPROM_VERSION = 0x01;
 };
 
 }

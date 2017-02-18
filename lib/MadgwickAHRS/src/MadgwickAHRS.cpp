@@ -229,7 +229,7 @@ void MadgwickAHRS::updateIMU(float gx, float gy, float gz, float ax, float ay, f
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 
 float MadgwickAHRS::invSqrt(float x) {
-	return 1.f / sqrt(x);
+	//return 1.f / sqrt(x);
 	float halfx = 0.5f * x;
 	float y = x;
 	long i = *(long*)&y;

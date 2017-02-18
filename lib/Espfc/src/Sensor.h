@@ -121,9 +121,8 @@ class Sensor
 
     void updateMagBias()
     {
-      return;
       if(!_model.config.magEnable) return;
-      if(_model.state.magCalibrationValid && !_model.config.magCalibration)
+      if(_model.state.magCalibrationValid && _model.config.magCalibration == 0)
       {
         _model.state.mag -= _model.config.magCalibrationOffset;
         _model.state.mag *= _model.config.magCalibrationScale;

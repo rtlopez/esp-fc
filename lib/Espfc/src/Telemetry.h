@@ -23,8 +23,8 @@ class Telemetry
           //<< _model.state.timestamp
 
           << _model.state.angle
-          << _model.state.gyroPose
-          << _model.state.accelPose
+          //<< _model.state.gyroPose
+          //<< _model.state.accelPose
           //<< _model.state.accelPose2
           //<< _model.state.accelRaw
           //<< _model.state.gyroRaw
@@ -34,7 +34,8 @@ class Telemetry
           //<< _model.state.accel
           //<< _model.state.mag
           //<< _model.state.magPose
-          << _model.state.pose
+          //<< _model.state.pose
+
 
           //<< _model.state.flightMode
           //<< _model.state.rateDesired[0]
@@ -53,7 +54,24 @@ class Telemetry
           //<< _model.state.inputUs[5]
           //<< _model.state.inputUs[6]
           //<< _model.state.inputUs[7]
-        ;
+
+          //<< _model.state.magCalibrationData[0][0]
+          //<< _model.state.magCalibrationData[0][1]
+          //<< _model.config.magCalibrationOffset[0]
+          //<< _model.config.magCalibrationScale[0]
+
+          //<< _model.state.magCalibrationData[1][0]
+          //<< _model.state.magCalibrationData[1][1]
+          //<< _model.config.magCalibrationOffset[1]
+          //<< _model.config.magCalibrationScale[1]
+
+          //<< _model.state.magCalibrationData[2][0]
+          //<< _model.state.magCalibrationData[2][1]
+          //<< _model.config.magCalibrationOffset[2]
+          //<< _model.config.magCalibrationScale[2]
+
+          //<< _model.config.magCalibration
+          ;
         println();
         _model.state.telemetryTimestamp = now;
         return 1;

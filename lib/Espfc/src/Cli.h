@@ -55,7 +55,7 @@ class Cli
             case PARAM_BOOL:  stream.print(*addr != 0); break;
             case PARAM_BYTE:  stream.print((int)(*addr)); break;
             case PARAM_SHORT: stream.print(*reinterpret_cast<short*>(addr)); break;
-            case PARAM_INT:   stream.print(*reinterpret_cast<int*>(addr)); break;
+            case PARAM_INT:   stream.print(*reinterpret_cast<long*>(addr)); break;
             case PARAM_FLOAT: stream.print(*reinterpret_cast<float*>(addr), 4); break;
             case PARAM_VECTOR_FLOAT:
               {
@@ -86,8 +86,8 @@ class Cli
               break;
             case PARAM_FLOAT:
               {
-                //String tmp = v;
-                *addr = String(v).toFloat();
+                String tmp = v;
+                *addr = tmp.toFloat();
               }
               break;
             case PARAM_VECTOR_FLOAT:
@@ -104,10 +104,10 @@ class Cli
       ModelConfig * c = &_model.config;
       size_t i = 0;
       _params[i++] = Param(PSTR("telemetry"), (char*)&c->telemetry, PARAM_BOOL);
-      _params[i++] = Param(PSTR("telemetry_interval"), (char*)&c->telemetryInterval, PARAM_INT);
+      _params[i++] = Param(PSTR("telemetry_interval"), (char*)&c->telemetryInterval, PARAM_SHORT);
       _params[i++] = Param(PSTR("gyro_fifo"), (char*)&c->gyroFifo, PARAM_BOOL);
-      _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_INT);
-      _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_INT);
+      _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_SHORT);
+      _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_SHORT);
       _params[i++] = Param(PSTR("compass_calibration"), (char*)&c->magCalibration, PARAM_BYTE);
       _params[i++] = Param(PSTR("compass_calibration_offset"), (char*)&c->magCalibrationOffset, PARAM_VECTOR_FLOAT);
       _params[i++] = Param(PSTR("compass_calibration_scale"), (char*)&c->magCalibrationScale, PARAM_VECTOR_FLOAT);
@@ -173,7 +173,7 @@ class Cli
 
       if(strcmp_P(_cmd.args[0], PSTR("help")) == 0)
       {
-        _stream.println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n info\n version"));
+        _stream.println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n reset\n info\n version"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
@@ -187,7 +187,7 @@ class Cli
         _stream.print(F("  int: ")); _stream.println(sizeof(int));
         _stream.print(F(" long: ")); _stream.println(sizeof(long));
         _stream.print(F("float: ")); _stream.println(sizeof(float));
-
+        _stream.print(F("model: ")); _stream.println(sizeof(ModelConfig));
 
         const rst_info * resetInfo = system_get_rst_info();
         _stream.print(F("system_get_rst_info() reset reason: "));
@@ -277,6 +277,39 @@ class Cli
           print(_params[i]);
         }
       }
+      else if(strcmp_P(_cmd.args[0], PSTR("mag")) == 0)
+      {
+        if(!_cmd.args[1]) {}
+        else if(_cmd.args[1][0] == '1')
+        {
+          _model.config.magCalibration = 1;
+          _model.config.telemetry = 1;
+          _model.config.telemetryInterval = 200;
+          _stream.print("mag calibration on");
+        }
+        else if(_cmd.args[1][0] == '0')
+        {
+          _model.config.magCalibration = 0;
+          _model.config.telemetry = 0;
+          _stream.print("mag calibration off");
+        }
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("load")) == 0)
+      {
+        _model.load();
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("save")) == 0)
+      {
+        _model.save();
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("eeprom")) == 0)
+      {
+        for(int i = 0; i < 32; ++i)
+        {
+          _stream.print(EEPROM.read(i), HEX);
+          _stream.print(' ');
+        }
+      }
       else
       {
         _stream.print(F("command not found: "));
@@ -294,7 +327,7 @@ class Cli
       _stream.println();
     }
 
-    static const size_t PARAM_SIZE = 16;
+    static const size_t PARAM_SIZE = 32;
     static const size_t BUFF_SIZE = 64;
 
     Model& _model;

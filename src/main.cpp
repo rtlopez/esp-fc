@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Ticker.h>
+#include <EEPROM.h>
 #include <Arduino.h>
 #include <Espfc.h>
 
@@ -18,12 +19,12 @@ void setup()
   //pinMode(LED_BUILTIN, OUTPUT);
   //ticker.attach(0.05, blink_led);
 
+  EEPROM.begin(1024);
   Wire.begin();
   //Wire.setClock(400000);
   Wire.setClock(1000000); // in real ~640kHz
   Serial.begin(115200);
   Serial.println();
-  Serial.println(sizeof(long));
 
   espfc.begin();
 
