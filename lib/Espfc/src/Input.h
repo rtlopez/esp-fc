@@ -41,7 +41,7 @@ class Input
       else _model.state.flightMode = MODE_ANGLE;
 
       _model.state.newInputData = true;
-      
+
       PPM.resetNewData();
       return 1;
     }

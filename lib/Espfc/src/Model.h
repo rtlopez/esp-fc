@@ -127,6 +127,12 @@ struct ModelState
   VectorFloat angle;
   Quaternion angleQ;
 
+  VectorFloat desiredAngle;
+  Quaternion desiredAngleQ;
+
+  VectorFloat desiredRotation;
+  Quaternion desiredRotationQ;
+
   short flightMode;
 
   float altitude;

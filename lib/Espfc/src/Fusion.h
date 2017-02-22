@@ -9,7 +9,7 @@ namespace Espfc {
 class Fusion
 {
   public:
-    Fusion(Model& model): _model(model), _first(true), _gyro_first(true) {}
+    Fusion(Model& model): _model(model), _first(true) {}
     int begin()
     {
       _model.state.gyroPoseQ = Quaternion();
@@ -25,7 +25,7 @@ class Fusion
           madgwickFusion();
           break;
         case FUSION_LERP:
-          updateGyroPose();
+          lerpFusion();
           break;
         case FUSION_RTQF:
           updatePoseFromAccelMag();
@@ -36,10 +36,11 @@ class Fusion
           kalmanFusion();
           break;
         case FUSION_COMPLEMENTARY:
-        default:
           updatePoseFromAccelMag();
           complementaryFusion();
           break;
+        default:
+          return 0;
        }
        return 1;
     }
@@ -197,7 +198,7 @@ class Fusion
     }
 
     // experimental
-    void updateGyroPose()
+    void lerpFusion()
     {
       float correctionAlpha = 0.001f; // 0 - 1 => gyro - accel
 
@@ -256,8 +257,7 @@ class Fusion
   private:
     Model& _model;
     bool _first;
-    bool _gyro_first;
-    ::MadgwickAHRS _madgwick;
+    MadgwickAHRS _madgwick;
 };
 
 }

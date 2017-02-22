@@ -336,6 +336,13 @@ public:
       return *this;
     }
 
+    VectorBase<T> eulerFromQuaternionAlt(const Quaternion& q)
+    {
+      x = atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * q.x * q.x - 2 * q.z * q.z);
+      y = atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * q.y * q.y - 2 * q.z * q.z);
+      z =  asin(2 * q.x * q.y + 2 * q.z * q.w);
+    }
+
     // vector arithmetics
     VectorBase<T>& operator+=(const VectorBase<T>& o) {
       x += o.x;

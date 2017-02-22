@@ -23,6 +23,8 @@ class Telemetry
           //<< _model.state.timestamp
 
           << _model.state.angle
+          << _model.state.desiredRotation
+          << _model.state.desiredAngle
           //<< _model.state.gyroPose
           //<< _model.state.accelPose
           //<< _model.state.accelPose2
