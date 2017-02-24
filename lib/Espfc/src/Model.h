@@ -133,6 +133,8 @@ struct ModelState
   VectorFloat desiredRotation;
   Quaternion desiredRotationQ;
 
+  Quaternion boardRotationQ;
+
   short flightMode;
 
   float altitude;
@@ -207,6 +209,7 @@ struct ModelConfig
 
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
+  VectorFloat boardRotation;
 
   short modelFrame;
   short flightModeChannel;
