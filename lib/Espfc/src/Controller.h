@@ -21,15 +21,8 @@ class Controller
     int update()
     {
       if(!_model.state.newGyroData && !_model.state.newInputData) return 0;
-
-      unsigned long now = millis();
-
-      if(_model.state.controllerTimestamp + _model.state.gyroSampleInterval > now) return 0;
-
       outerLoop();
       innerLoop();
-
-      _model.state.controllerTimestamp = now;
     }
 
     void outerLoop()
@@ -60,7 +53,7 @@ class Controller
           case MODE_ANGLE:
             _model.state.rateDesired[i] = _model.config.outerPid[i].update(_model.state.desiredRotation[i] * 2.f / _model.state.angleMax[i], angle, _model.state.gyroSampleIntervalFloat, _model.state.outerPid[i]);
             break;
-          default: // disarmed
+          default: // off
             _model.state.rateDesired[i] = 0.f;
         }
       }
@@ -86,7 +79,7 @@ class Controller
         }
       }
 
-      if(_model.state.flightMode != MODE_DISARMED)
+      if(_model.state.flightMode != MODE_OFF)
       {
         float rate = _model.state.rate[AXIS_YAW] / _model.state.rateMax[AXIS_YAW];
         _model.state.output[AXIS_YAW] = _model.config.innerPid[AXIS_YAW].update(_model.state.rateDesired[AXIS_YAW], rate, _model.state.gyroSampleIntervalFloat, _model.state.innerPid[AXIS_YAW]);

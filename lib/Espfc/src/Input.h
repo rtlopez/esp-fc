@@ -35,11 +35,6 @@ class Input
         _model.state.input[i] = v;
       }
 
-      float fm = _model.state.input[_model.config.flightModeChannel];
-      if(fm < -0.3) _model.state.flightMode = MODE_ANGLE;
-      else if(fm > 0.3) _model.state.flightMode = MODE_ANGLE;
-      else _model.state.flightMode = MODE_ANGLE;
-
       _model.state.newInputData = true;
 
       PPM.resetNewData();

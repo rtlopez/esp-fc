@@ -70,30 +70,43 @@ enum MagAvg {
 };
 
 enum FusionMode {
-  FUSION_COMPLEMENTARY = 0x01,
-  FUSION_KALMAN        = 0x02,
-  FUSION_RTQF          = 0x03,
-  FUSION_LERP          = 0x04,
-  FUSION_MADGWICK      = 0x05,
+  FUSION_MADGWICK      = 0x00,
+  FUSION_RTQF          = 0x01,
+  FUSION_LERP          = 0x02,
+  FUSION_COMPLEMENTARY = 0x03,
+  FUSION_KALMAN        = 0x04
 };
 
 enum FlightMode {
-  MODE_DISARMED = 0x01,
-  MODE_DIRECT   = 0x02,
-  MODE_RATE     = 0x03,
-  MODE_ANGLE    = 0x04
+  MODE_OFF      = 0x00,
+  MODE_DIRECT   = 0x01,
+  MODE_RATE     = 0x02,
+  MODE_ANGLE    = 0x03
 };
 
 enum ModelFrame {
-  FRAME_DISARMED = 0x01,
-  FRAME_QUAD_X   = 0x02,
-  FRAME_BALANCE_ROBOT = 0x03
+  FRAME_UNCONFIGURED  = 0x00,
+  FRAME_QUAD_X        = 0x01,
+  FRAME_BALANCE_ROBOT = 0x02,
+  FRAME_GIMBAL        = 0x03
+};
+
+enum ActuatorConfig {
+  ACT_INNER_P   = 1 << 0,
+  ACT_INNER_I   = 1 << 1,
+  ACT_INNER_D   = 1 << 2,
+  ACT_OUTER_P   = 1 << 3,
+  ACT_OUTER_I   = 1 << 4,
+  ACT_OUTER_D   = 1 << 5,
+  ACT_AXIS_X    = 1 << 6,
+  ACT_AXIS_Y    = 1 << 7,
+  ACT_AXIS_Z    = 1 << 8
 };
 
 const size_t OUTPUT_CHANNELS = 4;
-const size_t INPUT_CHANNELS = 8;
+const size_t INPUT_CHANNELS  = 8;
 
-const size_t AXES = 4;
+const size_t AXES        = 4;
 const size_t AXIS_ROLL   = 0;  // x
 const size_t AXIS_PITH   = 1;  // y
 const size_t AXIS_YAW    = 2;  // z
@@ -136,6 +149,7 @@ struct ModelState
   Quaternion boardRotationQ;
 
   short flightMode;
+  bool armed;
 
   float altitude;
   float altitudeVelocity;
@@ -213,6 +227,12 @@ struct ModelConfig
 
   short modelFrame;
   short flightModeChannel;
+  short flightModes[3];
+
+  long actuatorConfig[3];
+  short actuatorChannels[3];
+  float actuatorMin[3];
+  float actuatorMax[3];
 
   short inputMin[INPUT_CHANNELS];
   short inputNeutral[INPUT_CHANNELS];
@@ -276,7 +296,7 @@ class Model
       config.outputPin[1] = D6;
       config.outputPin[2] = D7;
       config.outputPin[3] = D8;
-      config.modelFrame = FRAME_DISARMED;
+      config.modelFrame = FRAME_QUAD_X;
       config.pwmRate = 100;
 
       // input config
@@ -289,7 +309,11 @@ class Model
       config.inputMap[5] = 5; // free
       config.inputMap[6] = 6; // free
       config.inputMap[7] = 7; // free
+
       config.flightModeChannel = 4;
+      config.flightModes[0] = MODE_ANGLE;
+      config.flightModes[1] = MODE_RATE;
+      config.flightModes[2] = MODE_DIRECT;
 
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {

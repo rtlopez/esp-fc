@@ -6,6 +6,7 @@
 #include "Model.h"
 #include "Controller.h"
 #include "Input.h"
+#include "Actuator.h"
 #include "Sensor.h"
 #include "Fusion.h"
 #include "Mixer.h"
@@ -17,12 +18,13 @@ namespace Espfc {
 class Espfc
 {
   public:
-    Espfc(): _model(), _controller(_model), _input(_model), _sensor(_model), _fusion(_model), _mixer(_model), _telemetry(_model, Serial), _cli(_model, Serial) {}
+    Espfc(): _model(), _controller(_model), _input(_model), _actuator(_model), _sensor(_model), _fusion(_model), _mixer(_model), _telemetry(_model, Serial), _cli(_model, Serial) {}
     int begin()
     {
       _sensor.begin();
       _fusion.begin();
       _input.begin();
+      _actuator.begin();
       _controller.begin();
       _mixer.begin();
       _telemetry.begin();
@@ -36,6 +38,7 @@ class Espfc
       _sensor.update();
       _fusion.update();
       _input.update();
+      _actuator.update();
       _controller.update();
       _mixer.update();
       _telemetry.update();
@@ -50,12 +53,12 @@ class Espfc
     Model _model;
     Controller _controller;
     Input _input;
+    Actuator _actuator;
     Sensor _sensor;
     Fusion _fusion;
     Mixer _mixer;
     Telemetry _telemetry;
     Cli _cli;
-    static const int DEBUG_PIN = D3;
 };
 
 }

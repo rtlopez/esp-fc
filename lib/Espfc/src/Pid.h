@@ -7,10 +7,15 @@ namespace Espfc {
 
 struct PidState
 {
-  float pTerm;
-  float iTerm;
-  float dTerm;
-  float prevInput;
+  public:
+    PidState(): pTerm(0), iTerm(0), dTerm(0), prevInput(0), pScale(1.f), iScale(1.f), dScale(1.f) {}
+    float pTerm;
+    float iTerm;
+    float dTerm;
+    float prevInput;
+    float pScale;
+    float iScale;
+    float dScale;
 };
 
 class Pid
@@ -18,17 +23,18 @@ class Pid
   public:
     Pid(float kp = 1, float ki = 0, float kd = 0, float il = 0.3, float da = 1, float dg = 0):
       Kp(kp), Ki(ki), Kd(kd), iLimit(il), dAlpha(da), dGamma(dg) {}
+
     float update(float setpoint, float input, float dt, PidState& state)
     {
       float error = setpoint - input;
-      state.pTerm = Kp * error;
-      state.iTerm += Ki * error * dt;
+      state.pTerm = Kp * error * state.pScale;
+      state.iTerm += Ki * error * dt * state.iScale;
       state.iTerm = Math::bound(state.iTerm, -iLimit, iLimit);
 
       float dTerm = 0;
       if(Kd > 0 && dt > 0)
       {
-        dTerm = Kd * (state.prevInput - input) / dt;
+        dTerm = (Kd * (state.prevInput - input) / dt) * state.dScale;
       }
       state.dTerm = (1.f - dAlpha) * state.dTerm + dAlpha * dTerm;
 
