@@ -217,6 +217,7 @@ struct ModelConfig
   float gyroFilterAlpha;
   float accelFilterAlpha;
   float magFilterAlpha;
+  float gyroDeadband;
 
   short magCalibration;
   short magEnable;
@@ -238,6 +239,7 @@ struct ModelConfig
   short inputNeutral[INPUT_CHANNELS];
   short inputMax[INPUT_CHANNELS];
   short inputMap[INPUT_CHANNELS];
+  float inputDeadband;
 
   short outputMin[OUTPUT_CHANNELS];
   short outputNeutral[OUTPUT_CHANNELS];

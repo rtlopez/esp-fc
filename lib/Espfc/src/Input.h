@@ -23,7 +23,7 @@ class Input
 
     int update()
     {
-      if(!PPM.hasNewData()) return 0;// avoid multiple reading channels
+      if(!PPM.hasNewData()) return 0; // avoid multiple reading channels
 
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {
@@ -32,6 +32,7 @@ class Input
 
         float v = Math::map3((float)us, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
         v = Math::bound(v, -1.f, 1.f);
+        if(fabs(v) < _model.config.inputDeadband) v = 0.f;
         _model.state.input[i] = v;
       }
 

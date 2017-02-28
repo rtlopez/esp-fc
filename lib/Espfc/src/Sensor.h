@@ -116,6 +116,13 @@ class Sensor
         }
       }
       _model.state.gyro -= _model.state.gyroBias;
+      for(size_t i; i < 3; ++i)
+      {
+        if(fabs(_model.state.gyro.get(i)) < _model.config.gyroDeadband)
+        {
+          _model.state.gyro.set(i, 0.f);
+        }
+      }
     }
 
     void updateMagBias()
