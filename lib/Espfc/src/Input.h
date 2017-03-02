@@ -14,16 +14,28 @@ class Input
     int begin()
     {
       PPM.begin(_model.config.ppmPin);
+      setFailSafe();
+    }
+
+    void setFailSafe()
+    {
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {
         _model.state.input[i] = 0.f;
       }
-      _model.state.flightMode = MODE_ANGLE;
+      _model.state.input[3] = -1.f; // throttle
     }
 
     int update()
     {
-      if(!PPM.hasNewData()) return 0; // avoid multiple reading channels
+      // avoid multiple reading channels
+      if(!PPM.hasNewData())
+      {
+        // fail-safe
+        unsigned long diff = micros() - PPM.getStart();
+        if(diff > 100000) setFailSafe();
+        return 0;
+      }
 
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {

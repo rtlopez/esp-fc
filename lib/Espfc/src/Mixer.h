@@ -34,6 +34,7 @@ class Mixer
         case FRAME_QUAD_X:         updateQuadX(); break;
         case FRAME_BALANCE_ROBOT:  updateBalancingRobot(); break;
         case FRAME_GIMBAL:         updateGimbal(); break;
+        case FRAME_DIRECT:         updateDirect(); break;
         case FRAME_UNCONFIGURED:
         default:
           updateDisarmed();
@@ -45,29 +46,44 @@ class Mixer
     void updateDisarmed()
     {
       float out[4];
-      out[0] = -1.f;
-      out[1] = -1.f;
-      out[2] = -1.f;
-      out[3] = -1.f;
+      float v = _model.config.modelFrame == FRAME_QUAD_X ? -1.f : 0.f;
+      out[0] = v;
+      out[1] = v;
+      out[2] = v;
+      out[3] = v;
       writeOutput(out, 4);
     }
 
     void updateGimbal()
     {
       float out[3];
-      out[0] = -1.f;
-      out[1] = -1.f;
-      out[2] = -1.f;
+      out[0] = 0.f;
+      out[1] = 0.f;
+      out[2] = 0.f;
       writeOutput(out, 3);
+    }
+
+    void updateDirect()
+    {
+      float r = _model.state.output[AXIS_ROLL];
+      float p = _model.state.output[AXIS_PITH];
+      float y = _model.state.output[AXIS_YAW];
+      float t = _model.state.output[AXIS_THRUST];
+      float out[4];
+      out[0] = r;
+      out[1] = p;
+      out[2] = y;
+      out[3] = t;
+      writeOutput(out, 4);
     }
 
     void updateBalancingRobot()
     {
       float p = _model.state.output[AXIS_PITH];
-      float t = _model.state.output[AXIS_THRUST];
+      float y = _model.state.output[AXIS_YAW];
       float out[2];
-      out[0] = t + p;
-      out[1] = t - p;
+      out[0] = p + y;
+      out[1] = p - y;
       writeOutput(out, 2);
     }
 

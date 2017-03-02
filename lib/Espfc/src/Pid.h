@@ -28,8 +28,15 @@ class Pid
     {
       float error = setpoint - input;
       state.pTerm = Kp * error * state.pScale;
-      state.iTerm += Ki * error * dt * state.iScale;
-      state.iTerm = Math::bound(state.iTerm, -iLimit, iLimit);
+      if(state.iScale > 0.01)
+      {
+        state.iTerm += Ki * error * dt * state.iScale;
+        state.iTerm = Math::bound(state.iTerm, -iLimit, iLimit);
+      }
+      else
+      {
+        state.iTerm = 0; // zero integral
+      }
 
       float dTerm = 0;
       if(Kd > 0 && dt > 0)

@@ -88,19 +88,21 @@ enum ModelFrame {
   FRAME_UNCONFIGURED  = 0x00,
   FRAME_QUAD_X        = 0x01,
   FRAME_BALANCE_ROBOT = 0x02,
-  FRAME_GIMBAL        = 0x03
+  FRAME_DIRECT        = 0x03,
+  FRAME_GIMBAL        = 0x04
 };
 
 enum ActuatorConfig {
-  ACT_INNER_P   = 1 << 0,
-  ACT_INNER_I   = 1 << 1,
-  ACT_INNER_D   = 1 << 2,
-  ACT_OUTER_P   = 1 << 3,
-  ACT_OUTER_I   = 1 << 4,
-  ACT_OUTER_D   = 1 << 5,
-  ACT_AXIS_X    = 1 << 6,
-  ACT_AXIS_Y    = 1 << 7,
-  ACT_AXIS_Z    = 1 << 8
+  ACT_INNER_P     = 1 << 0,
+  ACT_INNER_I     = 1 << 1,
+  ACT_INNER_D     = 1 << 2,
+  ACT_OUTER_P     = 1 << 3,
+  ACT_OUTER_I     = 1 << 4,
+  ACT_OUTER_D     = 1 << 5,
+  ACT_AXIS_ROLL   = 1 << 6,
+  ACT_AXIS_PITCH  = 1 << 7,
+  ACT_AXIS_YAW    = 1 << 8,
+  ACT_AXIS_THRUST = 1 << 9
 };
 
 const size_t OUTPUT_CHANNELS = 4;
@@ -160,8 +162,7 @@ struct ModelState
   short inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
 
-  float rateDesired[AXES];
-  float angleDesired[AXES];
+  float desiredRate[AXES];
 
   float rateMax[AXES];
   float angleMax[AXES];
@@ -264,18 +265,18 @@ class Model
   public:
     Model() {
       config.gyroFifo = 1;
-      config.gyroDlpf = GYRO_DLPF_188;
+      config.gyroDlpf = GYRO_DLPF_98;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_333;
+      config.gyroSampleRate = GYRO_RATE_250;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
       config.magEnable = 0;
 
-      config.accelFilterAlpha = 1;
-      config.gyroFilterAlpha = 1;
-      config.magFilterAlpha = 1;
+      config.accelFilterAlpha = 0.5;
+      config.gyroFilterAlpha = 0.5;
+      config.magFilterAlpha = 0.5;
       config.fusionMode = FUSION_MADGWICK;
 
       for(size_t i = 0; i < 3; i++)
@@ -285,21 +286,24 @@ class Model
       }
 
       config.telemetry = 1;
-      config.telemetryInterval = 40;
+      config.telemetryInterval = 30;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         config.outputMin[i] = 1000;
-        config.outputNeutral[i] = 1050;
+        config.outputNeutral[i] = 1500;
         config.outputMax[i] = 2000;
       }
+      config.outputMin[0] = 2000; // reverse channel 0
+      config.outputMax[0] = 1000;
+
       config.outputPin[0] = D5;
       config.outputPin[1] = D6;
       config.outputPin[2] = D7;
       config.outputPin[3] = D8;
-      config.modelFrame = FRAME_QUAD_X;
-      config.pwmRate = 100;
+      config.modelFrame = FRAME_BALANCE_ROBOT;
+      config.pwmRate = 50;
 
       // input config
       config.ppmPin = D4; // GPIO2
@@ -308,9 +312,9 @@ class Model
       config.inputMap[2] = 3; // yaw
       config.inputMap[3] = 2; // throttle
       config.inputMap[4] = 4; // flight mode
-      config.inputMap[5] = 5; // free
-      config.inputMap[6] = 6; // free
-      config.inputMap[7] = 7; // free
+      config.inputMap[5] = 5; // aux 1
+      config.inputMap[6] = 6; // aux 2
+      config.inputMap[7] = 7; // aux 3
 
       config.flightModeChannel = 4;
       config.flightModes[0] = MODE_ANGLE;
@@ -329,16 +333,35 @@ class Model
       for(size_t i = 0; i < AXES; i++)
       {
         state.kalman[i] = Kalman();
-        state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
-        config.outerPid[i] = Pid(1, 0, 0, 0.3);
-        config.innerPid[i] = Pid(1, 0, 0, 0.3);
+        state.outerPid[i] = PidState();
+        config.innerPid[i] = Pid(1, 0, 0, 0.2, 0.2);
+        config.outerPid[i] = Pid(1, 0, 0, 0.2);
       }
+      config.innerPid[AXIS_PITH].Ki = 1;
+      config.innerPid[AXIS_PITH].Kd = 0.05;
 
-      config.rateMax[AXIS_PITH] = config.rateMax[AXIS_ROLL] = 200; // deg/s
-      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 30; // deg
-      config.rateMax[AXIS_YAW] = 200; // deg/s
+      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 40; // deg
+      config.rateMax[AXIS_PITH] = config.rateMax[AXIS_ROLL] = 50; // deg/s
+      config.rateMax[AXIS_YAW] = 10; // deg/s
+
+      // actuator config - pid scaling
+      config.actuatorConfig[0] = ACT_INNER_P | ACT_OUTER_P | ACT_AXIS_PITCH | ACT_AXIS_YAW;
+      config.actuatorChannels[0] = 5;
+      config.actuatorMin[0] = 0.1;
+      config.actuatorMax[0] = 5;
+
+      config.actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH;
+      config.actuatorChannels[1] = 6;
+      config.actuatorMin[1] = 0.0;
+      config.actuatorMax[1] = 5;
+
+      config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH;
+      config.actuatorChannels[2] = 7;
+      config.actuatorMin[2] = 0.1;
+      config.actuatorMax[2] = 5;
     }
+
     union {
       ModelState state;
       char * stateAddr;

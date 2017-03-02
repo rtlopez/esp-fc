@@ -8,6 +8,7 @@ void InputPPM::begin(uint8_t pin)
 {
   _pin = pin;
   _channel = 0;
+  _start = micros();
   for(size_t i = 0; i < CHANNELS * 2; i++)
   {
     uint16_t default_tick = i / 2 == THROTTLE_CHANNEL ? TICK_MIN : TICK_CENTER;  // except throttle channel 3 (zero indexed)

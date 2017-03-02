@@ -19,6 +19,7 @@ class Actuator
       if(!_model.state.newInputData) return 0;
       updateFlightMode();
       updateScaler();
+      updateArming();
     }
 
   private:
@@ -33,23 +34,32 @@ class Actuator
         float min = _model.config.actuatorMin[i];
         float max = _model.config.actuatorMax[i];
         float scale = Math::map3(v, -1.f, 0.f, 1.f, min, 1.f, max);
-        for(size_t x = 0; x < 3; x++)
+        for(size_t x = 0; x < AXES; x++)
         {
-          if(x == 0 && !(mode & ACT_AXIS_X)) continue;
-          if(x == 1 && !(mode & ACT_AXIS_Y)) continue;
-          if(x == 2 && !(mode & ACT_AXIS_Z)) continue;
+          if(
+            x == AXIS_ROLL   && (mode & ACT_AXIS_ROLL) ||
+            x == AXIS_PITH   && (mode & ACT_AXIS_PITCH) ||
+            x == AXIS_YAW    && (mode & ACT_AXIS_YAW) ||
+            x == AXIS_THRUST && (mode & ACT_AXIS_THRUST)
+          )
+          {
 
-          PidState& inner = _model.state.innerPid[i];
-          if(mode & ACT_INNER_P) inner.pScale = scale;
-          if(mode & ACT_INNER_I) inner.iScale = scale;
-          if(mode & ACT_INNER_D) inner.dScale = scale;
+            if(mode & ACT_INNER_P) _model.state.innerPid[x].pScale = scale;
+            if(mode & ACT_INNER_I) _model.state.innerPid[x].iScale = scale;
+            if(mode & ACT_INNER_D) _model.state.innerPid[x].dScale = scale;
 
-          PidState& outer = _model.state.outerPid[i];
-          if(mode & ACT_OUTER_P) inner.pScale = scale;
-          if(mode & ACT_OUTER_I) inner.iScale = scale;
-          if(mode & ACT_OUTER_D) inner.dScale = scale;
+            if(mode & ACT_OUTER_P) _model.state.outerPid[x].pScale = scale;
+            if(mode & ACT_OUTER_I) _model.state.outerPid[x].iScale = scale;
+            if(mode & ACT_OUTER_D) _model.state.outerPid[x].dScale = scale;
+          }
         }
       }
+    }
+
+    void updateArming()
+    {
+      if(true || _model.state.input[AXIS_THRUST] > 0) _model.state.armed = true;
+      else _model.state.armed = false;
     }
 
     void updateFlightMode()

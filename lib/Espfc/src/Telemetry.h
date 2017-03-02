@@ -22,9 +22,9 @@ class Telemetry
         (*this)
           //<< _model.state.timestamp
 
-          << _model.state.angle
-          << _model.state.desiredRotation
-          << _model.state.desiredAngle
+          //<< _model.state.angle
+          //<< _model.state.desiredRotation
+          //<< _model.state.desiredAngle
           //<< _model.state.gyroPose
           //<< _model.state.accelPose
           //<< _model.state.accelPose2
@@ -39,19 +39,46 @@ class Telemetry
           //<< _model.state.pose
 
 
+          //<< _model.state.inputUs[0]
+          //<< _model.state.inputUs[1]
+          //<< _model.state.inputUs[2]
+          //<< _model.state.inputUs[3]
+
+          //<< _model.state.input[0]
+          << _model.state.input[1]
+          //<< _model.state.input[2]
+          //<< _model.state.input[3]
+          //<< _model.state.input[5]
+          //<< _model.state.input[6]
+          //<< _model.state.input[7]
+
+
           //<< _model.state.flightMode
-          //<< _model.state.rateDesired[0]
-          //<< _model.state.rateDesired[1]
+
+          //<< _model.state.innerPid[AXIS_PITH].pScale
+          //<< _model.state.innerPid[AXIS_PITH].iScale
+          //<< _model.state.innerPid[AXIS_YAW].pScale
+          //<< _model.state.innerPid[AXIS_YAW].iScale
+          //<< _model.state.outerPid[AXIS_PITH].pScale
+          //<< _model.state.outerPid[AXIS_PITH].iScale
+
+          << _model.state.desiredAngle[1]
+
+          << _model.state.desiredRotation[1]
+
+          << _model.state.desiredRate[1]
+          //<< _model.state.desiredRate[2]
+
+          //<< _model.state.output[0]
+          << _model.state.output[1]
+          //<< _model.state.output[2]
+          //<< _model.state.output[3]
 
           //<< _model.state.outputUs[0]
           //<< _model.state.outputUs[1]
           //<< _model.state.outputUs[2]
           //<< _model.state.outputUs[3]
 
-          //<< _model.state.inputUs[0]
-          //<< _model.state.inputUs[1]
-          //<< _model.state.inputUs[2]
-          //<< _model.state.inputUs[3]
           //<< _model.state.inputUs[4]
           //<< _model.state.inputUs[5]
           //<< _model.state.inputUs[6]
