@@ -268,11 +268,14 @@ class Model
       config.gyroDlpf = GYRO_DLPF_98;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_250;
+      config.gyroSampleRate = GYRO_RATE_200;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
       config.magEnable = 0;
+
+      config.gyroDeadband = radians(0.1); // deg/s
+      config.inputDeadband = 2.f / 100; // %
 
       config.accelFilterAlpha = 0.5;
       config.gyroFilterAlpha = 0.5;
@@ -286,7 +289,7 @@ class Model
       }
 
       config.telemetry = 1;
-      config.telemetryInterval = 30;
+      config.telemetryInterval = 50;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -300,13 +303,13 @@ class Model
 
       config.outputPin[0] = D5;
       config.outputPin[1] = D6;
-      config.outputPin[2] = D7;
-      config.outputPin[3] = D8;
+      config.outputPin[2] = -1; // D3;
+      config.outputPin[3] = -1; // D4;
       config.modelFrame = FRAME_BALANCE_ROBOT;
       config.pwmRate = 50;
 
       // input config
-      config.ppmPin = D4; // GPIO2
+      config.ppmPin = D8; // GPIO2
       config.inputMap[0] = 0; // roll
       config.inputMap[1] = 1; // pitch
       config.inputMap[2] = 3; // yaw
@@ -317,9 +320,9 @@ class Model
       config.inputMap[7] = 7; // aux 3
 
       config.flightModeChannel = 4;
-      config.flightModes[0] = MODE_ANGLE;
-      config.flightModes[1] = MODE_RATE;
-      config.flightModes[2] = MODE_DIRECT;
+      config.flightModes[0] = MODE_DIRECT;
+      config.flightModes[1] = MODE_ANGLE;
+      config.flightModes[2] = MODE_RATE;
 
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
@@ -335,27 +338,35 @@ class Model
         state.kalman[i] = Kalman();
         state.innerPid[i] = PidState();
         state.outerPid[i] = PidState();
-        config.innerPid[i] = Pid(1, 0, 0, 0.2, 0.2);
-        config.outerPid[i] = Pid(1, 0, 0, 0.2);
+        config.innerPid[i] = Pid(0.25, 0, 0, 0.3, 0.5);
+        config.outerPid[i] = Pid(5.00, 0, 0, 0.3, 0.5);
       }
-      config.innerPid[AXIS_PITH].Ki = 1;
-      config.innerPid[AXIS_PITH].Kd = 0.05;
 
-      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 40; // deg
-      config.rateMax[AXIS_PITH] = config.rateMax[AXIS_ROLL] = 50; // deg/s
-      config.rateMax[AXIS_YAW] = 10; // deg/s
+      config.innerPid[AXIS_PITH].Ki = 0.2;
+      config.innerPid[AXIS_PITH].Kd = 0.01;
+
+      //config.innerPid[AXIS_YAW].Kp = 0.05;
+      //config.innerPid[AXIS_YAW].Ki = 0.05;
+      //config.innerPid[AXIS_YAW].Kd = 0.005;
+
+      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 20;  // deg
+      config.rateMax[AXIS_PITH]  = config.rateMax[AXIS_ROLL]  = 300; // deg/s
+      config.rateMax[AXIS_YAW]   = 300; // deg/s
 
       // actuator config - pid scaling
-      config.actuatorConfig[0] = ACT_INNER_P | ACT_OUTER_P | ACT_AXIS_PITCH | ACT_AXIS_YAW;
+      //config.actuatorConfig[0] = ACT_INNER_P | ACT_OUTER_P | ACT_AXIS_PITCH;
+      config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH;
       config.actuatorChannels[0] = 5;
       config.actuatorMin[0] = 0.1;
       config.actuatorMax[0] = 5;
 
+      //config.actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_YAW;
       config.actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH;
       config.actuatorChannels[1] = 6;
       config.actuatorMin[1] = 0.0;
       config.actuatorMax[1] = 5;
 
+      //config.actuatorConfig[2] = ACT_OUTER_P | ACT_AXIS_PITCH;
       config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH;
       config.actuatorChannels[2] = 7;
       config.actuatorMin[2] = 0.1;

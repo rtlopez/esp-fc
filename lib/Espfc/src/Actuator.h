@@ -58,8 +58,7 @@ class Actuator
 
     void updateArming()
     {
-      if(true || _model.state.input[AXIS_THRUST] > 0) _model.state.armed = true;
-      else _model.state.armed = false;
+      _model.state.armed = _model.state.gyroBiasValid;
     }
 
     void updateFlightMode()

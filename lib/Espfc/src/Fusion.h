@@ -252,6 +252,7 @@ class Fusion
       _model.state.angleQ.y = _madgwick.q2;
       _model.state.angleQ.z = _madgwick.q3;
       _model.state.angle.eulerFromQuaternion(_model.state.angleQ);
+      _model.state.rate = _model.state.gyro;
     }
 
   private:

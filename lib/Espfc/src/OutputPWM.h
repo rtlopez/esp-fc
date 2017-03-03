@@ -11,9 +11,9 @@ class OutputPWM
     class Slot
     {
       public:
-        Slot(): pin(0), val(0), pulse(0) {}
-        int pin: 7;
-        bool val: 1;
+        Slot(): pin(-1), val(0), pulse(0) {}
+        char pin;
+        bool val;
         volatile int16_t pulse;
         bool operator<(const Slot& rhs) const { return this->pulse < rhs.pulse; }
     };
@@ -51,7 +51,13 @@ class OutputPWM
 
     void inline nextSlot() ICACHE_RAM_ATTR
     {
-      _currentSlot++;
+      while(true)
+      {
+        _currentSlot++;
+        if(_currentSlot == OUTPUT_CHANNELS) break;
+        if(_slots[_currentSlot].pin == -1) continue; // ignore disabled pins
+        break;
+      }
       if(_currentSlot == OUTPUT_CHANNELS) _currentSlot = -1;
     }
 
