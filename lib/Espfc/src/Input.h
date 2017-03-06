@@ -32,8 +32,8 @@ class Input
       if(!PPM.hasNewData())
       {
         // fail-safe
-        unsigned long diff = micros() - PPM.getStart();
-        if(diff > 100000) setFailSafe();
+        _model.state.inputDelay = micros() - PPM.getStart();
+        //if(diff > 100000) setFailSafe();
         return 0;
       }
 
@@ -45,7 +45,7 @@ class Input
         float v = Math::map3((float)us, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
         v = Math::bound(v, -1.f, 1.f);
         if(fabs(v) < _model.config.inputDeadband) v = 0.f;
-        _model.state.input[i] = v;
+        _model.state.input[i] = _model.state.input[i] * (1.f - _model.config.inputAlpha) + v * _model.config.inputAlpha;
       }
 
       _model.state.newInputData = true;

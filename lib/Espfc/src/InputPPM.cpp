@@ -23,16 +23,18 @@ void InputPPM::handle()
   unsigned long now = micros();
 
   uint8_t old = _value;
-  _value = digitalRead(_pin);
+  uint8_t v = digitalRead(_pin);
 
-  if(_value == old) return; // pin not changed, do nothing, sanity
+  if(v == old) return; // pin not changed, do nothing, sanity
 
   // TODO: detect broken link and set fail-safe
   // TODO: handle inversed PPM?
 
   unsigned long time = now - _start;
-  _start = now;
+  //if(time < TICK_SPACE) return; // noise??
 
+  _value = v;
+  _start = now;
   _channels[_channel] = time;
   _channel++;
 

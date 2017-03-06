@@ -59,6 +59,7 @@ class Actuator
     void updateArming()
     {
       _model.state.armed = _model.state.gyroBiasValid;
+      //_model.state.armed = false;
     }
 
     void updateFlightMode()

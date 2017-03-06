@@ -20,7 +20,7 @@ class Controller
 
     int update()
     {
-      if(!_model.state.newGyroData && !_model.state.newInputData) return 0;
+      if(!_model.state.newGyroData/* && !_model.state.newInputData*/) return 0;
       outerLoop();
       innerLoop();
     }
@@ -39,6 +39,23 @@ class Controller
         _model.state.desiredRotationQ = Quaternion::lerp(Quaternion(), _model.state.desiredRotationQ, 0.5f);
         _model.state.desiredRotation.eulerFromQuaternion(_model.state.desiredRotationQ);
       }
+      else if(_model.state.flightMode == MODE_ANGLE_SIMPLE)
+      {
+        if(false && _model.config.modelFrame == FRAME_BALANCE_ROBOT && fabs(_model.state.input[AXIS_PITH]) < 0.05)
+        {
+          float balanceAngle = _model.state.balanceAngle.get(AXIS_PITH) + _model.state.gyroSampleIntervalFloat * _model.state.desiredRate[AXIS_PITH];
+          balanceAngle = Math::bound(balanceAngle, _model.state.angleMax[AXIS_PITH] * -0.6f, _model.state.angleMax[AXIS_PITH] * 0.6f);
+          _model.state.balanceAngle.set(1, balanceAngle);
+        }
+        _model.state.desiredAngle = VectorFloat(
+          _model.state.input[AXIS_ROLL] * _model.state.angleMax[AXIS_ROLL],
+          _model.state.input[AXIS_PITH] * _model.state.angleMax[AXIS_PITH],
+          _model.state.angle.z * 1
+        );
+        _model.state.desiredAngleQ = _model.state.desiredAngle.eulerToQuaternion();
+        _model.state.desiredRotation = (_model.state.desiredAngle + _model.state.balanceAngle - _model.state.angle) * 0.5f;
+        _model.state.desiredRotationQ = _model.state.desiredRotation.eulerToQuaternion();
+      }
 
       // only pitch and roll
       for(size_t i = 0; i < 2; ++i)
@@ -51,6 +68,7 @@ class Controller
             _model.state.outerPid[i].iTerm = 0;
             break;
           case MODE_ANGLE:
+          case MODE_ANGLE_SIMPLE:
             {
               float angle = _model.state.angle[i] / _model.state.angleMax[i];
               float rotation = _model.state.desiredRotation[i] / _model.state.angleMax[i] * 2.f;
@@ -88,6 +106,7 @@ class Controller
             _model.state.output[i] = _model.state.desiredRate[i];
             _model.state.innerPid[i].iTerm = 0;
             break;
+          case MODE_ANGLE_SIMPLE:
           case MODE_ANGLE:
           case MODE_RATE:
             _model.state.output[i] = _model.config.innerPid[i].update(_model.state.desiredRate[i], rate, _model.state.gyroSampleIntervalFloat, _model.state.innerPid[i]);
@@ -104,6 +123,7 @@ class Controller
           _model.state.output[AXIS_YAW] = _model.state.desiredRate[AXIS_YAW];
           _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
           break;
+        case MODE_ANGLE_SIMPLE:
         case MODE_ANGLE:
         case MODE_RATE:
           {

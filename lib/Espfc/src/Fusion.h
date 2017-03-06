@@ -51,8 +51,9 @@ class Fusion
       {
         float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), _model.state.gyroSampleIntervalFloat);
         _model.state.angle.set(i, angle);
-        _model.state.rate.set(i, _model.state.kalman[i].getRate());
+        //_model.state.rate.set(i, _model.state.kalman[i].getRate());
       }
+      _model.state.rate = _model.state.gyro;
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
 
