@@ -51,15 +51,15 @@ class Fusion
       {
         float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), _model.state.gyroSampleIntervalFloat);
         _model.state.angle.set(i, angle);
-        //_model.state.rate.set(i, _model.state.kalman[i].getRate());
+        _model.state.rate.set(i, _model.state.kalman[i].getRate());
       }
-      _model.state.rate = _model.state.gyro;
+      //_model.state.rate = _model.state.gyro;
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
 
     void complementaryFusion()
     {
-      float alpha = 0.02f;
+      float alpha = 0.005f;
       for(size_t i = 0; i < 3; i++)
       {
         if(i == 2) alpha = 0.f;

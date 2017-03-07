@@ -82,7 +82,8 @@ enum FlightMode {
   MODE_DIRECT   = 0x01,
   MODE_RATE     = 0x02,
   MODE_ANGLE    = 0x03,
-  MODE_ANGLE_SIMPLE = 0x04
+  MODE_ANGLE_SIMPLE = 0x04,
+  MODE_BALANCING_ROBOT = 0x05
 };
 
 enum ModelFrame {
@@ -144,6 +145,7 @@ struct ModelState
   Quaternion angleQ;
 
   VectorFloat balanceAngle;
+  VectorFloat desiredVelocity;
 
   VectorFloat desiredAngle;
   Quaternion desiredAngleQ;
@@ -258,6 +260,7 @@ struct ModelConfig
   Pid outerPid[AXES];
   float rateMax[AXES];
   float angleMax[AXES];
+  float velocityMax[AXES];
 
   bool telemetry;
   short telemetryInterval;
@@ -270,10 +273,10 @@ class Model
   public:
     Model() {
       config.gyroFifo = 1;
-      config.gyroDlpf = GYRO_DLPF_98;
+      config.gyroDlpf = GYRO_DLPF_42;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_100;
+      config.gyroSampleRate = GYRO_RATE_250;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
@@ -283,11 +286,11 @@ class Model
       config.inputDeadband = 2.f / 100; // %
       config.inputAlpha = 0.5;
 
-      config.accelFilterAlpha = 0.1;
-      config.gyroFilterAlpha = 0.2;
+      config.accelFilterAlpha = 0.05;
+      config.gyroFilterAlpha = 0.1;
       config.magFilterAlpha = 1.0;
       //config.fusionMode = FUSION_MADGWICK;
-      config.fusionMode = FUSION_KALMAN;
+      config.fusionMode = FUSION_COMPLEMENTARY;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -301,19 +304,19 @@ class Model
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        config.outputMin[i] = 1000;
+        config.outputMin[i] = 600;
         config.outputNeutral[i] = 1500;
-        config.outputMax[i] = 2000;
+        config.outputMax[i] = 2400;
       }
-      config.outputMin[0] = 2000; // reverse channel 0
-      config.outputMax[0] = 1000;
+      config.outputMin[0] = 2400; // reverse channel 0
+      config.outputMax[0] =  600;
 
       config.outputPin[0] = D5;
       config.outputPin[1] = D6;
       config.outputPin[2] = -1; // D3;
       config.outputPin[3] = -1; // D4;
       config.modelFrame = FRAME_BALANCE_ROBOT;
-      config.pwmRate = 50;
+      config.pwmRate = 100;
 
       // input config
       config.ppmPin = D8; // GPIO2
@@ -345,30 +348,32 @@ class Model
         state.kalman[i] = Kalman();
         state.innerPid[i] = PidState();
         state.outerPid[i] = PidState();
-        config.innerPid[i] = Pid(0.30, 0, 0, 0.3, 0.05, 0);
-        config.outerPid[i] = Pid(1.00, 0, 0, 0.3, 0.05, 0);
+        config.innerPid[i] = Pid(0.30, 0, 0, 0.3, 0.02, 0);
+        config.outerPid[i] = Pid(2.00, 0, 0, 0.3, 0.02, 0);
       }
 
       config.innerPid[AXIS_PITH].Ki = 0.03;
       config.innerPid[AXIS_PITH].Kd = 0.03;
 
-      config.outerPid[AXIS_PITH].Ki = 0.1;
+      config.outerPid[AXIS_PITH].Ki = 5.0;
       config.outerPid[AXIS_PITH].Kd = 0.1;
 
       //config.innerPid[AXIS_YAW].Kp = 0.05;
-      //config.innerPid[AXIS_YAW].Ki = 0.05;
+      config.innerPid[AXIS_YAW].Ki = 0.5;
+      config.innerPid[AXIS_YAW].iLimit = 0.1;
       //config.innerPid[AXIS_YAW].Kd = 0.005;
 
-      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 30;  // deg
+      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 20;  // deg
       config.rateMax[AXIS_PITH]  = config.rateMax[AXIS_ROLL]  = 300; // deg/s
       config.rateMax[AXIS_YAW]   = 300; // deg/s
+      config.velocityMax[AXIS_PITH] = config.velocityMax[AXIS_ROLL] = 1; // m/s
 
       // actuator config - pid scaling
       //config.actuatorConfig[0] = ACT_INNER_P | ACT_OUTER_P | ACT_AXIS_PITCH;
       //config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH;
-      config.actuatorConfig[0] = ACT_INNER_P | ACT_INNER_I | ACT_AXIS_PITCH;
+      config.actuatorConfig[0] = ACT_OUTER_P | ACT_AXIS_PITCH;
       config.actuatorChannels[0] = 5;
-      config.actuatorMin[0] = 0.1;
+      config.actuatorMin[0] = 0.0;
       config.actuatorMax[0] = 5;
 
       //config.actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_YAW;
@@ -378,10 +383,10 @@ class Model
       config.actuatorMin[1] = 0.0;
       config.actuatorMax[1] = 5;
 
-      config.actuatorConfig[2] = ACT_OUTER_P | ACT_OUTER_D | ACT_AXIS_PITCH;
+      config.actuatorConfig[2] = ACT_OUTER_D | ACT_AXIS_PITCH;
       //config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH;
       config.actuatorChannels[2] = 7;
-      config.actuatorMin[2] = 0.1;
+      config.actuatorMin[2] = 0.0;
       config.actuatorMax[2] = 5;
     }
 

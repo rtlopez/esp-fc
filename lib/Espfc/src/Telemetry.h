@@ -58,9 +58,9 @@ class Telemetry
           //<< _model.state.inputDelay / 1000000.0f
 
           //<< _model.state.flightMode
-          << _model.state.innerPid[AXIS_PITH].pTerm
-          << _model.state.innerPid[AXIS_PITH].iTerm
-          << _model.state.innerPid[AXIS_PITH].dTerm
+          //<< _model.state.innerPid[AXIS_PITH].pTerm
+          //<< _model.state.innerPid[AXIS_PITH].iTerm
+          //<< _model.state.innerPid[AXIS_PITH].dTerm
           //<< _model.state.innerPid[AXIS_YAW].pScale
           //<< _model.state.innerPid[AXIS_YAW].iScale
 
@@ -80,7 +80,7 @@ class Telemetry
           //<< _model.state.desiredRate[2]
 
           //<< _model.state.output[0]
-          //<< _model.state.output[1]
+          << _model.state.output[1]
           //<< _model.state.output[2]
           //<< _model.state.output[3]
 
