@@ -83,7 +83,8 @@ enum FlightMode {
   MODE_RATE     = 0x02,
   MODE_ANGLE    = 0x03,
   MODE_ANGLE_SIMPLE = 0x04,
-  MODE_BALANCING_ROBOT = 0x05
+  MODE_BALANCING_ROBOT = 0x05,
+  MODE_BALANCING_ANGLE = 0x06
 };
 
 enum ModelFrame {
@@ -104,7 +105,8 @@ enum ActuatorConfig {
   ACT_AXIS_ROLL   = 1 << 6,
   ACT_AXIS_PITCH  = 1 << 7,
   ACT_AXIS_YAW    = 1 << 8,
-  ACT_AXIS_THRUST = 1 << 9
+  ACT_AXIS_THRUST = 1 << 9,
+  ACT_GYRO_THRUST = 1 << 10
 };
 
 const size_t OUTPUT_CHANNELS = 4;
@@ -112,7 +114,7 @@ const size_t INPUT_CHANNELS  = 8;
 
 const size_t AXES        = 4;
 const size_t AXIS_ROLL   = 0;  // x
-const size_t AXIS_PITH   = 1;  // y
+const size_t AXIS_PITCH  = 1;  // y
 const size_t AXIS_YAW    = 2;  // z
 const size_t AXIS_THRUST = 3;  // throttle channel index
 
@@ -144,8 +146,9 @@ struct ModelState
   VectorFloat angle;
   Quaternion angleQ;
 
-  VectorFloat balanceAngle;
+  VectorFloat velocity;
   VectorFloat desiredVelocity;
+  float gyroThrustScale;
 
   VectorFloat desiredAngle;
   Quaternion desiredAngleQ;
@@ -153,13 +156,14 @@ struct ModelState
   VectorFloat desiredRotation;
   Quaternion desiredRotationQ;
 
+  float desiredRate[AXES];
+
   Quaternion boardRotationQ;
 
   short flightMode;
   bool armed;
 
   float altitude;
-  float altitudeVelocity;
 
   PidState innerPid[AXES];
   PidState outerPid[AXES];
@@ -167,8 +171,6 @@ struct ModelState
   short inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
   unsigned long inputDelay;
-
-  float desiredRate[AXES];
 
   float rateMax[AXES];
   float angleMax[AXES];
@@ -224,6 +226,7 @@ struct ModelConfig
   float gyroFilterAlpha;
   float accelFilterAlpha;
   float magFilterAlpha;
+  float velocityFilterAlpha;
   float gyroDeadband;
 
   short magCalibration;
@@ -286,9 +289,10 @@ class Model
       config.inputDeadband = 2.f / 100; // %
       config.inputAlpha = 0.5;
 
-      config.accelFilterAlpha = 0.05;
+      config.accelFilterAlpha = 0.1;
       config.gyroFilterAlpha = 0.1;
       config.magFilterAlpha = 1.0;
+      config.velocityFilterAlpha = 0.1;
       //config.fusionMode = FUSION_MADGWICK;
       config.fusionMode = FUSION_COMPLEMENTARY;
 
@@ -299,7 +303,7 @@ class Model
       }
 
       config.telemetry = 1;
-      config.telemetryInterval = 20;
+      config.telemetryInterval = 10;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -319,7 +323,7 @@ class Model
       config.pwmRate = 100;
 
       // input config
-      config.ppmPin = D8; // GPIO2
+      config.ppmPin = D8;     // GPIO15
       config.inputMap[0] = 0; // roll
       config.inputMap[1] = 1; // pitch
       config.inputMap[2] = 3; // yaw
@@ -331,8 +335,8 @@ class Model
 
       config.flightModeChannel = 4;
       config.flightModes[0] = MODE_DIRECT;
-      config.flightModes[1] = MODE_ANGLE_SIMPLE;
-      config.flightModes[2] = MODE_RATE;
+      config.flightModes[1] = MODE_BALANCING_ROBOT;
+      config.flightModes[2] = MODE_BALANCING_ANGLE;
 
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
@@ -341,39 +345,42 @@ class Model
         config.inputMax[i] = 2000;
       }
       config.inputNeutral[AXIS_THRUST] = 1050; // override for thrust
+      config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
+      config.inputMax[AXIS_YAW] = 1000;
 
       // controller config
       for(size_t i = 0; i < AXES; i++)
       {
         state.kalman[i] = Kalman();
-        state.innerPid[i] = PidState();
         state.outerPid[i] = PidState();
-        config.innerPid[i] = Pid(0.30, 0, 0, 0.3, 0.02, 0);
-        config.outerPid[i] = Pid(2.00, 0, 0, 0.3, 0.02, 0);
+        state.innerPid[i] = PidState();
+        config.outerPid[i] = Pid(0.08, 0, 0, 0.3, 0.02, 0);
+        config.innerPid[i] = Pid(0.90, 0, 0, 0.3, 0.02, 0);
       }
 
-      config.innerPid[AXIS_PITH].Ki = 0.03;
-      config.innerPid[AXIS_PITH].Kd = 0.03;
+      config.outerPid[AXIS_PITCH].Kp = 0.5;
+      config.outerPid[AXIS_PITCH].Ki = 0.5;
+      config.outerPid[AXIS_PITCH].iLimit = 0.05;
+      config.outerPid[AXIS_PITCH].Kd = 0.05;
 
-      config.outerPid[AXIS_PITH].Ki = 5.0;
-      config.outerPid[AXIS_PITH].Kd = 0.1;
+      //config.innerPid[AXIS_PITCH].Ki = 0.0;
+      config.innerPid[AXIS_PITCH].Kd = 0.015;
 
-      //config.innerPid[AXIS_YAW].Kp = 0.05;
-      config.innerPid[AXIS_YAW].Ki = 0.5;
-      config.innerPid[AXIS_YAW].iLimit = 0.1;
-      //config.innerPid[AXIS_YAW].Kd = 0.005;
+      config.innerPid[AXIS_YAW].Kp = 0.2;
+      config.innerPid[AXIS_YAW].Ki = 0.3;
+      config.innerPid[AXIS_YAW].iLimit = 0.05;
 
-      config.angleMax[AXIS_PITH] = config.angleMax[AXIS_ROLL] = 20;  // deg
-      config.rateMax[AXIS_PITH]  = config.rateMax[AXIS_ROLL]  = 300; // deg/s
-      config.rateMax[AXIS_YAW]   = 300; // deg/s
-      config.velocityMax[AXIS_PITH] = config.velocityMax[AXIS_ROLL] = 1; // m/s
+      config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = 20;  // deg
+      config.rateMax[AXIS_PITCH]  = config.rateMax[AXIS_ROLL]  = 300; // deg/s
+      config.rateMax[AXIS_YAW]    = 300; // deg/s
+      config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s
 
       // actuator config - pid scaling
       //config.actuatorConfig[0] = ACT_INNER_P | ACT_OUTER_P | ACT_AXIS_PITCH;
       //config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH;
       config.actuatorConfig[0] = ACT_OUTER_P | ACT_AXIS_PITCH;
       config.actuatorChannels[0] = 5;
-      config.actuatorMin[0] = 0.0;
+      config.actuatorMin[0] = 0.1;
       config.actuatorMax[0] = 5;
 
       //config.actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_YAW;
@@ -384,10 +391,16 @@ class Model
       config.actuatorMax[1] = 5;
 
       config.actuatorConfig[2] = ACT_OUTER_D | ACT_AXIS_PITCH;
-      //config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH;
+      //config.actuatorConfig[2] = ACT_INNER_P | ACT_INNER_D | ACT_AXIS_PITCH;
       config.actuatorChannels[2] = 7;
-      config.actuatorMin[2] = 0.0;
+      config.actuatorMin[2] = 0.1;
       config.actuatorMax[2] = 5;
+
+      //config.actuatorConfig[2] = ACT_GYRO_THRUST;
+      //config.actuatorMin[2] = -0.05;
+      //config.actuatorMax[2] =  0.05;
+
+      state.gyroThrustScale = 0.02;
     }
 
     union {

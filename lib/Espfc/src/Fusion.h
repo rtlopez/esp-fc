@@ -59,7 +59,7 @@ class Fusion
 
     void complementaryFusion()
     {
-      float alpha = 0.005f;
+      float alpha = 0.01f;
       for(size_t i = 0; i < 3; i++)
       {
         if(i == 2) alpha = 0.f;

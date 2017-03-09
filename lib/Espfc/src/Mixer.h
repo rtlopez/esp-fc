@@ -66,7 +66,7 @@ class Mixer
     void updateDirect()
     {
       float r = _model.state.output[AXIS_ROLL];
-      float p = _model.state.output[AXIS_PITH];
+      float p = _model.state.output[AXIS_PITCH];
       float y = _model.state.output[AXIS_YAW];
       float t = _model.state.output[AXIS_THRUST];
       float out[4];
@@ -79,7 +79,7 @@ class Mixer
 
     void updateBalancingRobot()
     {
-      float p = _model.state.output[AXIS_PITH];
+      float p = _model.state.output[AXIS_PITCH];
       float y = _model.state.output[AXIS_YAW];
       float out[2];
       out[0] = p + y;
@@ -90,7 +90,7 @@ class Mixer
     void updateQuadX()
     {
       float r = _model.state.output[AXIS_ROLL];
-      float p = _model.state.output[AXIS_PITH];
+      float p = _model.state.output[AXIS_PITCH];
       float y = _model.state.output[AXIS_YAW];
       float t = _model.state.output[AXIS_THRUST];
       float out[4];

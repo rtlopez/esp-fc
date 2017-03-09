@@ -33,14 +33,11 @@ class Telemetry
           //<< _model.state.gyroRaw
           //<< _model.state.magRaw
           //<< _model.state.gyro[1]
-          //<< _model.state.gyro[2]
-          //<< _model.state.rate[1]
-          //<< _model.state.rate[2]
+          //<< _model.state.rate
           //<< _model.state.accel
           //<< _model.state.mag
           //<< _model.state.magPose
           //<< _model.state.pose
-
 
           //<< _model.state.inputUs[0]
           //<< _model.state.inputUs[1]
@@ -51,48 +48,43 @@ class Telemetry
           //<< _model.state.input[1]
           //<< _model.state.input[2]
           //<< _model.state.input[3]
-          //<< _model.state.input[5]
-          //<< _model.state.input[6]
-          //<< _model.state.input[7]
-
-          //<< _model.state.inputDelay / 1000000.0f
-
-          //<< _model.state.flightMode
-          //<< _model.state.innerPid[AXIS_PITH].pTerm
-          //<< _model.state.innerPid[AXIS_PITH].iTerm
-          //<< _model.state.innerPid[AXIS_PITH].dTerm
-          //<< _model.state.innerPid[AXIS_YAW].pScale
-          //<< _model.state.innerPid[AXIS_YAW].iScale
-
-          << _model.state.outerPid[AXIS_PITH].pTerm
-          << _model.state.outerPid[AXIS_PITH].iTerm
-          << _model.state.outerPid[AXIS_PITH].dTerm
-
-          //<< _model.state.balanceAngle[1]
 
           //<< _model.state.desiredAngle[1]
           //<< _model.state.desiredAngle[2]
 
           //<< _model.state.desiredRotation[1]
           //<< _model.state.desiredRotation[2]
-
           //<< _model.state.desiredRate[1]
           //<< _model.state.desiredRate[2]
 
           //<< _model.state.output[0]
-          << _model.state.output[1]
+          //<< _model.state.output[1]
           //<< _model.state.output[2]
           //<< _model.state.output[3]
+
+          << _model.state.velocity[1]
+          //<< (_model.state.output[1] - _model.state.gyro[1] * 0.05f) * -1.f
+          //<< (_model.state.output[1] + _model.state.gyro[1] * 0.05f) * -1.f
+
+          << _model.state.outerPid[AXIS_PITCH].pTerm
+          << _model.state.outerPid[AXIS_PITCH].iTerm
+          << _model.state.outerPid[AXIS_PITCH].dTerm
+
+          << _model.state.innerPid[AXIS_PITCH].pTerm
+          << _model.state.innerPid[AXIS_PITCH].iTerm
+          << _model.state.innerPid[AXIS_PITCH].dTerm
+
+          //<< _model.state.gyro[1] * _model.state.gyroThrustScale
+          //<< _model.state.gyroThrustScale
+
+          //<< _model.state.innerPid[AXIS_YAW].pTerm
+          //<< _model.state.innerPid[AXIS_YAW].iTerm
+          //<< _model.state.innerPid[AXIS_YAW].dTerm
 
           //<< _model.state.outputUs[0]
           //<< _model.state.outputUs[1]
           //<< _model.state.outputUs[2]
           //<< _model.state.outputUs[3]
-
-          //<< _model.state.inputUs[4]
-          //<< _model.state.inputUs[5]
-          //<< _model.state.inputUs[6]
-          //<< _model.state.inputUs[7]
 
           //<< _model.state.magCalibrationData[0][0]
           //<< _model.state.magCalibrationData[0][1]

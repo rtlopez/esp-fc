@@ -111,10 +111,10 @@ class Cli
       _params[i++] = Param(PSTR("compass_calibration"), (char*)&c->magCalibration, PARAM_BYTE);
       _params[i++] = Param(PSTR("compass_calibration_offset"), (char*)&c->magCalibrationOffset, PARAM_VECTOR_FLOAT);
       _params[i++] = Param(PSTR("compass_calibration_scale"), (char*)&c->magCalibrationScale, PARAM_VECTOR_FLOAT);
-      _params[i++] = Param(PSTR("rate_pitch_max"), (char*)&c->rateMax[AXIS_PITH], PARAM_FLOAT);
+      _params[i++] = Param(PSTR("rate_pitch_max"), (char*)&c->rateMax[AXIS_PITCH], PARAM_FLOAT);
       _params[i++] = Param(PSTR("rate_roll_max"), (char*)&c->rateMax[AXIS_ROLL], PARAM_FLOAT);
       _params[i++] = Param(PSTR("rate_yaw_max"), (char*)&c->rateMax[AXIS_YAW], PARAM_FLOAT);
-      _params[i++] = Param(PSTR("angle_pitch_max"), (char*)&c->angleMax[AXIS_PITH], PARAM_FLOAT);
+      _params[i++] = Param(PSTR("angle_pitch_max"), (char*)&c->angleMax[AXIS_PITCH], PARAM_FLOAT);
       _params[i++] = Param(PSTR("angle_roll_max"), (char*)&c->angleMax[AXIS_ROLL], PARAM_FLOAT);
     }
 

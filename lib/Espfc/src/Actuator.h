@@ -33,13 +33,13 @@ class Actuator
         float v = _model.state.input[c];
         float min = _model.config.actuatorMin[i];
         float max = _model.config.actuatorMax[i];
-        float scale = Math::map3(v, -1.f, 0.f, 1.f, min, 1.f, max);
+        float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
         for(size_t x = 0; x < AXES; x++)
         {
           if(
-            x == AXIS_ROLL   && (mode & ACT_AXIS_ROLL) ||
-            x == AXIS_PITH   && (mode & ACT_AXIS_PITCH) ||
-            x == AXIS_YAW    && (mode & ACT_AXIS_YAW) ||
+            x == AXIS_ROLL   && (mode & ACT_AXIS_ROLL)  ||
+            x == AXIS_PITCH  && (mode & ACT_AXIS_PITCH) ||
+            x == AXIS_YAW    && (mode & ACT_AXIS_YAW)   ||
             x == AXIS_THRUST && (mode & ACT_AXIS_THRUST)
           )
           {
@@ -51,8 +51,10 @@ class Actuator
             if(mode & ACT_OUTER_P) _model.state.outerPid[x].pScale = scale;
             if(mode & ACT_OUTER_I) _model.state.outerPid[x].iScale = scale;
             if(mode & ACT_OUTER_D) _model.state.outerPid[x].dScale = scale;
+
           }
         }
+        if(mode & ACT_GYRO_THRUST) _model.state.gyroThrustScale = scale;
       }
     }
 
