@@ -133,7 +133,7 @@ class Cli
     void process(char c)
     {
       if(c == '\r') return;
-      if(c == '\n' || _index >= BUFF_SIZE)
+      if(c == '\n' || _index >= BUFF_SIZE - 1)
       {
         parse();
         execute();
