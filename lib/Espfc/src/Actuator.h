@@ -16,7 +16,7 @@ class Actuator
 
     int update()
     {
-      if(!_model.state.newInputData) return 0;
+      //if(!_model.state.newInputData) return 0;
       updateFlightMode();
       updateScaler();
       updateArming();

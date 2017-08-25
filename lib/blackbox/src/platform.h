@@ -386,7 +386,9 @@ typedef enum {
     CHECKBOX_ITEM_COUNT
 } boxId_e;
 
-typedef struct boxBitmask_s { uint32_t bits[(CHECKBOX_ITEM_COUNT + 31) / 32]; } boxBitmask_t;
+typedef struct boxBitmask_s {
+  uint32_t bits[(CHECKBOX_ITEM_COUNT + 31) / 32];
+} boxBitmask_t;
 
 #define BITARRAY_BIT_OP(array, bit, op) ((array)[(bit) / (sizeof((array)[0]) * 8)] op (1 << ((bit) % (sizeof((array)[0]) * 8))))
 
@@ -472,6 +474,7 @@ extern uint16_t rssi;
 
 bool isModeActivationConditionPresent(boxId_e modeId);
 uint32_t getArmingBeepTimeMicros(void);
+void setArmingBeepTimeMicros(uint32_t ts);
 /* RCMODES END */
 
 /* CONFIG START */

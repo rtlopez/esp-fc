@@ -20,8 +20,9 @@ class Telemetry
       if(_model.config.telemetry && _model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)
       {
         (*this)
-          //<< _model.state.timestamp
-          //<< _model.state.gyroBiasValid
+          << _model.state.timestamp
+          << _model.state.armed
+          << _model.state.gyroBiasValid
 
           //<< _model.state.angle[1]
           //<< _model.state.desiredRotation
@@ -62,17 +63,17 @@ class Telemetry
           //<< _model.state.output[2]
           //<< _model.state.output[3]
 
-          << _model.state.velocity[1]
+          //<< _model.state.velocity[1]
           //<< (_model.state.output[1] - _model.state.gyro[1] * 0.05f) * -1.f
           //<< (_model.state.output[1] + _model.state.gyro[1] * 0.05f) * -1.f
 
-          << _model.state.outerPid[AXIS_PITCH].pTerm
-          << _model.state.outerPid[AXIS_PITCH].iTerm
-          << _model.state.outerPid[AXIS_PITCH].dTerm
+          //<< _model.state.outerPid[AXIS_PITCH].pTerm
+          //<< _model.state.outerPid[AXIS_PITCH].iTerm
+          //<< _model.state.outerPid[AXIS_PITCH].dTerm
 
-          << _model.state.innerPid[AXIS_PITCH].pTerm
-          << _model.state.innerPid[AXIS_PITCH].iTerm
-          << _model.state.innerPid[AXIS_PITCH].dTerm
+          //<< _model.state.innerPid[AXIS_PITCH].pTerm
+          //<< _model.state.innerPid[AXIS_PITCH].iTerm
+          //<< _model.state.innerPid[AXIS_PITCH].dTerm
 
           //<< _model.state.gyro[1] * _model.state.gyroThrustScale
           //<< _model.state.gyroThrustScale

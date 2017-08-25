@@ -331,7 +331,7 @@ class Sensor
 
     void initPresure()
     {
-      //_pressure.begin();
+      //_baro.begin();
     }
 
     static const uint8_t FIFO_SIZE = 12;
@@ -339,7 +339,7 @@ class Sensor
     Model& _model;
     MPU6050 _gyro;
     HMC5883L _mag;
-    Adafruit_BMP280 _pressure;
+    Adafruit_BMP280 _baro;
 };
 
 }

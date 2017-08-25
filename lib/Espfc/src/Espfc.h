@@ -10,18 +10,16 @@
 #include "Sensor.h"
 #include "Fusion.h"
 #include "Mixer.h"
+#include "Blackbox.h"
 #include "Telemetry.h"
 #include "Cli.h"
-extern "C" {
-#include "blackbox.h"
-}
 
 namespace Espfc {
 
 class Espfc
 {
   public:
-    Espfc(): _model(), _controller(_model), _input(_model), _actuator(_model), _sensor(_model), _fusion(_model), _mixer(_model), _telemetry(_model, Serial), _cli(_model, Serial) {}
+    Espfc(Stream& cliPort, Stream& telPort): _model(), _controller(_model), _input(_model), _actuator(_model), _sensor(_model), _fusion(_model), _mixer(_model), _blackbox(_model, cliPort), _telemetry(_model, cliPort), _cli(_model, cliPort) {}
     int begin()
     {
       _sensor.begin();
@@ -30,9 +28,10 @@ class Espfc
       _actuator.begin();
       _controller.begin();
       _mixer.begin();
+      _blackbox.begin();
       _telemetry.begin();
       _cli.begin();
-      blackboxInit();
+
       return 1;
     }
 
@@ -45,9 +44,9 @@ class Espfc
       _actuator.update();
       _controller.update();
       _mixer.update();
+      _blackbox.update();
       _telemetry.update();
       _cli.update();
-      blackboxUpdate(micros());
       _model.state.newGyroData = false;
       _model.state.newInputData = false;
       return 1;
@@ -62,6 +61,7 @@ class Espfc
     Sensor _sensor;
     Fusion _fusion;
     Mixer _mixer;
+    Blackbox _blackbox;
     Telemetry _telemetry;
     Cli _cli;
 };

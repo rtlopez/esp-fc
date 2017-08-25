@@ -80,11 +80,12 @@ enum FusionMode {
 enum FlightMode {
   MODE_OFF      = 0x00,
   MODE_DIRECT   = 0x01,
-  MODE_RATE     = 0x02,
-  MODE_ANGLE    = 0x03,
-  MODE_ANGLE_SIMPLE = 0x04,
-  MODE_BALANCING_ROBOT = 0x05,
-  MODE_BALANCING_ANGLE = 0x06
+  MODE_NO_STAB  = 0x02,
+  MODE_RATE     = 0x03,
+  MODE_ANGLE    = 0x04,
+  MODE_ANGLE_SIMPLE    = 0x05,
+  MODE_BALANCING_ROBOT = 0x06,
+  MODE_BALANCING_ANGLE = 0x07
 };
 
 enum ModelFrame {
@@ -276,7 +277,7 @@ class Model
   public:
     Model() {
       config.gyroFifo = 1;
-      config.gyroDlpf = GYRO_DLPF_42;
+      config.gyroDlpf = GYRO_DLPF_256;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSampleRate = GYRO_RATE_250;
@@ -285,11 +286,11 @@ class Model
       config.magCalibration = 0;
       config.magEnable = 0;
 
-      config.gyroDeadband = radians(0.1); // deg/s
-      config.inputDeadband = 2.f / 100; // %
+      //config.gyroDeadband = radians(0.1); // deg/s
+      //config.inputDeadband = 2.f / 100; // %
       config.inputAlpha = 0.5;
 
-      config.accelFilterAlpha = 0.1;
+      config.accelFilterAlpha = 0.01;
       config.gyroFilterAlpha = 0.1;
       config.magFilterAlpha = 1.0;
       config.velocityFilterAlpha = 0.1;
@@ -303,23 +304,23 @@ class Model
       }
 
       config.telemetry = 1;
-      config.telemetryInterval = 10;
+      config.telemetryInterval = 200;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        config.outputMin[i] = 600;
-        config.outputNeutral[i] = 1500;
-        config.outputMax[i] = 2400;
+        config.outputMin[i] = 1000;
+        config.outputNeutral[i] = 1040;
+        config.outputMax[i] = 2000;
       }
-      config.outputMin[0] = 2400; // reverse channel 0
-      config.outputMax[0] =  600;
+      //config.outputMin[0] = 2400; // reverse channel 0
+      //config.outputMax[0] =  600;
 
       config.outputPin[0] = D5;
       config.outputPin[1] = D6;
       config.outputPin[2] = -1; // D3;
       config.outputPin[3] = -1; // D4;
-      config.modelFrame = FRAME_BALANCE_ROBOT;
+      config.modelFrame = FRAME_QUAD_X;
       config.pwmRate = 100;
 
       // input config
@@ -334,9 +335,9 @@ class Model
       config.inputMap[7] = 7; // aux 3
 
       config.flightModeChannel = 4;
-      config.flightModes[0] = MODE_DIRECT;
-      config.flightModes[1] = MODE_BALANCING_ROBOT;
-      config.flightModes[2] = MODE_BALANCING_ANGLE;
+      config.flightModes[0] = MODE_OFF;
+      config.flightModes[1] = MODE_NO_STAB;
+      config.flightModes[2] = MODE_RATE;
 
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
