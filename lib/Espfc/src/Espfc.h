@@ -12,6 +12,9 @@
 #include "Mixer.h"
 #include "Telemetry.h"
 #include "Cli.h"
+extern "C" {
+#include "blackbox.h"
+}
 
 namespace Espfc {
 
@@ -29,6 +32,7 @@ class Espfc
       _mixer.begin();
       _telemetry.begin();
       _cli.begin();
+      blackboxInit();
       return 1;
     }
 
@@ -43,6 +47,7 @@ class Espfc
       _mixer.update();
       _telemetry.update();
       _cli.update();
+      blackboxUpdate(micros());
       _model.state.newGyroData = false;
       _model.state.newInputData = false;
       return 1;
