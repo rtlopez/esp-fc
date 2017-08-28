@@ -10,7 +10,6 @@ static Stream * blackboxSerial = NULL;
 void serialWrite(serialPort_t *instance, uint8_t ch)
 {
   UNUSED(instance);
-  UNUSED(ch);
   if(blackboxSerial) blackboxSerial->write(ch);
 }
 
@@ -31,9 +30,11 @@ class Blackbox
     {
       serialWriteInit(_serial);
 
+      currentPidProfile = &_pidProfile;
       blackboxConfigMutable()->p_denom = 32;
       blackboxConfigMutable()->device = BLACKBOX_DEVICE_SERIAL;
       gyro.targetLooptime = _model.state.gyroSampleInterval * 1000;
+      targetPidLooptime = gyro.targetLooptime;
 
       blackboxInit();
     }
@@ -57,6 +58,7 @@ class Blackbox
   private:
     Model& _model;
     Stream& _serial;
+    pidProfile_s _pidProfile;
 };
 
 }

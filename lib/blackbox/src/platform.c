@@ -40,7 +40,11 @@ uint8_t armingFlags;
 uint8_t debugMode;
 int16_t debug[DEBUG16_VALUE_COUNT];
 gyro_t gyro;
-acc_t acc;
+acc_t acc = {
+  .dev = {
+    .acc_1G = 4096
+  }
+};
 uint16_t rssi;
 float axisPID_P[3], axisPID_I[3], axisPID_D[3];
 float motor[MAX_SUPPORTED_MOTORS];
@@ -49,8 +53,13 @@ uint32_t targetPidLooptime;
 float rcCommand[4];
 float motorOutputHigh, motorOutputLow;
 
-static serialPort_t _sp;
-static serialPortConfig_t _spc;
+static serialPort_t _sp = {
+  .txBufferSize = 0
+};
+static serialPortConfig_t _spc = {
+  .blackbox_baudrateIndex = 5,
+  .identifier = SERIAL_PORT_USART1
+};
 static uint32_t activeFeaturesLatch = 0;
 
 int gcd(int num, int denom)
