@@ -19,7 +19,11 @@ namespace Espfc {
 class Espfc
 {
   public:
-    Espfc(Stream& cliPort, Stream& telPort): _model(), _controller(_model), _input(_model), _actuator(_model), _sensor(_model), _fusion(_model), _mixer(_model), _blackbox(_model, cliPort), _telemetry(_model, cliPort), _cli(_model, cliPort) {}
+    Espfc(HardwareSerial& cliPort, HardwareSerial& telPort):
+      _model(), _controller(_model), _input(_model), _actuator(_model), _sensor(_model), _fusion(_model),
+      _mixer(_model), _blackbox(_model, cliPort), _telemetry(_model, cliPort), _cli(_model, cliPort)
+      {}
+        
     int begin()
     {
       _sensor.begin();

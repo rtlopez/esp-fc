@@ -303,8 +303,8 @@ class Model
         config.magCalibrationScale.set(i, 1.f);
       }
 
-      config.telemetry = 1;
-      config.telemetryInterval = 200;
+      config.telemetry = 0;
+      config.telemetryInterval = 1000;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)

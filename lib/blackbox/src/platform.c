@@ -1,7 +1,9 @@
 #include "platform.h"
 
-const char * const targetName = "ESP8266"; //__TARGET__;
-const char * const shortGitRevision = "0000000"; //__REVISION__;
+//const char * const targetName = "ESP8266"; //__TARGET__;
+//const char * const shortGitRevision = "0000000"; //__REVISION__;
+const char * const targetName = "OMNIBUSF4SD"; //__TARGET__;
+const char * const shortGitRevision = "e1c4b5ce1c4b5c"; //__REVISION__;
 const char * const buildTime = __TIME__;
 const char * const buildDate = __DATE__;
 
@@ -42,7 +44,7 @@ int16_t debug[DEBUG16_VALUE_COUNT];
 gyro_t gyro;
 acc_t acc = {
   .dev = {
-    .acc_1G = 4096
+    .acc_1G = 2048
   }
 };
 uint16_t rssi;
@@ -54,11 +56,11 @@ float rcCommand[4];
 float motorOutputHigh, motorOutputLow;
 
 static serialPort_t _sp = {
-  .txBufferSize = 0
+    .txBufferSize = 128
 };
 static serialPortConfig_t _spc = {
-  .blackbox_baudrateIndex = 5,
-  .identifier = SERIAL_PORT_USART1
+    .blackbox_baudrateIndex = 5,
+    .identifier = SERIAL_PORT_USART1
 };
 static uint32_t activeFeaturesLatch = 0;
 
@@ -117,16 +119,6 @@ void closeSerialPort(serialPort_t *serialPort)
 
 void mspSerialAllocatePorts(void)
 {
-}
-
-uint32_t serialTxBytesFree(const serialPort_t *instance)
-{
-    return 0;
-}
-
-bool isSerialTransmitBufferEmpty(const serialPort_t *instance)
-{
-    return true;
 }
 
 portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function)

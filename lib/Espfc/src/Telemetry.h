@@ -20,9 +20,9 @@ class Telemetry
       if(_model.config.telemetry && _model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)
       {
         (*this)
-          << _model.state.timestamp
-          << _model.state.armed
-          << _model.state.gyroBiasValid
+          //<< _model.state.timestamp
+          //<< _model.state.armed
+          //<< _model.state.gyroBiasValid
 
           //<< _model.state.angle[1]
           //<< _model.state.desiredRotation

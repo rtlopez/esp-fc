@@ -10,10 +10,10 @@
 #define MAX_SUPPORTED_SERVOS 0
 #define PID_PROCESS_DENOM_DEFAULT       1
 
-#define FC_FIRMWARE_NAME            "esp-fc"
-#define FC_VERSION_MAJOR            0  // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR            0  // increment when a minor release is made (small new feature, change etc)
-#define FC_VERSION_PATCH_LEVEL      1  // increment when a bug is fixed
+#define FC_FIRMWARE_NAME            "Betaflight"
+#define FC_VERSION_MAJOR            3  // increment when a major release is made (big new feature, etc)
+#define FC_VERSION_MINOR            2  // increment when a minor release is made (small new feature, change etc)
+#define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -60,6 +60,9 @@ int gcd(int num, int denom);
 #ifndef constrain
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #endif
+
+unsigned long millis(void);
+unsigned long micros(void);
 /* UTILS END */
 
 /* PARAMETER GROUP START */
@@ -340,6 +343,7 @@ PG_DECLARE(motorConfig_t, motorConfig);
 
 extern float motor[MAX_SUPPORTED_MOTORS];
 extern float motor_disarmed[MAX_SUPPORTED_MOTORS];
+extern float motorOutputHigh, motorOutputLow;
 
 uint8_t getMotorCount();
 /* MIXER END */
@@ -588,7 +592,6 @@ PG_DECLARE(pidConfig_t, pidConfig);
 extern float axisPID_P[3], axisPID_I[3], axisPID_D[3];
 extern struct pidProfile_s *currentPidProfile;
 extern uint32_t targetPidLooptime;
-
 /* PID END */
 
 /* DEBUG START */
