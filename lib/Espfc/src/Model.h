@@ -110,6 +110,33 @@ enum ActuatorConfig {
   ACT_GYRO_THRUST = 1 << 10
 };
 
+enum DebugMode {
+    DEBUG_NONE,
+    DEBUG_CYCLETIME,
+    DEBUG_BATTERY,
+    DEBUG_GYRO,
+    DEBUG_ACCELEROMETER,
+    DEBUG_MIXER,
+    DEBUG_AIRMODE,
+    DEBUG_PIDLOOP,
+    DEBUG_NOTCH,
+    DEBUG_RC_INTERPOLATION,
+    DEBUG_VELOCITY,
+    DEBUG_DTERM_FILTER,
+    DEBUG_ANGLERATE,
+    DEBUG_ESC_SENSOR,
+    DEBUG_SCHEDULER,
+    DEBUG_STACK,
+    DEBUG_ESC_SENSOR_RPM,
+    DEBUG_ESC_SENSOR_TMP,
+    DEBUG_ALTITUDE,
+    DEBUG_FFT,
+    DEBUG_FFT_TIME,
+    DEBUG_FFT_FREQ,
+    DEBUG_FRSKY_D_RX,
+    DEBUG_COUNT
+};
+
 const size_t OUTPUT_CHANNELS = 4;
 const size_t INPUT_CHANNELS  = 8;
 
@@ -128,16 +155,19 @@ struct ModelState
   VectorInt16 accelRaw;
   VectorInt16 magRaw;
 
+  VectorFloat gyroScaled;
+  VectorFloat accelScaled;
+  VectorFloat magScaled;
+
   VectorFloat gyro;
+  VectorFloat accel;
+  VectorFloat mag;
+
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;
-
-  VectorFloat accel;
   VectorFloat accelPose;
   VectorFloat accelPose2;
   Quaternion accelPoseQ;
-
-  VectorFloat mag;
   VectorFloat magPose;
 
   VectorFloat pose;
@@ -280,7 +310,7 @@ class Model
       config.gyroDlpf = GYRO_DLPF_256;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_250;
+      config.gyroSampleRate = GYRO_RATE_500;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
@@ -313,15 +343,13 @@ class Model
         config.outputNeutral[i] = 1040;
         config.outputMax[i] = 2000;
       }
-      //config.outputMin[0] = 2400; // reverse channel 0
-      //config.outputMax[0] =  600;
 
-      config.outputPin[0] = D5;
+      config.outputPin[0] = D7; // -1 off
       config.outputPin[1] = D6;
-      config.outputPin[2] = -1; // D3;
-      config.outputPin[3] = -1; // D4;
+      config.outputPin[2] = D5;
+      config.outputPin[3] = D3;
       config.modelFrame = FRAME_QUAD_X;
-      config.pwmRate = 100;
+      config.pwmRate = 125;    // 125 max
 
       // input config
       config.ppmPin = D8;     // GPIO15

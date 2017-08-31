@@ -79,19 +79,19 @@ class Sensor
 
     void updateGyro()
     {
-      VectorFloat accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
-      accel.rotate(_model.state.boardRotationQ);
-      _model.state.accel = _model.state.accel * (1.f - _model.config.accelFilterAlpha) + accel * _model.config.accelFilterAlpha;
+      _model.state.accelScaled = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
+      //accel.rotate(_model.state.boardRotationQ);
+      _model.state.accel = _model.state.accel * (1.f - _model.config.accelFilterAlpha) + _model.state.accelScaled * _model.config.accelFilterAlpha;
 
-      VectorFloat gyro  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
-      gyro.rotate(_model.state.boardRotationQ);
-      _model.state.gyro  = _model.state.gyro  * (1.f - _model.config.gyroFilterAlpha)  + gyro  * _model.config.gyroFilterAlpha;
+      _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
+      //gyro.rotate(_model.state.boardRotationQ);
+      _model.state.gyro  = _model.state.gyro  * (1.f - _model.config.gyroFilterAlpha)  + _model.state.gyroScaled  * _model.config.gyroFilterAlpha;
 
       if(_model.config.magEnable)
       {
-        VectorFloat mag  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
-        mag.rotate(_model.state.boardRotationQ);
-        _model.state.mag = _model.state.mag * (1.f - _model.config.magFilterAlpha) + mag   * _model.config.magFilterAlpha;
+        _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
+        //mag.rotate(_model.state.boardRotationQ);
+        _model.state.mag = _model.state.mag * (1.f - _model.config.magFilterAlpha) + _model.state.magScaled * _model.config.magFilterAlpha;
       }
     }
 

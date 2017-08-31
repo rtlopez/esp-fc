@@ -46,7 +46,7 @@ class Pid
         //dTerm = (Kd * (error - state.prevError) / dt) * state.dScale;
         // OR
         //dTerm = (Kd * (state.prevInput - input) / dt) * state.dScale;
-        // OR
+        // OR BOTH
         dTerm = (Kd * (((error - state.prevError) * dGamma) + (state.prevInput - input) * (1.f - dGamma)) / dt) * state.dScale;
       }
       state.dTerm = (1.f - dAlpha) * state.dTerm + dAlpha * dTerm;
