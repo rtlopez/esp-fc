@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 #include "Model.h"
+#include "Hardware.h"
 
 namespace Espfc {
 
@@ -99,7 +100,7 @@ class Cli
         ParamType type;
     };
 
-    Cli(Model& model, Stream& stream): _model(model), _stream(stream), _index(0)
+    Cli(Model& model): _model(model), _index(0)
     {
       ModelConfig * c = &_model.config;
       size_t i = 0;
@@ -120,13 +121,17 @@ class Cli
 
     int begin()
     {
+      _stream = (Stream*)Hardware::getSerialPort(_model.config.cliPort);
+      return 1;
     }
 
     int update()
     {
-      while(_stream.available() > 0)
+      if(!_stream) return 0;
+
+      while((*_stream).available() > 0)
       {
-        process(_stream.read());
+        process((*_stream).read());
       }
     }
 
@@ -164,72 +169,72 @@ class Cli
       for(size_t i = 0; i < Cmd::ARGS_SIZE; ++i)
       {
         if(!_cmd.args[i]) break;
-        _stream.print(_cmd.args[i]);
-        _stream.print(' ');
+        print(_cmd.args[i]);
+        print(' ');
       }
-      _stream.println();
+      println();
 
       if(!_cmd.args[0]) return;
 
       if(strcmp_P(_cmd.args[0], PSTR("help")) == 0)
       {
-        _stream.println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n reset\n info\n version"));
+        println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n reset\n info\n version"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
-        _stream.println(F("0.1"));
+        println(F("0.1"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("info")) == 0)
       {
-        _stream.print(F(" bool: ")); _stream.println(sizeof(bool));
-        _stream.print(F(" char: ")); _stream.println(sizeof(char));
-        _stream.print(F("short: ")); _stream.println(sizeof(short));
-        _stream.print(F("  int: ")); _stream.println(sizeof(int));
-        _stream.print(F(" long: ")); _stream.println(sizeof(long));
-        _stream.print(F("float: ")); _stream.println(sizeof(float));
-        _stream.print(F("model: ")); _stream.println(sizeof(ModelConfig));
+        print(F(" bool: ")); println(sizeof(bool));
+        print(F(" char: ")); println(sizeof(char));
+        print(F("short: ")); println(sizeof(short));
+        print(F("  int: ")); println(sizeof(int));
+        print(F(" long: ")); println(sizeof(long));
+        print(F("float: ")); println(sizeof(float));
+        print(F("model: ")); println(sizeof(ModelConfig));
 
         const rst_info * resetInfo = system_get_rst_info();
-        _stream.print(F("system_get_rst_info() reset reason: "));
-        _stream.println(resetInfo->reason);
+        print(F("system_get_rst_info() reset reason: "));
+        println(resetInfo->reason);
 
-        _stream.print(F("system_get_free_heap_size(): "));
-        _stream.println(system_get_free_heap_size());
+        print(F("system_get_free_heap_size(): "));
+        println(system_get_free_heap_size());
 
-        _stream.print(F("system_get_os_print(): "));
-        _stream.println(system_get_os_print());
+        print(F("system_get_os_print(): "));
+        println(system_get_os_print());
 
         //system_print_meminfo();
 
-        _stream.print(F("system_get_chip_id(): 0x"));
-        _stream.println(system_get_chip_id(), HEX);
+        print(F("system_get_chip_id(): 0x"));
+        println(system_get_chip_id(), HEX);
 
-        _stream.print(F("system_get_sdk_version(): "));
-        _stream.println(system_get_sdk_version());
+        print(F("system_get_sdk_version(): "));
+        println(system_get_sdk_version());
 
-        _stream.print(F("system_get_boot_version(): "));
-        _stream.println(system_get_boot_version());
+        print(F("system_get_boot_version(): "));
+        println(system_get_boot_version());
 
-        _stream.print(F("system_get_userbin_addr(): 0x"));
-        _stream.println(system_get_userbin_addr(), HEX);
+        print(F("system_get_userbin_addr(): 0x"));
+        println(system_get_userbin_addr(), HEX);
 
-        _stream.print(F("system_get_boot_mode(): "));
-        _stream.println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
+        print(F("system_get_boot_mode(): "));
+        println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
 
-        _stream.print(F("system_get_cpu_freq(): "));
-        _stream.println(system_get_cpu_freq());
+        print(F("system_get_cpu_freq(): "));
+        println(system_get_cpu_freq());
 
-        _stream.print(F("system_get_flash_size_map(): "));
-        _stream.println(system_get_flash_size_map());
+        print(F("system_get_flash_size_map(): "));
+        println(system_get_flash_size_map());
 
-        _stream.print(F("system_get_time(): "));
-        _stream.println(system_get_time() / 1000000);
+        print(F("system_get_time(): "));
+        println(system_get_time() / 1000000);
       }
       else if(strcmp_P(_cmd.args[0], PSTR("get")) == 0)
       {
         if(!_cmd.args[1])
         {
-          _stream.println(F("param required"));
+          println(F("param required"));
           return;
         }
         for(size_t i = 0; i < PARAM_SIZE; ++i)
@@ -238,21 +243,21 @@ class Cli
 
           if(strcmp_P(_cmd.args[1], _params[i].name) == 0)
           {
-            _stream.print(FPSTR(_params[i].name));
-            _stream.print(" = ");
-            _params[i].print(_stream);
-            _stream.println();
+            print(FPSTR(_params[i].name));
+            print(" = ");
+            _params[i].print(*_stream);
+            println();
             return;
           }
         }
-        _stream.print(F("param not found: "));
-        _stream.println(_cmd.args[1]);
+        print(F("param not found: "));
+        println(_cmd.args[1]);
       }
       else if(strcmp_P(_cmd.args[0], PSTR("set")) == 0)
       {
         if(!_cmd.args[1])
         {
-          _stream.println(F("param required"));
+          println(F("param required"));
           return;
         }
         for(size_t i = 0; i < PARAM_SIZE; ++i)
@@ -266,8 +271,8 @@ class Cli
             return;
           }
         }
-        _stream.print(F("param not found: "));
-        _stream.println(_cmd.args[1]);
+        print(F("param not found: "));
+        println(_cmd.args[1]);
       }
       else if(strcmp_P(_cmd.args[0], PSTR("list")) == 0)
       {
@@ -285,13 +290,13 @@ class Cli
           _model.config.magCalibration = 1;
           _model.config.telemetry = 1;
           _model.config.telemetryInterval = 200;
-          _stream.print("mag calibration on");
+          print("mag calibration on");
         }
         else if(_cmd.args[1][0] == '0')
         {
           _model.config.magCalibration = 0;
           _model.config.telemetry = 0;
-          _stream.print("mag calibration off");
+          print("mag calibration off");
         }
       }
       else if(strcmp_P(_cmd.args[0], PSTR("load")) == 0)
@@ -306,32 +311,67 @@ class Cli
       {
         for(int i = 0; i < 32; ++i)
         {
-          _stream.print(EEPROM.read(i), HEX);
-          _stream.print(' ');
+          print(EEPROM.read(i), HEX);
+          print(' ');
         }
       }
       else
       {
-        _stream.print(F("command not found: "));
-        _stream.println(_cmd.args[0]);
+        print(F("command not found: "));
+        println(_cmd.args[0]);
       }
-      _stream.println();
+      println();
     }
 
   private:
+    template<typename T>
+    void print(const T& t)
+    {
+      if(!_stream) return;
+      (*_stream).print(t);
+    }
+
+    template<typename T, typename V>
+    void print(const T& t, const V& v)
+    {
+      if(!_stream) return;
+      (*_stream).print(t, v);
+    }
+
+    template<typename T>
+    void println(const T& t)
+    {
+      if(!_stream) return;
+      (*_stream).println(t);
+    }
+
+    template<typename T, typename V>
+    void println(const T& t, const V& v)
+    {
+      if(!_stream) return;
+      (*_stream).print(t, v);
+    }
+
+    void println()
+    {
+      if(!_stream) return;
+      (*_stream).println();
+    }
+
     void print(const Param& param)
     {
-      _stream.print(FPSTR(param.name));
-      _stream.print(" = ");
-      param.print(_stream);
-      _stream.println();
+      if(!_stream) return;
+      print(FPSTR(param.name));
+      print(" = ");
+      param.print(*_stream);
+      println();
     }
 
     static const size_t PARAM_SIZE = 32;
     static const size_t BUFF_SIZE = 64;
 
     Model& _model;
-    Stream& _stream;
+    Stream * _stream;
     Param _params[PARAM_SIZE];
     char _buff[BUFF_SIZE];
     size_t _index;

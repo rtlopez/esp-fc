@@ -12,17 +12,10 @@
 #include <printf.h>
 #include <blackbox.h>
 
-Espfc::Espfc espfc(Serial, Serial);
+Espfc::Espfc espfc;
 
 void setup()
 {
-  EEPROM.begin(1024);
-  Wire.begin();
-  //Wire.setClock(400000);
-  Wire.setClock(1000000); // in real ~640kHz
-  Serial.begin(115200);
-  Serial.println();
-
   espfc.begin();
 }
 

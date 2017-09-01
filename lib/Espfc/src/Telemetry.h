@@ -2,22 +2,27 @@
 #define _ESPFC_TELEMETRY_H_
 
 #include "Model.h"
+#include "Hardware.h"
 
 namespace Espfc {
 
 class Telemetry
 {
   public:
-    Telemetry(Model& model, Stream& stream): _model(model), _stream(stream) {}
+    Telemetry(Model& model): _model(model) {}
+
     int begin()
     {
-
+      _stream = (Stream*)Hardware::getSerialPort(_model.config.telemetryPort);
+      return 1;
     }
 
     int update()
     {
+      if(!_stream || !_model.config.telemetry) return 0;
+
       unsigned long now = millis();
-      if(_model.config.telemetry && _model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)
+      if(_model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)
       {
         (*this)
           //<< _model.state.timestamp
@@ -115,19 +120,25 @@ class Telemetry
     template<typename T>
     Telemetry& operator<<(T v)
     {
-      _stream.print(v); _stream.print(' ');
+      if(!_stream) return *this;
+      (*_stream).print(v);
+      (*_stream).print(' ');
       return *this;
     }
 
     Telemetry& operator<<(long v)
     {
-      _stream.print(v); _stream.print(' ');
+      if(!_stream) return *this;
+      (*_stream).print(v);
+      (*_stream).print(' ');
       return *this;
     }
 
     Telemetry& operator<<(float v)
     {
-      _stream.print(v, 4); _stream.print(' ');
+      if(!_stream) return *this;
+      (*_stream).print(v, 4);
+      (*_stream).print(' ');
       return *this;
     }
 
@@ -151,11 +162,12 @@ class Telemetry
 
     void println()
     {
-      _stream.println();
+      if(!_stream) return;
+      (*_stream).println();
     }
 
     Model& _model;
-    Stream& _stream;
+    Stream * _stream;
 };
 
 }

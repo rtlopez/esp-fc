@@ -111,30 +111,47 @@ enum ActuatorConfig {
 };
 
 enum DebugMode {
-    DEBUG_NONE,
-    DEBUG_CYCLETIME,
-    DEBUG_BATTERY,
-    DEBUG_GYRO,
-    DEBUG_ACCELEROMETER,
-    DEBUG_MIXER,
-    DEBUG_AIRMODE,
-    DEBUG_PIDLOOP,
-    DEBUG_NOTCH,
-    DEBUG_RC_INTERPOLATION,
-    DEBUG_VELOCITY,
-    DEBUG_DTERM_FILTER,
-    DEBUG_ANGLERATE,
-    DEBUG_ESC_SENSOR,
-    DEBUG_SCHEDULER,
-    DEBUG_STACK,
-    DEBUG_ESC_SENSOR_RPM,
-    DEBUG_ESC_SENSOR_TMP,
-    DEBUG_ALTITUDE,
-    DEBUG_FFT,
-    DEBUG_FFT_TIME,
-    DEBUG_FFT_FREQ,
-    DEBUG_FRSKY_D_RX,
-    DEBUG_COUNT
+  DEBUG_NONE,
+  DEBUG_CYCLETIME,
+  DEBUG_BATTERY,
+  DEBUG_GYRO,
+  DEBUG_ACCELEROMETER,
+  DEBUG_MIXER,
+  DEBUG_AIRMODE,
+  DEBUG_PIDLOOP,
+  DEBUG_NOTCH,
+  DEBUG_RC_INTERPOLATION,
+  DEBUG_VELOCITY,
+  DEBUG_DTERM_FILTER,
+  DEBUG_ANGLERATE,
+  DEBUG_ESC_SENSOR,
+  DEBUG_SCHEDULER,
+  DEBUG_STACK,
+  DEBUG_ESC_SENSOR_RPM,
+  DEBUG_ESC_SENSOR_TMP,
+  DEBUG_ALTITUDE,
+  DEBUG_FFT,
+  DEBUG_FFT_TIME,
+  DEBUG_FFT_FREQ,
+  DEBUG_FRSKY_D_RX,
+  DEBUG_COUNT
+};
+
+enum SerialSpeed {
+  SERIAL_SPEED_NONE   =      0,
+  SERIAL_SPEED_9600   =   9600,
+  SERIAL_SPEED_19200  =  19200,
+  SERIAL_SPEED_38400  =  38400,
+  SERIAL_SPEED_57600  =  57600,
+  SERIAL_SPEED_115200 = 115200,
+  SERIAL_SPEED_230400 = 230400,
+  SERIAL_SPEED_250000 = 250000
+};
+
+enum SerialPort {
+  SERIAL_UART_NONE = 0,
+  SERIAL_UART_1,
+  SERIAL_UART_2
 };
 
 const size_t OUTPUT_CHANNELS = 4;
@@ -298,6 +315,14 @@ struct ModelConfig
 
   bool telemetry;
   short telemetryInterval;
+  SerialPort telemetryPort;
+
+  bool blackbox;
+  SerialPort blackboxPort;
+  SerialPort cliPort;
+
+  SerialSpeed uart1Speed;
+  SerialSpeed uart2Speed;
 
   short fusionMode;
 };
@@ -324,8 +349,8 @@ class Model
       config.gyroFilterAlpha = 0.1;
       config.magFilterAlpha = 1.0;
       config.velocityFilterAlpha = 0.1;
-      //config.fusionMode = FUSION_MADGWICK;
-      config.fusionMode = FUSION_COMPLEMENTARY;
+      config.fusionMode = FUSION_MADGWICK;
+      //config.fusionMode = FUSION_COMPLEMENTARY;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -333,8 +358,17 @@ class Model
         config.magCalibrationScale.set(i, 1.f);
       }
 
+      config.uart1Speed = SERIAL_SPEED_115200;
+      config.uart2Speed = SERIAL_SPEED_230400;
+
+      config.cliPort = SERIAL_UART_1;
+
       config.telemetry = 0;
       config.telemetryInterval = 1000;
+      config.telemetryPort = SERIAL_UART_1;
+
+      config.blackbox = 0;
+      config.blackboxPort = SERIAL_UART_2;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)

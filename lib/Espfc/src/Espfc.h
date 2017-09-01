@@ -13,19 +13,21 @@
 #include "Blackbox.h"
 #include "Telemetry.h"
 #include "Cli.h"
+#include "SerialDevice.h"
 
 namespace Espfc {
 
 class Espfc
 {
   public:
-    Espfc(HardwareSerial& cliPort, HardwareSerial& telPort):
-      _model(), _controller(_model), _input(_model), _actuator(_model), _sensor(_model), _fusion(_model),
-      _mixer(_model), _blackbox(_model, cliPort), _telemetry(_model, cliPort), _cli(_model, cliPort)
+    Espfc():
+      _model(), _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model), _fusion(_model),
+      _mixer(_model), _blackbox(_model), _telemetry(_model), _cli(_model)
       {}
-        
+
     int begin()
     {
+      _hardware.begin();
       _sensor.begin();
       _fusion.begin();
       _input.begin();
@@ -41,7 +43,7 @@ class Espfc
 
     int update()
     {
-      bool updated = false;
+      _hardware.update();
       _sensor.update();
       _fusion.update();
       _input.update();
@@ -51,14 +53,17 @@ class Espfc
       _blackbox.update();
       _telemetry.update();
       _cli.update();
+
       _model.state.newGyroData = false;
       _model.state.newInputData = false;
+
       return 1;
     }
-    Model& model() { return _model; }
+    //Model& model() { return _model; }
 
   private:
     Model _model;
+    Hardware _hardware;
     Controller _controller;
     Input _input;
     Actuator _actuator;

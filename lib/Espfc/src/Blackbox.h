@@ -1,6 +1,8 @@
 #ifndef _ESPFC_BLACKBOX_H_
 #define _ESPFC_BLACKBOX_H_
+
 #include "Model.h"
+#include "Hardware.h"
 
 extern "C" {
 #include "blackbox.h"
@@ -13,9 +15,9 @@ void serialWrite(serialPort_t *instance, uint8_t ch)
   if(blackboxSerial) blackboxSerial->write(ch);
 }
 
-void serialWriteInit(HardwareSerial& serial)
+void serialWriteInit(HardwareSerial * serial)
 {
-  blackboxSerial = &serial;
+  blackboxSerial = serial;
 }
 
 uint32_t serialTxBytesFree(const serialPort_t *instance)
@@ -39,9 +41,13 @@ namespace Espfc {
 class Blackbox
 {
   public:
-    Blackbox(Model& model, HardwareSerial& serial): _model(model), _serial(serial) {}
-    void begin()
+    Blackbox(Model& model): _model(model) {}
+
+    int begin()
     {
+      _serial = Hardware::getSerialPort(_model.config.blackboxPort);
+      if(!_serial) return 0;
+
       serialWriteInit(_serial);
 
       systemConfigMutable()->activeRateProfile = 0;
@@ -107,16 +113,20 @@ class Blackbox
       featureConfigMutable()->enabledFeatures = 9243034;
 
       blackboxInit();
+      return 1;
     }
 
-    void  update()
+    int update()
     {
+      if(!_serial) return 0;
       if(_model.state.newGyroData)
       {
         updateArmed();
         updateData();
         blackboxUpdate(micros());
+        return 1;
       }
+      return 0;
     }
 
   private:
@@ -158,8 +168,8 @@ class Blackbox
     }
 
     Model& _model;
-    HardwareSerial& _serial;
     pidProfile_s _pidProfile;
+    HardwareSerial * _serial;
 };
 
 }
