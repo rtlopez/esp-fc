@@ -21,9 +21,11 @@ class Input
     {
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {
+        _model.state.inputUs[i] = 1500;
         _model.state.input[i] = 0.f;
       }
       _model.state.input[3] = -1.f; // throttle
+      _model.state.inputUs[3] = 1000;
     }
 
     int update()

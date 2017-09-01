@@ -155,13 +155,21 @@ enum SerialPort {
 };
 
 const size_t OUTPUT_CHANNELS = 4;
-const size_t INPUT_CHANNELS  = 8;
 
-const size_t AXES        = 4;
-const size_t AXIS_ROLL   = 0;  // x
-const size_t AXIS_PITCH  = 1;  // y
-const size_t AXIS_YAW    = 2;  // z
-const size_t AXIS_THRUST = 3;  // throttle channel index
+enum Axis {
+  AXIS_ROLL,    // x
+  AXIS_PITCH,   // y
+  AXIS_YAW,     // z
+  AXIS_THRUST,  // throttle channel index
+  AXIS_AUX_1,
+  AXIS_AUX_2,
+  AXIS_AUX_3,
+  AXIS_AUX_4,
+  AXIS_COUNT
+};
+
+const size_t AXES            = 4;
+const size_t INPUT_CHANNELS  = AXIS_COUNT;
 
 // working data
 struct ModelState
@@ -363,12 +371,12 @@ class Model
 
       config.cliPort = SERIAL_UART_1;
 
-      config.telemetry = 0;
-      config.telemetryInterval = 1000;
+      config.telemetry = 1;
+      config.telemetryInterval = 500;
       config.telemetryPort = SERIAL_UART_1;
 
       config.blackbox = 0;
-      config.blackboxPort = SERIAL_UART_2;
+      config.blackboxPort = SERIAL_UART_NONE;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -387,14 +395,13 @@ class Model
 
       // input config
       config.ppmPin = D8;     // GPIO15
-      config.inputMap[0] = 0; // roll
-      config.inputMap[1] = 1; // pitch
-      config.inputMap[2] = 3; // yaw
-      config.inputMap[3] = 2; // throttle
-      config.inputMap[4] = 4; // flight mode
-      config.inputMap[5] = 5; // aux 1
-      config.inputMap[6] = 6; // aux 2
-      config.inputMap[7] = 7; // aux 3
+      for(size_t i = 0; i < INPUT_CHANNELS; i++)
+      {
+        config.inputMap[i] = i;
+      }
+      // swap yaw and throttle
+      config.inputMap[2] = 3; // replace input 2 with rx channel 3, yaw
+      config.inputMap[3] = 2; // replace input 3 with rx channel 2, throttle
 
       config.flightModeChannel = 4;
       config.flightModes[0] = MODE_OFF;
@@ -407,9 +414,9 @@ class Model
         config.inputNeutral[i] = 1500;
         config.inputMax[i] = 2000;
       }
-      config.inputNeutral[AXIS_THRUST] = 1050; // override for thrust
-      config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
-      config.inputMax[AXIS_YAW] = 1000;
+      config.inputNeutral[AXIS_THRUST] = 1050; // override for thrust neutral
+      //config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
+      //config.inputMax[AXIS_YAW] = 1000;
 
       // controller config
       for(size_t i = 0; i < AXES; i++)

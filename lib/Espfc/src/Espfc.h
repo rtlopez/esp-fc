@@ -13,7 +13,7 @@
 #include "Blackbox.h"
 #include "Telemetry.h"
 #include "Cli.h"
-#include "SerialDevice.h"
+#include "Hardware.h"
 
 namespace Espfc {
 

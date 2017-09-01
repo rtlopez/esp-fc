@@ -49,12 +49,17 @@ class Telemetry
           //<< _model.state.inputUs[1]
           //<< _model.state.inputUs[2]
           //<< _model.state.inputUs[3]
+          //<< _model.state.inputUs[4]
+          //<< _model.state.inputUs[5]
+          //<< _model.state.inputUs[6]
+          //<< _model.state.inputUs[7]
 
           //<< _model.state.input[0]
           //<< _model.state.input[1]
           //<< _model.state.input[2]
           //<< _model.state.input[3]
-
+          //<< _model.state.input[4]
+          
           //<< _model.state.desiredAngle[1]
           //<< _model.state.desiredAngle[2]
 

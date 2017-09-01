@@ -45,6 +45,8 @@ class Blackbox
 
     int begin()
     {
+      if(!_model.config.blackbox) return 0;
+
       _serial = Hardware::getSerialPort(_model.config.blackboxPort);
       if(!_serial) return 0;
 
@@ -118,6 +120,7 @@ class Blackbox
 
     int update()
     {
+      if(!_model.config.blackbox) return 0;
       if(!_serial) return 0;
       if(_model.state.newGyroData)
       {
