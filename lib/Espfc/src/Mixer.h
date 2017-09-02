@@ -17,24 +17,36 @@ class Mixer
         PWM.attach(i, _model.config.outputPin[i],  _model.config.outputMin[i]);
       }
       PWM.begin(_model.config.pwmRate);
+      _model.state.mixerInterval = 1000 / _model.config.pwmRate;
     }
 
     int update()
     {
-      if(!_model.state.newGyroData && !_model.state.newInputData) return 0;
+      unsigned long now = millis();
+      if(_model.state.mixerTimestamp + _model.state.mixerInterval > now) return 0;
+
+      _model.state.mixerTimestamp = now;
+
       if(!_model.state.armed)
       {
         updateDisarmed();
         return 0;
       }
 
-      unsigned long now = millis();
       switch(_model.config.modelFrame)
       {
-        case FRAME_QUAD_X:         updateQuadX(); break;
-        case FRAME_BALANCE_ROBOT:  updateBalancingRobot(); break;
-        case FRAME_GIMBAL:         updateGimbal(); break;
-        case FRAME_DIRECT:         updateDirect(); break;
+        case FRAME_QUAD_X:
+          updateQuadX();
+          break;
+        case FRAME_BALANCE_ROBOT:
+          updateBalancingRobot();
+          break;
+        case FRAME_GIMBAL:
+          updateGimbal();
+          break;
+        case FRAME_DIRECT:
+          updateDirect();
+          break;
         case FRAME_UNCONFIGURED:
         default:
           updateDisarmed();
@@ -45,13 +57,12 @@ class Mixer
 
     void updateDisarmed()
     {
-      float out[4];
-      float v = _model.config.modelFrame == FRAME_QUAD_X ? -1.f : 0.f;
-      out[0] = v;
-      out[1] = v;
-      out[2] = v;
-      out[3] = v;
-      writeOutput(out, 4);
+      short out[4];
+      out[0] = 1000;
+      out[1] = 1000;
+      out[2] = 1000;
+      out[3] = 1000;
+      writeOutputRaw(out, 4);
     }
 
     void updateGimbal()
@@ -93,11 +104,28 @@ class Mixer
       float p = _model.state.output[AXIS_PITCH];
       float y = _model.state.output[AXIS_YAW];
       float t = _model.state.output[AXIS_THRUST];
+
       float out[4];
-      out[0] = t + r + p + y;
-      out[1] = t - r + p - y;
-      out[2] = t - r - p + y;
-      out[3] = t + r - p - y;
+      out[0] = -r + p + y;
+      out[1] =  r + p - y;
+      out[2] = -r - p + y;
+      out[3] =  r - p - y;
+
+      /*
+      float min = 0, max = 0, adj = 0;
+      for(size_t i = 0; i < 4; i++)
+      {
+        if(out[i] > max) max = out[i];
+        else if(out[i] < min) min = out[i];
+      }
+      if(min < -1.f) adj = min + 1.f;
+      else if(max > 1.f) adj = max - 1.f;
+      */
+
+      for(size_t i = 0; i < 4; i++)
+      {
+        out[i] += t;
+      }
       writeOutput(out, 4);
     }
 
@@ -113,6 +141,22 @@ class Mixer
         {
           float v = Math::bound(out[i], -1.f, 1.f);
           _model.state.outputUs[i] = (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+        }
+        PWM.write(i, _model.state.outputUs[i]);
+      }
+    }
+
+    void writeOutputRaw(short * out, int axes)
+    {
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        if(i >= axes)
+        {
+          _model.state.outputUs[i] = 1000;
+        }
+        else
+        {
+          _model.state.outputUs[i] = Math::bound(out[i], (short)1000, (short)2000);
         }
         PWM.write(i, _model.state.outputUs[i]);
       }

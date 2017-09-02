@@ -39,6 +39,9 @@ class Fusion
           updatePoseFromAccelMag();
           complementaryFusion();
           break;
+        case FUSION_NONE:
+          _model.state.rate = _model.state.gyro;
+          break;
         default:
           return 0;
        }

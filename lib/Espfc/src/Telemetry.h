@@ -59,7 +59,7 @@ class Telemetry
           //<< _model.state.input[2]
           //<< _model.state.input[3]
           //<< _model.state.input[4]
-          
+
           //<< _model.state.desiredAngle[1]
           //<< _model.state.desiredAngle[2]
 
@@ -72,6 +72,11 @@ class Telemetry
           //<< _model.state.output[1]
           //<< _model.state.output[2]
           //<< _model.state.output[3]
+
+          //<< _model.state.outputUs[0]
+          //<< _model.state.outputUs[1]
+          //<< _model.state.outputUs[2]
+          //<< _model.state.outputUs[3]
 
           //<< _model.state.velocity[1]
           //<< (_model.state.output[1] - _model.state.gyro[1] * 0.05f) * -1.f

@@ -27,7 +27,15 @@ class Sensor
 
     int update()
     {
-      if(!readSensors()) return 0;
+      // too early, do not read
+      uint32_t now = millis();
+      if(_model.state.timestamp + _model.state.gyroSampleInterval > now) return 0;
+
+      if(!readSensors(now)) return 0;
+
+      _model.state.newGyroData = true;
+      _model.state.timestamp = now;
+
       updateGyro();
       updateGyroBias();
       updateMagBias();
@@ -35,15 +43,10 @@ class Sensor
     }
 
   private:
-    int readSensors()
+    int readSensors(uint32_t now)
     {
       uint8_t buf[FIFO_SIZE];
-      bool fetched = false;
-      uint32_t now = millis();
       int numSamples = 1;
-
-      // too early, do not read
-      if(_model.state.timestamp + _model.state.gyroSampleInterval > now) return 0;
 
       if(_model.config.gyroFifo)
       {
@@ -72,8 +75,6 @@ class Sensor
       {
         now -= _model.state.gyroSampleInterval * (numSamples - 1);
       }
-      _model.state.newGyroData = true;
-      _model.state.timestamp = now;
       return 1;
     }
 

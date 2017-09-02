@@ -57,16 +57,16 @@ class Blackbox
 
       controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
       rp->rcRate8 = 57;
-      rp->rcExpo8 = 0;
+      rp->rcExpo8 = 1;
       rp->rcYawRate8 = 130;
-      rp->rcYawExpo8 = 0;
+      rp->rcYawExpo8 = 1;
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
       rp->dynThrPID = 10;
       rp->tpa_breakpoint = 1650;
-      rp->rates[ROLL] = 84;
-      rp->rates[PITCH] = 84;
-      rp->rates[YAW] = 50;
+      rp->rates[ROLL] = 100;
+      rp->rates[PITCH] = 100;
+      rp->rates[YAW] = 100;
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
       cp->pid[ROLL].P = 50;
@@ -106,8 +106,8 @@ class Blackbox
       gyro.targetLooptime = _model.state.gyroSampleInterval * 1000;
       targetPidLooptime = gyro.targetLooptime;
 
-      motorConfigMutable()->minthrottle = motorOutputLow = 1060;
-      motorConfigMutable()->maxthrottle = motorOutputHigh = 2000;
+      motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMin[0];
+      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
 
       gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = 1;
@@ -115,6 +115,9 @@ class Blackbox
       featureConfigMutable()->enabledFeatures = 9243034;
 
       blackboxInit();
+
+      setArmingBeepTimeMicros(micros());
+
       return 1;
     }
 
@@ -122,14 +125,13 @@ class Blackbox
     {
       if(!_model.config.blackbox) return 0;
       if(!_serial) return 0;
-      if(_model.state.newGyroData)
-      {
-        updateArmed();
-        updateData();
-        blackboxUpdate(micros());
-        return 1;
-      }
-      return 0;
+      if(!_model.state.newGyroData) return 0;
+
+      updateArmed();
+      updateData();
+      blackboxUpdate(micros());
+
+      return 1;
     }
 
   private:
@@ -142,10 +144,10 @@ class Blackbox
         axisPID_P[i] = _model.state.innerPid[i].pTerm * 1000.f;
         axisPID_I[i] = _model.state.innerPid[i].iTerm * 1000.f;
         axisPID_D[i] = _model.state.innerPid[i].dTerm * 1000.f;
-        rcCommand[i] = Math::bound((int)_model.state.inputUs[i] - 1500, -500, 500);
+        rcCommand[i] = _model.state.input[i] * 500;
         debug[i] = lrintf(degrees(_model.state.gyroScaled[i]));
       }
-      rcCommand[AXIS_THRUST] = Math::bound((int)_model.state.inputUs[AXIS_THRUST], 1000, 2000);
+      rcCommand[AXIS_THRUST] = Math::map(_model.state.input[AXIS_THRUST], -1.f, 1.f, 1000, 2000);
       for(size_t i = 0; i < 4; i++)
       {
         motor[i] = Math::bound((int)_model.state.outputUs[i], 1000, 2000);
@@ -154,19 +156,17 @@ class Blackbox
 
     void updateArmed()
     {
-      bool static armed = false;
-      if(_model.state.armed == armed) return;
+      if(_model.state.armed == ARMING_FLAG(ARMED)) return;
       if(_model.state.armed)
       {
         ENABLE_ARMING_FLAG(ARMED);
         setArmingBeepTimeMicros(micros());
-        armed = true;
       }
       else
       {
         DISABLE_ARMING_FLAG(ARMED);
-        setArmingBeepTimeMicros(micros());
-        armed = false;
+        blackboxFinish();
+        //setArmingBeepTimeMicros(micros());
       }
     }
 

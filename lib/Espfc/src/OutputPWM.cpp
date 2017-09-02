@@ -47,7 +47,7 @@ OutputPWM::OutputPWM()
 
 int OutputPWM::begin(int rate)
 {
-  if(rate >= 50 && rate < 500)
+  if(rate >= 50 && rate < 490)
   {
     _frameLength = 1000000 / rate;
   }

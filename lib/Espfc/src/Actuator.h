@@ -12,6 +12,7 @@ class Actuator
     Actuator(Model& model): _model(model) {}
     int begin()
     {
+      _model.state.armed = false;
     }
 
     int update()
@@ -58,18 +59,19 @@ class Actuator
       }
     }
 
-    void updateArming()
-    {
-      _model.state.armed = _model.state.gyroBiasValid;
-      //_model.state.armed = false;
-    }
-
     void updateFlightMode()
     {
       float v = _model.state.input[_model.config.flightModeChannel];
-      int i = v > 0.3f ? 2 : (v > -0.3f ? 1 : 0);
+      int i = v > 0.33f ? 2 : (v > -0.33f ? 1 : 0);
       _model.state.flightMode = _model.config.flightModes[i];
     }
+
+    void updateArming()
+    {
+      if(!_model.state.gyroBiasValid) return;
+      _model.state.armed = _model.state.flightMode != MODE_OFF;
+    }
+
     Model& _model;
 };
 
