@@ -8,9 +8,8 @@ namespace Espfc {
 
 enum FilterType {
   FILTER_NONE,
-  FILTER_AVG,
+  FILTER_PT1,
   FILTER_BIQUAD,
-  FILTER_PT1
 };
 
 enum BiquadFilterType {
@@ -19,7 +18,7 @@ enum BiquadFilterType {
   BIQUAD_FILTER_BPF
 };
 
-struct FilterStateAvg {
+struct FilterStatePt1 {
   float k;
   float v;
 };
@@ -41,12 +40,11 @@ class Filter
       _cut_freq = std::min(_cut_freq, _rate / 2); // adj cut freq below nyquist rule
       switch(_type)
       {
-        case FILTER_AVG:
         case FILTER_PT1:
           initPt1();
           break;
         case FILTER_BIQUAD:
-          initBiQuad();
+          initBiquad(BIQUAD_FILTER_LPF, 1.0f / sqrtf(2.0f)); /* quality factor - butterworth*/
           break;
         case FILTER_NONE:
         default:
@@ -58,8 +56,6 @@ class Filter
     {
       switch(_type)
       {
-        case FILTER_AVG:
-          return updateAvg(v);
         case FILTER_PT1:
           return updatePt1(v);
         case FILTER_BIQUAD:
@@ -75,28 +71,16 @@ class Filter
     {
       float rc = 1.f / (2.f * M_PI * _cut_freq);
       float dt = 1.f / _rate;
-      _state.av.k = dt / (dt + rc);
+      _state.pt1.k = dt / (dt + rc);
     }
 
     float updatePt1(float v)
     {
-      _state.av.v = _state.av.v + _state.av.k * (v - _state.av.v);
-      return _state.av.v;
+      _state.pt1.v = _state.pt1.v + _state.pt1.k * (v - _state.pt1.v);
+      return _state.pt1.v;
     }
 
-    float updateAvg(float v)
-    {
-      _state.av.v = _state.av.v * (1.f - _state.av.k) + _state.av.k * v;
-      return _state.av.v;
-    }
-
-    void initBiQuad()
-    {
-      float q = 1.0f / sqrtf(2.0f);     /* quality factor - butterworth*/
-      initBiquadType(BIQUAD_FILTER_LPF, q);
-    }
-
-    void initBiquadType(BiquadFilterType filterType, float q)
+    void initBiquad(BiquadFilterType filterType, float q)
     {
       const float omega = 2.0f * M_PI * _cut_freq * _rate * 0.000001f;
       const float sn = sinf(omega);
@@ -156,7 +140,7 @@ class Filter
     int _cut_freq;
     int _rate;
     union {
-      FilterStateAvg av;
+      FilterStatePt1 pt1;
       FilterStateBiquad bq;
     } _state;
 };
