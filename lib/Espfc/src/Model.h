@@ -361,7 +361,7 @@ class Model
 {
   public:
     Model() {
-      config.gyroFifo = 1;
+      config.gyroFifo = 0;
       config.gyroDlpf = GYRO_DLPF_256;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
@@ -384,12 +384,12 @@ class Model
       //config.fusionMode = FUSION_MADGWICK;
       //config.fusionMode = FUSION_COMPLEMENTARY;
 
-      config.gyroFilterType = FILTER_PT1;
+      config.gyroFilterType = FILTER_BIQUAD;
       config.gyroFilterCutFreq = 100;
-      config.accelFilterType = FILTER_PT1;
-      config.accelFilterCutFreq = 15;
+      config.accelFilterType = FILTER_BIQUAD;
+      config.accelFilterCutFreq = 20;
       config.magFilterType = FILTER_BIQUAD;
-      config.magFilterCutFreq = 100;
+      config.magFilterCutFreq = 90;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -398,16 +398,16 @@ class Model
       }
 
       config.uart1Speed = SERIAL_SPEED_115200;
-      //config.uart2Speed = SERIAL_SPEED_230400;
+      config.uart2Speed = SERIAL_SPEED_230400;
       //config.uart2Speed = SERIAL_SPEED_115200;
 
       config.cliPort = SERIAL_UART_1;
 
-      config.telemetry = 1;
-      config.telemetryInterval = 300;
+      config.telemetry = 0;
+      config.telemetryInterval = 500;
       config.telemetryPort = SERIAL_UART_1;
 
-      config.blackbox = 0;
+      config.blackbox = 1;
       config.blackboxPort = SERIAL_UART_2;
 
       // output config

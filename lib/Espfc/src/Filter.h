@@ -7,9 +7,9 @@
 namespace Espfc {
 
 enum FilterType {
-  FILTER_NONE,
   FILTER_PT1,
   FILTER_BIQUAD,
+  FILTER_NONE,
 };
 
 enum BiquadFilterType {
@@ -37,7 +37,7 @@ class Filter
     {
       _type = type;
       _rate = rate;
-      _cut_freq = std::min(_cut_freq, _rate / 2); // adj cut freq below nyquist rule
+      _cut_freq = std::min(cut_freq, _rate / 2); // adj cut freq below nyquist rule
       switch(_type)
       {
         case FILTER_PT1:

@@ -1,9 +1,9 @@
 #include "platform.h"
 
-//const char * const targetName = "ESP8266"; //__TARGET__;
-//const char * const shortGitRevision = "0000000"; //__REVISION__;
-const char * const targetName = "OMNIBUSF4SD"; //__TARGET__;
-const char * const shortGitRevision = "e1c4b5c"; //__REVISION__;
+const char * const targetName = "ESP8266"; //__TARGET__;
+const char * const shortGitRevision = "0000000"; //__REVISION__;
+//const char * const targetName = "OMNIBUSF4SD"; //__TARGET__;
+//const char * const shortGitRevision = "e1c4b5c"; //__REVISION__;
 const char * const buildTime = __TIME__;
 const char * const buildDate = __DATE__;
 

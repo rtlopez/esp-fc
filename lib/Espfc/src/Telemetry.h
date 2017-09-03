@@ -39,7 +39,7 @@ class Telemetry
           //<< _model.state.accelRaw
           //<< _model.state.gyroRaw
           //<< _model.state.magRaw
-          //<< _model.state.gyro[1]
+          //<< _model.state.gyro
           //<< _model.state.rate
           //<< _model.state.accel
           //<< _model.state.mag

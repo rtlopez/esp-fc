@@ -83,15 +83,15 @@ class Blackbox
       cp->pid[PID_LEVEL].D = 90;
       cp->pidAtMinThrottle = 1;
       cp->dterm_filter_type = 1;
-      cp->dterm_lpf_hz = 90;
-      cp->yaw_lpf_hz = 90;
+      cp->dterm_lpf_hz = 100;
+      cp->yaw_lpf_hz = _model.config.gyroFilterCutFreq;
       cp->itermWindupPointPercent = 50;
 
       gyroConfigMutable()->gyro_lpf = 0;
-      gyroConfigMutable()->gyro_soft_lpf_type = 0;
-      gyroConfigMutable()->gyro_soft_lpf_hz = 90;
+      gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilterType;
+      gyroConfigMutable()->gyro_soft_lpf_hz = _model.config.gyroFilterCutFreq;
 
-      accelerometerConfigMutable()->acc_lpf_hz = 10;
+      accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilterCutFreq;
       accelerometerConfigMutable()->acc_hardware = 3;
       barometerConfigMutable()->baro_hardware = 2;
       compassConfigMutable()->mag_hardware = 2;
@@ -100,7 +100,7 @@ class Blackbox
       motorConfigMutable()->dev.motorPwmProtocol = 0;
       motorConfigMutable()->dev.motorPwmRate = _model.config.pwmRate;
 
-      blackboxConfigMutable()->p_denom = 32;
+      blackboxConfigMutable()->p_denom = 64;
       blackboxConfigMutable()->device = BLACKBOX_DEVICE_SERIAL;
 
       targetPidLooptime = gyro.targetLooptime = _model.state.gyroSampleInterval;
@@ -109,9 +109,9 @@ class Blackbox
       motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
 
       gyroConfigMutable()->gyro_sync_denom = 1;
-      pidConfigMutable()->pid_process_denom = 1;
+      pidConfigMutable()->pid_process_denom = _model.config.pidSync;
 
-      featureConfigMutable()->enabledFeatures = 9243034;
+      featureConfigMutable()->enabledFeatures = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_AIRMODE | FEATURE_ANTI_GRAVITY;
 
       blackboxInit();
 

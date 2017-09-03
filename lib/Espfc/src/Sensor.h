@@ -97,13 +97,14 @@ class Sensor
 
       for(size_t i = 0; i < 3; i++)
       {
-        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
         _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
         if(_model.config.magEnable)
         {
           _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.magScaled[i]));
         }
       }
+      //_model.state.gyro.set(1, _model.state.magFilter[0].update(_model.state.gyroScaled[0]));
     }
 
     void updateGyroBias()
@@ -265,7 +266,7 @@ class Sensor
       _model.state.gyroBiasAlpha = 2.0f / rate; // higher value gives faster calibration, was 2
       _model.state.gyroBiasSamples = 0;
 
-      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' ');// Serial.print(_model.state.gyroSampleIntervalFloat, 3); Serial.println();
+      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.println();
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(divider);
     }

@@ -19,6 +19,7 @@ class Hardware
       Wire.begin();
       //Wire.setClock(400000);
       Wire.setClock(1000000); // in real ~640kHz
+      //Wire.setClockStretchLimit(100); // default 230
 
       if(_model.config.uart1Speed != SERIAL_SPEED_NONE)
       {
