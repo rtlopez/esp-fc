@@ -13,7 +13,7 @@ class Input
     Input(Model& model): _model(model) {}
     int begin()
     {
-      PPM.begin(_model.config.ppmPin);
+      PPM.begin(_model.config.ppmPin, _model.config.ppmMode);
       setFailSafe();
     }
 

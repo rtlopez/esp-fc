@@ -271,6 +271,8 @@ struct ModelState
 struct ModelConfig
 {
   short ppmPin;
+  int ppmMode;
+
   bool gyroFifo;
   long gyroDlpf;
   long gyroFsr;
@@ -357,7 +359,7 @@ class Model
 
       //config.gyroDeadband = radians(0.1); // deg/s
       //config.inputDeadband = 2.f / 100; // %
-      config.inputAlpha = 0.25;
+      config.inputAlpha = 0.33;
 
       config.accelFilterAlpha = 0.01f;
       config.gyroFilterAlpha = 0.1f;
@@ -374,16 +376,16 @@ class Model
       }
 
       config.uart1Speed = SERIAL_SPEED_115200;
-      config.uart2Speed = SERIAL_SPEED_230400;
+      //config.uart2Speed = SERIAL_SPEED_230400;
       //config.uart2Speed = SERIAL_SPEED_115200;
 
       config.cliPort = SERIAL_UART_1;
 
-      config.telemetry = 0;
+      config.telemetry = 1;
       config.telemetryInterval = 300;
       config.telemetryPort = SERIAL_UART_1;
 
-      config.blackbox = 1;
+      config.blackbox = 0;
       config.blackboxPort = SERIAL_UART_2;
 
       // output config
@@ -391,7 +393,7 @@ class Model
       {
         config.outputMin[i] = 1050;
         config.outputNeutral[i] = 1500;
-        config.outputMax[i] = 1950;
+        config.outputMax[i] = 2000;
       }
 
       config.outputPin[0] = D8; // -1 off
@@ -403,6 +405,7 @@ class Model
 
       // input config
       config.ppmPin = D7;     // GPIO13
+      config.ppmMode = RISING;
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
         config.inputMap[i] = i;
