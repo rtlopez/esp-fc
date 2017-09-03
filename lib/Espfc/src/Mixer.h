@@ -17,15 +17,11 @@ class Mixer
         PWM.attach(i, _model.config.outputPin[i],  _model.config.outputMin[i]);
       }
       PWM.begin(_model.config.pwmRate);
-      _model.state.mixerInterval = 1000 / _model.config.pwmRate;
     }
 
     int update()
     {
-      unsigned long now = millis();
-      if(_model.state.mixerTimestamp + _model.state.mixerInterval > now) return 0;
-
-      _model.state.mixerTimestamp = now;
+      if(!_model.state.loopChanged) return 0;
 
       if(!_model.state.armed)
       {

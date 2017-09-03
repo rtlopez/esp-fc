@@ -20,7 +20,15 @@ class Controller
 
     int update()
     {
-      if(!_model.state.newGyroData) return 0;
+      if(!_model.state.gyroChanged) return 0;
+      if(_model.state.gyroIteration % _model.config.pidSync != 0) return 0;
+
+      uint32_t now = micros();
+      _model.state.loopIteration++;
+      _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000;
+      _model.state.loopTimestamp = now;
+      _model.state.loopChanged = true;
+
       resetIterm();
       outerLoop();
       innerLoop();
@@ -75,7 +83,7 @@ class Controller
             break;
           case MODE_RATE:
           case MODE_ANGLE:
-            _model.state.output[i] = _model.config.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.gyroSampleIntervalFloat, _model.state.innerPid[i]);
+            _model.state.output[i] = _model.config.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.gyroDt, _model.state.innerPid[i]);
             break;
           case MODE_OFF:
           default: // off

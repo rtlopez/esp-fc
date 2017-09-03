@@ -54,12 +54,11 @@ class Espfc
       _telemetry.update();
       _cli.update();
 
-      _model.state.newGyroData = false;
-      _model.state.newInputData = false;
+      _model.state.gyroChanged = false;
+      _model.state.loopChanged = false;
 
       return 1;
     }
-    //Model& model() { return _model; }
 
   private:
     Model _model;

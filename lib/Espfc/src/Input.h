@@ -24,18 +24,20 @@ class Input
         _model.state.inputUs[i] = 1500;
         _model.state.input[i] = 0.f;
       }
-      _model.state.input[3] = -1.f; // throttle
-      _model.state.inputUs[3] = 1000;
+      _model.state.input[AXIS_THRUST] = -1.f;
+      _model.state.inputUs[AXIS_THRUST] = 1000;
     }
 
     int update()
     {
+      if(!_model.state.gyroChanged) return 0;
+
       // avoid multiple reading channels
       if(!PPM.hasNewData())
       {
         // fail-safe
         _model.state.inputDelay = micros() - PPM.getStart();
-        //if(diff > 100000) setFailSafe();
+        if(_model.state.inputDelay > 500000) setFailSafe(); // 0.5s
         return 0;
       }
 
@@ -50,15 +52,12 @@ class Input
         _model.state.input[i] = _model.state.input[i] * (1.f - _model.config.inputAlpha) + v * _model.config.inputAlpha;
       }
 
-      _model.state.newInputData = true;
-
       PPM.resetNewData();
       return 1;
     }
 
   private:
     Model& _model;
-
 };
 
 }

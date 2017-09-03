@@ -174,8 +174,6 @@ const size_t INPUT_CHANNELS  = AXIS_COUNT;
 // working data
 struct ModelState
 {
-  unsigned long timestamp;
-
   VectorInt16 gyroRaw;
   VectorInt16 accelRaw;
   VectorInt16 magRaw;
@@ -247,8 +245,19 @@ struct ModelState
 
   long gyroSampleRate;
   long gyroSampleInterval;
-  float gyroSampleIntervalFloat;
+  //float gyroSampleIntervalFloat;
+  float gyroDt;
 
+  unsigned long gyroTimestamp;
+  unsigned long gyroIteration;
+  bool gyroChanged;
+
+  unsigned long loopTimestamp;
+  unsigned long loopIteration;
+  float loopDt;
+  bool loopChanged;
+
+  unsigned long magTimestamp;
   long magSampleInterval;
   long magSampleRate;
   float magScale;
@@ -256,15 +265,7 @@ struct ModelState
   float magCalibrationData[3][2];
   bool magCalibrationValid;
 
-  unsigned long mixerInterval;
-
-  unsigned long magTimestamp;
-  unsigned long controllerTimestamp;
   unsigned long telemetryTimestamp;
-  unsigned long mixerTimestamp;
-
-  bool newGyroData;
-  bool newInputData;
 };
 
 // persistent data
@@ -324,6 +325,7 @@ struct ModelConfig
   float rateMax[AXES];
   float angleMax[AXES];
   float velocityMax[AXES];
+  short pidSync;
 
   float lowThrottleTreshold;
   bool lowThrottleZeroIterm;
@@ -356,6 +358,7 @@ class Model
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
       config.magEnable = 0;
+      config.pidSync = 2;
 
       //config.gyroDeadband = radians(0.1); // deg/s
       //config.inputDeadband = 2.f / 100; // %

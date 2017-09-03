@@ -103,8 +103,7 @@ class Blackbox
       blackboxConfigMutable()->p_denom = 32;
       blackboxConfigMutable()->device = BLACKBOX_DEVICE_SERIAL;
 
-      gyro.targetLooptime = _model.state.gyroSampleInterval * 1000;
-      targetPidLooptime = gyro.targetLooptime;
+      targetPidLooptime = gyro.targetLooptime = _model.state.gyroSampleInterval;
 
       motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMin[0];
       motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
@@ -125,11 +124,11 @@ class Blackbox
     {
       if(!_model.config.blackbox) return 0;
       if(!_serial) return 0;
-      if(!_model.state.newGyroData) return 0;
+      if(!_model.state.gyroChanged) return 0;
 
       updateArmed();
       updateData();
-      blackboxUpdate(micros());
+      blackboxUpdate(_model.state.gyroTimestamp);
 
       return 1;
     }

@@ -20,6 +20,7 @@ class Telemetry
     int update()
     {
       if(!_stream || !_model.config.telemetry) return 0;
+      //if(_model.state.gyroChanged) return 0;
 
       unsigned long now = millis();
       if(_model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now)

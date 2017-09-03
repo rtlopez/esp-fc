@@ -28,14 +28,14 @@ class Sensor
     int update()
     {
       // too early, do not read
-      uint32_t now = millis();
-      if(_model.state.timestamp + _model.state.gyroSampleInterval > now) return 0;
+      uint32_t now = micros();
+      if(_model.state.gyroTimestamp + _model.state.gyroSampleInterval > now) return 0;
+      _model.state.gyroDt = (now - _model.state.gyroTimestamp) / 1000000.f;
+      _model.state.gyroTimestamp = now;
+      _model.state.gyroIteration++;
+      _model.state.gyroChanged = true;
 
       if(!readSensors(now)) return 0;
-
-      _model.state.newGyroData = true;
-      _model.state.timestamp = now;
-
       updateGyro();
       updateGyroBias();
       updateMagBias();
@@ -71,10 +71,11 @@ class Sensor
       }
 
       // adjust timestamp for delayed fifo samples
-      if(numSamples > 1)
-      {
-        now -= _model.state.gyroSampleInterval * (numSamples - 1);
-      }
+      //if(numSamples > 1)
+      //{
+      //  now -= _model.state.gyroSampleInterval * (numSamples - 1);
+      //}
+
       return 1;
     }
 
@@ -249,13 +250,13 @@ class Sensor
 
       int divider = clock / (rate + 1);
       _model.state.gyroSampleRate = clock / (divider + 1); // update to real sample rate
-      _model.state.gyroSampleInterval = 1000 / _model.state.gyroSampleRate;
-      _model.state.gyroSampleIntervalFloat = 1.0 / _model.state.gyroSampleRate;
+      _model.state.gyroSampleInterval = 1000000 / _model.state.gyroSampleRate;
+      //_model.state.gyroSampleIntervalFloat = 1.0 / _model.state.gyroSampleRate;
 
-      _model.state.gyroBiasAlpha = 2.0f / rate; // higher value gives facter calibration, was 2
+      _model.state.gyroBiasAlpha = 2.0f / rate; // higher value gives faster calibration, was 2
       _model.state.gyroBiasSamples = 0;
 
-      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.print(_model.state.gyroSampleIntervalFloat, 3); Serial.println();
+      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' ');// Serial.print(_model.state.gyroSampleIntervalFloat, 3); Serial.println();
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(divider);
     }

@@ -18,7 +18,7 @@ class Fusion
 
     int update()
     {
-      if(!_model.state.newGyroData) return 0;
+      if(!_model.state.gyroChanged) return 0;
       switch(_model.config.fusionMode)
       {
         case FUSION_MADGWICK:
@@ -52,7 +52,7 @@ class Fusion
     {
       for(size_t i = 0; i < 3; i++)
       {
-        float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), _model.state.gyroSampleIntervalFloat);
+        float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), _model.state.gyroDt);
         _model.state.angle.set(i, angle);
         _model.state.rate.set(i, _model.state.kalman[i].getRate());
       }
@@ -66,7 +66,7 @@ class Fusion
       for(size_t i = 0; i < 3; i++)
       {
         if(i == 2) alpha = 0.f;
-        float angle = (_model.state.angle.get(i) + _model.state.gyro.get(i) * _model.state.gyroSampleIntervalFloat) * (1.f - alpha);
+        float angle = (_model.state.angle.get(i) + _model.state.gyro.get(i) * _model.state.gyroDt) * (1.f - alpha);
         //if(angle > 0 && _model.state.pose.get(i) < 0) angle -= TWO_PI;
         //if(angle < 0 && _model.state.pose.get(i) > 0) angle += TWO_PI;
         angle += _model.state.pose.get(i) * alpha;
@@ -79,7 +79,7 @@ class Fusion
     void complementaryFusionOld()
     {
       float alpha = 0.02f;
-      _model.state.angle = (_model.state.angle + _model.state.gyro * _model.state.gyroSampleIntervalFloat) * (1.f - alpha) + _model.state.pose * alpha;
+      _model.state.angle = (_model.state.angle + _model.state.gyro * _model.state.gyroDt) * (1.f - alpha) + _model.state.pose * alpha;
       _model.state.rate  = _model.state.gyro;
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
@@ -95,7 +95,7 @@ class Fusion
         return;
       }
 
-      float timeDelta = _model.state.gyroSampleIntervalFloat;
+      float timeDelta = _model.state.gyroDt;
       Quaternion measuredQPose = _model.state.poseQ;
       Quaternion fusionQPose = _model.state.angleQ;
       VectorFloat fusionGyro = _model.state.gyro;
@@ -224,7 +224,7 @@ class Fusion
       //_model.state.accelPose.eulerFromQuaternion(_model.state.accelPoseQ);
 
       // predict new state
-      Quaternion rotation = (_model.state.gyro * _model.state.gyroSampleIntervalFloat).eulerToQuaternion();
+      Quaternion rotation = (_model.state.gyro * _model.state.gyroDt).eulerToQuaternion();
       _model.state.gyroPoseQ = (_model.state.gyroPoseQ * rotation).getNormalized();
 
       // drift compensation
