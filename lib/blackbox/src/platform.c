@@ -146,6 +146,11 @@ uint8_t getMotorCount()
   return MAX_SUPPORTED_MOTORS;
 }
 
+bool areMotorsRunning(void)
+{
+    return false;
+}
+
 uint16_t getBatteryVoltageLatest(void)
 {
     return 0;

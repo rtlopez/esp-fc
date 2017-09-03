@@ -346,6 +346,7 @@ extern float motor_disarmed[MAX_SUPPORTED_MOTORS];
 extern float motorOutputHigh, motorOutputLow;
 
 uint8_t getMotorCount();
+bool areMotorsRunning(void);
 /* MIXER END */
 
 /* RCMODES START */
