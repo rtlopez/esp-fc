@@ -21,6 +21,7 @@ class Controller
     int update()
     {
       if(!_model.state.newGyroData) return 0;
+      resetIterm();
       outerLoop();
       innerLoop();
     }
@@ -93,6 +94,19 @@ class Controller
         case MODE_OFF:
         default: // off
           _model.state.output[AXIS_THRUST] = -1.f;
+      }
+    }
+
+    void resetIterm()
+    {
+      if(!_model.config.lowThrottleZeroIterm) return;
+      if(_model.state.input[AXIS_THRUST] < _model.config.lowThrottleTreshold)
+      {
+        for(size_t i = 0; i < AXES; i++)
+        {
+          _model.state.innerPid[i].iTerm = 0;
+          _model.state.outerPid[i].iTerm = 0;
+        }
       }
     }
 

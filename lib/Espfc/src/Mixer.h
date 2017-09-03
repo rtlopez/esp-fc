@@ -55,6 +55,7 @@ class Mixer
       return 1;
     }
 
+  private:
     void updateDisarmed()
     {
       short out[4];
@@ -106,9 +107,9 @@ class Mixer
       float t = _model.state.output[AXIS_THRUST];
 
       float out[4];
-      out[0] = -r + p + y;
-      out[1] =  r + p - y;
-      out[2] = -r - p + y;
+      out[0] = -r + p - y;
+      out[1] = -r - p + y;
+      out[2] =  r + p + y;
       out[3] =  r - p - y;
 
       /*
@@ -131,6 +132,7 @@ class Mixer
 
     void writeOutput(float * out, int axes)
     {
+      bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         if(i >= axes)
@@ -140,7 +142,7 @@ class Mixer
         else
         {
           float v = Math::bound(out[i], -1.f, 1.f);
-          _model.state.outputUs[i] = (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+          _model.state.outputUs[i] = stop ? 1000 : (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
         }
         PWM.write(i, _model.state.outputUs[i]);
       }
@@ -148,6 +150,7 @@ class Mixer
 
     void writeOutputRaw(short * out, int axes)
     {
+      bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         if(i >= axes)
@@ -156,12 +159,17 @@ class Mixer
         }
         else
         {
-          _model.state.outputUs[i] = Math::bound(out[i], (short)1000, (short)2000);
+          _model.state.outputUs[i] = stop ? 1000 : Math::bound(out[i], (short)1000, (short)2000);
         }
         PWM.write(i, _model.state.outputUs[i]);
       }
     }
-  private:
+
+    bool _stop(void)
+    {
+      return (_model.config.lowThrottleMotorStop && _model.state.input[AXIS_THRUST] < _model.config.lowThrottleTreshold) || !_model.state.armed;
+    }
+
     Model& _model;
 };
 

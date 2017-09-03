@@ -323,6 +323,10 @@ struct ModelConfig
   float angleMax[AXES];
   float velocityMax[AXES];
 
+  float lowThrottleTreshold;
+  bool lowThrottleZeroIterm;
+  bool lowThrottleMotorStop;
+
   bool telemetry;
   short telemetryInterval;
   SerialPort telemetryPort;
@@ -451,6 +455,10 @@ class Model
       config.rateMax[AXIS_YAW]    = 300; // deg/s
 
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s
+
+      config.lowThrottleTreshold = -0.9f;
+      config.lowThrottleZeroIterm = true;
+      config.lowThrottleMotorStop = true;
 
       // actuator config - pid scaling
       config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH;
