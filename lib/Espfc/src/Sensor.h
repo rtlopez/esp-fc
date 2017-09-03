@@ -7,6 +7,7 @@
 #include <Adafruit_BMP280.h>
 
 #include "Model.h"
+#include "Filter.h"
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
 #define ESPFC_FUZZY_GYRO_ZERO 0.20
@@ -22,6 +23,7 @@ class Sensor
       initGyro();
       initMag();
       initPresure();
+      initFilter();
       _model.state.boardRotationQ = _model.config.boardRotation.eulerToQuaternion();
     }
 
@@ -83,17 +85,24 @@ class Sensor
     {
       _model.state.accelScaled = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       //accel.rotate(_model.state.boardRotationQ);
-      _model.state.accel = _model.state.accel * (1.f - _model.config.accelFilterAlpha) + _model.state.accelScaled * _model.config.accelFilterAlpha;
 
       _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
       //gyro.rotate(_model.state.boardRotationQ);
-      _model.state.gyro  = _model.state.gyro  * (1.f - _model.config.gyroFilterAlpha)  + _model.state.gyroScaled  * _model.config.gyroFilterAlpha;
 
       if(_model.config.magEnable)
       {
         _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
         //mag.rotate(_model.state.boardRotationQ);
-        _model.state.mag = _model.state.mag * (1.f - _model.config.magFilterAlpha) + _model.state.magScaled * _model.config.magFilterAlpha;
+      }
+
+      for(size_t i = 0; i < 3; i++)
+      {
+        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
+        _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
+        if(_model.config.magEnable)
+        {
+          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.magScaled[i]));
+        }
       }
     }
 
@@ -334,6 +343,16 @@ class Sensor
     void initPresure()
     {
       //_baro.begin();
+    }
+
+    void initFilter()
+    {
+      for(size_t i = 0; i < 3; i++)
+      {
+        _model.state.gyroFilter[i].begin(_model.config.gyroFilterType, _model.config.gyroFilterCutFreq, _model.state.gyroSampleRate);
+        _model.state.accelFilter[i].begin(_model.config.accelFilterType, _model.config.accelFilterCutFreq, _model.state.gyroSampleRate);
+        _model.state.magFilter[i].begin(_model.config.magFilterType, _model.config.magFilterCutFreq, _model.state.gyroSampleRate);
+      }
     }
 
     static const uint8_t FIFO_SIZE = 12;

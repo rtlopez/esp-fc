@@ -1,5 +1,7 @@
 #include "OutputPWM.h"
 
+#include <algorithm>
+
 namespace Espfc {
 
 OutputPWM PWM;
@@ -14,7 +16,7 @@ void _pwm_timer0_isr(void)
   if(slot == NULL)  // space pulse to align frequency
   {
     PWM.nextSlot();
-    timer0_write(ESP.getCycleCount() + PWM.usToTicks(max(PWM._frameLength - frameCount, 2 * frameComp)));
+    timer0_write(ESP.getCycleCount() + PWM.usToTicks(std::max(PWM._frameLength - frameCount, 2 * frameComp)));
     frameCount = 0;
     return;
   }

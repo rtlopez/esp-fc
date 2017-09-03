@@ -5,6 +5,7 @@
 #include "Pid.h"
 #include "Kalman.h"
 #include "EEPROM.h"
+#include "Filter.h"
 
 namespace Espfc {
 
@@ -200,6 +201,10 @@ struct ModelState
   VectorFloat angle;
   Quaternion angleQ;
 
+  Filter gyroFilter[3];
+  Filter accelFilter[3];
+  Filter magFilter[3];
+
   VectorFloat velocity;
   VectorFloat desiredVelocity;
   float gyroThrustScale;
@@ -297,6 +302,13 @@ struct ModelConfig
   VectorFloat magCalibrationOffset;
   VectorFloat boardRotation;
 
+  FilterType gyroFilterType;
+  short gyroFilterCutFreq;
+  FilterType accelFilterType;
+  short accelFilterCutFreq;
+  FilterType magFilterType;
+  short magFilterCutFreq;
+
   short modelFrame;
   short flightModeChannel;
   short flightModes[3];
@@ -371,6 +383,13 @@ class Model
       config.fusionMode = FUSION_NONE;
       //config.fusionMode = FUSION_MADGWICK;
       //config.fusionMode = FUSION_COMPLEMENTARY;
+
+      config.gyroFilterType = FILTER_PT1;
+      config.gyroFilterCutFreq = 100;
+      config.accelFilterType = FILTER_PT1;
+      config.accelFilterCutFreq = 15;
+      config.magFilterType = FILTER_BIQUAD;
+      config.magFilterCutFreq = 100;
 
       for(size_t i = 0; i < 3; i++)
       {
