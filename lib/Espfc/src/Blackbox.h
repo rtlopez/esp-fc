@@ -56,17 +56,17 @@ class Blackbox
       systemConfigMutable()->debug_mode = debugMode = DEBUG_GYRO;
 
       controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
-      rp->rcRate8 = 57;
-      rp->rcExpo8 = 1;
-      rp->rcYawRate8 = 130;
-      rp->rcYawExpo8 = 1;
+      rp->rcRate8 = _model.config.inputRate[ROLL];
+      rp->rcExpo8 = _model.config.inputExpo[ROLL];
+      rp->rcYawRate8 = _model.config.inputRate[YAW];
+      rp->rcYawExpo8 = _model.config.inputExpo[YAW];
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
       rp->dynThrPID = 10;
       rp->tpa_breakpoint = 1650;
-      rp->rates[ROLL] = 100;
-      rp->rates[PITCH] = 100;
-      rp->rates[YAW] = 100;
+      rp->rates[ROLL] = _model.config.inputSuperRate[ROLL];
+      rp->rates[PITCH] = _model.config.inputSuperRate[PITCH];
+      rp->rates[YAW] = _model.config.inputSuperRate[YAW];
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
       cp->pid[ROLL].P = 50;

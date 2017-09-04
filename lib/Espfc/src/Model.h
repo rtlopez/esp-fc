@@ -231,9 +231,6 @@ struct ModelState
   float input[INPUT_CHANNELS];
   unsigned long inputDelay;
 
-  float rateMax[AXES];
-  float angleMax[AXES];
-
   float output[OUTPUT_CHANNELS];
   short outputUs[OUTPUT_CHANNELS];
 
@@ -324,6 +321,9 @@ struct ModelConfig
   short inputMap[INPUT_CHANNELS];
   float inputDeadband;
   float inputAlpha;
+  uint8_t inputExpo[3];
+  uint8_t inputRate[3];
+  uint8_t inputSuperRate[3];
 
   short outputMin[OUTPUT_CHANNELS];
   short outputNeutral[OUTPUT_CHANNELS];
@@ -334,7 +334,6 @@ struct ModelConfig
 
   Pid innerPid[AXES];
   Pid outerPid[AXES];
-  float rateMax[AXES];
   float angleMax[AXES];
   float velocityMax[AXES];
   short pidSync;
@@ -436,6 +435,16 @@ class Model
       config.inputMap[2] = 3; // replace input 2 with rx channel 3, yaw
       config.inputMap[3] = 2; // replace input 3 with rx channel 2, throttle
 
+      for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
+      {
+        config.inputRate[i] = 100;
+        config.inputExpo[i] = 0;
+        config.inputSuperRate[i] = 0;
+      }
+      config.inputRate[AXIS_YAW] = 100;
+      config.inputExpo[AXIS_YAW] = 0;
+      config.inputSuperRate[AXIS_YAW] = 0;
+
       config.flightModeChannel = 4;
       config.flightModes[0] = MODE_OFF;
       config.flightModes[1] = MODE_DIRECT;
@@ -461,24 +470,12 @@ class Model
         config.innerPid[i] = Pid(1, 0, 0, 0.3, 0.02, 0);
       }
 
-      //config.outerPid[AXIS_PITCH].Kp = 0.5;
-      //config.outerPid[AXIS_PITCH].Ki = 0.5;
-      //config.outerPid[AXIS_PITCH].iLimit = 0.05;
-      //config.outerPid[AXIS_PITCH].Kd = 0.05;
-
       config.innerPid[AXIS_PITCH].Ki = 0.1;
       config.innerPid[AXIS_PITCH].Kd = 0.01;
       config.innerPid[AXIS_ROLL].Ki = 0.1;
       config.innerPid[AXIS_ROLL].Kd = 0.01;
 
-      //config.innerPid[AXIS_YAW].Kp = 0.2;
-      //config.innerPid[AXIS_YAW].Ki = 0.3;
-      //config.innerPid[AXIS_YAW].iLimit = 0.05;
-
-      config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = 20;  // deg
-      config.rateMax[AXIS_PITCH]  = config.rateMax[AXIS_ROLL]  = 300; // deg/s
-      config.rateMax[AXIS_YAW]    = 300; // deg/s
-
+      config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(40);  // deg
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s
 
       config.lowThrottleTreshold = -0.9f;
