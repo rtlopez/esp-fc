@@ -30,8 +30,6 @@ class Input
 
     int update()
     {
-      if(!_model.state.gyroChanged) return 0;
-
       // avoid multiple reading channels
       if(!PPM.hasNewData())
       {

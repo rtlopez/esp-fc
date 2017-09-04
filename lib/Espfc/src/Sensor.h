@@ -29,15 +29,7 @@ class Sensor
 
     int update()
     {
-      // too early, do not read
-      uint32_t now = micros();
-      if(_model.state.gyroTimestamp + _model.state.gyroSampleInterval > now) return 0;
-      _model.state.gyroDt = (now - _model.state.gyroTimestamp) / 1000000.f;
-      _model.state.gyroTimestamp = now;
-      _model.state.gyroIteration++;
-      _model.state.gyroChanged = true;
-
-      if(!readSensors(now)) return 0;
+      if(!readSensors(_model.state.gyroTimestamp)) return 0;
       updateGyro();
       updateGyroBias();
       updateMagBias();

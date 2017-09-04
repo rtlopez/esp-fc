@@ -252,12 +252,14 @@ struct ModelState
 
   unsigned long gyroTimestamp;
   unsigned long gyroIteration;
-  bool gyroChanged;
+  bool gyroUpdate;
 
   unsigned long loopTimestamp;
   unsigned long loopIteration;
   float loopDt;
-  bool loopChanged;
+  bool loopUpdate;
+
+  bool mixerUpdate;
 
   unsigned long magTimestamp;
   long magSampleInterval;
@@ -337,6 +339,7 @@ struct ModelConfig
   float angleMax[AXES];
   float velocityMax[AXES];
   short pidSync;
+  short mixerSync;
 
   float lowThrottleTreshold;
   bool lowThrottleZeroIterm;

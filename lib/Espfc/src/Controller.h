@@ -18,15 +18,6 @@ class Controller
 
     int update()
     {
-      if(!_model.state.gyroChanged) return 0;
-      if(_model.state.gyroIteration % _model.config.pidSync != 0) return 0;
-
-      uint32_t now = micros();
-      _model.state.loopIteration++;
-      _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000;
-      _model.state.loopTimestamp = now;
-      _model.state.loopChanged = true;
-
       resetIterm();
       outerLoop();
       innerLoop();
@@ -34,6 +25,28 @@ class Controller
 
     void outerLoop()
     {
+      VectorFloat angle;
+      switch(_model.state.flightMode)
+      {
+        case MODE_ANGLE:
+          {
+            if(true)
+            {
+              // Experiment: workaround for 90 deg limit on pitch[y] axis
+              Quaternion r = Quaternion::lerp(Quaternion(), _model.state.accel.accelToQuaternion(), 0.5);
+              angle.eulerFromQuaternion(r);
+              angle *= 2.f;
+            }
+            else
+            {
+              angle = _model.state.accel.accelToEuler();
+            }
+          }
+          break;
+        default:
+        ;
+      }
+
       for(size_t i = 0; i < 2; ++i)
       {
         switch(_model.state.flightMode)
@@ -45,7 +58,7 @@ class Controller
             _model.state.desiredRate[i] = calculateSetpointRate(i, _model.state.input[i]);
             break;
           case MODE_ANGLE:
-            _model.state.desiredRate[i] = _model.config.outerPid[i].update(_model.state.input[i] * _model.config.angleMax[i], _model.state.angle[i], _model.state.loopDt, _model.state.innerPid[i]);
+            _model.state.desiredRate[i] = _model.config.outerPid[i].update(_model.state.input[i] * _model.config.angleMax[i], angle[i], _model.state.loopDt, _model.state.innerPid[i]);
             break;
           case MODE_OFF:
           default:

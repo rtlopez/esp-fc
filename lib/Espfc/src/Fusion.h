@@ -18,7 +18,6 @@ class Fusion
 
     int update()
     {
-      if(!_model.state.gyroChanged) return 0;
       switch(_model.config.fusionMode)
       {
         case FUSION_MADGWICK:

@@ -37,25 +37,53 @@ class Espfc
       _blackbox.begin();
       _telemetry.begin();
       _cli.begin();
-
       return 1;
     }
 
     int update()
     {
       _hardware.update();
-      _sensor.update();
-      _fusion.update();
-      _input.update();
-      _actuator.update();
-      _controller.update();
-      _mixer.update();
-      _blackbox.update();
+
+      uint32_t now = micros();
+      _model.state.gyroUpdate = _model.state.gyroTimestamp + _model.state.gyroSampleInterval > now;
+      if(_model.state.gyroUpdate)
+      {
+        _model.state.gyroDt = (now - _model.state.gyroTimestamp) / 1000000.f;
+        _model.state.gyroTimestamp = now;
+        _model.state.gyroIteration++;
+        _sensor.update();
+        _fusion.update();
+      }
+
+      now = micros();
+      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroIteration % _model.config.pidSync != 0;
+      if(_model.state.loopUpdate)
+      {
+        _model.state.loopIteration++;
+        _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000;
+        _model.state.loopTimestamp = now;
+        _input.update();
+        _actuator.update();
+        _controller.update();
+      }
+
+      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.loopIteration % _model.config.mixerSync != 0;
+      if(_model.state.mixerUpdate)
+      {
+        _mixer.update();
+      }
+
+      if(_model.state.loopUpdate)
+      {
+        _blackbox.update();
+      }
+
       _telemetry.update();
       _cli.update();
 
-      _model.state.gyroChanged = false;
-      _model.state.loopChanged = false;
+      _model.state.gyroUpdate = false;
+      _model.state.loopUpdate = false;
+      _model.state.mixerUpdate = false;
 
       return 1;
     }

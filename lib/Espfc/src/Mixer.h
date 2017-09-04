@@ -21,8 +21,6 @@ class Mixer
 
     int update()
     {
-      if(!_model.state.loopChanged) return 0;
-
       if(!_model.state.armed)
       {
         updateDisarmed();

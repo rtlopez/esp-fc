@@ -124,11 +124,10 @@ class Blackbox
     {
       if(!_model.config.blackbox) return 0;
       if(!_serial) return 0;
-      if(!_model.state.gyroChanged) return 0;
 
       updateArmed();
       updateData();
-      blackboxUpdate(_model.state.gyroTimestamp);
+      blackboxUpdate(_model.state.loopTimestamp);
 
       return 1;
     }
