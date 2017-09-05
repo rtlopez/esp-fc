@@ -270,6 +270,7 @@ struct ModelState
   bool magCalibrationValid;
 
   unsigned long telemetryTimestamp;
+  bool telemetryUpdate;
 };
 
 // persistent data
@@ -373,6 +374,7 @@ class Model
       config.magCalibration = 0;
       config.magEnable = 0;
       config.pidSync = 2;
+      config.mixerSync = 2;
 
       //config.gyroDeadband = radians(0.1); // deg/s
       //config.inputDeadband = 2.f / 100; // %

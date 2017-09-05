@@ -101,12 +101,13 @@ class Mixer
       float t = _model.state.output[AXIS_THRUST];
 
       float out[4];
-      out[0] = -r + p - y;
-      out[1] = -r - p + y;
-      out[2] =  r + p + y;
-      out[3] =  r - p - y;
+      out[0] = -r + p + y;
+      out[1] = -r - p - y;
+      out[2] =  r + p - y;
+      out[3] =  r - p + y;
 
       /*
+      // airmode logic
       float min = 0, max = 0, adj = 0;
       for(size_t i = 0; i < 4; i++)
       {

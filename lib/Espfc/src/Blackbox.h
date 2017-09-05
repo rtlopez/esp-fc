@@ -96,11 +96,11 @@ class Blackbox
       barometerConfigMutable()->baro_hardware = 2;
       compassConfigMutable()->mag_hardware = 2;
 
-      motorConfigMutable()->dev.useUnsyncedPwm = 1;
+      motorConfigMutable()->dev.useUnsyncedPwm = 0;
       motorConfigMutable()->dev.motorPwmProtocol = 0;
       motorConfigMutable()->dev.motorPwmRate = _model.config.pwmRate;
 
-      blackboxConfigMutable()->p_denom = 64;
+      blackboxConfigMutable()->p_denom = 32;
       blackboxConfigMutable()->device = BLACKBOX_DEVICE_SERIAL;
 
       targetPidLooptime = gyro.targetLooptime = _model.state.gyroSampleInterval;
@@ -115,20 +115,15 @@ class Blackbox
 
       blackboxInit();
 
-      setArmingBeepTimeMicros(micros());
-
       return 1;
     }
 
     int update()
     {
-      if(!_model.config.blackbox) return 0;
       if(!_serial) return 0;
-
       updateArmed();
       updateData();
       blackboxUpdate(_model.state.loopTimestamp);
-
       return 1;
     }
 
@@ -143,7 +138,14 @@ class Blackbox
         axisPID_I[i] = _model.state.innerPid[i].iTerm * 1000.f;
         axisPID_D[i] = _model.state.innerPid[i].dTerm * 1000.f;
         rcCommand[i] = _model.state.input[i] * 500;
-        debug[i] = lrintf(degrees(_model.state.gyroScaled[i]));
+        if(debugMode == DEBUG_GYRO)
+        {
+          debug[i] = lrintf(degrees(_model.state.gyroScaled[i]));
+        }
+        else
+        {
+          debug[i] = 0;
+        }
       }
       rcCommand[AXIS_THRUST] = Math::map(_model.state.input[AXIS_THRUST], -1.f, 1.f, 1000, 2000);
       for(size_t i = 0; i < 4; i++)
@@ -154,17 +156,24 @@ class Blackbox
 
     void updateArmed()
     {
+      static uint32_t beep = 0;
+      if(beep != 0 and beep < _model.state.loopTimestamp)
+      {
+        setArmingBeepTimeMicros(_model.state.loopTimestamp);
+        beep = 0;
+      }
+
       if(_model.state.armed == ARMING_FLAG(ARMED)) return;
       if(_model.state.armed)
       {
         ENABLE_ARMING_FLAG(ARMED);
-        setArmingBeepTimeMicros(micros());
+        beep = _model.state.loopTimestamp + 200000; // delay arming beep event ~20ms
       }
       else
       {
         DISABLE_ARMING_FLAG(ARMED);
+        setArmingBeepTimeMicros(micros());
         blackboxFinish();
-        //setArmingBeepTimeMicros(micros());
       }
     }
 

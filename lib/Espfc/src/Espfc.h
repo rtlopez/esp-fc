@@ -45,7 +45,7 @@ class Espfc
       _hardware.update();
 
       uint32_t now = micros();
-      _model.state.gyroUpdate = _model.state.gyroTimestamp + _model.state.gyroSampleInterval > now;
+      _model.state.gyroUpdate = _model.state.gyroTimestamp + _model.state.gyroSampleInterval < now;
       if(_model.state.gyroUpdate)
       {
         _model.state.gyroDt = (now - _model.state.gyroTimestamp) / 1000000.f;
@@ -56,29 +56,35 @@ class Espfc
       }
 
       now = micros();
-      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroIteration % _model.config.pidSync != 0;
+      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroIteration % _model.config.pidSync == 0;
       if(_model.state.loopUpdate)
       {
-        _model.state.loopIteration++;
         _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000;
         _model.state.loopTimestamp = now;
+        _model.state.loopIteration++;
         _input.update();
         _actuator.update();
         _controller.update();
       }
 
-      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.loopIteration % _model.config.mixerSync != 0;
+      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.loopIteration % _model.config.mixerSync == 0;
       if(_model.state.mixerUpdate)
       {
         _mixer.update();
       }
 
-      if(_model.state.loopUpdate)
+      if(_model.state.loopUpdate && _model.config.blackbox)
       {
         _blackbox.update();
       }
 
-      _telemetry.update();
+      _model.state.telemetryUpdate = _model.config.telemetry && _model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now;
+      if(_model.state.telemetryUpdate)
+      {
+        _model.state.telemetryTimestamp = now;
+        _telemetry.update();
+      }
+
       _cli.update();
 
       _model.state.gyroUpdate = false;
