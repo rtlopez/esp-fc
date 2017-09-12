@@ -109,7 +109,7 @@ class Blackbox
       motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
 
       gyroConfigMutable()->gyro_sync_denom = 1;
-      pidConfigMutable()->pid_process_denom = _model.config.pidSync;
+      pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       featureConfigMutable()->enabledFeatures = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_AIRMODE | FEATURE_ANTI_GRAVITY;
 

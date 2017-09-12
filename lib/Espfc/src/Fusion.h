@@ -38,13 +38,32 @@ class Fusion
           updatePoseFromAccelMag();
           complementaryFusion();
           break;
-        case FUSION_NONE:
-          _model.state.rate = _model.state.gyro;
+        case FUSION_SIMPLE:
+          simpleFusion();
           break;
+        case FUSION_EXPERIMENTAL:
+          experimentalFusion();
+          break;
+        case FUSION_NONE:
         default:
-          return 0;
+          _model.state.rate = _model.state.gyro;
        }
        return 1;
+    }
+
+    void experimentalFusion()
+    {
+      // Experiment: workaround for 90 deg limit on pitch[y] axis
+      Quaternion r = Quaternion::lerp(Quaternion(), _model.state.accel.accelToQuaternion(), 0.5);
+      _model.state.angle.eulerFromQuaternion(r);
+      _model.state.angle *= 2.f;
+      _model.state.rate = _model.state.gyro;
+    }
+
+    void simpleFusion()
+    {
+      _model.state.rate = _model.state.gyro;
+      _model.state.angle = _model.state.accel.accelToEuler();
     }
 
     void kalmanFusion()
@@ -64,11 +83,9 @@ class Fusion
       float alpha = 0.01f;
       for(size_t i = 0; i < 3; i++)
       {
-        if(i == 2) alpha = 0.f;
-        float angle = (_model.state.angle.get(i) + _model.state.gyro.get(i) * _model.state.gyroDt) * (1.f - alpha);
-        //if(angle > 0 && _model.state.pose.get(i) < 0) angle -= TWO_PI;
-        //if(angle < 0 && _model.state.pose.get(i) > 0) angle += TWO_PI;
-        angle += _model.state.pose.get(i) * alpha;
+        float angle = (_model.state.angle[i] + _model.state.gyro[i] * _model.state.gyroDt) * (1.f - alpha) + _model.state.pose[i] * alpha;
+        if(angle > M_PI) angle -= M_PI;
+        if(angle < M_PI) angle += M_PI;
         _model.state.angle.set(i, angle);
       }
       _model.state.rate  = _model.state.gyro;
@@ -77,7 +94,7 @@ class Fusion
 
     void complementaryFusionOld()
     {
-      float alpha = 0.02f;
+      float alpha = 0.01f;
       _model.state.angle = (_model.state.angle + _model.state.gyro * _model.state.gyroDt) * (1.f - alpha) + _model.state.pose * alpha;
       _model.state.rate  = _model.state.gyro;
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();

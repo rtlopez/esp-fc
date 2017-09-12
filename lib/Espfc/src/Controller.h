@@ -14,6 +14,13 @@ class Controller
     Controller(Model& model): _model(model) {}
     int begin()
     {
+      _model.state.loopSampleRate = _model.state.gyroSampleRate / _model.config.loopSync;
+      _model.state.loopSampleInterval = 1000000 / _model.state.loopSampleRate;
+      for(size_t i = 0; i < 3; ++i)
+      {
+        _model.state.innerPid[i].dtermFilter.begin(_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
+        _model.state.outerPid[i].dtermFilter.begin(_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
+      }
     }
 
     int update()
@@ -30,17 +37,9 @@ class Controller
       {
         case MODE_ANGLE:
           {
-            if(true)
-            {
-              // Experiment: workaround for 90 deg limit on pitch[y] axis
-              Quaternion r = Quaternion::lerp(Quaternion(), _model.state.accel.accelToQuaternion(), 0.5);
-              angle.eulerFromQuaternion(r);
-              angle *= 2.f;
-            }
-            else
-            {
-              angle = _model.state.accel.accelToEuler();
-            }
+            _model.state.desiredAngle.set(AXIS_ROLL,  _model.state.input[AXIS_ROLL] * _model.config.angleMax[AXIS_ROLL]);
+            _model.state.desiredAngle.set(AXIS_PITCH, _model.state.input[AXIS_PITCH] * _model.config.angleMax[AXIS_PITCH]);
+            _model.state.desiredAngle.set(AXIS_YAW,  0);
           }
           break;
         default:
@@ -58,11 +57,12 @@ class Controller
             _model.state.desiredRate[i] = calculateSetpointRate(i, _model.state.input[i]);
             break;
           case MODE_ANGLE:
-            _model.state.desiredRate[i] = _model.config.outerPid[i].update(_model.state.input[i] * _model.config.angleMax[i], angle[i], _model.state.loopDt, _model.state.innerPid[i]);
+            _model.state.desiredRate[i] = _model.config.outerPid[i].update(_model.state.desiredAngle[i], _model.state.angle[i], _model.state.loopDt, _model.state.outerPid[i]);
             break;
           case MODE_OFF:
           default:
             _model.state.desiredRate[i] = 0.f;
+            _model.state.outerPid[i].iTerm = 0.f;
         }
       }
 

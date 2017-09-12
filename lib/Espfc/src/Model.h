@@ -72,11 +72,13 @@ enum MagAvg {
 
 enum FusionMode {
   FUSION_NONE          = 0x00,
-  FUSION_MADGWICK      = 0x01,
-  FUSION_RTQF          = 0x02,
-  FUSION_LERP          = 0x03,
-  FUSION_COMPLEMENTARY = 0x04,
-  FUSION_KALMAN        = 0x05
+  FUSION_SIMPLE        = 0x01,
+  FUSION_EXPERIMENTAL  = 0x02,
+  FUSION_MADGWICK      = 0x03,
+  FUSION_RTQF          = 0x04,
+  FUSION_LERP          = 0x05,
+  FUSION_COMPLEMENTARY = 0x06,
+  FUSION_KALMAN        = 0x07
 };
 
 enum FlightMode {
@@ -212,8 +214,8 @@ struct ModelState
   VectorFloat desiredAngle;
   Quaternion desiredAngleQ;
 
-  VectorFloat desiredRotation;
-  Quaternion desiredRotationQ;
+  //VectorFloat desiredRotation;
+  //Quaternion desiredRotationQ;
 
   float desiredRate[AXES];
 
@@ -253,6 +255,8 @@ struct ModelState
   uint32_t gyroIteration;
   bool gyroUpdate;
 
+  uint32_t loopSampleRate;
+  uint32_t loopSampleInterval;
   uint32_t loopTimestamp;
   uint32_t loopIteration;
   float loopDt;
@@ -307,6 +311,8 @@ struct ModelConfig
   short accelFilterCutFreq;
   FilterType magFilterType;
   short magFilterCutFreq;
+  FilterType dtermFilterType;
+  short dtermFilterCutFreq;
 
   short modelFrame;
   short flightModeChannel;
@@ -338,7 +344,7 @@ struct ModelConfig
   Pid outerPid[AXES];
   float angleMax[AXES];
   float velocityMax[AXES];
-  short pidSync;
+  short loopSync;
   short mixerSync;
 
   float lowThrottleTreshold;
@@ -368,24 +374,25 @@ class Model
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSampleRate = GYRO_RATE_500;
+
+      config.magEnable = 0;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
-      config.magEnable = 0;
-      config.pidSync = 1;
+
+      config.loopSync = 1;
       config.mixerSync = 1;
 
       //config.gyroDeadband = radians(0.1); // deg/s
-      //config.inputDeadband = 2.f / 100; // %
+      config.inputDeadband = 1.f / 100; // %
       config.inputAlpha = 0.5;
 
       config.accelFilterAlpha = 0.01f;
       config.gyroFilterAlpha = 0.1f;
       config.magFilterAlpha = 0.1f;
       config.velocityFilterAlpha = 0.1f;
-      config.fusionMode = FUSION_NONE;
+      config.fusionMode = FUSION_EXPERIMENTAL;
       //config.fusionMode = FUSION_MADGWICK;
-      //config.fusionMode = FUSION_COMPLEMENTARY;
 
       config.gyroFilterType = FILTER_PT1;
       config.gyroFilterCutFreq = 60;
@@ -393,6 +400,8 @@ class Model
       config.accelFilterCutFreq = 15;
       config.magFilterType = FILTER_PT1;
       config.magFilterCutFreq = 30;
+      config.dtermFilterType = FILTER_PT1;
+      config.dtermFilterCutFreq = 60;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -401,25 +410,26 @@ class Model
       }
 
       config.uart1Speed = SERIAL_SPEED_115200;
+      config.uart2Speed = SERIAL_SPEED_115200;
       config.uart2Speed = SERIAL_SPEED_230400;
-      //config.uart2Speed = SERIAL_SPEED_115200;
-      //config.uart2Speed = SERIAL_SPEED_NONE;
+      config.uart2Speed = SERIAL_SPEED_NONE;
 
       config.cliPort = SERIAL_UART_1;
 
       config.telemetry = 0;
-      config.telemetryInterval = 500000;
+      config.telemetryInterval = 300 * 1000;
       config.telemetryPort = SERIAL_UART_1;
 
-      config.blackbox = 1;
+      config.blackbox = 0;
       config.blackboxPort = SERIAL_UART_2;
+      config.blackboxPort = SERIAL_UART_NONE;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         config.outputMin[i] = 1050;
         config.outputNeutral[i] = 1500;
-        config.outputMax[i] = 2000;
+        config.outputMax[i] = 1950;
       }
 
       config.outputPin[0] = D8; // -1 off
@@ -461,7 +471,6 @@ class Model
         config.inputNeutral[i] = 1500;
         config.inputMax[i] = 2000;
       }
-      //config.inputNeutral[AXIS_THRUST] = 1050;   // override for thrust neutral
       //config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
       //config.inputMax[AXIS_YAW] = 1000;
 
@@ -471,14 +480,16 @@ class Model
         state.kalman[i] = Kalman();
         state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
-        config.outerPid[i] = Pid(1, 0, 0, 0.3, 0.02, 0);
-        config.innerPid[i] = Pid(1, 0, 0, 0.3, 0.02, 0);
+        config.outerPid[i] = Pid(1, 0.2, 0.02, 0.3, 0.02, 0);
+        config.innerPid[i] = Pid(1, 0.2, 0.02, 0.3, 0.02, 0);
       }
 
-      config.innerPid[AXIS_PITCH].Ki = 0.1;
-      config.innerPid[AXIS_PITCH].Kd = 0.01;
-      config.innerPid[AXIS_ROLL].Ki = 0.1;
-      config.innerPid[AXIS_ROLL].Kd = 0.01;
+      //config.innerPid[AXIS_PITCH].Ki = 0.2;
+      //config.innerPid[AXIS_PITCH].Kd = 0.02;
+      //config.innerPid[AXIS_ROLL].Ki = 0.2;
+      //config.innerPid[AXIS_ROLL].Kd = 0.02;
+      //config.innerPid[AXIS_YAW].Ki = 0.2;
+      //config.innerPid[AXIS_YAW].Kd = 0.02;
 
       config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(40);  // deg
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s

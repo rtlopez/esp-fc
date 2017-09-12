@@ -2,6 +2,7 @@
 #define _ESPFC_PID_H_
 
 #include "Math.h"
+#include "Filter.h"
 
 namespace Espfc {
 
@@ -18,6 +19,7 @@ struct PidState
     float pScale;
     float iScale;
     float dScale;
+    Filter dtermFilter;
 };
 
 class Pid
@@ -49,7 +51,8 @@ class Pid
         // OR BOTH
         dTerm = (Kd * (((error - state.prevError) * dGamma) + (state.prevInput - input) * (1.f - dGamma)) / dt) * state.dScale;
       }
-      state.dTerm = (1.f - dAlpha) * state.dTerm + dAlpha * dTerm;
+      //state.dTerm = (1.f - dAlpha) * state.dTerm + dAlpha * dTerm;
+      state.dTerm = state.dtermFilter.update(dTerm);
 
       float output = Math::bound(state.pTerm + state.iTerm + state.dTerm, -1.f, 1.f);
 

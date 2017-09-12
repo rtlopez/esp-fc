@@ -57,7 +57,7 @@ class Espfc
       }
 
       now = micros();
-      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroIteration % _model.config.pidSync == 0;
+      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroIteration % _model.config.loopSync == 0;
       if(_model.state.loopUpdate)
       {
         _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000.f;
@@ -74,7 +74,7 @@ class Espfc
         _mixer.update();
       }
 
-      if(_model.config.blackbox && _model.state.loopUpdate)
+      if(_model.config.blackbox && _model.state.gyroUpdate)
       {
         _blackbox.update();
       }

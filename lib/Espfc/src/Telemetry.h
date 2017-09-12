@@ -33,9 +33,14 @@ class Telemetry
         //<< _model.state.gyro
         //<< _model.state.accel
         //<< _model.state.mag
-
+        //<< " | "
         //<< _model.state.rate
         //<< _model.state.angle
+
+        //<< (int)degrees(_model.state.angle.x)
+        //<< (int)degrees(_model.state.angle.y)
+        //<< (int)degrees(_model.state.angle.z)
+
         //<< _model.state.desiredRotation
         //<< _model.state.desiredAngle
 
