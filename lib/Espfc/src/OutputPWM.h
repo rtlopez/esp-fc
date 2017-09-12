@@ -12,9 +12,9 @@ class OutputPWM
     {
       public:
         Slot(): pin(-1), val(0), pulse(0) {}
-        char pin;
-        bool val;
         volatile int16_t pulse;
+        volatile char pin;
+        volatile bool val;
         bool operator<(const Slot& rhs) const { return this->pulse < rhs.pulse; }
     };
 
@@ -24,7 +24,7 @@ class OutputPWM
 
     inline unsigned long usToTicks(uint32_t us) const ICACHE_RAM_ATTR
     {
-      return (clockCyclesPerMicrosecond() * us);// converts microseconds to tick
+      return microsecondsToClockCycles(us); // converts microseconds to ticks
     }
 
     int attach(int slot_id, int pin, int pulse)
@@ -60,6 +60,9 @@ class OutputPWM
       }
       if(_currentSlot == OUTPUT_CHANNELS) _currentSlot = -1;
     }
+
+    void trigger() {};
+    void apply() {};
 
     int _currentSlot;
     int _frameLength;

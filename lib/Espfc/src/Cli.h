@@ -128,7 +128,8 @@ class Cli
 
       while((*_stream).available() > 0)
       {
-        process((*_stream).read());
+        char c = (*_stream).read();
+        if(!_model.state.armed) process(c);
       }
     }
 

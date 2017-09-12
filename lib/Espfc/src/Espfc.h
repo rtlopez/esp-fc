@@ -37,6 +37,7 @@ class Espfc
       _blackbox.begin();
       _telemetry.begin();
       _cli.begin();
+
       return 1;
     }
 
@@ -59,7 +60,7 @@ class Espfc
       _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroIteration % _model.config.pidSync == 0;
       if(_model.state.loopUpdate)
       {
-        _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000;
+        _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000.f;
         _model.state.loopTimestamp = now;
         _model.state.loopIteration++;
         _input.update();
@@ -73,11 +74,12 @@ class Espfc
         _mixer.update();
       }
 
-      if(_model.state.loopUpdate && _model.config.blackbox)
+      if(_model.config.blackbox && _model.state.loopUpdate)
       {
         _blackbox.update();
       }
 
+      now = micros();
       _model.state.telemetryUpdate = _model.config.telemetry && _model.config.telemetryInterval >= 10 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now;
       if(_model.state.telemetryUpdate)
       {
@@ -86,10 +88,6 @@ class Espfc
       }
 
       _cli.update();
-
-      _model.state.gyroUpdate = false;
-      _model.state.loopUpdate = false;
-      _model.state.mixerUpdate = false;
 
       return 1;
     }

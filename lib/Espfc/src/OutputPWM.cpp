@@ -9,7 +9,7 @@ OutputPWM PWM;
 static const int frameComp = 1;
 static int frameCount = 0;
 
-static void _pwm_timer0_ISR(void) ICACHE_RAM_ATTR;
+static void _pwm_timer0_isr(void) ICACHE_RAM_ATTR;
 void _pwm_timer0_isr(void)
 {
   OutputPWM::Slot * slot = PWM.getCurrentSlot();

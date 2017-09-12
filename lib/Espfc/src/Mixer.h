@@ -2,9 +2,13 @@
 #define _ESPFC_MIXER_H_
 
 #include "Model.h"
+#include "OutputPWMFast.h"
 #include "OutputPWM.h"
 
 namespace Espfc {
+
+//#define PWMDriver PWM
+#define PWMDriver PWMfast
 
 class Mixer
 {
@@ -14,9 +18,9 @@ class Mixer
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {
-        PWM.attach(i, _model.config.outputPin[i],  _model.config.outputMin[i]);
+        PWMDriver.attach(i, _model.config.outputPin[i],  _model.config.outputMin[i]);
       }
-      PWM.begin(_model.config.pwmRate);
+      PWMDriver.begin(_model.config.pwmRate);
     }
 
     int update()
@@ -139,8 +143,9 @@ class Mixer
           float v = Math::bound(out[i], -1.f, 1.f);
           _model.state.outputUs[i] = stop ? 1000 : (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
         }
-        PWM.write(i, _model.state.outputUs[i]);
+        PWMDriver.write(i, _model.state.outputUs[i]);
       }
+      PWMDriver.apply();
     }
 
     void writeOutputRaw(short * out, int axes)
@@ -156,8 +161,9 @@ class Mixer
         {
           _model.state.outputUs[i] = stop ? 1000 : Math::bound(out[i], (short)1000, (short)2000);
         }
-        PWM.write(i, _model.state.outputUs[i]);
+        PWMDriver.write(i, _model.state.outputUs[i]);
       }
+      PWMDriver.apply();
     }
 
     bool _stop(void)

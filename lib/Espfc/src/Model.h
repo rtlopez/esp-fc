@@ -245,23 +245,22 @@ struct ModelState
   long gyroBiasSamples;
   bool gyroBiasValid;
 
-  long gyroSampleRate;
-  long gyroSampleInterval;
-  //float gyroSampleIntervalFloat;
+  uint32_t gyroSampleRate;
+  uint32_t gyroSampleInterval;
   float gyroDt;
 
-  unsigned long gyroTimestamp;
-  unsigned long gyroIteration;
+  uint32_t gyroTimestamp;
+  uint32_t gyroIteration;
   bool gyroUpdate;
 
-  unsigned long loopTimestamp;
-  unsigned long loopIteration;
+  uint32_t loopTimestamp;
+  uint32_t loopIteration;
   float loopDt;
   bool loopUpdate;
 
   bool mixerUpdate;
 
-  unsigned long magTimestamp;
+  uint32_t magTimestamp;
   long magSampleInterval;
   long magSampleRate;
   float magScale;
@@ -269,7 +268,7 @@ struct ModelState
   float magCalibrationData[3][2];
   bool magCalibrationValid;
 
-  unsigned long telemetryTimestamp;
+  uint32_t telemetryTimestamp;
   bool telemetryUpdate;
 };
 
@@ -347,7 +346,7 @@ struct ModelConfig
   bool lowThrottleMotorStop;
 
   bool telemetry;
-  short telemetryInterval;
+  uint32_t telemetryInterval;
   SerialPort telemetryPort;
 
   bool blackbox;
@@ -373,12 +372,12 @@ class Model
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
       config.magEnable = 0;
-      config.pidSync = 2;
-      config.mixerSync = 2;
+      config.pidSync = 1;
+      config.mixerSync = 1;
 
       //config.gyroDeadband = radians(0.1); // deg/s
       //config.inputDeadband = 2.f / 100; // %
-      config.inputAlpha = 0.33;
+      config.inputAlpha = 0.5;
 
       config.accelFilterAlpha = 0.01f;
       config.gyroFilterAlpha = 0.1f;
@@ -388,12 +387,12 @@ class Model
       //config.fusionMode = FUSION_MADGWICK;
       //config.fusionMode = FUSION_COMPLEMENTARY;
 
-      config.gyroFilterType = FILTER_BIQUAD;
-      config.gyroFilterCutFreq = 100;
-      config.accelFilterType = FILTER_BIQUAD;
-      config.accelFilterCutFreq = 20;
-      config.magFilterType = FILTER_BIQUAD;
-      config.magFilterCutFreq = 90;
+      config.gyroFilterType = FILTER_PT1;
+      config.gyroFilterCutFreq = 60;
+      config.accelFilterType = FILTER_PT1;
+      config.accelFilterCutFreq = 15;
+      config.magFilterType = FILTER_PT1;
+      config.magFilterCutFreq = 30;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -404,11 +403,12 @@ class Model
       config.uart1Speed = SERIAL_SPEED_115200;
       config.uart2Speed = SERIAL_SPEED_230400;
       //config.uart2Speed = SERIAL_SPEED_115200;
+      //config.uart2Speed = SERIAL_SPEED_NONE;
 
       config.cliPort = SERIAL_UART_1;
 
       config.telemetry = 0;
-      config.telemetryInterval = 500;
+      config.telemetryInterval = 500000;
       config.telemetryPort = SERIAL_UART_1;
 
       config.blackbox = 1;

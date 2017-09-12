@@ -33,17 +33,17 @@ class Input
     int update()
     {
       static float step = 0;
-      static uint32_t inputDt = 10000;
+      static float inputDt = 0.02;
       static uint32_t prevTm = 0;
 
       if(PPM.hasNewData())
       {
         uint32_t now = micros();
-        inputDt = Math::bound(now - prevTm, (uint32_t)1000, (uint32_t)30000);
+        inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)40000) / 1000000.f;
         prevTm = now;
         _read();
         PPM.resetNewData();
-        step = 0;
+        step = 0.f;
       }
       else
       {
@@ -56,7 +56,7 @@ class Input
         }
       }
 
-      float interpolationStep = (_model.state.loopDt * 1000000) / inputDt;
+      float interpolationStep = _model.state.loopDt / inputDt;
       if(step < 1.f) step += interpolationStep;
 
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
@@ -65,7 +65,7 @@ class Input
         float prev = Math::map3((float)_get(i, 1), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
         float val = i < 4 ? Math::bound(_interpolate(prev, curr, step), -1.f, 1.f) : curr;
         if(fabs(val) < _model.config.inputDeadband) val = 0.f;
-        //_model.state.input[i] = _model.state.input[i] * (1.f - _model.config.inputAlpha) + val * _model.config.inputAlpha;
+        _model.state.input[i] = _model.state.input[i] * (1.f - _model.config.inputAlpha) + val * _model.config.inputAlpha;
         _model.state.input[i] = val;
         _model.state.inputUs[i] = (uint16_t)lrintf(Math::map3(_model.state.input[i], -1.f, 0.f, 1.f, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i]));
       }

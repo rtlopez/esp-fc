@@ -38,6 +38,11 @@ class Telemetry
         //<< _model.state.angle
         //<< _model.state.desiredRotation
         //<< _model.state.desiredAngle
+
+        //<< _model.state.outputUs[0]
+        //<< _model.state.outputUs[1]
+        //<< _model.state.outputUs[2]
+        //<< _model.state.outputUs[3]
       ;
       println();
       return 1;
