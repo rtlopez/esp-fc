@@ -82,8 +82,8 @@ class Blackbox
       cp->pid[PID_LEVEL].I = 50;
       cp->pid[PID_LEVEL].D = 90;
       cp->pidAtMinThrottle = 1;
-      cp->dterm_filter_type = 1;
-      cp->dterm_lpf_hz = 100;
+      cp->dterm_filter_type = _model.config.dtermFilterType;
+      cp->dterm_lpf_hz = _model.config.dtermFilterCutFreq;
       cp->yaw_lpf_hz = _model.config.gyroFilterCutFreq;
       cp->itermWindupPointPercent = 50;
 
@@ -96,7 +96,7 @@ class Blackbox
       barometerConfigMutable()->baro_hardware = 2;
       compassConfigMutable()->mag_hardware = 2;
 
-      motorConfigMutable()->dev.useUnsyncedPwm = 0;
+      motorConfigMutable()->dev.useUnsyncedPwm = 1;
       motorConfigMutable()->dev.motorPwmProtocol = 0;
       motorConfigMutable()->dev.motorPwmRate = _model.config.pwmRate;
 

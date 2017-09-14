@@ -7,6 +7,14 @@
 #include "EEPROM.h"
 #include "Filter.h"
 
+#if 1
+#define PIN_DEBUG(v) digitalWrite(D0, v)
+#define PIN_DEBUG_INIT(v) pinMode(D0, v)
+#else
+#define PIN_DEBUG(v)
+#define PIN_DEBUG_INIT(v)
+#endif
+
 namespace Espfc {
 
 enum GyroRate {
@@ -30,14 +38,14 @@ enum GyroDlpf {
   GYRO_DLPF_5   = 0x06
 };
 
-enum GyroFsr {
+enum GyroGain {
   GYRO_FS_250  = 0x00,
   GYRO_FS_500  = 0x01,
   GYRO_FS_1000 = 0x02,
   GYRO_FS_2000 = 0x03
 };
 
-enum AccelFsr {
+enum AccelGain {
   ACCEL_FS_2  = 0x00,
   ACCEL_FS_4  = 0x01,
   ACCEL_FS_8  = 0x02,
@@ -279,40 +287,37 @@ struct ModelState
 // persistent data
 struct ModelConfig
 {
-  short ppmPin;
-  int ppmMode;
+  uint8_t ppmPin;
+  uint8_t ppmMode;
 
   bool gyroFifo;
-  long gyroDlpf;
-  long gyroFsr;
-  long accelFsr;
-  short gyroSampleRate;
+  GyroDlpf gyroDlpf;
+  GyroGain gyroFsr;
+  AccelGain accelFsr;
+  GyroRate gyroSampleRate;
 
-  short magSampleRate;
-  short magFsr;
-  short magAvr;
+  MagRate magSampleRate;
+  MagGain magFsr;
+  MagAvg magAvr;
 
-  float gyroFilterAlpha;
-  float accelFilterAlpha;
-  float magFilterAlpha;
   float velocityFilterAlpha;
   float gyroDeadband;
 
-  short magCalibration;
-  short magEnable;
+  bool magCalibration;
+  bool magEnable;
 
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
   VectorFloat boardRotation;
 
   FilterType gyroFilterType;
-  short gyroFilterCutFreq;
+  uint16_t gyroFilterCutFreq;
   FilterType accelFilterType;
-  short accelFilterCutFreq;
+  uint16_t accelFilterCutFreq;
   FilterType magFilterType;
-  short magFilterCutFreq;
+  uint16_t magFilterCutFreq;
   FilterType dtermFilterType;
-  short dtermFilterCutFreq;
+  uint16_t dtermFilterCutFreq;
 
   short modelFrame;
   short flightModeChannel;
@@ -387,20 +392,17 @@ class Model
       config.inputDeadband = 1.f / 100; // %
       config.inputAlpha = 0.5;
 
-      config.accelFilterAlpha = 0.01f;
-      config.gyroFilterAlpha = 0.1f;
-      config.magFilterAlpha = 0.1f;
       config.velocityFilterAlpha = 0.1f;
-      config.fusionMode = FUSION_EXPERIMENTAL;
-      //config.fusionMode = FUSION_MADGWICK;
+      //config.fusionMode = FUSION_EXPERIMENTAL;
+      config.fusionMode = FUSION_MADGWICK;
 
-      config.gyroFilterType = FILTER_PT1;
-      config.gyroFilterCutFreq = 60;
-      config.accelFilterType = FILTER_PT1;
+      config.gyroFilterType = FILTER_BIQUAD;
+      config.gyroFilterCutFreq = 90;
+      config.accelFilterType = FILTER_BIQUAD;
       config.accelFilterCutFreq = 15;
-      config.magFilterType = FILTER_PT1;
-      config.magFilterCutFreq = 30;
-      config.dtermFilterType = FILTER_PT1;
+      config.magFilterType = FILTER_BIQUAD;
+      config.magFilterCutFreq = 20;
+      config.dtermFilterType = FILTER_BIQUAD;
       config.dtermFilterCutFreq = 60;
 
       for(size_t i = 0; i < 3; i++)
@@ -410,19 +412,20 @@ class Model
       }
 
       config.uart1Speed = SERIAL_SPEED_115200;
+
       config.uart2Speed = SERIAL_SPEED_115200;
       config.uart2Speed = SERIAL_SPEED_230400;
-      config.uart2Speed = SERIAL_SPEED_NONE;
+      config.uart2Speed = SERIAL_SPEED_250000;
 
       config.cliPort = SERIAL_UART_1;
 
       config.telemetry = 0;
-      config.telemetryInterval = 300 * 1000;
+      config.telemetryInterval = 500 * 1000;
       config.telemetryPort = SERIAL_UART_1;
 
-      config.blackbox = 0;
+      config.blackbox = 1;
       config.blackboxPort = SERIAL_UART_2;
-      config.blackboxPort = SERIAL_UART_NONE;
+      //config.blackboxPort = SERIAL_UART_NONE;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -432,11 +435,12 @@ class Model
         config.outputMax[i] = 1950;
       }
 
-      config.outputPin[0] = D8; // -1 off
-      config.outputPin[1] = D6;
-      config.outputPin[2] = D5;
-      config.outputPin[3] = D3;
+      config.outputPin[0] = D3; // D8; // -1 off
+      config.outputPin[1] = D5; // D6;
+      config.outputPin[2] = D6; // D5;
+      config.outputPin[3] = D8; // D3;
       config.modelFrame = FRAME_QUAD_X;
+      //config.modelFrame = FRAME_DIRECT;
       config.pwmRate = 125;    // 125 max
 
       // input config
@@ -480,8 +484,8 @@ class Model
         state.kalman[i] = Kalman();
         state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
-        config.outerPid[i] = Pid(1, 0.2, 0.02, 0.3, 0.02, 0);
-        config.innerPid[i] = Pid(1, 0.2, 0.02, 0.3, 0.02, 0);
+        config.outerPid[i] = Pid(1.0f, 0.00f, 0.000f, 0.1f, 0.0f);
+        config.innerPid[i] = Pid(0.2f, 0.02f, 0.001f, 0.4f, 0.0f);
       }
 
       //config.innerPid[AXIS_PITCH].Ki = 0.2;
@@ -489,7 +493,7 @@ class Model
       //config.innerPid[AXIS_ROLL].Ki = 0.2;
       //config.innerPid[AXIS_ROLL].Kd = 0.02;
       //config.innerPid[AXIS_YAW].Ki = 0.2;
-      //config.innerPid[AXIS_YAW].Kd = 0.02;
+      config.innerPid[AXIS_YAW].Kd = 0.0005;
 
       config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(40);  // deg
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s
@@ -501,18 +505,18 @@ class Model
       // actuator config - pid scaling
       config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH;
       config.actuatorChannels[0] = 5;
-      config.actuatorMin[0] = 0.1;
-      config.actuatorMax[0] = 5;
+      config.actuatorMin[0] = 0.2;
+      config.actuatorMax[0] = 2;
 
       config.actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_ROLL;
       config.actuatorChannels[1] = 6;
-      config.actuatorMin[1] = 0.1;
-      config.actuatorMax[1] = 5;
+      config.actuatorMin[1] = 0.2;
+      config.actuatorMax[1] = 2;
 
       config.actuatorConfig[2] = ACT_INNER_P | ACT_AXIS_YAW;
       config.actuatorChannels[2] = 7;
-      config.actuatorMin[2] = 0.1;
-      config.actuatorMax[2] = 5;
+      config.actuatorMin[2] = 0.2;
+      config.actuatorMax[2] = 2;
 
       //config.actuatorConfig[2] = ACT_GYRO_THRUST;
       //config.actuatorMin[2] = -0.05;

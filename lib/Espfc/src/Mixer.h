@@ -18,7 +18,7 @@ class Mixer
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {
-        PWMDriver.attach(i, _model.config.outputPin[i],  _model.config.outputMin[i]);
+        PWMDriver.attach(i, _model.config.outputPin[i],  1000);
       }
       PWMDriver.begin(_model.config.pwmRate);
     }
@@ -75,10 +75,10 @@ class Mixer
 
     void updateDirect()
     {
-      float r = _model.state.output[AXIS_ROLL];
-      float p = _model.state.output[AXIS_PITCH];
-      float y = _model.state.output[AXIS_YAW];
-      float t = _model.state.output[AXIS_THRUST];
+      float r = -1.f + abs(_model.state.output[AXIS_ROLL]);
+      float p = -1.f + abs(_model.state.output[AXIS_PITCH]);
+      float y = -1.f + abs(_model.state.output[AXIS_YAW]);
+      float t = -1.f + abs(_model.state.output[AXIS_THRUST]);
       float out[4];
       out[0] = r;
       out[1] = p;
@@ -136,7 +136,7 @@ class Mixer
       {
         if(i >= axes)
         {
-          _model.state.outputUs[i] = _model.config.outputMin[i];
+          _model.state.outputUs[i] = 1000;
         }
         else
         {

@@ -37,14 +37,14 @@ class OutputPWMFast
       return 1;
     }
 
-    int write(int slot_id, int pulse)
+    int write(int slot_id, int pulse) ICACHE_RAM_ATTR
     {
       if(slot_id < 0 || slot_id >= OUTPUT_CHANNELS) return 0;
       _buffer[slot_id].pulse = pulse;
       return 1;
     }
 
-    void apply()
+    void apply() ICACHE_RAM_ATTR
     {
       Slot tmp[OUTPUT_CHANNELS];
       std::copy(_buffer, _buffer + OUTPUT_CHANNELS, tmp);
@@ -62,7 +62,7 @@ class OutputPWMFast
       trigger();
     }
 
-    void trigger();
+    void trigger() ICACHE_RAM_ATTR;
 
     Slot* begin() ICACHE_RAM_ATTR
     {
