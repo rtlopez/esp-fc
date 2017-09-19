@@ -37,9 +37,21 @@ class Telemetry
         //<< _model.state.rate
         //<< _model.state.angle
 
-        //<< (int)degrees(_model.state.angle.x)
-        //<< (int)degrees(_model.state.angle.y)
-        //<< (int)degrees(_model.state.angle.z)
+        //<< (int)degrees(_model.state.desiredAngle.x)
+        //<< (int)degrees(_model.state.desiredAngle.y)
+        //<< (int)degrees(_model.state.desiredAngle.z)
+
+        //<< " | "
+
+        //<< (int)degrees(_model.state.controlAngle.x)
+        //<< (int)degrees(_model.state.controlAngle.y)
+        //<< (int)degrees(_model.state.controlAngle.z)
+
+        //<< " | "
+
+        //<< (int)degrees(_model.state.desiredRate[0])
+        //<< (int)degrees(_model.state.desiredRate[1])
+        //<< (int)degrees(_model.state.desiredRate[2])
 
         //<< _model.state.desiredRotation
         //<< _model.state.desiredAngle

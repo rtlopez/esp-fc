@@ -219,11 +219,9 @@ struct ModelState
   VectorFloat desiredVelocity;
   float gyroThrustScale;
 
+  VectorFloat controlAngle;
   VectorFloat desiredAngle;
   Quaternion desiredAngleQ;
-
-  //VectorFloat desiredRotation;
-  //Quaternion desiredRotationQ;
 
   float desiredRate[AXES];
 
@@ -389,8 +387,8 @@ class Model
       config.mixerSync = 1;
 
       //config.gyroDeadband = radians(0.1); // deg/s
-      config.inputDeadband = 1.f / 100; // %
-      config.inputAlpha = 0.5;
+      config.inputDeadband = 0.f / 100; // %
+      config.inputAlpha = 0.66;
 
       config.velocityFilterAlpha = 0.1f;
       //config.fusionMode = FUSION_EXPERIMENTAL;
@@ -399,11 +397,11 @@ class Model
       config.gyroFilterType = FILTER_BIQUAD;
       config.gyroFilterCutFreq = 90;
       config.accelFilterType = FILTER_BIQUAD;
-      config.accelFilterCutFreq = 15;
+      config.accelFilterCutFreq = 25;
       config.magFilterType = FILTER_BIQUAD;
       config.magFilterCutFreq = 20;
       config.dtermFilterType = FILTER_BIQUAD;
-      config.dtermFilterCutFreq = 60;
+      config.dtermFilterCutFreq = 80;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -466,8 +464,8 @@ class Model
 
       config.flightModeChannel = 4;
       config.flightModes[0] = MODE_OFF;
-      config.flightModes[1] = MODE_DIRECT;
-      config.flightModes[2] = MODE_RATE;
+      config.flightModes[1] = MODE_RATE;
+      config.flightModes[2] = MODE_ANGLE;
 
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
@@ -475,8 +473,8 @@ class Model
         config.inputNeutral[i] = 1500;
         config.inputMax[i] = 2000;
       }
-      //config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
-      //config.inputMax[AXIS_YAW] = 1000;
+      config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
+      config.inputMax[AXIS_YAW] = 1000;
 
       // controller config
       for(size_t i = 0; i < AXES; i++)
@@ -484,8 +482,8 @@ class Model
         state.kalman[i] = Kalman();
         state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
-        config.outerPid[i] = Pid(1.0f, 0.00f, 0.000f, 0.1f, 0.0f);
-        config.innerPid[i] = Pid(0.2f, 0.02f, 0.001f, 0.4f, 0.0f);
+        config.outerPid[i] = Pid(2.0f, 0.00f, 0.000f, 0.1f, 0.0f);
+        config.innerPid[i] = Pid(0.2f, 0.20f, 0.004f, 0.5f, 0.0f);
       }
 
       //config.innerPid[AXIS_PITCH].Ki = 0.2;
@@ -493,7 +491,7 @@ class Model
       //config.innerPid[AXIS_ROLL].Ki = 0.2;
       //config.innerPid[AXIS_ROLL].Kd = 0.02;
       //config.innerPid[AXIS_YAW].Ki = 0.2;
-      config.innerPid[AXIS_YAW].Kd = 0.0005;
+      config.innerPid[AXIS_YAW].Kd = 0.0005f;
 
       config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(40);  // deg
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s
@@ -506,17 +504,17 @@ class Model
       config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH;
       config.actuatorChannels[0] = 5;
       config.actuatorMin[0] = 0.2;
-      config.actuatorMax[0] = 2;
+      config.actuatorMax[0] = 4;
 
       config.actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_ROLL;
       config.actuatorChannels[1] = 6;
       config.actuatorMin[1] = 0.2;
-      config.actuatorMax[1] = 2;
+      config.actuatorMax[1] = 4;
 
       config.actuatorConfig[2] = ACT_INNER_P | ACT_AXIS_YAW;
       config.actuatorChannels[2] = 7;
       config.actuatorMin[2] = 0.2;
-      config.actuatorMax[2] = 2;
+      config.actuatorMax[2] = 4;
 
       //config.actuatorConfig[2] = ACT_GYRO_THRUST;
       //config.actuatorMin[2] = -0.05;

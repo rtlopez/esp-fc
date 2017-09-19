@@ -32,15 +32,16 @@ class Controller
 
     void outerLoop()
     {
-      VectorFloat angle;
       switch(_model.state.flightMode)
       {
         case MODE_ANGLE:
-          {
-            _model.state.desiredAngle.set(AXIS_ROLL,  _model.state.input[AXIS_ROLL] * _model.config.angleMax[AXIS_ROLL]);
-            _model.state.desiredAngle.set(AXIS_PITCH, _model.state.input[AXIS_PITCH] * _model.config.angleMax[AXIS_PITCH]);
-            _model.state.desiredAngle.set(AXIS_YAW,  0);
-          }
+        case MODE_ANGLE_SIMPLE:
+          _model.state.desiredAngle = VectorFloat(
+            _model.state.input[AXIS_ROLL] * _model.config.angleMax[AXIS_ROLL],
+            _model.state.input[AXIS_PITCH] * _model.config.angleMax[AXIS_PITCH],
+            0
+          );
+          _model.state.controlAngle = _model.state.angle;
           break;
         default:
         ;
@@ -57,7 +58,8 @@ class Controller
             _model.state.desiredRate[i] = calculateSetpointRate(i, _model.state.input[i]);
             break;
           case MODE_ANGLE:
-            _model.state.desiredRate[i] = _model.config.outerPid[i].update(_model.state.desiredAngle[i], _model.state.angle[i], _model.state.loopDt, _model.state.outerPid[i]);
+          case MODE_ANGLE_SIMPLE:
+            _model.state.desiredRate[i] = _model.config.outerPid[i].update(_model.state.desiredAngle[i], _model.state.controlAngle[i], _model.state.loopDt, _model.state.outerPid[i]);
             break;
           case MODE_OFF:
           default:
@@ -74,6 +76,7 @@ class Controller
           break;
         case MODE_RATE:
         case MODE_ANGLE:
+        case MODE_ANGLE_SIMPLE:
           _model.state.desiredRate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input[AXIS_YAW]);
           _model.state.desiredRate[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
           break;
@@ -96,6 +99,7 @@ class Controller
             break;
           case MODE_RATE:
           case MODE_ANGLE:
+          case MODE_ANGLE_SIMPLE:
             _model.state.output[i] = _model.config.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.loopDt, _model.state.innerPid[i]);
             break;
           case MODE_OFF:
@@ -110,6 +114,7 @@ class Controller
         case MODE_DIRECT:
         case MODE_RATE:
         case MODE_ANGLE:
+        case MODE_ANGLE_SIMPLE:
           _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
           break;
         case MODE_OFF:
