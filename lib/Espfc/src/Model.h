@@ -330,7 +330,7 @@ struct ModelConfig
   short inputNeutral[INPUT_CHANNELS];
   short inputMax[INPUT_CHANNELS];
   short inputMap[INPUT_CHANNELS];
-  float inputDeadband;
+  uint8_t inputDeadband;
   float inputAlpha;
   uint8_t inputExpo[3];
   uint8_t inputRate[3];
@@ -387,8 +387,9 @@ class Model
       config.mixerSync = 1;
 
       //config.gyroDeadband = radians(0.1); // deg/s
-      config.inputDeadband = 0.f / 100; // %
-      config.inputAlpha = 0.66;
+      //config.inputDeadband = 0.4f / 100; // %
+      config.inputDeadband = 3; // us
+      config.inputAlpha = 0.8f;
 
       config.velocityFilterAlpha = 0.1f;
       //config.fusionMode = FUSION_EXPERIMENTAL;

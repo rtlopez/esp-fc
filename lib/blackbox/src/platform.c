@@ -75,6 +75,16 @@ bool bitArrayGet(const void *array, unsigned bit)
     return BITARRAY_BIT_OP((uint32_t*)array, bit, &);
 }
 
+void bitArraySet(void *array, unsigned bit)
+{
+    BITARRAY_BIT_OP((uint32_t*)array, bit, |=);
+}
+
+void bitArrayClr(void *array, unsigned bit)
+{
+    BITARRAY_BIT_OP((uint32_t*)array, bit, &=~);
+}
+
 bool IS_RC_MODE_ACTIVE(boxId_e boxId)
 {
     return bitArrayGet(&rcModeActivationMask, boxId);

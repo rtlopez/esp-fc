@@ -122,6 +122,7 @@ class Blackbox
     {
       if(!_serial) return 0;
       updateArmed();
+      updateMode();
       updateData();
       blackboxUpdate(_model.state.loopTimestamp);
       return 1;
@@ -178,6 +179,19 @@ class Blackbox
         DISABLE_ARMING_FLAG(ARMED);
         setArmingBeepTimeMicros(micros());
         blackboxFinish();
+      }
+    }
+
+    void updateMode()
+    {
+      switch(_model.state.flightMode)
+      {
+        case MODE_ANGLE:
+        case MODE_ANGLE_SIMPLE:
+          bitArraySet(&rcModeActivationMask, BOXANGLE);
+          break;
+        default:
+          bitArrayClr(&rcModeActivationMask, BOXANGLE);
       }
     }
 

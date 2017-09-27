@@ -104,25 +104,39 @@ class Mixer
       float y = _model.state.output[AXIS_YAW];
       float t = _model.state.output[AXIS_THRUST];
 
-      float out[4];
+      float out[OUTPUT_CHANNELS];
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        out[i] = 0;
+      }
+
+      // TODO: use mix table
       out[0] = -r + p + y;
       out[1] = -r - p - y;
       out[2] =  r + p - y;
       out[3] =  r - p + y;
 
-      /*
       // airmode logic
-      float min = 0, max = 0, adj = 0;
-      for(size_t i = 0; i < 4; i++)
+      if(false)
       {
-        if(out[i] > max) max = out[i];
-        else if(out[i] < min) min = out[i];
+        float min = 0, max = 0;
+        for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+        {
+          max = std::max(max, out[i]);
+          min = std::min(min, out[i]);
+        }
+        float range = (max - min) / 2.f;
+        if(range > 1.f)
+        {
+          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            out[i] /= range;
+          }
+          t = Math::bound(t, -1.f + range, 1.f - range);
+        }
       }
-      if(min < -1.f) adj = min + 1.f;
-      else if(max > 1.f) adj = max - 1.f;
-      */
 
-      for(size_t i = 0; i < 4; i++)
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         out[i] += t;
       }

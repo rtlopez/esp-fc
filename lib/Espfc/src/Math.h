@@ -20,7 +20,15 @@ public:
   }
 
   template<typename T>
-  T static bound(T x, T min, T max)
+  T static deadband(const T value, const T band)
+  {
+    if(value > band) return value - band;
+    else if(value < -band) return value + band;
+    return 0;
+  }
+
+  template<typename T>
+  T static bound(const T x, const T min, const T max)
   {
     if(x > max) return max;
     if(x < min) return min;

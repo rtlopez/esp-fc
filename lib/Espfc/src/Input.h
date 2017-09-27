@@ -63,7 +63,6 @@ class Input
         float curr = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
         float prev = Math::map3((float)_get(i, 1), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
         float val = i < 3 ? Math::bound(_interpolate(prev, curr, step), -1.f, 1.f) : curr;
-        if(fabs(val) < _model.config.inputDeadband) val = 0.f;
         _model.state.input[i] = _model.state.input[i] * (1.f - _model.config.inputAlpha) + val * _model.config.inputAlpha;
         _model.state.input[i] = val;
         _model.state.inputUs[i] = (uint16_t)lrintf(Math::map3(_model.state.input[i], -1.f, 0.f, 1.f, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i]));
@@ -105,6 +104,10 @@ class Input
 
     void _set(size_t i, uint32_t v)
     {
+      if(i < 4)
+      {
+        v = (uint32_t)Math::deadband((int)v - 1500, (int)_model.config.inputDeadband) + 1500;
+      }
       for(size_t b = 1; b < INPUT_BUFF_SIZE; b++)
       {
         v += _buff[b][i];

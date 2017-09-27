@@ -397,6 +397,10 @@ typedef struct boxBitmask_s {
 
 #define BITARRAY_BIT_OP(array, bit, op) ((array)[(bit) / (sizeof((array)[0]) * 8)] op (1 << ((bit) % (sizeof((array)[0]) * 8))))
 
+bool bitArrayGet(const void *array, unsigned bit);
+void bitArraySet(void *array, unsigned bit);
+void bitArrayClr(void *array, unsigned bit);
+
 bool IS_RC_MODE_ACTIVE(boxId_e boxId);
 
 typedef enum {
@@ -476,6 +480,7 @@ typedef struct rcControlsConfig_s {
 PG_DECLARE(rcControlsConfig_t, rcControlsConfig);
 
 extern uint16_t rssi;
+extern boxBitmask_t rcModeActivationMask;
 
 bool isModeActivationConditionPresent(boxId_e modeId);
 uint32_t getArmingBeepTimeMicros(void);
