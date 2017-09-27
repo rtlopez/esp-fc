@@ -20,8 +20,8 @@ void InputPPM::begin(uint8_t pin, int mode)
 
 void InputPPM::handle()
 {
-  unsigned long now = micros();
-  unsigned long width = now - _start;
+  uint32_t now = micros();
+  uint32_t width = now - _start;
 
   _start = now;
 

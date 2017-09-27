@@ -25,8 +25,8 @@ class PidState
 class Pid
 {
   public:
-    Pid(float kp = 1, float ki = 0, float kd = 0, float il = 0.3, float dg = 0):
-      Kp(kp), Ki(ki), Kd(kd), iLimit(il), dGamma(dg) {}
+    Pid(float kp = 1, float ki = 0, float kd = 0, float il = 0.3, float dg = 0, float ol = 1):
+      Kp(kp), Ki(ki), Kd(kd), iLimit(il), dGamma(dg), oLimit(ol) {}
 
     float update(float setpoint, float input, float dt, PidState& state)
     {
@@ -49,11 +49,12 @@ class Pid
         // OR
         //dTerm = (Kd * (state.prevInput - input) / dt) * state.dScale;
         // OR BOTH
-        dTerm = (Kd * (((error - state.prevError) * dGamma) + (state.prevInput - input) * (1.f - dGamma)) / dt) * state.dScale;
+        dTerm = (Kd * (((error - state.prevError) * dGamma)
+                    + (state.prevInput - input) * (1.f - dGamma)) / dt) * state.dScale;
       }
       state.dTerm = state.dtermFilter.update(dTerm);
 
-      float output = Math::bound(state.pTerm + state.iTerm + state.dTerm, -1.f, 1.f);
+      float output = Math::bound(state.pTerm + state.iTerm + state.dTerm, -oLimit, oLimit);
 
       state.prevInput = input;
       state.prevError = state.error;
@@ -66,6 +67,7 @@ class Pid
     float Kd;
     float iLimit;
     float dGamma;
+    float oLimit;
 };
 
 }

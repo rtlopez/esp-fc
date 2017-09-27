@@ -53,7 +53,7 @@ class Blackbox
       serialWriteInit(_serial);
 
       systemConfigMutable()->activeRateProfile = 0;
-      systemConfigMutable()->debug_mode = debugMode = DEBUG_GYRO;
+      systemConfigMutable()->debug_mode = debugMode = DEBUG_ANGLERATE;
 
       controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
       rp->rcRate8 = _model.config.inputRate[ROLL];
@@ -141,6 +141,10 @@ class Blackbox
         if(debugMode == DEBUG_GYRO)
         {
           debug[i] = lrintf(degrees(_model.state.gyroScaled[i]));
+        }
+        else if(debugMode == DEBUG_ANGLERATE)
+        {
+          debug[i] = lrintf(degrees(_model.state.desiredRate[i]));
         }
         else
         {

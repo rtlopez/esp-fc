@@ -395,13 +395,13 @@ class Model
       config.fusionMode = FUSION_MADGWICK;
 
       config.gyroFilterType = FILTER_BIQUAD;
-      config.gyroFilterCutFreq = 90;
+      config.gyroFilterCutFreq = 120;
       config.accelFilterType = FILTER_BIQUAD;
-      config.accelFilterCutFreq = 25;
+      config.accelFilterCutFreq = 15;
       config.magFilterType = FILTER_BIQUAD;
       config.magFilterCutFreq = 20;
       config.dtermFilterType = FILTER_BIQUAD;
-      config.dtermFilterCutFreq = 80;
+      config.dtermFilterCutFreq = 120;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -456,7 +456,7 @@ class Model
       {
         config.inputRate[i] = 100;
         config.inputExpo[i] = 0;
-        config.inputSuperRate[i] = 0;
+        config.inputSuperRate[i] = 40;
       }
       config.inputRate[AXIS_YAW] = 100;
       config.inputExpo[AXIS_YAW] = 0;
@@ -482,8 +482,8 @@ class Model
         state.kalman[i] = Kalman();
         state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
-        config.outerPid[i] = Pid(2.0f, 0.00f, 0.000f, 0.1f, 0.0f);
-        config.innerPid[i] = Pid(0.2f, 0.20f, 0.004f, 0.5f, 0.0f);
+        config.outerPid[i] = Pid(3.00f, 0.00f, 0.0000f, 0.0f, 0.0f, radians(300));
+        config.innerPid[i] = Pid(0.08f, 0.40f, 0.0020f, 0.7f, 1.0f);
       }
 
       //config.innerPid[AXIS_PITCH].Ki = 0.2;
@@ -491,7 +491,9 @@ class Model
       //config.innerPid[AXIS_ROLL].Ki = 0.2;
       //config.innerPid[AXIS_ROLL].Kd = 0.02;
       //config.innerPid[AXIS_YAW].Ki = 0.2;
-      config.innerPid[AXIS_YAW].Kd = 0.0005f;
+      config.innerPid[AXIS_YAW].Kp = 0.15;
+      config.innerPid[AXIS_YAW].Ki = 0.4;
+      config.innerPid[AXIS_YAW].Kd = 0;//0.0005f;
 
       config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(40);  // deg
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s
@@ -511,7 +513,9 @@ class Model
       config.actuatorMin[1] = 0.2;
       config.actuatorMax[1] = 4;
 
-      config.actuatorConfig[2] = ACT_INNER_P | ACT_AXIS_YAW;
+      config.actuatorConfig[2] = ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
+      //config.actuatorConfig[2] = ACT_OUTER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
+      //config.actuatorConfig[2] = ACT_INNER_P | ACT_AXIS_YAW;
       config.actuatorChannels[2] = 7;
       config.actuatorMin[2] = 0.2;
       config.actuatorMax[2] = 4;

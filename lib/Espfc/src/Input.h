@@ -7,8 +7,6 @@
 
 namespace Espfc {
 
-static const size_t INPUT_BUFF = 3;
-
 class Input
 {
   public:
@@ -48,7 +46,8 @@ class Input
       else
       {
         // fail-safe
-        _model.state.inputDelay = micros() - PPM.getStart();
+        uint32_t now = micros();
+        _model.state.inputDelay = now - PPM.getStart();
         if(_model.state.inputDelay > 500000)  // 0.5s
         {
           setFailSafe();
@@ -63,7 +62,7 @@ class Input
       {
         float curr = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
         float prev = Math::map3((float)_get(i, 1), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
-        float val = i < 4 ? Math::bound(_interpolate(prev, curr, step), -1.f, 1.f) : curr;
+        float val = i < 3 ? Math::bound(_interpolate(prev, curr, step), -1.f, 1.f) : curr;
         if(fabs(val) < _model.config.inputDeadband) val = 0.f;
         _model.state.input[i] = _model.state.input[i] * (1.f - _model.config.inputAlpha) + val * _model.config.inputAlpha;
         _model.state.input[i] = val;
@@ -90,7 +89,7 @@ class Input
 
     void _shift()
     {
-      for(size_t b = INPUT_BUFF - 1; b > 0; b--)
+      for(size_t b = INPUT_BUFF_SIZE - 1; b > 0; b--)
       {
         for(size_t i = 0; i < INPUT_CHANNELS; i++)
         {
@@ -106,16 +105,17 @@ class Input
 
     void _set(size_t i, uint32_t v)
     {
-      for(size_t b = 1; b < INPUT_BUFF; b++)
+      for(size_t b = 1; b < INPUT_BUFF_SIZE; b++)
       {
         v += _buff[b][i];
       }
-      v /= INPUT_BUFF;
+      v /= INPUT_BUFF_SIZE;
       _buff[0][i] = v;
     }
+    static const size_t INPUT_BUFF_SIZE = 3;
 
     Model& _model;
-    uint16_t _buff[INPUT_BUFF][INPUT_CHANNELS];
+    uint16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];
 };
 
 }

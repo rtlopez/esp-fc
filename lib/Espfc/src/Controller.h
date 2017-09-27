@@ -39,7 +39,7 @@ class Controller
           _model.state.desiredAngle = VectorFloat(
             _model.state.input[AXIS_ROLL] * _model.config.angleMax[AXIS_ROLL],
             _model.state.input[AXIS_PITCH] * _model.config.angleMax[AXIS_PITCH],
-            0
+            _model.state.angle[AXIS_YAW]
           );
           _model.state.controlAngle = _model.state.angle;
           break;

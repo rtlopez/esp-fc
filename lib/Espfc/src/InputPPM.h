@@ -12,17 +12,17 @@ class InputPPM
     void handle() ICACHE_RAM_ATTR;
 
     uint16_t getTime(uint8_t i) const { return _channels[i]; }
-    unsigned long getStart() const { return _start; }
-    boolean hasNewData() const { return _new_data; }
-    boolean resetNewData() { _new_data = false; }
+    uint32_t getStart() const { return _start; }
+    bool hasNewData() const { return _new_data; }
+    bool resetNewData() { _new_data = false; }
 
-    static const uint8_t CHANNELS     =   16;
+    static const uint8_t CHANNELS = 16;
 
   private:
     volatile uint16_t _channels[CHANNELS];
-    volatile unsigned long _start;
+    volatile uint32_t _start;
     volatile uint8_t  _channel;
-    volatile boolean  _new_data;
+    volatile bool     _new_data;
     uint8_t _pin;
 };
 
