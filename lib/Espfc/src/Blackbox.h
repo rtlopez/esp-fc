@@ -53,7 +53,7 @@ class Blackbox
       serialWriteInit(_serial);
 
       systemConfigMutable()->activeRateProfile = 0;
-      systemConfigMutable()->debug_mode = debugMode = DEBUG_ANGLERATE;
+      systemConfigMutable()->debug_mode = debugMode = DEBUG_GYRO;
 
       controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
       rp->rcRate8 = _model.config.inputRate[ROLL];
@@ -86,6 +86,9 @@ class Blackbox
       cp->dterm_lpf_hz = _model.config.dtermFilterCutFreq;
       cp->yaw_lpf_hz = _model.config.gyroFilterCutFreq;
       cp->itermWindupPointPercent = 50;
+
+      rcControlsConfigMutable()->deadband = _model.config.inputDeadband;
+      rcControlsConfigMutable()->yaw_deadband = _model.config.inputDeadband;
 
       gyroConfigMutable()->gyro_lpf = 0;
       gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilterType;
@@ -139,17 +142,16 @@ class Blackbox
         axisPID_I[i] = _model.state.innerPid[i].iTerm * 1000.f;
         axisPID_D[i] = _model.state.innerPid[i].dTerm * 1000.f;
         rcCommand[i] = _model.state.input[i] * 500;
-        if(debugMode == DEBUG_GYRO)
+        switch(debugMode)
         {
-          debug[i] = lrintf(degrees(_model.state.gyroScaled[i]));
-        }
-        else if(debugMode == DEBUG_ANGLERATE)
-        {
-          debug[i] = lrintf(degrees(_model.state.desiredRate[i]));
-        }
-        else
-        {
-          debug[i] = 0;
+          case DEBUG_GYRO:
+            debug[i] = lrintf(degrees(_model.state.gyroScaled[i]));
+            break;
+          case DEBUG_ANGLERATE:
+            debug[i] = lrintf(degrees(_model.state.desiredRate[i]));
+            break;
+          default:
+            debug[i] = 0;
         }
       }
       rcCommand[AXIS_THRUST] = Math::map(_model.state.input[AXIS_THRUST], -1.f, 1.f, 1000, 2000);

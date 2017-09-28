@@ -26,6 +26,8 @@ class Input
       }
       _model.state.inputUs[AXIS_THRUST] = 1000;
       _model.state.input[AXIS_THRUST] = -1.f;
+      _model.state.inputUs[_model.config.flightModeChannel] = 1000;
+      _model.state.input[_model.config.flightModeChannel] = -1.f;
     }
 
     int update()
@@ -37,7 +39,7 @@ class Input
       if(PPM.hasNewData())
       {
         uint32_t now = micros();
-        inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)40000) / 1000000.f;
+        inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)25000) / 1000000.f;
         prevTm = now;
         _read();
         PPM.resetNewData();
