@@ -252,6 +252,7 @@ struct ModelState
   float gyroBiasAlpha;
   long gyroBiasSamples;
   bool gyroBiasValid;
+  uint8_t gyroDivider;
 
   uint32_t gyroSampleRate;
   uint32_t gyroSampleInterval;
@@ -386,20 +387,20 @@ class Model
       config.loopSync = 1;
       config.mixerSync = 1;
 
-      //config.gyroDeadband = radians(0.1); // deg/s
+      config.gyroDeadband = radians(0.1); // deg/s
 
       config.velocityFilterAlpha = 0.1f;
       //config.fusionMode = FUSION_EXPERIMENTAL;
       config.fusionMode = FUSION_MADGWICK;
 
       config.gyroFilterType = FILTER_PT1;
-      config.gyroFilterCutFreq = 100;
+      config.gyroFilterCutFreq = 70;
       config.accelFilterType = FILTER_PT1;
-      config.accelFilterCutFreq = 20;
+      config.accelFilterCutFreq = 15;
       config.magFilterType = FILTER_PT1;
-      config.magFilterCutFreq = 20;
+      config.magFilterCutFreq = 15;
       config.dtermFilterType = FILTER_BIQUAD;
-      config.dtermFilterCutFreq = 100;
+      config.dtermFilterCutFreq = 90;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -438,7 +439,7 @@ class Model
       config.outputPin[3] = D8; // D3;
       config.modelFrame = FRAME_QUAD_X;
       //config.modelFrame = FRAME_DIRECT;
-      config.pwmRate = 125;    // 125 max
+      config.pwmRate = 500;    // 125 max for old driver
 
       // input config
       config.ppmPin = D7;     // GPIO13
@@ -485,16 +486,16 @@ class Model
         state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
         config.outerPid[i] = Pid(3.00f, 0.00f, 0.0000f, 0.0f, 0.0f, radians(300));
-        config.innerPid[i] = Pid(0.10f, 0.40f, 0.0010f, 0.3f, 1.0f);
+        config.innerPid[i] = Pid(0.10f, 0.10f, 0.0010f, 0.3f, 0.6f);
       }
 
-      config.innerPid[AXIS_ROLL].Kp *= 0.8;
-      config.innerPid[AXIS_ROLL].Ki *= 0.8;
-      config.innerPid[AXIS_ROLL].Kd *= 0.8;
+      config.innerPid[AXIS_ROLL].Kp *= 0.9;
+      config.innerPid[AXIS_ROLL].Ki *= 0.9;
+      config.innerPid[AXIS_ROLL].Kd *= 0.9;
 
-      config.innerPid[AXIS_YAW].Kp = 0.2;
-      config.innerPid[AXIS_YAW].Ki = 0.4;
-      config.innerPid[AXIS_YAW].Kd = 0.0002f;
+      config.innerPid[AXIS_YAW].Kp = 0.20;
+      config.innerPid[AXIS_YAW].Ki = 0.15;
+      config.innerPid[AXIS_YAW].Kd = 0.0005f;
 
       config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(50);  // deg
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s

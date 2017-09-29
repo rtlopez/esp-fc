@@ -39,7 +39,7 @@ class Input
       if(PPM.hasNewData())
       {
         uint32_t now = micros();
-        inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)25000) / 1000000.f;
+        inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)30000) / 1000000.f;
         prevTm = now;
         _read();
         PPM.resetNewData();

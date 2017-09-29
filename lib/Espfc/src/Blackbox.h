@@ -62,35 +62,36 @@ class Blackbox
       rp->rcYawExpo8 = _model.config.inputExpo[YAW];
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
-      rp->dynThrPID = 10;
+      rp->dynThrPID = 0;
       rp->tpa_breakpoint = 1650;
       rp->rates[ROLL] = _model.config.inputSuperRate[ROLL];
       rp->rates[PITCH] = _model.config.inputSuperRate[PITCH];
       rp->rates[YAW] = _model.config.inputSuperRate[YAW];
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
-      cp->pid[ROLL].P = 50;
-      cp->pid[ROLL].I = 40;
-      cp->pid[ROLL].D = 20;
-      cp->pid[PITCH].P = 50;
-      cp->pid[PITCH].I = 40;
-      cp->pid[PITCH].D = 20;
-      cp->pid[YAW].P = 50;
-      cp->pid[YAW].I = 40;
-      cp->pid[YAW].D = 20;
-      cp->pid[PID_LEVEL].P = 50;
-      cp->pid[PID_LEVEL].I = 50;
-      cp->pid[PID_LEVEL].D = 90;
+      cp->pid[ROLL].P = (uint8_t)(_model.config.innerPid[AXIS_ROLL].Kp * 500);
+      cp->pid[ROLL].I = (uint8_t)(_model.config.innerPid[AXIS_ROLL].Ki * 500);
+      cp->pid[ROLL].D = (uint8_t)(_model.config.innerPid[AXIS_ROLL].Kd * 25000);
+      cp->pid[PITCH].P = (uint8_t)(_model.config.innerPid[AXIS_PITCH].Kp * 500);
+      cp->pid[PITCH].I = (uint8_t)(_model.config.innerPid[AXIS_PITCH].Ki * 500);
+      cp->pid[PITCH].D = (uint8_t)(_model.config.innerPid[AXIS_PITCH].Kd * 25000);
+      cp->pid[YAW].P = (uint8_t)(_model.config.innerPid[AXIS_YAW].Kp * 500);
+      cp->pid[YAW].I = (uint8_t)(_model.config.innerPid[AXIS_YAW].Ki * 500);
+      cp->pid[YAW].D = (uint8_t)(_model.config.innerPid[AXIS_YAW].Kd * 25000);
+      cp->pid[PID_LEVEL].P = (uint8_t)(_model.config.outerPid[AXIS_ROLL].Kp * 10);
+      cp->pid[PID_LEVEL].I = (uint8_t)(_model.config.outerPid[AXIS_ROLL].Kp * 10);
+      cp->pid[PID_LEVEL].D = 100;
       cp->pidAtMinThrottle = 1;
       cp->dterm_filter_type = _model.config.dtermFilterType;
       cp->dterm_lpf_hz = _model.config.dtermFilterCutFreq;
       cp->yaw_lpf_hz = _model.config.gyroFilterCutFreq;
-      cp->itermWindupPointPercent = 50;
+      cp->itermWindupPointPercent = (uint8_t)(_model.config.innerPid[AXIS_ROLL].iLimit * 100);
+      cp->dtermSetpointWeight = (uint8_t)(_model.config.innerPid[AXIS_ROLL].dGamma * 100);
 
       rcControlsConfigMutable()->deadband = _model.config.inputDeadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.inputDeadband;
 
-      gyroConfigMutable()->gyro_lpf = 0;
+      gyroConfigMutable()->gyro_lpf = _model.config.gyroDlpf;
       gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilterType;
       gyroConfigMutable()->gyro_soft_lpf_hz = _model.config.gyroFilterCutFreq;
 
@@ -99,7 +100,7 @@ class Blackbox
       barometerConfigMutable()->baro_hardware = 2;
       compassConfigMutable()->mag_hardware = 2;
 
-      motorConfigMutable()->dev.useUnsyncedPwm = 1;
+      motorConfigMutable()->dev.useUnsyncedPwm = 0;
       motorConfigMutable()->dev.motorPwmProtocol = 0;
       motorConfigMutable()->dev.motorPwmRate = _model.config.pwmRate;
 
@@ -111,7 +112,7 @@ class Blackbox
       motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMin[0];
       motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
 
-      gyroConfigMutable()->gyro_sync_denom = 1;
+      gyroConfigMutable()->gyro_sync_denom = _model.state.gyroDivider + 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       featureConfigMutable()->enabledFeatures = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_AIRMODE | FEATURE_ANTI_GRAVITY;

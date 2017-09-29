@@ -79,6 +79,10 @@ class Sensor
       //accel.rotate(_model.state.boardRotationQ);
 
       _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
+      for(size_t i; i < 3; ++i)
+      {
+        _model.state.gyroScaled.set(i, Math::deadband(_model.state.gyroScaled[i], _model.config.gyroDeadband));
+      }
       //gyro.rotate(_model.state.boardRotationQ);
 
       if(_model.config.magEnable)
@@ -96,7 +100,6 @@ class Sensor
           _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.magScaled[i]));
         }
       }
-      //_model.state.gyro.set(1, _model.state.magFilter[0].update(_model.state.gyroScaled[0]));
     }
 
     void updateGyroBias()
@@ -120,13 +123,6 @@ class Sensor
         }
       }
       _model.state.gyro -= _model.state.gyroBias;
-      for(size_t i; i < 3; ++i)
-      {
-        if(fabs(_model.state.gyro.get(i)) < _model.config.gyroDeadband)
-        {
-          _model.state.gyro.set(i, 0.f);
-        }
-      }
     }
 
     void updateMagBias()
@@ -250,17 +246,17 @@ class Sensor
         default: rate = 100;
       }
 
-      int divider = clock / (rate + 1);
-      _model.state.gyroSampleRate = clock / (divider + 1); // update to real sample rate
+      _model.state.gyroDivider = clock / (rate + 1);
+      _model.state.gyroSampleRate = clock / (_model.state.gyroDivider + 1); // update to real sample rate
       _model.state.gyroSampleInterval = 1000000 / _model.state.gyroSampleRate;
       //_model.state.gyroSampleIntervalFloat = 1.0 / _model.state.gyroSampleRate;
 
-      _model.state.gyroBiasAlpha = 2.0f / rate; // higher value gives faster calibration, was 2
+      _model.state.gyroBiasAlpha = 5.0f / rate; // higher value gives faster calibration, was 2
       _model.state.gyroBiasSamples = 0;
 
-      Serial.print("gyro rate: "); Serial.print(divider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.println();
+      Serial.print("gyro rate: "); Serial.print(_model.state.gyroDivider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.println();
       _gyro.setDLPFMode(_model.config.gyroDlpf);
-      _gyro.setRate(divider);
+      _gyro.setRate(_model.state.gyroDivider);
     }
 
     void setGyroScale()
