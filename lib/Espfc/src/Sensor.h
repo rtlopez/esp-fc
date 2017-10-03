@@ -29,10 +29,16 @@ class Sensor
 
     int update()
     {
-      if(!readSensors(_model.state.gyroTimestamp)) return 0;
+      _model.state.stats.start(COUNTER_IMU_READ);
+      int ret = readSensors(_model.state.gyroTimestamp);
+      _model.state.stats.end(COUNTER_IMU_READ);
+      if(!ret) return 0;
+
+      _model.state.stats.start(COUNTER_IMU_FILTER);
       updateGyro();
       updateGyroBias();
       updateMagBias();
+      _model.state.stats.end(COUNTER_IMU_FILTER);
       return 1;
     }
 

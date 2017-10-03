@@ -25,9 +25,15 @@ class Controller
 
     int update()
     {
+      _model.state.stats.start(COUNTER_OUTER_PID);
       resetIterm();
       outerLoop();
+      _model.state.stats.end(COUNTER_OUTER_PID);
+
+      _model.state.stats.start(COUNTER_INNER_PID);
       innerLoop();
+      _model.state.stats.end(COUNTER_INNER_PID);
+      return 1;
     }
 
     void outerLoop()

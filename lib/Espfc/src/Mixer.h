@@ -27,10 +27,13 @@ class Mixer
     {
       if(!_model.state.armed)
       {
+        _model.state.stats.start(COUNTER_MIXER);
         updateDisarmed();
+        _model.state.stats.end(COUNTER_MIXER);
         return 0;
       }
 
+      _model.state.stats.start(COUNTER_MIXER);
       switch(_model.config.modelFrame)
       {
         case FRAME_QUAD_X:
@@ -50,6 +53,7 @@ class Mixer
           updateDisarmed();
           break;
       }
+      _model.state.stats.end(COUNTER_MIXER);
       return 1;
     }
 

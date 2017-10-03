@@ -176,7 +176,7 @@ class Cli
 
       if(strcmp_P(_cmd.args[0], PSTR("help")) == 0)
       {
-        println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n reset\n info\n version"));
+        println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n reset\n stats\n info\n version"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
@@ -312,6 +312,26 @@ class Cli
           print(EEPROM.read(i), HEX);
           print(' ');
         }
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
+      {
+        for(size_t i = 0; i < COUNTER_COUNT; ++i)
+        {
+          print(FPSTR(_model.state.stats.getName((StatCounter)i)));
+          print(": ");
+          print((int)_model.state.stats.getTime((StatCounter)i));
+          print("us, ");
+          print(_model.state.stats.getLoad((StatCounter)i), 1);
+          print("%");
+          println();
+        }
+        println();
+        print(F("     total: "));
+        print((int)_model.state.stats.getTotalTime());
+        print("us, ");
+        print(_model.state.stats.getTotalLoad(), 1);
+        print("%");
+        println();
       }
       else
       {

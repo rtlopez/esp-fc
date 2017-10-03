@@ -20,7 +20,7 @@ class Telemetry
     int update()
     {
       if(!_stream) return 0;
-
+      _model.state.stats.start(COUNTER_TELEMETRY);
       (*this)
         //<< _model.state.timestamp
         //<< _model.state.armed
@@ -62,6 +62,7 @@ class Telemetry
         //<< _model.state.outputUs[3]
       ;
       println();
+      _model.state.stats.end(COUNTER_TELEMETRY);
       return 1;
     }
 

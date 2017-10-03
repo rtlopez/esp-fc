@@ -18,6 +18,7 @@ class Fusion
 
     int update()
     {
+      _model.state.stats.start(COUNTER_IMU_FUSION);
       switch(_model.config.fusionMode)
       {
         case FUSION_MADGWICK:
@@ -48,6 +49,7 @@ class Fusion
         default:
           _model.state.rate = _model.state.gyro;
        }
+       _model.state.stats.end(COUNTER_IMU_FUSION);
        return 1;
     }
 

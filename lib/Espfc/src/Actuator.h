@@ -17,9 +17,11 @@ class Actuator
 
     int update()
     {
+      _model.state.stats.start(COUNTER_ACTUATOR);
       updateFlightMode();
       updateScaler();
       updateArming();
+      _model.state.stats.end(COUNTER_ACTUATOR);
     }
 
   private:

@@ -125,10 +125,12 @@ class Blackbox
     int update()
     {
       if(!_serial) return 0;
+      _model.state.stats.start(COUNTER_BLACKBOX);
       updateArmed();
       updateMode();
       updateData();
       blackboxUpdate(_model.state.loopTimestamp);
+      _model.state.stats.end(COUNTER_BLACKBOX);
       return 1;
     }
 

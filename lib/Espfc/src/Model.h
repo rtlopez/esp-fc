@@ -6,6 +6,7 @@
 #include "Kalman.h"
 #include "EEPROM.h"
 #include "Filter.h"
+#include "Stats.h"
 
 #if 0
 #define PIN_DEBUG(v) digitalWrite(D0, v)
@@ -281,6 +282,8 @@ struct ModelState
 
   uint32_t telemetryTimestamp;
   bool telemetryUpdate;
+
+  Stats stats;
 };
 
 // persistent data
@@ -418,7 +421,7 @@ class Model
       config.cliPort = SERIAL_UART_1;
 
       config.telemetry = 0;
-      config.telemetryInterval = 500 * 1000;
+      config.telemetryInterval = 1000 * 1000;
       config.telemetryPort = SERIAL_UART_1;
 
       config.blackbox = 1;
@@ -527,6 +530,7 @@ class Model
       //config.actuatorMax[2] =  0.05;
 
       state.gyroThrustScale = 0.02;
+      state.stats = Stats();
     }
 
     union {
