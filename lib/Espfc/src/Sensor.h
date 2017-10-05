@@ -8,6 +8,7 @@
 
 #include "Model.h"
 #include "Filter.h"
+#include "Fusion.h"
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
 #define ESPFC_FUZZY_GYRO_ZERO 0.20
@@ -17,99 +18,156 @@ namespace Espfc {
 class Sensor
 {
   public:
-    Sensor(Model& model): _model(model) {}
+    Sensor(Model& model): _model(model), _fusion(model) {}
     int begin()
     {
       initGyro();
       initMag();
       initPresure();
       initFilter();
+      _fusion.begin();
       _model.state.boardRotationQ = _model.config.boardRotation.eulerToQuaternion();
     }
 
     int update()
     {
-      _model.state.stats.start(COUNTER_IMU_READ);
-      int ret = readSensors(_model.state.gyroTimestamp);
-      _model.state.stats.end(COUNTER_IMU_READ);
+      _model.state.stats.start(COUNTER_GYRO_READ);
+      int ret = readSensors();
+      _model.state.stats.end(COUNTER_GYRO_READ);
       if(!ret) return 0;
 
-      _model.state.stats.start(COUNTER_IMU_FILTER);
-      updateGyro();
-      updateGyroBias();
-      updateMagBias();
-      _model.state.stats.end(COUNTER_IMU_FILTER);
+      _model.state.stats.start(COUNTER_GYRO_FILTER);
+      updateSensors();
+      _model.state.stats.end(COUNTER_GYRO_FILTER);
+
+      if(!_model.config.fusionDelay)
+      {
+        _fusion.update();
+      }
+
       return 1;
     }
 
+    int updateDelayed()
+    {
+      if(_model.config.accelMode == ACCEL_DELAYED)
+      {
+        _model.state.stats.start(COUNTER_ACCEL_READ);
+        readAccel();
+        _model.state.stats.end(COUNTER_ACCEL_READ);
+        _model.state.stats.start(COUNTER_ACCEL_FILTER);
+        updateAccel();
+        _model.state.stats.end(COUNTER_ACCEL_FILTER);
+      }
+
+      if(_model.config.magEnable)
+      {
+        _model.state.stats.start(COUNTER_MAG_READ);
+        int ret = readMag();
+        _model.state.stats.end(COUNTER_MAG_READ);
+        _model.state.stats.start(COUNTER_MAG_FILTER);
+        updateMag();
+        _model.state.stats.end(COUNTER_MAG_FILTER);
+      }
+
+      if(_model.config.fusionDelay)
+      {
+        _fusion.update();
+      }
+    }
+
   private:
-    int readSensors(uint32_t now)
+    int readSensors()
+    {
+      switch(_model.config.accelMode)
+      {
+        case ACCEL_GYRO_FIFO:
+          return readGyroAccelFifo();
+        case ACCEL_GYRO:
+          return readGyroAccel();
+        case ACCEL_NONE:
+        case ACCEL_DELAYED:
+        default:
+          return readGyro();
+      }
+    }
+
+    void updateSensors()
+    {
+      switch(_model.config.accelMode)
+      {
+        case ACCEL_GYRO_FIFO:
+        case ACCEL_GYRO:
+          updateAccel();
+        case ACCEL_NONE:
+        case ACCEL_DELAYED:
+        default:
+          updateGyro();
+      }
+    }
+
+    int readGyroAccelFifo()
     {
       uint8_t buf[FIFO_SIZE];
-      int numSamples = 1;
-
-      if(_model.config.gyroFifo)
+      int numSamples = 0;
+      do
       {
         int fifoCount = _gyro.getFIFOCount();
         if(fifoCount < FIFO_SIZE) return 0;
         numSamples = fifoCount / FIFO_SIZE;
         _gyro.getFIFOBytes(buf, FIFO_SIZE);
-        toVector(_model.state.accelRaw, buf);
-        toVector(_model.state.gyroRaw, buf + 6);
       }
-      else
-      {
-        _gyro.getMotion6(&_model.state.accelRaw.x, &_model.state.accelRaw.y, &_model.state.accelRaw.z,
-                         &_model.state.gyroRaw.x,  &_model.state.gyroRaw.y,  &_model.state.gyroRaw.z);
-      }
+      while(numSamples > 1); // discard late samples and use only latest
+      toVector(_model.state.accelRaw, buf);
+      toVector(_model.state.gyroRaw, buf + 6);
+      return 1;
+    }
 
-      // read compas
-      if(_model.config.magEnable && _model.state.magTimestamp + _model.state.magSampleInterval < now)
+    int readGyroAccel()
+    {
+      _gyro.getMotion6(
+        &_model.state.accelRaw.x, &_model.state.accelRaw.y, &_model.state.accelRaw.z,
+        &_model.state.gyroRaw.x,  &_model.state.gyroRaw.y,  &_model.state.gyroRaw.z
+      );
+      return 1;
+    }
+
+    int readGyro()
+    {
+      _gyro.getRotation(&_model.state.gyroRaw.x,  &_model.state.gyroRaw.y,  &_model.state.gyroRaw.z);
+      return 1;
+    }
+
+    int readAccel()
+    {
+      _gyro.getAcceleration(&_model.state.accelRaw.x, &_model.state.accelRaw.y, &_model.state.accelRaw.z);
+      return 1;
+    }
+
+    int readMag()
+    {
+      if(_model.config.magEnable && _model.state.magTimestamp + _model.state.magSampleInterval < _model.state.gyroTimestamp)
       {
         _mag.getHeading(&_model.state.magRaw.x, &_model.state.magRaw.y, &_model.state.magRaw.z);
-        _model.state.magTimestamp = now;
+        _model.state.magTimestamp = _model.state.gyroTimestamp;
+        return 1;
       }
-
-      // adjust timestamp for delayed fifo samples
-      //if(numSamples > 1)
-      //{
-      //  now -= _model.state.gyroSampleInterval * (numSamples - 1);
-      //}
-
-      return 1;
+      return 0;
     }
 
     void updateGyro()
     {
-      _model.state.accelScaled = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
-      //accel.rotate(_model.state.boardRotationQ);
-
       _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
       for(size_t i; i < 3; ++i)
       {
         _model.state.gyroScaled.set(i, Math::deadband(_model.state.gyroScaled[i], _model.config.gyroDeadband));
       }
       //gyro.rotate(_model.state.boardRotationQ);
-
-      if(_model.config.magEnable)
-      {
-        _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
-        //mag.rotate(_model.state.boardRotationQ);
-      }
-
       for(size_t i = 0; i < 3; i++)
       {
-        _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
-        if(_model.config.magEnable)
-        {
-          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.magScaled[i]));
-        }
       }
-    }
 
-    void updateGyroBias()
-    {
       if(!_model.state.gyroBiasValid)
       {
         VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
@@ -131,15 +189,34 @@ class Sensor
       _model.state.gyro -= _model.state.gyroBias;
     }
 
-    void updateMagBias()
+    void updateAccel()
     {
-      if(!_model.config.magEnable) return;
-      if(_model.state.magCalibrationValid && _model.config.magCalibration == 0)
+      _model.state.accelScaled = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
+      //accel.rotate(_model.state.boardRotationQ);
+      for(size_t i = 0; i < 3; i++)
       {
-        _model.state.mag -= _model.config.magCalibrationOffset;
-        _model.state.mag *= _model.config.magCalibrationScale;
+        _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
       }
-      collectMagCalibration();
+      //TOD0: accel calibration
+    }
+
+    void updateMag()
+    {
+      if(_model.config.magEnable)
+      {
+        _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
+        //mag.rotate(_model.state.boardRotationQ);
+        for(size_t i = 0; i < 3; i++)
+        {
+          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.magScaled[i]));
+        }
+        if(_model.state.magCalibrationValid && _model.config.magCalibration == 0)
+        {
+          _model.state.mag -= _model.config.magCalibrationOffset;
+          _model.state.mag *= _model.config.magCalibrationScale;
+        }
+        collectMagCalibration();
+      }
     }
 
     void collectMagCalibration()
@@ -222,7 +299,7 @@ class Sensor
       setAccelScale();
 
       // setup fifo
-      if(_model.config.gyroFifo)
+      if(_model.config.accelMode == ACCEL_GYRO_FIFO)
       {
         _gyro.setAccelFIFOEnabled(true);
         _gyro.setXGyroFIFOEnabled(true);
@@ -252,9 +329,9 @@ class Sensor
         default: rate = 100;
       }
 
-      _model.state.gyroDivider = clock / (rate + 1);
-      _model.state.gyroSampleRate = clock / (_model.state.gyroDivider + 1); // update to real sample rate
-      _model.state.gyroSampleInterval = 1000000 / _model.state.gyroSampleRate;
+      _model.state.gyroDivider = (clock / (rate + 1)) + 1;
+      _model.state.gyroSampleRate = clock / (_model.state.gyroDivider); // update to real sample rate
+      _model.state.gyroSampleInterval = (1000000 / _model.state.gyroSampleRate);
       //_model.state.gyroSampleIntervalFloat = 1.0 / _model.state.gyroSampleRate;
 
       _model.state.gyroBiasAlpha = 5.0f / rate; // higher value gives faster calibration, was 2
@@ -262,7 +339,7 @@ class Sensor
 
       Serial.print("gyro rate: "); Serial.print(_model.state.gyroDivider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.println();
       _gyro.setDLPFMode(_model.config.gyroDlpf);
-      _gyro.setRate(_model.state.gyroDivider);
+      _gyro.setRate(_model.state.gyroDivider - 1);
     }
 
     void setGyroScale()
@@ -313,7 +390,7 @@ class Sensor
         default: _model.config.magSampleRate = MAG_RATE_15; rate = 15; return;
       }
       _model.state.magSampleRate = rate;
-      _model.state.magSampleInterval = 1000 / rate;
+      _model.state.magSampleInterval = 1000000 / rate;
       _mag.setDataRate(_model.config.magSampleRate + 0x02);
       Serial.print("mag rate: "); Serial.print(_model.config.magSampleRate); Serial.print(' '); Serial.print(_model.state.magSampleRate); Serial.print(' '); Serial.println(_model.state.magSampleInterval);
     }
@@ -353,6 +430,7 @@ class Sensor
     static const uint8_t FIFO_SIZE = 12;
 
     Model& _model;
+    Fusion _fusion;
     MPU6050 _gyro;
     HMC5883L _mag;
     Adafruit_BMP280 _baro;

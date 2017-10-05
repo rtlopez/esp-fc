@@ -6,8 +6,12 @@
 namespace Espfc {
 
 enum StatCounter {
-  COUNTER_IMU_READ,
-  COUNTER_IMU_FILTER,
+  COUNTER_GYRO_READ,
+  COUNTER_GYRO_FILTER,
+  COUNTER_ACCEL_READ,
+  COUNTER_ACCEL_FILTER,
+  COUNTER_MAG_READ,
+  COUNTER_MAG_FILTER,
   COUNTER_IMU_FUSION,
   COUNTER_INPUT,
   COUNTER_ACTUATOR,
@@ -22,14 +26,20 @@ enum StatCounter {
 class Stats
 {
   public:
-    Stats()
+    Stats(): _first(0)
     {
-      for(size_t i = 0; i < COUNTER_COUNT; i++) _counter[i] = 0;
+      for(size_t i = 0; i < COUNTER_COUNT; i++)
+      {
+        _start[i] = 0;
+        _counter[i] = 0;
+        _avg[i] = 0;
+      }
     }
 
     void start(StatCounter c)
     {
       _start[c] = micros();
+      if(!_first) _first = _start[c] / 1000;
     }
 
     void end(StatCounter c)
@@ -37,14 +47,14 @@ class Stats
       uint32_t diff = micros() - _start[c];
       _counter[c] += diff;
 
-      const float k = 0.2f;
+      const float k = 0.1f;
       _avg[c] = (k * diff) + ((1.f - k) * _avg[c]);
       //_avg[c] = _avg[c] + ((int32_t)diff - _avg[c]) / 10;
     }
 
     float getLoad(StatCounter c) const
     {
-      return (_counter[c] / 10.0f) / millis();
+      return (_counter[c] / 10.0f) / (millis() - _first);
     }
 
     float getTime(StatCounter c) const
@@ -70,32 +80,41 @@ class Stats
     {
       switch(c)
       {
-        case COUNTER_IMU_READ:
-          return PSTR("  imu read");
-        case COUNTER_IMU_FILTER:
-          return PSTR("imu filter");
+        case COUNTER_GYRO_READ:
+          return PSTR("gyro read   ");
+        case COUNTER_GYRO_FILTER:
+          return PSTR("gyro filter ");
+        case COUNTER_ACCEL_READ:
+          return PSTR("accel read  ");
+        case COUNTER_ACCEL_FILTER:
+          return PSTR("accel filter");
+        case COUNTER_MAG_READ:
+          return PSTR("mag read    ");
+        case COUNTER_MAG_FILTER:
+          return PSTR("mag filter  ");
         case COUNTER_IMU_FUSION:
-          return PSTR("imu fusion");
+          return PSTR("imu fusion  ");
         case COUNTER_INPUT:
-          return PSTR("     input");
+          return PSTR("input rx    ");
         case COUNTER_ACTUATOR:
-          return PSTR("  actuator");
+          return PSTR("actuator    ");
         case COUNTER_OUTER_PID:
-          return PSTR(" outer pid");
+          return PSTR("pid outer   ");
         case COUNTER_INNER_PID:
-          return PSTR(" inner pid");
+          return PSTR("pid inner   ");
         case COUNTER_MIXER:
-          return PSTR("     mixer");
+          return PSTR("mixer       ");
         case COUNTER_BLACKBOX:
-          return PSTR("  blackbox");
+          return PSTR("blackbox    ");
         case COUNTER_TELEMETRY:
-          return PSTR(" telemetry");
+          return PSTR("telemetry   ");
         default:
-          return PSTR("   unknown");
+          return PSTR("unknown     ");
       }
     }
 
   private:
+    uint32_t _first;
     uint32_t _start[COUNTER_COUNT];
     uint64_t _counter[COUNTER_COUNT];
     float _avg[COUNTER_COUNT];

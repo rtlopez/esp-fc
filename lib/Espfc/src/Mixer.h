@@ -20,7 +20,7 @@ class Mixer
       {
         PWMDriver.attach(i, _model.config.outputPin[i],  1000);
       }
-      PWMDriver.begin(_model.config.pwmRate);
+      PWMDriver.begin(_model.config.outputRate, _model.config.outputProtocol);
     }
 
     int update()

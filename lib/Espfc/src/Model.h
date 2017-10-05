@@ -53,6 +53,13 @@ enum AccelGain {
   ACCEL_FS_16 = 0x03
 };
 
+enum AccelMode {
+  ACCEL_NONE      = 0x00,
+  ACCEL_DELAYED   = 0x01,
+  ACCEL_GYRO      = 0x02,
+  ACCEL_GYRO_FIFO = 0x03
+};
+
 enum MagGain {
   MAG_GAIN_1370 = 0x00,
   MAG_GAIN_1090 = 0x01,
@@ -157,13 +164,19 @@ enum SerialSpeed {
   SERIAL_SPEED_57600  =  57600,
   SERIAL_SPEED_115200 = 115200,
   SERIAL_SPEED_230400 = 230400,
-  SERIAL_SPEED_250000 = 250000
+  SERIAL_SPEED_250000 = 250000,
+  SERIAL_SPEED_500000 = 500000
 };
 
 enum SerialPort {
   SERIAL_UART_NONE = 0,
   SERIAL_UART_1,
   SERIAL_UART_2
+};
+
+enum OutputProtocol {
+  OUTPUT_PWM,
+  OUTPUT_ONESHOT125
 };
 
 const size_t OUTPUT_CHANNELS = 4;
@@ -292,7 +305,8 @@ struct ModelConfig
   uint8_t ppmPin;
   uint8_t ppmMode;
 
-  bool gyroFifo;
+  AccelMode accelMode;
+
   GyroDlpf gyroDlpf;
   GyroGain gyroFsr;
   AccelGain accelFsr;
@@ -345,7 +359,8 @@ struct ModelConfig
   short outputMax[OUTPUT_CHANNELS];
 
   short outputPin[OUTPUT_CHANNELS];
-  short pwmRate;
+  OutputProtocol outputProtocol;
+  uint16_t outputRate;
 
   Pid innerPid[AXES];
   Pid outerPid[AXES];
@@ -369,26 +384,29 @@ struct ModelConfig
   SerialSpeed uart1Speed;
   SerialSpeed uart2Speed;
 
-  short fusionMode;
+  FusionMode fusionMode;
+  bool fusionDelay;
 };
 
 class Model
 {
   public:
     Model() {
-      config.gyroFifo = 0;
+      config.accelMode = ACCEL_GYRO;
       config.gyroDlpf = GYRO_DLPF_256;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSampleRate = GYRO_RATE_500;
+      config.gyroSampleRate = GYRO_RATE_1000;
 
       config.magEnable = 0;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
       config.magCalibration = 0;
 
+      config.fusionDelay = 0;
+
       config.loopSync = 1;
-      config.mixerSync = 1;
+      config.mixerSync = 2;
 
       config.gyroDeadband = radians(0.1); // deg/s
 
@@ -416,6 +434,7 @@ class Model
       //config.uart2Speed = SERIAL_SPEED_115200;
       //config.uart2Speed = SERIAL_SPEED_230400;
       config.uart2Speed = SERIAL_SPEED_250000;
+      //config.uart2Speed = SERIAL_SPEED_500000;
       //config.uart2Speed = SERIAL_SPEED_NONE;
 
       config.cliPort = SERIAL_UART_1;
@@ -442,7 +461,8 @@ class Model
       config.outputPin[3] = D8; // D3;
       config.modelFrame = FRAME_QUAD_X;
       //config.modelFrame = FRAME_DIRECT;
-      config.pwmRate = 500;    // 125 max for old driver
+      config.outputRate = 500;    // 125 max for old driver
+      config.outputProtocol = OUTPUT_PWM;
 
       // input config
       config.ppmPin = D7;     // GPIO13
@@ -467,8 +487,8 @@ class Model
 
       config.flightModeChannel = 4;
       config.flightModes[0] = MODE_OFF;
-      config.flightModes[1] = MODE_RATE;
-      config.flightModes[2] = MODE_ANGLE;
+      config.flightModes[1] = MODE_ANGLE;
+      config.flightModes[2] = MODE_RATE;
 
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {

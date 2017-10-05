@@ -24,12 +24,13 @@ class Input
         _model.state.inputUs[i] = 1500;
         _model.state.input[i] = 0.f;
       }
-      _model.state.inputUs[AXIS_THRUST] = 1000;
-      _model.state.input[AXIS_THRUST] = -1.f;
-      //_model.state.inputUs[AXIS_THRUST] = 1500;
-      //_model.state.input[AXIS_THRUST] = 0.f;
-      _model.state.inputUs[_model.config.flightModeChannel] = 1000;
-      _model.state.input[_model.config.flightModeChannel] = -1.f;
+      if(true) // false to simulation
+      {
+        _model.state.inputUs[AXIS_THRUST] = 1000;
+        _model.state.input[AXIS_THRUST] = -1.f;
+        _model.state.inputUs[_model.config.flightModeChannel] = 1000;
+        _model.state.input[_model.config.flightModeChannel] = -1.f;
+      }
     }
 
     int update()

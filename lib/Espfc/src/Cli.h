@@ -106,7 +106,7 @@ class Cli
       size_t i = 0;
       _params[i++] = Param(PSTR("telemetry"), (char*)&c->telemetry, PARAM_BOOL);
       _params[i++] = Param(PSTR("telemetry_interval"), (char*)&c->telemetryInterval, PARAM_SHORT);
-      _params[i++] = Param(PSTR("gyro_fifo"), (char*)&c->gyroFifo, PARAM_BOOL);
+      _params[i++] = Param(PSTR("accel_mode"), (char*)&c->accelMode, PARAM_INT);
       _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_SHORT);
       _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_SHORT);
       _params[i++] = Param(PSTR("compass_calibration"), (char*)&c->magCalibration, PARAM_BYTE);
@@ -129,7 +129,7 @@ class Cli
       while((*_stream).available() > 0)
       {
         char c = (*_stream).read();
-        if(!_model.state.armed) process(c);
+        if(true || !_model.state.armed) process(c);
       }
     }
 
@@ -325,12 +325,11 @@ class Cli
           print("%");
           println();
         }
-        println();
-        print(F("     total: "));
+        print(F("TOTAL       : "));
         print((int)_model.state.stats.getTotalTime());
-        print("us, ");
+        print(F("us, "));
         print(_model.state.stats.getTotalLoad(), 1);
-        print("%");
+        print(F("%"));
         println();
       }
       else

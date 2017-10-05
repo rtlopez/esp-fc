@@ -101,8 +101,8 @@ class Blackbox
       compassConfigMutable()->mag_hardware = 2;
 
       motorConfigMutable()->dev.useUnsyncedPwm = 0;
-      motorConfigMutable()->dev.motorPwmProtocol = 0;
-      motorConfigMutable()->dev.motorPwmRate = _model.config.pwmRate;
+      motorConfigMutable()->dev.motorPwmProtocol = _model.config.outputProtocol;
+      motorConfigMutable()->dev.motorPwmRate = _model.config.outputRate;
 
       blackboxConfigMutable()->p_denom = 32;
       blackboxConfigMutable()->device = BLACKBOX_DEVICE_SERIAL;
@@ -112,7 +112,7 @@ class Blackbox
       motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMin[0];
       motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
 
-      gyroConfigMutable()->gyro_sync_denom = _model.state.gyroDivider + 1;
+      gyroConfigMutable()->gyro_sync_denom = _model.state.gyroDivider;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       featureConfigMutable()->enabledFeatures = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_AIRMODE | FEATURE_ANTI_GRAVITY;

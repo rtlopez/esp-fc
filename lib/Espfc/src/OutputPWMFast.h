@@ -13,26 +13,38 @@ class OutputPWMFast
     {
       public:
         Slot(): pin(-1), pulse(1000), diff(0) {}
-        volatile int16_t pulse;
-        volatile int16_t diff;
-        volatile char pin;
+        volatile uint32_t pulse;
+        volatile uint32_t diff;
+        volatile uint8_t pin;
         bool operator<(const Slot& rhs) const { return this->pulse < rhs.pulse; }
     };
 
     OutputPWMFast();
-    int begin(int rate);
+    int begin(int rate, OutputProtocol protocol);
     int update();
 
-    inline unsigned long usToTicks(uint32_t us) const ICACHE_RAM_ATTR
+    inline uint32_t usToTicks(uint32_t us) const ICACHE_RAM_ATTR
     {
-      return microsecondsToClockCycles(us); // converts microseconds to ticks
+      //uint32_t ticks = microsecondsToClockCycles(us); // timer0
+      uint32_t ticks = APB_CLK_FREQ / 1000000L * us; // timer1
+      //uint32_t ticks = F_CPU / 1000000L / 2 * us; // timer1
+
+      switch(_protocol)
+      {
+        case OUTPUT_ONESHOT125:
+          ticks = ticks >> 3;
+          break;
+        default:
+          break;
+      }
+      return ticks - 180; // ~180 cycles compensation for isr trigger
     }
 
     int attach(int slot_id, int pin, int pulse)
     {
       if(slot_id < 0 || slot_id >= OUTPUT_CHANNELS) return 0;
       _buffer[slot_id].pin = pin;
-      _buffer[slot_id].pulse = pulse;
+      _buffer[slot_id].pulse = usToTicks(pulse);
       pinMode(pin, OUTPUT);
       return 1;
     }
@@ -40,7 +52,7 @@ class OutputPWMFast
     int write(int slot_id, int pulse) ICACHE_RAM_ATTR
     {
       if(slot_id < 0 || slot_id >= OUTPUT_CHANNELS) return 0;
-      _buffer[slot_id].pulse = pulse;
+      _buffer[slot_id].pulse = usToTicks(pulse);
       return 1;
     }
 
@@ -74,9 +86,13 @@ class OutputPWMFast
       return _slots + OUTPUT_CHANNELS;
     }
 
+
+
   private:
     Slot _buffer[OUTPUT_CHANNELS];
     Slot _slots[OUTPUT_CHANNELS];
+    OutputProtocol _protocol;
+    uint16_t _rate;
 };
 
 extern OutputPWMFast PWMfast;

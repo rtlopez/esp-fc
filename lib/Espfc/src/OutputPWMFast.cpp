@@ -25,10 +25,36 @@ static void timer_init()
   interrupts();
 }
 
-static inline void timer_write(uint32_t us)
+static inline void timer_write(uint32_t ticks)
 {
   //timer0_write(ESP.getCycleCount() + usToTicks(us));
-  timer1_write(usToTicks(us));
+  //timer1_write(usToTicks(us));
+  timer1_write(ticks);
+}
+
+static inline void delay_ticks(uint32_t ticks)
+{
+  if(ticks < 20) return;
+  uint32_t end = ESP.getCycleCount() + ticks - 10;
+  while(ESP.getCycleCount() < end)
+  {
+    __asm__ volatile ("nop");
+  };
+}
+
+static inline void digitalWriteFast(uint8_t pin, uint8_t val)
+{
+  //digitalWrite(pin, val);
+  if(pin < 16)
+  {
+    if(val) GPOS = (1 << pin);
+    else GPOC = (1 << pin);
+  }
+  else if(pin == 16)
+  {
+    if(val) GP16O |= 1;
+    else GP16O &= ~1;
+  }
 }
 
 void _pwm_fast_handle_isr(void)
@@ -43,7 +69,7 @@ void _pwm_fast_handle_isr(void)
     for(it = PWMfast.begin(); it != end; ++it)
     {
       if(it->pin == -1) continue;
-      digitalWrite(it->pin, HIGH);
+      digitalWriteFast(it->pin, HIGH);
     }
     it = PWMfast.begin();
     while(it->pin == -1 && it != end) ++it;
@@ -54,15 +80,19 @@ void _pwm_fast_handle_isr(void)
   // suppress similar pulses
   while(it != end)
   {
-    digitalWrite(it->pin, LOW);
+    digitalWriteFast(it->pin, LOW);
     ++it;
     if(it == end) break;
     if(it->pin == -1) continue;
-    if(it->diff > 2)
+    if(it->diff > 200)
     {
       // jump to next cycle
       timer_write(it->diff);
       return;
+    }
+    else
+    {
+      delay_ticks(it->diff);
     }
   }
 
@@ -79,7 +109,7 @@ void OutputPWMFast::trigger()
   _pwm_fast_handle_isr();
 }
 
-OutputPWMFast::OutputPWMFast()
+OutputPWMFast::OutputPWMFast(): _rate(50), _protocol(OUTPUT_PWM)
 {
   for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
   {
@@ -88,8 +118,10 @@ OutputPWMFast::OutputPWMFast()
   }
 }
 
-int OutputPWMFast::begin(int rate)
+int OutputPWMFast::begin(int rate, OutputProtocol protocol)
 {
+  _protocol = protocol;
+  _rate = rate;
   timer_init();
   return 1;
 }
