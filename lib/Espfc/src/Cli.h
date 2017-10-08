@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 #include "Model.h"
+#include "Msp.h"
 #include "Hardware.h"
 
 namespace Espfc {
@@ -100,7 +101,7 @@ class Cli
         ParamType type;
     };
 
-    Cli(Model& model): _model(model), _index(0)
+    Cli(Model& model): _model(model), _index(0), _msp(model)
     {
       ModelConfig * c = &_model.config;
       size_t i = 0;
@@ -129,7 +130,10 @@ class Cli
       while((*_stream).available() > 0)
       {
         char c = (*_stream).read();
-        if(true || !_model.state.armed) process(c);
+        if(!_msp.process(c, *_stream))
+        {
+          process(c);
+        }
       }
     }
 
@@ -393,6 +397,7 @@ class Cli
     char _buff[BUFF_SIZE];
     size_t _index;
     Cmd _cmd;
+    Msp _msp;
 };
 
 }
