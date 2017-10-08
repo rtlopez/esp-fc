@@ -421,7 +421,7 @@ class Model
       config.magFilterType = FILTER_PT1;
       config.magFilterCutFreq = 15;
       config.dtermFilterType = FILTER_BIQUAD;
-      config.dtermFilterCutFreq = 90;
+      config.dtermFilterCutFreq = 50;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -509,16 +509,16 @@ class Model
         state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
         config.outerPid[i] = Pid(3.00f, 0.00f, 0.0000f, 0.0f, 0.0f, radians(300));
-        config.innerPid[i] = Pid(0.10f, 0.10f, 0.0010f, 0.3f, 0.6f);
+        config.innerPid[i] = Pid(0.10f, 0.10f, 0.0005f, 0.3f, 0.6f);
       }
 
       config.innerPid[AXIS_ROLL].Kp *= 0.9;
       config.innerPid[AXIS_ROLL].Ki *= 0.9;
       config.innerPid[AXIS_ROLL].Kd *= 0.9;
 
-      config.innerPid[AXIS_YAW].Kp = 0.20;
+      config.innerPid[AXIS_YAW].Kp = 0.25;
       config.innerPid[AXIS_YAW].Ki = 0.15;
-      config.innerPid[AXIS_YAW].Kd = 0.0005f;
+      config.innerPid[AXIS_YAW].Kd = 0.0002f;
 
       config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(50);  // deg
       config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s

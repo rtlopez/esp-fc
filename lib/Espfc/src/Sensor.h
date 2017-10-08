@@ -40,7 +40,12 @@ class Sensor
       updateSensors();
       _model.state.stats.end(COUNTER_GYRO_FILTER);
 
-      if(!_model.config.fusionDelay)
+      if(_model.config.fusionDelay)
+      {
+        // if fusion is delayed, update attitude using current gyro reading
+        _model.state.angle += _model.state.gyro * _model.state.gyroDt;
+      }
+      else
       {
         _fusion.update();
       }

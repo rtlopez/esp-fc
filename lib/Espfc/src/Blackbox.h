@@ -100,7 +100,7 @@ class Blackbox
       barometerConfigMutable()->baro_hardware = 2;
       compassConfigMutable()->mag_hardware = 2;
 
-      motorConfigMutable()->dev.useUnsyncedPwm = 0;
+      motorConfigMutable()->dev.useUnsyncedPwm = _model.config.mixerSync != 1;
       motorConfigMutable()->dev.motorPwmProtocol = _model.config.outputProtocol;
       motorConfigMutable()->dev.motorPwmRate = _model.config.outputRate;
 
