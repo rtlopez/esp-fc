@@ -9,6 +9,8 @@ namespace Espfc {
 enum FilterType {
   FILTER_PT1,
   FILTER_BIQUAD,
+  FILTER_FIR,
+  FILTER_PT2, // two cascaded pt1 filters
   FILTER_NONE,
 };
 
@@ -21,6 +23,11 @@ enum BiquadFilterType {
 struct FilterStatePt1 {
   float k;
   float v;
+};
+
+struct FilterStatePt2 {
+  float k;
+  float v[2];
 };
 
 struct FilterStateBiquad {
@@ -46,9 +53,13 @@ class Filter
         case FILTER_BIQUAD:
           initBiquad(BIQUAD_FILTER_LPF, 1.0f / sqrtf(2.0f)); /* quality factor - butterworth*/
           break;
+        case FILTER_PT2:
+          initPt2();
+          break;
+        case FILTER_FIR:
         case FILTER_NONE:
         default:
-        ;
+          ;
       }
     }
 
@@ -60,6 +71,9 @@ class Filter
           return updatePt1(v);
         case FILTER_BIQUAD:
           return updateBiquad(v);
+        case FILTER_PT2:
+          return updatePt2(v);
+        case FILTER_FIR:
         case FILTER_NONE:
         default:
           return v;
@@ -72,6 +86,7 @@ class Filter
       float rc = 1.f / (2.f * M_PI * _cut_freq);
       float dt = 1.f / _rate;
       _state.pt1.k = dt / (dt + rc);
+      _state.pt1.v = 0;
     }
 
     float updatePt1(float v)
@@ -79,6 +94,23 @@ class Filter
       _state.pt1.v = _state.pt1.v + _state.pt1.k * (v - _state.pt1.v);
       return _state.pt1.v;
     }
+
+    void initPt2()
+    {
+      float rc = 1.f / (2.f * M_PI * _cut_freq);
+      float dt = 1.f / _rate;
+      _state.pt2.k = dt / (dt + rc);
+      _state.pt2.v[0] = 0;
+      _state.pt2.v[1] = 0;
+    }
+
+    float updatePt2(float v)
+    {
+      _state.pt2.v[0] = _state.pt2.v[0] + _state.pt2.k * (v - _state.pt2.v[0]);
+      _state.pt2.v[1] = _state.pt2.v[1] + _state.pt2.k * (_state.pt2.v[0] - _state.pt2.v[1]);
+      return _state.pt2.v[1];
+    }
+
 
     void initBiquad(BiquadFilterType filterType, float q)
     {
@@ -142,6 +174,7 @@ class Filter
     union {
       FilterStatePt1 pt1;
       FilterStateBiquad bq;
+      FilterStatePt2 pt2;
     } _state;
 };
 

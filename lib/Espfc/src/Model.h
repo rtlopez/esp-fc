@@ -406,7 +406,7 @@ class Model
       config.fusionDelay = 0;
 
       config.loopSync = 1;
-      config.mixerSync = 2;
+      config.mixerSync = 1;
 
       config.gyroDeadband = radians(0.1); // deg/s
 
@@ -414,7 +414,7 @@ class Model
       //config.fusionMode = FUSION_EXPERIMENTAL;
       config.fusionMode = FUSION_MADGWICK;
 
-      config.gyroFilterType = FILTER_PT1;
+      config.gyroFilterType = FILTER_PT2;
       config.gyroFilterCutFreq = 70;
       config.accelFilterType = FILTER_PT1;
       config.accelFilterCutFreq = 15;
@@ -451,8 +451,8 @@ class Model
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         config.outputMin[i] = 1050;
-        config.outputNeutral[i] = 1500;
-        config.outputMax[i] = 1950;
+        config.outputNeutral[i] = 1520;
+        config.outputMax[i] = 1990;
       }
 
       config.outputPin[0] = D3; // D8; // -1 off
@@ -462,7 +462,8 @@ class Model
       config.modelFrame = FRAME_QUAD_X;
       //config.modelFrame = FRAME_DIRECT;
       config.outputRate = 500;    // 125 max for old driver
-      config.outputProtocol = OUTPUT_PWM;
+      //config.outputProtocol = OUTPUT_PWM;
+      config.outputProtocol = OUTPUT_ONESHOT125;
 
       // input config
       config.ppmPin = D7;     // GPIO13
@@ -483,7 +484,7 @@ class Model
       }
       config.inputRate[AXIS_YAW] = 110;
       config.inputExpo[AXIS_YAW] = 0;
-      config.inputSuperRate[AXIS_YAW] = 20;
+      config.inputSuperRate[AXIS_YAW] = 50;
 
       config.flightModeChannel = 4;
       config.flightModes[0] = MODE_OFF;
@@ -509,12 +510,12 @@ class Model
         state.outerPid[i] = PidState();
         state.innerPid[i] = PidState();
         config.outerPid[i] = Pid(3.00f, 0.00f, 0.0000f, 0.0f, 0.0f, radians(300));
-        config.innerPid[i] = Pid(0.10f, 0.10f, 0.0005f, 0.3f, 0.6f);
+        config.innerPid[i] = Pid(0.09f, 0.09f, 0.0006f, 0.3f, 0.5f);
       }
 
-      config.innerPid[AXIS_ROLL].Kp *= 0.9;
-      config.innerPid[AXIS_ROLL].Ki *= 0.9;
-      config.innerPid[AXIS_ROLL].Kd *= 0.9;
+      config.innerPid[AXIS_PITCH].Kp *= 1.4f;
+      config.innerPid[AXIS_PITCH].Ki *= 1.2f;
+      config.innerPid[AXIS_PITCH].Kd *= 1.2f;
 
       config.innerPid[AXIS_YAW].Kp = 0.25;
       config.innerPid[AXIS_YAW].Ki = 0.15;
