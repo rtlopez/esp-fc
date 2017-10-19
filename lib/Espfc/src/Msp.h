@@ -332,6 +332,38 @@ class Msp
           r.writeU16(lrintf(degrees(_model.state.angle.z))); // yaw
           break;
 
+        case MSP_BEEPER_CONFIG:
+          r.writeU32(0); // beeper mask
+          break;
+
+        case MSP_BOARD_ALIGNMENT_CONFIG:
+          r.writeU16(0); // roll
+          r.writeU16(0); // pitch
+          r.writeU16(0); // yaw
+          break;
+
+        case MSP_RX_MAP:
+          for(size_t i = 0; i < 8; i++)
+          {
+            r.writeU8(_model.config.inputMap[i]);
+          }
+          break;
+
+        case MSP_RSSI_CONFIG:
+          r.writeU8(0);
+          break;
+
+        case MSP_MOTOR_CONFIG:
+          r.writeU16(1050); // minthrottle
+          r.writeU16(2000); // maxthrottle
+          r.writeU16(1050); // mincommand
+          break;
+
+        case MSP_ARMING_CONFIG:
+          r.writeU8(5);
+          r.writeU8(0);
+          break;
+
         default:
           r.result = 0;
           break;
@@ -346,7 +378,7 @@ class Msp
       if(cmd == MSP_STATUS_EX) return false;
       if(cmd == MSP_BOXNAMES) return false;
       if(cmd == MSP_ANALOG) return false;
-      //if(cmd == MSP_ATTITUDE) return false;
+      if(cmd == MSP_ATTITUDE) return false;
       return true;
     }
 
