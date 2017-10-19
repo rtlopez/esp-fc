@@ -130,10 +130,10 @@ class Cli
       while((*_stream).available() > 0)
       {
         char c = (*_stream).read();
-        //if(!_msp.process(c, *_stream))
-        //{
+        if(!_msp.process(c, *_stream))
+        {
           process(c);
-        //}
+        }
       }
     }
 

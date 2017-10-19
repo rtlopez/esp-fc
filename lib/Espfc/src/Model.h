@@ -431,9 +431,9 @@ class Model
 
       config.uart1Speed = SERIAL_SPEED_115200;
 
-      //config.uart2Speed = SERIAL_SPEED_115200;
+      config.uart2Speed = SERIAL_SPEED_115200;
       //config.uart2Speed = SERIAL_SPEED_230400;
-      config.uart2Speed = SERIAL_SPEED_250000;
+      //config.uart2Speed = SERIAL_SPEED_250000;
       //config.uart2Speed = SERIAL_SPEED_500000;
       //config.uart2Speed = SERIAL_SPEED_NONE;
 
@@ -443,9 +443,9 @@ class Model
       config.telemetryInterval = 1000 * 1000;
       config.telemetryPort = SERIAL_UART_1;
 
-      config.blackbox = 1;
-      config.blackboxPort = SERIAL_UART_2;
-      //config.blackboxPort = SERIAL_UART_NONE;
+      config.blackbox = 0;
+      //config.blackboxPort = SERIAL_UART_2;
+      config.blackboxPort = SERIAL_UART_NONE;
 
       // output config
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)

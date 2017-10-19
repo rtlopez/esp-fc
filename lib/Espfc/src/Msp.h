@@ -4,31 +4,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "Arduino.h"
-
-#define MSP_PROTOCOL_VERSION                0
-
-#define API_VERSION_MAJOR                   1  // increment when major changes are made
-#define API_VERSION_MINOR                   36 // increment after a release, to set the version for all changes to go into the following release (if no changes to MSP are made between the releases, this can be reverted before the release)
-#define API_VERSION_LENGTH                  2
-
-#define MSP_API_VERSION                 1    //out message
-#define MSP_FC_VARIANT                  2    //out message
-#define MSP_FC_VERSION                  3    //out message
-#define MSP_BOARD_INFO                  4    //out message
-#define MSP_BUILD_INFO                  5    //out message
+#include "msp/msp_protocol.h"
 
 #define FC_FIRMWARE_NAME            "Betaflight"
 #define FC_VERSION_MAJOR            3  // increment when a major release is made (big new feature, etc)
 #define FC_VERSION_MINOR            2  // increment when a minor release is made (small new feature, change etc)
 #define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
-
-#define BETAFLIGHT_IDENTIFIER "BTFL"
-#define FLIGHT_CONTROLLER_IDENTIFIER_LENGTH 4
-#define FLIGHT_CONTROLLER_VERSION_LENGTH    3
-#define FLIGHT_CONTROLLER_VERSION_MASK      0xFFF
-
-#define BOARD_IDENTIFIER_LENGTH             4 // 4 UPPER CASE alpha numeric characters that identify the board being used.
-#define BOARD_HARDWARE_REVISION_LENGTH      2
 
 #define GIT_SHORT_REVISION_LENGTH   7 // lower case hexadecimal digits.
 extern const char* const shortGitRevision;
@@ -68,15 +49,6 @@ class Msp
       TYPE_REPLY
     };
 
-    enum MspCmd
-    {
-      MSP_IDENT                = 100,
-  	  MSP_STATUS               = 101,
-  	  MSP_RAW_IMU              = 102,
-  	  MSP_SERVO                = 103,
-  	  MSP_MOTOR                = 104,
-    };
-
     class MspMessage
     {
       public:
@@ -93,8 +65,8 @@ class Msp
     class MspResponse {
       public:
         MspResponse(): len(0) {}
-        int16_t cmd;
-        int16_t result;
+        uint8_t cmd;
+        uint8_t result;
         uint8_t direction;
         uint8_t len;
         uint8_t data[MSP_BUF_SIZE];
@@ -191,10 +163,11 @@ class Msp
       if(_msg.state == STATE_RECEIVED)
       {
         _msg.state = STATE_IDLE;
+        debugMessage(_msg);
         switch(_msg.dir)
         {
           case TYPE_CMD:
-            processCommand(_msg);
+            processReply(_msg, s);
             break;
           case TYPE_REPLY:
             processReply(_msg, s);
@@ -206,6 +179,34 @@ class Msp
       return _msg.state != STATE_IDLE;
     }
 
+    void debugMessage(const MspMessage& m)
+    {
+      if(!debugSkip(m.cmd)) return;
+
+      Serial1.print(m.dir == TYPE_REPLY ? '>' : '<'); Serial1.print(' ');
+      Serial1.print(m.cmd); Serial1.print(' ');
+      Serial1.print(m.expected); Serial1.print(' ');
+      for(size_t i = 0; i < m.expected; i++)
+      {
+        Serial1.print(m.buffer[i], HEX); Serial1.print(' ');
+      }
+      Serial1.println();
+    }
+
+    void debugResponse(const MspResponse& r)
+    {
+      if(!debugSkip(r.cmd)) return;
+
+      Serial1.print(r.result ? '>' : '!'); Serial1.print(' ');
+      Serial1.print(r.cmd); Serial1.print(' ');
+      Serial1.print(r.len); Serial1.print(' ');
+      for(size_t i = 0; i < r.len; i++)
+      {
+        Serial1.print(r.data[i], HEX); Serial1.print(' ');
+      }
+      Serial1.println();
+    }
+
     void processCommand(MspMessage& m)
     {
 
@@ -215,6 +216,7 @@ class Msp
     {
       MspResponse r;
       r.cmd = m.cmd;
+      r.result = 1;
       switch(m.cmd)
       {
         case MSP_API_VERSION:
@@ -245,14 +247,113 @@ class Msp
           r.writeData(shortGitRevision, GIT_SHORT_REVISION_LENGTH);
           break;
 
-        default:
+        case MSP_UID:
+          r.writeU32(0);
+          r.writeU32(0);
+          r.writeU32(0);
           break;
+
+        case MSP_STATUS_EX:
+        case MSP_STATUS:
+          r.writeU16(_model.state.loopSampleInterval);
+          r.writeU16(0); // i2c error count
+          //         acc,     baro,    mag,     gps,     sonar,   gyro
+          r.writeU16(1 << 0 | 0 << 1 | 0 << 2 | 0 << 3 | 0 << 4 | 1 << 5);
+          r.writeU32(0); // flight mode flags
+          r.writeU8(0); // pid profile
+          r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
+          if (m.cmd == MSP_STATUS_EX) {
+            r.writeU8(1);
+            r.writeU8(0);
+          } else {  // MSP_STATUS
+            r.writeU16(_model.state.gyroSampleInterval); // gyro cycle time
+          }
+
+          // flight mode flags
+          r.writeU8(0); // count
+
+          // Write arming disable flags
+          r.writeU8(16);  // 1 byte, flag count
+          r.writeU8(0);   // 4 bytes, flags
+          break;
+
+        case MSP_NAME:
+          {
+            const char * name = "ESPFC";
+            const int nameLen = strlen(name);
+            r.writeData(name, nameLen);
+          }
+          break;
+
+        case MSP_BOXNAMES:
+        case MSP_BOXIDS:
+          break;
+
+        case MSP_ANALOG:
+          r.writeU8(0);  // voltage
+          r.writeU16(0); // mah drawn
+          r.writeU16(0); // rssi
+          r.writeU16(0); // amperage
+          break;
+
+        case MSP_FEATURE_CONFIG:
+          r.writeU32(0);
+          break;
+
+        case MSP_BATTERY_CONFIG:
+          r.writeU8(34);  // vbatmincellvoltage
+          r.writeU8(43);  // vbatmaxcellvoltage
+          r.writeU8(35);  // vbatwarningcellvoltage
+          r.writeU16(1200); // batteryCapacity
+          r.writeU8(1);  // voltageMeterSource
+          r.writeU8(0);  // currentMeterSource
+          break;
+
+        case MSP_DATAFLASH_SUMMARY:
+          r.writeU8(0); // FlashFS is neither ready nor supported
+          r.writeU32(0);
+          r.writeU32(0);
+          r.writeU32(0);
+          break;
+
+        case MSP_ACC_TRIM:
+          r.writeU16(0); // pitch
+          r.writeU16(0); // roll
+          break;
+
+        case MSP_MIXER_CONFIG:
+          r.writeU8(3); // mixerMode, QUAD_X
+          r.writeU8(0); // yaw_motors_reversed
+          break;
+
+        case MSP_ATTITUDE:
+          r.writeU16(lrintf(degrees(_model.state.angle.x) * 10)); // roll
+          r.writeU16(lrintf(degrees(_model.state.angle.y) * 10)); // pitch
+          r.writeU16(lrintf(degrees(_model.state.angle.z))); // yaw
+          break;
+
+        default:
+          r.result = 0;
+          break;
+
       }
       sendResponse(r, s);
     }
 
+    bool debugSkip(uint8_t cmd)
+    {
+      if(cmd == MSP_STATUS) return false;
+      if(cmd == MSP_STATUS_EX) return false;
+      if(cmd == MSP_BOXNAMES) return false;
+      if(cmd == MSP_ANALOG) return false;
+      //if(cmd == MSP_ATTITUDE) return false;
+      return true;
+    }
+
     void sendResponse(MspResponse& r, Stream& s)
     {
+      debugResponse(r);
+
       uint8_t hdr[5] = { '$', 'M', '>' };
       hdr[3] = r.len;
       hdr[4] = r.cmd;
