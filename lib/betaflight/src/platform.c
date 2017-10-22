@@ -5,6 +5,20 @@ const char * const shortGitRevision = STR(__REVISION__);
 const char * const buildTime = __TIME__;
 const char * const buildDate = __DATE__;
 
+// TODO: move to pgm_spage
+const char * pidnames =
+  "ROLL;"
+  "PITCH;"
+  "YAW;"
+  "ALT;"
+  "Pos;"
+  "PosR;"
+  "NavR;"
+  "LEVEL;"
+  "MAG;"
+  "VEL;"
+;
+
 PG_RESET_TEMPLATE_DEF(serialConfig_t, serialConfig);
 PG_RESET_TEMPLATE_DEF(mixerConfig_t, mixerConfig);
 PG_RESET_TEMPLATE_DEF(motorConfig_t, motorConfig);

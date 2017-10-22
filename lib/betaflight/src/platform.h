@@ -32,6 +32,8 @@ extern const char * const buildDate;  // "MMM DD YYYY" MMM = Jan/Feb/...
 #define BUILD_TIME_LENGTH 8
 extern const char * const buildTime;  // "HH:MM:SS"
 
+extern const char * pidnames;
+
 #define TARGET_BOARD_IDENTIFIER "ESPFC"
 
 /* UTILS START */

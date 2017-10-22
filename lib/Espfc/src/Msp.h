@@ -154,10 +154,10 @@ class Msp
         switch(_msg.dir)
         {
           case TYPE_CMD:
-            processReply(_msg, s);
+            processCommand(_msg, s);
             break;
           case TYPE_REPLY:
-            processReply(_msg, s);
+            //processCommand(_msg, s);
             break;
         }
         return true;
@@ -194,12 +194,7 @@ class Msp
       Serial1.println();
     }
 
-    void processCommand(MspMessage& m)
-    {
-
-    }
-
-    void processReply(MspMessage& m, Stream& s)
+    void processCommand(MspMessage& m, Stream& s)
     {
       MspResponse r;
       r.cmd = m.cmd;
@@ -351,6 +346,96 @@ class Msp
           r.writeU8(0);
           break;
 
+        case MSP_RC_DEADBAND:
+          r.writeU8(_model.config.inputDeadband);
+          r.writeU8(_model.config.inputDeadband);
+          r.writeU8(0);
+          r.writeU16(0);
+          break;
+
+        case MSP_RX_CONFIG:
+          r.writeU8(0); // serialrx_provider
+          r.writeU16(1900); //maxcheck
+          r.writeU16(1500); //midrc
+          r.writeU16(1100); //mincheck
+          r.writeU8(0); // spectrum bind
+          r.writeU16(1000); //min_us
+          r.writeU16(2000); //max_us
+          r.writeU8(3); // rc interpolation
+          r.writeU8(26); // rc interpolation interval
+          r.writeU16(1500); // airmode activate threshold
+          r.writeU8(0); // rx spi prot
+          r.writeU32(0); // rx spi id
+          r.writeU8(0); // rx spi chan count
+          r.writeU8(0); // fpv camera angle
+          break;
+
+        case MSP_RC:
+          for(size_t i = 0; i < 8; i++)
+          {
+            r.writeU16(_model.state.inputUs[i]);
+          }
+          break;
+
+        case MSP_RC_TUNING:
+          r.writeU8(_model.config.inputRate[0]);
+          r.writeU8(_model.config.inputExpo[0]);
+          for(size_t i = 0; i < 3; i++)
+          {
+            r.writeU8(_model.config.inputSuperRate[i]);
+          }
+          r.writeU8(0); // dyn thr pid
+          r.writeU8(50); // thrMid8
+          r.writeU8(0);  // thr expo
+          r.writeU16(1650); // tpa breakpoint
+          r.writeU8(_model.config.inputExpo[2]); // yaw expo
+          r.writeU8(_model.config.inputRate[2]); // yaw rate
+          break;
+
+        case MSP_ADVANCED_CONFIG:
+          r.writeU8(_model.state.gyroDivider);
+          r.writeU8(_model.config.loopSync);
+          r.writeU8((uint8_t)(_model.config.mixerSync != 1)); // unsynced PWM
+          r.writeU8(_model.config.outputProtocol);
+          r.writeU16(_model.config.outputRate);
+          r.writeU16(450);
+          r.writeU8(0); // 32k gyro
+          r.writeU8(0); // PWM inversion
+          break;
+
+        case MSP_FILTER_CONFIG:
+          r.writeU8(_model.config.gyroFilterCutFreq); // gyro lpf
+          r.writeU16(_model.config.dtermFilterCutFreq); // dterm lpf
+          r.writeU16(_model.config.gyroFilterCutFreq);  // yaw lpf
+          r.writeU16(0);  // gyro notch 1 hz
+          r.writeU16(0);  // gyro notch 1 cutoff
+          r.writeU16(0);  // dterm notch hz
+          r.writeU16(0);  // dterm notch cutoff
+          r.writeU16(0);  // gyro notch 2 hz
+          r.writeU16(0);  // gyro notch 2 cutoff
+          r.writeU8(_model.config.dtermFilterType);
+          break;
+
+        case MSP_PID_CONTROLLER:
+          r.writeU8(1); // betaflight controller id
+          break;
+
+        case MSP_PIDNAMES:
+          for(const char * c = pidnames; *c; c++)
+          {
+            r.writeU8(*c);
+          }
+          break;
+
+        case MSP_PID:
+          for(size_t i = 0; i < 10; i++)
+          {
+            r.writeU8(40); // pid P
+            r.writeU8(30); // pid I
+            r.writeU8(20); // pid D
+          }
+          break;
+
         default:
           r.result = 0;
           break;
@@ -366,6 +451,7 @@ class Msp
       if(cmd == MSP_BOXNAMES) return false;
       if(cmd == MSP_ANALOG) return false;
       if(cmd == MSP_ATTITUDE) return false;
+      if(cmd == MSP_RC) return false;
       return true;
     }
 
