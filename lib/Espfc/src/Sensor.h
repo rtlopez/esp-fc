@@ -26,7 +26,6 @@ class Sensor
       initPresure();
       initFilter();
       _fusion.begin();
-      _model.state.boardRotationQ = _model.config.boardRotation.eulerToQuaternion();
     }
 
     int update()
@@ -165,9 +164,8 @@ class Sensor
       _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
       for(size_t i; i < 3; ++i)
       {
-        _model.state.gyroScaled.set(i, Math::deadband(_model.state.gyroScaled[i], _model.config.gyroDeadband));
+        _model.state.gyroScaled.set(i, Math::deadband(_model.state.gyroScaled[i], _model.state.gyroDeadband));
       }
-      //gyro.rotate(_model.state.boardRotationQ);
       for(size_t i = 0; i < 3; i++)
       {
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
@@ -197,7 +195,6 @@ class Sensor
     void updateAccel()
     {
       _model.state.accelScaled = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
-      //accel.rotate(_model.state.boardRotationQ);
       for(size_t i = 0; i < 3; i++)
       {
         _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
@@ -210,12 +207,11 @@ class Sensor
       if(_model.config.magEnable)
       {
         _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
-        //mag.rotate(_model.state.boardRotationQ);
         for(size_t i = 0; i < 3; i++)
         {
           _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.magScaled[i]));
         }
-        if(_model.state.magCalibrationValid && _model.config.magCalibration == 0)
+        if(_model.state.magCalibrationValid && _model.state.magCalibration == 0)
         {
           _model.state.mag -= _model.config.magCalibrationOffset;
           _model.state.mag *= _model.config.magCalibrationScale;
@@ -227,13 +223,13 @@ class Sensor
     void collectMagCalibration()
     {
       if(!_model.config.magEnable) return;
-      if(_model.config.magCalibration == 1)
+      if(_model.state.magCalibration == 1)
       {
         resetMagCalibration();
-        _model.config.magCalibration = 2;
+        _model.state.magCalibration = 2;
       }
 
-      if(_model.config.magCalibration == 0) return;
+      if(_model.state.magCalibration == 0) return;
       for(int i = 0; i < 3; i++)
       {
         _model.state.magCalibrationData[i][0] = _model.state.mag.get(i) < _model.state.magCalibrationData[i][0] ? _model.state.mag.get(i) : _model.state.magCalibrationData[i][0];
@@ -426,9 +422,9 @@ class Sensor
     {
       for(size_t i = 0; i < 3; i++)
       {
-        _model.state.gyroFilter[i].begin(_model.config.gyroFilterType, _model.config.gyroFilterCutFreq, _model.state.gyroSampleRate);
-        _model.state.accelFilter[i].begin(_model.config.accelFilterType, _model.config.accelFilterCutFreq, _model.state.gyroSampleRate);
-        _model.state.magFilter[i].begin(_model.config.magFilterType, _model.config.magFilterCutFreq, _model.state.gyroSampleRate);
+        _model.state.gyroFilter[i].begin((FilterType)_model.config.gyroFilterType, _model.config.gyroFilterCutFreq, _model.state.gyroSampleRate);
+        _model.state.accelFilter[i].begin((FilterType)_model.config.accelFilterType, _model.config.accelFilterCutFreq, _model.state.gyroSampleRate);
+        _model.state.magFilter[i].begin((FilterType)_model.config.magFilterType, _model.config.magFilterCutFreq, _model.state.gyroSampleRate);
       }
     }
 

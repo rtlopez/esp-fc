@@ -111,7 +111,6 @@ class Filter
       return _state.pt2.v[1];
     }
 
-
     void initBiquad(BiquadFilterType filterType, float q)
     {
       const float omega = 2.0f * M_PI * _cut_freq * _rate * 0.000001f;

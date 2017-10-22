@@ -4,11 +4,9 @@
 #include <cstring>
 #include <cctype>
 
-#ifdef ESP8266
 extern "C" {
 #include "user_interface.h"
 }
-#endif
 
 #include "Model.h"
 #include "Msp.h"
@@ -104,13 +102,14 @@ class Cli
     Cli(Model& model): _model(model), _index(0), _msp(model)
     {
       ModelConfig * c = &_model.config;
+      ModelState * s = &_model.state;
       size_t i = 0;
       _params[i++] = Param(PSTR("telemetry"), (char*)&c->telemetry, PARAM_BOOL);
-      _params[i++] = Param(PSTR("telemetry_interval"), (char*)&c->telemetryInterval, PARAM_SHORT);
+      _params[i++] = Param(PSTR("telemetry_interval"), (char*)&c->telemetryInterval, PARAM_INT);
       _params[i++] = Param(PSTR("accel_mode"), (char*)&c->accelMode, PARAM_INT);
       _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_SHORT);
       _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_SHORT);
-      _params[i++] = Param(PSTR("compass_calibration"), (char*)&c->magCalibration, PARAM_BYTE);
+      _params[i++] = Param(PSTR("compass_calibration"), (char*)&s->magCalibration, PARAM_BYTE);
       _params[i++] = Param(PSTR("compass_calibration_offset"), (char*)&c->magCalibrationOffset, PARAM_VECTOR_FLOAT);
       _params[i++] = Param(PSTR("compass_calibration_scale"), (char*)&c->magCalibrationScale, PARAM_VECTOR_FLOAT);
       _params[i++] = Param(PSTR("angle_max"), (char*)&c->angleMax, PARAM_INT);
@@ -118,7 +117,7 @@ class Cli
 
     int begin()
     {
-      _stream = (Stream*)Hardware::getSerialPort(_model.config.cliPort);
+      _stream = (Stream*)Hardware::getSerialPort((SerialPort)_model.config.cliPort);
       return 1;
     }
 
@@ -288,15 +287,15 @@ class Cli
         if(!_cmd.args[1]) {}
         else if(_cmd.args[1][0] == '1')
         {
-          _model.config.magCalibration = 1;
-          _model.config.telemetry = 1;
-          _model.config.telemetryInterval = 200;
+          _model.state.magCalibration = 1;
+          //_model.config.telemetry = 1;
+          //_model.config.telemetryInterval = 200;
           print("mag calibration on");
         }
         else if(_cmd.args[1][0] == '0')
         {
-          _model.config.magCalibration = 0;
-          _model.config.telemetry = 0;
+          _model.state.magCalibration = 0;
+          //_model.config.telemetry = 0;
           print("mag calibration off");
         }
       }

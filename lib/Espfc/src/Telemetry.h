@@ -13,7 +13,7 @@ class Telemetry
 
     int begin()
     {
-      _stream = (Stream*)Hardware::getSerialPort(_model.config.telemetryPort);
+      _stream = (Stream*)Hardware::getSerialPort((SerialPort)_model.config.telemetryPort);
       return 1;
     }
 

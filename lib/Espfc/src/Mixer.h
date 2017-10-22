@@ -20,7 +20,7 @@ class Mixer
       {
         PWMDriver.attach(i, _model.config.outputPin[i],  1000);
       }
-      PWMDriver.begin(_model.config.outputRate, _model.config.outputProtocol);
+      PWMDriver.begin(_model.config.outputRate, (OutputProtocol)_model.config.outputProtocol);
     }
 
     int update()
@@ -60,12 +60,7 @@ class Mixer
   private:
     void updateDisarmed()
     {
-      short out[4];
-      out[0] = 1000;
-      out[1] = 1000;
-      out[2] = 1000;
-      out[3] = 1000;
-      writeOutputRaw(out, 4);
+      writeOutputRaw(_model.state.outputDisarmed, OUTPUT_CHANNELS);
     }
 
     void updateGimbal()
@@ -154,30 +149,30 @@ class Mixer
       {
         if(i >= axes)
         {
-          _model.state.outputUs[i] = 1000;
+          _model.state.outputUs[i] = _model.state.outputDisarmed[i];
         }
         else
         {
           float v = Math::bound(out[i], -1.f, 1.f);
-          _model.state.outputUs[i] = stop ? 1000 : (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+          _model.state.outputUs[i] = stop ? _model.state.outputDisarmed[i] : (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
         }
         PWMDriver.write(i, _model.state.outputUs[i]);
       }
       PWMDriver.apply();
     }
 
-    void writeOutputRaw(short * out, int axes)
+    void writeOutputRaw(uint16_t * out, int axes)
     {
       bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         if(i >= axes)
         {
-          _model.state.outputUs[i] = 1000;
+          _model.state.outputUs[i] = _model.state.outputDisarmed[i];
         }
         else
         {
-          _model.state.outputUs[i] = stop ? 1000 : Math::bound(out[i], (short)1000, (short)2000);
+          _model.state.outputUs[i] = stop ? _model.state.outputDisarmed[i] : Math::bound(out[i], (uint16_t)1000, (uint16_t)2000);
         }
         PWMDriver.write(i, _model.state.outputUs[i]);
       }

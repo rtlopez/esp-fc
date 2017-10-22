@@ -373,7 +373,7 @@ class Msp
         case MSP_MOTOR_CONFIG:
           r.writeU16(1050); // minthrottle
           r.writeU16(2000); // maxthrottle
-          r.writeU16(1050); // mincommand
+          r.writeU16(1000); // mincommand
           break;
 
         case MSP_ARMING_CONFIG:
@@ -497,7 +497,7 @@ class Msp
           if (m.remain() >= 1) {
               _model.config.dtermFilterType = (FilterType)m.readU8();
           }
-          // TODO: update model
+          _model.update();
           break;
 
         case MSP_PID_CONTROLLER:
@@ -527,7 +527,7 @@ class Msp
             _model.config.pid[i].I = m.readU8();
             _model.config.pid[i].D = m.readU8();
           }
-          //TODO: update model
+          _model.update();
           break;
 
         case MSP_PID_ADVANCED:
@@ -570,17 +570,61 @@ class Msp
               m.readU16();
               m.readU16();
           }
-          //TODO: update model
+          _model.update();
+          break;
+
+        case MSP_RAW_IMU:
+          for (int i = 0; i < 3; i++)
+          {
+            r.writeU16(lrintf(_model.state.accel[i] * 500));
+          }
+          for (int i = 0; i < 3; i++)
+          {
+            r.writeU16(lrintf(degrees(_model.state.gyro[i])));
+          }
+          for (int i = 0; i < 3; i++)
+          {
+            r.writeU16(lrintf(_model.state.magRaw[i]));
+          }
+          break;
+
+        case MSP_MOTOR:
+          for (size_t i = 0; i < 8; i++)
+          {
+            if (i >= OUTPUT_CHANNELS || _model.config.outputPin[i] == -1)
+            {
+              r.writeU16(0);
+              continue;
+            }
+            r.writeU16(_model.state.outputUs[i]);
+          }
+          break;
+
+        case MSP_SET_MOTOR:
+          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+              _model.state.outputDisarmed[i] = m.readU16();
+          }
+          break;
+
+        case MSP_SERVO:
+          for(size_t i = 0; i < 8; i++)
+          {
+            r.writeU16(1500);
+          }
           break;
 
         case MSP_EEPROM_WRITE:
-          // TODO: implement
+          _model.save();
+          break;
+
+        case MSP_REBOOT:
+          _reboot;
           break;
 
         default:
           r.result = 0;
           break;
-
       }
       sendResponse(r, s);
     }
@@ -593,6 +637,9 @@ class Msp
       if(cmd == MSP_ANALOG) return false;
       if(cmd == MSP_ATTITUDE) return false;
       if(cmd == MSP_RC) return false;
+      if(cmd == MSP_RAW_IMU) return false;
+      if(cmd == MSP_MOTOR) return false;
+      if(cmd == MSP_SERVO) return false;
       return true;
     }
 
@@ -615,6 +662,12 @@ class Msp
         checksum = crc(checksum, r.data, r.len);
       }
       s.write(checksum);
+      postCommand();
+    }
+
+    void postCommand()
+    {
+      if(_reboot) ESP.restart();
     }
 
     uint8_t crc(uint8_t checksum, const uint8_t *data, int len)
@@ -629,6 +682,7 @@ class Msp
   private:
     Model& _model;
     MspMessage _msg;
+    bool _reboot;
 };
 
 }

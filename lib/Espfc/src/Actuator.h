@@ -56,7 +56,6 @@ class Actuator
 
           }
         }
-        if(mode & ACT_GYRO_THRUST) _model.state.gyroThrustScale = scale;
       }
     }
 

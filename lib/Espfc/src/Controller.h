@@ -18,8 +18,8 @@ class Controller
       _model.state.loopSampleInterval = 1000000 / _model.state.loopSampleRate;
       for(size_t i = 0; i < 3; ++i)
       {
-        _model.state.innerPid[i].dtermFilter.begin(_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
-        _model.state.outerPid[i].dtermFilter.begin(_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
+        _model.state.innerPid[i].configureFilter((FilterType)_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
+        _model.state.outerPid[i].configureFilter((FilterType)_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
       }
     }
 

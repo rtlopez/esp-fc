@@ -28,6 +28,7 @@ class Espfc
     int begin()
     {
       PIN_DEBUG_INIT(OUTPUT);
+      _model.begin();
       _hardware.begin();
       _sensor.begin();
       _input.begin();

@@ -47,7 +47,7 @@ class Blackbox
     {
       if(!_model.config.blackbox) return 0;
 
-      _serial = Hardware::getSerialPort(_model.config.blackboxPort);
+      _serial = Hardware::getSerialPort((SerialPort)_model.config.blackboxPort);
       if(!_serial) return 0;
 
       serialWriteInit(_serial);

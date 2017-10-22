@@ -31,13 +31,22 @@ class PidConfig
 class Pid
 {
   public:
-    Pid(PidConfig& c, float il = 0.3, float dg = 0):
-      Kp(PTERM_SCALE * c.P), Ki(ITERM_SCALE * c.I), Kd(DTERM_SCALE * c.D), iLimit(il), dGamma(dg), oLimit(1.f),
-      pScale(1.f), iScale(1.f), dScale(1.f) {}
+    Pid(): Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f), pScale(1.f), iScale(1.f), dScale(1.f) {}
 
-    Pid(PidConfig& c, bool level, float ol, float il = 0.1, float dg = 0):
-      Kp(LEVEL_PTERM_SCALE * c.P), Ki(LEVEL_ITERM_SCALE * c.I), Kd(LEVEL_DTERM_SCALE * c.D), iLimit(il), dGamma(dg), oLimit(ol),
-      pScale(1.f), iScale(1.f), dScale(1.f) {}
+    void configureFilter(FilterType type, int cutFreq, int sampleFreq)
+    {
+      dtermFilter.begin(type, cutFreq, sampleFreq);
+    }
+
+    void configurePid(float p, float i, float d, float il = 0.3, float dg = 0, float ol = 1)
+    {
+      Kp = p;
+      Ki = i;
+      Kd = d;
+      iLimit = il;
+      dGamma = dg;
+      oLimit = ol;
+    }
 
     float update(float setpoint, float measure, float dt)
     {
@@ -56,10 +65,6 @@ class Pid
       float dTerm = 0;
       if(Kd > 0 && dt > 0)
       {
-        //dTerm = (Kd * (error - prevError) / dt) * dScale;
-        // OR
-        //dTerm = (Kd * (prevMeasure - measure) / dt) * Scale;
-        // OR BOTH
         dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
       }
       dTerm = dtermFilter.update(dTerm);

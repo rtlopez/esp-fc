@@ -7,6 +7,7 @@
 #include "EEPROM.h"
 #include "Filter.h"
 #include "Stats.h"
+#include "Math.h"
 
 #if 0
 #define PIN_DEBUG(v) digitalWrite(D0, v)
@@ -245,7 +246,6 @@ struct ModelState
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;
-  float gyroThrustScale;
 
   VectorFloat controlAngle;
   VectorFloat desiredAngle;
@@ -253,12 +253,8 @@ struct ModelState
 
   float desiredRate[AXES];
 
-  Quaternion boardRotationQ;
-
   short flightMode;
   bool armed;
-
-  float altitude;
 
   Pid innerPid[AXES];
   Pid outerPid[AXES];
@@ -266,6 +262,7 @@ struct ModelState
   short inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
   unsigned long inputDelay;
+  float inputFilterAlpha;
 
   float output[OUTPUT_CHANNELS];
   short outputUs[OUTPUT_CHANNELS];
@@ -281,6 +278,7 @@ struct ModelState
   long gyroBiasSamples;
   bool gyroBiasValid;
   uint8_t gyroDivider;
+  float gyroDeadband;
 
   uint32_t gyroSampleRate;
   uint32_t gyroSampleInterval;
@@ -304,11 +302,14 @@ struct ModelState
   long magSampleRate;
   float magScale;
 
+  bool magCalibration;
   float magCalibrationData[3][2];
   bool magCalibrationValid;
 
   uint32_t telemetryTimestamp;
   bool telemetryUpdate;
+
+  uint16_t outputDisarmed[OUTPUT_CHANNELS];
 
   Stats stats;
 };
@@ -316,93 +317,87 @@ struct ModelState
 // persistent data
 struct ModelConfig
 {
-  uint8_t ppmPin;
-  uint8_t ppmMode;
+  uint8_t gyroDlpf;
+  uint8_t gyroFsr;
+  uint8_t accelFsr;
+  uint8_t gyroSampleRate;
+  uint8_t accelMode;
 
-  AccelMode accelMode;
+  uint8_t magSampleRate;
+  uint8_t magFsr;
+  uint8_t magAvr;
 
-  GyroDlpf gyroDlpf;
-  GyroGain gyroFsr;
-  AccelGain accelFsr;
-  GyroRate gyroSampleRate;
+  uint8_t gyroDeadband;
 
-  MagRate magSampleRate;
-  MagGain magFsr;
-  MagAvg magAvr;
-
-  float velocityFilterAlpha;
-  float gyroDeadband;
-
-  bool magCalibration;
   bool magEnable;
+  VectorInt16 magCalibrationScale;
+  VectorInt16 magCalibrationOffset;
 
-  VectorFloat magCalibrationScale;
-  VectorFloat magCalibrationOffset;
-  VectorFloat boardRotation;
-
-  FilterType gyroFilterType;
+  uint8_t gyroFilterType;
   uint16_t gyroFilterCutFreq;
-  FilterType accelFilterType;
+  uint8_t accelFilterType;
   uint16_t accelFilterCutFreq;
-  FilterType magFilterType;
+  uint8_t magFilterType;
   uint16_t magFilterCutFreq;
-  FilterType dtermFilterType;
+  uint8_t dtermFilterType;
   uint16_t dtermFilterCutFreq;
 
   uint8_t dtermSetpointWeight;
   uint8_t itermWindupPointPercent;
 
-  short modelFrame;
-  short flightModeChannel;
-  short flightModes[3];
+  uint8_t modelFrame;
+  uint8_t flightModeChannel;
+  uint8_t flightModes[3];
 
-  long actuatorConfig[3];
-  short actuatorChannels[3];
-  float actuatorMin[3];
-  float actuatorMax[3];
+  uint32_t actuatorConfig[3];
+  uint8_t actuatorChannels[3];
+  uint16_t actuatorMin[3];
+  uint16_t actuatorMax[3];
 
-  short inputMin[INPUT_CHANNELS];
-  short inputNeutral[INPUT_CHANNELS];
-  short inputMax[INPUT_CHANNELS];
-  short inputMap[INPUT_CHANNELS];
+  int8_t ppmPin;
+  uint8_t ppmMode;
+  uint16_t inputMin[INPUT_CHANNELS];
+  uint16_t inputNeutral[INPUT_CHANNELS];
+  uint16_t inputMax[INPUT_CHANNELS];
+  uint8_t inputMap[INPUT_CHANNELS];
   uint8_t inputDeadband;
-  float inputAlpha;
+  uint8_t inputFilterAlpha;
 
   uint8_t inputExpo[3];
   uint8_t inputRate[3];
   uint8_t inputSuperRate[3];
 
-  short outputMin[OUTPUT_CHANNELS];
-  short outputNeutral[OUTPUT_CHANNELS];
-  short outputMax[OUTPUT_CHANNELS];
+  uint16_t outputMin[OUTPUT_CHANNELS];
+  uint16_t outputNeutral[OUTPUT_CHANNELS];
+  uint16_t outputMax[OUTPUT_CHANNELS];
 
-  short outputPin[OUTPUT_CHANNELS];
-  OutputProtocol outputProtocol;
+  int8_t outputPin[OUTPUT_CHANNELS];
+  uint8_t outputProtocol;
   uint16_t outputRate;
 
   PidConfig pid[PID_ITEM_COUNT];
 
   uint8_t angleMax;
   uint8_t velocityMax;
-  short loopSync;
-  short mixerSync;
+  uint8_t loopSync;
+  uint8_t mixerSync;
 
-  float lowThrottleTreshold;
+  uint16_t lowThrottleTreshold;
   bool lowThrottleZeroIterm;
   bool lowThrottleMotorStop;
 
   bool telemetry;
   uint32_t telemetryInterval;
-  SerialPort telemetryPort;
+  uint8_t telemetryPort;
 
   bool blackbox;
-  SerialPort blackboxPort;
-  SerialPort cliPort;
+  uint8_t blackboxPort;
+  uint8_t cliPort;
 
-  SerialSpeed uart1Speed;
-  SerialSpeed uart2Speed;
+  uint32_t uart1Speed;
+  uint32_t uart2Speed;
 
-  FusionMode fusionMode;
+  uint8_t fusionMode;
   bool fusionDelay;
 };
 
@@ -415,24 +410,19 @@ class Model
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSampleRate = GYRO_RATE_1000;
+      config.gyroDeadband = 0;
 
       config.magEnable = 0;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
-      config.magCalibration = 0;
-
-      config.fusionDelay = 0;
 
       config.loopSync = 1;
       config.mixerSync = 1;
 
-      config.gyroDeadband = radians(0.1); // deg/s
-
-      config.velocityFilterAlpha = 0.1f;
-      //config.fusionMode = FUSION_EXPERIMENTAL;
       config.fusionMode = FUSION_MADGWICK;
+      config.fusionDelay = 0;
 
-      config.gyroFilterType = FILTER_PT2;
+      config.gyroFilterType = FILTER_PT1;
       config.gyroFilterCutFreq = 70;
       config.accelFilterType = FILTER_PT1;
       config.accelFilterCutFreq = 15;
@@ -477,6 +467,7 @@ class Model
       config.outputPin[1] = D5; // D6;
       config.outputPin[2] = D6; // D5;
       config.outputPin[3] = D8; // D3;
+
       config.modelFrame = FRAME_QUAD_X;
       //config.modelFrame = FRAME_DIRECT;
       config.outputRate = 500;    // 125 max for old driver
@@ -496,11 +487,11 @@ class Model
 
       for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
       {
-        config.inputRate[i] = 110;
+        config.inputRate[i] = 100;
         config.inputExpo[i] = 0;
-        config.inputSuperRate[i] = 40;
+        config.inputSuperRate[i] = 60;
       }
-      config.inputRate[AXIS_YAW] = 110;
+      config.inputRate[AXIS_YAW] = 100;
       config.inputExpo[AXIS_YAW] = 0;
       config.inputSuperRate[AXIS_YAW] = 50;
 
@@ -519,7 +510,7 @@ class Model
       config.inputMax[AXIS_YAW] = 1000;
 
       config.inputDeadband = 3; // us
-      config.inputAlpha = 0.8f;
+      config.inputFilterAlpha = 80;
 
       // PID controller config
       config.pid[PID_PITCH] = { .P = 45,  .I = 45, .D = 14 };
@@ -530,17 +521,9 @@ class Model
       float iwp = config.itermWindupPointPercent = 30;
       float dsw = config.dtermSetpointWeight = 50;
 
-      state.innerPid[AXIS_PITCH] = Pid(config.pid[PID_PITCH], iwp / 100.0f, dsw / 100.0f);
-      state.innerPid[AXIS_ROLL]  = Pid(config.pid[PID_ROLL],  iwp / 100.0f, dsw / 100.0f);
-      state.innerPid[AXIS_YAW]   = Pid(config.pid[PID_YAW],   iwp / 100.0f, dsw / 100.0f);
-
-      state.outerPid[AXIS_PITCH] = Pid(config.pid[PID_LEVEL], true, radians(300));
-      state.outerPid[AXIS_ROLL]  = Pid(config.pid[PID_LEVEL], true, radians(300));
-
       config.angleMax = 50;  // deg
-      config.velocityMax = 0.5; // m/s
 
-      config.lowThrottleTreshold = -0.9f;
+      config.lowThrottleTreshold = 1050;
       config.lowThrottleZeroIterm = true;
       config.lowThrottleMotorStop = true;
 
@@ -565,19 +548,53 @@ class Model
       //config.actuatorConfig[2] = ACT_GYRO_THRUST;
       //config.actuatorMin[2] = -0.05;
       //config.actuatorMax[2] =  0.05;
-
-      state.gyroThrustScale = 0.02;
-      state.stats = Stats();
     }
 
-    union {
-      ModelState state;
-      char * stateAddr;
-    };
-    union {
-      ModelConfig config;
-      char * configAddr;
-    };
+    void begin()
+    {
+      load();
+      update();
+    }
+
+    void update()
+    {
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        state.outputDisarmed[i] = 1000;
+      }
+      
+      state.gyroDeadband = radians(config.gyroDeadband / 10.0f);
+      state.inputFilterAlpha = Math::bound((config.inputFilterAlpha / 100.0f), 0.f, 1.f);
+
+      for(size_t i = 0; i < 3; i++)
+      {
+        PidConfig * pc = &config.pid[i];
+        state.innerPid[i].configurePid(
+          pc->P * PTERM_SCALE,
+          pc->I * ITERM_SCALE,
+          pc->D * DTERM_SCALE,
+          config.itermWindupPointPercent / 100.0f,
+          config.dtermSetpointWeight / 100.0f,
+          1.0f
+        );
+      }
+
+      for(size_t i = 0; i < 3; i++)
+      {
+        PidConfig * pc = &config.pid[PID_LEVEL];
+        state.outerPid[i].configurePid(
+          pc->P * LEVEL_PTERM_SCALE,
+          pc->I * LEVEL_ITERM_SCALE,
+          pc->D * LEVEL_DTERM_SCALE,
+          0.1f,
+          0,
+          radians(300)
+        );
+      }
+    }
+
+    ModelState state;
+    ModelConfig config;
 
     int load()
     {
@@ -587,8 +604,8 @@ class Model
 
       uint8_t version = EEPROM.read(addr++);
 
-      uint8_t * begin = reinterpret_cast<uint8_t*>(&config.magCalibrationScale);
-      uint8_t * end = begin + sizeof(VectorFloat) * 2;
+      uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
+      uint8_t * end = begin + sizeof(ModelConfig);
       for(uint8_t * it = begin; it < end; ++it)
       {
         *it = EEPROM.read(addr++);
@@ -602,8 +619,8 @@ class Model
       EEPROM.write(addr++, EEPROM_MAGIC);
       EEPROM.write(addr++, EEPROM_VERSION);
 
-      uint8_t * begin = reinterpret_cast<uint8_t*>(&config.magCalibrationScale);
-      uint8_t * end = begin + sizeof(VectorFloat) * 2;
+      uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
+      uint8_t * end = begin + sizeof(ModelConfig);
       for(uint8_t * it = begin; it < end; ++it)
       {
         EEPROM.write(addr++, *it);
