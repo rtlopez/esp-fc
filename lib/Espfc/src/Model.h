@@ -321,17 +321,8 @@ struct ModelConfig
   uint8_t gyroFsr;
   uint8_t accelFsr;
   uint8_t gyroSampleRate;
-  uint8_t accelMode;
-
-  uint8_t magSampleRate;
-  uint8_t magFsr;
-  uint8_t magAvr;
-
   uint8_t gyroDeadband;
-
-  bool magEnable;
-  VectorInt16 magCalibrationScale;
-  VectorInt16 magCalibrationOffset;
+  uint8_t accelMode;
 
   uint8_t gyroFilterType;
   uint16_t gyroFilterCutFreq;
@@ -344,6 +335,12 @@ struct ModelConfig
 
   uint8_t dtermSetpointWeight;
   uint8_t itermWindupPointPercent;
+
+  bool magEnable;
+  uint8_t magSampleRate;
+  uint8_t magFsr;
+  uint8_t magAvr;
+
 
   uint8_t modelFrame;
   uint8_t flightModeChannel;
@@ -399,6 +396,9 @@ struct ModelConfig
 
   uint8_t fusionMode;
   bool fusionDelay;
+
+  VectorFloat magCalibrationScale;
+  VectorFloat magCalibrationOffset;
 };
 
 class Model
@@ -552,6 +552,7 @@ class Model
 
     void begin()
     {
+      EEPROM.begin(512);
       load();
       update();
     }
@@ -562,11 +563,11 @@ class Model
       {
         state.outputDisarmed[i] = 1000;
       }
-      
+
       state.gyroDeadband = radians(config.gyroDeadband / 10.0f);
       state.inputFilterAlpha = Math::bound((config.inputFilterAlpha / 100.0f), 0.f, 1.f);
 
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i < 3; i++) // rpy
       {
         PidConfig * pc = &config.pid[i];
         state.innerPid[i].configurePid(
@@ -631,10 +632,11 @@ class Model
     void reset()
     {
       config = ModelConfig();
+      //update();
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x01;
+    static const uint8_t EEPROM_VERSION = 0x02;
 };
 
 }

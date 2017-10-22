@@ -14,8 +14,6 @@ class Hardware
 
     int begin()
     {
-      EEPROM.begin(1024);
-
       Wire.begin();
       //Wire.setClock(400000);
       Wire.setClock(1000000); // in real ~640kHz
@@ -29,11 +27,12 @@ class Hardware
       {
         Serial1.begin(_model.config.uart2Speed);
       }
+      return 1;
     }
 
     int update()
     {
-
+      return 0;
     }
 
     static HardwareSerial * getSerialPort(SerialPort portId)

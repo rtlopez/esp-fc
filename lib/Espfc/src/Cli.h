@@ -106,13 +106,13 @@ class Cli
       size_t i = 0;
       _params[i++] = Param(PSTR("telemetry"), (char*)&c->telemetry, PARAM_BOOL);
       _params[i++] = Param(PSTR("telemetry_interval"), (char*)&c->telemetryInterval, PARAM_INT);
-      _params[i++] = Param(PSTR("accel_mode"), (char*)&c->accelMode, PARAM_INT);
-      _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_SHORT);
-      _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_SHORT);
+      _params[i++] = Param(PSTR("accel_mode"), (char*)&c->accelMode, PARAM_BYTE);
+      _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_BYTE);
+      _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_BYTE);
       _params[i++] = Param(PSTR("compass_calibration"), (char*)&s->magCalibration, PARAM_BYTE);
       _params[i++] = Param(PSTR("compass_calibration_offset"), (char*)&c->magCalibrationOffset, PARAM_VECTOR_FLOAT);
       _params[i++] = Param(PSTR("compass_calibration_scale"), (char*)&c->magCalibrationScale, PARAM_VECTOR_FLOAT);
-      _params[i++] = Param(PSTR("angle_max"), (char*)&c->angleMax, PARAM_INT);
+      _params[i++] = Param(PSTR("angle_max"), (char*)&c->angleMax, PARAM_BYTE);
     }
 
     int begin()
@@ -178,7 +178,7 @@ class Cli
 
       if(strcmp_P(_cmd.args[0], PSTR("help")) == 0)
       {
-        println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n reset\n stats\n info\n version"));
+        println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n eeprom\n reset\n stats\n info\n version"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
@@ -193,6 +193,7 @@ class Cli
         print(F(" long: ")); println(sizeof(long));
         print(F("float: ")); println(sizeof(float));
         print(F("model: ")); println(sizeof(ModelConfig));
+        println();
 
         const rst_info * resetInfo = system_get_rst_info();
         print(F("system_get_rst_info() reset reason: "));
@@ -368,7 +369,7 @@ class Cli
     void println(const T& t, const V& v)
     {
       if(!_stream) return;
-      (*_stream).print(t, v);
+      (*_stream).println(t, v);
     }
 
     void println()

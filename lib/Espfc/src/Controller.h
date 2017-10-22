@@ -133,7 +133,7 @@ class Controller
     void resetIterm()
     {
       if(!_model.config.lowThrottleZeroIterm) return;
-      if(_model.state.input[AXIS_THRUST] < _model.config.lowThrottleTreshold)
+      if(_model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold)
       {
         for(size_t i = 0; i < AXES; i++)
         {

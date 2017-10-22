@@ -265,9 +265,11 @@ class Msp
           break;
 
         case MSP_UID:
-          r.writeU32(0);
-          r.writeU32(0);
-          r.writeU32(0);
+          {
+            r.writeU32(ESP.getChipId());
+            r.writeU32(ESP.getFlashChipId());
+            r.writeU32(ESP.getFlashChipSize());
+          }
           break;
 
         case MSP_STATUS_EX:

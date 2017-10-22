@@ -181,7 +181,7 @@ class Mixer
 
     bool _stop(void)
     {
-      return (_model.config.lowThrottleMotorStop && _model.state.input[AXIS_THRUST] < _model.config.lowThrottleTreshold) || !_model.state.armed;
+      return (_model.config.lowThrottleMotorStop && _model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold) || !_model.state.armed;
     }
 
     Model& _model;
