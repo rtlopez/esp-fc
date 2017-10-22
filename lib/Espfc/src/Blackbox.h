@@ -69,24 +69,18 @@ class Blackbox
       rp->rates[YAW] = _model.config.inputSuperRate[YAW];
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
-      cp->pid[ROLL].P = (uint8_t)(_model.config.innerPid[AXIS_ROLL].Kp * 500);
-      cp->pid[ROLL].I = (uint8_t)(_model.config.innerPid[AXIS_ROLL].Ki * 500);
-      cp->pid[ROLL].D = (uint8_t)(_model.config.innerPid[AXIS_ROLL].Kd * 25000);
-      cp->pid[PITCH].P = (uint8_t)(_model.config.innerPid[AXIS_PITCH].Kp * 500);
-      cp->pid[PITCH].I = (uint8_t)(_model.config.innerPid[AXIS_PITCH].Ki * 500);
-      cp->pid[PITCH].D = (uint8_t)(_model.config.innerPid[AXIS_PITCH].Kd * 25000);
-      cp->pid[YAW].P = (uint8_t)(_model.config.innerPid[AXIS_YAW].Kp * 500);
-      cp->pid[YAW].I = (uint8_t)(_model.config.innerPid[AXIS_YAW].Ki * 500);
-      cp->pid[YAW].D = (uint8_t)(_model.config.innerPid[AXIS_YAW].Kd * 25000);
-      cp->pid[PID_LEVEL].P = (uint8_t)(_model.config.outerPid[AXIS_ROLL].Kp * 10);
-      cp->pid[PID_LEVEL].I = (uint8_t)(_model.config.outerPid[AXIS_ROLL].Kp * 10);
-      cp->pid[PID_LEVEL].D = 100;
+      for(size_t i = 0; i < PID_ITEM_COUNT; i++)
+      {
+        cp->pid[i].P = _model.config.pid[i].P;
+        cp->pid[i].I = _model.config.pid[i].I;
+        cp->pid[i].D = _model.config.pid[i].D;
+      }
       cp->pidAtMinThrottle = 1;
       cp->dterm_filter_type = _model.config.dtermFilterType;
       cp->dterm_lpf_hz = _model.config.dtermFilterCutFreq;
       cp->yaw_lpf_hz = _model.config.gyroFilterCutFreq;
-      cp->itermWindupPointPercent = (uint8_t)(_model.config.innerPid[AXIS_ROLL].iLimit * 100);
-      cp->dtermSetpointWeight = (uint8_t)(_model.config.innerPid[AXIS_ROLL].dGamma * 100);
+      cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
+      cp->dtermSetpointWeight = _model.config.dtermSetpointWeight;
 
       rcControlsConfigMutable()->deadband = _model.config.inputDeadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.inputDeadband;

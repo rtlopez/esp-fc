@@ -33,6 +33,7 @@ class Controller
       _model.state.stats.start(COUNTER_INNER_PID);
       innerLoop();
       _model.state.stats.end(COUNTER_INNER_PID);
+
       return 1;
     }
 
@@ -43,8 +44,8 @@ class Controller
         case MODE_ANGLE:
         case MODE_ANGLE_SIMPLE:
           _model.state.desiredAngle = VectorFloat(
-            _model.state.input[AXIS_ROLL] * _model.config.angleMax[AXIS_ROLL],
-            _model.state.input[AXIS_PITCH] * _model.config.angleMax[AXIS_PITCH],
+            _model.state.input[AXIS_ROLL] * radians(_model.config.angleMax),
+            _model.state.input[AXIS_PITCH] * radians(_model.config.angleMax),
             _model.state.angle[AXIS_YAW]
           );
           _model.state.controlAngle = _model.state.angle;
@@ -65,7 +66,7 @@ class Controller
             break;
           case MODE_ANGLE:
           case MODE_ANGLE_SIMPLE:
-            _model.state.desiredRate[i] = _model.config.outerPid[i].update(_model.state.desiredAngle[i], _model.state.controlAngle[i], _model.state.loopDt, _model.state.outerPid[i]);
+            _model.state.desiredRate[i] = _model.state.outerPid[i].update(_model.state.desiredAngle[i], _model.state.controlAngle[i], _model.state.loopDt);
             break;
           case MODE_OFF:
           default:
@@ -106,7 +107,7 @@ class Controller
           case MODE_RATE:
           case MODE_ANGLE:
           case MODE_ANGLE_SIMPLE:
-            _model.state.output[i] = _model.config.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.loopDt, _model.state.innerPid[i]);
+            _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.loopDt);
             break;
           case MODE_OFF:
           default:

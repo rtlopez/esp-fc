@@ -175,7 +175,7 @@ class Msp
       Serial1.print(m.expected); Serial1.print(' ');
       for(size_t i = 0; i < m.expected; i++)
       {
-        Serial1.print(m.buffer[i], HEX); Serial1.print(' ');
+        Serial1.print(m.buffer[i]); Serial1.print(' ');
       }
       Serial1.println();
     }
@@ -189,7 +189,7 @@ class Msp
       Serial1.print(r.len); Serial1.print(' ');
       for(size_t i = 0; i < r.len; i++)
       {
-        Serial1.print(r.data[i], HEX); Serial1.print(' ');
+        Serial1.print(r.data[i]); Serial1.print(' ');
       }
       Serial1.println();
     }
@@ -428,12 +428,31 @@ class Msp
           break;
 
         case MSP_PID:
-          for(size_t i = 0; i < 10; i++)
+          for(size_t i = 0; i < PID_ITEM_COUNT; i++)
           {
-            r.writeU8(40); // pid P
-            r.writeU8(30); // pid I
-            r.writeU8(20); // pid D
+            r.writeU8(_model.config.pid[i].P);
+            r.writeU8(_model.config.pid[i].I);
+            r.writeU8(_model.config.pid[i].D);
           }
+          break;
+
+        case MSP_PID_ADVANCED:
+          r.writeU16(0);
+          r.writeU16(0);
+          r.writeU16(0); // was pidProfile.yaw_p_limit
+          r.writeU8(0); // reserved
+          r.writeU8(0); //vbatPidCompensation;
+          r.writeU8(0); //setpointRelaxRatio;
+          r.writeU8(_model.config.dtermSetpointWeight);
+          r.writeU8(0); // reserved
+          r.writeU8(0); // reserved
+          r.writeU8(0); // reserved
+          r.writeU16(0); //rateAccelLimit;
+          r.writeU16(0); //yawRateAccelLimit;
+          r.writeU8(_model.config.angleMax); // levelAngleLimit;
+          r.writeU8(0); // was pidProfile.levelSensitivity
+          r.writeU16(0); //itermThrottleThreshold;
+          r.writeU16(0); //itermAcceleratorGain;
           break;
 
         default:

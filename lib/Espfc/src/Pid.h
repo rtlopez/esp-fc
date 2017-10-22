@@ -4,59 +4,70 @@
 #include "Math.h"
 #include "Filter.h"
 
+// bataflight scalers
+//#define PTERM_SCALE 0.032029f
+//#define ITERM_SCALE 0.244381f
+//#define DTERM_SCALE 0.000529f
+
+// espfc scalers
+#define PTERM_SCALE 0.002f    // 1/500
+#define ITERM_SCALE 0.002f    // 1/500
+#define DTERM_SCALE 0.00004f  // 1/25000
+
+#define LEVEL_PTERM_SCALE 0.1f    // 1/10
+#define LEVEL_ITERM_SCALE 0.1f    // 1/10
+#define LEVEL_DTERM_SCALE 0.001f  // 1/1000
+
 namespace Espfc {
 
-class PidState
+class PidConfig
 {
   public:
-    PidState(): pScale(1.f), iScale(1.f), dScale(1.f) {}
-    float error;
-    float pTerm;
-    float iTerm;
-    float dTerm;
-    float prevInput;
-    float prevError;
-    float pScale;
-    float iScale;
-    float dScale;
-    Filter dtermFilter;
+    uint8_t P;
+    uint8_t I;
+    uint8_t D;
 };
 
 class Pid
 {
   public:
-    Pid(float kp = 1, float ki = 0, float kd = 0, float il = 0.3, float dg = 0, float ol = 1):
-      Kp(kp), Ki(ki), Kd(kd), iLimit(il), dGamma(dg), oLimit(ol) {}
+    Pid(PidConfig& c, float il = 0.3, float dg = 0):
+      Kp(PTERM_SCALE * c.P), Ki(ITERM_SCALE * c.I), Kd(DTERM_SCALE * c.D), iLimit(il), dGamma(dg), oLimit(1.f),
+      pScale(1.f), iScale(1.f), dScale(1.f) {}
 
-    float update(float setpoint, float input, float dt, PidState& state)
+    Pid(PidConfig& c, bool level, float ol, float il = 0.1, float dg = 0):
+      Kp(LEVEL_PTERM_SCALE * c.P), Ki(LEVEL_ITERM_SCALE * c.I), Kd(LEVEL_DTERM_SCALE * c.D), iLimit(il), dGamma(dg), oLimit(ol),
+      pScale(1.f), iScale(1.f), dScale(1.f) {}
+
+    float update(float setpoint, float measure, float dt)
     {
-      float error = state.error = setpoint - input;
-      state.pTerm = Kp * error * state.pScale;
-      if(state.iScale > 0.01)
+      error = setpoint - measure;
+      pTerm = Kp * error * pScale;
+      if(iScale > 0.01)
       {
-        state.iTerm += Ki * error * dt * state.iScale;
-        state.iTerm = Math::bound(state.iTerm, -iLimit, iLimit);
+        iTerm += Ki * error * dt * iScale;
+        iTerm = Math::bound(iTerm, -iLimit, iLimit);
       }
       else
       {
-        state.iTerm = 0; // zero integral
+        iTerm = 0; // zero integral
       }
 
       float dTerm = 0;
       if(Kd > 0 && dt > 0)
       {
-        //dTerm = (Kd * (error - state.prevError) / dt) * state.dScale;
+        //dTerm = (Kd * (error - prevError) / dt) * dScale;
         // OR
-        //dTerm = (Kd * (state.prevInput - input) / dt) * state.dScale;
+        //dTerm = (Kd * (prevMeasure - measure) / dt) * Scale;
         // OR BOTH
-        dTerm = (Kd * state.dScale * (((error - state.prevError) * dGamma) + (state.prevInput - input) * (1.f - dGamma)) / dt);
+        dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
       }
-      state.dTerm = state.dtermFilter.update(dTerm);
+      dTerm = dtermFilter.update(dTerm);
 
-      float output = Math::bound(state.pTerm + state.iTerm + state.dTerm, -oLimit, oLimit);
+      float output = Math::bound(pTerm + iTerm + dTerm, -oLimit, oLimit);
 
-      state.prevInput = input;
-      state.prevError = state.error;
+      prevMeasure = measure;
+      prevError = error;
 
       return output;
     }
@@ -64,9 +75,22 @@ class Pid
     float Kp;
     float Ki;
     float Kd;
+
     float iLimit;
     float dGamma;
     float oLimit;
+
+    float pScale;
+    float iScale;
+    float dScale;
+    Filter dtermFilter;
+
+    float error;
+    float pTerm;
+    float iTerm;
+    float dTerm;
+    float prevMeasure;
+    float prevError;
 };
 
 }

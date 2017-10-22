@@ -196,6 +196,20 @@ enum Axis {
 const size_t AXES            = 4;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
 
+enum PidIndex {
+  PID_ROLL,
+  PID_PITCH,
+  PID_YAW,
+  PID_ALT,
+  PID_POS,
+  PID_POSR,
+  PID_NAVR,
+  PID_LEVEL,
+  PID_MAG,
+  PID_VEL,
+  PID_ITEM_COUNT
+};
+
 // working data
 struct ModelState
 {
@@ -246,8 +260,8 @@ struct ModelState
 
   float altitude;
 
-  PidState innerPid[AXES];
-  PidState outerPid[AXES];
+  Pid innerPid[AXES];
+  Pid outerPid[AXES];
 
   short inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
@@ -335,6 +349,9 @@ struct ModelConfig
   FilterType dtermFilterType;
   uint16_t dtermFilterCutFreq;
 
+  uint8_t dtermSetpointWeight;
+  uint8_t itermWindupPointPercent;
+
   short modelFrame;
   short flightModeChannel;
   short flightModes[3];
@@ -350,6 +367,7 @@ struct ModelConfig
   short inputMap[INPUT_CHANNELS];
   uint8_t inputDeadband;
   float inputAlpha;
+
   uint8_t inputExpo[3];
   uint8_t inputRate[3];
   uint8_t inputSuperRate[3];
@@ -362,10 +380,10 @@ struct ModelConfig
   OutputProtocol outputProtocol;
   uint16_t outputRate;
 
-  Pid innerPid[AXES];
-  Pid outerPid[AXES];
-  float angleMax[AXES];
-  float velocityMax[AXES];
+  PidConfig pid[PID_ITEM_COUNT];
+
+  uint8_t angleMax;
+  uint8_t velocityMax;
   short loopSync;
   short mixerSync;
 
@@ -503,26 +521,24 @@ class Model
       config.inputDeadband = 3; // us
       config.inputAlpha = 0.8f;
 
-      // controller config
-      for(size_t i = 0; i < AXES; i++)
-      {
-        state.kalman[i] = Kalman();
-        state.outerPid[i] = PidState();
-        state.innerPid[i] = PidState();
-        config.outerPid[i] = Pid(3.00f, 0.00f, 0.0000f, 0.0f, 0.0f, radians(300));
-        config.innerPid[i] = Pid(0.09f, 0.09f, 0.0006f, 0.3f, 0.5f);
-      }
+      // PID controller config
+      config.pid[PID_PITCH] = { .P = 45,  .I = 45, .D = 14 };
+      config.pid[PID_ROLL]  = { .P = 63,  .I = 54, .D = 18 };
+      config.pid[PID_YAW]   = { .P = 125, .I = 75, .D = 5 };
+      config.pid[PID_LEVEL] = { .P = 30,  .I = 0,  .D = 0 };
 
-      config.innerPid[AXIS_PITCH].Kp *= 1.4f;
-      config.innerPid[AXIS_PITCH].Ki *= 1.2f;
-      config.innerPid[AXIS_PITCH].Kd *= 1.2f;
+      float iwp = config.itermWindupPointPercent = 30;
+      float dsw = config.dtermSetpointWeight = 50;
 
-      config.innerPid[AXIS_YAW].Kp = 0.25;
-      config.innerPid[AXIS_YAW].Ki = 0.15;
-      config.innerPid[AXIS_YAW].Kd = 0.0002f;
+      state.innerPid[AXIS_PITCH] = Pid(config.pid[PID_PITCH], iwp / 100.0f, dsw / 100.0f);
+      state.innerPid[AXIS_ROLL]  = Pid(config.pid[PID_ROLL],  iwp / 100.0f, dsw / 100.0f);
+      state.innerPid[AXIS_YAW]   = Pid(config.pid[PID_YAW],   iwp / 100.0f, dsw / 100.0f);
 
-      config.angleMax[AXIS_PITCH] = config.angleMax[AXIS_ROLL] = radians(50);  // deg
-      config.velocityMax[AXIS_PITCH] = config.velocityMax[AXIS_ROLL] = 0.5; // m/s
+      state.outerPid[AXIS_PITCH] = Pid(config.pid[PID_LEVEL], true, radians(300));
+      state.outerPid[AXIS_ROLL]  = Pid(config.pid[PID_LEVEL], true, radians(300));
+
+      config.angleMax = 50;  // deg
+      config.velocityMax = 0.5; // m/s
 
       config.lowThrottleTreshold = -0.9f;
       config.lowThrottleZeroIterm = true;
