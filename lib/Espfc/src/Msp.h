@@ -5,20 +5,7 @@
 #include <stdint.h>
 #include "Arduino.h"
 #include "msp/msp_protocol.h"
-
-#define FC_FIRMWARE_NAME            "Betaflight"
-#define FC_VERSION_MAJOR            3  // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR            2  // increment when a minor release is made (small new feature, change etc)
-#define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
-
-#define GIT_SHORT_REVISION_LENGTH   7 // lower case hexadecimal digits.
-extern const char* const shortGitRevision;
-
-#define BUILD_DATE_LENGTH 11
-extern const char* const buildDate;  // "MMM DD YYYY" MMM = Jan/Feb/...
-
-#define BUILD_TIME_LENGTH 8
-extern const char* const buildTime;  // "HH:MM:SS"
+#include "platform.h"
 
 static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
 static const char * boardIdentifier = "ESPF";

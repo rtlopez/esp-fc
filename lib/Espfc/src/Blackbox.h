@@ -5,7 +5,7 @@
 #include "Hardware.h"
 
 extern "C" {
-#include "blackbox.h"
+#include "blackbox/blackbox.h"
 
 static HardwareSerial * blackboxSerial = NULL;
 

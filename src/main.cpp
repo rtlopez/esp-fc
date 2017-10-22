@@ -10,7 +10,7 @@
 #include <Kalman.h>
 #include <MadgwickAHRS.h>
 #include <printf.h>
-#include <blackbox.h>
+#include <blackbox/blackbox.h>
 
 Espfc::Espfc espfc;
 
