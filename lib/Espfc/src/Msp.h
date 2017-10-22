@@ -39,21 +39,55 @@ class Msp
     class MspMessage
     {
       public:
-        MspMessage() {}
+        MspMessage(): expected(0), received(0), read(0) {}
         MspState state;
         MspType dir;
         uint8_t cmd;
         uint8_t expected;
         uint8_t received;
+        uint8_t read;
         uint8_t buffer[MSP_BUF_SIZE];
         uint8_t checksum;
+
+        int remain()
+        {
+          return received - read;
+        }
+
+        void advance(size_t size)
+        {
+          read += size;
+        }
+
+        uint8_t readU8()
+        {
+          return buffer[read++];
+        }
+
+        uint16_t readU16()
+        {
+          uint16_t ret;
+          ret = readU8();
+          ret |= readU8() << 8;
+          return ret;
+        }
+
+        uint32_t readU32()
+        {
+          uint32_t ret;
+          ret = readU8();
+          ret |= readU8() <<  8;
+          ret |= readU8() << 16;
+          ret |= readU8() << 24;
+          return ret;
+        }
     };
 
     class MspResponse {
       public:
         MspResponse(): len(0) {}
         uint8_t cmd;
-        uint8_t result;
+        int8_t  result;
         uint8_t direction;
         uint8_t len;
         uint8_t data[MSP_BUF_SIZE];
@@ -120,6 +154,7 @@ class Msp
           {
             _msg.expected = c;
             _msg.received = 0;
+            _msg.read = 0;
             _msg.checksum = 0;
             _msg.checksum ^= c;
             _msg.state = STATE_HEADER_SIZE;
@@ -184,7 +219,7 @@ class Msp
     {
       if(!debugSkip(r.cmd)) return;
 
-      Serial1.print(r.result ? '>' : '!'); Serial1.print(' ');
+      Serial1.print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); Serial1.print(' ');
       Serial1.print(r.cmd); Serial1.print(' ');
       Serial1.print(r.len); Serial1.print(' ');
       for(size_t i = 0; i < r.len; i++)
@@ -392,6 +427,35 @@ class Msp
           r.writeU8(_model.config.inputRate[2]); // yaw rate
           break;
 
+        case MSP_SET_RC_TUNING:
+          if(m.remain() >= 10)
+          {
+            _model.config.inputRate[0] = _model.config.inputRate[1] = m.readU8();
+            _model.config.inputExpo[0] = _model.config.inputExpo[1] = m.readU8();
+            for(size_t i = 0; i < 3; i++)
+            {
+              _model.config.inputSuperRate[i] = m.readU8();
+            }
+            m.readU8(); // dyn thr pid
+            m.readU8(); // thrMid8
+            m.readU8();  // thr expo
+            m.readU16(); // tpa breakpoint
+            if(m.remain() >= 1)
+            {
+              _model.config.inputExpo[2] = m.readU8(); // yaw expo
+            }
+            if(m.remain() >= 1)
+            {
+              _model.config.inputRate[2]  = m.readU8(); // yaw rate
+            }
+          }
+          else
+          {
+            r.result = -1;
+            // error
+          }
+          break;
+
         case MSP_ADVANCED_CONFIG:
           r.writeU8(_model.state.gyroDivider);
           r.writeU8(_model.config.loopSync);
@@ -416,6 +480,26 @@ class Msp
           r.writeU8(_model.config.dtermFilterType);
           break;
 
+        case MSP_SET_FILTER_CONFIG:
+          _model.config.gyroFilterCutFreq = m.readU8();
+          _model.config.dtermFilterCutFreq = m.readU16();
+          m.readU16();
+          if (m.remain() >= 8) {
+              m.readU16();
+              m.readU16();
+              m.readU16();
+              m.readU16();
+          }
+          if (m.remain() >= 4) {
+              m.readU16();
+              m.readU16();
+          }
+          if (m.remain() >= 1) {
+              _model.config.dtermFilterType = (FilterType)m.readU8();
+          }
+          // TODO: update model
+          break;
+
         case MSP_PID_CONTROLLER:
           r.writeU8(1); // betaflight controller id
           break;
@@ -436,6 +520,16 @@ class Msp
           }
           break;
 
+        case MSP_SET_PID:
+          for (int i = 0; i < PID_ITEM_COUNT; i++)
+          {
+            _model.config.pid[i].P = m.readU8();
+            _model.config.pid[i].I = m.readU8();
+            _model.config.pid[i].D = m.readU8();
+          }
+          //TODO: update model
+          break;
+
         case MSP_PID_ADVANCED:
           r.writeU16(0);
           r.writeU16(0);
@@ -453,6 +547,34 @@ class Msp
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); //itermThrottleThreshold;
           r.writeU16(0); //itermAcceleratorGain;
+          break;
+
+        case MSP_SET_PID_ADVANCED:
+          m.readU16();
+          m.readU16();
+          m.readU16(); // was pidProfile.yaw_p_limit
+          m.readU8(); // reserved
+          m.readU8();
+          m.readU8();
+          _model.config.dtermSetpointWeight = m.readU8();
+          m.readU8(); // reserved
+          m.readU8(); // reserved
+          m.readU8(); // reserved
+          m.readU16();
+          m.readU16();
+          if (m.remain() >= 2) {
+              _model.config.angleMax = m.readU8();
+              m.readU8(); // was pidProfile.levelSensitivity
+          }
+          if (m.remain() >= 4) {
+              m.readU16();
+              m.readU16();
+          }
+          //TODO: update model
+          break;
+
+        case MSP_EEPROM_WRITE:
+          // TODO: implement
           break;
 
         default:
@@ -479,6 +601,10 @@ class Msp
       debugResponse(r);
 
       uint8_t hdr[5] = { '$', 'M', '>' };
+      if(r.result == -1)
+      {
+        hdr[2] = '!'; // error ??
+      }
       hdr[3] = r.len;
       hdr[4] = r.cmd;
       uint8_t checksum = crc(0, &hdr[3], 2);
