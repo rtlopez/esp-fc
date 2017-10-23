@@ -294,7 +294,8 @@ class Sensor
     void initGyro()
     {
       _gyro.initialize();
-      Serial.print("gyro init: "); Serial.print(_gyro.getDeviceID()); Serial.print(' '); Serial.println(_gyro.testConnection());
+      _model.logger.info().log(F("GYRO INIT")).log(_gyro.getDeviceID()).logln(_gyro.testConnection());
+
       setSampleRate();
       setGyroScale();
       setAccelScale();
@@ -338,7 +339,8 @@ class Sensor
       _model.state.gyroBiasAlpha = 5.0f / rate; // higher value gives faster calibration, was 2
       _model.state.gyroBiasSamples = 0;
 
-      Serial.print("gyro rate: "); Serial.print(_model.state.gyroDivider); Serial.print(' '); Serial.print(_model.state.gyroSampleRate); Serial.print(' '); Serial.print(_model.state.gyroSampleInterval); Serial.print(' '); Serial.println();
+      _model.logger.info().log(F("GYRO RATE")).log(_model.state.gyroDivider).log(_model.state.gyroSampleRate).logln(_model.state.gyroSampleInterval);
+
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(_model.state.gyroDivider - 1);
     }

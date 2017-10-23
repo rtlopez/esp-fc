@@ -7,6 +7,7 @@
 #include "EEPROM.h"
 #include "Filter.h"
 #include "Stats.h"
+#include "Logger.h"
 #include "Math.h"
 
 #if 0
@@ -552,6 +553,7 @@ class Model
 
     void begin()
     {
+      logger.begin();
       EEPROM.begin(512);
       load();
       update();
@@ -596,14 +598,24 @@ class Model
 
     ModelState state;
     ModelConfig config;
+    Logger logger;
 
     int load()
     {
       int addr = 0;
       uint8_t magic = EEPROM.read(addr++);
-      if(EEPROM_MAGIC != magic) return -1;
+      if(EEPROM_MAGIC != magic)
+      {
+        logger.err().log(F("eeprom bad magic"));
+        return -1;
+      }
 
       uint8_t version = EEPROM.read(addr++);
+      if(version != EEPROM_VERSION)
+      {
+        logger.err().log(F("eeprom wrong version"));
+        return -1;
+      }
 
       uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
       uint8_t * end = begin + sizeof(ModelConfig);
@@ -611,6 +623,7 @@ class Model
       {
         *it = EEPROM.read(addr++);
       }
+      logger.info().logln(F("eeprom load"));
       return 1;
     }
 
@@ -627,6 +640,7 @@ class Model
         EEPROM.write(addr++, *it);
       }
       EEPROM.commit();
+      logger.info().logln(F("eeprom save"));
     }
 
     void reset()

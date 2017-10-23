@@ -11,6 +11,7 @@ extern "C" {
 #include "Model.h"
 #include "Msp.h"
 #include "Hardware.h"
+#include "Logger.h"
 
 namespace Espfc {
 
@@ -334,6 +335,34 @@ class Cli
         print(_model.state.stats.getTotalLoad(), 1);
         print(F("%"));
         println();
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("fsinfo")) == 0)
+      {
+        _model.logger.info(_stream);
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("fsformat")) == 0)
+      {
+        _model.logger.format();
+        println(F("OK"));
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("logs")) == 0)
+      {
+        _model.logger.list(_stream);
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("log")) == 0)
+      {
+        if(!_cmd.args[1])
+        {
+          println(F("missing log id arg"));
+          return;
+        }
+        int id = String(_cmd.args[1]).toInt();
+        if(!id)
+        {
+          println(F("invalid log id arg"));
+          return;
+        }
+        _model.logger.show(_stream, id);
       }
       else
       {
