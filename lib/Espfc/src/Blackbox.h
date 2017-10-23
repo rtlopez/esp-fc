@@ -161,14 +161,15 @@ class Blackbox
     void updateArmed()
     {
       static uint32_t beep = 0;
-      if(beep != 0 and beep < _model.state.loopTimestamp)
+      if(beep != 0 && beep < _model.state.loopTimestamp)
       {
         setArmingBeepTimeMicros(_model.state.loopTimestamp);
         beep = 0;
       }
 
-      if(_model.state.armed == ARMING_FLAG(ARMED)) return;
-      if(_model.state.armed)
+      bool armed =_model.isMode(MODE_ARMED);
+      if(armed == ARMING_FLAG(ARMED)) return;
+      if(armed)
       {
         ENABLE_ARMING_FLAG(ARMED);
         beep = _model.state.loopTimestamp + 200000; // delay arming beep event ~20ms
@@ -183,15 +184,11 @@ class Blackbox
 
     void updateMode()
     {
-      switch(_model.state.flightMode)
-      {
-        case MODE_ANGLE:
-        case MODE_ANGLE_SIMPLE:
-          bitArraySet(&rcModeActivationMask, BOXANGLE);
-          break;
-        default:
-          bitArrayClr(&rcModeActivationMask, BOXANGLE);
-      }
+      if(_model.isMode(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
+      else bitArrayClr(&rcModeActivationMask, BOXANGLE);
+
+      if(_model.isMode(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
+      else bitArrayClr(&rcModeActivationMask, BOXAIRMODE);
     }
 
     Model& _model;

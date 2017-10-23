@@ -18,17 +18,17 @@ class Hardware
       //Wire.setClock(400000);
       Wire.setClock(1000000); // in real ~640kHz
       //Wire.setClockStretchLimit(100); // default 230
-      _model.logger.info().logln(F("I2C"));
+      _model.logger.info().log(F("I2C")).logln(Wire.status());
 
       if(_model.config.uart1Speed != SERIAL_SPEED_NONE)
       {
-        _model.logger.info().log(F("UART0")).logln(_model.config.uart1Speed);
         Serial.begin(_model.config.uart1Speed);
+        _model.logger.info().log(F("UART0")).logln(_model.config.uart1Speed);
       }
       if(_model.config.uart2Speed != SERIAL_SPEED_NONE)
       {
-        _model.logger.info().log(F("UART1")).logln(_model.config.uart2Speed);
         Serial1.begin(_model.config.uart2Speed);
+        _model.logger.info().log(F("UART1")).logln(_model.config.uart2Speed);
       }
       return 1;
     }

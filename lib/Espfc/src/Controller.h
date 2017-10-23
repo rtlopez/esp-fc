@@ -39,101 +39,38 @@ class Controller
 
     void outerLoop()
     {
-      switch(_model.state.flightMode)
+      if(_model.isMode(MODE_ANGLE))
       {
-        case MODE_ANGLE:
-        case MODE_ANGLE_SIMPLE:
-          _model.state.desiredAngle = VectorFloat(
-            _model.state.input[AXIS_ROLL] * radians(_model.config.angleMax),
-            _model.state.input[AXIS_PITCH] * radians(_model.config.angleMax),
-            _model.state.angle[AXIS_YAW]
-          );
-          _model.state.controlAngle = _model.state.angle;
-          break;
-        default:
-        ;
+        _model.state.desiredAngle = VectorFloat(
+          _model.state.input[AXIS_ROLL] * radians(_model.config.angleMax),
+          _model.state.input[AXIS_PITCH] * radians(_model.config.angleMax),
+          _model.state.angle[AXIS_YAW]
+        );
+        _model.state.controlAngle = _model.state.angle;
+        _model.state.desiredRate[AXIS_ROLL] = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.controlAngle[AXIS_ROLL], _model.state.loopDt);
+        _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.controlAngle[AXIS_PITCH], _model.state.loopDt);
       }
-
-      for(size_t i = 0; i < 2; ++i)
+      else
       {
-        switch(_model.state.flightMode)
-        {
-          case MODE_DIRECT:
-            _model.state.desiredRate[i] = _model.state.input[i];
-            break;
-          case MODE_RATE:
-            _model.state.desiredRate[i] = calculateSetpointRate(i, _model.state.input[i]);
-            break;
-          case MODE_ANGLE:
-          case MODE_ANGLE_SIMPLE:
-            _model.state.desiredRate[i] = _model.state.outerPid[i].update(_model.state.desiredAngle[i], _model.state.controlAngle[i], _model.state.loopDt);
-            break;
-          case MODE_OFF:
-          default:
-            _model.state.desiredRate[i] = 0.f;
-            _model.state.outerPid[i].iTerm = 0.f;
-        }
+        _model.state.desiredRate[AXIS_ROLL] = calculateSetpointRate(AXIS_ROLL, _model.state.input[AXIS_ROLL]);
+        _model.state.desiredRate[AXIS_PITCH] = calculateSetpointRate(AXIS_PITCH, _model.state.input[AXIS_PITCH]);
       }
-
-      switch(_model.state.flightMode)
-      {
-        case MODE_DIRECT:
-          _model.state.desiredRate[AXIS_YAW] = _model.state.input[AXIS_YAW];
-          _model.state.desiredRate[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
-          break;
-        case MODE_RATE:
-        case MODE_ANGLE:
-        case MODE_ANGLE_SIMPLE:
-          _model.state.desiredRate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input[AXIS_YAW]);
-          _model.state.desiredRate[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
-          break;
-        case MODE_OFF:
-        default:
-          _model.state.desiredRate[AXIS_YAW] = 0.f;
-          _model.state.desiredRate[AXIS_THRUST] = -1.f;
-      }
+      _model.state.desiredRate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input[AXIS_YAW]);
+      _model.state.desiredRate[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
     }
 
     void innerLoop()
     {
-      for(size_t i = 0; i < 3; ++i)
+      for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
-        switch(_model.state.flightMode)
-        {
-          case MODE_DIRECT:
-            _model.state.output[i] = _model.state.desiredRate[i];
-            _model.state.innerPid[i].iTerm = 0;
-            break;
-          case MODE_RATE:
-          case MODE_ANGLE:
-          case MODE_ANGLE_SIMPLE:
-            _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.loopDt);
-            break;
-          case MODE_OFF:
-          default:
-            _model.state.output[i] = 0.f;
-            _model.state.innerPid[i].iTerm = 0;
-        }
+        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.loopDt);
       }
-
-      switch(_model.state.flightMode)
-      {
-        case MODE_DIRECT:
-        case MODE_RATE:
-        case MODE_ANGLE:
-        case MODE_ANGLE_SIMPLE:
-          _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
-          break;
-        case MODE_OFF:
-        default:
-          _model.state.output[AXIS_THRUST] = -1.f;
-      }
+      _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
     }
 
     void resetIterm()
     {
-      if(!_model.config.lowThrottleZeroIterm) return;
-      if(_model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold)
+      if(!_model.isMode(MODE_ARMED) || (_model.config.lowThrottleZeroIterm && _model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold))
       {
         for(size_t i = 0; i < AXES; i++)
         {

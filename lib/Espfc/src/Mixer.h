@@ -3,29 +3,28 @@
 
 #include "Model.h"
 #include "OutputPWMFast.h"
-#include "OutputPWM.h"
 
 namespace Espfc {
 
-//#define PWMDriver PWM
 #define PWMDriver PWMfast
 
 class Mixer
 {
   public:
     Mixer(Model& model): _model(model) {}
+
     int begin()
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {
-        PWMDriver.attach(i, _model.config.outputPin[i],  1000);
+        PWMDriver.attach(i, _model.config.outputPin[i], _model.state.outputDisarmed[i]);
       }
       PWMDriver.begin(_model.config.outputRate, (OutputProtocol)_model.config.outputProtocol);
     }
 
     int update()
     {
-      if(!_model.state.armed)
+      if(!_model.isMode(MODE_ARMED))
       {
         _model.state.stats.start(COUNTER_MIXER);
         updateDisarmed();
@@ -116,7 +115,7 @@ class Mixer
       out[3] =  r - p + y;
 
       // airmode logic
-      if(false)
+      if(_model.isMode(MODE_AIRMODE))
       {
         float min = 0, max = 0;
         for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -147,14 +146,14 @@ class Mixer
       bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        if(i >= axes)
+        if(i >= axes || stop)
         {
           _model.state.outputUs[i] = _model.state.outputDisarmed[i];
         }
         else
         {
           float v = Math::bound(out[i], -1.f, 1.f);
-          _model.state.outputUs[i] = stop ? _model.state.outputDisarmed[i] : (short)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+          _model.state.outputUs[i] = (uint16_t)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
         }
         PWMDriver.write(i, _model.state.outputUs[i]);
       }
@@ -166,13 +165,13 @@ class Mixer
       bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        if(i >= axes)
+        if(i >= axes || stop)
         {
           _model.state.outputUs[i] = _model.state.outputDisarmed[i];
         }
         else
         {
-          _model.state.outputUs[i] = stop ? _model.state.outputDisarmed[i] : Math::bound(out[i], (uint16_t)1000, (uint16_t)2000);
+          _model.state.outputUs[i] = Math::bound(out[i], (uint16_t)1000, (uint16_t)2000);
         }
         PWMDriver.write(i, _model.state.outputUs[i]);
       }
@@ -181,7 +180,7 @@ class Mixer
 
     bool _stop(void)
     {
-      return (_model.config.lowThrottleMotorStop && _model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold) || !_model.state.armed;
+      return (_model.config.lowThrottleMotorStop && _model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold) || !_model.isMode(MODE_ARMED);
     }
 
     Model& _model;

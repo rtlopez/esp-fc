@@ -10,17 +10,17 @@ class Actuator
 {
   public:
     Actuator(Model& model): _model(model) {}
+
     int begin()
     {
-      _model.state.armed = false;
+      _model.state.modeMask = 0;
     }
 
     int update()
     {
       _model.state.stats.start(COUNTER_ACTUATOR);
-      updateFlightMode();
+      updateModeMask();
       updateScaler();
-      updateArming();
       _model.state.stats.end(COUNTER_ACTUATOR);
     }
 
@@ -59,17 +59,26 @@ class Actuator
       }
     }
 
-    void updateFlightMode()
+    void updateModeMask()
     {
-      float v = _model.state.input[_model.config.flightModeChannel];
-      int i = v > 0.33f ? 2 : (v > -0.33f ? 1 : 0);
-      _model.state.flightMode = _model.config.flightModes[i];
-    }
+      uint32_t newMask;
+      for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+      {
+        ActuatorCondition * c = &_model.config.conditions[i];
+        if(!(c->min < c->max)) continue; // inactive
 
-    void updateArming()
-    {
-      if(!_model.state.gyroBiasValid) return;
-      _model.state.armed = _model.state.flightMode != MODE_OFF;
+        uint16_t min = c->min * 25 + 900;
+        uint16_t max = c->max * 25 + 900;
+        size_t ch = c->ch + AXIS_AUX_1;
+        if(ch < AXIS_AUX_1 || ch >= AXIS_COUNT) continue; // invalid channel
+
+        uint16_t val = _model.state.inputUs[ch];
+        if(val > min && val < max)
+        {
+          newMask |= 1 << c->id;
+        }
+      }
+      _model.state.modeMask = newMask;
     }
 
     Model& _model;

@@ -97,6 +97,11 @@ class Msp
           while(size-- > 0) writeU8(*v++);
         }
 
+        void writeString(const char * v)
+        {
+          while(*v) writeU8(*v++);
+        }
+
         void writeU8(uint8_t v)
         {
           data[len++] = v;
@@ -278,7 +283,7 @@ class Msp
           r.writeU16(0); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
           r.writeU16(1 << 0 | 0 << 1 | 0 << 2 | 0 << 3 | 0 << 4 | 1 << 5);
-          r.writeU32(0); // flight mode flags
+          r.writeU32(_model.state.modeMask); // flight mode flags
           r.writeU8(0); // pid profile
           r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
           if (m.cmd == MSP_STATUS_EX) {
@@ -288,24 +293,54 @@ class Msp
             r.writeU16(_model.state.gyroSampleInterval); // gyro cycle time
           }
 
-          // flight mode flags
+          // flight mode flags (above 32 bits)
           r.writeU8(0); // count
 
           // Write arming disable flags
           r.writeU8(16);  // 1 byte, flag count
-          r.writeU8(0);   // 4 bytes, flags
+          r.writeU32(0);  // 4 bytes, flags
           break;
 
         case MSP_NAME:
-          {
-            const char * name = "ESPFC";
-            const int nameLen = strlen(name);
-            r.writeData(name, nameLen);
-          }
+          r.writeString("ESPFC");
           break;
 
         case MSP_BOXNAMES:
+          //TODO: use pgm_space
+          r.writeString("ARM;ANGLE;AIRMODE;");
+          break;
+
         case MSP_BOXIDS:
+          r.writeU8(MODE_ARMED);
+          r.writeU8(MODE_ANGLE);
+          r.writeU8(MODE_AIRMODE);
+          break;
+
+        case MSP_MODE_RANGES:
+          for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+          {
+            r.writeU8(_model.config.conditions[i].id);
+            r.writeU8(_model.config.conditions[i].ch);
+            r.writeU8(_model.config.conditions[i].min);
+            r.writeU8(_model.config.conditions[i].max);
+          }
+          break;
+
+        case MSP_SET_MODE_RANGE:
+          {
+            size_t i = m.readU8();
+            if(i < ACTUATOR_CONDITIONS)
+            {
+              _model.config.conditions[i].id = m.readU8();
+              _model.config.conditions[i].ch = m.readU8();
+              _model.config.conditions[i].min = m.readU8();
+              _model.config.conditions[i].max = m.readU8();
+            }
+            else
+            {
+              r.result = -1;
+            }
+          }
           break;
 
         case MSP_ANALOG:
@@ -396,8 +431,8 @@ class Msp
           r.writeU16(1500); //midrc
           r.writeU16(1100); //mincheck
           r.writeU8(0); // spectrum bind
-          r.writeU16(1000); //min_us
-          r.writeU16(2000); //max_us
+          r.writeU16(850); //min_us
+          r.writeU16(2150); //max_us
           r.writeU8(3); // rc interpolation
           r.writeU8(26); // rc interpolation interval
           r.writeU16(1500); // airmode activate threshold
@@ -633,6 +668,7 @@ class Msp
 
     bool debugSkip(uint8_t cmd)
     {
+      //return true;
       if(cmd == MSP_STATUS) return false;
       if(cmd == MSP_STATUS_EX) return false;
       if(cmd == MSP_BOXNAMES) return false;

@@ -100,13 +100,9 @@ enum FusionMode {
 };
 
 enum FlightMode {
-  MODE_OFF      = 0x00,
-  MODE_DIRECT   = 0x01,
-  MODE_RATE     = 0x02,
-  MODE_ANGLE    = 0x03,
-  MODE_ANGLE_SIMPLE    = 0x05,
-  MODE_BALANCING_ROBOT = 0x06,
-  MODE_BALANCING_ANGLE = 0x07
+  MODE_ARMED    = 0x00,
+  MODE_ANGLE    = 0x01,
+  MODE_AIRMODE  = 0x02,
 };
 
 enum ModelFrame {
@@ -212,6 +208,17 @@ enum PidIndex {
   PID_ITEM_COUNT
 };
 
+class ActuatorCondition
+{
+  public:
+    uint8_t id;
+    uint8_t ch;
+    uint8_t min;
+    uint8_t max;
+};
+
+#define ACTUATOR_CONDITIONS 8
+
 // working data
 struct ModelState
 {
@@ -253,9 +260,6 @@ struct ModelState
   Quaternion desiredAngleQ;
 
   float desiredRate[AXES];
-
-  short flightMode;
-  bool armed;
 
   Pid innerPid[AXES];
   Pid outerPid[AXES];
@@ -313,6 +317,8 @@ struct ModelState
   uint16_t outputDisarmed[OUTPUT_CHANNELS];
 
   Stats stats;
+
+  uint32_t modeMask;
 };
 
 // persistent data
@@ -351,6 +357,8 @@ struct ModelConfig
   uint8_t actuatorChannels[3];
   uint16_t actuatorMin[3];
   uint16_t actuatorMax[3];
+
+  ActuatorCondition conditions[ACTUATOR_CONDITIONS];
 
   int8_t ppmPin;
   uint8_t ppmMode;
@@ -460,8 +468,8 @@ class Model
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         config.outputMin[i] = 1050;
-        config.outputNeutral[i] = 1520;
         config.outputMax[i] = 1990;
+        config.outputNeutral[i] = (config.outputMin[i] + config.outputMax[i]) / 2;
       }
 
       config.outputPin[0] = D3; // D8; // -1 off
@@ -496,11 +504,6 @@ class Model
       config.inputExpo[AXIS_YAW] = 0;
       config.inputSuperRate[AXIS_YAW] = 50;
 
-      config.flightModeChannel = 4;
-      config.flightModes[0] = MODE_OFF;
-      config.flightModes[1] = MODE_ANGLE;
-      config.flightModes[2] = MODE_RATE;
-
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
         config.inputMin[i] = 1000;
@@ -528,6 +531,21 @@ class Model
       config.lowThrottleZeroIterm = true;
       config.lowThrottleMotorStop = true;
 
+      config.conditions[0].id = MODE_ARMED;
+      config.conditions[0].ch = 0; // aux1
+      config.conditions[0].min = (1200 - 900) / 25;
+      config.conditions[0].max = (2100 - 900) / 25;
+
+      config.conditions[1].id = MODE_ANGLE;
+      config.conditions[1].ch = 0; // aux1
+      config.conditions[1].min = (1700 - 900) / 25;
+      config.conditions[1].max = (2100 - 900) / 25;
+
+      config.conditions[2].id = MODE_AIRMODE;
+      config.conditions[2].ch = 0; // aux1
+      config.conditions[2].min = (1200 - 900) / 25;
+      config.conditions[2].max = (1700 - 900) / 25;
+
       // actuator config - pid scaling
       config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
       config.actuatorChannels[0] = 5;
@@ -551,11 +569,16 @@ class Model
       //config.actuatorMax[2] =  0.05;
     }
 
+    bool isMode(FlightMode mode)
+    {
+      return state.modeMask & (1 << mode);
+    }
+
     void begin()
     {
       logger.begin();
       EEPROM.begin(512);
-      load();
+      //load();
       update();
     }
 
