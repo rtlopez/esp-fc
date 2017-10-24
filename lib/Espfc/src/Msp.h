@@ -580,7 +580,7 @@ class Msp
           r.writeU8(0); // reserved
           r.writeU16(0); //rateAccelLimit;
           r.writeU16(0); //yawRateAccelLimit;
-          r.writeU8(_model.config.angleMax); // levelAngleLimit;
+          r.writeU8(_model.config.angleLimit); // levelAngleLimit;
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); //itermThrottleThreshold;
           r.writeU16(0); //itermAcceleratorGain;
@@ -600,7 +600,7 @@ class Msp
           m.readU16();
           m.readU16();
           if (m.remain() >= 2) {
-              _model.config.angleMax = m.readU8();
+              _model.config.angleLimit = m.readU8();
               m.readU8(); // was pidProfile.levelSensitivity
           }
           if (m.remain() >= 4) {
@@ -650,6 +650,13 @@ class Msp
             r.writeU16(1500);
           }
           break;
+
+        case MSP_ACC_CALIBRATION:
+          if(!_model.isMode(MODE_ARMED)) _model.calibrate();
+          break;
+
+        case MSP_MAG_CALIBRATION:
+            break;
 
         case MSP_EEPROM_WRITE:
           _model.save();

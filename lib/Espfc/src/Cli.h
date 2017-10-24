@@ -32,16 +32,19 @@ class Cli
       PARAM_BYTE,   // 8 bit int
       PARAM_SHORT,  // 16 bit int
       PARAM_INT,    // 32 bit int
-      PARAM_FLOAT,   // 32 bit float
-      PARAM_VECTOR_FLOAT   // 32 bit float vector
+      PARAM_FLOAT   // 32 bit float
     };
 
     class Param
     {
       public:
-        Param(): name(NULL), addr(NULL), type(PARAM_NONE) {}
+        Param(): Param(NULL, NULL, PARAM_NONE) {}
         Param(const char * n, char * a, ParamType t): name(n), addr(a), type(t) {}
-        Param(const Param& c): name(c.name), addr(c.addr), type(c.type) {}
+        Param(const char * n, bool    * a): Param(n, (char*)a, PARAM_BOOL) {}
+        Param(const char * n, int8_t  * a): Param(n, (char*)a, PARAM_BYTE) {}
+        Param(const char * n, int16_t * a): Param(n, (char*)a, PARAM_SHORT) {}
+        Param(const char * n, int32_t * a): Param(n, (char*)a, PARAM_INT) {}
+        Param(const Param& c): Param(c.name, c.addr, c.type) {}
 
         void print(Stream& stream) const
         {
@@ -54,16 +57,10 @@ class Cli
           {
             case PARAM_NONE:  stream.print("NONE"); break;
             case PARAM_BOOL:  stream.print(*addr != 0); break;
-            case PARAM_BYTE:  stream.print((int)(*addr)); break;
-            case PARAM_SHORT: stream.print(*reinterpret_cast<short*>(addr)); break;
-            case PARAM_INT:   stream.print(*reinterpret_cast<long*>(addr)); break;
+            case PARAM_BYTE:  stream.print((int8_t)(*addr)); break;
+            case PARAM_SHORT: stream.print(*reinterpret_cast<int16_t*>(addr)); break;
+            case PARAM_INT:   stream.print(*reinterpret_cast<int32_t*>(addr)); break;
             case PARAM_FLOAT: stream.print(*reinterpret_cast<float*>(addr), 4); break;
-            case PARAM_VECTOR_FLOAT:
-              {
-                const VectorFloat * v = reinterpret_cast<VectorFloat*>(addr);
-                stream.print(v->x, 4); stream.print(' '); stream.print(v->y, 4); stream.print(' '); stream.print(v->z, 4);
-              }
-              break;
           }
         }
 
@@ -91,8 +88,6 @@ class Cli
                 *addr = tmp.toFloat();
               }
               break;
-            case PARAM_VECTOR_FLOAT:
-              break;
           }
         }
         const char * name;
@@ -103,17 +98,35 @@ class Cli
     Cli(Model& model): _model(model), _index(0), _msp(model), _ignore(false)
     {
       ModelConfig * c = &_model.config;
-      ModelState * s = &_model.state;
       size_t i = 0;
-      _params[i++] = Param(PSTR("telemetry"), (char*)&c->telemetry, PARAM_BOOL);
-      _params[i++] = Param(PSTR("telemetry_interval"), (char*)&c->telemetryInterval, PARAM_INT);
-      _params[i++] = Param(PSTR("accel_mode"), (char*)&c->accelMode, PARAM_BYTE);
-      _params[i++] = Param(PSTR("gyro_rate"), (char*)&c->gyroSampleRate, PARAM_BYTE);
-      _params[i++] = Param(PSTR("compass_rate"), (char*)&c->magSampleRate, PARAM_BYTE);
-      _params[i++] = Param(PSTR("compass_calibration"), (char*)&s->magCalibration, PARAM_BYTE);
-      _params[i++] = Param(PSTR("compass_calibration_offset"), (char*)&c->magCalibrationOffset, PARAM_VECTOR_FLOAT);
-      _params[i++] = Param(PSTR("compass_calibration_scale"), (char*)&c->magCalibrationScale, PARAM_VECTOR_FLOAT);
-      _params[i++] = Param(PSTR("angle_max"), (char*)&c->angleMax, PARAM_BYTE);
+      _params[i++] = Param(PSTR("telemetry"), &c->telemetry);
+      _params[i++] = Param(PSTR("telemetry_interval"), &c->telemetryInterval);
+      _params[i++] = Param(PSTR("accel_mode"), &c->accelMode);
+      _params[i++] = Param(PSTR("gyro_rate"), &c->gyroSampleRate);
+      _params[i++] = Param(PSTR("mag_rate"), &c->magSampleRate);
+      _params[i++] = Param(PSTR("angle_limit"), &c->angleLimit);
+      _params[i++] = Param(PSTR("angle_rate_limit"), &c->angleRateLimit);
+      _params[i++] = Param(PSTR("gyro_cal_x"), &c->gyroBias[0]);
+      _params[i++] = Param(PSTR("gyro_cal_y"), &c->gyroBias[1]);
+      _params[i++] = Param(PSTR("gyro_cal_z"), &c->gyroBias[2]);  // 10
+
+      _params[i++] = Param(PSTR("accel_cal_x"), &c->accelBias[0]);
+      _params[i++] = Param(PSTR("accel_cal_y"), &c->accelBias[1]);
+      _params[i++] = Param(PSTR("accel_cal_z"), &c->accelBias[2]);
+      _params[i++] = Param(PSTR("mag_cal_offset_x"), &c->magCalibrationOffset[0]);
+      _params[i++] = Param(PSTR("mag_cal_offset_y"), &c->magCalibrationOffset[1]);
+      _params[i++] = Param(PSTR("mag_cal_offset_z"), &c->magCalibrationOffset[2]);
+      _params[i++] = Param(PSTR("mag_cal_scale_x"), &c->magCalibrationScale[0]);
+      _params[i++] = Param(PSTR("mag_cal_scale_y"), &c->magCalibrationScale[1]);
+      _params[i++] = Param(PSTR("mag_cal_scale_z"), &c->magCalibrationScale[2]);
+      _params[i++] = Param(PSTR("pin_out_0"), &c->outputPin[0]); // 20
+
+      _params[i++] = Param(PSTR("pin_out_1"), &c->outputPin[1]);
+      _params[i++] = Param(PSTR("pin_out_2"), &c->outputPin[2]);
+      _params[i++] = Param(PSTR("pin_out_3"), &c->outputPin[3]);
+      _params[i++] = Param(PSTR("pin_ppm"), &c->ppmPin);
+      _params[i++] = Param(PSTR("loop_sync"), &c->loopSync);
+      _params[i++] = Param(PSTR("mixer_sync"), &c->mixerSync);
     }
 
     int begin()
@@ -182,6 +195,7 @@ class Cli
 
     void execute()
     {
+      if(_cmd.args[0]) print(F("# "));
       for(size_t i = 0; i < Cmd::ARGS_SIZE; ++i)
       {
         if(!_cmd.args[i]) break;
@@ -194,7 +208,13 @@ class Cli
 
       if(strcmp_P(_cmd.args[0], PSTR("help")) == 0)
       {
-        println(F("available commands:\n help\n list\n get param\n set param value\n load\n save\n eeprom\n reset\n stats\n info\n version"));
+        println(F("available commands:\n "
+          "help\n dump\n get param\n set param value\n "
+          "calgyro\n calmag\n calinfo\n "
+          "load\n save\n eeprom\n defaults\n reboot\n "
+          "fsinfo\n fsformat\n logs\n log\n "
+          "stats\n info\n version"
+        ));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
@@ -252,31 +272,37 @@ class Cli
         if(!_cmd.args[1])
         {
           println(F("param required"));
+          println();
           return;
         }
+        bool found = false;
         for(size_t i = 0; i < PARAM_SIZE; ++i)
         {
           if(!_params[i].name) continue;
 
           if(strcmp_P(_cmd.args[1], _params[i].name) == 0)
           {
-            print(FPSTR(_params[i].name));
-            print(" = ");
-            _params[i].print(*_stream);
+            print(_params[i]);
             println();
-            return;
+            found = true;
+            break;
           }
         }
-        print(F("param not found: "));
-        println(_cmd.args[1]);
+        if(!found)
+        {
+          print(F("param not found: "));
+          println(_cmd.args[1]);
+        }
       }
       else if(strcmp_P(_cmd.args[0], PSTR("set")) == 0)
       {
         if(!_cmd.args[1])
         {
           println(F("param required"));
+          println();
           return;
         }
+        bool found = false;
         for(size_t i = 0; i < PARAM_SIZE; ++i)
         {
           if(!_params[i].name) continue;
@@ -285,13 +311,17 @@ class Cli
           {
             _params[i].update(_cmd.args[2]);
             print(_params[i]);
-            return;
+            found = true;
+            break;
           }
         }
-        print(F("param not found: "));
-        println(_cmd.args[1]);
+        if(!found)
+        {
+          print(F("param not found: "));
+          println(_cmd.args[1]);
+        }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("list")) == 0)
+      else if(strcmp_P(_cmd.args[0], PSTR("dump")) == 0)
       {
         for(size_t i = 0; i < PARAM_SIZE; ++i)
         {
@@ -299,13 +329,7 @@ class Cli
           print(_params[i]);
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("cal")) == 0)
-      {
-        _model.state.gyroBiasSamples = 2 * _model.state.gyroSampleRate;
-        _model.state.accelBiasSamples = 2 * _model.state.gyroSampleRate;
-        println(F("OK"));
-      }
-      else if(strcmp_P(_cmd.args[0], PSTR("mag")) == 0)
+      else if(strcmp_P(_cmd.args[0], PSTR("calmag")) == 0)
       {
         if(!_cmd.args[1]) {}
         else if(_cmd.args[1][0] == '1')
@@ -313,30 +337,96 @@ class Cli
           _model.state.magCalibration = 1;
           //_model.config.telemetry = 1;
           //_model.config.telemetryInterval = 200;
-          print("mag calibration on");
+          print(F("mag calibration on"));
         }
         else if(_cmd.args[1][0] == '0')
         {
           _model.state.magCalibration = 0;
           //_model.config.telemetry = 0;
-          print("mag calibration off");
+          print(F("mag calibration off"));
         }
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("calgyro")) == 0)
+      {
+        _model.calibrate();
+        println(F("OK"));
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("calinfo")) == 0)
+      {
+        print(F("gyro offset: "));
+        print(_model.config.gyroBias[0]); print(' ');
+        print(_model.config.gyroBias[1]); print(' ');
+        print(_model.config.gyroBias[2]); print(F(" ["));
+        print(_model.state.gyroBias[0]); print(' ');
+        print(_model.state.gyroBias[1]); print(' ');
+        print(_model.state.gyroBias[2]); println(F("]"));
+
+        print(F("accel offset: "));
+        print(_model.config.accelBias[0]); print(' ');
+        print(_model.config.accelBias[1]); print(' ');
+        print(_model.config.accelBias[2]); print(F(" ["));
+        print(_model.state.accelBias[0]); print(' ');
+        print(_model.state.accelBias[1]); print(' ');
+        print(_model.state.accelBias[2]); println(F("]"));
+
+        print(F("mag offset: "));
+        print(_model.config.magCalibrationOffset[0]); print(' ');
+        print(_model.config.magCalibrationOffset[1]); print(' ');
+        print(_model.config.magCalibrationOffset[2]); print(F(" ["));
+        print(_model.state.magCalibrationOffset[0]); print(' ');
+        print(_model.state.magCalibrationOffset[1]); print(' ');
+        print(_model.state.magCalibrationOffset[2]); println(F("]"));
+
+        print(F("mag scale: "));
+        print(_model.config.magCalibrationScale[0]); print(' ');
+        print(_model.config.magCalibrationScale[1]); print(' ');
+        print(_model.config.magCalibrationScale[2]); print(F(" ["));
+        print(_model.state.magCalibrationScale[0]); print(' ');
+        print(_model.state.magCalibrationScale[1]); print(' ');
+        print(_model.state.magCalibrationScale[2]); println(F("]"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("load")) == 0)
       {
         _model.load();
+        println(F("OK"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("save")) == 0)
       {
         _model.save();
+        println(F("OK"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("eeprom")) == 0)
       {
-        for(int i = 0; i < 32; ++i)
+        int start = 0;
+        if(_cmd.args[1])
+        {
+          start = std::max(String(_cmd.args[1]).toInt(), 0L);
+        }
+
+        //start = ((char*)&_model.config.gyroBias - (char*)&_model.config) + 2;
+        //println(start);
+
+        for(int i = start; i < start + 32; ++i)
         {
           print(EEPROM.read(i), HEX);
           print(' ');
         }
+        println();
+
+        for(int i = start; i < start + 32; ++i)
+        {
+          print((int8_t)EEPROM.read(i));
+          print(' ');
+        }
+        println();
+
+        for(int i = start; i < start + 32; i += 2)
+        {
+          int16_t v = EEPROM.read(i) | EEPROM.read(i + 1) << 8;
+          print(v);
+          print(' ');
+        }
+        println();
       }
       else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
       {
@@ -374,16 +464,22 @@ class Cli
       {
         if(!_cmd.args[1])
         {
-          println(F("missing log id arg"));
+          println(F("missing log id"));
+          println();
           return;
         }
         int id = String(_cmd.args[1]).toInt();
         if(!id)
         {
-          println(F("invalid log id arg"));
+          println(F("invalid log id"));
+          println();
           return;
         }
         _model.logger.show(_stream, id);
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("reboot")) == 0)
+      {
+        ESP.restart();
       }
       else
       {
@@ -431,8 +527,9 @@ class Cli
     void print(const Param& param)
     {
       if(!_stream) return;
+      print(F("set "));
       print(FPSTR(param.name));
-      print(" = ");
+      print(' ');
       param.print(*_stream);
       println();
     }

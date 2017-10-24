@@ -317,6 +317,9 @@ struct ModelState
   float magCalibrationData[3][2];
   bool magCalibrationValid;
 
+  VectorFloat magCalibrationScale;
+  VectorFloat magCalibrationOffset;
+
   uint32_t telemetryTimestamp;
   bool telemetryUpdate;
 
@@ -330,90 +333,90 @@ struct ModelState
 // persistent data
 struct ModelConfig
 {
-  uint8_t gyroDlpf;
-  uint8_t gyroFsr;
-  uint8_t accelFsr;
-  uint8_t gyroSampleRate;
-  uint8_t gyroDeadband;
-  uint8_t accelMode;
+  int8_t gyroDlpf;
+  int8_t gyroFsr;
+  int8_t accelFsr;
+  int8_t gyroSampleRate;
+  int8_t gyroDeadband;
+  int8_t accelMode;
 
-  uint8_t gyroFilterType;
-  uint16_t gyroFilterCutFreq;
-  uint8_t accelFilterType;
-  uint16_t accelFilterCutFreq;
-  uint8_t magFilterType;
-  uint16_t magFilterCutFreq;
-  uint8_t dtermFilterType;
-  uint16_t dtermFilterCutFreq;
+  int8_t gyroFilterType;
+  int16_t gyroFilterCutFreq;
+  int8_t accelFilterType;
+  int16_t accelFilterCutFreq;
+  int8_t magFilterType;
+  int16_t magFilterCutFreq;
+  int8_t dtermFilterType;
+  int16_t dtermFilterCutFreq;
 
   uint8_t dtermSetpointWeight;
-  uint8_t itermWindupPointPercent;
+  int8_t itermWindupPointPercent;
 
   bool magEnable;
-  uint8_t magSampleRate;
-  uint8_t magFsr;
-  uint8_t magAvr;
+  int8_t magSampleRate;
+  int8_t magFsr;
+  int8_t magAvr;
 
-  uint8_t modelFrame;
+  int8_t modelFrame;
 
-  uint32_t actuatorConfig[3];
-  uint8_t actuatorChannels[3];
-  uint16_t actuatorMin[3];
-  uint16_t actuatorMax[3];
+  int32_t actuatorConfig[3];
+  int8_t actuatorChannels[3];
+  int16_t actuatorMin[3];
+  int16_t actuatorMax[3];
 
   ActuatorCondition conditions[ACTUATOR_CONDITIONS];
 
   int8_t ppmPin;
-  uint8_t ppmMode;
-  uint16_t inputMin[INPUT_CHANNELS];
-  uint16_t inputNeutral[INPUT_CHANNELS];
-  uint16_t inputMax[INPUT_CHANNELS];
-  uint8_t inputMap[INPUT_CHANNELS];
-  uint8_t inputDeadband;
-  uint8_t inputFilterAlpha;
+  int8_t ppmMode;
+  int16_t inputMin[INPUT_CHANNELS];
+  int16_t inputNeutral[INPUT_CHANNELS];
+  int16_t inputMax[INPUT_CHANNELS];
+  int8_t inputMap[INPUT_CHANNELS];
+  int8_t inputDeadband;
+  int8_t inputFilterAlpha;
 
   uint8_t inputExpo[3];
   uint8_t inputRate[3];
   uint8_t inputSuperRate[3];
 
-  uint16_t outputMin[OUTPUT_CHANNELS];
-  uint16_t outputNeutral[OUTPUT_CHANNELS];
-  uint16_t outputMax[OUTPUT_CHANNELS];
+  int16_t outputMin[OUTPUT_CHANNELS];
+  int16_t outputNeutral[OUTPUT_CHANNELS];
+  int16_t outputMax[OUTPUT_CHANNELS];
 
   int8_t outputPin[OUTPUT_CHANNELS];
-  uint8_t outputProtocol;
-  uint16_t outputRate;
+  int8_t outputProtocol;
+  int16_t outputRate;
 
   PidConfig pid[PID_ITEM_COUNT];
 
-  uint8_t angleMax;
-  uint8_t velocityMax;
-  uint8_t loopSync;
-  uint8_t mixerSync;
+  int8_t angleLimit;
+  int16_t angleRateLimit;
 
-  uint16_t lowThrottleTreshold;
+  int8_t loopSync;
+  int8_t mixerSync;
+
+  int16_t lowThrottleTreshold;
   bool lowThrottleZeroIterm;
   bool lowThrottleMotorStop;
 
   bool telemetry;
-  uint32_t telemetryInterval;
-  uint8_t telemetryPort;
+  int32_t telemetryInterval;
+  int8_t telemetryPort;
 
   bool blackbox;
-  uint8_t blackboxPort;
-  uint8_t cliPort;
+  int8_t blackboxPort;
+  int8_t cliPort;
 
-  uint32_t uart1Speed;
-  uint32_t uart2Speed;
+  int32_t uart1Speed;
+  int32_t uart2Speed;
 
-  uint8_t fusionMode;
+  int8_t fusionMode;
   bool fusionDelay;
 
-  uint16_t gyroBias[3];
-  uint16_t accelBias[3];
-
-  VectorFloat magCalibrationScale;
-  VectorFloat magCalibrationOffset;
+  int16_t gyroBias[3];
+  int16_t accelBias[3];
+  int16_t magCalibrationScale[3];
+  int16_t magCalibrationOffset[3];
 };
 
 class Model
@@ -445,12 +448,6 @@ class Model
       config.magFilterCutFreq = 15;
       config.dtermFilterType = FILTER_BIQUAD;
       config.dtermFilterCutFreq = 50;
-
-      for(size_t i = 0; i < 3; i++)
-      {
-        config.magCalibrationOffset.set(i, 0.f);
-        config.magCalibrationScale.set(i, 1.f);
-      }
 
       config.uart1Speed = SERIAL_SPEED_115200;
 
@@ -531,7 +528,8 @@ class Model
       float iwp = config.itermWindupPointPercent = 30;
       float dsw = config.dtermSetpointWeight = 50;
 
-      config.angleMax = 50;  // deg
+      config.angleLimit = 50;  // deg
+      config.angleRateLimit = 300;  // deg
 
       config.lowThrottleTreshold = 1050;
       config.lowThrottleZeroIterm = true;
@@ -539,7 +537,7 @@ class Model
 
       config.conditions[0].id = MODE_ARMED;
       config.conditions[0].ch = 0; // aux1
-      config.conditions[0].min = (1200 - 900) / 25;
+      config.conditions[0].min = (1700 - 900) / 25;
       config.conditions[0].max = (2100 - 900) / 25;
 
       config.conditions[1].id = MODE_ANGLE;
@@ -555,29 +553,49 @@ class Model
       // actuator config - pid scaling
       config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
       config.actuatorChannels[0] = 5;
-      config.actuatorMin[0] = 0.25;
-      config.actuatorMax[0] = 4;
+      config.actuatorMin[0] = 25;
+      config.actuatorMax[0] = 400;
 
       config.actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH;
       config.actuatorChannels[1] = 6;
-      config.actuatorMin[1] = 0.25;
-      config.actuatorMax[1] = 4;
+      config.actuatorMin[1] = 25;
+      config.actuatorMax[1] = 400;
 
       config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
       //config.actuatorConfig[2] = ACT_OUTER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
       //config.actuatorConfig[2] = ACT_INNER_P | ACT_AXIS_YAW;
       config.actuatorChannels[2] = 7;
-      config.actuatorMin[2] = 0.25;
-      config.actuatorMax[2] = 4;
+      config.actuatorMin[2] = 25;
+      config.actuatorMax[2] = 400;
 
       //config.actuatorConfig[2] = ACT_GYRO_THRUST;
       //config.actuatorMin[2] = -0.05;
       //config.actuatorMax[2] =  0.05;
+
+      // default callibration values
+      config.gyroBias[0] = 0;
+      config.gyroBias[1] = 0;
+      config.gyroBias[2] = 0;
+      config.accelBias[0] = 0;
+      config.accelBias[1] = 0;
+      config.accelBias[2] = 0;
+      config.magCalibrationOffset[0] = 0;
+      config.magCalibrationOffset[1] = 0;
+      config.magCalibrationOffset[2] = 0;
+      config.magCalibrationScale[0] = 1000;
+      config.magCalibrationScale[1] = 1000;
+      config.magCalibrationScale[2] = 1000;
     }
 
     bool isMode(FlightMode mode)
     {
       return state.modeMask & (1 << mode);
+    }
+
+    void calibrate()
+    {
+      state.gyroBiasSamples  = 5 * state.gyroSampleRate;
+      state.accelBiasSamples = 5 * state.gyroSampleRate;
     }
 
     void begin()
@@ -601,6 +619,8 @@ class Model
       {
         state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
         state.accelBias.set(i, config.accelBias[i] / 1000.0f);
+        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
+        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
       }
 
       state.gyroDeadband = radians(config.gyroDeadband / 10.0f);
@@ -628,7 +648,7 @@ class Model
           pc->D * LEVEL_DTERM_SCALE,
           0.1f,
           0,
-          radians(300)
+          radians(config.angleRateLimit)
         );
       }
     }
@@ -640,6 +660,8 @@ class Model
       {
         config.gyroBias[i] = lrintf(state.gyroBias[i] * 1000.0f);
         config.accelBias[i] = lrintf(state.accelBias[i] * 1000.0f);
+        config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 1000.0f);
+        config.magCalibrationScale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
       }
     }
 

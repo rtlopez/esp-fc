@@ -246,8 +246,8 @@ class Sensor
         }
         if(_model.state.magCalibrationValid && _model.state.magCalibration == 0)
         {
-          _model.state.mag -= _model.config.magCalibrationOffset;
-          _model.state.mag *= _model.config.magCalibrationScale;
+          _model.state.mag -= _model.state.magCalibrationOffset;
+          _model.state.mag *= _model.state.magCalibrationScale;
         }
         collectMagCalibration();
       }
@@ -289,8 +289,8 @@ class Sensor
       _model.state.magCalibrationValid = false;
       for(int i = 0; i < 3; i++)
       {
-        _model.config.magCalibrationOffset.set(i, 0.f);
-        _model.config.magCalibrationScale.set(i, 1.f);
+        _model.state.magCalibrationOffset.set(i, 0.f);
+        _model.state.magCalibrationScale.set(i, 1.f);
       }
 
       // find biggest range
@@ -311,8 +311,8 @@ class Sensor
         float delta = (_model.state.magCalibrationData[i][1] - _model.state.magCalibrationData[i][0]) / 2.f;
         if(delta < epsilon && delta > -epsilon) return;
         float offset = (_model.state.magCalibrationData[i][1] + _model.state.magCalibrationData[i][0]) / 2.f;
-        _model.config.magCalibrationScale.set(i, maxDelta / delta);     // makes everything the same range
-        _model.config.magCalibrationOffset.set(i, offset);
+        _model.state.magCalibrationScale.set(i, maxDelta / delta);     // makes everything the same range
+        _model.state.magCalibrationOffset.set(i, offset);
       }
       _model.state.magCalibrationValid = true;
     }

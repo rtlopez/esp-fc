@@ -33,8 +33,8 @@ class Actuator
         if(!mode) continue;
         short c = _model.config.actuatorChannels[i];
         float v = _model.state.input[c];
-        float min = _model.config.actuatorMin[i];
-        float max = _model.config.actuatorMax[i];
+        float min = _model.config.actuatorMin[i] / 100.f;
+        float max = _model.config.actuatorMax[i] / 100.f;
         float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
         for(size_t x = 0; x < AXES; x++)
         {
