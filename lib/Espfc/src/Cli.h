@@ -100,7 +100,7 @@ class Cli
         ParamType type;
     };
 
-    Cli(Model& model): _model(model), _index(0), _msp(model)
+    Cli(Model& model): _model(model), _index(0), _msp(model), _ignore(false)
     {
       ModelConfig * c = &_model.config;
       ModelState * s = &_model.state;
@@ -129,27 +129,42 @@ class Cli
       while((*_stream).available() > 0)
       {
         char c = (*_stream).read();
-        if(!_msp.process(c, *_stream))
+        bool consumed = _msp.process(c, *_stream);
+        if(!consumed)
         {
           process(c);
         }
       }
     }
 
-    void process(char c)
+    bool process(const char c)
     {
-      if(c == '\r') return;
-      if(c == '\n' || _index >= BUFF_SIZE - 1)
+      bool endl = c == '\n' || c == '\r';
+      if(_index && endl)
       {
         parse();
         execute();
         _index = 0;
         _buff[_index] = '\0';
-        return;
+        return true;
       }
-      _buff[_index++] = c;
-      _buff[_index] = '\0';
-      return;
+
+      if(c == '#') _ignore = true;
+      else if(endl) _ignore = false;
+
+      // don't put characters into buffer in specific conditions
+      if(_ignore || endl || _index >= BUFF_SIZE - 1) return false;
+
+      if(c == '\b') // handle backspace
+      {
+        _buff[--_index] = '\0';
+      }
+      else
+      {
+        _buff[_index] = c;
+        _buff[++_index] = '\0';
+      }
+      return false;
     }
 
     void parse()
@@ -426,6 +441,7 @@ class Cli
     size_t _index;
     Cmd _cmd;
     Msp _msp;
+    bool _ignore;
 };
 
 }
