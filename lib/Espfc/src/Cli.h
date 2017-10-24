@@ -299,6 +299,12 @@ class Cli
           print(_params[i]);
         }
       }
+      else if(strcmp_P(_cmd.args[0], PSTR("cal")) == 0)
+      {
+        _model.state.gyroBiasSamples = 2 * _model.state.gyroSampleRate;
+        _model.state.accelBiasSamples = 2 * _model.state.gyroSampleRate;
+        println(F("OK"));
+      }
       else if(strcmp_P(_cmd.args[0], PSTR("mag")) == 0)
       {
         if(!_cmd.args[1]) {}

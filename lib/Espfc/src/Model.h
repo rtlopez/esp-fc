@@ -277,14 +277,20 @@ struct ModelState
   VectorFloat accelPrev;
 
   float accelScale;
+  VectorFloat accelBias;
+  float accelBiasAlpha;
+  int accelBiasSamples;
+  bool accelBiasValid;
+
   float gyroScale;
   VectorFloat gyroBias;
   float gyroBiasAlpha;
   long gyroBiasSamples;
   bool gyroBiasValid;
-  uint8_t gyroDivider;
+
   float gyroDeadband;
 
+  uint8_t gyroDivider;
   uint32_t gyroSampleRate;
   uint32_t gyroSampleInterval;
   float gyroDt;
@@ -348,10 +354,7 @@ struct ModelConfig
   uint8_t magFsr;
   uint8_t magAvr;
 
-
   uint8_t modelFrame;
-  uint8_t flightModeChannel;
-  uint8_t flightModes[3];
 
   uint32_t actuatorConfig[3];
   uint8_t actuatorChannels[3];
@@ -405,6 +408,9 @@ struct ModelConfig
 
   uint8_t fusionMode;
   bool fusionDelay;
+
+  uint16_t gyroBias[3];
+  uint16_t accelBias[3];
 
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
@@ -584,9 +590,17 @@ class Model
 
     void update()
     {
+      // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         state.outputDisarmed[i] = 1000;
+      }
+
+      // update initial sensor calibration
+      for(size_t i = 0; i < 3; i++)
+      {
+        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
+        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
       }
 
       state.gyroDeadband = radians(config.gyroDeadband / 10.0f);
@@ -616,6 +630,16 @@ class Model
           0,
           radians(300)
         );
+      }
+    }
+
+    void preSave()
+    {
+      // store current sensor calibration
+      for(size_t i = 0; i < 3; i++)
+      {
+        config.gyroBias[i] = lrintf(state.gyroBias[i] * 1000.0f);
+        config.accelBias[i] = lrintf(state.accelBias[i] * 1000.0f);
       }
     }
 
@@ -652,6 +676,7 @@ class Model
 
     void save()
     {
+      preSave();
       int addr = 0;
       EEPROM.write(addr++, EEPROM_MAGIC);
       EEPROM.write(addr++, EEPROM_VERSION);

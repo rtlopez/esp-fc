@@ -171,6 +171,7 @@ class Sensor
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
       }
 
+      /*
       if(!_model.state.gyroBiasValid)
       {
         VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
@@ -189,6 +190,24 @@ class Sensor
           }
         }
       }
+      */
+
+      if(_model.state.gyroBiasSamples)
+      {
+        VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
+        _model.state.accelPrev = _model.state.accel;
+        if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO &&
+          _model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
+        {
+          _model.state.gyroBias = (_model.state.gyroBias * (1.0 - _model.state.gyroBiasAlpha)) + (_model.state.gyro * _model.state.gyroBiasAlpha);
+          _model.state.gyroBiasSamples--;
+          if(_model.state.gyroBiasSamples == 0)
+          {
+            _model.state.gyroBiasValid = true;
+          }
+        }
+      }
+
       _model.state.gyro -= _model.state.gyroBias;
     }
 
@@ -199,7 +218,21 @@ class Sensor
       {
         _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
       }
-      //TOD0: accel calibration
+
+      if(_model.state.accelBiasSamples)
+      {
+        _model.state.accelBias = (_model.state.accelBias * (1.0f - _model.state.accelBiasAlpha)) + (_model.state.accel * _model.state.accelBiasAlpha);
+        _model.state.accelBiasSamples--;
+        if(_model.state.accelBiasSamples == 0)
+        {
+          _model.state.accelBias.z -= 1.0f;
+          _model.state.accelBiasValid = true;
+        }
+      }
+      else
+      {
+        _model.state.accel -= _model.state.accelBias;
+      }
     }
 
     void updateMag()
@@ -334,15 +367,17 @@ class Sensor
       _model.state.gyroDivider = (clock / (rate + 1)) + 1;
       _model.state.gyroSampleRate = clock / (_model.state.gyroDivider); // update to real sample rate
       _model.state.gyroSampleInterval = (1000000 / _model.state.gyroSampleRate);
-      //_model.state.gyroSampleIntervalFloat = 1.0 / _model.state.gyroSampleRate;
 
-      _model.state.gyroBiasAlpha = 5.0f / rate; // higher value gives faster calibration, was 2
-      _model.state.gyroBiasSamples = 0;
+      _model.state.gyroBiasAlpha = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
+      _model.state.gyroBiasSamples = 2 * _model.state.gyroSampleRate;
 
-      _model.logger.info().log(F("GYRO RATE")).log(_model.state.gyroDivider).log(_model.state.gyroSampleRate).logln(_model.state.gyroSampleInterval);
+      _model.state.accelBiasAlpha = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
+      _model.state.accelBiasSamples = 2 * _model.state.gyroSampleRate;
 
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(_model.state.gyroDivider - 1);
+
+      _model.logger.info().log(F("GYRO RATE")).log(_model.state.gyroDivider).log(_model.state.gyroSampleRate).logln(_model.state.gyroSampleInterval);
     }
 
     void setGyroScale()
@@ -373,9 +408,12 @@ class Sensor
     {
       if(!_model.config.magEnable) return;
       _mag.initialize();
-      Serial.print("mag init: "); Serial.println(_mag.testConnection());
+
+      _model.logger.info().log(F("MAG INIT")).logln(_mag.testConnection());
+
       _mag.setSampleAveraging(_model.config.magAvr);
       _mag.setMode(HMC5883L_MODE_CONTINUOUS);
+
       setMagSampleRate();
       setMagScale();
     }
@@ -395,7 +433,7 @@ class Sensor
       _model.state.magSampleRate = rate;
       _model.state.magSampleInterval = 1000000 / rate;
       _mag.setDataRate(_model.config.magSampleRate + 0x02);
-      Serial.print("mag rate: "); Serial.print(_model.config.magSampleRate); Serial.print(' '); Serial.print(_model.state.magSampleRate); Serial.print(' '); Serial.println(_model.state.magSampleInterval);
+      _model.logger.info().log(F("MAG RATE")).logln(_model.config.magSampleRate).log(_model.state.magSampleRate).logln(_model.state.magSampleInterval);
     }
 
     void setMagScale()
