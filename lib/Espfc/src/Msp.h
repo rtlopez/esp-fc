@@ -363,6 +363,31 @@ class Msp
           r.writeU8(0);  // currentMeterSource
           break;
 
+        case MSP_BATTERY_STATE:
+          // battery characteristics
+          r.writeU8(3); // cell count, 0 indicates battery not detected.
+          r.writeU16(1000); // in mAh
+
+          // battery state
+          r.writeU8(126); // in 0.1V steps
+          r.writeU16(0);  // milliamp hours drawn from battery
+          r.writeU16(0); // send current in 0.01 A steps, range is -320A to 320A
+
+          // battery alerts
+          r.writeU8(0);
+          break;
+
+        case MSP_VOLTAGE_METERS:
+          for(int i = 0; i < 1; i++)
+          {
+            r.writeU8(i);  // meter id
+            r.writeU8(100);  // meter value
+          }
+          break;
+
+        case MSP_CURRENT_METERS:
+          break;
+
         case MSP_DATAFLASH_SUMMARY:
           r.writeU8(0); // FlashFS is neither ready nor supported
           r.writeU32(0);
@@ -378,6 +403,38 @@ class Msp
         case MSP_MIXER_CONFIG:
           r.writeU8(3); // mixerMode, QUAD_X
           r.writeU8(0); // yaw_motors_reversed
+          break;
+
+        case MSP_SENSOR_CONFIG:
+          r.writeU8(3); // 3 acc mpu6050
+          r.writeU8(0); // 2 baro bmp085
+          r.writeU8(0); // 3 mag hmc5883l
+          break;
+
+        case MSP_SENSOR_ALIGNMENT:
+          r.writeU8(0); // gyro align
+          r.writeU8(0); // acc align
+          r.writeU8(0); // mag align
+          break;
+
+        case MSP_CF_SERIAL_CONFIG:
+          for (int i = SERIAL_UART_1; i < SERIAL_UART_COUNT; i++)
+          {
+            r.writeU8(i - 1); // identifier
+            r.writeU16(i == SERIAL_UART_2 ? SERIAL_FUNCTION_BLACKBOX : SERIAL_FUNCTION_MSP); // functionMask
+            r.writeU8(i == SERIAL_UART_2 ? SERIAL_SPEED_INDEX_AUTO : SERIAL_SPEED_INDEX_115200); // msp_baudrateIndex
+            r.writeU8(0); // gps_baudrateIndex
+            r.writeU8(0); // telemetry_baudrateIndex
+            r.writeU8(i == SERIAL_UART_2 ? SERIAL_SPEED_INDEX_250000 : SERIAL_SPEED_INDEX_AUTO); // blackbox_baudrateIndex
+          }
+          break;
+
+        case MSP_BLACKBOX_CONFIG:
+          r.writeU8(1); // Blackbox supported
+          r.writeU8(3); // device serial
+          r.writeU8(1); // blackboxGetRateNum());
+          r.writeU8(1); // blackboxGetRateDenom());
+          r.writeU16(32); // p_denom
           break;
 
         case MSP_ATTITUDE:
@@ -413,16 +470,23 @@ class Msp
           r.writeU16(1000); // mincommand
           break;
 
+        case MSP_MOTOR_3D_CONFIG:
+          r.writeU16(1406); // deadband3d_low;
+          r.writeU16(1514); // deadband3d_high;
+          r.writeU16(1460); // neutral3d;
+          break;
+
         case MSP_ARMING_CONFIG:
-          r.writeU8(5);
-          r.writeU8(0);
+          r.writeU8(5); // auto_disarm delay
+          r.writeU8(0);  // disarm kill switch
+          r.writeU8(180); // small angle
           break;
 
         case MSP_RC_DEADBAND:
           r.writeU8(_model.config.inputDeadband);
-          r.writeU8(_model.config.inputDeadband);
-          r.writeU8(0);
-          r.writeU16(0);
+          r.writeU8(0); // yaw deadband
+          r.writeU8(0); // alt hod deadband
+          r.writeU16(0); // deadband 3d throttle
           break;
 
         case MSP_RX_CONFIG:
@@ -502,6 +566,17 @@ class Msp
           r.writeU16(450);
           r.writeU8(0); // 32k gyro
           r.writeU8(0); // PWM inversion
+          break;
+
+      case MSP_GPS_CONFIG:
+          r.writeU8(0); // provider
+          r.writeU8(0); // sbasMode
+          r.writeU8(0); // autoConfig
+          r.writeU8(0); // autoBaud
+          break;
+
+      case MSP_COMPASS_CONFIG:
+          r.writeU16(0); // mag_declination * 10
           break;
 
         case MSP_FILTER_CONFIG:
@@ -685,6 +760,9 @@ class Msp
       if(cmd == MSP_RAW_IMU) return false;
       if(cmd == MSP_MOTOR) return false;
       if(cmd == MSP_SERVO) return false;
+      if(cmd == MSP_BATTERY_STATE) return false;
+      if(cmd == MSP_VOLTAGE_METERS) return false;
+      if(cmd == MSP_CURRENT_METERS) return false;
       return true;
     }
 

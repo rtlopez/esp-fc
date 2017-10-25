@@ -13,7 +13,7 @@ void InputPPM::begin(uint8_t pin, int mode)
   {
     _channels[i] = 1500;
   }
-  _channels[2] = 1000; // usually throttle channel
+  _channels[2] = 1000; // usually throttle channel (3)
   pinMode(_pin, INPUT);
   attachInterrupt(_pin, _ppm_input_handler_callback, mode);
 }
@@ -28,7 +28,7 @@ void InputPPM::handle()
   if(width > 3000) // sync
   {
     _channel = 0;
-    _new_data = 1;
+    //_new_data = true;
     return;
   }
 
@@ -37,6 +37,7 @@ void InputPPM::handle()
     _channels[_channel] = width;
   }
   _channel++;
+  if(_channel == 4) _new_data = true; // increase responsivnes for sticks channels
 }
 
 InputPPM PPM;

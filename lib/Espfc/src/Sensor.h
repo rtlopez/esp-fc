@@ -204,6 +204,7 @@ class Sensor
           if(_model.state.gyroBiasSamples == 0)
           {
             _model.state.gyroBiasValid = true;
+            _model.logger.info().log(F("GYRO CAL")).log(_model.state.gyroBias.x).log(_model.state.gyroBias.y).logln(_model.state.gyroBias.z);
           }
         }
       }
@@ -227,6 +228,7 @@ class Sensor
         {
           _model.state.accelBias.z -= 1.0f;
           _model.state.accelBiasValid = true;
+          _model.logger.info().log(F("ACCEL CAL")).log(_model.state.accelBias.x).log(_model.state.accelBias.y).logln(_model.state.accelBias.z);
         }
       }
       else
@@ -372,7 +374,7 @@ class Sensor
       _model.state.gyroBiasSamples = 2 * _model.state.gyroSampleRate;
 
       _model.state.accelBiasAlpha = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
-      _model.state.accelBiasSamples = 2 * _model.state.gyroSampleRate;
+      //_model.state.accelBiasSamples = 2 * _model.state.gyroSampleRate;
 
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(_model.state.gyroDivider - 1);

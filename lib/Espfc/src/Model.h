@@ -166,11 +166,43 @@ enum SerialSpeed {
   SERIAL_SPEED_500000 = 500000
 };
 
+enum SerialSpeedIndex {
+  SERIAL_SPEED_INDEX_AUTO = 0,
+  SERIAL_SPEED_INDEX_9600,
+  SERIAL_SPEED_INDEX_19200,
+  SERIAL_SPEED_INDEX_38400,
+  SERIAL_SPEED_INDEX_57600,
+  SERIAL_SPEED_INDEX_115200,
+  SERIAL_SPEED_INDEX_230400,
+  SERIAL_SPEED_INDEX_250000,
+  SERIAL_SPEED_INDEX_500000 = 10
+};
+
 enum SerialPort {
   SERIAL_UART_NONE = 0,
   SERIAL_UART_1,
-  SERIAL_UART_2
+  SERIAL_UART_2,
+  SERIAL_UART_COUNT
 };
+
+enum SerialFunction {
+  SERIAL_FUNCTION_NONE                = 0,
+  SERIAL_FUNCTION_MSP                 = (1 << 0),  // 1
+  SERIAL_FUNCTION_GPS                 = (1 << 1),  // 2
+  SERIAL_FUNCTION_TELEMETRY_FRSKY     = (1 << 2),  // 4
+  SERIAL_FUNCTION_TELEMETRY_HOTT      = (1 << 3),  // 8
+  SERIAL_FUNCTION_TELEMETRY_LTM       = (1 << 4),  // 16
+  SERIAL_FUNCTION_TELEMETRY_SMARTPORT = (1 << 5),  // 32
+  SERIAL_FUNCTION_RX_SERIAL           = (1 << 6),  // 64
+  SERIAL_FUNCTION_BLACKBOX            = (1 << 7),  // 128
+  SERIAL_FUNCTION_TELEMETRY_MAVLINK   = (1 << 9),  // 512
+  SERIAL_FUNCTION_ESC_SENSOR          = (1 << 10), // 1024
+  SERIAL_FUNCTION_VTX_SMARTAUDIO      = (1 << 11), // 2048
+  SERIAL_FUNCTION_TELEMETRY_IBUS      = (1 << 12), // 4096
+  SERIAL_FUNCTION_VTX_TRAMP           = (1 << 13), // 8192
+  SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
+};
+
 
 enum OutputProtocol {
   OUTPUT_PWM,
@@ -499,11 +531,11 @@ class Model
 
       for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
       {
-        config.inputRate[i] = 100;
+        config.inputRate[i] = 70;
         config.inputExpo[i] = 0;
-        config.inputSuperRate[i] = 60;
+        config.inputSuperRate[i] = 80;
       }
-      config.inputRate[AXIS_YAW] = 100;
+      config.inputRate[AXIS_YAW] = 120;
       config.inputExpo[AXIS_YAW] = 0;
       config.inputSuperRate[AXIS_YAW] = 50;
 
@@ -517,7 +549,7 @@ class Model
       config.inputMax[AXIS_YAW] = 1000;
 
       config.inputDeadband = 3; // us
-      config.inputFilterAlpha = 80;
+      config.inputFilterAlpha = 100;
 
       // PID controller config
       config.pid[PID_PITCH] = { .P = 45,  .I = 45, .D = 14 };
@@ -594,8 +626,8 @@ class Model
 
     void calibrate()
     {
-      state.gyroBiasSamples  = 5 * state.gyroSampleRate;
-      state.accelBiasSamples = 5 * state.gyroSampleRate;
+      state.gyroBiasSamples  = 2 * state.gyroSampleRate;
+      state.accelBiasSamples = 2 * state.gyroSampleRate;
     }
 
     void begin()
