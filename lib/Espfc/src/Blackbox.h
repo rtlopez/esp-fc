@@ -90,9 +90,9 @@ class Blackbox
       gyroConfigMutable()->gyro_soft_lpf_hz = _model.config.gyroFilterCutFreq;
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilterCutFreq;
-      accelerometerConfigMutable()->acc_hardware = 3;
-      barometerConfigMutable()->baro_hardware = 2;
-      compassConfigMutable()->mag_hardware = 2;
+      accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
+      barometerConfigMutable()->baro_hardware = _model.config.baroDev;
+      compassConfigMutable()->mag_hardware = _model.config.magDev;
 
       motorConfigMutable()->dev.useUnsyncedPwm = _model.config.outputAsync;
       motorConfigMutable()->dev.motorPwmProtocol = _model.config.outputProtocol;
@@ -109,7 +109,7 @@ class Blackbox
       gyroConfigMutable()->gyro_sync_denom = _model.state.gyroDivider;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
-      featureConfigMutable()->enabledFeatures = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_AIRMODE | FEATURE_ANTI_GRAVITY;
+      featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
       blackboxInit();
 
@@ -167,7 +167,7 @@ class Blackbox
         beep = 0;
       }
 
-      bool armed =_model.isMode(MODE_ARMED);
+      bool armed =_model.isActive(MODE_ARMED);
       if(armed == ARMING_FLAG(ARMED)) return;
       if(armed)
       {
@@ -184,10 +184,10 @@ class Blackbox
 
     void updateMode()
     {
-      if(_model.isMode(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
+      if(_model.isActive(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
       else bitArrayClr(&rcModeActivationMask, BOXANGLE);
 
-      if(_model.isMode(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
+      if(_model.isActive(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
       else bitArrayClr(&rcModeActivationMask, BOXAIRMODE);
     }
 

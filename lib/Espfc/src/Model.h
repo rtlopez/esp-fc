@@ -425,10 +425,21 @@ struct ModelConfig
 
   int8_t ppmPin;
   int8_t ppmMode;
+
+  int16_t inputMaxCheck;
+  int16_t inputMinCheck;
+  int16_t inputMinRc;
+  int16_t inputMidRc;
+  int16_t inputMaxRc;
+
+  int8_t inputInterpolation;
+  int8_t inputInterpolationInterval;
+
   int16_t inputMin[INPUT_CHANNELS];
   int16_t inputNeutral[INPUT_CHANNELS];
   int16_t inputMax[INPUT_CHANNELS];
   int8_t inputMap[INPUT_CHANNELS];
+
   int8_t inputDeadband;
   int8_t inputFilterAlpha;
 
@@ -538,15 +549,17 @@ class Model
       // output config
       config.outputMinThrottle = 1050;
       config.outputMaxThrottle = 2000;
-      config.outputMinCommand = 1000;
+      config.outputMinCommand  = 1000;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         config.outputMin[i] = config.outputMinThrottle;
         config.outputMax[i] = config.outputMaxThrottle;
         config.outputNeutral[i] = (config.outputMin[i] + config.outputMax[i] + 1) / 2;
+        config.outputPin[i] = -1; // disable
       }
 
-      config.outputPin[0] = D3; // D8; // -1 off
+      // pin assignment
+      config.outputPin[0] = D3; // D8;
       config.outputPin[1] = D5; // D6;
       config.outputPin[2] = D6; // D5;
       config.outputPin[3] = D8; // D3;
@@ -563,13 +576,27 @@ class Model
       // input config
       config.ppmPin = D7;     // GPIO13
       config.ppmMode = RISING;
+      config.inputMinCheck = 1050;
+      config.inputMaxCheck = 1900;
+      config.inputMinRc = 850;
+      config.inputMaxRc = 2150;
+      config.inputMidRc = 1500;
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
         config.inputMap[i] = i;
       }
-      // swap yaw and throttle
+      // swap yaw and throttle for AETR
       config.inputMap[2] = 3; // replace input 2 with rx channel 3, yaw
       config.inputMap[3] = 2; // replace input 3 with rx channel 2, throttle
+
+      for(size_t i = 0; i < INPUT_CHANNELS; i++)
+      {
+        config.inputMin[i] = 1000;
+        config.inputNeutral[i] = config.inputMidRc;
+        config.inputMax[i] = 2000;
+      }
+      config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
+      config.inputMax[AXIS_YAW] = 1000;
 
       for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
       {
@@ -581,14 +608,8 @@ class Model
       config.inputExpo[AXIS_YAW] = 0;
       config.inputSuperRate[AXIS_YAW] = 50;
 
-      for(size_t i = 0; i < INPUT_CHANNELS; i++)
-      {
-        config.inputMin[i] = 1000;
-        config.inputNeutral[i] = 1500;
-        config.inputMax[i] = 2000;
-      }
-      config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
-      config.inputMax[AXIS_YAW] = 1000;
+      config.inputInterpolation = 3; // mode
+      config.inputInterpolationInterval = 26;
 
       config.inputDeadband = 3; // us
       config.inputFilterAlpha = 100;
@@ -638,15 +659,9 @@ class Model
       config.actuatorMax[1] = 400;
 
       config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
-      //config.actuatorConfig[2] = ACT_OUTER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
-      //config.actuatorConfig[2] = ACT_INNER_P | ACT_AXIS_YAW;
       config.actuatorChannels[2] = 7;
       config.actuatorMin[2] = 25;
       config.actuatorMax[2] = 400;
-
-      //config.actuatorConfig[2] = ACT_GYRO_THRUST;
-      //config.actuatorMin[2] = -0.05;
-      //config.actuatorMax[2] =  0.05;
 
       // default callibration values
       config.gyroBias[0] = 0;
@@ -663,9 +678,14 @@ class Model
       config.magCalibrationScale[2] = 1000;
     }
 
-    bool isMode(FlightMode mode)
+    bool isActive(FlightMode mode)
     {
       return state.modeMask & (1 << mode);
+    }
+
+    bool isActive(Feature feature)
+    {
+      return config.featureMask & feature;
     }
 
     void calibrate()

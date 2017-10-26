@@ -543,19 +543,37 @@ class Msp
 
         case MSP_RX_CONFIG:
           r.writeU8(0); // serialrx_provider
-          r.writeU16(1900); //maxcheck
-          r.writeU16(1500); //midrc
-          r.writeU16(1100); //mincheck
+          r.writeU16(_model.config.inputMaxCheck); //maxcheck
+          r.writeU16(_model.config.inputMidRc); //midrc
+          r.writeU16(_model.config.inputMinCheck); //mincheck
           r.writeU8(0); // spectrum bind
-          r.writeU16(850); //min_us
-          r.writeU16(2150); //max_us
-          r.writeU8(3); // rc interpolation
-          r.writeU8(26); // rc interpolation interval
+          r.writeU16(_model.config.inputMinRc); //min_us
+          r.writeU16(_model.config.inputMaxRc); //max_us
+          r.writeU8(_model.config.inputInterpolation); // rc interpolation
+          r.writeU8(_model.config.inputInterpolationInterval); // rc interpolation interval
           r.writeU16(1500); // airmode activate threshold
           r.writeU8(0); // rx spi prot
           r.writeU32(0); // rx spi id
           r.writeU8(0); // rx spi chan count
           r.writeU8(0); // fpv camera angle
+          break;
+
+        case MSP_SET_RX_CONFIG:
+          m.readU8(); // serialrx_provider
+          _model.config.inputMaxCheck = m.readU16(); //maxcheck
+          _model.config.inputMidRc = m.readU16(); //midrc
+          _model.config.inputMinCheck = m.readU16(); //mincheck
+          m.readU8(); // spectrum bind
+          _model.config.inputMinRc = m.readU16(); //min_us
+          _model.config.inputMaxRc = m.readU16(); //max_us
+          _model.config.inputInterpolation = m.readU8(); // rc interpolation
+          _model.config.inputInterpolationInterval = m.readU8(); // rc interpolation interval
+          m.readU16(); // airmode activate threshold
+          m.readU8(); // rx spi prot
+          m.readU32(); // rx spi id
+          m.readU8(); // rx spi chan count
+          m.readU8(); // fpv camera angle
+          _model.update();
           break;
 
         case MSP_RC:
@@ -779,7 +797,7 @@ class Msp
         case MSP_SET_MOTOR:
           for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
-              _model.state.outputDisarmed[i] = m.readU16();
+            _model.state.outputDisarmed[i] = m.readU16();
           }
           break;
 
@@ -791,7 +809,7 @@ class Msp
           break;
 
         case MSP_ACC_CALIBRATION:
-          if(!_model.isMode(MODE_ARMED)) _model.calibrate();
+          if(!_model.isActive(MODE_ARMED)) _model.calibrate();
           break;
 
         case MSP_MAG_CALIBRATION:

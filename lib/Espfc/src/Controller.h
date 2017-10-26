@@ -40,7 +40,7 @@ class Controller
 
     void outerLoop()
     {
-      if(_model.isMode(MODE_ANGLE))
+      if(_model.isActive(MODE_ANGLE))
       {
         _model.state.desiredAngle = VectorFloat(
           _model.state.input[AXIS_ROLL] * radians(_model.config.angleLimit),
@@ -71,7 +71,7 @@ class Controller
 
     void resetIterm()
     {
-      if(!_model.isMode(MODE_ARMED) || (_model.config.lowThrottleZeroIterm && _model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold))
+      if(!_model.isActive(MODE_ARMED) && (_model.config.lowThrottleZeroIterm && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck))
       {
         for(size_t i = 0; i < AXES; i++)
         {

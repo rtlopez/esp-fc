@@ -25,14 +25,6 @@ class Mixer
 
     int update()
     {
-      if(!_model.isMode(MODE_ARMED))
-      {
-        _model.state.stats.start(COUNTER_MIXER);
-        updateDisarmed();
-        _model.state.stats.end(COUNTER_MIXER);
-        return 0;
-      }
-
       _model.state.stats.start(COUNTER_MIXER);
       switch(_model.config.mixerType)
       {
@@ -42,50 +34,12 @@ class Mixer
         case FRAME_BALANCE_ROBOT:
           updateBalancingRobot();
           break;
-        case FRAME_GIMBAL:
-          updateGimbal();
-          break;
-        case FRAME_DIRECT:
-          updateDirect();
-          break;
-        case FRAME_UNCONFIGURED:
-        default:
-          updateDisarmed();
-          break;
       }
       _model.state.stats.end(COUNTER_MIXER);
       return 1;
     }
 
   private:
-    void updateDisarmed()
-    {
-      writeOutputRaw(_model.state.outputDisarmed, OUTPUT_CHANNELS);
-    }
-
-    void updateGimbal()
-    {
-      float out[3];
-      out[0] = 0.f;
-      out[1] = 0.f;
-      out[2] = 0.f;
-      writeOutput(out, 3);
-    }
-
-    void updateDirect()
-    {
-      float r = -1.f + abs(_model.state.output[AXIS_ROLL]);
-      float p = -1.f + abs(_model.state.output[AXIS_PITCH]);
-      float y = -1.f + abs(_model.state.output[AXIS_YAW]);
-      float t = -1.f + abs(_model.state.output[AXIS_THRUST]);
-      float out[4];
-      out[0] = r;
-      out[1] = p;
-      out[2] = y;
-      out[3] = t;
-      writeOutput(out, 4);
-    }
-
     void updateBalancingRobot()
     {
       float p = _model.state.output[AXIS_PITCH];
@@ -116,7 +70,7 @@ class Mixer
       out[3] =  r - p + y;
 
       // airmode logic
-      if(_model.isMode(MODE_AIRMODE))
+      if(_model.isActive(MODE_AIRMODE))
       {
         float min = 0, max = 0;
         for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -156,24 +110,14 @@ class Mixer
           float v = Math::bound(out[i], -1.f, 1.f);
           _model.state.outputUs[i] = (int16_t)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
         }
-        PWMDriver.write(i, _model.state.outputUs[i]);
       }
-      PWMDriver.apply();
+      _write(_model.state.outputUs, OUTPUT_CHANNELS);
     }
 
-    void writeOutputRaw(int16_t * out, size_t axes)
+    void _write(int16_t * out, size_t axes)
     {
-      bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        if(i >= axes || stop)
-        {
-          _model.state.outputUs[i] = _model.state.outputDisarmed[i];
-        }
-        else
-        {
-          _model.state.outputUs[i] = Math::bound((int)out[i], 1000, 2000);
-        }
         PWMDriver.write(i, _model.state.outputUs[i]);
       }
       PWMDriver.apply();
@@ -181,7 +125,7 @@ class Mixer
 
     bool _stop(void)
     {
-      return (_model.config.lowThrottleMotorStop && _model.state.inputUs[AXIS_THRUST] < _model.config.lowThrottleTreshold) || !_model.isMode(MODE_ARMED);
+      return (_model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck) && !_model.isActive(MODE_ARMED);
     }
 
     Model& _model;
