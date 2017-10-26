@@ -254,6 +254,13 @@ enum Feature {
   FEATURE_TELEMETRY  = 1 << 10
 };
 
+enum InputInterpolation {
+  INPUT_INTERPOLATION_OFF,
+  INPUT_INTERPOLATION_DEFAULT,
+  INPUT_INTERPOLATION_AUTO,
+  INPUT_INTERPOLATION_MANUAL
+};
+
 const size_t AXES            = 4;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
 const size_t OUTPUT_CHANNELS = 4;
@@ -608,7 +615,7 @@ class Model
       config.inputExpo[AXIS_YAW] = 0;
       config.inputSuperRate[AXIS_YAW] = 50;
 
-      config.inputInterpolation = 3; // mode
+      config.inputInterpolation = INPUT_INTERPOLATION_MANUAL; // mode
       config.inputInterpolationInterval = 26;
 
       config.inputDeadband = 3; // us
