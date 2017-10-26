@@ -417,7 +417,9 @@ struct ModelConfig
 
   int8_t outputPin[OUTPUT_CHANNELS];
   int8_t outputProtocol;
+  int16_t outputAsync;
   int16_t outputRate;
+  int8_t yawReverse;
 
   PidConfig pid[PID_ITEM_COUNT];
 
@@ -513,10 +515,13 @@ class Model
       config.outputPin[3] = D8; // D3;
 
       config.modelFrame = FRAME_QUAD_X;
+      config.yawReverse = 0;
+
       //config.modelFrame = FRAME_DIRECT;
-      config.outputRate = 500;    // 125 max for old driver
       //config.outputProtocol = OUTPUT_PWM;
       config.outputProtocol = OUTPUT_ONESHOT125;
+      config.outputRate = 500;    // max 500 for PWM, 2000 for Oneshot125
+      config.outputAsync = false;
 
       // input config
       config.ppmPin = D7;     // GPIO13
@@ -552,13 +557,13 @@ class Model
       config.inputFilterAlpha = 100;
 
       // PID controller config
-      config.pid[PID_PITCH] = { .P = 45,  .I = 45, .D = 14 };
-      config.pid[PID_ROLL]  = { .P = 63,  .I = 54, .D = 18 };
+      config.pid[PID_ROLL]  = { .P = 45,  .I = 45, .D = 14 };
+      config.pid[PID_PITCH] = { .P = 63,  .I = 54, .D = 18 };
       config.pid[PID_YAW]   = { .P = 125, .I = 75, .D = 5 };
       config.pid[PID_LEVEL] = { .P = 30,  .I = 0,  .D = 0 };
 
-      float iwp = config.itermWindupPointPercent = 30;
-      float dsw = config.dtermSetpointWeight = 50;
+      config.itermWindupPointPercent = 30;
+      config.dtermSetpointWeight = 50;
 
       config.angleLimit = 50;  // deg
       config.angleRateLimit = 300;  // deg
@@ -634,7 +639,7 @@ class Model
     {
       logger.begin();
       EEPROM.begin(512);
-      //load();
+      load();
       update();
     }
 

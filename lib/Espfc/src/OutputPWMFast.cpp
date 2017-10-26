@@ -4,14 +4,11 @@ namespace Espfc {
 
 OutputPWMFast PWMfast;
 
-static volatile bool _isr_busy = false;
 static void _pwm_fast_handle_isr(void) ICACHE_RAM_ATTR;
 
-static inline uint32_t usToTicks(uint32_t us)
+void _pwm_fast_handle_isr(void)
 {
-  //return microsecondsToClockCycles(us); // timer0
-  return APB_CLK_FREQ / 1000000L * us; // timer1
-  //return F_CPU / 1000000L / 2 * us; // timer1
+  PWMfast.handle();
 }
 
 static void timer_init()
@@ -57,32 +54,36 @@ static inline void digitalWriteFast(uint8_t pin, uint8_t val)
   }
 }
 
-void _pwm_fast_handle_isr(void)
+void OutputPWMFast::handle(void)
 {
-  static OutputPWMFast::Slot * end = PWMfast.end();
-  static OutputPWMFast::Slot * it = NULL;
+  static const OutputPWMFast::Slot * en = end();
+  static const OutputPWMFast::Slot * it = NULL;
 
   // start cycle
   if(!it)
   {
     _isr_busy = true;
-    for(it = PWMfast.begin(); it != end; ++it)
+    if(_async)
+    {
+      commit();
+    }
+    for(it = begin(); it != en; ++it)
     {
       if(it->pin == -1) continue;
       digitalWriteFast(it->pin, HIGH);
     }
-    it = PWMfast.begin();
-    while(it->pin == -1 && it != end) ++it;
-    if(it != end) timer_write(it->diff);
+    it = begin();
+    while(it->pin == -1 && it != en) ++it;
+    if(it != en) timer_write(it->diff);
     return;
   }
 
   // suppress similar pulses
-  while(it != end)
+  while(it != en)
   {
     digitalWriteFast(it->pin, LOW);
     ++it;
-    if(it == end) break;
+    if(it == en) break;
     if(it->pin == -1) continue;
     if(it->diff > 200)
     {
@@ -99,6 +100,12 @@ void _pwm_fast_handle_isr(void)
   // finish cycle
   _isr_busy = false;
   it = NULL;
+
+  // trigger next cycle
+  if(_async)
+  {
+    timer_write(_space);
+  }
 }
 
 void OutputPWMFast::trigger()
@@ -106,11 +113,31 @@ void OutputPWMFast::trigger()
   //PIN_DEBUG(true);
   //PIN_DEBUG(false);
   if(_isr_busy == true) return;
-  _pwm_fast_handle_isr();
+  //_pwm_fast_handle_isr();
+  handle();
 }
 
-OutputPWMFast::OutputPWMFast(): _rate(50), _protocol(OUTPUT_PWM)
+void OutputPWMFast::commit()
 {
+  Slot tmp[OUTPUT_CHANNELS];
+  std::copy(_buffer, _buffer + OUTPUT_CHANNELS, tmp);
+  std::sort(tmp, tmp + OUTPUT_CHANNELS);
+  Slot * end = tmp + OUTPUT_CHANNELS;
+  Slot * prev = NULL;
+  for(Slot * it = tmp; it != end; ++it)
+  {
+    if(it->pin == -1) continue;
+    if(!prev) it->diff = it->pulse;
+    else it->diff = it->pulse - prev->pulse;
+    prev = it;
+  }
+  _space = prev ? _interval - prev->pulse : _interval; // after loop prev is the last item with longest pulse
+  std::copy(tmp, tmp + OUTPUT_CHANNELS, _slots);
+}
+
+OutputPWMFast::OutputPWMFast(): _protocol(OUTPUT_PWM), _async(true), _rate(50), _isr_busy(false)
+{
+  _interval = usToTicks(1000000L / _rate, true);
   for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
   {
     _slots[i] = Slot();
@@ -118,10 +145,12 @@ OutputPWMFast::OutputPWMFast(): _rate(50), _protocol(OUTPUT_PWM)
   }
 }
 
-int OutputPWMFast::begin(int rate, OutputProtocol protocol)
+int OutputPWMFast::begin(OutputProtocol protocol, bool async, int16_t rate)
 {
   _protocol = protocol;
+  _async = async;
   _rate = rate;
+  _interval = usToTicks(1000000L / _rate, true);
   timer_init();
   return 1;
 }

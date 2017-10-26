@@ -305,6 +305,10 @@ class Msp
           r.writeString("ESPFC");
           break;
 
+        case MSP_SET_NAME:
+          //TODO
+          break;
+
         case MSP_BOXNAMES:
           //TODO: use pgm_space
           r.writeString("ARM;ANGLE;AIRMODE;");
@@ -388,6 +392,18 @@ class Msp
         case MSP_CURRENT_METERS:
           break;
 
+        case MSP_VOLTAGE_METER_CONFIG:
+          for(int i = 0; i < 1; i++)
+          {
+            r.writeU8(5); // size
+            r.writeU8(i + 1); // id
+            r.writeU8(0); // type resistor divider
+            r.writeU8(100); // scale
+            r.writeU8(0);  // resdivval
+            r.writeU8(0);  // resdivmultiplier
+          }
+          break;
+
         case MSP_DATAFLASH_SUMMARY:
           r.writeU8(0); // FlashFS is neither ready nor supported
           r.writeU32(0);
@@ -402,7 +418,12 @@ class Msp
 
         case MSP_MIXER_CONFIG:
           r.writeU8(3); // mixerMode, QUAD_X
-          r.writeU8(0); // yaw_motors_reversed
+          r.writeU8(_model.config.yawReverse); // yaw_motors_reversed
+          break;
+
+        case MSP_SET_MIXER_CONFIG:
+          m.readU8(); // mixerMode, QUAD_X
+          _model.config.yawReverse = m.readU8(); // yaw_motors_reversed
           break;
 
         case MSP_SENSOR_CONFIG:
@@ -560,22 +581,36 @@ class Msp
         case MSP_ADVANCED_CONFIG:
           r.writeU8(_model.state.gyroDivider);
           r.writeU8(_model.config.loopSync);
-          r.writeU8((uint8_t)(_model.config.mixerSync != 1)); // unsynced PWM
+          r.writeU8(_model.config.outputAsync);
           r.writeU8(_model.config.outputProtocol);
           r.writeU16(_model.config.outputRate);
-          r.writeU16(450);
+          r.writeU16(450); // dshot idle
           r.writeU8(0); // 32k gyro
           r.writeU8(0); // PWM inversion
           break;
 
-      case MSP_GPS_CONFIG:
+        case MSP_SET_ADVANCED_CONFIG:
+          _model.state.gyroDivider = m.readU8();
+          _model.config.loopSync = m.readU8();
+          _model.config.outputAsync = m.readU8();
+          {
+            int8_t p = m.readU8();
+            if(p == OUTPUT_PWM || p == OUTPUT_ONESHOT125) _model.config.outputProtocol = p;
+          }
+          _model.config.outputRate = m.readU16();
+          m.readU16(); // dshot idle
+          m.readU8();  // 32k gyro
+          m.readU8();  // PWM inversion
+          break;
+
+        case MSP_GPS_CONFIG:
           r.writeU8(0); // provider
           r.writeU8(0); // sbasMode
           r.writeU8(0); // autoConfig
           r.writeU8(0); // autoBaud
           break;
 
-      case MSP_COMPASS_CONFIG:
+        case MSP_COMPASS_CONFIG:
           r.writeU16(0); // mag_declination * 10
           break;
 

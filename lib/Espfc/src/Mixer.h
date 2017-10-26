@@ -19,7 +19,7 @@ class Mixer
       {
         PWMDriver.attach(i, _model.config.outputPin[i], _model.state.outputDisarmed[i]);
       }
-      PWMDriver.begin(_model.config.outputRate, (OutputProtocol)_model.config.outputProtocol);
+      PWMDriver.begin((OutputProtocol)_model.config.outputProtocol, _model.config.outputAsync, _model.config.outputRate);
     }
 
     int update()
@@ -99,7 +99,7 @@ class Mixer
     {
       float r = _model.state.output[AXIS_ROLL];
       float p = _model.state.output[AXIS_PITCH];
-      float y = _model.state.output[AXIS_YAW];
+      float y = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? 1 : -1);
       float t = _model.state.output[AXIS_THRUST];
 
       float out[OUTPUT_CHANNELS];
