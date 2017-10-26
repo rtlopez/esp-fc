@@ -106,7 +106,7 @@ class Blackbox
       motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMin[0];
       motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
 
-      gyroConfigMutable()->gyro_sync_denom = _model.state.gyroDivider;
+      gyroConfigMutable()->gyro_sync_denom = _model.config.gyroSync;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
