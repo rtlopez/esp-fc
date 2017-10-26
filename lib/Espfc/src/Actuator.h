@@ -14,6 +14,7 @@ class Actuator
     int begin()
     {
       _model.state.modeMask = 0;
+      return 1;
     }
 
     int update()
@@ -22,6 +23,7 @@ class Actuator
       updateModeMask();
       updateScaler();
       _model.state.stats.end(COUNTER_ACTUATOR);
+      return 1;
     }
 
   private:
@@ -39,10 +41,10 @@ class Actuator
         for(size_t x = 0; x < AXES; x++)
         {
           if(
-            x == AXIS_ROLL   && (mode & ACT_AXIS_ROLL)  ||
-            x == AXIS_PITCH  && (mode & ACT_AXIS_PITCH) ||
-            x == AXIS_YAW    && (mode & ACT_AXIS_YAW)   ||
-            x == AXIS_THRUST && (mode & ACT_AXIS_THRUST)
+            (x == AXIS_ROLL   && (mode & ACT_AXIS_ROLL))  ||
+            (x == AXIS_PITCH  && (mode & ACT_AXIS_PITCH)) ||
+            (x == AXIS_YAW    && (mode & ACT_AXIS_YAW))   ||
+            (x == AXIS_THRUST && (mode & ACT_AXIS_THRUST))
           )
           {
 
@@ -61,7 +63,7 @@ class Actuator
 
     void updateModeMask()
     {
-      uint32_t newMask;
+      uint32_t newMask = 0;
       for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
       {
         ActuatorCondition * c = &_model.config.conditions[i];

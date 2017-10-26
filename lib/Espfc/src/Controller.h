@@ -21,6 +21,7 @@ class Controller
         _model.state.innerPid[i].configureFilter((FilterType)_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
         _model.state.outerPid[i].configureFilter((FilterType)_model.config.dtermFilterType, _model.config.dtermFilterCutFreq, _model.state.loopSampleRate);
       }
+      return 1;
     }
 
     int update()

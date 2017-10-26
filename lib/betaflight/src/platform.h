@@ -89,9 +89,6 @@ unsigned long micros(void);
 
 // Register system config
 #define PG_REGISTER_I(_type, _name, _pgn, _version, _reset)
-//#define PG_REGISTER_I(_type, _name, _pgn, _version, _reset)             \
-//    _type _name ## _System;                                             \
-//    /**/
 
 #define PG_REGISTER(_type, _name, _pgn, _version)                       \
     PG_REGISTER_I(_type, _name, _pgn, _version, 0)                      \

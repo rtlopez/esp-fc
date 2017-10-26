@@ -12,7 +12,7 @@ class OutputPWMFast
     class Slot
     {
       public:
-        Slot(): pin(-1), pulse(1000), diff(0) {}
+        Slot(): pulse(1000), diff(0), pin(-1) {}
         volatile uint32_t pulse;
         volatile uint32_t diff;
         volatile uint8_t pin;
@@ -43,7 +43,7 @@ class OutputPWMFast
       return ticks - 180; // ~180 cycles compensation for isr trigger
     }
 
-    int attach(int slot_id, int pin, int pulse)
+    int attach(size_t slot_id, int pin, int pulse)
     {
       if(slot_id < 0 || slot_id >= OUTPUT_CHANNELS) return 0;
       _buffer[slot_id].pin = pin;
@@ -52,7 +52,7 @@ class OutputPWMFast
       return 1;
     }
 
-    int write(int slot_id, int pulse) ICACHE_RAM_ATTR
+    int write(size_t slot_id, int pulse) ICACHE_RAM_ATTR
     {
       if(slot_id < 0 || slot_id >= OUTPUT_CHANNELS) return 0;
       _buffer[slot_id].pulse = usToTicks(pulse);

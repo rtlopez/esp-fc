@@ -26,6 +26,7 @@ class Sensor
       initPresure();
       initFilter();
       _fusion.begin();
+      return 1;
     }
 
     int update()
@@ -67,7 +68,7 @@ class Sensor
       if(_model.config.magDev != MAG_NONE)
       {
         _model.state.stats.start(COUNTER_MAG_READ);
-        int ret = readMag();
+        readMag();
         _model.state.stats.end(COUNTER_MAG_READ);
         _model.state.stats.start(COUNTER_MAG_FILTER);
         updateMag();
@@ -78,6 +79,7 @@ class Sensor
       {
         _fusion.update();
       }
+      return 1;
     }
 
   private:
@@ -162,12 +164,9 @@ class Sensor
     void updateGyro()
     {
       _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
-      for(size_t i; i < 3; ++i)
+      for(size_t i = 0; i < 3; ++i)
       {
         _model.state.gyroScaled.set(i, Math::deadband(_model.state.gyroScaled[i], _model.state.gyroDeadband));
-      }
-      for(size_t i = 0; i < 3; i++)
-      {
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
       }
 
@@ -352,18 +351,6 @@ class Sensor
       // sample rate = clock / ( divider + 1)
       int clock = 1000;
       if(_model.config.gyroDlpf == GYRO_DLPF_256) clock = 8000;
-      /*int rate = 100;
-      switch(_model.config.gyroSampleRate)
-      {
-        case GYRO_RATE_1000: rate = 1000; break;
-        case GYRO_RATE_500: rate = 500; break;
-        case GYRO_RATE_333: rate = 333; break;
-        case GYRO_RATE_250: rate = 250; break;
-        case GYRO_RATE_200: rate = 200; break;
-        case GYRO_RATE_166: rate = 166; break;
-        case GYRO_RATE_100: rate = 100; break;
-        case GYRO_RATE_50:  rate =  50; break;
-      }*/
       int rate = _model.config.gyroSampleRate;
 
       _model.state.gyroDivider = (clock / (rate + 1)) + 1;

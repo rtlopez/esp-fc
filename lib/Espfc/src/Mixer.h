@@ -20,6 +20,7 @@ class Mixer
         PWMDriver.attach(i, _model.config.outputPin[i], _model.state.outputDisarmed[i]);
       }
       PWMDriver.begin((OutputProtocol)_model.config.outputProtocol, _model.config.outputAsync, _model.config.outputRate);
+      return 1;
     }
 
     int update()
@@ -33,7 +34,7 @@ class Mixer
       }
 
       _model.state.stats.start(COUNTER_MIXER);
-      switch(_model.config.modelFrame)
+      switch(_model.config.mixerType)
       {
         case FRAME_QUAD_X:
           updateQuadX();
@@ -141,7 +142,7 @@ class Mixer
       writeOutput(out, 4);
     }
 
-    void writeOutput(float * out, int axes)
+    void writeOutput(float * out, size_t axes)
     {
       bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -153,14 +154,14 @@ class Mixer
         else
         {
           float v = Math::bound(out[i], -1.f, 1.f);
-          _model.state.outputUs[i] = (uint16_t)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+          _model.state.outputUs[i] = (int16_t)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
         }
         PWMDriver.write(i, _model.state.outputUs[i]);
       }
       PWMDriver.apply();
     }
 
-    void writeOutputRaw(uint16_t * out, int axes)
+    void writeOutputRaw(int16_t * out, size_t axes)
     {
       bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -171,7 +172,7 @@ class Mixer
         }
         else
         {
-          _model.state.outputUs[i] = Math::bound(out[i], (uint16_t)1000, (uint16_t)2000);
+          _model.state.outputUs[i] = Math::bound((int)out[i], 1000, 2000);
         }
         PWMDriver.write(i, _model.state.outputUs[i]);
       }

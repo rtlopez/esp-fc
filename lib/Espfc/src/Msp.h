@@ -802,7 +802,7 @@ class Msp
           break;
 
         case MSP_REBOOT:
-          _reboot;
+          _reboot = true;
           break;
 
         default:

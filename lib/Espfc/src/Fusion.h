@@ -14,6 +14,7 @@ class Fusion
     {
       _model.state.gyroPoseQ = Quaternion();
       _madgwick.begin(_model.state.gyroSampleRate);
+      return 1;
     }
 
     int update()

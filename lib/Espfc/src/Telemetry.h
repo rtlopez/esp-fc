@@ -22,6 +22,7 @@ class Telemetry
       if(!_stream) return 0;
       _model.state.stats.start(COUNTER_TELEMETRY);
       (*this)
+        << ""
         //<< _model.state.timestamp
         //<< _model.state.armed
         //<< _model.state.gyroBiasValid

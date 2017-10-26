@@ -14,7 +14,7 @@ class InputPPM
     uint16_t getTime(uint8_t i) const { return _channels[i]; }
     uint32_t getStart() const { return _start; }
     bool hasNewData() const { return _new_data; }
-    bool resetNewData() { _new_data = false; }
+    void resetNewData() { _new_data = false; }
 
     static const uint8_t CHANNELS = 16;
 

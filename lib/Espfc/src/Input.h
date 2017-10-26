@@ -16,6 +16,7 @@ class Input
       PPM.begin(_model.config.ppmPin, _model.config.ppmMode);
       _model.logger.info().log(F("PPM")).log(_model.config.ppmPin).logln(_model.config.ppmMode);
       setFailSafe();
+      return 1;
     }
 
     void setFailSafe()

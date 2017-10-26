@@ -20,17 +20,6 @@
 
 namespace Espfc {
 
-enum GyroRate {
-  GYRO_RATE_1000 = 0x00,
-  GYRO_RATE_500 = 0x01,
-  GYRO_RATE_333 = 0x02,
-  GYRO_RATE_250 = 0x03,
-  GYRO_RATE_200 = 0x04,
-  GYRO_RATE_166 = 0x05,
-  GYRO_RATE_100 = 0x06,
-  GYRO_RATE_50  = 0x07
-};
-
 enum GyroDlpf {
   GYRO_DLPF_256 = 0x00,
   GYRO_DLPF_188 = 0x01,
@@ -326,13 +315,13 @@ struct ModelState
   Pid innerPid[AXES];
   Pid outerPid[AXES];
 
-  short inputUs[INPUT_CHANNELS];
+  int16_t inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
-  unsigned long inputDelay;
+  uint32_t inputDelay;
   float inputFilterAlpha;
 
   float output[OUTPUT_CHANNELS];
-  short outputUs[OUTPUT_CHANNELS];
+  int16_t outputUs[OUTPUT_CHANNELS];
 
   // other state
   Kalman kalman[AXES];
@@ -352,7 +341,7 @@ struct ModelState
 
   float gyroDeadband;
 
-  uint8_t gyroDivider;
+  int8_t gyroDivider;
   uint32_t gyroSampleRate;
   uint32_t gyroSampleInterval;
   float gyroDt;
@@ -385,7 +374,7 @@ struct ModelState
   uint32_t telemetryTimestamp;
   bool telemetryUpdate;
 
-  uint16_t outputDisarmed[OUTPUT_CHANNELS];
+  int16_t outputDisarmed[OUTPUT_CHANNELS];
 
   Stats stats;
 
@@ -425,7 +414,7 @@ struct ModelConfig
 
   int8_t baroDev;
 
-  int8_t modelFrame;
+  int8_t mixerType;
 
   int32_t actuatorConfig[3];
   int8_t actuatorChannels[3];
@@ -508,7 +497,6 @@ class Model
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSync = 8;
-      config.gyroSampleRate = GYRO_RATE_1000;
       config.gyroDeadband = 0;
 
       config.magDev = MAG_NONE;
@@ -531,7 +519,6 @@ class Model
       config.dtermFilterCutFreq = 50;
 
       config.uart1Speed = SERIAL_SPEED_115200;
-
       config.uart2Speed = SERIAL_SPEED_115200;
       //config.uart2Speed = SERIAL_SPEED_230400;
       //config.uart2Speed = SERIAL_SPEED_250000;
@@ -546,7 +533,7 @@ class Model
 
       config.blackbox = 0;
       //config.blackboxPort = SERIAL_UART_2;
-      config.blackboxPort = SERIAL_UART_NONE;
+      config.blackboxPort = SERIAL_UART_2;
 
       // output config
       config.outputMinThrottle = 1050;
@@ -556,7 +543,7 @@ class Model
       {
         config.outputMin[i] = config.outputMinThrottle;
         config.outputMax[i] = config.outputMaxThrottle;
-        config.outputNeutral[i] = (config.outputMin[i] + config.outputMax[i]) / 2;
+        config.outputNeutral[i] = (config.outputMin[i] + config.outputMax[i] + 1) / 2;
       }
 
       config.outputPin[0] = D3; // D8; // -1 off
@@ -564,10 +551,10 @@ class Model
       config.outputPin[2] = D6; // D5;
       config.outputPin[3] = D8; // D3;
 
-      config.modelFrame = FRAME_QUAD_X;
+      //config.mixerType = FRAME_DIRECT;
+      config.mixerType = FRAME_QUAD_X;
       config.yawReverse = 0;
 
-      //config.modelFrame = FRAME_DIRECT;
       //config.outputProtocol = OUTPUT_PWM;
       config.outputProtocol = OUTPUT_ONESHOT125;
       config.outputRate = 500;    // max 500 for PWM, 2000 for Oneshot125

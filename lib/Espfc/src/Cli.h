@@ -103,13 +103,15 @@ class Cli
       _params[i++] = Param(PSTR("telemetry_interval"), &c->telemetryInterval);
       _params[i++] = Param(PSTR("accel_mode"), &c->accelMode);
       _params[i++] = Param(PSTR("gyro_sync"), &c->gyroSync);
+      _params[i++] = Param(PSTR("loop_sync"), &c->loopSync);
+      _params[i++] = Param(PSTR("mixer_sync"), &c->mixerSync);
       _params[i++] = Param(PSTR("mag_rate"), &c->magSampleRate);
       _params[i++] = Param(PSTR("angle_limit"), &c->angleLimit);
-      _params[i++] = Param(PSTR("angle_rate_limit"), &c->angleRateLimit);
+      _params[i++] = Param(PSTR("angle_rate_limit"), &c->angleRateLimit);  // 9
+
       _params[i++] = Param(PSTR("gyro_cal_x"), &c->gyroBias[0]);
       _params[i++] = Param(PSTR("gyro_cal_y"), &c->gyroBias[1]);
-      _params[i++] = Param(PSTR("gyro_cal_z"), &c->gyroBias[2]);  // 10
-
+      _params[i++] = Param(PSTR("gyro_cal_z"), &c->gyroBias[2]);
       _params[i++] = Param(PSTR("accel_cal_x"), &c->accelBias[0]);
       _params[i++] = Param(PSTR("accel_cal_y"), &c->accelBias[1]);
       _params[i++] = Param(PSTR("accel_cal_z"), &c->accelBias[2]);
@@ -118,15 +120,13 @@ class Cli
       _params[i++] = Param(PSTR("mag_cal_offset_z"), &c->magCalibrationOffset[2]);
       _params[i++] = Param(PSTR("mag_cal_scale_x"), &c->magCalibrationScale[0]);
       _params[i++] = Param(PSTR("mag_cal_scale_y"), &c->magCalibrationScale[1]);
-      _params[i++] = Param(PSTR("mag_cal_scale_z"), &c->magCalibrationScale[2]);
-      _params[i++] = Param(PSTR("pin_out_0"), &c->outputPin[0]); // 20
+      _params[i++] = Param(PSTR("mag_cal_scale_z"), &c->magCalibrationScale[2]); // 12
 
+      _params[i++] = Param(PSTR("pin_out_0"), &c->outputPin[0]);
       _params[i++] = Param(PSTR("pin_out_1"), &c->outputPin[1]);
       _params[i++] = Param(PSTR("pin_out_2"), &c->outputPin[2]);
       _params[i++] = Param(PSTR("pin_out_3"), &c->outputPin[3]);
-      _params[i++] = Param(PSTR("pin_ppm"), &c->ppmPin);
-      _params[i++] = Param(PSTR("loop_sync"), &c->loopSync);
-      _params[i++] = Param(PSTR("mixer_sync"), &c->mixerSync);
+      _params[i++] = Param(PSTR("pin_ppm"), &c->ppmPin);  // 5
     }
 
     int begin()
@@ -148,6 +148,7 @@ class Cli
           process(c);
         }
       }
+      return 1;
     }
 
     bool process(const char c)
