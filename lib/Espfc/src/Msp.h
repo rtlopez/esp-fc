@@ -456,23 +456,61 @@ class Msp
           break;
 
         case MSP_CF_SERIAL_CONFIG:
-          for (int i = SERIAL_UART_1; i < SERIAL_UART_COUNT; i++)
+          for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
           {
-            r.writeU8(i - 1); // identifier
-            r.writeU16(i == SERIAL_UART_2 ? SERIAL_FUNCTION_BLACKBOX : SERIAL_FUNCTION_MSP); // functionMask
-            r.writeU8(i == SERIAL_UART_2 ? SERIAL_SPEED_INDEX_AUTO : SERIAL_SPEED_INDEX_115200); // msp_baudrateIndex
+            r.writeU8(_model.config.serial[i].id); // identifier
+            r.writeU16(_model.config.serial[i].functionMask); // functionMask
+            r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
             r.writeU8(0); // gps_baudrateIndex
             r.writeU8(0); // telemetry_baudrateIndex
-            r.writeU8(i == SERIAL_UART_2 ? SERIAL_SPEED_INDEX_250000 : SERIAL_SPEED_INDEX_AUTO); // blackbox_baudrateIndex
+            r.writeU8(_model.config.serial[i].blackboxBaudIndex); // blackbox_baudrateIndex
           }
+          break;
+
+        case MSP_SET_CF_SERIAL_CONFIG:
+          {
+            const int packetSize = 1 + 2 + 4;
+            while(m.remain() >= packetSize)
+            {
+              int id = m.readU8();
+              if(id != SERIAL_UART_0 && id != SERIAL_UART_1)
+              {
+                m.advance(packetSize - 1);
+                continue;
+              }
+              _model.config.serial[id].id = id;
+              _model.config.serial[id].functionMask = m.readU16();
+              _model.config.serial[id].baudIndex = m.readU8();
+              m.readU8();
+              m.readU8();
+              _model.config.serial[id].blackboxBaudIndex = m.readU8();
+            }
+          }
+          _model.update();
           break;
 
         case MSP_BLACKBOX_CONFIG:
           r.writeU8(1); // Blackbox supported
-          r.writeU8(3); // device serial
+          r.writeU8(_model.config.blackboxDev); // device serial or none
           r.writeU8(1); // blackboxGetRateNum());
           r.writeU8(1); // blackboxGetRateDenom());
-          r.writeU16(32); // p_denom
+          r.writeU16(_model.config.blackboxPdenom); // p_denom
+          break;
+
+        case MSP_SET_BLACKBOX_CONFIG:
+          // Don't allow config to be updated while Blackbox is logging
+          if (true) {
+            _model.config.blackboxDev = m.readU8();
+            const int rateNum = m.readU8(); // was rate_num
+            const int rateDenom = m.readU8(); // was rate_denom
+            if (m.remain() >= 2) {
+                _model.config.blackboxPdenom = m.readU16(); // p_denom specified, so use it directly
+            } else {
+                // p_denom not specified in MSP, so calculate it from old rateNum and rateDenom
+                //p_denom = blackboxCalculatePDenom(rateNum, rateDenom);
+                (void)(rateNum + rateDenom);
+            }
+          }
           break;
 
         case MSP_ATTITUDE:

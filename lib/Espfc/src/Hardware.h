@@ -18,19 +18,67 @@ class Hardware
       //Wire.setClock(400000);
       Wire.setClock(1000000); // in real ~640kHz
       //Wire.setClockStretchLimit(100); // default 230
-      _model.logger.info().log(F("I2C")).logln(Wire.status());
+      _model.logger.info().log(F("I2C")).log(Wire.status()).logln(Wire.status() == 0 ? F("OK") : F("FAIL"));
 
-      if(_model.config.uart1Speed != SERIAL_SPEED_NONE)
+      for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
-        Serial.begin(_model.config.uart1Speed);
-        _model.logger.info().log(F("UART0")).logln(_model.config.uart1Speed);
+        HardwareSerial * serial = getSerialPort((SerialPort)i);
+        if(!serial) continue;
+
+        bool blackbox = _model.config.serial[i].functionMask & SERIAL_FUNCTION_BLACKBOX;
+        bool msp = _model.config.serial[i].functionMask & SERIAL_FUNCTION_MSP;
+        bool deb = _model.config.serial[i].functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY;
+
+        if(blackbox && msp)
+        {
+          int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
+          int speed = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_115200);
+          serial->begin(speed);
+          _model.logger.info().log(F("UART")).log(i).log(speed).log(F("msp")).logln(F("blackbox"));
+        }
+        else if(blackbox)
+        {
+          int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
+          int speed = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_250000);
+          serial->begin(speed);
+          _model.logger.info().log(F("UART")).log(i).log(speed).logln(F("blackbox"));
+        }
+        else if(msp || deb)
+        {
+          int speed = fromIndex((SerialSpeedIndex)_model.config.serial[i].baudIndex, SERIAL_SPEED_115200);
+          serial->begin(speed);
+          _model.logger.info().log(F("UART")).log(i).log(speed).log(msp ? F("msp") : F("")).logln(deb ? F("debug") : F(""));
+        }
       }
-      if(_model.config.uart2Speed != SERIAL_SPEED_NONE)
-      {
-        Serial1.begin(_model.config.uart2Speed);
-        _model.logger.info().log(F("UART1")).logln(_model.config.uart2Speed);
-      }
+      //Serial1.begin(115200);
       return 1;
+    }
+
+    static HardwareSerial * getSerialPort(SerialConfig * config, SerialFunction sf)
+    {
+      for (int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
+      {
+        if(config[i].functionMask & sf) return getSerialPort((SerialPort)i);
+      }
+      return NULL;
+    }
+
+    SerialSpeed fromIndex(SerialSpeedIndex index, SerialSpeed defaultSpeed)
+    {
+      switch(index)
+      {
+        case SERIAL_SPEED_INDEX_9600:   return SERIAL_SPEED_9600;
+        case SERIAL_SPEED_INDEX_19200:  return SERIAL_SPEED_19200;
+        case SERIAL_SPEED_INDEX_38400:  return SERIAL_SPEED_38400;
+        case SERIAL_SPEED_INDEX_57600:  return SERIAL_SPEED_57600;
+        case SERIAL_SPEED_INDEX_115200: return SERIAL_SPEED_115200;
+        case SERIAL_SPEED_INDEX_230400: return SERIAL_SPEED_230400;
+        case SERIAL_SPEED_INDEX_250000: return SERIAL_SPEED_250000;
+        case SERIAL_SPEED_INDEX_500000: return SERIAL_SPEED_500000;
+        case SERIAL_SPEED_INDEX_AUTO:
+        default:
+          return defaultSpeed;
+      }
     }
 
     int update()
@@ -42,9 +90,9 @@ class Hardware
     {
       switch(portId)
       {
-        case SERIAL_UART_1:
+        case SERIAL_UART_0:
           return  &Serial;
-        case SERIAL_UART_2:
+        case SERIAL_UART_1:
           return  &Serial1;
         default:
           return NULL;

@@ -45,9 +45,9 @@ class Blackbox
 
     int begin()
     {
-      if(!_model.config.blackbox) return 0;
+      if(!_model.config.blackboxDev) return 0;
 
-      _serial = Hardware::getSerialPort((SerialPort)_model.config.blackboxPort);
+      _serial = Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_BLACKBOX);
       if(!_serial) return 0;
 
       serialWriteInit(_serial);
@@ -98,8 +98,8 @@ class Blackbox
       motorConfigMutable()->dev.motorPwmProtocol = _model.config.outputProtocol;
       motorConfigMutable()->dev.motorPwmRate = _model.config.outputRate;
 
-      blackboxConfigMutable()->p_denom = 32;
-      blackboxConfigMutable()->device = BLACKBOX_DEVICE_SERIAL;
+      blackboxConfigMutable()->p_denom = _model.config.blackboxPdenom;
+      blackboxConfigMutable()->device = _model.config.blackboxDev;
 
       targetPidLooptime = gyro.targetLooptime = _model.state.gyroSampleInterval;
 

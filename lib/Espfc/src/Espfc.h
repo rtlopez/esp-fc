@@ -80,7 +80,7 @@ class Espfc
         PIN_DEBUG(false);
       }
 
-      if(_model.config.blackbox && _model.state.gyroUpdate)
+      if(_model.config.blackboxDev && _model.state.gyroUpdate)
       {
         PIN_DEBUG(true);
         _blackbox.update();

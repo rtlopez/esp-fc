@@ -131,7 +131,7 @@ class Cli
 
     int begin()
     {
-      _stream = (Stream*)Hardware::getSerialPort((SerialPort)_model.config.cliPort);
+      _stream = (Stream*)Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_MSP);
       return 1;
     }
 

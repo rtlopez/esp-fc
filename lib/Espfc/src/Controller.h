@@ -71,7 +71,7 @@ class Controller
 
     void resetIterm()
     {
-      if(!_model.isActive(MODE_ARMED) || (_model.config.lowThrottleZeroIterm && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck))
+      if(!_model.isActive(MODE_ARMED) || (_model.config.lowThrottleZeroIterm && !_model.isActive(MODE_AIRMODE) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck))
       {
         for(size_t i = 0; i < AXES; i++)
         {

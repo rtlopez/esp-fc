@@ -168,9 +168,8 @@ enum SerialSpeedIndex {
 };
 
 enum SerialPort {
-  SERIAL_UART_NONE = 0,
+  SERIAL_UART_0,
   SERIAL_UART_1,
-  SERIAL_UART_2,
   SERIAL_UART_COUNT
 };
 
@@ -273,6 +272,15 @@ class ActuatorCondition
     uint8_t ch;
     uint8_t min;
     uint8_t max;
+};
+
+class SerialConfig
+{
+  public:
+    int8_t id;
+    int16_t functionMask;
+    int8_t baudIndex;
+    int8_t blackboxBaudIndex;
 };
 
 #define ACTUATOR_CONDITIONS 8
@@ -478,20 +486,16 @@ struct ModelConfig
 
   int32_t featureMask;
 
-  int16_t lowThrottleTreshold;
   bool lowThrottleZeroIterm;
-  bool lowThrottleMotorStop;
 
   bool telemetry;
   int32_t telemetryInterval;
   int8_t telemetryPort;
 
-  bool blackbox;
-  int8_t blackboxPort;
-  int8_t cliPort;
+  int8_t blackboxDev;
+  int16_t blackboxPdenom;
 
-  int32_t uart1Speed;
-  int32_t uart2Speed;
+  SerialConfig serial[2];
 
   int8_t fusionMode;
   bool fusionDelay;
@@ -506,7 +510,21 @@ struct ModelConfig
 class Model
 {
   public:
-    Model() {
+    Model()
+    {
+      initialize();
+    }
+
+    void begin()
+    {
+      logger.begin();
+      EEPROM.begin(512);
+      load();
+      update();
+    }
+
+    void initialize()
+    {
       config.gyroDev = ACCEL_MPU6050;
       config.accelDev = ACCEL_MPU6050;
 
@@ -536,22 +554,21 @@ class Model
       config.dtermFilterType = FILTER_BIQUAD;
       config.dtermFilterCutFreq = 50;
 
-      config.uart1Speed = SERIAL_SPEED_115200;
-      config.uart2Speed = SERIAL_SPEED_115200;
-      //config.uart2Speed = SERIAL_SPEED_230400;
-      //config.uart2Speed = SERIAL_SPEED_250000;
-      //config.uart2Speed = SERIAL_SPEED_500000;
-      //config.uart2Speed = SERIAL_SPEED_NONE;
-
-      config.cliPort = SERIAL_UART_1;
-
       config.telemetry = 0;
       config.telemetryInterval = 1000 * 1000;
-      config.telemetryPort = SERIAL_UART_1;
 
-      config.blackbox = 0;
-      //config.blackboxPort = SERIAL_UART_2;
-      config.blackboxPort = SERIAL_UART_2;
+      config.blackboxDev = 3;
+      config.blackboxPdenom = 32;
+
+      config.serial[SERIAL_UART_0].id = SERIAL_UART_0;
+      config.serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
+      config.serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
+      config.serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+
+      config.serial[SERIAL_UART_1].id = SERIAL_UART_1;
+      config.serial[SERIAL_UART_1].functionMask = 0;
+      config.serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
+      config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       // output config
       config.outputMinThrottle = 1050;
@@ -635,9 +652,7 @@ class Model
 
       config.featureMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP;
 
-      config.lowThrottleTreshold = 1050;
       config.lowThrottleZeroIterm = true;
-      config.lowThrottleMotorStop = true;
 
       config.conditions[0].id = MODE_ARMED;
       config.conditions[0].ch = 0; // aux1
@@ -651,8 +666,8 @@ class Model
 
       config.conditions[2].id = MODE_AIRMODE;
       config.conditions[2].ch = 0; // aux1
-      config.conditions[2].min = (1200 - 900) / 25;
-      config.conditions[2].max = (1700 - 900) / 25;
+      config.conditions[2].min = (1700 - 900) / 25;
+      config.conditions[2].max = (2100 - 900) / 25;
 
       // actuator config - pid scaling
       config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
@@ -701,14 +716,6 @@ class Model
       state.accelBiasSamples = 2 * state.gyroSampleRate;
     }
 
-    void begin()
-    {
-      logger.begin();
-      EEPROM.begin(512);
-      load();
-      update();
-    }
-
     void update()
     {
       config.gyroSync = std::max((int)config.gyroSync, 8);
@@ -736,7 +743,9 @@ class Model
       config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);
       config.featureMask |= FEATURE_RX_PPM; // force ppm
 
-      config.lowThrottleMotorStop = config.featureMask & FEATURE_MOTOR_STOP;
+      config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
+      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
+      config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
 
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
