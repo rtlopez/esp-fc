@@ -64,7 +64,7 @@ class Sensor
         _model.state.stats.end(COUNTER_ACCEL_FILTER);
       }
 
-      if(_model.config.magEnable)
+      if(_model.config.magDev != MAG_NONE)
       {
         _model.state.stats.start(COUNTER_MAG_READ);
         int ret = readMag();
@@ -89,7 +89,7 @@ class Sensor
           return readGyroAccelFifo();
         case ACCEL_GYRO:
           return readGyroAccel();
-        case ACCEL_NONE:
+        case ACCEL_OFF:
         case ACCEL_DELAYED:
         default:
           return readGyro();
@@ -103,7 +103,7 @@ class Sensor
         case ACCEL_GYRO_FIFO:
         case ACCEL_GYRO:
           updateAccel();
-        case ACCEL_NONE:
+        case ACCEL_OFF:
         case ACCEL_DELAYED:
         default:
           updateGyro();
@@ -150,7 +150,7 @@ class Sensor
 
     int readMag()
     {
-      if(_model.config.magEnable && _model.state.magTimestamp + _model.state.magSampleInterval < _model.state.gyroTimestamp)
+      if(_model.config.magDev != MAG_NONE && _model.state.magTimestamp + _model.state.magSampleInterval < _model.state.gyroTimestamp)
       {
         _mag.getHeading(&_model.state.magRaw.x, &_model.state.magRaw.y, &_model.state.magRaw.z);
         _model.state.magTimestamp = _model.state.gyroTimestamp;
@@ -239,7 +239,7 @@ class Sensor
 
     void updateMag()
     {
-      if(_model.config.magEnable)
+      if(_model.config.magDev != MAG_NONE)
       {
         _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
         for(size_t i = 0; i < 3; i++)
@@ -257,7 +257,7 @@ class Sensor
 
     void collectMagCalibration()
     {
-      if(!_model.config.magEnable) return;
+      if(_model.config.magDev == MAG_NONE) return;
       if(_model.state.magCalibration == 1)
       {
         resetMagCalibration();
@@ -275,7 +275,7 @@ class Sensor
 
     void resetMagCalibration()
     {
-      if(!_model.config.magEnable) return;
+      if(_model.config.magDev == MAG_NONE) return;
       for(int i = 0; i < 3; i++)
       {
         _model.state.magCalibrationData[i][0] = 0;
@@ -286,7 +286,7 @@ class Sensor
 
     void updateMagCalibration()
     {
-      if(!_model.config.magEnable) return;
+      if(_model.config.magDev == MAG_NONE) return;
       // just in case when the calibration data is not valid
       _model.state.magCalibrationValid = false;
       for(int i = 0; i < 3; i++)
@@ -352,7 +352,7 @@ class Sensor
       // sample rate = clock / ( divider + 1)
       int clock = 1000;
       if(_model.config.gyroDlpf == GYRO_DLPF_256) clock = 8000;
-      int rate = -1;
+      /*int rate = 100;
       switch(_model.config.gyroSampleRate)
       {
         case GYRO_RATE_1000: rate = 1000; break;
@@ -363,8 +363,8 @@ class Sensor
         case GYRO_RATE_166: rate = 166; break;
         case GYRO_RATE_100: rate = 100; break;
         case GYRO_RATE_50:  rate =  50; break;
-        default: rate = 100;
-      }
+      }*/
+      int rate = _model.config.gyroSampleRate;
 
       _model.state.gyroDivider = (clock / (rate + 1)) + 1;
       _model.state.gyroSampleRate = clock / (_model.state.gyroDivider); // update to real sample rate
@@ -408,7 +408,7 @@ class Sensor
 
     void initMag()
     {
-      if(!_model.config.magEnable) return;
+      if(_model.config.magDev == MAG_NONE) return;
       _mag.initialize();
 
       _model.logger.info().log(F("MAG INIT")).logln(_mag.testConnection());

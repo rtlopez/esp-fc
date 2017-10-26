@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <cstring>
 #include "Arduino.h"
 #include "msp/msp_protocol.h"
 #include "platform.h"
@@ -302,11 +303,15 @@ class Msp
           break;
 
         case MSP_NAME:
-          r.writeString("ESPFC");
+          r.writeString(_model.config.modelName);
           break;
 
         case MSP_SET_NAME:
-          //TODO
+          std::memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
+          for(size_t i = 0; i < std::min((size_t)m.received, MODEL_NAME_LEN); i++)
+          {
+            _model.config.modelName[i] = m.readU8();
+          }
           break;
 
         case MSP_BOXNAMES:
@@ -355,7 +360,12 @@ class Msp
           break;
 
         case MSP_FEATURE_CONFIG:
-          r.writeU32(0);
+          r.writeU32(_model.config.featureMask);
+          break;
+
+        case MSP_SET_FEATURE_CONFIG:
+          _model.config.featureMask = m.readU32();
+          _model.update();
           break;
 
         case MSP_BATTERY_CONFIG:
@@ -427,9 +437,16 @@ class Msp
           break;
 
         case MSP_SENSOR_CONFIG:
-          r.writeU8(3); // 3 acc mpu6050
-          r.writeU8(0); // 2 baro bmp085
-          r.writeU8(0); // 3 mag hmc5883l
+          r.writeU8(_model.config.accelDev); // 3 acc mpu6050
+          r.writeU8(_model.config.baroDev);  // 2 baro bmp085
+          r.writeU8(_model.config.magDev);   // 3 mag hmc5883l
+          break;
+
+        case MSP_SET_SENSOR_CONFIG:
+          _model.config.accelDev = m.readU8(); // 3 acc mpu6050
+          _model.config.baroDev = m.readU8();  // 2 baro bmp085
+          _model.config.magDev = m.readU8();   // 3 mag hmc5883l
+          _model.update();
           break;
 
         case MSP_SENSOR_ALIGNMENT:
@@ -475,7 +492,7 @@ class Msp
           break;
 
         case MSP_RX_MAP:
-          for(size_t i = 0; i < 8; i++)
+          for(size_t i = 0; i < INPUT_CHANNELS; i++)
           {
             r.writeU8(_model.config.inputMap[i]);
           }
@@ -486,9 +503,16 @@ class Msp
           break;
 
         case MSP_MOTOR_CONFIG:
-          r.writeU16(1050); // minthrottle
-          r.writeU16(2000); // maxthrottle
-          r.writeU16(1000); // mincommand
+          r.writeU16(_model.config.outputMinThrottle); // minthrottle
+          r.writeU16(_model.config.outputMaxThrottle); // maxthrottle
+          r.writeU16(_model.config.outputMinCommand); // mincommand
+          break;
+
+        case MSP_SET_MOTOR_CONFIG:
+          _model.config.outputMinThrottle = m.readU16(); // minthrottle
+          _model.config.outputMaxThrottle = m.readU16(); // maxthrottle
+          _model.config.outputMinCommand = m.readU16(); // mincommand
+          _model.update();
           break;
 
         case MSP_MOTOR_3D_CONFIG:
@@ -510,6 +534,13 @@ class Msp
           r.writeU16(0); // deadband 3d throttle
           break;
 
+        case MSP_SET_RC_DEADBAND:
+          _model.config.inputDeadband = m.readU8();
+          m.readU8(); // yaw deadband
+          m.readU8(); // alt hod deadband
+          m.readU16(); // deadband 3d throttle
+          break;
+
         case MSP_RX_CONFIG:
           r.writeU8(0); // serialrx_provider
           r.writeU16(1900); //maxcheck
@@ -528,7 +559,7 @@ class Msp
           break;
 
         case MSP_RC:
-          for(size_t i = 0; i < 8; i++)
+          for(size_t i = 0; i < INPUT_CHANNELS; i++)
           {
             r.writeU16(_model.state.inputUs[i]);
           }
@@ -579,7 +610,7 @@ class Msp
           break;
 
         case MSP_ADVANCED_CONFIG:
-          r.writeU8(_model.state.gyroDivider);
+          r.writeU8(_model.config.gyroSync);
           r.writeU8(_model.config.loopSync);
           r.writeU8(_model.config.outputAsync);
           r.writeU8(_model.config.outputProtocol);
@@ -590,17 +621,15 @@ class Msp
           break;
 
         case MSP_SET_ADVANCED_CONFIG:
-          _model.state.gyroDivider = m.readU8();
+          _model.config.gyroSync = m.readU8();
           _model.config.loopSync = m.readU8();
           _model.config.outputAsync = m.readU8();
-          {
-            int8_t p = m.readU8();
-            if(p == OUTPUT_PWM || p == OUTPUT_ONESHOT125) _model.config.outputProtocol = p;
-          }
+          _model.config.outputProtocol = m.readU8();
           _model.config.outputRate = m.readU16();
           m.readU16(); // dshot idle
           m.readU8();  // 32k gyro
           m.readU8();  // PWM inversion
+          _model.update();
           break;
 
         case MSP_GPS_CONFIG:

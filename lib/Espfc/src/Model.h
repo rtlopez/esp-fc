@@ -56,7 +56,7 @@ enum AccelGain {
 };
 
 enum AccelMode {
-  ACCEL_NONE      = 0x00,
+  ACCEL_OFF       = 0x00,
   ACCEL_DELAYED   = 0x01,
   ACCEL_GYRO      = 0x02,
   ACCEL_GYRO_FIFO = 0x03
@@ -203,13 +203,35 @@ enum SerialFunction {
   SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
 };
 
-
 enum OutputProtocol {
   OUTPUT_PWM,
   OUTPUT_ONESHOT125
 };
 
-const size_t OUTPUT_CHANNELS = 4;
+enum AccelDev {
+  ACCEL_DEFAULT = 0,
+  ACCEL_NONE    = 1,
+  ACCEL_MPU6050 = 3,
+  ACCEL_MPU6000 = 7,
+  ACCEL_MPU6500 = 8,
+  ACCEL_MPU9250 = 9
+};
+
+enum MagDev {
+  MAG_DEFAULT = 0,
+  MAG_NONE    = 1,
+  MAG_HMC5883 = 2,
+  MAG_AK8975  = 3,
+  MAG_AK8963  = 4
+};
+
+enum BaroDev {
+  BARO_DEFAULT = 0,
+  BARO_NONE    = 1,
+  BARO_BMP085  = 2,
+  BARO_MS5611  = 3,
+  BARO_BMP280  = 4
+};
 
 enum Axis {
   AXIS_ROLL,    // x
@@ -222,9 +244,6 @@ enum Axis {
   AXIS_AUX_4,
   AXIS_COUNT
 };
-
-const size_t AXES            = 4;
-const size_t INPUT_CHANNELS  = AXIS_COUNT;
 
 enum PidIndex {
   PID_ROLL,
@@ -239,6 +258,17 @@ enum PidIndex {
   PID_VEL,
   PID_ITEM_COUNT
 };
+
+enum Feature {
+  FEATURE_RX_PPM     = 1 << 0,
+  FEATURE_MOTOR_STOP = 1 << 4,
+  FEATURE_TELEMETRY  = 1 << 10
+};
+
+const size_t AXES            = 4;
+const size_t INPUT_CHANNELS  = AXIS_COUNT;
+const size_t OUTPUT_CHANNELS = 4;
+const size_t MODEL_NAME_LEN  = 16;
 
 class ActuatorCondition
 {
@@ -365,13 +395,17 @@ struct ModelState
 // persistent data
 struct ModelConfig
 {
+  int8_t gyroDev;
   int8_t gyroDlpf;
   int8_t gyroFsr;
+  int8_t gyroSync;
+  int16_t gyroSampleRate;
+
+  int8_t accelDev;
   int8_t accelFsr;
-  int8_t gyroSampleRate;
-  int8_t gyroDeadband;
   int8_t accelMode;
 
+  int8_t gyroDeadband;
   int8_t gyroFilterType;
   int16_t gyroFilterCutFreq;
   int8_t accelFilterType;
@@ -384,10 +418,12 @@ struct ModelConfig
   uint8_t dtermSetpointWeight;
   int8_t itermWindupPointPercent;
 
-  bool magEnable;
+  int8_t magDev;
   int8_t magSampleRate;
   int8_t magFsr;
   int8_t magAvr;
+
+  int8_t baroDev;
 
   int8_t modelFrame;
 
@@ -411,6 +447,10 @@ struct ModelConfig
   uint8_t inputRate[3];
   uint8_t inputSuperRate[3];
 
+  int16_t outputMinThrottle;
+  int16_t outputMaxThrottle;
+  int16_t outputMinCommand;
+
   int16_t outputMin[OUTPUT_CHANNELS];
   int16_t outputNeutral[OUTPUT_CHANNELS];
   int16_t outputMax[OUTPUT_CHANNELS];
@@ -428,6 +468,8 @@ struct ModelConfig
 
   int8_t loopSync;
   int8_t mixerSync;
+
+  int32_t featureMask;
 
   int16_t lowThrottleTreshold;
   bool lowThrottleZeroIterm;
@@ -451,20 +493,25 @@ struct ModelConfig
   int16_t accelBias[3];
   int16_t magCalibrationScale[3];
   int16_t magCalibrationOffset[3];
+  char modelName[MODEL_NAME_LEN + 1];
 };
 
 class Model
 {
   public:
     Model() {
+      config.gyroDev = ACCEL_MPU6050;
+      config.accelDev = ACCEL_MPU6050;
+
       config.accelMode = ACCEL_GYRO;
       config.gyroDlpf = GYRO_DLPF_256;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
+      config.gyroSync = 8;
       config.gyroSampleRate = GYRO_RATE_1000;
       config.gyroDeadband = 0;
 
-      config.magEnable = 0;
+      config.magDev = MAG_NONE;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
 
@@ -502,10 +549,13 @@ class Model
       config.blackboxPort = SERIAL_UART_NONE;
 
       // output config
+      config.outputMinThrottle = 1050;
+      config.outputMaxThrottle = 2000;
+      config.outputMinCommand = 1000;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        config.outputMin[i] = 1050;
-        config.outputMax[i] = 1990;
+        config.outputMin[i] = config.outputMinThrottle;
+        config.outputMax[i] = config.outputMaxThrottle;
         config.outputNeutral[i] = (config.outputMin[i] + config.outputMax[i]) / 2;
       }
 
@@ -567,6 +617,8 @@ class Model
 
       config.angleLimit = 50;  // deg
       config.angleRateLimit = 300;  // deg
+
+      config.featureMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP;
 
       config.lowThrottleTreshold = 1050;
       config.lowThrottleZeroIterm = true;
@@ -645,10 +697,37 @@ class Model
 
     void update()
     {
+      config.gyroSync = std::max((int)config.gyroSync, 8);
+      config.gyroSampleRate = 8000 / config.gyroSync;
+
+      if(config.outputProtocol != OUTPUT_PWM && config.outputProtocol != OUTPUT_ONESHOT125)
+      {
+        config.outputProtocol = OUTPUT_PWM;
+      }
+
+      if(config.outputProtocol == OUTPUT_PWM && config.gyroSampleRate > 500)
+      {
+        config.loopSync = config.gyroSampleRate / 500;
+      }
+
+      if(config.outputProtocol == OUTPUT_PWM)
+      {
+        config.outputRate = std::max((int)config.outputRate, 480);
+      }
+      else if(config.outputProtocol == OUTPUT_ONESHOT125)
+      {
+        config.outputRate = std::max((int)config.outputRate, 1000);
+      }
+
+      config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);
+      config.featureMask |= FEATURE_RX_PPM; // force ppm
+
+      config.lowThrottleMotorStop = config.featureMask & FEATURE_MOTOR_STOP;
+
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        state.outputDisarmed[i] = 1000;
+        state.outputDisarmed[i] = config.outputMinCommand;
       }
 
       // update initial sensor calibration
@@ -753,7 +832,7 @@ class Model
     void reset()
     {
       config = ModelConfig();
-      //update();
+      update();
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;

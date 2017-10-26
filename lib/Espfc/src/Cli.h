@@ -102,7 +102,7 @@ class Cli
       _params[i++] = Param(PSTR("telemetry"), &c->telemetry);
       _params[i++] = Param(PSTR("telemetry_interval"), &c->telemetryInterval);
       _params[i++] = Param(PSTR("accel_mode"), &c->accelMode);
-      _params[i++] = Param(PSTR("gyro_rate"), &c->gyroSampleRate);
+      _params[i++] = Param(PSTR("gyro_sync"), &c->gyroSync);
       _params[i++] = Param(PSTR("mag_rate"), &c->magSampleRate);
       _params[i++] = Param(PSTR("angle_limit"), &c->angleLimit);
       _params[i++] = Param(PSTR("angle_rate_limit"), &c->angleRateLimit);
