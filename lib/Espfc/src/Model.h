@@ -394,6 +394,9 @@ struct ModelState
   uint32_t modeMask;
 
   bool sensorCalibration;
+
+  bool actuatorUpdate;
+  uint32_t actuatorTimestamp;
 };
 
 // persistent data
@@ -700,14 +703,19 @@ class Model
       config.magCalibrationScale[2] = 1000;
     }
 
-    bool isActive(FlightMode mode)
+    bool isActive(FlightMode mode) const
     {
       return state.modeMask & (1 << mode);
     }
 
-    bool isActive(Feature feature)
+    bool isActive(Feature feature) const
     {
       return config.featureMask & feature;
+    }
+
+    bool blackboxEnabled() const
+    {
+      return config.blackboxDev == 3 && config.blackboxPdenom > 0;
     }
 
     void calibrate()
@@ -729,7 +737,7 @@ class Model
 
     void update()
     {
-      config.gyroSync = std::max((int)config.gyroSync, 8);
+      config.gyroSync = std::max((int)config.gyroSync, 8); // max 1khz
       config.gyroSampleRate = 8000 / config.gyroSync;
 
       if(config.outputProtocol != OUTPUT_PWM && config.outputProtocol != OUTPUT_ONESHOT125)
@@ -776,7 +784,7 @@ class Model
         state.outputDisarmed[i] = config.outputMinCommand;
       }
 
-      // update initial sensor calibration
+      // load sensor calibration data
       for(size_t i = 0; i < 3; i++)
       {
         state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
@@ -837,14 +845,14 @@ class Model
       uint8_t magic = EEPROM.read(addr++);
       if(EEPROM_MAGIC != magic)
       {
-        logger.err().log(F("eeprom bad magic"));
+        logger.err().logln(F("EEPROM bad magic"));
         return -1;
       }
 
       uint8_t version = EEPROM.read(addr++);
       if(version != EEPROM_VERSION)
       {
-        logger.err().log(F("eeprom wrong version"));
+        logger.err().logln(F("EEPROM wrong version"));
         return -1;
       }
 
@@ -854,7 +862,7 @@ class Model
       {
         *it = EEPROM.read(addr++);
       }
-      logger.info().logln(F("eeprom load"));
+      logger.info().logln(F("EEPROM loaded"));
       return 1;
     }
 
@@ -872,7 +880,7 @@ class Model
         EEPROM.write(addr++, *it);
       }
       EEPROM.commit();
-      logger.info().logln(F("eeprom save"));
+      logger.info().logln(F("EEPROM saveed"));
     }
 
     void reset()

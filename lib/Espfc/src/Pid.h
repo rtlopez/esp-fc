@@ -62,12 +62,12 @@ class Pid
         iTerm = 0; // zero integral
       }
 
-      float dTerm = 0;
+      float delta = 0;
       if(Kd > 0 && dt > 0)
       {
-        dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
+        delta = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
       }
-      dTerm = dtermFilter.update(dTerm);
+      dTerm = dtermFilter.update(delta);
 
       float output = Math::bound(pTerm + iTerm + dTerm, -oLimit, oLimit);
 

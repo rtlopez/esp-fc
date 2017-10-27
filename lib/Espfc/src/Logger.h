@@ -13,7 +13,7 @@ class Logger
     {
       _valid = false;
       SPIFFS.begin();
-      for(size_t i = 1; i < 100; i++)
+      for(size_t i = 1; i < 1000; i++)
       {
         String name;
         _mkname(name, i);
@@ -21,7 +21,6 @@ class Logger
         {
           _name = name;
           _valid = true;
-          //_file = SPIFFS.open(name, "a+");
           break;
         }
       }
@@ -81,7 +80,7 @@ class Logger
 
     Logger& info()
     {
-      if(!_valid) return *this;
+      if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
@@ -94,7 +93,7 @@ class Logger
 
     Logger& err()
     {
-      if(!_valid) return *this;
+      if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
@@ -108,7 +107,7 @@ class Logger
     template<typename T>
     Logger& log(const T& v)
     {
-      if(!_valid) return *this;
+      if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
@@ -122,7 +121,7 @@ class Logger
     template<typename T>
     Logger& logln(const T& v)
     {
-      if(!_valid) return *this;
+      if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
@@ -132,11 +131,23 @@ class Logger
       return *this;
     }
 
+    bool _available()
+    {
+      if(_valid)
+      {
+        FSInfo i;
+        SPIFFS.info(i);
+        _valid = i.totalBytes - i.usedBytes > 1024; // keep 1kB free space margin
+      }
+      return _valid;
+    }
+
     void _mkname(String& name, int i)
     {
       name = "";
-      if(i < 10) name += "00";
-      else if(i < 100) name += "0";
+      if(i < 10) name += "000";
+      else if(i < 100) name += "00";
+      else if(i < 1000) name += "0";
       name += i;
     }
 

@@ -67,7 +67,12 @@ class Espfc
         _model.state.loopTimestamp = now;
         _model.state.loopIteration++;
         _input.update();
-        _actuator.update();
+        _model.state.actuatorUpdate = _model.state.actuatorTimestamp + 50000 < now; // update every 50ms
+        if(_model.state.actuatorUpdate)
+        {
+          _model.state.actuatorTimestamp = now;
+          _actuator.update();
+        }
         _controller.update();
         PIN_DEBUG(false);
       }
@@ -80,7 +85,7 @@ class Espfc
         PIN_DEBUG(false);
       }
 
-      if(_model.config.blackboxDev && _model.state.gyroUpdate)
+      if(_model.state.gyroUpdate && _model.blackboxEnabled())
       {
         PIN_DEBUG(true);
         _blackbox.update();

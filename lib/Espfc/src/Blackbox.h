@@ -45,7 +45,7 @@ class Blackbox
 
     int begin()
     {
-      if(!_model.config.blackboxDev) return 0;
+      if(!_model.blackboxEnabled()) return 0;
 
       _serial = Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_BLACKBOX);
       if(!_serial) return 0;

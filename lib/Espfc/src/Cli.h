@@ -349,7 +349,7 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("calgyro")) == 0)
       {
-        _model.calibrate();
+        if(!_model.isActive(MODE_ARMED)) _model.calibrate();
         println(F("OK"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("calinfo")) == 0)
@@ -403,9 +403,6 @@ class Cli
         {
           start = std::max(String(_cmd.args[1]).toInt(), 0L);
         }
-
-        //start = ((char*)&_model.config.gyroBias - (char*)&_model.config) + 2;
-        //println(start);
 
         for(int i = start; i < start + 32; ++i)
         {
