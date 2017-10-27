@@ -458,6 +458,9 @@ struct ModelConfig
   int16_t inputMax[INPUT_CHANNELS];
   int8_t inputMap[INPUT_CHANNELS];
 
+  int8_t failsafeMode[INPUT_CHANNELS];
+  int16_t failsafeValue[INPUT_CHANNELS];
+
   int8_t inputDeadband;
   int8_t inputFilterAlpha;
 
@@ -521,7 +524,7 @@ class Model
     void begin()
     {
       logger.begin();
-      EEPROM.begin(512);
+      EEPROM.begin(1024);
       load();
       update();
     }
@@ -541,6 +544,8 @@ class Model
       config.magDev = MAG_NONE;
       config.magSampleRate = MAG_RATE_75;
       config.magAvr = MAG_AVERAGING_1;
+
+      config.baroDev = BARO_NONE;
 
       config.loopSync = 1;
       config.mixerSync = 1;
@@ -569,7 +574,7 @@ class Model
       config.serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       config.serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      config.serial[SERIAL_UART_1].functionMask = 0;
+      config.serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
       config.serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
@@ -611,19 +616,24 @@ class Model
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
         config.inputMap[i] = i;
+        config.inputMin[i] = 1000;
+        config.inputNeutral[i] = config.inputMidRc;
+        config.inputMax[i] = 2000;
+        config.failsafeMode[i] = 2;
+        config.failsafeValue[i] = 1500;
       }
       // swap yaw and throttle for AETR
       config.inputMap[2] = 3; // replace input 2 with rx channel 3, yaw
       config.inputMap[3] = 2; // replace input 3 with rx channel 2, throttle
 
-      for(size_t i = 0; i < INPUT_CHANNELS; i++)
-      {
-        config.inputMin[i] = 1000;
-        config.inputNeutral[i] = config.inputMidRc;
-        config.inputMax[i] = 2000;
-      }
       config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
       config.inputMax[AXIS_YAW] = 1000;
+
+      config.failsafeMode[AXIS_ROLL] = 0;
+      config.failsafeMode[AXIS_PITCH] = 0;
+      config.failsafeMode[AXIS_YAW] = 0;
+      config.failsafeMode[AXIS_THRUST] = 0;
+      config.failsafeValue[AXIS_THRUST] = 1000;
 
       for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
       {
@@ -856,8 +866,18 @@ class Model
         return -1;
       }
 
+      uint16_t size = 0;
+      size = EEPROM.read(addr++);
+      size |= EEPROM.read(addr++) << 8;
+      if(size != sizeof(ModelConfig))
+      {
+        logger.info().logln(F("EEPROM size mismatch"));
+      }
+
+      size = std::min(size, (uint16_t)sizeof(ModelConfig));
+
       uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
-      uint8_t * end = begin + sizeof(ModelConfig);
+      uint8_t * end = begin + size;
       for(uint8_t * it = begin; it < end; ++it)
       {
         *it = EEPROM.read(addr++);
@@ -869,28 +889,36 @@ class Model
     void save()
     {
       preSave();
+      write(config);
+      logger.info().logln(F("EEPROM saved"));
+    }
+
+    void write(const ModelConfig& config)
+    {
       int addr = 0;
+      uint16_t size = sizeof(ModelConfig);
       EEPROM.write(addr++, EEPROM_MAGIC);
       EEPROM.write(addr++, EEPROM_VERSION);
-
-      uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
-      uint8_t * end = begin + sizeof(ModelConfig);
-      for(uint8_t * it = begin; it < end; ++it)
+      EEPROM.write(addr++, size & 0xFF);
+      EEPROM.write(addr++, size >> 8);
+      const uint8_t * begin = reinterpret_cast<const uint8_t*>(&config);
+      const uint8_t * end = begin + sizeof(ModelConfig);
+      for(const uint8_t * it = begin; it < end; ++it)
       {
         EEPROM.write(addr++, *it);
       }
       EEPROM.commit();
-      logger.info().logln(F("EEPROM saveed"));
     }
 
     void reset()
     {
-      config = ModelConfig();
+      initialize();
+      save();
       update();
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x02;
+    static const uint8_t EEPROM_VERSION = 0x03;
 };
 
 }

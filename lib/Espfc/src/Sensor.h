@@ -397,7 +397,7 @@ class Sensor
       _model.state.magSampleRate = rate;
       _model.state.magSampleInterval = 1000000 / rate;
       _mag.setDataRate(_model.config.magSampleRate + 0x02);
-      _model.logger.info().log(F("MAG RATE")).logln(_model.config.magSampleRate).log(_model.state.magSampleRate).logln(_model.state.magSampleInterval);
+      _model.logger.info().log(F("MAG RATE")).log(_model.config.magSampleRate).log(_model.state.magSampleRate).logln(_model.state.magSampleInterval);
     }
 
     void setMagScale()

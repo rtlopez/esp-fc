@@ -614,6 +614,44 @@ class Msp
           _model.update();
           break;
 
+        case MSP_FAILSAFE_CONFIG:
+          r.writeU8(0); // failsafe_delay
+          r.writeU8(0); // failsafe_off_delay
+          r.writeU16(1000); //failsafe_throttle
+          r.writeU8(0); // failsafe_kill_switch
+          r.writeU16(0); // failsafe_throttle_low_delay
+          r.writeU8(1); //failsafe_procedure; default drop
+          break;
+
+        case MSP_SET_FAILSAFE_CONFIG:
+          m.readU8(); //failsafe_delay
+          m.readU8(); //failsafe_off_delay
+          m.readU16(); //failsafe_throttle
+          m.readU8(); //failsafe_kill_switch
+          m.readU16(); //failsafe_throttle_low_delay
+          m.readU8(); //failsafe_procedure
+          break;
+
+        case MSP_RXFAIL_CONFIG:
+          for (size_t i = 0; i < INPUT_CHANNELS; i++)
+          {
+            r.writeU8(_model.config.failsafeMode[i]);
+            r.writeU16(_model.config.failsafeValue[i]);
+          }
+          break;
+
+        case MSP_SET_RXFAIL_CONFIG:
+          {
+            size_t i = m.readU8();
+            if (i < INPUT_CHANNELS) {
+              _model.config.failsafeMode[i] = m.readU8(); // mode
+              _model.config.failsafeValue[i] = m.readU16(); // pulse
+            } else {
+              r.result = -1;
+            }
+          }
+          break;
+
         case MSP_RC:
           for(size_t i = 0; i < INPUT_CHANNELS; i++)
           {
@@ -821,7 +859,7 @@ class Msp
           break;
 
         case MSP_MOTOR:
-          for (size_t i = 0; i < 8; i++)
+          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
             if (i >= OUTPUT_CHANNELS || _model.config.outputPin[i] == -1)
             {
@@ -857,6 +895,15 @@ class Msp
           _model.save();
           break;
 
+        case MSP_RESET_CONF:
+          if(!_model.isActive(MODE_ARMED))
+          {
+            _model.reset();
+            _model.load();
+            _model.update();
+          }
+          break;
+
         case MSP_REBOOT:
           _reboot = true;
           break;
@@ -870,7 +917,7 @@ class Msp
 
     bool debugSkip(uint8_t cmd)
     {
-      return true;
+      //return true;
       if(cmd == MSP_STATUS) return true;
       if(cmd == MSP_STATUS_EX) return true;
       if(cmd == MSP_BOXNAMES) return true;

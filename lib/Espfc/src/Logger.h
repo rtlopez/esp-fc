@@ -24,7 +24,7 @@ class Logger
           break;
         }
       }
-      info().logln(F("init"));
+      info().logln(F("INIT"));
       return 1;
     }
 
@@ -69,13 +69,13 @@ class Logger
       if(!s) return;
       FSInfo i;
       SPIFFS.info(i);
-      s->print(F("total: ")); s->println(i.totalBytes);
-      s->print(F("used: ")); s->println(i.usedBytes);
-      s->print(F("avail: ")); s->println(i.totalBytes - i.usedBytes);
+      s->print(F("total: ")); s->print(i.totalBytes / 1024); s->println(F(" kB"));
+      s->print(F(" used: ")); s->print(i.usedBytes / 1024); s->println(F(" kB"));
+      s->print(F("avail: ")); s->print((i.totalBytes - i.usedBytes) / 1024); s->println(F(" kB"));
       s->print(F("block: ")); s->println(i.blockSize);
-      s->print(F("page: ")); s->println(i.pageSize);
-      s->print(F("max files: ")); s->println(i.maxOpenFiles);
-      s->print(F("max path: ")); s->println(i.maxPathLength);
+      s->print(F(" page: ")); s->println(i.pageSize);
+      s->print(F("files: ")); s->println(i.maxOpenFiles);
+      s->print(F(" path: ")); s->println(i.maxPathLength);
     }
 
     Logger& info()

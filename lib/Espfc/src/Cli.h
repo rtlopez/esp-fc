@@ -479,6 +479,10 @@ class Cli
       {
         ESP.restart();
       }
+      else if(strcmp_P(_cmd.args[0], PSTR("defaults")) == 0)
+      {
+        _model.reset();
+      }
       else
       {
         print(F("command not found: "));

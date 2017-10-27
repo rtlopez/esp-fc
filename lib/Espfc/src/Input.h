@@ -7,6 +7,12 @@
 
 namespace Espfc {
 
+enum FailsafeChannelMode {
+  FAILSAFE_MODE_AUTO,
+  FAILSAFE_MODE_HOLD,
+  FAILSAFE_MODE_SET
+};
+
 class Input
 {
   public:
@@ -23,13 +29,9 @@ class Input
     {
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {
-        _model.state.inputUs[i] = 1500;
-        _model.state.input[i] = 0.f;
-      }
-      if(true) // false to simulation
-      {
-        _model.state.inputUs[AXIS_THRUST] = 1000;
-        _model.state.input[AXIS_THRUST] = -1.f;
+        if(_model.config.failsafeMode[i] == FAILSAFE_MODE_HOLD) continue;
+        _model.state.inputUs[i] = _model.config.failsafeValue[i];
+        _model.state.input[i] = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
       }
     }
 
