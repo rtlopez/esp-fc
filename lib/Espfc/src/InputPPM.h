@@ -11,7 +11,7 @@ class InputPPM
     void begin(uint8_t pin, int mode = RISING);
     void handle() ICACHE_RAM_ATTR;
 
-    bool failsafeActive() { return micros() - _last_tick > 100000; }
+    bool failsafeActive() { return (uint32_t)micros() - _last_tick > 200000UL; }
     uint16_t getPulse(uint8_t i) const { return _channels[i]; }
     bool hasNewData() const { return _new_data; }
     void resetNewData() { _new_data = false; }

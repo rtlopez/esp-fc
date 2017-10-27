@@ -24,8 +24,7 @@ static void timer_init()
 
 static inline void timer_write(uint32_t ticks)
 {
-  //timer0_write(ESP.getCycleCount() + usToTicks(us));
-  //timer1_write(usToTicks(us));
+  //timer0_write(ESP.getCycleCount() + ticks);
   timer1_write(ticks);
 }
 
@@ -152,6 +151,7 @@ int OutputPWMFast::begin(OutputProtocol protocol, bool async, int16_t rate)
   _rate = rate;
   _interval = usToTicks(1000000L / _rate, true);
   timer_init();
+  if(_async) timer_write(_interval);
   return 1;
 }
 

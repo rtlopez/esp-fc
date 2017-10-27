@@ -49,7 +49,6 @@ class Sensor
       {
         _fusion.update();
       }
-
       return 1;
     }
 
@@ -79,6 +78,7 @@ class Sensor
       {
         _fusion.update();
       }
+      _model.finishCalibration();
       return 1;
     }
 
@@ -170,28 +170,7 @@ class Sensor
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
       }
 
-      /*
-      if(!_model.state.gyroBiasValid)
-      {
-        VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
-        _model.state.accelPrev = _model.state.accel;
-        if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO && _model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
-        {
-          // what we are seeing on the gyros should be bias only so learn from this
-          _model.state.gyroBias = (_model.state.gyroBias * (1.0 - _model.state.gyroBiasAlpha)) + (_model.state.gyro * _model.state.gyroBiasAlpha);
-          if(_model.state.gyroBiasSamples < (5 * _model.state.gyroSampleRate))
-          {
-              _model.state.gyroBiasSamples++;
-              if(_model.state.gyroBiasSamples == (5 * _model.state.gyroSampleRate))
-              {
-                _model.state.gyroBiasValid = true;
-              }
-          }
-        }
-      }
-      */
-
-      if(_model.state.gyroBiasSamples)
+      if(_model.state.gyroBiasSamples > 0)
       {
         VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
         _model.state.accelPrev = _model.state.accel;
@@ -202,7 +181,6 @@ class Sensor
           _model.state.gyroBiasSamples--;
           if(_model.state.gyroBiasSamples == 0)
           {
-            _model.state.gyroBiasValid = true;
             _model.logger.info().log(F("GYRO CAL")).log(_model.state.gyroBias.x).log(_model.state.gyroBias.y).logln(_model.state.gyroBias.z);
           }
         }
@@ -219,14 +197,13 @@ class Sensor
         _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
       }
 
-      if(_model.state.accelBiasSamples)
+      if(_model.state.accelBiasSamples > 0)
       {
         _model.state.accelBias = (_model.state.accelBias * (1.0f - _model.state.accelBiasAlpha)) + (_model.state.accel * _model.state.accelBiasAlpha);
         _model.state.accelBiasSamples--;
         if(_model.state.accelBiasSamples == 0)
         {
           _model.state.accelBias.z -= 1.0f;
-          _model.state.accelBiasValid = true;
           _model.logger.info().log(F("ACCEL CAL")).log(_model.state.accelBias.x).log(_model.state.accelBias.y).logln(_model.state.accelBias.z);
         }
       }
@@ -357,11 +334,9 @@ class Sensor
       _model.state.gyroSampleRate = clock / (_model.state.gyroDivider); // update to real sample rate
       _model.state.gyroSampleInterval = (1000000 / _model.state.gyroSampleRate);
 
-      _model.state.gyroBiasAlpha = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
-      _model.state.gyroBiasSamples = 2 * _model.state.gyroSampleRate;
-
       _model.state.accelBiasAlpha = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
-      //_model.state.accelBiasSamples = 2 * _model.state.gyroSampleRate;
+      _model.state.gyroBiasAlpha  = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
+      _model.state.gyroBiasSamples = 2 * _model.state.gyroSampleRate; // start gyro calibration
 
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(_model.state.gyroDivider - 1);

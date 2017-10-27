@@ -83,7 +83,7 @@ class Hardware
 
     int update()
     {
-      return 0;
+      return 1;
     }
 
     static HardwareSerial * getSerialPort(SerialPort portId)

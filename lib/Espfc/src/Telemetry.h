@@ -22,45 +22,7 @@ class Telemetry
       if(!_stream) return 0;
       _model.state.stats.start(COUNTER_TELEMETRY);
       (*this)
-        << ""
-        //<< _model.state.timestamp
-        //<< _model.state.armed
-        //<< _model.state.gyroBiasValid
-
-        //<< _model.state.accelRaw
-        //<< _model.state.gyroRaw
-        //<< _model.state.magRaw
-
-        //<< _model.state.gyro
-        //<< _model.state.accel
-        //<< _model.state.mag
-        //<< " | "
-        //<< _model.state.rate
-        //<< _model.state.angle
-
-        //<< (int)degrees(_model.state.desiredAngle.x)
-        //<< (int)degrees(_model.state.desiredAngle.y)
-        //<< (int)degrees(_model.state.desiredAngle.z)
-
-        //<< " | "
-
-        //<< (int)degrees(_model.state.controlAngle.x)
-        //<< (int)degrees(_model.state.controlAngle.y)
-        //<< (int)degrees(_model.state.controlAngle.z)
-
-        //<< " | "
-
-        //<< (int)degrees(_model.state.desiredRate[0])
-        //<< (int)degrees(_model.state.desiredRate[1])
-        //<< (int)degrees(_model.state.desiredRate[2])
-
-        //<< _model.state.desiredRotation
-        //<< _model.state.desiredAngle
-
-        //<< _model.state.outputUs[0]
-        //<< _model.state.outputUs[1]
-        //<< _model.state.outputUs[2]
-        //<< _model.state.outputUs[3]
+        << F("")
       ;
       println();
       _model.state.stats.end(COUNTER_TELEMETRY);

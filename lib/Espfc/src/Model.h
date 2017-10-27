@@ -346,13 +346,11 @@ struct ModelState
   VectorFloat accelBias;
   float accelBiasAlpha;
   int accelBiasSamples;
-  bool accelBiasValid;
 
   float gyroScale;
   VectorFloat gyroBias;
   float gyroBiasAlpha;
   long gyroBiasSamples;
-  bool gyroBiasValid;
 
   float gyroDeadband;
 
@@ -394,6 +392,8 @@ struct ModelState
   Stats stats;
 
   uint32_t modeMask;
+
+  bool sensorCalibration;
 };
 
 // persistent data
@@ -712,8 +712,19 @@ class Model
 
     void calibrate()
     {
+      state.sensorCalibration = true;
       state.gyroBiasSamples  = 2 * state.gyroSampleRate;
       state.accelBiasSamples = 2 * state.gyroSampleRate;
+      state.accelBias.z += 1.f;
+    }
+
+    void finishCalibration()
+    {
+      if(state.sensorCalibration && state.accelBiasSamples == 0 && state.gyroBiasSamples == 0)
+      {
+        state.sensorCalibration = false;
+        save();
+      }
     }
 
     void update()
@@ -726,18 +737,30 @@ class Model
         config.outputProtocol = OUTPUT_PWM;
       }
 
-      if(config.outputProtocol == OUTPUT_PWM && config.gyroSampleRate > 500)
+      if(config.outputAsync)
       {
-        config.loopSync = config.gyroSampleRate / 500;
+        // for async limit pwm rate
+        if(config.outputProtocol == OUTPUT_PWM)
+        {
+          config.outputRate = std::min((int)config.outputRate, 480);
+        }
+        else if(config.outputProtocol == OUTPUT_ONESHOT125)
+        {
+          config.outputRate = std::min((int)config.outputRate, 1000);
+        }
       }
-
-      if(config.outputProtocol == OUTPUT_PWM)
+      else
       {
-        config.outputRate = std::max((int)config.outputRate, 480);
-      }
-      else if(config.outputProtocol == OUTPUT_ONESHOT125)
-      {
-        config.outputRate = std::max((int)config.outputRate, 1000);
+        // for synced and standard PWM limit loop rate and pwm pulse width
+        if(config.outputProtocol == OUTPUT_PWM && config.gyroSampleRate > 500)
+        {
+          config.loopSync = std::max(config.loopSync, (int8_t)((config.gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
+          int loopRate = config.gyroSampleRate / config.loopSync;
+          if(loopRate > 480 && config.outputMaxThrottle > 1950)
+          {
+            config.outputMaxThrottle = 1950;
+          }
+        }
       }
 
       config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);

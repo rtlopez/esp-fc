@@ -209,7 +209,7 @@ class Msp
 
     void debugMessage(const MspMessage& m)
     {
-      if(!debugSkip(m.cmd)) return;
+      if(debugSkip(m.cmd)) return;
 
       Serial1.print(m.dir == TYPE_REPLY ? '>' : '<'); Serial1.print(' ');
       Serial1.print(m.cmd); Serial1.print(' ');
@@ -223,7 +223,7 @@ class Msp
 
     void debugResponse(const MspResponse& r)
     {
-      if(!debugSkip(r.cmd)) return;
+      if(debugSkip(r.cmd)) return;
 
       Serial1.print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); Serial1.print(' ');
       Serial1.print(r.cmd); Serial1.print(' ');
@@ -870,20 +870,20 @@ class Msp
 
     bool debugSkip(uint8_t cmd)
     {
-      //return true;
-      if(cmd == MSP_STATUS) return false;
-      if(cmd == MSP_STATUS_EX) return false;
-      if(cmd == MSP_BOXNAMES) return false;
-      if(cmd == MSP_ANALOG) return false;
-      if(cmd == MSP_ATTITUDE) return false;
-      if(cmd == MSP_RC) return false;
-      if(cmd == MSP_RAW_IMU) return false;
-      if(cmd == MSP_MOTOR) return false;
-      if(cmd == MSP_SERVO) return false;
-      if(cmd == MSP_BATTERY_STATE) return false;
-      if(cmd == MSP_VOLTAGE_METERS) return false;
-      if(cmd == MSP_CURRENT_METERS) return false;
       return true;
+      if(cmd == MSP_STATUS) return true;
+      if(cmd == MSP_STATUS_EX) return true;
+      if(cmd == MSP_BOXNAMES) return true;
+      if(cmd == MSP_ANALOG) return true;
+      if(cmd == MSP_ATTITUDE) return true;
+      if(cmd == MSP_RC) return true;
+      if(cmd == MSP_RAW_IMU) return true;
+      if(cmd == MSP_MOTOR) return true;
+      if(cmd == MSP_SERVO) return true;
+      if(cmd == MSP_BATTERY_STATE) return true;
+      if(cmd == MSP_VOLTAGE_METERS) return true;
+      if(cmd == MSP_CURRENT_METERS) return true;
+      return false;
     }
 
     void sendResponse(MspResponse& r, Stream& s)

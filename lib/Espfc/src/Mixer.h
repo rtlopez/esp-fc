@@ -54,7 +54,7 @@ class Mixer
     {
       float r = _model.state.output[AXIS_ROLL];
       float p = _model.state.output[AXIS_PITCH];
-      float y = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? 1 : -1);
+      float y = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? -1 : 1);
       float t = _model.state.output[AXIS_THRUST];
 
       float out[OUTPUT_CHANNELS];
@@ -125,7 +125,7 @@ class Mixer
 
     bool _stop(void)
     {
-      return (_model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck) && !_model.isActive(MODE_ARMED);
+      return !_model.isActive(MODE_ARMED) || (_model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck);
     }
 
     Model& _model;
