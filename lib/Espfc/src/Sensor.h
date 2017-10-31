@@ -24,7 +24,6 @@ class Sensor
       initGyro();
       initMag();
       initPresure();
-      initFilter();
       _fusion.begin();
       return 1;
     }
@@ -169,7 +168,9 @@ class Sensor
       for(size_t i = 0; i < 3; ++i)
       {
         _model.state.gyroScaled.set(i, Math::deadband(_model.state.gyroScaled[i], _model.state.gyroDeadband));
-        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyroScaled[i]));
+        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyroScaled[i]));
+        _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
       }
 
       if(_model.state.gyroBiasSamples > 0)
@@ -187,7 +188,6 @@ class Sensor
           }
         }
       }
-
       _model.state.gyro -= _model.state.gyroBias;
     }
 
@@ -330,22 +330,8 @@ class Sensor
 
     void setSampleRate()
     {
-      // sample rate = clock / ( divider + 1)
-      int clock = 1000;
-      if(_model.config.gyroDlpf == GYRO_DLPF_256) clock = 8000;
-      int rate = _model.config.gyroSampleRate;
-
-      _model.state.gyroDivider = (clock / (rate + 1)) + 1;
-      _model.state.gyroSampleRate = clock / (_model.state.gyroDivider); // update to real sample rate
-      _model.state.gyroSampleInterval = (1000000 / _model.state.gyroSampleRate);
-
-      _model.state.accelBiasAlpha = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
-      _model.state.gyroBiasAlpha  = 5.0f / _model.state.gyroSampleRate; // higher value gives faster calibration, was 2
-      _model.state.gyroBiasSamples = 2 * _model.state.gyroSampleRate; // start gyro calibration
-
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(_model.state.gyroDivider - 1);
-
       _model.logger.info().log(F("GYRO RATE")).log(_model.state.gyroDivider).log(_model.state.gyroSampleRate).logln(_model.state.gyroSampleInterval);
     }
 
@@ -425,16 +411,6 @@ class Sensor
     void initPresure()
     {
       //_baro.begin();
-    }
-
-    void initFilter()
-    {
-      for(size_t i = 0; i < 3; i++)
-      {
-        _model.state.gyroFilter[i].begin((FilterType)_model.config.gyroFilterType, _model.config.gyroFilterCutFreq, _model.state.gyroSampleRate);
-        _model.state.accelFilter[i].begin((FilterType)_model.config.accelFilterType, _model.config.accelFilterCutFreq, _model.state.gyroSampleRate);
-        _model.state.magFilter[i].begin((FilterType)_model.config.magFilterType, _model.config.magFilterCutFreq, _model.state.gyroSampleRate);
-      }
     }
 
     void align(VectorInt16& dest, uint8_t rotation)

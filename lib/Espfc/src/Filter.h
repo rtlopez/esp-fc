@@ -10,7 +10,7 @@ enum FilterType {
   FILTER_PT1,
   FILTER_BIQUAD,
   FILTER_FIR,
-  FILTER_PT2, // two cascaded pt1 filters
+  FILTER_NOTCH,
   FILTER_NONE,
 };
 
@@ -18,6 +18,14 @@ enum BiquadFilterType {
   BIQUAD_FILTER_LPF,
   BIQUAD_FILTER_NOTCH,
   BIQUAD_FILTER_BPF
+};
+
+class FilterConfig
+{
+  public:
+    int8_t type;
+    int16_t freq;
+    int16_t cutoff;
 };
 
 struct FilterStatePt1 {
@@ -40,23 +48,33 @@ class Filter
   public:
     Filter(): _type(FILTER_NONE) {}
 
-    void begin(FilterType type, int cut_freq, int rate)
+    void begin()
     {
-      _type = type;
+      _type = FILTER_NONE;
+    }
+
+    void begin(const FilterConfig& config, int rate)
+    {
+      _type = (FilterType)config.type;
       _rate = rate;
-      _cut_freq = std::min(cut_freq, _rate / 2); // adj cut freq below nyquist rule
+      _freq = std::min((int)config.freq, _rate / 2); // adj cut freq below nyquist rule
+      _cutoff = std::min((int)config.cutoff, _rate / 2); // adj cut freq below nyquist rule
+      _cutoff = std::min(_cutoff, _freq - 10); // sanitize cutoff to be slightly below filter freq
+      if(_freq == 0) _type = FILTER_NONE; // turn off if filter freq equals zero
       switch(_type)
       {
         case FILTER_PT1:
           initPt1();
           break;
         case FILTER_BIQUAD:
-          initBiquad(BIQUAD_FILTER_LPF, 1.0f / sqrtf(2.0f)); /* quality factor - butterworth*/
-          break;
-        case FILTER_PT2:
-          initPt2();
+          initBiquadLpf();
           break;
         case FILTER_FIR:
+          initPt1();
+          break;
+        case FILTER_NOTCH:
+          initBiquadNotch();
+          break;
         case FILTER_NONE:
         default:
           ;
@@ -71,9 +89,10 @@ class Filter
           return updatePt1(v);
         case FILTER_BIQUAD:
           return updateBiquad(v);
-        case FILTER_PT2:
-          return updatePt2(v);
         case FILTER_FIR:
+          return updatePt1(v);
+        case FILTER_NOTCH:
+          return updateBiquad(v);
         case FILTER_NONE:
         default:
           return v;
@@ -83,7 +102,7 @@ class Filter
   private:
     void initPt1()
     {
-      float rc = 1.f / (2.f * M_PI * _cut_freq);
+      float rc = 1.f / (2.f * M_PI * _freq);
       float dt = 1.f / _rate;
       _state.pt1.k = dt / (dt + rc);
       _state.pt1.v = 0;
@@ -95,56 +114,52 @@ class Filter
       return _state.pt1.v;
     }
 
-    void initPt2()
+    void initBiquadNotch()
     {
-      float rc = 1.f / (2.f * M_PI * _cut_freq);
-      float dt = 1.f / _rate;
-      _state.pt2.k = dt / (dt + rc);
-      _state.pt2.v[0] = 0;
-      _state.pt2.v[1] = 0;
+      float q = getNotchQ(_freq, _cutoff);
+      initBiquad(BIQUAD_FILTER_NOTCH, q);
     }
 
-    float updatePt2(float v)
+    void initBiquadLpf()
     {
-      _state.pt2.v[0] = _state.pt2.v[0] + _state.pt2.k * (v - _state.pt2.v[0]);
-      _state.pt2.v[1] = _state.pt2.v[1] + _state.pt2.k * (_state.pt2.v[0] - _state.pt2.v[1]);
-      return _state.pt2.v[1];
+      initBiquad(BIQUAD_FILTER_LPF, 1.0f / sqrtf(2.0f)); /* quality factor - butterworth for lpf */
     }
 
     void initBiquad(BiquadFilterType filterType, float q)
     {
-      const float omega = 2.0f * M_PI * _cut_freq * _rate * 0.000001f;
+      const float omega = 2.0f * M_PI * _freq * _rate * 0.000001f;
       const float sn = sinf(omega);
       const float cs = cosf(omega);
       const float alpha = sn / (2.0f * q);
 
       float b0 = 0, b1 = 0, b2 = 0, a0 = 0, a1 = 0, a2 = 0;
 
-      switch (filterType) {
+      switch (filterType)
+      {
         case BIQUAD_FILTER_LPF:
-            b0 = (1 - cs) * 0.5f;
-            b1 = 1 - cs;
-            b2 = (1 - cs) * 0.5f;
-            a0 = 1 + alpha;
-            a1 = -2 * cs;
-            a2 = 1 - alpha;
-            break;
+          b0 = (1 - cs) * 0.5f;
+          b1 = 1 - cs;
+          b2 = (1 - cs) * 0.5f;
+          a0 = 1 + alpha;
+          a1 = -2 * cs;
+          a2 = 1 - alpha;
+          break;
         case BIQUAD_FILTER_NOTCH:
-            b0 =  1;
-            b1 = -2 * cs;
-            b2 =  1;
-            a0 =  1 + alpha;
-            a1 = -2 * cs;
-            a2 =  1 - alpha;
-            break;
+          b0 =  1;
+          b1 = -2 * cs;
+          b2 =  1;
+          a0 =  1 + alpha;
+          a1 = -2 * cs;
+          a2 =  1 - alpha;
+          break;
         case BIQUAD_FILTER_BPF:
-            b0 = alpha;
-            b1 = 0;
-            b2 = -alpha;
-            a0 = 1 + alpha;
-            a1 = -2 * cs;
-            a2 = 1 - alpha;
-            break;
+          b0 = alpha;
+          b1 = 0;
+          b2 = -alpha;
+          a0 = 1 + alpha;
+          a1 = -2 * cs;
+          a2 = 1 - alpha;
+          break;
       }
 
       // precompute the coefficients
@@ -167,9 +182,21 @@ class Filter
       return result;
     }
 
+    float getNotchQApprox(int freq, int cutoff)
+    {
+      return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
+    }
+
+    float getNotchQ(int freq, int cutoff)
+    {
+      float octaves = log2f((float)freq  / (float)cutoff) * 2;
+      return sqrtf(powf(2, octaves)) / (powf(2, octaves) - 1);
+    }
+
     FilterType _type;
-    int _cut_freq;
+    int _freq;
     int _rate;
+    int _cutoff;
     union {
       FilterStatePt1 pt1;
       FilterStateBiquad bq;

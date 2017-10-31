@@ -76,9 +76,9 @@ class Blackbox
         cp->pid[i].D = _model.config.pid[i].D;
       }
       cp->pidAtMinThrottle = 1;
-      cp->dterm_filter_type = _model.config.dtermFilterType;
-      cp->dterm_lpf_hz = _model.config.dtermFilterCutFreq;
-      cp->yaw_lpf_hz = _model.config.gyroFilterCutFreq;
+      cp->dterm_filter_type = _model.config.dtermFilter.type;
+      cp->dterm_lpf_hz = _model.config.dtermFilter.freq;
+      cp->yaw_lpf_hz = _model.config.gyroFilter.freq;
       cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
       cp->dtermSetpointWeight = _model.config.dtermSetpointWeight;
 
@@ -86,10 +86,10 @@ class Blackbox
       rcControlsConfigMutable()->yaw_deadband = _model.config.inputDeadband;
 
       gyroConfigMutable()->gyro_lpf = _model.config.gyroDlpf;
-      gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilterType;
-      gyroConfigMutable()->gyro_soft_lpf_hz = _model.config.gyroFilterCutFreq;
+      gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilter.type;
+      gyroConfigMutable()->gyro_soft_lpf_hz = _model.config.gyroFilter.freq;
 
-      accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilterCutFreq;
+      accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
       barometerConfigMutable()->baro_hardware = _model.config.baroDev;
       compassConfigMutable()->mag_hardware = _model.config.magDev;

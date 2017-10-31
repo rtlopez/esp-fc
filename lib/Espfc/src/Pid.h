@@ -31,12 +31,7 @@ class PidConfig
 class Pid
 {
   public:
-    Pid(): Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f), pScale(1.f), iScale(1.f), dScale(1.f) {}
-
-    void configureFilter(FilterType type, int cutFreq, int sampleFreq)
-    {
-      dtermFilter.begin(type, cutFreq, sampleFreq);
-    }
+    Pid(): Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f), pScale(1.f), iScale(1.f), dScale(1.f), iTerm(0), dTerm(0) {}
 
     void configurePid(float p, float i, float d, float il = 0.3, float dg = 0, float ol = 1)
     {
@@ -52,9 +47,14 @@ class Pid
     {
       error = setpoint - measure;
       pTerm = Kp * error * pScale;
+      pTerm = ptermFilter.update(pTerm);
+
       if(iScale > 0.01)
       {
-        iTerm += Ki * error * dt * iScale;
+        if(std::abs(pTerm) < oLimit)
+        {
+          iTerm += Ki * error * dt * iScale;
+        }
         iTerm = Math::bound(iTerm, -iLimit, iLimit);
       }
       else
@@ -62,12 +62,12 @@ class Pid
         iTerm = 0; // zero integral
       }
 
-      float delta = 0;
       if(Kd > 0 && dt > 0)
       {
-        delta = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
+        dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
       }
-      dTerm = dtermFilter.update(delta);
+      dTerm = dtermNotchFilter.update(dTerm);
+      dTerm = dtermFilter.update(dTerm);
 
       float output = Math::bound(pTerm + iTerm + dTerm, -oLimit, oLimit);
 
@@ -88,7 +88,10 @@ class Pid
     float pScale;
     float iScale;
     float dScale;
+
     Filter dtermFilter;
+    Filter dtermNotchFilter;
+    Filter ptermFilter;
 
     float error;
     float pTerm;

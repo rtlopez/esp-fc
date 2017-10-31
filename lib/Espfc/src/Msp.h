@@ -744,34 +744,34 @@ class Msp
           break;
 
         case MSP_FILTER_CONFIG:
-          r.writeU8(_model.config.gyroFilterCutFreq); // gyro lpf
-          r.writeU16(_model.config.dtermFilterCutFreq); // dterm lpf
-          r.writeU16(_model.config.gyroFilterCutFreq);  // yaw lpf
-          r.writeU16(0);  // gyro notch 1 hz
-          r.writeU16(0);  // gyro notch 1 cutoff
-          r.writeU16(0);  // dterm notch hz
-          r.writeU16(0);  // dterm notch cutoff
-          r.writeU16(0);  // gyro notch 2 hz
-          r.writeU16(0);  // gyro notch 2 cutoff
-          r.writeU8(_model.config.dtermFilterType);
+          r.writeU8(_model.config.gyroFilter.freq); // gyro lpf
+          r.writeU16(_model.config.dtermFilter.freq); // dterm lpf
+          r.writeU16(_model.config.yawFilter.freq);  // yaw lpf
+          r.writeU16(_model.config.gyroNotch1Filter.freq);  // gyro notch 1 hz
+          r.writeU16(_model.config.gyroNotch1Filter.cutoff);  // gyro notch 1 cutoff
+          r.writeU16(_model.config.dtermNotchFilter.freq);  // dterm notch hz
+          r.writeU16(_model.config.dtermNotchFilter.cutoff);  // dterm notch cutoff
+          r.writeU16(_model.config.gyroNotch2Filter.freq);  // gyro notch 2 hz
+          r.writeU16(_model.config.gyroNotch2Filter.cutoff);  // gyro notch 2 cutoff
+          r.writeU8(_model.config.dtermFilter.type);
           break;
 
         case MSP_SET_FILTER_CONFIG:
-          _model.config.gyroFilterCutFreq = m.readU8();
-          _model.config.dtermFilterCutFreq = m.readU16();
-          m.readU16();
+          _model.config.gyroFilter.freq = m.readU8();
+          _model.config.dtermFilter.freq = m.readU16();
+          _model.config.yawFilter.freq = m.readU16();
           if (m.remain() >= 8) {
-              m.readU16();
-              m.readU16();
-              m.readU16();
-              m.readU16();
+              _model.config.gyroNotch1Filter.freq = m.readU16();
+              _model.config.gyroNotch1Filter.cutoff = m.readU16();
+              _model.config.dtermNotchFilter.freq = m.readU16();
+              _model.config.dtermNotchFilter.cutoff = m.readU16();
           }
           if (m.remain() >= 4) {
-              m.readU16();
-              m.readU16();
+              _model.config.gyroNotch2Filter.freq = m.readU16();
+              _model.config.gyroNotch2Filter.cutoff = m.readU16();
           }
           if (m.remain() >= 1) {
-              _model.config.dtermFilterType = (FilterType)m.readU8();
+              _model.config.dtermFilter.type = (FilterType)m.readU8();
           }
           _model.update();
           break;

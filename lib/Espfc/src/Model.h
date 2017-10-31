@@ -327,6 +327,9 @@ struct ModelState
   Quaternion angleQ;
 
   Filter gyroFilter[3];
+  Filter gyroNotch1Filter[3];
+  Filter gyroNotch2Filter[3];
+
   Filter accelFilter[3];
   Filter magFilter[3];
 
@@ -419,39 +422,25 @@ struct ModelConfig
   int8_t gyroFsr;
   int8_t gyroSync;
   int16_t gyroSampleRate;
+  int8_t gyroAlign;
+  FilterConfig gyroFilter;
+  FilterConfig gyroNotch1Filter;
+  FilterConfig gyroNotch2Filter;
 
   int8_t accelDev;
   int8_t accelFsr;
   int8_t accelMode;
-
-  int8_t gyroDeadband;
-  int8_t gyroFilterType;
-  int16_t gyroFilterCutFreq;
-  int8_t accelFilterType;
-  int16_t accelFilterCutFreq;
-  int8_t magFilterType;
-  int16_t magFilterCutFreq;
-  int8_t dtermFilterType;
-  int16_t dtermFilterCutFreq;
-
-  uint8_t dtermSetpointWeight;
-  int8_t itermWindupPointPercent;
+  int8_t accelAlign;
+  FilterConfig accelFilter;
 
   int8_t magDev;
   int8_t magSampleRate;
   int8_t magFsr;
   int8_t magAvr;
+  int8_t magAlign;
+  FilterConfig magFilter;
 
   int8_t baroDev;
-
-  int8_t mixerType;
-
-  int32_t actuatorConfig[3];
-  int8_t actuatorChannels[3];
-  int16_t actuatorMin[3];
-  int16_t actuatorMax[3];
-
-  ActuatorCondition conditions[ACTUATOR_CONDITIONS];
 
   int8_t ppmPin;
   int8_t ppmMode;
@@ -480,6 +469,15 @@ struct ModelConfig
   uint8_t inputRate[3];
   uint8_t inputSuperRate[3];
 
+  ActuatorCondition conditions[ACTUATOR_CONDITIONS];
+
+  int32_t actuatorConfig[3];
+  int8_t actuatorChannels[3];
+  int16_t actuatorMin[3];
+  int16_t actuatorMax[3];
+
+  int8_t mixerType;
+
   int16_t outputMinThrottle;
   int16_t outputMaxThrottle;
   int16_t outputMinCommand;
@@ -495,6 +493,14 @@ struct ModelConfig
   int8_t yawReverse;
 
   PidConfig pid[PID_ITEM_COUNT];
+
+  FilterConfig yawFilter;
+
+  FilterConfig dtermFilter;
+  FilterConfig dtermNotchFilter;
+
+  uint8_t dtermSetpointWeight;
+  int8_t itermWindupPointPercent;
 
   int8_t angleLimit;
   int16_t angleRateLimit;
@@ -524,9 +530,6 @@ struct ModelConfig
   int16_t magCalibrationOffset[3];
   char modelName[MODEL_NAME_LEN + 1];
 
-  int8_t gyroAlign;
-  int8_t accelAlign;
-  int8_t magAlign;
 };
 
 class Model
@@ -558,7 +561,6 @@ class Model
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
       config.gyroSync = 8;
-      config.gyroDeadband = 0;
 
       config.magDev = MAG_NONE;
       config.magSampleRate = MAG_RATE_75;
@@ -572,14 +574,29 @@ class Model
       config.fusionMode = FUSION_MADGWICK;
       config.fusionDelay = 0;
 
-      config.gyroFilterType = FILTER_PT1;
-      config.gyroFilterCutFreq = 70;
-      config.accelFilterType = FILTER_BIQUAD;
-      config.accelFilterCutFreq = 15;
-      config.magFilterType = FILTER_BIQUAD;
-      config.magFilterCutFreq = 15;
-      config.dtermFilterType = FILTER_BIQUAD;
-      config.dtermFilterCutFreq = 50;
+      config.gyroFilter.type = FILTER_PT1;
+      config.gyroFilter.freq = 70;
+      config.gyroNotch1Filter.type = FILTER_NOTCH;
+      config.gyroNotch1Filter.cutoff = 70;
+      config.gyroNotch1Filter.freq = 150;
+      config.gyroNotch2Filter.type = FILTER_NOTCH;
+      config.gyroNotch2Filter.cutoff = 150;
+      config.gyroNotch2Filter.freq = 250;
+
+      config.accelFilter.type = FILTER_BIQUAD;
+      config.accelFilter.freq = 15;
+
+      config.magFilter.type = FILTER_BIQUAD;
+      config.magFilter.freq = 15;
+
+      config.dtermFilter.type = FILTER_BIQUAD;
+      config.dtermFilter.freq = 50;
+      config.dtermNotchFilter.type = FILTER_BIQUAD;
+      config.dtermNotchFilter.cutoff = 70;
+      config.dtermNotchFilter.freq = 130;
+
+      config.yawFilter.type = FILTER_PT1;
+      config.yawFilter.freq = 0;
 
       config.telemetry = 0;
       config.telemetryInterval = 1000 * 1000;
@@ -769,6 +786,17 @@ class Model
       config.gyroSync = std::max((int)config.gyroSync, 8); // max 1khz
       config.gyroSampleRate = 8000 / config.gyroSync;
 
+      // sample rate = clock / ( divider + 1)
+      int clock = config.gyroDlpf == GYRO_DLPF_256 ? 8000 : 1000;
+
+      state.gyroDivider = (clock / (config.gyroSampleRate + 1)) + 1;
+      state.gyroSampleRate = clock / state.gyroDivider; // update to real sample rate
+      state.gyroSampleInterval = (1000000.f / state.gyroSampleRate);
+
+      state.accelBiasAlpha = 4.0f / state.gyroSampleRate; // higher value gives faster calibration, was 2
+      state.gyroBiasAlpha  = 4.0f / state.gyroSampleRate; // higher value gives faster calibration, was 2
+      state.gyroBiasSamples = 2 * state.gyroSampleRate; // start gyro calibration
+
       if(config.outputProtocol != OUTPUT_PWM && config.outputProtocol != OUTPUT_ONESHOT125)
       {
         config.outputProtocol = OUTPUT_PWM;
@@ -822,10 +850,22 @@ class Model
         state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
       }
 
-      state.gyroDeadband = radians(config.gyroDeadband / 10.0f);
       state.inputFilterAlpha = Math::bound((config.inputFilterAlpha / 100.0f), 0.f, 1.f);
 
-      for(size_t i = 0; i < 3; i++) // rpy
+      state.gyroSampleRate = config.gyroSampleRate;
+      state.loopSampleRate = state.gyroSampleRate / config.loopSync;
+      state.loopSampleInterval = 1000000 / state.loopSampleRate;
+
+      for(size_t i = 0; i < AXIS_YAW; i++)
+      {
+        state.gyroFilter[i].begin(config.gyroFilter, state.gyroSampleRate);
+        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroSampleRate);
+        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroSampleRate);
+        state.accelFilter[i].begin(config.accelFilter, state.gyroSampleRate);
+        state.magFilter[i].begin(config.magFilter, state.gyroSampleRate);
+      }
+
+      for(size_t i = 0; i < AXIS_YAW; i++) // rpy
       {
         PidConfig * pc = &config.pid[i];
         state.innerPid[i].configurePid(
@@ -836,6 +876,16 @@ class Model
           config.dtermSetpointWeight / 100.0f,
           1.0f
         );
+        state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopSampleRate);
+        state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopSampleRate);
+        if(i == AXIS_YAW)
+        {
+          state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopSampleRate);
+        }
+        else
+        {
+          state.innerPid[i].ptermFilter.begin(); // no filter
+        }
       }
 
       for(size_t i = 0; i < 3; i++)
@@ -849,6 +899,9 @@ class Model
           0,
           radians(config.angleRateLimit)
         );
+        state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopSampleRate);
+        state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopSampleRate);
+        state.outerPid[i].ptermFilter.begin(); // unused
       }
     }
 
@@ -937,7 +990,7 @@ class Model
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x03;
+    static const uint8_t EEPROM_VERSION = 0x04;
 };
 
 }
