@@ -163,6 +163,8 @@ class Sensor
 
     void updateGyro()
     {
+      align(_model.state.gyroRaw, _model.config.gyroAlign);
+
       _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
       for(size_t i = 0; i < 3; ++i)
       {
@@ -191,6 +193,8 @@ class Sensor
 
     void updateAccel()
     {
+      align(_model.state.accelRaw, _model.config.accelAlign);
+
       _model.state.accelScaled = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       for(size_t i = 0; i < 3; i++)
       {
@@ -217,6 +221,7 @@ class Sensor
     {
       if(_model.config.magDev != MAG_NONE)
       {
+        align(_model.state.magRaw, _model.config.magAlign);
         _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
         for(size_t i = 0; i < 3; i++)
         {
@@ -429,6 +434,58 @@ class Sensor
         _model.state.gyroFilter[i].begin((FilterType)_model.config.gyroFilterType, _model.config.gyroFilterCutFreq, _model.state.gyroSampleRate);
         _model.state.accelFilter[i].begin((FilterType)_model.config.accelFilterType, _model.config.accelFilterCutFreq, _model.state.gyroSampleRate);
         _model.state.magFilter[i].begin((FilterType)_model.config.magFilterType, _model.config.magFilterCutFreq, _model.state.gyroSampleRate);
+      }
+    }
+
+    void align(VectorInt16& dest, uint8_t rotation)
+    {
+      const int16_t x = dest.x;
+      const int16_t y = dest.y;
+      const int16_t z = dest.z;
+
+      switch(rotation)
+      {
+        default:
+        case ALIGN_CW0_DEG:
+          dest.x = x;
+          dest.y = y;
+          dest.z = z;
+          break;
+        case ALIGN_CW90_DEG:
+          dest.x = y;
+          dest.y = -x;
+          dest.z = z;
+          break;
+        case ALIGN_CW180_DEG:
+          dest.x = -x;
+          dest.y = -y;
+          dest.z = z;
+          break;
+        case ALIGN_CW270_DEG:
+          dest.x = -y;
+          dest.y = x;
+          dest.z = z;
+          break;
+        case ALIGN_CW0_DEG_FLIP:
+          dest.x = -x;
+          dest.y = y;
+          dest.z = -z;
+          break;
+        case ALIGN_CW90_DEG_FLIP:
+          dest.x = y;
+          dest.y = x;
+          dest.z = -z;
+          break;
+        case ALIGN_CW180_DEG_FLIP:
+          dest.x = x;
+          dest.y = -y;
+          dest.z = -z;
+          break;
+        case ALIGN_CW270_DEG_FLIP:
+          dest.x = -y;
+          dest.y = -x;
+          dest.z = -z;
+          break;
       }
     }
 

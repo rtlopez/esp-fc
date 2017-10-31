@@ -450,9 +450,15 @@ class Msp
           break;
 
         case MSP_SENSOR_ALIGNMENT:
-          r.writeU8(0); // gyro align
-          r.writeU8(0); // acc align
-          r.writeU8(0); // mag align
+          r.writeU8(_model.config.gyroAlign); // gyro align
+          r.writeU8(_model.config.accelAlign); // acc align
+          r.writeU8(_model.config.magAlign); // mag align
+          break;
+
+        case MSP_SET_SENSOR_ALIGNMENT:
+          _model.config.gyroAlign = m.readU8(); // gyro align
+          _model.config.accelAlign = m.readU8(); // acc align
+          _model.config.magAlign = m.readU8(); // mag align
           break;
 
         case MSP_CF_SERIAL_CONFIG:
@@ -516,7 +522,7 @@ class Msp
         case MSP_ATTITUDE:
           r.writeU16(lrintf(degrees(_model.state.angle.x) * 10)); // roll
           r.writeU16(lrintf(degrees(_model.state.angle.y) * 10)); // pitch
-          r.writeU16(lrintf(degrees(_model.state.angle.z))); // yaw
+          r.writeU16(lrintf(degrees(-_model.state.angle.z))); // yaw
           break;
 
         case MSP_BEEPER_CONFIG:

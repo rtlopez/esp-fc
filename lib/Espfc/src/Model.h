@@ -77,6 +77,18 @@ enum MagAvg {
   MAG_AVERAGING_8 = 0x03
 };
 
+enum SensorAlign {
+  ALIGN_DEFAULT        = 0,
+  ALIGN_CW0_DEG        = 1,
+  ALIGN_CW90_DEG       = 2,
+  ALIGN_CW180_DEG      = 3,
+  ALIGN_CW270_DEG      = 4,
+  ALIGN_CW0_DEG_FLIP   = 5,
+  ALIGN_CW90_DEG_FLIP  = 6,
+  ALIGN_CW180_DEG_FLIP = 7,
+  ALIGN_CW270_DEG_FLIP = 8
+};
+
 enum FusionMode {
   FUSION_NONE          = 0x00,
   FUSION_SIMPLE        = 0x01,
@@ -511,6 +523,10 @@ struct ModelConfig
   int16_t magCalibrationScale[3];
   int16_t magCalibrationOffset[3];
   char modelName[MODEL_NAME_LEN + 1];
+
+  int8_t gyroAlign;
+  int8_t accelAlign;
+  int8_t magAlign;
 };
 
 class Model
@@ -533,6 +549,9 @@ class Model
     {
       config.gyroDev = ACCEL_MPU6050;
       config.accelDev = ACCEL_MPU6050;
+      config.gyroAlign = ALIGN_DEFAULT;
+      config.accelAlign = ALIGN_DEFAULT;
+      config.magAlign = ALIGN_DEFAULT;
 
       config.accelMode = ACCEL_GYRO;
       config.gyroDlpf = GYRO_DLPF_256;
@@ -555,9 +574,9 @@ class Model
 
       config.gyroFilterType = FILTER_PT1;
       config.gyroFilterCutFreq = 70;
-      config.accelFilterType = FILTER_PT1;
+      config.accelFilterType = FILTER_BIQUAD;
       config.accelFilterCutFreq = 15;
-      config.magFilterType = FILTER_PT1;
+      config.magFilterType = FILTER_BIQUAD;
       config.magFilterCutFreq = 15;
       config.dtermFilterType = FILTER_BIQUAD;
       config.dtermFilterCutFreq = 50;
