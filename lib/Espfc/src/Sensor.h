@@ -77,6 +77,12 @@ class Sensor
       {
         _fusion.update();
       }
+
+      if(_model.state.gyroIteration % 50 == 0)
+      {
+        updateBattery();
+      }
+
       _model.finishCalibration();
       return 1;
     }
@@ -411,6 +417,18 @@ class Sensor
     void initPresure()
     {
       //_baro.begin();
+    }
+
+    void updateBattery()
+    {
+      float val = analogRead(A0);
+      val *= std::max(1, (int)_model.config.vbatScale);
+      val /= 10.f;
+      val *= _model.config.vbatResMult;
+      val /= _model.config.vbatResDiv;
+      val = (val + _model.state.voltage) / 2; // smooth
+      _model.state.voltage = Math::bound((int)lrintf(val), 0, 255);
+      _model.state.numCells = ((int)_model.state.voltage + 40) / 42;  // round
     }
 
     void align(VectorInt16& dest, uint8_t rotation)

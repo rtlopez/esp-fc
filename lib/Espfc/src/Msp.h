@@ -353,7 +353,7 @@ class Msp
           break;
 
         case MSP_ANALOG:
-          r.writeU8(0);  // voltage
+          r.writeU8(_model.state.voltage);  // voltage
           r.writeU16(0); // mah drawn
           r.writeU16(0); // rssi
           r.writeU16(0); // amperage
@@ -370,20 +370,20 @@ class Msp
 
         case MSP_BATTERY_CONFIG:
           r.writeU8(34);  // vbatmincellvoltage
-          r.writeU8(43);  // vbatmaxcellvoltage
-          r.writeU8(35);  // vbatwarningcellvoltage
-          r.writeU16(1200); // batteryCapacity
+          r.writeU8(42);  // vbatmaxcellvoltage
+          r.writeU8(_model.config.vbatCellWarning);  // vbatwarningcellvoltage
+          r.writeU16(0); // batteryCapacity
           r.writeU8(1);  // voltageMeterSource
           r.writeU8(0);  // currentMeterSource
           break;
 
         case MSP_BATTERY_STATE:
           // battery characteristics
-          r.writeU8(3); // cell count, 0 indicates battery not detected.
-          r.writeU16(1000); // in mAh
+          r.writeU8(_model.state.numCells); // cell count, 0 indicates battery not detected.
+          r.writeU16(0); // capacity in mAh
 
           // battery state
-          r.writeU8(126); // in 0.1V steps
+          r.writeU8(_model.state.voltage); // in 0.1V steps
           r.writeU16(0);  // milliamp hours drawn from battery
           r.writeU16(0); // send current in 0.01 A steps, range is -320A to 320A
 
@@ -394,8 +394,8 @@ class Msp
         case MSP_VOLTAGE_METERS:
           for(int i = 0; i < 1; i++)
           {
-            r.writeU8(i);  // meter id
-            r.writeU8(100);  // meter value
+            r.writeU8(i + 10);  // meter id (10-19 vbat adc)
+            r.writeU8(_model.state.voltage);  // meter value
           }
           break;
 
@@ -403,14 +403,27 @@ class Msp
           break;
 
         case MSP_VOLTAGE_METER_CONFIG:
+          r.writeU8(1); // num voltage sensors
           for(int i = 0; i < 1; i++)
           {
-            r.writeU8(5); // size
-            r.writeU8(i + 1); // id
+            r.writeU8(5); // frame size
+            r.writeU8(i + 10); // id (10-19 vbat adc)
             r.writeU8(0); // type resistor divider
-            r.writeU8(100); // scale
-            r.writeU8(0);  // resdivval
-            r.writeU8(0);  // resdivmultiplier
+            r.writeU8(_model.config.vbatScale); // scale
+            r.writeU8(_model.config.vbatResDiv);  // resdivval
+            r.writeU8(_model.config.vbatResMult);  // resdivmultiplier
+          }
+          break;
+
+        case MSP_SET_VOLTAGE_METER_CONFIG:
+          {
+            int id = m.readU8();
+            if(id == 10 + 0) // id (10-19 vbat adc, allow only 10)
+            {
+              _model.config.vbatScale = m.readU8();
+              _model.config.vbatResDiv = m.readU8();
+              _model.config.vbatResMult = m.readU8();
+            }
           }
           break;
 

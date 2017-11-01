@@ -412,6 +412,9 @@ struct ModelState
 
   bool actuatorUpdate;
   uint32_t actuatorTimestamp;
+
+  uint8_t voltage;
+  int8_t numCells;
 };
 
 // persistent data
@@ -530,6 +533,10 @@ struct ModelConfig
   int16_t magCalibrationOffset[3];
   char modelName[MODEL_NAME_LEN + 1];
 
+  int8_t vbatCellWarning;
+  int8_t vbatScale;
+  int8_t vbatResDiv;
+  int8_t vbatResMult;
 };
 
 class Model
@@ -747,6 +754,11 @@ class Model
       config.magCalibrationScale[0] = 1000;
       config.magCalibrationScale[1] = 1000;
       config.magCalibrationScale[2] = 1000;
+
+      config.vbatScale = 100;
+      config.vbatResDiv = 16;
+      config.vbatResMult = 1;
+      config.vbatCellWarning = 35;
     }
 
     bool isActive(FlightMode mode) const
@@ -903,6 +915,9 @@ class Model
         state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopSampleRate);
         state.outerPid[i].ptermFilter.begin(); // unused
       }
+
+      state.voltage = 125; // 12.5
+      state.numCells = 3;
     }
 
     void preSave()
@@ -990,7 +1005,7 @@ class Model
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x04;
+    static const uint8_t EEPROM_VERSION = 0x05;
 };
 
 }
