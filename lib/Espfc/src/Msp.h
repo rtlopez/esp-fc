@@ -280,7 +280,7 @@ class Msp
 
         case MSP_STATUS_EX:
         case MSP_STATUS:
-          r.writeU16(_model.state.loopSampleInterval);
+          r.writeU16(_model.state.loopTimer.interval);
           r.writeU16(0); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
           r.writeU16(1 << 0 | 0 << 1 | 0 << 2 | 0 << 3 | 0 << 4 | 1 << 5);
@@ -291,7 +291,7 @@ class Msp
             r.writeU8(1);
             r.writeU8(0);
           } else {  // MSP_STATUS
-            r.writeU16(_model.state.gyroSampleInterval); // gyro cycle time
+            r.writeU16(_model.state.gyroTimer.interval); // gyro cycle time
           }
 
           // flight mode flags (above 32 bits)

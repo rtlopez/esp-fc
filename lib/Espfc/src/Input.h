@@ -20,7 +20,7 @@ class Input
     int begin()
     {
       PPM.begin(_model.config.ppmPin, _model.config.ppmMode);
-      _model.logger.info().log(F("PPM")).log(_model.config.ppmPin).logln(_model.config.ppmMode);
+      _model.logger.info().log(F("RX PPM")).log(_model.config.ppmPin).logln(_model.config.ppmMode);
       setFailsafe();
       return 1;
     }
@@ -81,7 +81,7 @@ class Input
 
       if(_model.config.inputInterpolation != INPUT_INTERPOLATION_OFF)
       {
-        float interpolationStep = _model.state.loopDt / inputDt;
+        float interpolationStep = _model.state.loopTimer.delta / inputDt;
         if(step < 1.f) step += interpolationStep;
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {

@@ -18,8 +18,10 @@ class Mixer
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {
         PWMDriver.attach(i, _model.config.outputPin[i], _model.state.outputDisarmed[i]);
+        _model.logger.info().log(F("OUTPUT PIN")).log(i).logln(_model.config.outputPin[i]);
       }
       PWMDriver.begin((OutputProtocol)_model.config.outputProtocol, _model.config.outputAsync, _model.config.outputRate);
+      _model.logger.info().log(F("OUTPUT CONF")).log(_model.config.outputProtocol).log(_model.config.outputAsync).logln(_model.config.outputRate);
       return 1;
     }
 

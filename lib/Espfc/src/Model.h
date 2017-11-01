@@ -9,6 +9,7 @@
 #include "Stats.h"
 #include "Logger.h"
 #include "Math.h"
+#include "Timer.h"
 
 #if 0
 #define PIN_DEBUG(v) digitalWrite(D0, v)
@@ -304,10 +305,6 @@ struct ModelState
   VectorInt16 accelRaw;
   VectorInt16 magRaw;
 
-  VectorFloat gyroScaled;
-  VectorFloat accelScaled;
-  VectorFloat magScaled;
-
   VectorFloat gyro;
   VectorFloat accel;
   VectorFloat mag;
@@ -367,30 +364,23 @@ struct ModelState
   float gyroBiasAlpha;
   long gyroBiasSamples;
 
-  float gyroDeadband;
-
   int8_t gyroDivider;
-  uint32_t gyroSampleRate;
-  uint32_t gyroSampleInterval;
-  float gyroDt;
 
-  uint32_t gyroTimestamp;
-  uint32_t gyroIteration;
+  Timer gyroTimer;
   bool gyroUpdate;
 
-  uint32_t loopSampleRate;
-  uint32_t loopSampleInterval;
-  uint32_t loopTimestamp;
-  uint32_t loopIteration;
-  float loopDt;
+  Timer loopTimer;
   bool loopUpdate;
 
+  Timer mixerTimer;
   bool mixerUpdate;
 
-  uint32_t magTimestamp;
-  long magSampleInterval;
-  long magSampleRate;
+  Timer actuatorTimer;
+
+  Timer magTimer;
   float magScale;
+
+  Timer batteryTimer;
 
   bool magCalibration;
   float magCalibrationData[3][2];
@@ -399,7 +389,7 @@ struct ModelState
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
 
-  uint32_t telemetryTimestamp;
+  Timer telemetryTimer;
   bool telemetryUpdate;
 
   int16_t outputDisarmed[OUTPUT_CHANNELS];
@@ -415,6 +405,8 @@ struct ModelState
 
   uint8_t voltage;
   int8_t numCells;
+
+  int16_t debug[4];
 };
 
 // persistent data
@@ -537,6 +529,8 @@ struct ModelConfig
   int8_t vbatScale;
   int8_t vbatResDiv;
   int8_t vbatResMult;
+
+  int8_t debugMode;
 };
 
 class Model
@@ -606,7 +600,9 @@ class Model
       config.yawFilter.freq = 0;
 
       config.telemetry = 0;
-      config.telemetryInterval = 1000 * 1000;
+      config.telemetryInterval = 1000;
+
+      config.debugMode = DEBUG_NOTCH;
 
       config.blackboxDev = 3;
       config.blackboxPdenom = 32;
@@ -779,8 +775,8 @@ class Model
     void calibrate()
     {
       state.sensorCalibration = true;
-      state.gyroBiasSamples  = 2 * state.gyroSampleRate;
-      state.accelBiasSamples = 2 * state.gyroSampleRate;
+      state.gyroBiasSamples  = 2 * state.gyroTimer.rate;
+      state.accelBiasSamples = 2 * state.gyroTimer.rate;
       state.accelBias.z += 1.f;
     }
 
@@ -797,17 +793,6 @@ class Model
     {
       config.gyroSync = std::max((int)config.gyroSync, 8); // max 1khz
       config.gyroSampleRate = 8000 / config.gyroSync;
-
-      // sample rate = clock / ( divider + 1)
-      int clock = config.gyroDlpf == GYRO_DLPF_256 ? 8000 : 1000;
-
-      state.gyroDivider = (clock / (config.gyroSampleRate + 1)) + 1;
-      state.gyroSampleRate = clock / state.gyroDivider; // update to real sample rate
-      state.gyroSampleInterval = (1000000.f / state.gyroSampleRate);
-
-      state.accelBiasAlpha = 4.0f / state.gyroSampleRate; // higher value gives faster calibration, was 2
-      state.gyroBiasAlpha  = 4.0f / state.gyroSampleRate; // higher value gives faster calibration, was 2
-      state.gyroBiasSamples = 2 * state.gyroSampleRate; // start gyro calibration
 
       if(config.outputProtocol != OUTPUT_PWM && config.outputProtocol != OUTPUT_ONESHOT125)
       {
@@ -847,6 +832,20 @@ class Model
       config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
 
+      // init timers
+      // sample rate = clock / ( divider + 1)
+      int clock = config.gyroDlpf == GYRO_DLPF_256 ? 8000 : 1000;
+      state.gyroDivider = (clock / (config.gyroSampleRate + 1)) + 1;
+      state.gyroTimer.setRate(clock / state.gyroDivider);
+      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
+      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
+      state.actuatorTimer.setRate(25); // 25 hz
+      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
+
+      state.gyroBiasAlpha = 4.0f / state.gyroTimer.rate;
+      state.accelBiasAlpha = 4.0f / state.gyroTimer.rate;
+      state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
+
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -862,19 +861,16 @@ class Model
         state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
       }
 
-      state.inputFilterAlpha = Math::bound((config.inputFilterAlpha / 100.0f), 0.f, 1.f);
-
-      state.gyroSampleRate = config.gyroSampleRate;
-      state.loopSampleRate = state.gyroSampleRate / config.loopSync;
-      state.loopSampleInterval = 1000000 / state.loopSampleRate;
+      // load input filter config
+      state.inputFilterAlpha = Math::bound((config.inputFilterAlpha / 100.0f), 0.01f, 1.f);
 
       for(size_t i = 0; i < AXIS_YAW; i++)
       {
-        state.gyroFilter[i].begin(config.gyroFilter, state.gyroSampleRate);
-        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroSampleRate);
-        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroSampleRate);
-        state.accelFilter[i].begin(config.accelFilter, state.gyroSampleRate);
-        state.magFilter[i].begin(config.magFilter, state.gyroSampleRate);
+        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
+        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
+        state.accelFilter[i].begin(config.accelFilter, state.gyroTimer.rate);
+        state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
       }
 
       for(size_t i = 0; i < AXIS_YAW; i++) // rpy
@@ -888,11 +884,11 @@ class Model
           config.dtermSetpointWeight / 100.0f,
           1.0f
         );
-        state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopSampleRate);
-        state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopSampleRate);
+        state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         if(i == AXIS_YAW)
         {
-          state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopSampleRate);
+          state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
         }
         else
         {
@@ -911,13 +907,10 @@ class Model
           0,
           radians(config.angleRateLimit)
         );
-        state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopSampleRate);
-        state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopSampleRate);
+        state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         state.outerPid[i].ptermFilter.begin(); // unused
       }
-
-      state.voltage = 125; // 12.5
-      state.numCells = 3;
     }
 
     void preSave()
@@ -931,10 +924,6 @@ class Model
         config.magCalibrationScale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
       }
     }
-
-    ModelState state;
-    ModelConfig config;
-    Logger logger;
 
     int load()
     {
@@ -1006,6 +995,10 @@ class Model
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
     static const uint8_t EEPROM_VERSION = 0x05;
+
+    ModelState state;
+    ModelConfig config;
+    Logger logger;
 };
 
 }

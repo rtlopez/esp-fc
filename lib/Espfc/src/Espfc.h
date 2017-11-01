@@ -46,38 +46,29 @@ class Espfc
     {
       _hardware.update();
 
-      uint32_t now = micros();
-      _model.state.gyroUpdate = _model.state.gyroTimestamp + _model.state.gyroSampleInterval < now;
+      _model.state.gyroUpdate = _model.state.gyroTimer.check();
       if(_model.state.gyroUpdate)
       {
         PIN_DEBUG(true);
-        _model.state.gyroDt = (now - _model.state.gyroTimestamp) / 1000000.f;
-        _model.state.gyroTimestamp = now;
-        _model.state.gyroIteration++;
         _sensor.update();
         PIN_DEBUG(false);
       }
 
-      now = micros();
-      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroIteration % _model.config.loopSync == 0;
+      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroTimer.sync(_model.state.loopTimer);
       if(_model.state.loopUpdate)
       {
         PIN_DEBUG(true);
-        _model.state.loopDt = (now - _model.state.loopTimestamp) / 1000000.f;
-        _model.state.loopTimestamp = now;
-        _model.state.loopIteration++;
         _input.update();
-        _model.state.actuatorUpdate = _model.state.actuatorTimestamp + 50000 < now; // update every 50ms
+        _model.state.actuatorUpdate = _model.state.actuatorTimer.check();
         if(_model.state.actuatorUpdate)
         {
-          _model.state.actuatorTimestamp = now;
           _actuator.update();
         }
         _controller.update();
         PIN_DEBUG(false);
       }
 
-      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.loopIteration % _model.config.mixerSync == 0;
+      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.loopTimer.sync(_model.state.mixerTimer);
       if(_model.state.mixerUpdate)
       {
         PIN_DEBUG(true);
@@ -99,11 +90,9 @@ class Espfc
         PIN_DEBUG(false);
       }
 
-      now = micros();
-      _model.state.telemetryUpdate = _model.config.telemetry && _model.config.telemetryInterval >= 10000 && _model.state.telemetryTimestamp + _model.config.telemetryInterval < now;
+      _model.state.telemetryUpdate = _model.config.telemetry && _model.state.telemetryTimer.check();
       if(_model.state.telemetryUpdate)
       {
-        _model.state.telemetryTimestamp = now;
         _telemetry.update();
       }
 

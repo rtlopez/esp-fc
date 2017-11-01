@@ -19,12 +19,15 @@ class Sensor
 {
   public:
     Sensor(Model& model): _model(model), _fusion(model) {}
+
     int begin()
     {
+      _model.logger.info().log(F("SENSOR")).log(_model.config.accelMode).logln(_model.config.fusionDelay);
       initGyro();
       initMag();
       initPresure();
       _fusion.begin();
+      _model.state.batteryTimer.setRate(20);
       return 1;
     }
 
@@ -42,7 +45,7 @@ class Sensor
       if(_model.config.fusionDelay)
       {
         // if fusion is delayed, update attitude using current gyro reading
-        _model.state.angle += _model.state.gyro * _model.state.gyroDt;
+        _model.state.angle += _model.state.gyro * _model.state.gyroTimer.delta;
       }
       else
       {
@@ -78,7 +81,7 @@ class Sensor
         _fusion.update();
       }
 
-      if(_model.state.gyroIteration % 50 == 0)
+      if(_model.state.batteryTimer.check())
       {
         updateBattery();
       }
@@ -157,10 +160,9 @@ class Sensor
 
     int readMag()
     {
-      if(_model.config.magDev != MAG_NONE && _model.state.magTimestamp + _model.state.magSampleInterval < _model.state.gyroTimestamp)
+      if(_model.config.magDev != MAG_NONE && _model.state.magTimer.check())
       {
         _mag.getHeading(&_model.state.magRaw.x, &_model.state.magRaw.y, &_model.state.magRaw.z);
-        _model.state.magTimestamp = _model.state.gyroTimestamp;
         return 1;
       }
       return 0;
@@ -170,12 +172,19 @@ class Sensor
     {
       align(_model.state.gyroRaw, _model.config.gyroAlign);
 
-      _model.state.gyroScaled  = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
+      _model.state.gyro = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
       for(size_t i = 0; i < 3; ++i)
       {
-        _model.state.gyroScaled.set(i, Math::deadband(_model.state.gyroScaled[i], _model.state.gyroDeadband));
-        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyroScaled[i]));
+        if(_model.config.debugMode == DEBUG_NOTCH)
+        {
+          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+        }
+        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
         _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
+        if(_model.config.debugMode == DEBUG_GYRO)
+        {
+          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+        }
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
       }
 
@@ -201,10 +210,10 @@ class Sensor
     {
       align(_model.state.accelRaw, _model.config.accelAlign);
 
-      _model.state.accelScaled = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
+      _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       for(size_t i = 0; i < 3; i++)
       {
-        _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accelScaled[i]));
+        _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accel[i]));
       }
 
       if(_model.state.accelBiasSamples > 0)
@@ -228,10 +237,10 @@ class Sensor
       if(_model.config.magDev != MAG_NONE)
       {
         align(_model.state.magRaw, _model.config.magAlign);
-        _model.state.magScaled  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
+        _model.state.mag  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
         for(size_t i = 0; i < 3; i++)
         {
-          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.magScaled[i]));
+          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
         }
         if(_model.state.magCalibrationValid && _model.state.magCalibration == 0)
         {
@@ -316,7 +325,7 @@ class Sensor
     void initGyro()
     {
       _gyro.initialize();
-      _model.logger.info().log(F("GYRO INIT")).log(_gyro.getDeviceID()).logln(_gyro.testConnection());
+      _model.logger.info().log(F("GYRO INIT")).log(_model.config.gyroDev).log(_gyro.getDeviceID()).logln(_gyro.testConnection());
 
       setSampleRate();
       setGyroScale();
@@ -338,7 +347,7 @@ class Sensor
     {
       _gyro.setDLPFMode(_model.config.gyroDlpf);
       _gyro.setRate(_model.state.gyroDivider - 1);
-      _model.logger.info().log(F("GYRO RATE")).log(_model.state.gyroDivider).log(_model.state.gyroSampleRate).logln(_model.state.gyroSampleInterval);
+      _model.logger.info().log(F("GYRO RATE")).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
     }
 
     void setGyroScale()
@@ -391,10 +400,9 @@ class Sensor
         case MAG_RATE_75:   rate = 75; break;
         default: _model.config.magSampleRate = MAG_RATE_15; rate = 15; return;
       }
-      _model.state.magSampleRate = rate;
-      _model.state.magSampleInterval = 1000000 / rate;
       _mag.setDataRate(_model.config.magSampleRate + 0x02);
-      _model.logger.info().log(F("MAG RATE")).log(_model.config.magSampleRate).log(_model.state.magSampleRate).logln(_model.state.magSampleInterval);
+      _model.state.magTimer.setRate(rate);
+      _model.logger.info().log(F("MAG RATE")).log(_model.config.magSampleRate).log(_model.state.magTimer.rate).logln(_model.state.magTimer.interval);
     }
 
     void setMagScale()
