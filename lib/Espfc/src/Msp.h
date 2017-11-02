@@ -539,7 +539,11 @@ class Msp
           break;
 
         case MSP_BEEPER_CONFIG:
-          r.writeU32(0); // beeper mask
+          r.writeU32(~_model.config.buzzer.beeperMask); // beeper mask
+          break;
+
+        case MSP_SET_BEEPER_CONFIG:
+          _model.config.buzzer.beeperMask = ~m.readU32(); // beeper mask
           break;
 
         case MSP_BOARD_ALIGNMENT_CONFIG:
@@ -908,7 +912,13 @@ class Msp
           break;
 
         case MSP_MAG_CALIBRATION:
-            break;
+          break;
+
+        case MSP_DEBUG:
+          for (int i = 0; i < 4; i++) {
+            r.writeU16(_model.state.debug[i]);
+          }
+          break;
 
         case MSP_EEPROM_WRITE:
           _model.save();

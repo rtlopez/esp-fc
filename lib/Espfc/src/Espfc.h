@@ -14,6 +14,7 @@
 #include "Telemetry.h"
 #include "Cli.h"
 #include "Hardware.h"
+#include "Buzzer.h"
 
 namespace Espfc {
 
@@ -22,7 +23,7 @@ class Espfc
   public:
     Espfc():
       _model(), _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
-      _mixer(_model), _blackbox(_model), _telemetry(_model), _cli(_model)
+      _mixer(_model), _blackbox(_model), _telemetry(_model), _cli(_model), _buzzer(_model)
       {}
 
     int begin()
@@ -30,6 +31,7 @@ class Espfc
       PIN_DEBUG_INIT(OUTPUT);
       _model.begin();
       _hardware.begin();
+      _buzzer.begin();
       _sensor.begin();
       _input.begin();
       _actuator.begin();
@@ -97,6 +99,7 @@ class Espfc
       }
 
       _cli.update();
+      _buzzer.update();
 
       return 1;
     }
@@ -112,6 +115,7 @@ class Espfc
     Blackbox _blackbox;
     Telemetry _telemetry;
     Cli _cli;
+    Buzzer _buzzer;
 };
 
 }

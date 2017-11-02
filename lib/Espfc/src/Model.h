@@ -298,6 +298,70 @@ class SerialConfig
 
 #define ACTUATOR_CONDITIONS 8
 
+#define BUZZER_MAX_EVENTS 8
+
+enum BuzzerEvent {
+  BEEPER_SILENCE = 0,             // Silence, see beeperSilence()
+  BEEPER_GYRO_CALIBRATED,
+  BEEPER_RX_LOST,                 // Beeps when TX is turned off or signal lost (repeat until TX is okay)
+  BEEPER_RX_LOST_LANDING,         // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
+  BEEPER_DISARMING,               // Beep when disarming the board
+  BEEPER_ARMING,                  // Beep when arming the board
+  BEEPER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
+  BEEPER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
+  BEEPER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
+  BEEPER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
+  BEEPER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
+  BEEPER_ACC_CALIBRATION,         // ACC inflight calibration completed confirmation
+  BEEPER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
+  BEEPER_READY_BEEP,              // Ring a tone when GPS is locked and ready
+  BEEPER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
+  BEEPER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position
+  BEEPER_ARMED,                   // Warning beeps when board is armed (repeats until board is disarmed or throttle is increased)
+  BEEPER_SYSTEM_INIT,             // Initialisation beeps when board is powered on
+  BEEPER_USB,                     // Some boards have beeper powered USB connected
+  BEEPER_BLACKBOX_ERASE,          // Beep when blackbox erase completes
+  BEEPER_CRASH_FLIP_MODE,         // Crash flip mode is active
+  BEEPER_CAM_CONNECTION_OPEN,     // When the 5 key simulation stated
+  BEEPER_CAM_CONNECTION_CLOSE,    // When the 5 key simulation stop
+  BEEPER_ALL,                     // Turn ON or OFF all beeper conditions
+  BEEPER_PREFERENCE,              // Save preferred beeper configuration
+  // BEEPER_ALL and BEEPER_PREFERENCE must remain at the bottom of this enum
+};
+
+class BuzzerConfig
+{
+  public:
+    int8_t pin;
+    int8_t inverted;
+    int32_t beeperMask;
+};
+
+class BuzzerState
+{
+  public:
+    Timer timer;
+    BuzzerEvent events[BUZZER_MAX_EVENTS];
+    size_t idx;
+
+    void push(BuzzerEvent e)
+    {
+      if(idx >= BUZZER_MAX_EVENTS) return;
+      events[idx++] = e;
+    }
+
+    BuzzerEvent pop()
+    {
+      if(empty()) return BEEPER_SILENCE;
+      return events[idx--];
+    }
+
+    bool empty() const
+    {
+      return idx == 0;
+    }
+};
+
 // working data
 struct ModelState
 {
@@ -407,6 +471,8 @@ struct ModelState
   int8_t numCells;
 
   int16_t debug[4];
+
+  BuzzerState buzzer;
 };
 
 // persistent data
@@ -523,6 +589,7 @@ struct ModelConfig
   int16_t accelBias[3];
   int16_t magCalibrationScale[3];
   int16_t magCalibrationOffset[3];
+
   char modelName[MODEL_NAME_LEN + 1];
 
   int8_t vbatCellWarning;
@@ -531,6 +598,8 @@ struct ModelConfig
   int8_t vbatResMult;
 
   int8_t debugMode;
+
+  BuzzerConfig buzzer;
 };
 
 class Model
@@ -755,6 +824,8 @@ class Model
       config.vbatResDiv = 16;
       config.vbatResMult = 1;
       config.vbatCellWarning = 35;
+
+      config.buzzer.pin = -1;
     }
 
     bool isActive(FlightMode mode) const
@@ -831,6 +902,12 @@ class Model
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
       config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
+
+      // only few beeper allowed
+      config.buzzer.beeperMask &=
+        1 << (BEEPER_GYRO_CALIBRATED - 1) | 1 << (BEEPER_RX_LOST - 1) | 
+        1 << (BEEPER_DISARMING - 1) | 1 << (BEEPER_ARMING - 1) |
+        1 << (BEEPER_BAT_LOW - 1) | 1 << (BEEPER_RX_SET - 1);
 
       // init timers
       // sample rate = clock / ( divider + 1)
