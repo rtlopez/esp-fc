@@ -353,7 +353,10 @@ class BuzzerState
     void push(BuzzerEvent e) // play once
     {
       if(full()) return;
-      events[idx++] = e;
+      if(beeperMask & (1 << (e - 1)))
+      {
+        events[idx++] = e;
+      }
     }
 
     BuzzerEvent pop()
@@ -375,6 +378,23 @@ class BuzzerState
     Timer timer;
     BuzzerEvent events[BUZZER_MAX_EVENTS];
     size_t idx;
+    int32_t beeperMask;
+};
+
+class BatteryState
+{
+  public:
+    bool warn(int vbatCellWarning) const
+    {
+      return !samples && cellVoltage < vbatCellWarning;
+    }
+
+    int16_t rawVoltage;
+    uint8_t voltage;
+    uint8_t cellVoltage;
+    int8_t cells;
+    int8_t samples;
+    Timer timer;
 };
 
 // working data
@@ -459,8 +479,6 @@ struct ModelState
   Timer magTimer;
   float magScale;
 
-  Timer batteryTimer;
-
   bool magCalibration;
   float magCalibrationData[3][2];
   bool magCalibrationValid;
@@ -483,12 +501,11 @@ struct ModelState
   bool actuatorUpdate;
   uint32_t actuatorTimestamp;
 
-  uint8_t voltage;
-  int8_t numCells;
-
   int16_t debug[4];
 
   BuzzerState buzzer;
+
+  BatteryState battery;
 };
 
 // persistent data
@@ -609,9 +626,9 @@ struct ModelConfig
   char modelName[MODEL_NAME_LEN + 1];
 
   int8_t vbatCellWarning;
-  int8_t vbatScale;
-  int8_t vbatResDiv;
-  int8_t vbatResMult;
+  uint8_t vbatScale;
+  uint8_t vbatResDiv;
+  uint8_t vbatResMult;
 
   int8_t debugMode;
 
@@ -937,11 +954,16 @@ class Model
 
       // only few beeper allowed
       config.buzzer.beeperMask &=
-        1 << (BEEPER_GYRO_CALIBRATED - 1) | 1 << (BEEPER_RX_LOST - 1) |
-        1 << (BEEPER_DISARMING - 1) | 1 << (BEEPER_ARMING - 1) |
-        1 << (BEEPER_BAT_LOW - 1) | 1 << (BEEPER_RX_SET - 1) | 1 << (BEEPER_SYSTEM_INIT - 1);
+        1 << (BEEPER_GYRO_CALIBRATED - 1) |
+        1 << (BEEPER_SYSTEM_INIT - 1) |
+        1 << (BEEPER_RX_LOST - 1) |
+        1 << (BEEPER_RX_SET - 1) |
+        1 << (BEEPER_DISARMING - 1) |
+        1 << (BEEPER_ARMING - 1) |
+        1 << (BEEPER_BAT_LOW - 1);
 
-      //config.debugMode = DEBUG_NONE;
+      state.buzzer.beeperMask = config.buzzer.beeperMask;
+      config.debugMode = DEBUG_NONE;
 
       // init timers
       // sample rate = clock / ( divider + 1)

@@ -9,6 +9,8 @@ static const uint8_t beeperRxLost[] = { 30, 0 };
 static const uint8_t beeperDisarming[] = { 10, 10, 0 };
 static const uint8_t beeperArming[] = { 20, 0 };
 static const uint8_t beeperSystemInit[] = { 10, 0 };
+static const uint8_t beeperBatteryLow[] = { 30, 0 };
+static const uint8_t beeperBatteryCritical[] = { 50, 0 };
 
 const uint8_t* Buzzer::schemes[] = {
   //BEEPER_SILENCE
@@ -26,9 +28,9 @@ const uint8_t* Buzzer::schemes[] = {
   //BEEPER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
   beeperSilence,
   //BEEPER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
-  beeperSilence,
+  beeperBatteryCritical,
   //BEEPER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
-  beeperSilence,
+  beeperBatteryLow,
   //BEEPER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
   beeperSilence,
   //BEEPER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled

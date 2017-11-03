@@ -27,7 +27,8 @@ class Sensor
       initMag();
       initPresure();
       _fusion.begin();
-      _model.state.batteryTimer.setRate(20);
+      _model.state.battery.timer.setRate(20);
+      _model.state.battery.samples = 20;
       return 1;
     }
 
@@ -81,7 +82,7 @@ class Sensor
         _fusion.update();
       }
 
-      if(_model.state.batteryTimer.check())
+      if(_model.state.battery.timer.check())
       {
         updateBattery();
       }
@@ -430,14 +431,24 @@ class Sensor
 
     void updateBattery()
     {
-      float val = analogRead(A0);
-      val *= std::max(1, (int)_model.config.vbatScale);
+      // wemos d1 mini has divider 3.2:1 (220k:100k)
+      const float alpha = 0.33f;
+      float val = _model.state.battery.rawVoltage = analogRead(A0);
+      val *= (int)_model.config.vbatScale;
       val /= 10.f;
       val *= _model.config.vbatResMult;
       val /= _model.config.vbatResDiv;
-      val = (val + _model.state.voltage) / 2; // smooth
-      _model.state.voltage = Math::bound((int)lrintf(val), 0, 255);
-      _model.state.numCells = ((int)_model.state.voltage + 40) / 42;  // round
+      val = Math::bound(val, 0.f, 255.f);
+      val = (val * alpha + _model.state.battery.voltage * (1.f - alpha)); // smooth
+      _model.state.battery.voltage = (uint8_t)lrintf(val);
+
+      // cell count detection
+      if(_model.state.battery.samples > 0)
+      {
+        _model.state.battery.cells = ((int)_model.state.battery.voltage + 40) / 42;  // round
+        _model.state.battery.samples--;
+      }
+      _model.state.battery.cellVoltage = _model.state.battery.voltage / std::max((int)_model.state.battery.cells, 1);
     }
 
     void align(VectorInt16& dest, uint8_t rotation)

@@ -26,7 +26,7 @@ class Buzzer
       pinMode(_model.config.buzzer.pin, OUTPUT);
       digitalWrite(_model.config.buzzer.pin, _model.config.buzzer.inverted);
       _model.state.buzzer.timer.setRate(100);
-      
+
       return 1;
     }
 
@@ -42,11 +42,8 @@ class Buzzer
           if(!_model.state.buzzer.empty())
           {
             _e = _model.state.buzzer.pop();
-            if(_model.config.buzzer.beeperMask & (1 << (_e - 1)))
-            {
-              _scheme = schemes[_e];
-              _status = BUZZER_STATUS_TEST;
-            }
+            _scheme = schemes[_e];
+            _status = BUZZER_STATUS_TEST;
           }
           break;
         case BUZZER_STATUS_TEST: // test for end or continue
@@ -94,9 +91,7 @@ class Buzzer
 
     BuzzerPlayStatus _status;
     uint32_t _wait;
-
     const uint8_t * _scheme;
-
     BuzzerEvent _e;
 
     static const uint8_t* schemes[];

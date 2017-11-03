@@ -355,7 +355,7 @@ class Msp
           break;
 
         case MSP_ANALOG:
-          r.writeU8(_model.state.voltage);  // voltage
+          r.writeU8(_model.state.battery.voltage);  // voltage
           r.writeU16(0); // mah drawn
           r.writeU16(0); // rssi
           r.writeU16(0); // amperage
@@ -379,13 +379,22 @@ class Msp
           r.writeU8(0);  // currentMeterSource
           break;
 
+        case MSP_SET_BATTERY_CONFIG:
+          m.readU8();  // vbatmincellvoltage
+          m.readU8();  // vbatmaxcellvoltage
+          _model.config.vbatCellWarning = m.readU8();  // vbatwarningcellvoltage
+          m.readU16(); // batteryCapacity
+          m.readU8();  // voltageMeterSource
+          m.readU8();  // currentMeterSource
+          break;
+
         case MSP_BATTERY_STATE:
           // battery characteristics
-          r.writeU8(_model.state.numCells); // cell count, 0 indicates battery not detected.
+          r.writeU8(_model.state.battery.cells); // cell count, 0 indicates battery not detected.
           r.writeU16(0); // capacity in mAh
 
           // battery state
-          r.writeU8(_model.state.voltage); // in 0.1V steps
+          r.writeU8(_model.state.battery.voltage); // in 0.1V steps
           r.writeU16(0);  // milliamp hours drawn from battery
           r.writeU16(0); // send current in 0.01 A steps, range is -320A to 320A
 
@@ -397,7 +406,7 @@ class Msp
           for(int i = 0; i < 1; i++)
           {
             r.writeU8(i + 10);  // meter id (10-19 vbat adc)
-            r.writeU8(_model.state.voltage);  // meter value
+            r.writeU8(_model.state.battery.voltage);  // meter value
           }
           break;
 

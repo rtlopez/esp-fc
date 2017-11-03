@@ -87,15 +87,18 @@ class Actuator
 
     void updateBuzzer()
     {
-      if(_model.isActive(MODE_BUZZER))
-      {
-        _model.state.buzzer.play(BEEPER_RX_SET);
-      }
       if(_model.isActive(MODE_FAILSAFE))
       {
         _model.state.buzzer.play(BEEPER_RX_LOST);
       }
-
+      if(_model.state.battery.warn(_model.config.vbatCellWarning))
+      {
+        _model.state.buzzer.play(BEEPER_BAT_LOW);
+      }
+      if(_model.isActive(MODE_BUZZER))
+      {
+        _model.state.buzzer.play(BEEPER_RX_SET);
+      }
       if((_model.hasChanged(MODE_ARMED)))
       {
         if(_model.isActive(MODE_ARMED))
