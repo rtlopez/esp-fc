@@ -199,6 +199,7 @@ class Sensor
           _model.state.gyroBiasSamples--;
           if(_model.state.gyroBiasSamples == 0)
           {
+            _model.state.buzzer.push(BEEPER_GYRO_CALIBRATED);
             _model.logger.info().log(F("GYRO CAL")).log(_model.state.gyroBias.x).log(_model.state.gyroBias.y).logln(_model.state.gyroBias.z);
           }
         }

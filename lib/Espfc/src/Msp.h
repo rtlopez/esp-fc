@@ -316,13 +316,15 @@ class Msp
 
         case MSP_BOXNAMES:
           //TODO: use pgm_space
-          r.writeString("ARM;ANGLE;AIRMODE;");
+          r.writeString("ARM;ANGLE;AIRMODE;BUZZER;FAILSAFE;");
           break;
 
         case MSP_BOXIDS:
           r.writeU8(MODE_ARMED);
           r.writeU8(MODE_ANGLE);
           r.writeU8(MODE_AIRMODE);
+          r.writeU8(MODE_BUZZER);
+          r.writeU8(MODE_FAILSAFE);
           break;
 
         case MSP_MODE_RANGES:
@@ -946,7 +948,7 @@ class Msp
 
     bool debugSkip(uint8_t cmd)
     {
-      //return true;
+      return true;
       if(cmd == MSP_STATUS) return true;
       if(cmd == MSP_STATUS_EX) return true;
       if(cmd == MSP_BOXNAMES) return true;

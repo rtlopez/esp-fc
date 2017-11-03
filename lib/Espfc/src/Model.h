@@ -105,6 +105,8 @@ enum FlightMode {
   MODE_ARMED    = 0x00,
   MODE_ANGLE    = 0x01,
   MODE_AIRMODE  = 0x02,
+  MODE_BUZZER   = 0x03,
+  MODE_FAILSAFE = 0x04
 };
 
 enum ModelFrame {
@@ -340,26 +342,39 @@ class BuzzerConfig
 class BuzzerState
 {
   public:
-    Timer timer;
-    BuzzerEvent events[BUZZER_MAX_EVENTS];
-    size_t idx;
+    BuzzerState(): idx(0) {}
 
-    void push(BuzzerEvent e)
+    void play(BuzzerEvent e) // play continously, repeat while condition is true
     {
-      if(idx >= BUZZER_MAX_EVENTS) return;
+      if(!empty()) return;
+      push(e);
+    }
+
+    void push(BuzzerEvent e) // play once
+    {
+      if(full()) return;
       events[idx++] = e;
     }
 
     BuzzerEvent pop()
     {
       if(empty()) return BEEPER_SILENCE;
-      return events[idx--];
+      return events[--idx];
     }
 
     bool empty() const
     {
       return idx == 0;
     }
+
+    bool full() const
+    {
+      return idx >= BUZZER_MAX_EVENTS;
+    }
+
+    Timer timer;
+    BuzzerEvent events[BUZZER_MAX_EVENTS];
+    size_t idx;
 };
 
 // working data
@@ -461,6 +476,7 @@ struct ModelState
   Stats stats;
 
   uint32_t modeMask;
+  uint32_t modeMaskPrev;
 
   bool sensorCalibration;
 
@@ -671,7 +687,7 @@ class Model
       config.telemetry = 0;
       config.telemetryInterval = 1000;
 
-      config.debugMode = DEBUG_NOTCH;
+      config.debugMode = DEBUG_NONE;
 
       config.blackboxDev = 3;
       config.blackboxPdenom = 32;
@@ -790,6 +806,16 @@ class Model
       config.conditions[2].min = (1700 - 900) / 25;
       config.conditions[2].max = (2100 - 900) / 25;
 
+      //config.conditions[3].id = MODE_FAILSAFE;
+      //config.conditions[3].ch = 1; // aux1
+      //config.conditions[3].min = (1700 - 900) / 25;
+      //config.conditions[3].max = (2100 - 900) / 25;
+
+      //config.conditions[4].id = MODE_BUZZER;
+      //config.conditions[4].ch = 2; // aux1
+      //config.conditions[4].min = (1700 - 900) / 25;
+      //config.conditions[4].max = (2100 - 900) / 25;
+
       // actuator config - pid scaling
       config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
       config.actuatorChannels[0] = 5;
@@ -825,12 +851,18 @@ class Model
       config.vbatResMult = 1;
       config.vbatCellWarning = 35;
 
-      config.buzzer.pin = -1;
+      config.buzzer.pin = D0;
+      config.buzzer.inverted = true;
     }
 
     bool isActive(FlightMode mode) const
     {
       return state.modeMask & (1 << mode);
+    }
+
+    bool hasChanged(FlightMode mode) const
+    {
+      return (state.modeMask & (1 << mode)) != (state.modeMaskPrev & (1 << mode));
     }
 
     bool isActive(Feature feature) const
@@ -905,9 +937,11 @@ class Model
 
       // only few beeper allowed
       config.buzzer.beeperMask &=
-        1 << (BEEPER_GYRO_CALIBRATED - 1) | 1 << (BEEPER_RX_LOST - 1) | 
+        1 << (BEEPER_GYRO_CALIBRATED - 1) | 1 << (BEEPER_RX_LOST - 1) |
         1 << (BEEPER_DISARMING - 1) | 1 << (BEEPER_ARMING - 1) |
-        1 << (BEEPER_BAT_LOW - 1) | 1 << (BEEPER_RX_SET - 1);
+        1 << (BEEPER_BAT_LOW - 1) | 1 << (BEEPER_RX_SET - 1) | 1 << (BEEPER_SYSTEM_INIT - 1);
+
+      //config.debugMode = DEBUG_NONE;
 
       // init timers
       // sample rate = clock / ( divider + 1)
@@ -1071,7 +1105,7 @@ class Model
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x05;
+    static const uint8_t EEPROM_VERSION = 0x06;
 
     ModelState state;
     ModelConfig config;

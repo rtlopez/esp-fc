@@ -49,9 +49,10 @@ class Input
       static float inputDt = 0.02f;
       static uint32_t prevTm = 0;
 
-      if(PPM.failsafeActive())
+      if(PPM.fail())
       {
         setFailsafe();
+        _model.state.buzzer.play(BEEPER_RX_LOST);
         return 0;
       }
 

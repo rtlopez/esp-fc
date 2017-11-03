@@ -22,6 +22,7 @@ class Actuator
       _model.state.stats.start(COUNTER_ACTUATOR);
       updateModeMask();
       updateScaler();
+      updateBuzzer();
       _model.state.stats.end(COUNTER_ACTUATOR);
       return 1;
     }
@@ -80,7 +81,32 @@ class Actuator
           newMask |= 1 << c->id;
         }
       }
+      _model.state.modeMaskPrev = _model.state.modeMask;
       _model.state.modeMask = newMask;
+    }
+
+    void updateBuzzer()
+    {
+      if(_model.isActive(MODE_BUZZER))
+      {
+        _model.state.buzzer.play(BEEPER_RX_SET);
+      }
+      if(_model.isActive(MODE_FAILSAFE))
+      {
+        _model.state.buzzer.play(BEEPER_RX_LOST);
+      }
+
+      if((_model.hasChanged(MODE_ARMED)))
+      {
+        if(_model.isActive(MODE_ARMED))
+        {
+          _model.state.buzzer.push(BEEPER_ARMING);
+        }
+        else
+        {
+          _model.state.buzzer.push(BEEPER_DISARMING);
+        }
+      }
     }
 
     Model& _model;

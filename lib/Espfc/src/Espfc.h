@@ -41,6 +41,8 @@ class Espfc
       _telemetry.begin();
       _cli.begin();
 
+      _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
+
       return 1;
     }
 

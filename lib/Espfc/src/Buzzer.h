@@ -17,16 +17,16 @@ enum BuzzerPlayStatus
 class Buzzer
 {
   public:
-    Buzzer(Model& model): _model(model) {}
+    Buzzer(Model& model): _model(model), _status(BUZZER_STATUS_IDLE), _wait(0), _scheme(NULL), _e(BEEPER_SILENCE) {}
 
     int begin()
     {
       if(_model.config.buzzer.pin == -1) return 0;
 
       pinMode(_model.config.buzzer.pin, OUTPUT);
-
+      digitalWrite(_model.config.buzzer.pin, _model.config.buzzer.inverted);
       _model.state.buzzer.timer.setRate(100);
-
+      
       return 1;
     }
 
@@ -41,29 +41,31 @@ class Buzzer
         case BUZZER_STATUS_IDLE: // wait for command
           if(!_model.state.buzzer.empty())
           {
-            BuzzerEvent e = _model.state.buzzer.pop();
-            if(_model.config.buzzer.beeperMask & 1 << (e - 1))
+            _e = _model.state.buzzer.pop();
+            if(_model.config.buzzer.beeperMask & (1 << (_e - 1)))
             {
-              _schemePtr = schemes[e];
+              _scheme = schemes[_e];
               _status = BUZZER_STATUS_TEST;
             }
           }
           break;
         case BUZZER_STATUS_TEST: // test for end or continue
-          if(!_schemePtr || *_schemePtr == 0)
+          if(!_scheme || *_scheme == 0)
           {
-            _play(false, 50, BUZZER_STATUS_IDLE);
+            _play(false, 10, BUZZER_STATUS_IDLE);
+            _scheme = NULL;
+            _e = BEEPER_SILENCE;
           }
           else
           {
-            _play(true, *_schemePtr, BUZZER_STATUS_ON); // start playing
+            _play(true, *_scheme, BUZZER_STATUS_ON); // start playing
           }
           break;
         case BUZZER_STATUS_ON: // end playing with pause, same length as on
-          _play(false, *_schemePtr, BUZZER_STATUS_OFF);
+          _play(false, (*_scheme) / 2, BUZZER_STATUS_OFF);
           break;
         case BUZZER_STATUS_OFF: // move to next cycle
-          _schemePtr++;
+          _scheme++;
           _status = BUZZER_STATUS_TEST;
           break;
       }
@@ -71,20 +73,33 @@ class Buzzer
       return 1;
     }
 
-    void _play(bool v, uint8_t time, BuzzerPlayStatus s)
+    void _play(bool v, int time, BuzzerPlayStatus s)
     {
-      digitalWrite(_model.config.buzzer.pin, v);
-      _wait = millis() + time * 10;
+      _write(v);
+      _delay(time);
       _status = s;
     }
 
-    const uint8_t * _schemePtr;
+    void _write(bool v)
+    {
+      digitalWrite(_model.config.buzzer.pin, _model.config.buzzer.inverted ? !v : v);
+    }
+
+    void _delay(int time)
+    {
+      _wait = millis() + time * 10;
+    }
+
+    Model& _model;
+
     BuzzerPlayStatus _status;
     uint32_t _wait;
 
-    static const uint8_t* schemes[];
+    const uint8_t * _scheme;
 
-    Model& _model;
+    BuzzerEvent _e;
+
+    static const uint8_t* schemes[];
 };
 
 }
