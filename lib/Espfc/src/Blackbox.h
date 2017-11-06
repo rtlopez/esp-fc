@@ -8,6 +8,7 @@ extern "C" {
 #include "blackbox/blackbox.h"
 
 static HardwareSerial * blackboxSerial = NULL;
+static Espfc::Model * _model_ptr = NULL;
 
 void serialWrite(serialPort_t *instance, uint8_t ch)
 {
@@ -22,16 +23,33 @@ void serialWriteInit(HardwareSerial * serial)
 
 uint32_t serialTxBytesFree(const serialPort_t *instance)
 {
-    UNUSED(instance);
-    if(!blackboxSerial) return 0;
-    return blackboxSerial->availableForWrite();
+  UNUSED(instance);
+  if(!blackboxSerial) return 0;
+  return blackboxSerial->availableForWrite();
 }
 
 bool isSerialTransmitBufferEmpty(const serialPort_t *instance)
 {
-    UNUSED(instance);
-    if(!blackboxSerial) return false;
-    return blackboxSerial->availableForWrite() > 127;
+  UNUSED(instance);
+  if(!blackboxSerial) return false;
+  return blackboxSerial->availableForWrite() > 127;
+}
+
+void initBlackboxModel(Espfc::Model * m)
+{
+  _model_ptr = m;
+}
+
+uint16_t getBatteryVoltageLatest(void)
+{
+  if(!_model_ptr) return 0;
+  return ((*_model_ptr).state.battery.voltage);
+}
+
+bool rxIsReceivingSignal(void)
+{
+  if(!_model_ptr) return false;
+  return ((*_model_ptr).state.inputLinkValid);
 }
 
 }
@@ -45,6 +63,8 @@ class Blackbox
 
     int begin()
     {
+      initBlackboxModel(&_model);
+
       if(!_model.blackboxEnabled()) return 0;
 
       _serial = Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_BLACKBOX);

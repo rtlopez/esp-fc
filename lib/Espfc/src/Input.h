@@ -53,6 +53,7 @@ class Input
       {
         setFailsafe();
         _model.state.buzzer.play(BEEPER_RX_LOST);
+        _model.state.inputLinkValid = false;
         return 0;
       }
 
@@ -75,6 +76,7 @@ class Input
             inputDt = 0.02f;
             break;
         }
+        _model.state.inputLinkValid = true;
         _read();
         PPM.resetNewData();
         step = 0.f;

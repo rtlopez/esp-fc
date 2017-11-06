@@ -5,20 +5,6 @@ const char * const shortGitRevision = STR(__REVISION__);
 const char * const buildTime = __TIME__;
 const char * const buildDate = __DATE__;
 
-// TODO: move to pgm_spage
-const char * pidnames =
-  "ROLL;"
-  "PITCH;"
-  "YAW;"
-  "ALT;"
-  "Pos;"
-  "PosR;"
-  "NavR;"
-  "LEVEL;"
-  "MAG;"
-  "VEL;"
-;
-
 PG_RESET_TEMPLATE_DEF(serialConfig_t, serialConfig);
 PG_RESET_TEMPLATE_DEF(mixerConfig_t, mixerConfig);
 PG_RESET_TEMPLATE_DEF(motorConfig_t, motorConfig);
@@ -145,17 +131,12 @@ void mspSerialAllocatePorts(void)
 
 portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function)
 {
-    return PORTSHARING_UNUSED;
+  return PORTSHARING_UNUSED;
 }
 
 failsafePhase_e failsafePhase()
 {
   return FAILSAFE_IDLE;
-}
-
-bool rxIsReceivingSignal(void)
-{
-  return true;
 }
 
 bool rxAreFlightChannelsValid(void)
@@ -171,11 +152,6 @@ uint8_t getMotorCount()
 bool areMotorsRunning(void)
 {
     return false;
-}
-
-uint16_t getBatteryVoltageLatest(void)
-{
-    return 0;
 }
 
 int32_t getAmperageLatest(void)

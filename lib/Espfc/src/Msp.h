@@ -103,6 +103,17 @@ class Msp
           while(*v) writeU8(*v++);
         }
 
+        void writeString(const __FlashStringHelper *ifsh)
+        {
+          PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+          while(true)
+          {
+            uint8_t c = pgm_read_byte(p++);
+            if (c == 0) break;
+            writeU8(c);
+          }
+        }
+
         void writeU8(uint8_t v)
         {
           data[len++] = v;
@@ -315,8 +326,7 @@ class Msp
           break;
 
         case MSP_BOXNAMES:
-          //TODO: use pgm_space
-          r.writeString("ARM;ANGLE;AIRMODE;BUZZER;FAILSAFE;");
+          r.writeString(F("ARM;ANGLE;AIRMODE;BUZZER;FAILSAFE;"));
           break;
 
         case MSP_BOXIDS:
@@ -809,10 +819,7 @@ class Msp
           break;
 
         case MSP_PIDNAMES:
-          for(const char * c = pidnames; *c; c++)
-          {
-            r.writeU8(*c);
-          }
+          r.writeString(F("ROLL;PITCH;YAW;ALT;Pos;PosR;NavR;LEVEL;MAG;VEL;"));
           break;
 
         case MSP_PID:

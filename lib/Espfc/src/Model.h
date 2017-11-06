@@ -441,6 +441,7 @@ struct ModelState
   Pid innerPid[AXES];
   Pid outerPid[AXES];
 
+  bool inputLinkValid;
   int16_t inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
   uint32_t inputDelay;
