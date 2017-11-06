@@ -127,6 +127,7 @@ class Cli
       _params[i++] = Param(PSTR("pin_out_2"), &c->outputPin[2]);
       _params[i++] = Param(PSTR("pin_out_3"), &c->outputPin[3]);
       _params[i++] = Param(PSTR("pin_ppm"), &c->ppmPin);  // 5
+      _params[i++] = Param(PSTR("pin_buzzer"), &c->buzzer.pin);  // 0
     }
 
     int begin()

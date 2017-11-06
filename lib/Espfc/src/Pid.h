@@ -33,7 +33,7 @@ class Pid
   public:
     Pid(): Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f), pScale(1.f), iScale(1.f), dScale(1.f), iTerm(0), dTerm(0) {}
 
-    void configurePid(float p, float i, float d, float il = 0.3, float dg = 0, float ol = 1)
+    void configure(float p, float i, float d, float il = 0.3, float dg = 0.f, float ol = 1.f)
     {
       Kp = p;
       Ki = i;

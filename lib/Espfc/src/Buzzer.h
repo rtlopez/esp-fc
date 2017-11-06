@@ -32,6 +32,10 @@ class Buzzer
 
     int update()
     {
+      //_model.state.debug[0] = _e;
+      //_model.state.debug[1] = _status;
+      //_model.state.debug[2] = (int16_t)(millis() - _wait);
+
       if(_model.config.buzzer.pin == -1) return 0;
       if(!_model.state.buzzer.timer.check()) return 0;
       if(_wait > millis()) return 0;

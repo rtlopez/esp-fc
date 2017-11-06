@@ -432,6 +432,9 @@ class Sensor
     void updateBattery()
     {
       // wemos d1 mini has divider 3.2:1 (220k:100k)
+      // additionaly I've used divider 5.7:1 (4k7:1k)
+      // total should equals ~18.24:1, 73:4 resDiv:resMult should be ideal,
+      // but ~52:1 is real, did I miss something?
       const float alpha = 0.33f;
       float val = _model.state.battery.rawVoltage = analogRead(A0);
       val *= (int)_model.config.vbatScale;

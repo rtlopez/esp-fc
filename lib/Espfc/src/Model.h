@@ -386,6 +386,7 @@ class BatteryState
   public:
     bool warn(int vbatCellWarning) const
     {
+      if(voltage < 20) return false; // no battery connected
       return !samples && cellVoltage < vbatCellWarning;
     }
 
@@ -685,7 +686,7 @@ class Model
       config.gyroNotch1Filter.freq = 150;
       config.gyroNotch2Filter.type = FILTER_NOTCH;
       config.gyroNotch2Filter.cutoff = 150;
-      config.gyroNotch2Filter.freq = 250;
+      config.gyroNotch2Filter.freq = 300;
 
       config.accelFilter.type = FILTER_BIQUAD;
       config.accelFilter.freq = 15;
@@ -794,8 +795,8 @@ class Model
       config.inputFilterAlpha = 100;
 
       // PID controller config
-      config.pid[PID_ROLL]  = { .P = 45,  .I = 45, .D = 14 };
-      config.pid[PID_PITCH] = { .P = 63,  .I = 54, .D = 18 };
+      config.pid[PID_ROLL]  = { .P = 45,  .I = 45, .D = 15 };
+      config.pid[PID_PITCH] = { .P = 70,  .I = 55, .D = 20 };
       config.pid[PID_YAW]   = { .P = 125, .I = 75, .D = 5 };
       config.pid[PID_LEVEL] = { .P = 30,  .I = 0,  .D = 0 };
 
@@ -964,7 +965,7 @@ class Model
         1 << (BEEPER_BAT_LOW - 1);
 
       state.buzzer.beeperMask = config.buzzer.beeperMask;
-      config.debugMode = DEBUG_NONE;
+      config.debugMode = DEBUG_NOTCH;
 
       // init timers
       // sample rate = clock / ( divider + 1)
@@ -998,7 +999,7 @@ class Model
       // load input filter config
       state.inputFilterAlpha = Math::bound((config.inputFilterAlpha / 100.0f), 0.01f, 1.f);
 
-      for(size_t i = 0; i < AXIS_YAW; i++)
+      for(size_t i = 0; i <= AXIS_YAW; i++)
       {
         state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
@@ -1007,10 +1008,10 @@ class Model
         state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
       }
 
-      for(size_t i = 0; i < AXIS_YAW; i++) // rpy
+      for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
         PidConfig * pc = &config.pid[i];
-        state.innerPid[i].configurePid(
+        state.innerPid[i].configure(
           pc->P * PTERM_SCALE,
           pc->I * ITERM_SCALE,
           pc->D * DTERM_SCALE,
@@ -1030,14 +1031,14 @@ class Model
         }
       }
 
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i <= AXIS_YAW; i++)
       {
         PidConfig * pc = &config.pid[PID_LEVEL];
-        state.outerPid[i].configurePid(
+        state.outerPid[i].configure(
           pc->P * LEVEL_PTERM_SCALE,
           pc->I * LEVEL_ITERM_SCALE,
           pc->D * LEVEL_DTERM_SCALE,
-          0.1f,
+          radians(config.angleRateLimit) * 0.05f,
           0,
           radians(config.angleRateLimit)
         );
