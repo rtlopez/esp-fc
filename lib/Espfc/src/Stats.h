@@ -26,12 +26,11 @@ enum StatCounter {
 class Stats
 {
   public:
-    Stats(): _first(0)
+    Stats()
     {
       for(size_t i = 0; i < COUNTER_COUNT; i++)
       {
         _start[i] = 0;
-        _counter[i] = 0;
         _avg[i] = 0;
       }
     }
@@ -39,22 +38,19 @@ class Stats
     void start(StatCounter c)
     {
       _start[c] = micros();
-      if(!_first) _first = _start[c] / 1000;
     }
 
     void end(StatCounter c)
     {
       uint32_t diff = micros() - _start[c];
-      _counter[c] += diff;
-
-      const float k = 0.1f;
+      const float k = 0.05f;
       _avg[c] = (k * diff) + ((1.f - k) * _avg[c]);
       //_avg[c] = _avg[c] + ((int32_t)diff - _avg[c]) / 10;
     }
 
-    float getLoad(StatCounter c) const
+    float getLoad(StatCounter c, uint32_t interval) const
     {
-      return (_counter[c] / 10.0f) / (millis() - _first);
+      return (_avg[c] / interval) * 100.f;
     }
 
     float getTime(StatCounter c) const
@@ -62,10 +58,10 @@ class Stats
       return _avg[c];
     }
 
-    float getTotalLoad() const
+    float getTotalLoad(uint32_t interval) const
     {
       float ret = 0;
-      for(size_t i = 0; i < COUNTER_COUNT; i++) ret += getLoad((StatCounter)i);
+      for(size_t i = 0; i < COUNTER_COUNT; i++) ret += getLoad((StatCounter)i, interval);
       return ret;
     }
 
@@ -114,9 +110,7 @@ class Stats
     }
 
   private:
-    uint32_t _first;
     uint32_t _start[COUNTER_COUNT];
-    uint64_t _counter[COUNTER_COUNT];
     float _avg[COUNTER_COUNT];
 };
 

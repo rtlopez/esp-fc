@@ -81,8 +81,27 @@ class Actuator
           newMask |= 1 << c->id;
         }
       }
+
+      for(size_t i = 0; i < MODE_COUNT; i++)
+      {
+        bool curr = newMask & (1 << i);
+        bool prev = _model.state.modeMask & (1 << i);
+        if(!canActivate((FlightMode)i) && curr != prev)
+        {
+          if(curr) newMask &= ~(1 << i); // block activation
+          else newMask |= (1 << i); // keep previous
+        }
+      }
+
       _model.state.modeMaskPrev = _model.state.modeMask;
       _model.state.modeMask = newMask;
+    }
+
+    bool canActivate(FlightMode mode)
+    {
+      if(mode == MODE_ANGLE && !_model.accelActive()) return false;
+      if(mode == MODE_ARMED && _model.state.inputUs[AXIS_THRUST] > _model.config.inputMinCheck) return false;
+      return true;
     }
 
     void updateBuzzer()

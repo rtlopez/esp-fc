@@ -102,11 +102,12 @@ enum FusionMode {
 };
 
 enum FlightMode {
-  MODE_ARMED    = 0x00,
-  MODE_ANGLE    = 0x01,
-  MODE_AIRMODE  = 0x02,
-  MODE_BUZZER   = 0x03,
-  MODE_FAILSAFE = 0x04
+  MODE_ARMED,
+  MODE_ANGLE,
+  MODE_AIRMODE,
+  MODE_BUZZER,
+  MODE_FAILSAFE,
+  MODE_COUNT
 };
 
 enum ModelFrame {
@@ -894,6 +895,16 @@ class Model
       return config.blackboxDev == 3 && config.blackboxPdenom > 0;
     }
 
+    bool accelActive()
+    {
+      return config.accelDev != ACCEL_NONE;
+    }
+
+    bool magActive()
+    {
+      return config.magDev != MAG_NONE;
+    }
+
     void calibrate()
     {
       state.sensorCalibration = true;
@@ -914,6 +925,10 @@ class Model
     void update()
     {
       config.gyroSync = std::max((int)config.gyroSync, 8); // max 1khz
+      if(config.gyroDlpf != GYRO_DLPF_256)
+      {
+        config.gyroSync = ((config.gyroSync + 7) / 8) * 8;
+      }
       config.gyroSampleRate = 8000 / config.gyroSync;
 
       if(config.outputProtocol != OUTPUT_PWM && config.outputProtocol != OUTPUT_ONESHOT125)

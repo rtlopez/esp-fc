@@ -21,35 +21,39 @@ class Fusion
     int update()
     {
       _model.state.stats.start(COUNTER_IMU_FUSION);
-      switch(_model.config.fusionMode)
+      _model.state.rate = _model.state.gyro;
+      if(_model.config.accelDev != ACCEL_NONE)
       {
-        case FUSION_MADGWICK:
-          madgwickFusion();
-          break;
-        case FUSION_LERP:
-          lerpFusion();
-          break;
-        case FUSION_RTQF:
-          updatePoseFromAccelMag();
-          rtqfFusion();
-          break;
-        case FUSION_KALMAN:
-          updatePoseFromAccelMag();
-          kalmanFusion();
-          break;
-        case FUSION_COMPLEMENTARY:
-          updatePoseFromAccelMag();
-          complementaryFusion();
-          break;
-        case FUSION_SIMPLE:
-          simpleFusion();
-          break;
-        case FUSION_EXPERIMENTAL:
-          experimentalFusion();
-          break;
-        case FUSION_NONE:
-        default:
-          _model.state.rate = _model.state.gyro;
+        switch(_model.config.fusionMode)
+        {
+          case FUSION_MADGWICK:
+            madgwickFusion();
+            break;
+          case FUSION_LERP:
+            lerpFusion();
+            break;
+          case FUSION_RTQF:
+            updatePoseFromAccelMag();
+            rtqfFusion();
+            break;
+          case FUSION_KALMAN:
+            updatePoseFromAccelMag();
+            kalmanFusion();
+            break;
+          case FUSION_COMPLEMENTARY:
+            updatePoseFromAccelMag();
+            complementaryFusion();
+            break;
+          case FUSION_SIMPLE:
+            simpleFusion();
+            break;
+          case FUSION_EXPERIMENTAL:
+            experimentalFusion();
+            break;
+          case FUSION_NONE:
+          default:
+            ;
+         }
        }
        _model.state.stats.end(COUNTER_IMU_FUSION);
        return 1;

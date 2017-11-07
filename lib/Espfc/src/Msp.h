@@ -294,10 +294,10 @@ class Msp
           r.writeU16(_model.state.loopTimer.interval);
           r.writeU16(0); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
-          r.writeU16(1 << 0 | 0 << 1 | 0 << 2 | 0 << 3 | 0 << 4 | 1 << 5);
+          r.writeU16(_model.accelActive() << 0 | 0 << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | 1 << 5);
           r.writeU32(_model.state.modeMask); // flight mode flags
           r.writeU8(0); // pid profile
-          r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
+          r.writeU16(lrintf(_model.state.stats.getTotalLoad(_model.state.gyroTimer.interval)));
           if (m.cmd == MSP_STATUS_EX) {
             r.writeU8(1);
             r.writeU8(0);

@@ -99,15 +99,16 @@ class Cli
     {
       ModelConfig * c = &_model.config;
       size_t i = 0;
-      _params[i++] = Param(PSTR("telemetry"), &c->telemetry);
-      _params[i++] = Param(PSTR("telemetry_interval"), &c->telemetryInterval);
-      _params[i++] = Param(PSTR("accel_mode"), &c->accelMode);
       _params[i++] = Param(PSTR("gyro_sync"), &c->gyroSync);
+      _params[i++] = Param(PSTR("gyro_lpf"), &c->gyroDlpf);
+      _params[i++] = Param(PSTR("accel_dev"), &c->accelDev);
+      _params[i++] = Param(PSTR("accel_mode"), &c->accelMode);
       _params[i++] = Param(PSTR("loop_sync"), &c->loopSync);
       _params[i++] = Param(PSTR("mixer_sync"), &c->mixerSync);
+      _params[i++] = Param(PSTR("mag_dev"), &c->magDev);
       _params[i++] = Param(PSTR("mag_rate"), &c->magSampleRate);
       _params[i++] = Param(PSTR("angle_limit"), &c->angleLimit);
-      _params[i++] = Param(PSTR("angle_rate_limit"), &c->angleRateLimit);  // 9
+      _params[i++] = Param(PSTR("angle_rate_limit"), &c->angleRateLimit);  // 8
 
       _params[i++] = Param(PSTR("gyro_cal_x"), &c->gyroBias[0]);
       _params[i++] = Param(PSTR("gyro_cal_y"), &c->gyroBias[1]);
@@ -120,14 +121,17 @@ class Cli
       _params[i++] = Param(PSTR("mag_cal_offset_z"), &c->magCalibrationOffset[2]);
       _params[i++] = Param(PSTR("mag_cal_scale_x"), &c->magCalibrationScale[0]);
       _params[i++] = Param(PSTR("mag_cal_scale_y"), &c->magCalibrationScale[1]);
-      _params[i++] = Param(PSTR("mag_cal_scale_z"), &c->magCalibrationScale[2]); // 12
+      _params[i++] = Param(PSTR("mag_cal_scale_z"), &c->magCalibrationScale[2]);
+      _params[i++] = Param(PSTR("telemetry"), &c->telemetry);
+      _params[i++] = Param(PSTR("telemetry_interval"), &c->telemetryInterval); // 14
 
       _params[i++] = Param(PSTR("pin_out_0"), &c->outputPin[0]);
       _params[i++] = Param(PSTR("pin_out_1"), &c->outputPin[1]);
       _params[i++] = Param(PSTR("pin_out_2"), &c->outputPin[2]);
       _params[i++] = Param(PSTR("pin_out_3"), &c->outputPin[3]);
-      _params[i++] = Param(PSTR("pin_ppm"), &c->ppmPin);  // 5
-      _params[i++] = Param(PSTR("pin_buzzer"), &c->buzzer.pin);  // 0
+      _params[i++] = Param(PSTR("pin_ppm"), &c->ppmPin);
+      _params[i++] = Param(PSTR("pin_buzzer"), &c->buzzer.pin);
+      _params[i++] = Param(PSTR("pin_buzzer_invert"), &c->buzzer.inverted); // 7
     }
 
     int begin()
@@ -435,14 +439,14 @@ class Cli
           print(": ");
           print((int)_model.state.stats.getTime((StatCounter)i));
           print("us, ");
-          print(_model.state.stats.getLoad((StatCounter)i), 1);
+          print(_model.state.stats.getLoad((StatCounter)i, _model.state.gyroTimer.interval), 1);
           print("%");
           println();
         }
         print(F("TOTAL       : "));
         print((int)_model.state.stats.getTotalTime());
         print(F("us, "));
-        print(_model.state.stats.getTotalLoad(), 1);
+        print(_model.state.stats.getTotalLoad(_model.state.gyroTimer.interval), 1);
         print(F("%"));
         println();
       }
@@ -537,7 +541,7 @@ class Cli
       println();
     }
 
-    static const size_t PARAM_SIZE = 32;
+    static const size_t PARAM_SIZE = 64;
     static const size_t BUFF_SIZE = 64;
 
     Model& _model;
