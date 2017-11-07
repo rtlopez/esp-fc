@@ -98,7 +98,9 @@ class Blackbox
       cp->pidAtMinThrottle = 1;
       cp->dterm_filter_type = _model.config.dtermFilter.type;
       cp->dterm_lpf_hz = _model.config.dtermFilter.freq;
-      cp->yaw_lpf_hz = _model.config.gyroFilter.freq;
+      cp->dterm_notch_hz = _model.config.dtermNotchFilter.freq;
+      cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
+      cp->yaw_lpf_hz = _model.config.yawFilter.freq;
       cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
       cp->dtermSetpointWeight = _model.config.dtermSetpointWeight;
 
@@ -108,6 +110,10 @@ class Blackbox
       gyroConfigMutable()->gyro_lpf = _model.config.gyroDlpf;
       gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilter.type;
       gyroConfigMutable()->gyro_soft_lpf_hz = _model.config.gyroFilter.freq;
+      gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyroNotch1Filter.cutoff;
+      gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
+      gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
+      gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyroNotch2Filter.freq;
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
@@ -123,13 +129,18 @@ class Blackbox
 
       targetPidLooptime = gyro.targetLooptime = _model.state.gyroTimer.interval;
 
-      motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMin[0];
-      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMax[0];
+      motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMinThrottle;
+      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMaxThrottle;
 
       gyroConfigMutable()->gyro_sync_denom = _model.config.gyroSync;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
+
+      batteryConfigMutable()->voltageMeterSource = VOLTAGE_METER_ADC;
+
+      rxConfigMutable()->rcInterpolation = _model.config.inputInterpolation;
+      rxConfigMutable()->rcInterpolationInterval = _model.config.inputInterpolationInterval;
 
       blackboxInit();
 
