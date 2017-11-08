@@ -38,13 +38,16 @@ class Cli
     class Param
     {
       public:
-        Param(): Param(NULL, NULL, PARAM_NONE) {}
-        Param(const char * n, char * a, ParamType t): name(n), addr(a), type(t) {}
-        Param(const char * n, bool    * a): Param(n, (char*)a, PARAM_BOOL) {}
-        Param(const char * n, int8_t  * a): Param(n, (char*)a, PARAM_BYTE) {}
-        Param(const char * n, int16_t * a): Param(n, (char*)a, PARAM_SHORT) {}
-        Param(const char * n, int32_t * a): Param(n, (char*)a, PARAM_INT) {}
-        Param(const Param& c): Param(c.name, c.addr, c.type) {}
+        Param(): Param(NULL, NULL, PARAM_NONE, NULL) {}
+        Param(const Param& p): Param(p.name, p.addr, p.type, p.choices) {}
+        Param(const char * n, char * a, ParamType t, const char ** c): name(n), addr(a), type(t), choices(c) {}
+
+        Param(const char * n, bool    * a): Param(n, reinterpret_cast<char*>(a), PARAM_BOOL, NULL) {}
+        Param(const char * n, int8_t  * a): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE, NULL) {}
+        Param(const char * n, int16_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_SHORT, NULL) {}
+        Param(const char * n, int32_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_INT, NULL) {}
+
+        Param(const char * n, int8_t  * a, const char ** c): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE, c) {}
 
         void print(Stream& stream) const
         {
@@ -55,21 +58,48 @@ class Cli
           }
           switch(type)
           {
-            case PARAM_NONE:  stream.print("NONE"); break;
-            case PARAM_BOOL:  stream.print(*addr != 0); break;
-            case PARAM_BYTE:  stream.print((int8_t)(*addr)); break;
-            case PARAM_SHORT: stream.print(*reinterpret_cast<int16_t*>(addr)); break;
-            case PARAM_INT:   stream.print(*reinterpret_cast<int32_t*>(addr)); break;
-            case PARAM_FLOAT: stream.print(*reinterpret_cast<float*>(addr), 4); break;
+            case PARAM_NONE:
+              stream.print(F("NONE"));
+              break;
+            case PARAM_BOOL:
+              stream.print(*addr != 0);
+              break;
+            case PARAM_BYTE:
+              print(stream, *reinterpret_cast<int8_t*>(addr));
+              break;
+            case PARAM_SHORT:
+              print(stream, *reinterpret_cast<int16_t*>(addr));
+              break;
+            case PARAM_INT:
+              print(stream, *reinterpret_cast<int32_t*>(addr));
+              break;
+            case PARAM_FLOAT:
+              stream.print(*reinterpret_cast<float*>(addr), 4);
+              break;
           }
         }
 
-        void update(const char * v)
+        void print(Stream& stream, int32_t v) const
+        {
+          if(choices)
+          {
+            for(int32_t i = 0; choices[i]; i++)
+            {
+              if(i == v)
+              {
+                stream.print(FPSTR(choices[i]));
+                return;
+              }
+            }
+          }
+          stream.print(v);
+        }
+
+        void update(const char * v) const
         {
           if(!addr || !v) return;
           switch(type)
           {
-            case PARAM_NONE:  break;
             case PARAM_BOOL:
               if(*v == '0') *addr = 0;
               if(*v == '1') *addr = 1;
@@ -77,61 +107,84 @@ class Cli
             case PARAM_BYTE:
             case PARAM_SHORT:
             case PARAM_INT:
-              {
-                String tmp = v;
-                *addr = tmp.toInt();
-              }
+              *addr = parse(v);
               break;
             case PARAM_FLOAT:
-              {
-                String tmp = v;
-                *addr = tmp.toFloat();
-              }
+              *addr = String(v).toFloat();
+              break;
+            case PARAM_NONE:
+            default:
               break;
           }
         }
+
+        int32_t parse(const char * v) const
+        {
+          if(choices)
+          {
+            for(int32_t i = 0; choices[i]; i++)
+            {
+              if(strcasecmp_P(v, choices[i]) == 0) return i;
+            }
+          }
+          String tmp = v;
+          return tmp.toInt();
+        }
+
         const char * name;
         char * addr;
         ParamType type;
+        const char ** choices;
     };
 
     Cli(Model& model): _model(model), _index(0), _msp(model), _ignore(false)
     {
-      ModelConfig * c = &_model.config;
-      size_t i = 0;
-      _params[i++] = Param(PSTR("gyro_sync"), &c->gyroSync);
-      _params[i++] = Param(PSTR("gyro_lpf"), &c->gyroDlpf);
-      _params[i++] = Param(PSTR("accel_dev"), &c->accelDev);
-      _params[i++] = Param(PSTR("accel_mode"), &c->accelMode);
-      _params[i++] = Param(PSTR("loop_sync"), &c->loopSync);
-      _params[i++] = Param(PSTR("mixer_sync"), &c->mixerSync);
-      _params[i++] = Param(PSTR("mag_dev"), &c->magDev);
-      _params[i++] = Param(PSTR("mag_rate"), &c->magSampleRate);
-      _params[i++] = Param(PSTR("angle_limit"), &c->angleLimit);
-      _params[i++] = Param(PSTR("angle_rate_limit"), &c->angleRateLimit);  // 8
+      _params = initialize(_model.config);
+    }
 
-      _params[i++] = Param(PSTR("gyro_cal_x"), &c->gyroBias[0]);
-      _params[i++] = Param(PSTR("gyro_cal_y"), &c->gyroBias[1]);
-      _params[i++] = Param(PSTR("gyro_cal_z"), &c->gyroBias[2]);
-      _params[i++] = Param(PSTR("accel_cal_x"), &c->accelBias[0]);
-      _params[i++] = Param(PSTR("accel_cal_y"), &c->accelBias[1]);
-      _params[i++] = Param(PSTR("accel_cal_z"), &c->accelBias[2]);
-      _params[i++] = Param(PSTR("mag_cal_offset_x"), &c->magCalibrationOffset[0]);
-      _params[i++] = Param(PSTR("mag_cal_offset_y"), &c->magCalibrationOffset[1]);
-      _params[i++] = Param(PSTR("mag_cal_offset_z"), &c->magCalibrationOffset[2]);
-      _params[i++] = Param(PSTR("mag_cal_scale_x"), &c->magCalibrationScale[0]);
-      _params[i++] = Param(PSTR("mag_cal_scale_y"), &c->magCalibrationScale[1]);
-      _params[i++] = Param(PSTR("mag_cal_scale_z"), &c->magCalibrationScale[2]);
-      _params[i++] = Param(PSTR("telemetry"), &c->telemetry);
-      _params[i++] = Param(PSTR("telemetry_interval"), &c->telemetryInterval); // 14
+    static const Param * initialize(ModelConfig& c)
+    {
+      static const char* gyroDlpfChoices[] = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
+      static const char* accelDevChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("RESERVED"), PSTR("MPU6050"), NULL };
+      static const char* magDevChoices[]   = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
 
-      _params[i++] = Param(PSTR("pin_out_0"), &c->outputPin[0]);
-      _params[i++] = Param(PSTR("pin_out_1"), &c->outputPin[1]);
-      _params[i++] = Param(PSTR("pin_out_2"), &c->outputPin[2]);
-      _params[i++] = Param(PSTR("pin_out_3"), &c->outputPin[3]);
-      _params[i++] = Param(PSTR("pin_ppm"), &c->ppmPin);
-      _params[i++] = Param(PSTR("pin_buzzer"), &c->buzzer.pin);
-      _params[i++] = Param(PSTR("pin_buzzer_invert"), &c->buzzer.inverted); // 7
+      static const Param params[] = {
+        Param(PSTR("gyro_sync"), &c.gyroSync),
+        Param(PSTR("gyro_lpf"), &c.gyroDlpf, gyroDlpfChoices),
+        Param(PSTR("accel_dev"), &c.accelDev, accelDevChoices),
+        Param(PSTR("accel_mode"), &c.accelMode),
+        Param(PSTR("loop_sync"), &c.loopSync),
+        Param(PSTR("mixer_sync"), &c.mixerSync),
+        Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
+        Param(PSTR("mag_rate"), &c.magSampleRate),
+        Param(PSTR("angle_limit"), &c.angleLimit),
+        Param(PSTR("angle_rate_limit"), &c.angleRateLimit),
+
+        Param(PSTR("gyro_cal_x"), &c.gyroBias[0]),
+        Param(PSTR("gyro_cal_y"), &c.gyroBias[1]),
+        Param(PSTR("gyro_cal_z"), &c.gyroBias[2]),
+        Param(PSTR("accel_cal_x"), &c.accelBias[0]),
+        Param(PSTR("accel_cal_y"), &c.accelBias[1]),
+        Param(PSTR("accel_cal_z"), &c.accelBias[2]),
+        Param(PSTR("mag_cal_offset_x"), &c.magCalibrationOffset[0]),
+        Param(PSTR("mag_cal_offset_y"), &c.magCalibrationOffset[1]),
+        Param(PSTR("mag_cal_offset_z"), &c.magCalibrationOffset[2]),
+        Param(PSTR("mag_cal_scale_x"), &c.magCalibrationScale[0]),
+        Param(PSTR("mag_cal_scale_y"), &c.magCalibrationScale[1]),
+        Param(PSTR("mag_cal_scale_z"), &c.magCalibrationScale[2]),
+        Param(PSTR("telemetry"), &c.telemetry),
+        Param(PSTR("telemetry_interval"), &c.telemetryInterval),
+
+        Param(PSTR("pin_out_0"), &c.outputPin[0]),
+        Param(PSTR("pin_out_1"), &c.outputPin[1]),
+        Param(PSTR("pin_out_2"), &c.outputPin[2]),
+        Param(PSTR("pin_out_3"), &c.outputPin[3]),
+        Param(PSTR("pin_ppm"), &c.ppmPin),
+        Param(PSTR("pin_buzzer"), &c.buzzer.pin),
+        Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+        Param()
+      };
+      return params;
     }
 
     int begin()
@@ -282,10 +335,8 @@ class Cli
           return;
         }
         bool found = false;
-        for(size_t i = 0; i < PARAM_SIZE; ++i)
+        for(size_t i = 0; _params[i].name; ++i)
         {
-          if(!_params[i].name) continue;
-
           if(strcmp_P(_cmd.args[1], _params[i].name) == 0)
           {
             print(_params[i]);
@@ -309,10 +360,8 @@ class Cli
           return;
         }
         bool found = false;
-        for(size_t i = 0; i < PARAM_SIZE; ++i)
+        for(size_t i = 0; _params[i].name; ++i)
         {
-          if(!_params[i].name) continue;
-
           if(strcmp_P(_cmd.args[1], _params[i].name) == 0)
           {
             _params[i].update(_cmd.args[2]);
@@ -329,9 +378,8 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("dump")) == 0)
       {
-        for(size_t i = 0; i < PARAM_SIZE; ++i)
+        for(size_t i = 0; _params[i].name; ++i)
         {
-          if(!_params[i].name) continue;
           print(_params[i]);
         }
       }
@@ -541,12 +589,11 @@ class Cli
       println();
     }
 
-    static const size_t PARAM_SIZE = 64;
     static const size_t BUFF_SIZE = 64;
 
     Model& _model;
     Stream * _stream;
-    Param _params[PARAM_SIZE];
+    const Param * _params;
     char _buff[BUFF_SIZE];
     size_t _index;
     Cmd _cmd;
