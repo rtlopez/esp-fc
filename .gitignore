@@ -35,3 +35,4 @@
 *.BFL
 *.log
 .directory
+/tmp
