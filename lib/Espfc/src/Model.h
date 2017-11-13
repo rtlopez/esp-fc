@@ -540,7 +540,7 @@ struct ModelConfig
 
   int8_t baroDev;
 
-  int8_t ppmPin;
+  int8_t inputPin;
   int8_t ppmMode;
 
   int16_t inputMaxCheck;
@@ -756,7 +756,7 @@ class Model
       config.outputAsync = false;
 
       // input config
-      config.ppmPin = D7;     // GPIO13
+      config.inputPin = D7;     // GPIO13
       config.ppmMode = RISING;
       config.inputMinCheck = 1050;
       config.inputMaxCheck = 1900;

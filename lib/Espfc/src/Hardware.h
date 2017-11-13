@@ -40,7 +40,7 @@ class Hardware
         {
           sc.baud = 100000; // sbus
           sc.inverted = true;
-          sc.rx_pin = _model.config.ppmPin;
+          sc.rx_pin = _model.config.inputPin;
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("serial_rx"));
         }
@@ -129,13 +129,13 @@ class Hardware
       if(serial)
       {
         sbus.begin(serial);
-        model.logger.info().log(F("SBUS RX")).logln(model.config.ppmPin);
+        model.logger.info().log(F("SBUS RX")).logln(model.config.inputPin);
         return &sbus;
       }
       else if(model.isActive(FEATURE_RX_PPM))
       {
-        ppm.begin(model.config.ppmPin, model.config.ppmMode);
-        model.logger.info().log(F("PPM RX")).log(model.config.ppmPin).logln(model.config.ppmMode);
+        ppm.begin(model.config.inputPin, model.config.ppmMode);
+        model.logger.info().log(F("PPM RX")).log(model.config.inputPin).logln(model.config.ppmMode);
         return &ppm;
       }
       return NULL;

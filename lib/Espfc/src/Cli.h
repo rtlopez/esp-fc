@@ -179,7 +179,7 @@ class Cli
         Param(PSTR("pin_out_1"), &c.outputPin[1]),
         Param(PSTR("pin_out_2"), &c.outputPin[2]),
         Param(PSTR("pin_out_3"), &c.outputPin[3]),
-        Param(PSTR("pin_ppm"), &c.ppmPin),
+        Param(PSTR("pin_input"), &c.inputPin),
         Param(PSTR("pin_buzzer"), &c.buzzer.pin),
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
         Param()
