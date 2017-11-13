@@ -2,14 +2,16 @@
 #define _INPUT_PPM_H_
 
 #include "Arduino.h"
+#include "InputDevice.h"
 
 namespace Espfc {
 
-class InputPPM
+class InputPPM: public InputDevice
 {
   public:
     void begin(uint8_t pin, int mode = RISING);
     void handle() ICACHE_RAM_ATTR;
+    static void handle_isr() ICACHE_RAM_ATTR;
 
     bool fail()
     {
@@ -21,9 +23,21 @@ class InputPPM
       return delta > BROKEN_LINK_US;
     }
 
-    uint16_t getPulse(uint8_t i) const { return _channels[i]; }
-    bool hasNewData() const { return _new_data; }
-    void resetNewData() { _new_data = false; }
+    uint16_t get(uint8_t i) const override
+    {
+      return _channels[i];
+    }
+
+    InputStatus update() override
+    {
+      if(_new_data)
+      {
+        return INPUT_RECEIVED;
+        _new_data = false;
+      }
+      if(fail()) return INPUT_FAILED;
+      return INPUT_IDLE;
+    }
 
     static const size_t CHANNELS = 16;
     static const uint32_t BROKEN_LINK_US = 100000UL; // 100ms
@@ -34,9 +48,8 @@ class InputPPM
     volatile uint8_t  _channel;
     volatile bool     _new_data;
     uint8_t _pin;
+    static InputPPM * _instance;
 };
-
-extern InputPPM PPM;
 
 }
 

@@ -7,7 +7,7 @@
 extern "C" {
 #include "blackbox/blackbox.h"
 
-static HardwareSerial * blackboxSerial = NULL;
+static Espfc::SerialDevice * blackboxSerial = NULL;
 static Espfc::Model * _model_ptr = NULL;
 
 void serialWrite(serialPort_t *instance, uint8_t ch)
@@ -16,7 +16,7 @@ void serialWrite(serialPort_t *instance, uint8_t ch)
   if(blackboxSerial) blackboxSerial->write(ch);
 }
 
-void serialWriteInit(HardwareSerial * serial)
+void serialWriteInit(Espfc::SerialDevice * serial)
 {
   blackboxSerial = serial;
 }
@@ -214,7 +214,7 @@ class Blackbox
 
     Model& _model;
     pidProfile_s _pidProfile;
-    HardwareSerial * _serial;
+    SerialDevice * _serial;
 };
 
 }

@@ -3,7 +3,9 @@
 
 #include "Model.h"
 #include "Math.h"
+#include "Hardware.h"
 #include "InputPPM.h"
+#include "InputSBUS.h"
 
 namespace Espfc {
 
@@ -19,8 +21,7 @@ class Input
     Input(Model& model): _model(model) {}
     int begin()
     {
-      PPM.begin(_model.config.ppmPin, _model.config.ppmMode);
-      _model.logger.info().log(F("RX PPM")).log(_model.config.ppmPin).logln(_model.config.ppmMode);
+      _device = Hardware::getInputDevice(_model);
       setFailsafe();
       return 1;
     }
@@ -45,11 +46,15 @@ class Input
 
     int doUpdate()
     {
+      if(!_device) return 0;
+
       static float step = 0;
       static float inputDt = 0.02f;
       static uint32_t prevTm = 0;
 
-      if(PPM.fail())
+      InputStatus status = _device->update();
+
+      if(status == INPUT_FAILED)
       {
         setFailsafe();
         _model.state.buzzer.play(BEEPER_RX_LOST);
@@ -57,8 +62,7 @@ class Input
         return 0;
       }
 
-      bool newData = PPM.hasNewData();
-      if(newData)
+      if(status == INPUT_RECEIVED)
       {
         switch(_model.config.inputInterpolation)
         {
@@ -78,7 +82,6 @@ class Input
         }
         _model.state.inputLinkValid = true;
         _read();
-        PPM.resetNewData();
         step = 0.f;
       }
 
@@ -96,7 +99,7 @@ class Input
           _model.state.inputUs[i] = (uint16_t)lrintf(Math::map3(_model.state.input[i], -1.f, 0.f, 1.f, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i]));
         }
       }
-      else if(newData)
+      else if(status == INPUT_RECEIVED)
       {
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {
@@ -120,7 +123,8 @@ class Input
       _shift();
       for(size_t c = 0; c < INPUT_CHANNELS; ++c)
       {
-        _set(c, PPM.getPulse(_model.config.inputMap[c]));
+        int pulse = _device->get(_model.config.inputMap[c]);
+        _set(c, pulse);
       }
     }
 
@@ -143,16 +147,10 @@ class Input
 
     void _set(size_t c, int16_t v)
     {
-      if(c < 4)
+      if(c < 3)
       {
         v = (int16_t)Math::deadband((int)v - _model.config.inputMidRc, (int)_model.config.inputDeadband) + _model.config.inputMidRc;
       }
-      /*for(size_t b = 1; b < INPUT_BUFF_SIZE; b++)
-      {
-        v += _buff[b][i];
-      }
-      v += INPUT_BUFF_SIZE_HALF;
-      v /= INPUT_BUFF_SIZE;*/
       _buff[0][c] = v;
     }
     static const size_t INPUT_BUFF_SIZE = 3;
@@ -160,6 +158,7 @@ class Input
 
     Model& _model;
     int16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];
+    InputDevice * _device;
 };
 
 }

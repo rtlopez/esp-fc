@@ -11,6 +11,8 @@
 #include <MadgwickAHRS.h>
 #include <printf.h>
 #include <blackbox/blackbox.h>
+#include <Queue.h>
+#include <EspSoftSerial.h>
 
 Espfc::Espfc espfc;
 

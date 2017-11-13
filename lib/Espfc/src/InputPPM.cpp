@@ -2,19 +2,28 @@
 
 namespace Espfc {
 
-static void _ppm_input_handler_isr() ICACHE_RAM_ATTR;
+InputPPM * InputPPM::_instance = NULL;
 
 void InputPPM::begin(uint8_t pin, int mode)
 {
-  _pin = pin;
-  _channel = 0;
-  _last_tick = micros();
-  for(size_t i = 0; i < CHANNELS; i++)
+  if(_instance && _pin != -1)
   {
-    _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
+    detachInterrupt(_pin);
+    _instance = NULL;
   }
-  pinMode(_pin, INPUT);
-  attachInterrupt(_pin, _ppm_input_handler_isr, mode);
+  if(pin != -1)
+  {
+    _instance = this;
+    _pin = pin;
+    _channel = 0;
+    _last_tick = micros();
+    for(size_t i = 0; i < CHANNELS; i++)
+    {
+      _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
+    }
+    pinMode(_pin, INPUT);
+    attachInterrupt(_pin, InputPPM::handle_isr, mode);
+  }
 }
 
 void InputPPM::handle()
@@ -38,11 +47,9 @@ void InputPPM::handle()
   if(_channel == 4) _new_data = true; // increase responsivnes for sticks channels
 }
 
-InputPPM PPM;
-
-static void _ppm_input_handler_isr()
+void InputPPM::handle_isr()
 {
-  PPM.handle();
+  if(_instance) _instance->handle();
 }
 
 }

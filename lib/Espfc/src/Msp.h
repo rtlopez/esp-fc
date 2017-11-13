@@ -513,17 +513,18 @@ class Msp
             while(m.remain() >= packetSize)
             {
               int id = m.readU8();
-              if(id != SERIAL_UART_0 && id != SERIAL_UART_1)
+              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != 30)
               {
                 m.advance(packetSize - 1);
                 continue;
               }
-              _model.config.serial[id].id = id;
-              _model.config.serial[id].functionMask = m.readU16();
-              _model.config.serial[id].baudIndex = m.readU8();
+              size_t k = id == 30 ? SERIAL_SOFT_0 : id;
+              _model.config.serial[k].id = id;
+              _model.config.serial[k].functionMask = m.readU16();
+              _model.config.serial[k].baudIndex = m.readU8();
               m.readU8();
               m.readU8();
-              _model.config.serial[id].blackboxBaudIndex = m.readU8();
+              _model.config.serial[k].blackboxBaudIndex = m.readU8();
             }
           }
           _model.update();

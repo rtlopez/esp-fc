@@ -186,6 +186,7 @@ enum SerialSpeedIndex {
 enum SerialPort {
   SERIAL_UART_0,
   SERIAL_UART_1,
+  SERIAL_SOFT_0,
   SERIAL_UART_COUNT
 };
 
@@ -290,7 +291,7 @@ class ActuatorCondition
     uint8_t max;
 };
 
-class SerialConfig
+class SerialPortConfig
 {
   public:
     int8_t id;
@@ -616,7 +617,7 @@ struct ModelConfig
   int8_t blackboxDev;
   int16_t blackboxPdenom;
 
-  SerialConfig serial[2];
+  SerialPortConfig serial[SERIAL_UART_COUNT];
 
   int8_t fusionMode;
   bool fusionDelay;
@@ -721,6 +722,11 @@ class Model
       config.serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
       config.serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+
+      config.serial[SERIAL_SOFT_0].id = 30;
+      config.serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
+      config.serial[SERIAL_SOFT_0].baudIndex = SERIAL_SPEED_INDEX_115200;
+      config.serial[SERIAL_SOFT_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       // output config
       config.outputMinThrottle = 1050;
@@ -963,11 +969,12 @@ class Model
       }
 
       config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);
-      config.featureMask |= FEATURE_RX_PPM; // force ppm
+      //config.featureMask |= FEATURE_RX_PPM; // force ppm
 
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
-      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
+      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL;
 
       // only few beeper allowed
       config.buzzer.beeperMask &=
