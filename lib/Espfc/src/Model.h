@@ -969,12 +969,15 @@ class Model
       }
 
       config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);
-      //config.featureMask |= FEATURE_RX_PPM; // force ppm
 
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
       config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
       config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL;
+
+      config.featureMask |= FEATURE_RX_PPM; // force ppm
+      //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
+      //config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
 
       // only few beeper allowed
       config.buzzer.beeperMask &=
@@ -1151,7 +1154,7 @@ class Model
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x06;
+    static const uint8_t EEPROM_VERSION = 0x07;
 
     ModelState state;
     ModelConfig config;

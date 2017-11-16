@@ -36,6 +36,9 @@ struct SbusData
   uint8_t endByte;
 } __attribute__ ((__packed__));
 
+#define SBUS_FLAG_SIGNAL_LOSS       (1 << 2)
+#define SBUS_FLAG_FAILSAFE_ACTIVE   (1 << 3)
+
 class InputSBUS: public InputDevice
 {
   public:
@@ -53,7 +56,7 @@ class InputSBUS: public InputDevice
       for(size_t i = 0; i < DATA_SIZE; i++)
       {
         _data[i] = 0;
-        if(i < 16) _channels[i] = 0;
+        if(i < 16) _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
       }
       return 1;
     }
@@ -70,15 +73,16 @@ class InputSBUS: public InputDevice
       if(_new_data)
       {
         _new_data = false;
+        if(_flags & SBUS_FLAG_FAILSAFE_ACTIVE) return INPUT_FAILED;
+        if(_flags & SBUS_FLAG_SIGNAL_LOSS) return INPUT_FAILED;
         return INPUT_RECEIVED;
       }
-      //TODO: check failsafe
       return INPUT_IDLE;
     }
 
     uint16_t get(uint8_t i) const override
     {
-      return map(_channels[i], 220, 1820, 1000, 2000);
+      return _channels[i];
     }
 
   private:
@@ -106,32 +110,41 @@ class InputSBUS: public InputDevice
             _data[_idx++] = c;
             _state = SBUS_START;
             _idx = 0;
-
-            // convert channels
-            _channels[0]  = ((_data[1]       | _data[2]  << 8) & 0x07FF);
-            _channels[1]  = ((_data[2]  >> 3 | _data[3]  << 5) & 0x07FF);
-            _channels[2]  = ((_data[3]  >> 6 | _data[4]  << 2 | _data[5] << 10) & 0x07FF);
-            _channels[3]  = ((_data[5]  >> 1 | _data[6]  << 7) & 0x07FF);
-            _channels[4]  = ((_data[6]  >> 4 | _data[7]  << 4) & 0x07FF);
-            _channels[5]  = ((_data[7]  >> 7 | _data[8]  << 1 | _data[9] << 9) & 0x07FF);
-            _channels[6]  = ((_data[9]  >> 2 | _data[10] << 6) & 0x07FF);
-            _channels[7]  = ((_data[10] >> 5 | _data[11] << 3) & 0x07FF);
-            _channels[8]  = ((_data[12]      | _data[13] << 8) & 0x07FF);
-            _channels[9]  = ((_data[13] >> 3 | _data[14] << 5)  & 0x07FF);
-            _channels[10] = ((_data[14] >> 6 | _data[15] << 2| _data[16] << 10) & 0x07FF);
-            _channels[11] = ((_data[16] >> 1 | _data[17] << 7) & 0x07FF);
-            _channels[12] = ((_data[17] >> 4 | _data[18] << 4) & 0x07FF);
-            _channels[13] = ((_data[18] >> 7 | _data[19] << 1| _data[20] << 9)  & 0x07FF);
-            _channels[14] = ((_data[20] >> 2 | _data[21] << 6) & 0x07FF);
-            _channels[15] = ((_data[21] >> 5 | _data[22] << 3) & 0x07FF);
-            //_channels[16] = ((_data[23]));
-
+            apply();
             _new_data = true;
           }
-        }
+       }
     }
 
-    const static size_t DATA_SIZE = 25;
+    void apply()
+    {
+      const SbusData* frame = reinterpret_cast<const SbusData*>(_data);
+      _channels[0]  = convert(frame->chan0);
+      _channels[1]  = convert(frame->chan1);
+      _channels[2]  = convert(frame->chan2);
+      _channels[3]  = convert(frame->chan3);
+      _channels[4]  = convert(frame->chan4);
+      _channels[5]  = convert(frame->chan5);
+      _channels[6]  = convert(frame->chan6);
+      _channels[7]  = convert(frame->chan7);
+      _channels[8]  = convert(frame->chan8);
+      _channels[9]  = convert(frame->chan9);
+      _channels[10] = convert(frame->chan10);
+      _channels[11] = convert(frame->chan11);
+      _channels[12] = convert(frame->chan12);
+      _channels[13] = convert(frame->chan13);
+      _channels[14] = convert(frame->chan14);
+      _channels[15] = convert(frame->chan15);
+      _flags = frame->flags;
+    }
+
+    inline uint16_t convert(uint16_t v)
+    {
+      return ((v * 5 + 4) / 8) + 880;
+      //return map(v, 220, 1820, 1000, 2000);
+    }
+
+    const static size_t DATA_SIZE = sizeof(SbusData);
 
     SerialDevice * _serial;
     SbusState _state;
@@ -140,6 +153,7 @@ class InputSBUS: public InputDevice
 
     uint8_t _data[DATA_SIZE];
     uint16_t _channels[16];
+    uint8_t _flags;
 };
 
 }

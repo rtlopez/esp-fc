@@ -93,19 +93,18 @@ class Input
         {
           float curr = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
           float prev = Math::map3((float)_get(i, 1), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
-          float val =  i < 3 ? Math::bound(_interpolate(prev, curr, step), -1.f, 1.f) : curr;
+          float val  = i < 3 ? Math::bound(_interpolate(prev, curr, step), -1.5f, 1.5f) : curr;
           //_model.state.input[i] = _model.state.input[i] * (1.f - _model.state.inputFilterAlpha) + val * _model.state.inputFilterAlpha;
           _model.state.input[i] = val;
-          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map3(_model.state.input[i], -1.f, 0.f, 1.f, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i]));
+          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, _model.config.inputMin[i], _model.config.inputMax[i]));
         }
       }
       else if(status == INPUT_RECEIVED)
       {
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {
-          float val = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
-          _model.state.input[i] = val;
-          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map3(_model.state.input[i], -1.f, 0.f, 1.f, _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i]));
+          _model.state.input[i] = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
+          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, _model.config.inputMin[i], _model.config.inputMax[i]));
         }
       }
 
@@ -142,7 +141,7 @@ class Input
     uint32_t _get(size_t c, size_t b)
     {
       //return _buff[b][i];
-      return (_buff[b][c] + _buff[b + 1][c]) / 2; // avg last two samples
+      return (_buff[b][c] + _buff[b + 1][c] + 1) / 2; // avg last two samples
     }
 
     void _set(size_t c, int16_t v)

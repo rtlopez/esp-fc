@@ -30,28 +30,28 @@ class Hardware
         SerialDevice * serial = getSerialPortById((SerialPort)i);
         if(!serial) continue;
 
-        bool blackbox = _model.config.serial[i].functionMask & SERIAL_FUNCTION_BLACKBOX;
+        bool bbx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_BLACKBOX;
         bool msp = _model.config.serial[i].functionMask & SERIAL_FUNCTION_MSP;
         bool deb = _model.config.serial[i].functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY;
-        bool rx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_RX_SERIAL;
+        bool srx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_RX_SERIAL;
 
         SerialDeviceConfig sc;
-        if(rx)
+        if(srx)
         {
           sc.baud = 100000; // sbus
           sc.inverted = true;
           sc.rx_pin = _model.config.inputPin;
           serial->begin(sc);
-          _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("serial_rx"));
+          _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("sbus"));
         }
-        else if(blackbox && msp)
+        else if(bbx && msp)
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_115200);
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).log(F("msp")).logln(F("blackbox"));
         }
-        else if(blackbox)
+        else if(bbx)
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_250000);
@@ -103,20 +103,15 @@ class Hardware
     static SerialDevice * getSerialPortById(SerialPort portId)
     {
       static EspSoftSerial softSerial;
-      static SerialDeviceAdapter<HardwareSerial> uart0(&Serial);
-      static SerialDeviceAdapter<HardwareSerial> uart1(&Serial1);
-      static SerialDeviceAdapter<EspSoftSerial> soft0(&softSerial);
-
+      static SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+      static SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+      static SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
       switch(portId)
       {
-        case SERIAL_UART_0:
-          return  &uart0;
-        case SERIAL_UART_1:
-          return  &uart1;
-        case SERIAL_SOFT_0:
-          return  &soft0;
-        default:
-          return NULL;
+        case SERIAL_UART_0: return &uart0;
+        case SERIAL_UART_1: return &uart1;
+        case SERIAL_SOFT_0: return &soft0;
+        default: return NULL;
       }
     }
 

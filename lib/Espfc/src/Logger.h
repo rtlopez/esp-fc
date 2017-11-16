@@ -4,6 +4,9 @@
 #include "Arduino.h"
 #include "FS.h"
 
+#define LOG_SERIAL_DEBUG(v)
+//#define LOG_SERIAL_DEBUG(v) Serial.println(v)
+
 namespace Espfc {
 
 class Logger
@@ -80,12 +83,13 @@ class Logger
 
     Logger& info()
     {
+      LOG_SERIAL_DEBUG("INF");
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
         f.print(millis());
-        f.print(F(" INF "));
+        f.print(F(" INF"));
         f.close();
       }
       return *this;
@@ -93,12 +97,13 @@ class Logger
 
     Logger& err()
     {
+      LOG_SERIAL_DEBUG("ERR");
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
         f.print(millis());
-        f.print(F(" ERR "));
+        f.print(F(" ERR"));
         f.close();
       }
       return *this;
@@ -107,12 +112,13 @@ class Logger
     template<typename T>
     Logger& log(const T& v)
     {
+      LOG_SERIAL_DEBUG(v);
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
-        f.print(v);
         f.print(' ');
+        f.print(v);
         f.close();
       }
       return *this;
@@ -121,10 +127,12 @@ class Logger
     template<typename T>
     Logger& logln(const T& v)
     {
+      LOG_SERIAL_DEBUG(v);
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
+        f.print(' ');
         f.println(v);
         f.close();
       }
