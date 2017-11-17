@@ -2,6 +2,7 @@
 #define _ESP_SOFT_SERIAL_H_
 
 #include "Arduino.h"
+#include "EspGpio.h"
 #include "Queue.h"
 
 class EspSoftSerialConfig
@@ -53,7 +54,7 @@ class EspSoftSerial
       return _rx_buff.peek();
     }
 
-    size_t write(uint8_t c)
+    virtual size_t write(uint8_t c)
     {
       return 0;
     }
@@ -79,21 +80,6 @@ class EspSoftSerial
     void timerInit();
     void timerStop();
     void timerWrite(uint32_t ticks) ICACHE_RAM_ATTR;
-
-    static inline void digitalWrite(uint8_t pin, uint8_t val)
-    {
-      //digitalWrite(pin, val);
-      if(pin < 16)
-      {
-        if(val) GPOS = (1 << pin);
-        else GPOC = (1 << pin);
-      }
-      else if(pin == 16)
-      {
-        if(val) GP16O |= 1;
-        else GP16O &= ~1;
-      }
-    }
 
     EspSoftSerialConfig _conf;
     uint32_t _delay;

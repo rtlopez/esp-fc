@@ -1,4 +1,5 @@
 #include "OutputPWMFast.h"
+#include "EspGpio.h"
 
 namespace Espfc {
 
@@ -38,21 +39,6 @@ static inline void delay_ticks(uint32_t ticks)
   };
 }
 
-static inline void digitalWriteFast(uint8_t pin, uint8_t val)
-{
-  //digitalWrite(pin, val);
-  if(pin < 16)
-  {
-    if(val) GPOS = (1 << pin);
-    else GPOC = (1 << pin);
-  }
-  else if(pin == 16)
-  {
-    if(val) GP16O |= 1;
-    else GP16O &= ~1;
-  }
-}
-
 void OutputPWMFast::handle(void)
 {
   static const OutputPWMFast::Slot * en = end();
@@ -69,7 +55,7 @@ void OutputPWMFast::handle(void)
     for(it = begin(); it != en; ++it)
     {
       if(it->pin == -1) continue;
-      digitalWriteFast(it->pin, HIGH);
+      EspGpio::digitalWrite(it->pin, HIGH);
     }
     it = begin();
     while(it->pin == -1 && it != en) ++it;
@@ -80,7 +66,7 @@ void OutputPWMFast::handle(void)
   // suppress similar pulses
   while(it != en)
   {
-    digitalWriteFast(it->pin, LOW);
+    EspGpio::digitalWrite(it->pin, LOW);
     ++it;
     if(it == en) break;
     if(it->pin == -1) continue;

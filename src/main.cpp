@@ -13,6 +13,7 @@
 #include <blackbox/blackbox.h>
 #include <Queue.h>
 #include <EspSoftSerial.h>
+#include <EspGpio.h>
 
 Espfc::Espfc espfc;
 

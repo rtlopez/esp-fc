@@ -10,9 +10,10 @@
 #include "Logger.h"
 #include "Math.h"
 #include "Timer.h"
+#include "EspGpio.h"
 
 #if 0
-#define PIN_DEBUG(v) digitalWrite(D0, v)
+#define PIN_DEBUG(v) EspGpio::digitalWrite(D0, v)
 #define PIN_DEBUG_INIT(v) pinMode(D0, v)
 #else
 #define PIN_DEBUG(v)

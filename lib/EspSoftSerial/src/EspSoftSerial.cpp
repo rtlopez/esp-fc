@@ -51,7 +51,7 @@ void EspSoftSerial::timerWrite(uint32_t ticks)
 
 void EspSoftSerial::rxReadBit()
 {
-  bool v = digitalRead(_conf.rx_pin);
+  bool v = EspGpio::digitalRead(_conf.rx_pin);
   v = _conf.inverted ? !v : v;
   switch(_rx_state)
   {
