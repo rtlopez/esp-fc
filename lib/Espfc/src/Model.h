@@ -92,14 +92,14 @@ enum SensorAlign {
 };
 
 enum FusionMode {
-  FUSION_NONE          = 0x00,
-  FUSION_SIMPLE        = 0x01,
-  FUSION_EXPERIMENTAL  = 0x02,
-  FUSION_MADGWICK      = 0x03,
-  FUSION_RTQF          = 0x04,
-  FUSION_LERP          = 0x05,
-  FUSION_COMPLEMENTARY = 0x06,
-  FUSION_KALMAN        = 0x07
+  FUSION_NONE,
+  FUSION_MADGWICK,
+  FUSION_COMPLEMENTARY,
+  FUSION_KALMAN,
+  FUSION_RTQF,
+  FUSION_LERP,
+  FUSION_SIMPLE,
+  FUSION_EXPERIMENTAL,
 };
 
 enum FlightMode {
@@ -490,6 +490,8 @@ struct ModelState
 
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
+
+  Timer fusionTimer;
 
   Timer telemetryTimer;
   bool telemetryUpdate;
@@ -1021,6 +1023,8 @@ class Model
         state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
         state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
       }
+
+      state.fusionTimer.setRate(500);
 
       // load input filter config
       state.inputFilterAlpha = Math::bound((config.inputFilterAlpha / 100.0f), 0.01f, 1.f);

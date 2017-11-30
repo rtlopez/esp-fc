@@ -22,6 +22,7 @@ class Fusion
     {
       _model.state.stats.start(COUNTER_IMU_FUSION);
       _model.state.rate = _model.state.gyro;
+      if(!_model.state.fusionTimer.check()) return 0;
       if(_model.config.accelDev != ACCEL_NONE)
       {
         switch(_model.config.fusionMode)

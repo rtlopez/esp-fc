@@ -144,19 +144,25 @@ class Cli
 
     static const Param * initialize(ModelConfig& c)
     {
-      static const char* gyroDlpfChoices[] = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
-      static const char* accelDevChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("RESERVED"), PSTR("MPU6050"), NULL };
-      static const char* magDevChoices[]   = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
+      static const char* gyroDlpfChoices[]  = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
+      static const char* accelDevChoices[]  = { PSTR("AUTO"), PSTR("NONE"), PSTR("RESERVED"), PSTR("MPU6050"), NULL };
+      static const char* accelModeChoices[] = { PSTR("OFF"), PSTR("DELAYED"), PSTR("GYRO"), PSTR("GYROFIFO"), NULL };
+      static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
+      static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
+      static const char* fusionModeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
+                                                 PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
 
       static const Param params[] = {
         Param(PSTR("gyro_sync"), &c.gyroSync),
         Param(PSTR("gyro_lpf"), &c.gyroDlpf, gyroDlpfChoices),
         Param(PSTR("accel_dev"), &c.accelDev, accelDevChoices),
-        Param(PSTR("accel_mode"), &c.accelMode),
+        Param(PSTR("accel_mode"), &c.accelMode, accelModeChoices),
+        Param(PSTR("fusion_delay"), &c.fusionDelay),
+        Param(PSTR("fusion_mode"), &c.fusionMode, fusionModeChoices),
         Param(PSTR("loop_sync"), &c.loopSync),
         Param(PSTR("mixer_sync"), &c.mixerSync),
         Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
-        Param(PSTR("mag_rate"), &c.magSampleRate),
+        Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
         Param(PSTR("angle_limit"), &c.angleLimit),
         Param(PSTR("angle_rate_limit"), &c.angleRateLimit),
 
