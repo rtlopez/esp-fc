@@ -86,8 +86,10 @@ class Controller
 
     float calculateSetpointRate(int axis, float input)
     {
+      if(axis == AXIS_YAW) input *= -1.f;
+
       float rcRate = _model.config.inputRate[axis] / 100.0f;
-      uint8_t rcExpo = _model.config.inputExpo[axis];
+      const uint8_t rcExpo = _model.config.inputExpo[axis];
 
       if (rcRate > 2.0f)
       {

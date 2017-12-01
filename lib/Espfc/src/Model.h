@@ -779,8 +779,8 @@ class Model
       config.inputMap[2] = 3; // replace input 2 with rx channel 3, yaw
       config.inputMap[3] = 2; // replace input 3 with rx channel 2, throttle
 
-      config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
-      config.inputMax[AXIS_YAW] = 1000;
+      //config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
+      //config.inputMax[AXIS_YAW] = 1000;
 
       config.failsafeMode[AXIS_ROLL] = 0;
       config.failsafeMode[AXIS_PITCH] = 0;
