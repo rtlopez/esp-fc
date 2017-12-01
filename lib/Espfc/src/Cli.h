@@ -491,16 +491,16 @@ class Cli
         {
           print(FPSTR(_model.state.stats.getName((StatCounter)i)));
           print(": ");
-          print((int)_model.state.stats.getTime((StatCounter)i));
+          print((int)(_model.state.stats.getTime((StatCounter)i) * _model.state.loopTimer.interval), 1);
           print("us, ");
-          print(_model.state.stats.getLoad((StatCounter)i, _model.state.gyroTimer.interval), 1);
+          print(_model.state.stats.getLoad((StatCounter)i), 1);
           print("%");
           println();
         }
-        print(F("TOTAL       : "));
-        print((int)_model.state.stats.getTotalTime());
+        print(F("       TOTAL: "));
+        print((int)(_model.state.stats.getTotalTime() * _model.state.loopTimer.interval));
         print(F("us, "));
-        print(_model.state.stats.getTotalLoad(_model.state.gyroTimer.interval), 1);
+        print(_model.state.stats.getTotalLoad(), 1);
         print(F("%"));
         println();
       }

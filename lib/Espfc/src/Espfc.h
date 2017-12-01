@@ -103,6 +103,11 @@ class Espfc
       _cli.update();
       _buzzer.update();
 
+      if(_model.state.stats.timer.check())
+      {
+        _model.state.stats.calculate();
+      }
+
       return 1;
     }
 

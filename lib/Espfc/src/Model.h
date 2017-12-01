@@ -1004,6 +1004,7 @@ class Model
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
       state.actuatorTimer.setRate(25); // 25 hz
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
+      state.stats.timer.setRate(10);
 
       state.gyroBiasAlpha = 4.0f / state.gyroTimer.rate;
       state.accelBiasAlpha = 4.0f / state.gyroTimer.rate;

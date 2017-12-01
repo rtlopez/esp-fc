@@ -121,6 +121,7 @@ int EspSoftSerial::begin(int baud)
 {
   EspSoftSerialConfig conf(baud, -1);
   begin(conf);
+  return 1;
 }
 
 int EspSoftSerial::begin(const EspSoftSerialConfig& conf)

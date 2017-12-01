@@ -297,7 +297,7 @@ class Msp
           r.writeU16(_model.accelActive() << 0 | 0 << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | 1 << 5);
           r.writeU32(_model.state.modeMask); // flight mode flags
           r.writeU8(0); // pid profile
-          r.writeU16(lrintf(_model.state.stats.getTotalLoad(_model.state.gyroTimer.interval)));
+          r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
           if (m.cmd == MSP_STATUS_EX) {
             r.writeU8(1);
             r.writeU8(0);

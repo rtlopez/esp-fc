@@ -2,6 +2,7 @@
 #define _ESPFC_STATS_H_
 
 #include "Arduino.h"
+#include "Timer.h"
 
 namespace Espfc {
 
@@ -32,6 +33,7 @@ class Stats
       {
         _start[i] = 0;
         _avg[i] = 0;
+        _sum[i] = 0;
       }
     }
 
@@ -43,14 +45,24 @@ class Stats
     void end(StatCounter c)
     {
       uint32_t diff = micros() - _start[c];
-      const float k = 0.05f;
-      _avg[c] = (k * diff) + ((1.f - k) * _avg[c]);
+      _sum[c] += diff;
+      //const float k = 0.05f;
+      //_avg[c] = (k * diff) + ((1.f - k) * _avg[c]);
       //_avg[c] = _avg[c] + ((int32_t)diff - _avg[c]) / 10;
     }
 
-    float getLoad(StatCounter c, uint32_t interval) const
+    void calculate()
     {
-      return (_avg[c] / interval) * 100.f;
+      for(size_t i = 0; i < COUNTER_COUNT; i++)
+      {
+        _avg[i] = (float)_sum[i] / timer.deltaUs;
+        _sum[i] = 0;
+      }
+    }
+
+    float getLoad(StatCounter c) const
+    {
+      return _avg[c] * 100.f;
     }
 
     float getTime(StatCounter c) const
@@ -58,10 +70,10 @@ class Stats
       return _avg[c];
     }
 
-    float getTotalLoad(uint32_t interval) const
+    float getTotalLoad() const
     {
       float ret = 0;
-      for(size_t i = 0; i < COUNTER_COUNT; i++) ret += getLoad((StatCounter)i, interval);
+      for(size_t i = 0; i < COUNTER_COUNT; i++) ret += getLoad((StatCounter)i);
       return ret;
     }
 
@@ -76,41 +88,29 @@ class Stats
     {
       switch(c)
       {
-        case COUNTER_GYRO_READ:
-          return PSTR("gyro read   ");
-        case COUNTER_GYRO_FILTER:
-          return PSTR("gyro filter ");
-        case COUNTER_ACCEL_READ:
-          return PSTR("accel read  ");
-        case COUNTER_ACCEL_FILTER:
-          return PSTR("accel filter");
-        case COUNTER_MAG_READ:
-          return PSTR("mag read    ");
-        case COUNTER_MAG_FILTER:
-          return PSTR("mag filter  ");
-        case COUNTER_IMU_FUSION:
-          return PSTR("imu fusion  ");
-        case COUNTER_INPUT:
-          return PSTR("input rx    ");
-        case COUNTER_ACTUATOR:
-          return PSTR("actuator    ");
-        case COUNTER_OUTER_PID:
-          return PSTR("pid outer   ");
-        case COUNTER_INNER_PID:
-          return PSTR("pid inner   ");
-        case COUNTER_MIXER:
-          return PSTR("mixer       ");
-        case COUNTER_BLACKBOX:
-          return PSTR("blackbox    ");
-        case COUNTER_TELEMETRY:
-          return PSTR("telemetry   ");
-        default:
-          return PSTR("unknown     ");
+        case COUNTER_GYRO_READ:    return PSTR("   gyro read");
+        case COUNTER_GYRO_FILTER:  return PSTR(" gyro filter");
+        case COUNTER_ACCEL_READ:   return PSTR("  accel read");
+        case COUNTER_ACCEL_FILTER: return PSTR("accel filter");
+        case COUNTER_MAG_READ:     return PSTR("    mag read");
+        case COUNTER_MAG_FILTER:   return PSTR("  mag filter");
+        case COUNTER_IMU_FUSION:   return PSTR("  imu fusion");
+        case COUNTER_INPUT:        return PSTR("    input rx");
+        case COUNTER_ACTUATOR:     return PSTR("    actuator");
+        case COUNTER_OUTER_PID:    return PSTR("   pid outer");
+        case COUNTER_INNER_PID:    return PSTR("   pid inner");
+        case COUNTER_MIXER:        return PSTR("       mixer");
+        case COUNTER_BLACKBOX:     return PSTR("    blackbox");
+        case COUNTER_TELEMETRY:    return PSTR("   telemetry");
+        default:                   return PSTR("     unknown");
       }
     }
 
+    Timer timer;
+
   private:
     uint32_t _start[COUNTER_COUNT];
+    uint32_t _sum[COUNTER_COUNT];
     float _avg[COUNTER_COUNT];
 };
 
