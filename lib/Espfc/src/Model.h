@@ -980,7 +980,7 @@ class Model
 
       config.featureMask |= FEATURE_RX_PPM; // force ppm
       //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
-      //config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
+      config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
 
       // only few beeper allowed
       config.buzzer.beeperMask &=
