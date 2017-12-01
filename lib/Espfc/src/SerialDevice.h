@@ -4,8 +4,14 @@
 #include <Arduino.h>
 #include "EspSoftSerial.h"
 
+#if defined(ESP8266)
 #define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
 #define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
+#else
+#define SERIAL_RXD_INV 0
+#define SERIAL_TXD_INV 0
+#define SerialConfig int
+#endif
 
 namespace Espfc {
 
@@ -53,7 +59,14 @@ class SerialDeviceAdapter: public SerialDevice
     virtual int peek() { return _dev.peek(); }
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
-    virtual size_t availableForWrite() { return _dev.availableForWrite(); }
+    virtual size_t availableForWrite()
+    {
+#if defined(ESP8266)
+      return _dev.availableForWrite();
+#else
+      return 127;
+#endif
+    }
   private:
     T& _dev;
 };
@@ -69,6 +82,7 @@ void SerialDeviceAdapter<HardwareSerial>::begin(const SerialDeviceConfig& conf)
   _dev.begin(conf.baud, (SerialConfig)sc);
 }
 
+#if defined(ESP8266)
 template<>
 void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
 {
@@ -78,6 +92,7 @@ void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
   ec.inverted = conf.inverted;
   _dev.begin(ec);
 }
+#endif
 
 }
 

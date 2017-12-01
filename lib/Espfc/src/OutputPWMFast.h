@@ -1,6 +1,8 @@
 #ifndef _OUTPUT_PWM_FAST_H_
 #define _OUTPUT_PWM_FAST_H_
 
+#if defined(ESP8266)
+
 #include "Model.h"
 #include <algorithm>
 
@@ -107,5 +109,7 @@ class OutputPWMFast
 extern OutputPWMFast PWMfast;
 
 }
+
+#endif // ESP8266
 
 #endif

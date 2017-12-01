@@ -1,3 +1,5 @@
+#if defined(ESP8266)
+
 #include "OutputPWMFast.h"
 #include "EspGpio.h"
 
@@ -142,3 +144,5 @@ int OutputPWMFast::begin(OutputProtocol protocol, bool async, int16_t rate)
 }
 
 }
+
+#endif // ESP8266

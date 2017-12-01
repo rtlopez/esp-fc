@@ -10,6 +10,11 @@
 #include "InputPPM.h"
 #include "InputSBUS.h"
 
+#if defined(ESP32)
+HardwareSerial Serial1(1);
+HardwareSerial Serial2(1);
+#endif
+
 namespace Espfc {
 
 class Hardware
@@ -21,9 +26,13 @@ class Hardware
     {
       Wire.begin();
       //Wire.setClock(400000);
-      Wire.setClock(1000000); // in real ~640kHz
-      //Wire.setClockStretchLimit(100); // default 230
+      Wire.setClock(1000000); // in real ~640kHz on ESP8266
+
+#if defined(ESP8266)
       _model.logger.info().log(F("I2C")).log(Wire.status()).logln(Wire.status() == 0 ? F("OK") : F("FAIL"));
+#else
+      _model.logger.info().logln(F("I2C"));
+#endif
 
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
@@ -102,15 +111,26 @@ class Hardware
 
     static SerialDevice * getSerialPortById(SerialPort portId)
     {
-      static EspSoftSerial softSerial;
       static SerialDeviceAdapter<HardwareSerial> uart0(Serial);
       static SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+#if defined(ESP32)
+      static SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
+#endif
+#if defined(ESP8266)
+      static EspSoftSerial softSerial;
       static SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
+#endif
+
       switch(portId)
       {
         case SERIAL_UART_0: return &uart0;
         case SERIAL_UART_1: return &uart1;
+#if defined(ESP32)
+        case SERIAL_UART_2: return &uart2;
+#endif
+#if defined(ESP8266)
         case SERIAL_SOFT_0: return &soft0;
+#endif
         default: return NULL;
       }
     }

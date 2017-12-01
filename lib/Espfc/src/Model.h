@@ -20,6 +20,25 @@
 #define PIN_DEBUG_INIT(v)
 #endif
 
+#if defined(ESP32)
+#define D0 0
+#define D1 1
+#define D2 2
+#define D3 3
+#define D4 4
+#define D5 5
+#define D6 6
+#define D7 7
+#define D8 8
+#define D9 9
+#define D10 10
+#define D11 11
+#define D12 12
+#define D13 13
+#define D14 14
+#define D15 15
+#endif
+
 namespace Espfc {
 
 enum GyroDlpf {
@@ -187,7 +206,12 @@ enum SerialSpeedIndex {
 enum SerialPort {
   SERIAL_UART_0,
   SERIAL_UART_1,
+#if defined(ESP32)
+  SERIAL_UART_2,
+#endif
+#if defined(ESP8266)
   SERIAL_SOFT_0,
+#endif
   SERIAL_UART_COUNT
 };
 
@@ -726,10 +750,19 @@ class Model
       config.serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
+#if defined(ESP32)
+      config.serial[SERIAL_UART_2].id = SERIAL_UART_2;
+      config.serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_NONE;
+      config.serial[SERIAL_UART_2].baudIndex = SERIAL_SPEED_INDEX_115200;
+      config.serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+#endif
+
+#if defined(ESP8266)
       config.serial[SERIAL_SOFT_0].id = 30;
       config.serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
       config.serial[SERIAL_SOFT_0].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_SOFT_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+#endif
 
       // output config
       config.outputMinThrottle = 1050;
@@ -976,11 +1009,16 @@ class Model
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
       config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
+#if defined(ESP32)
+      config.serial[SERIAL_UART_2].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
+#endif
+#if defined(ESP8266)
       config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL;
+      config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
+      //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
+#endif
 
       config.featureMask |= FEATURE_RX_PPM; // force ppm
-      //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
-      config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
 
       // only few beeper allowed
       config.buzzer.beeperMask &=

@@ -220,6 +220,7 @@ class Msp
 
     void debugMessage(const MspMessage& m)
     {
+      /*
       if(debugSkip(m.cmd)) return;
 
       Serial1.print(m.dir == TYPE_REPLY ? '>' : '<'); Serial1.print(' ');
@@ -230,10 +231,12 @@ class Msp
         Serial1.print(m.buffer[i]); Serial1.print(' ');
       }
       Serial1.println();
+      */
     }
 
     void debugResponse(const MspResponse& r)
     {
+      /*
       if(debugSkip(r.cmd)) return;
 
       Serial1.print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); Serial1.print(' ');
@@ -244,6 +247,7 @@ class Msp
         Serial1.print(r.data[i]); Serial1.print(' ');
       }
       Serial1.println();
+      */
     }
 
     void processCommand(MspMessage& m, Stream& s)
@@ -283,9 +287,15 @@ class Msp
 
         case MSP_UID:
           {
+#if defined(ESP8266)
             r.writeU32(ESP.getChipId());
             r.writeU32(ESP.getFlashChipId());
             r.writeU32(ESP.getFlashChipSize());
+#else
+            r.writeU32(0);
+            r.writeU32(0);
+            r.writeU32(0);
+#endif
           }
           break;
 
@@ -513,12 +523,19 @@ class Msp
             while(m.remain() >= packetSize)
             {
               int id = m.readU8();
+#if defined(ESP32)
+              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != SERIAL_UART_2)
+#elif defined(ESP8266)
               if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != 30)
+#endif
               {
                 m.advance(packetSize - 1);
                 continue;
               }
-              size_t k = id == 30 ? SERIAL_SOFT_0 : id;
+              size_t k = id;
+#if defined(ESP8266)
+               if(id == 30) k = SERIAL_SOFT_0;
+#endif
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU16();
               _model.config.serial[k].baudIndex = m.readU8();

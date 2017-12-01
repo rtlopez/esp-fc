@@ -14,6 +14,7 @@
 #include <Queue.h>
 #include <EspSoftSerial.h>
 #include <EspGpio.h>
+#include <EscDriver.h>
 
 Espfc::Espfc espfc;
 

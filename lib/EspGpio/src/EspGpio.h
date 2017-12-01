@@ -8,7 +8,7 @@ class EspGpio
   public:
     static inline void digitalWrite(uint8_t pin, uint8_t val) ICACHE_RAM_ATTR
     {
-      //::digitalWrite(pin, val);
+#if defined(ESP8266)
       if(pin < 16)
       {
         if(val) GPOS = (1 << pin);
@@ -19,11 +19,14 @@ class EspGpio
         if(val) GP16O |= 1;
         else GP16O &= ~1;
       }
+#else
+      ::digitalWrite(pin, val);
+#endif
     }
 
     static inline int digitalRead(uint8_t pin) ICACHE_RAM_ATTR
     {
-      //return ::digitalRead(pin);
+#if defined(ESP8266)
       if(pin < 16)
       {
         return GPIP(pin);
@@ -33,6 +36,9 @@ class EspGpio
         return GP16I & 0x01;
       }
       return 0;
+#else
+      return ::digitalRead(pin);
+#endif
     }
 };
 

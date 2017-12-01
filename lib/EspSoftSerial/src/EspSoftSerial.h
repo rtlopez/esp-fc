@@ -1,6 +1,8 @@
 #ifndef _ESP_SOFT_SERIAL_H_
 #define _ESP_SOFT_SERIAL_H_
 
+#if defined(ESP8266)
+
 #include "Arduino.h"
 #include "EspGpio.h"
 #include "Queue.h"
@@ -92,5 +94,7 @@ class EspSoftSerial
     Queue<char> _rx_buff;
     static EspSoftSerial * _instance;
 };
+
+#endif // ESP8266
 
 #endif

@@ -1,13 +1,13 @@
 /*
  * Queue.h
- * 
+ *
  * By Steven de Salas
- * 
+ *
  * Defines a templated (generic) class for a queue of things.
  * Used for Arduino projects, just #include "Queue.h" and add this file via the IDE.
- * 
+ *
  * Examples:
- * 
+ *
  * Queue<char> queue(10); // Max 10 chars in this queue
  * queue.push('H');
  * queue.push('e');
@@ -23,17 +23,17 @@
  * Serial.print(queue.pop()); // l
  * Serial.print(queue.pop()); // l
  * Serial.print(queue.pop()); // o
- * 
+ *
  * struct Point { int x; int y; }
  * Queue<Point> points(5);
  * points.push(Point{2,4});
  * points.push(Point{5,0});
  * points.count(); // 2
- * 
+ *
  */
 
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef _ARDUINO_QUEUE_H_
+#define _ARDUINO_QUEUE_H_
 
 #include <Arduino.h>
 
@@ -44,15 +44,15 @@ class Queue {
     T *_data;
     int _maxitems;
   public:
-    Queue(int maxitems = 256) { 
+    Queue(int maxitems = 256) {
       _front = 0;
       _back = 0;
       _count = 0;
       _maxitems = maxitems;
-      _data = new T[maxitems + 1];   
+      _data = new T[maxitems + 1];
     }
     ~Queue() {
-      delete[] _data;  
+      delete[] _data;
     }
     inline int count();
     inline int front();
@@ -64,19 +64,19 @@ class Queue {
 };
 
 template<class T>
-inline int Queue<T>::count() 
+inline int Queue<T>::count()
 {
   return _count;
 }
 
 template<class T>
-inline int Queue<T>::front() 
+inline int Queue<T>::front()
 {
   return _front;
 }
 
 template<class T>
-inline int Queue<T>::back() 
+inline int Queue<T>::back()
 {
   return _back;
 }
@@ -101,9 +101,9 @@ T Queue<T>::pop() {
     _front++;
     --_count;
     // Check wrap around
-    if (_front > _maxitems) 
+    if (_front > _maxitems)
       _front -= (_maxitems + 1);
-    return result; 
+    return result;
   }
 }
 
@@ -114,7 +114,7 @@ T Queue<T>::peek() {
 }
 
 template<class T>
-void Queue<T>::clear() 
+void Queue<T>::clear()
 {
   _front = _back;
   _count = 0;

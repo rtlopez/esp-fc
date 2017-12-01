@@ -4,9 +4,11 @@
 #include <cstring>
 #include <cctype>
 
+#ifdef ESP8266
 extern "C" {
 #include "user_interface.h"
 }
+#endif //ESP8266
 
 #include "Model.h"
 #include "Msp.h"
@@ -296,6 +298,7 @@ class Cli
         print(F("model: ")); println(sizeof(ModelConfig));
         println();
 
+#if defined(ESP8266)
         const rst_info * resetInfo = system_get_rst_info();
         print(F("system_get_rst_info() reset reason: "));
         println(resetInfo->reason);
@@ -331,6 +334,7 @@ class Cli
 
         print(F("system_get_time(): "));
         println(system_get_time() / 1000000);
+#endif
       }
       else if(strcmp_P(_cmd.args[0], PSTR("get")) == 0)
       {

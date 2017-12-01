@@ -1,5 +1,7 @@
 #include "EspSoftSerial.h"
 
+#if defined(ESP8266)
+
 #define USE_TIMER0 1
 #define TIMER0_US_CLOCKS (F_CPU / 1000000L)
 #define TIMER1_US_CLOCKS (APB_CLK_FREQ / 1000000L)
@@ -156,3 +158,5 @@ int EspSoftSerial::begin(const EspSoftSerialConfig& conf)
 }
 
 EspSoftSerial * EspSoftSerial::_instance = NULL;
+
+#endif //ESP8266
