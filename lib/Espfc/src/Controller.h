@@ -42,8 +42,8 @@ class Controller
           _model.state.angle[AXIS_YAW]
         );
         _model.state.controlAngle = _model.state.angle;
-        _model.state.desiredRate[AXIS_ROLL] = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.controlAngle[AXIS_ROLL], _model.state.loopTimer.delta);
-        _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.controlAngle[AXIS_PITCH], _model.state.loopTimer.delta);
+        _model.state.desiredRate[AXIS_ROLL] = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.controlAngle[AXIS_ROLL], _model.state.loopTimer.getDelta());
+        _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.controlAngle[AXIS_PITCH], _model.state.loopTimer.getDelta());
       }
       else
       {
@@ -67,7 +67,7 @@ class Controller
     {
       for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
-        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.loopTimer.delta);
+        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], _model.state.loopTimer.getDelta());
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
     }

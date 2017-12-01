@@ -7,7 +7,7 @@
 class Timer
 {
   public:
-    Timer(): interval(0), last(0), iteration(0), delta(0.f) {}
+    Timer(): interval(0), last(0), iteration(0), deltaUs(0) {}
 
     int setInterval(uint32_t interval)
     {
@@ -15,7 +15,7 @@ class Timer
       this->rate = 1000000UL / interval;
       this->denom = 1;
       iteration = 0;
-      delta = 0.f;
+      deltaUs = 0;
       return 1;
     }
 
@@ -30,7 +30,7 @@ class Timer
       this->interval = 1000000UL / this->rate;
       this->denom = denom;
       iteration = 0;
-      delta = 0.f;
+      deltaUs = 0;
       return 1;
     }
 
@@ -54,7 +54,7 @@ class Timer
 
     int update(uint32_t now)
     {
-      delta = (now - last) / 1000000.f;
+      deltaUs = now - last;
       iteration++;
       last = now;
       return 1;
@@ -67,13 +67,18 @@ class Timer
       return true;
     }
 
+    float getDelta() const
+    {
+      return deltaUs / 1000000.f;
+    }
+
     uint32_t interval;
     uint32_t rate;
     uint32_t denom;
 
     uint32_t last;
     uint32_t iteration;
-    float delta;
+    uint32_t deltaUs;
 };
 
 #endif

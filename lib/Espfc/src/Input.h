@@ -87,7 +87,7 @@ class Input
 
       if(_model.config.inputInterpolation != INPUT_INTERPOLATION_OFF)
       {
-        float interpolationStep = _model.state.loopTimer.delta / inputDt;
+        float interpolationStep = _model.state.loopTimer.getDelta() / inputDt;
         if(step < 1.f) step += interpolationStep;
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {
