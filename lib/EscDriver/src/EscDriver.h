@@ -1,41 +1,38 @@
 #ifndef _ESC_DRIVER_H_
 #define _ESC_DRIVER_H_
 
-#include "Arduino.h"
-
 enum EscProtocol {
-  ESC_PROTOCOL_PWM
+  ESC_PROTOCOL_PWM,
+  ESC_PROTOCOL_ONESHOT125,
+#if defined(ESP32)
+  ESC_PROTOCOL_ONESHOT42,
+  ESC_PROTOCOL_MULTISHOT,
+  ESC_PROTOCOL_DSHOT150,
+  ESC_PROTOCOL_DSHOT300,
+  ESC_PROTOCOL_DSHOT600,
+  ESC_PROTOCOL_DSHOT1200,
+#endif
+  ESC_PROTOCOL_COUNT
 };
 
-class EscDriverClass
-{
-  public:
-    EscDriverClass();
+#if defined(ESP8266)
 
-    int begin(EscProtocol protocol, bool async, int16_t rate) { return 1; }
-    //int update()
+  #define ESC_CHANNEL_COUNT 4
+  #include "Esp8266EscDriver.h"
+  #define EscDriver Esp8266EscDriver
+  //typedef Esp8266EscDriver EscDriver;
 
-    int attach(size_t slot_id, int pin, int pulse)
-    {
-      return 1;
-    }
+#elif defined(ESP32)
 
-    int write(size_t slot_id, int pulse) ICACHE_RAM_ATTR
-    {
-      return 1;
-    }
+  #define ESC_CHANNEL_COUNT 4
+  #include "Esp32EscDriver.h"
+  #define EscDriver Esp32EscDriver
+  //typedef Esp32EscDriver EscDriver;
 
-    void apply() ICACHE_RAM_ATTR
-    {
-      commit();
-      trigger();
-    }
+#else
 
-    void commit() ICACHE_RAM_ATTR {}
-    //void handle() ICACHE_RAM_ATTR {}
-    void trigger() ICACHE_RAM_ATTR {}
-};
+  #error "Unsupported platform"
 
-extern EscDriverClass ESCDriver;
+#endif
 
 #endif

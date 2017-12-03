@@ -15,10 +15,10 @@ class Mixer
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {
-        ESCDriver.attach(i, _model.config.outputPin[i], _model.state.outputDisarmed[i]);
+        _driver.attach(i, _model.config.outputPin[i], _model.state.outputDisarmed[i]);
         _model.logger.info().log(F("OUTPUT PIN")).log(i).logln(_model.config.outputPin[i]);
       }
-      ESCDriver.begin((EscProtocol)_model.config.outputProtocol, _model.config.outputAsync, _model.config.outputRate);
+      _driver.begin((EscProtocol)_model.config.outputProtocol, _model.config.outputAsync, _model.config.outputRate);
       _model.logger.info().log(F("OUTPUT CONF")).log(_model.config.outputProtocol).log(_model.config.outputAsync).logln(_model.config.outputRate);
       return 1;
     }
@@ -118,9 +118,9 @@ class Mixer
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        ESCDriver.write(i, _model.state.outputUs[i]);
+        _driver.write(i, _model.state.outputUs[i]);
       }
-      ESCDriver.apply();
+      _driver.apply();
     }
 
     bool _stop(void)
@@ -129,6 +129,7 @@ class Mixer
     }
 
     Model& _model;
+    EscDriver _driver;
 };
 
 }

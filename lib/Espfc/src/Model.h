@@ -11,6 +11,7 @@
 #include "Math.h"
 #include "Timer.h"
 #include "EspGpio.h"
+#include "EscDriver.h"
 
 #if 0
 #define PIN_DEBUG(v) EspGpio::digitalWrite(D0, v)
@@ -233,11 +234,6 @@ enum SerialFunction {
   SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
 };
 
-enum OutputProtocol {
-  OUTPUT_PWM,
-  OUTPUT_ONESHOT125
-};
-
 enum AccelDev {
   ACCEL_DEFAULT = 0,
   ACCEL_NONE    = 1,
@@ -304,7 +300,7 @@ enum InputInterpolation {
 
 const size_t AXES            = 4;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
-const size_t OUTPUT_CHANNELS = 4;
+const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 const size_t MODEL_NAME_LEN  = 16;
 
 class ActuatorCondition
@@ -786,8 +782,8 @@ class Model
       config.mixerType = FRAME_QUAD_X;
       config.yawReverse = 0;
 
-      //config.outputProtocol = OUTPUT_PWM;
-      config.outputProtocol = OUTPUT_ONESHOT125;
+      //config.outputProtocol = ESC_PROTOCOL_PWM;
+      config.outputProtocol = ESC_PROTOCOL_ONESHOT125;
       config.outputRate = 500;    // max 500 for PWM, 2000 for Oneshot125
       config.outputAsync = false;
 
@@ -973,19 +969,19 @@ class Model
       }
       config.gyroSampleRate = 8000 / config.gyroSync;
 
-      if(config.outputProtocol != OUTPUT_PWM && config.outputProtocol != OUTPUT_ONESHOT125)
+      if(config.outputProtocol != ESC_PROTOCOL_PWM && config.outputProtocol != ESC_PROTOCOL_ONESHOT125)
       {
-        config.outputProtocol = OUTPUT_PWM;
+        config.outputProtocol = ESC_PROTOCOL_PWM;
       }
 
       if(config.outputAsync)
       {
         // for async limit pwm rate
-        if(config.outputProtocol == OUTPUT_PWM)
+        if(config.outputProtocol == ESC_PROTOCOL_PWM)
         {
           config.outputRate = std::min((int)config.outputRate, 480);
         }
-        else if(config.outputProtocol == OUTPUT_ONESHOT125)
+        else if(config.outputProtocol == ESC_PROTOCOL_ONESHOT125)
         {
           config.outputRate = std::min((int)config.outputRate, 1000);
         }
@@ -993,7 +989,7 @@ class Model
       else
       {
         // for synced and standard PWM limit loop rate and pwm pulse width
-        if(config.outputProtocol == OUTPUT_PWM && config.gyroSampleRate > 500)
+        if(config.outputProtocol == ESC_PROTOCOL_PWM && config.gyroSampleRate > 500)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((config.gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
           int loopRate = config.gyroSampleRate / config.loopSync;

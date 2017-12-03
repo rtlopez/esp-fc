@@ -1,29 +1,9 @@
 #if defined(ESP8266)
 
-#include "OutputPWMFast.h"
+#include "Esp8266EscDriver.h"
+
 #include "EspGpio.h"
-
-namespace Espfc {
-
-OutputPWMFast PWMfast;
-
-static void _pwm_fast_handle_isr(void) ICACHE_RAM_ATTR;
-
-void _pwm_fast_handle_isr(void)
-{
-  PWMfast.handle();
-}
-
-static void timer_init()
-{
-  noInterrupts();
-  //timer0_isr_init();
-  //timer0_attachInterrupt(_pwm_fast_handle_isr);
-  timer1_isr_init();
-  timer1_attachInterrupt(_pwm_fast_handle_isr);
-  timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);
-  interrupts();
-}
+#include <algorithm>
 
 static inline void timer_write(uint32_t ticks)
 {
@@ -41,10 +21,38 @@ static inline void delay_ticks(uint32_t ticks)
   };
 }
 
-void OutputPWMFast::handle(void)
+int Esp8266EscDriver::attach(size_t channel, int pin, int pulse)
 {
-  static const OutputPWMFast::Slot * en = end();
-  static const OutputPWMFast::Slot * it = NULL;
+  if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
+  _buffer[channel].pin = pin;
+  _buffer[channel].pulse = usToTicks(pulse);
+  pinMode(pin, OUTPUT);
+  return 1;
+}
+
+int Esp8266EscDriver::write(size_t channel, int pulse)
+{
+  if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
+  _buffer[channel].pulse = usToTicks(pulse);
+  return 1;
+}
+
+void Esp8266EscDriver::apply()
+{
+  if(_async) return;
+  commit();
+  trigger();
+}
+
+void Esp8266EscDriver::handle_isr(void)
+{
+  if(_instance) _instance->handle();
+}
+
+void Esp8266EscDriver::handle(void)
+{
+  static const Esp8266EscDriver::Slot * en = end();
+  static const Esp8266EscDriver::Slot * it = NULL;
 
   // start cycle
   if(!it)
@@ -95,7 +103,7 @@ void OutputPWMFast::handle(void)
   }
 }
 
-void OutputPWMFast::trigger()
+void Esp8266EscDriver::trigger()
 {
   //PIN_DEBUG(true);
   //PIN_DEBUG(false);
@@ -104,12 +112,12 @@ void OutputPWMFast::trigger()
   handle();
 }
 
-void OutputPWMFast::commit()
+void Esp8266EscDriver::commit()
 {
-  Slot tmp[OUTPUT_CHANNELS];
-  std::copy(_buffer, _buffer + OUTPUT_CHANNELS, tmp);
-  std::sort(tmp, tmp + OUTPUT_CHANNELS);
-  Slot * end = tmp + OUTPUT_CHANNELS;
+  Slot tmp[ESC_CHANNEL_COUNT];
+  std::copy(_buffer, _buffer + ESC_CHANNEL_COUNT, tmp);
+  std::sort(tmp, tmp + ESC_CHANNEL_COUNT);
+  Slot * end = tmp + ESC_CHANNEL_COUNT;
   Slot * prev = NULL;
   for(Slot * it = tmp; it != end; ++it)
   {
@@ -119,30 +127,40 @@ void OutputPWMFast::commit()
     prev = it;
   }
   _space = prev ? _interval - prev->pulse : _interval; // after loop prev is the last item with longest pulse
-  std::copy(tmp, tmp + OUTPUT_CHANNELS, _slots);
+  std::copy(tmp, tmp + ESC_CHANNEL_COUNT, _slots);
 }
 
-OutputPWMFast::OutputPWMFast(): _protocol(OUTPUT_PWM), _async(true), _rate(50), _isr_busy(false)
+Esp8266EscDriver::Esp8266EscDriver(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _isr_busy(false)
 {
   _interval = usToTicks(1000000L / _rate, true);
-  for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
+  for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
   {
     _slots[i] = Slot();
     _buffer[i] = Slot();
   }
 }
 
-int OutputPWMFast::begin(OutputProtocol protocol, bool async, int16_t rate)
+int Esp8266EscDriver::begin(EscProtocol protocol, bool async, int16_t rate)
 {
   _protocol = protocol;
   _async = async;
   _rate = rate;
   _interval = usToTicks(1000000L / _rate, true);
-  timer_init();
+  if(!_instance)
+  {
+    _instance = this;
+    noInterrupts();
+    //timer0_isr_init();
+    //timer0_attachInterrupt(Esp8266EscDriver::handle_isr);
+    timer1_isr_init();
+    timer1_attachInterrupt(Esp8266EscDriver::handle_isr);
+    timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);
+    interrupts();
+  }
   if(_async) timer_write(_interval);
   return 1;
 }
 
-}
+Esp8266EscDriver * Esp8266EscDriver::_instance = NULL;
 
 #endif // ESP8266
