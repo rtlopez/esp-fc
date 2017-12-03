@@ -23,7 +23,7 @@ enum EscProtocol {
 
 #elif defined(ESP32)
 
-  #define ESC_CHANNEL_COUNT 4
+  #define ESC_CHANNEL_COUNT RMT_CHANNEL_MAX
   #include "Esp32EscDriver.h"
   #define EscDriver Esp32EscDriver
 

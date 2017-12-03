@@ -21,25 +21,6 @@
 #define PIN_DEBUG_INIT(v)
 #endif
 
-#if defined(ESP32)
-#define D0 0
-#define D1 1
-#define D2 2
-#define D3 3
-#define D4 4
-#define D5 5
-#define D6 6
-#define D7 7
-#define D8 8
-#define D9 9
-#define D10 10
-#define D11 11
-#define D12 12
-#define D13 13
-#define D14 14
-#define D15 15
-#endif
-
 namespace Espfc {
 
 enum GyroDlpf {
@@ -303,6 +284,50 @@ const size_t INPUT_CHANNELS  = AXIS_COUNT;
 const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 const size_t MODEL_NAME_LEN  = 16;
 
+enum PinFunction {
+#if defined(ESP8266)
+  PIN_INPUT_RX,
+  PIN_OUTPUT_0,
+  PIN_OUTPUT_1,
+  PIN_OUTPUT_2,
+  PIN_OUTPUT_3,
+  PIN_BUZZER,
+  PIN_SERIAL_0_TX,
+  PIN_SERIAL_0_RX,
+  PIN_SERIAL_1_TX,
+  PIN_I2C_0_SCL,
+  PIN_I2C_0_SDA,
+  PIN_INPUT_ADC_0,
+#endif
+#if defined(ESP32)
+  PIN_INPUT_RX,
+  PIN_OUTPUT_0,
+  PIN_OUTPUT_1,
+  PIN_OUTPUT_2,
+  PIN_OUTPUT_3,
+  PIN_OUTPUT_4,
+  PIN_OUTPUT_5,
+  PIN_OUTPUT_6,
+  PIN_OUTPUT_7,
+  PIN_BUZZER,
+  PIN_SERIAL_0_TX,
+  PIN_SERIAL_0_RX,
+  PIN_SERIAL_1_TX,
+  PIN_SERIAL_1_RX,
+  PIN_SERIAL_2_TX,
+  PIN_SERIAL_2_RX,
+  PIN_I2C_0_SCL,
+  PIN_I2C_0_SDA,
+  PIN_INPUT_ADC_0,
+  PIN_INPUT_ADC_1,
+  PIN_SPI_0_SCK,
+  PIN_SPI_0_MOSI,
+  PIN_SPI_0_MISO,
+  PIN_SPI_0_CS0,
+#endif
+  PIN_COUNT
+};
+
 class ActuatorCondition
 {
   public:
@@ -563,7 +588,6 @@ struct ModelConfig
 
   int8_t baroDev;
 
-  int8_t inputPin;
   int8_t ppmMode;
 
   int16_t inputMaxCheck;
@@ -607,7 +631,6 @@ struct ModelConfig
   int16_t outputNeutral[OUTPUT_CHANNELS];
   int16_t outputMax[OUTPUT_CHANNELS];
 
-  int8_t outputPin[OUTPUT_CHANNELS];
   int8_t outputProtocol;
   int16_t outputAsync;
   int16_t outputRate;
@@ -660,6 +683,8 @@ struct ModelConfig
   int8_t debugMode;
 
   BuzzerConfig buzzer;
+
+  int8_t pin[PIN_COUNT];
 };
 
 class Model
@@ -680,6 +705,47 @@ class Model
 
     void initialize()
     {
+#if defined(ESP8266)
+      config.pin[PIN_INPUT_RX] = 13;    // D7
+      config.pin[PIN_OUTPUT_0] = 0;     // D3
+      config.pin[PIN_OUTPUT_1] = 14;    // D5
+      config.pin[PIN_OUTPUT_2] = 12;    // D6
+      config.pin[PIN_OUTPUT_3] = 15;    // D8
+      config.pin[PIN_SERIAL_0_TX] = 1;  // TX0
+      config.pin[PIN_SERIAL_0_RX] = 3;  // RX0
+      config.pin[PIN_SERIAL_1_TX] = 2;  // TX1, D4
+      config.pin[PIN_I2C_0_SCL] = 5;    // D1
+      config.pin[PIN_I2C_0_SDA] = 4;    // D2
+      config.pin[PIN_INPUT_ADC_0] = A0; // A0
+      config.pin[PIN_BUZZER] = 16;      // D0
+#endif
+#if defined(ESP32)
+      config.pin[PIN_INPUT_RX] = 35;
+      config.pin[PIN_OUTPUT_0] = 32;
+      config.pin[PIN_OUTPUT_1] = 33;
+      config.pin[PIN_OUTPUT_2] = 25;
+      config.pin[PIN_OUTPUT_3] = 26;
+      config.pin[PIN_OUTPUT_4] = 27;
+      config.pin[PIN_OUTPUT_5] = 14;
+      config.pin[PIN_OUTPUT_6] = 12;
+      config.pin[PIN_OUTPUT_7] = 13;
+      config.pin[PIN_BUZZER] = 15;
+      config.pin[PIN_SERIAL_0_TX] = 1;
+      config.pin[PIN_SERIAL_0_RX] = 3;
+      config.pin[PIN_SERIAL_1_TX] = 10;
+      config.pin[PIN_SERIAL_1_RX] = 9;
+      config.pin[PIN_SERIAL_2_TX] = 17;
+      config.pin[PIN_SERIAL_2_RX] = 16;
+      config.pin[PIN_I2C_0_SCL] = 22;
+      config.pin[PIN_I2C_0_SDA] = 21;
+      config.pin[PIN_INPUT_ADC_0] = 36;
+      config.pin[PIN_INPUT_ADC_1] = 39;
+      config.pin[PIN_SPI_0_SCK] = 18;
+      config.pin[PIN_SPI_0_MOSI] = 23;
+      config.pin[PIN_SPI_0_MISO] = 19;
+      config.pin[PIN_SPI_0_CS0] = 5;
+#endif
+
       config.gyroDev = ACCEL_MPU6050;
       config.accelDev = ACCEL_MPU6050;
       config.gyroAlign = ALIGN_DEFAULT;
@@ -690,7 +756,7 @@ class Model
       config.gyroDlpf = GYRO_DLPF_256;
       config.gyroFsr  = GYRO_FS_2000;
       config.accelFsr = ACCEL_FS_8;
-      config.gyroSync = 8;
+      config.gyroSync = 32;
 
       config.magDev = MAG_NONE;
       config.magSampleRate = MAG_RATE_75;
@@ -769,14 +835,7 @@ class Model
         config.outputMin[i] = config.outputMinThrottle;
         config.outputMax[i] = config.outputMaxThrottle;
         config.outputNeutral[i] = (config.outputMin[i] + config.outputMax[i] + 1) / 2;
-        config.outputPin[i] = -1; // disable
       }
-
-      // pin assignment
-      config.outputPin[0] = D3; // D8;
-      config.outputPin[1] = D5; // D6;
-      config.outputPin[2] = D6; // D5;
-      config.outputPin[3] = D8; // D3;
 
       //config.mixerType = FRAME_DIRECT;
       config.mixerType = FRAME_QUAD_X;
@@ -788,7 +847,6 @@ class Model
       config.outputAsync = false;
 
       // input config
-      config.inputPin = D7;     // GPIO13
       config.ppmMode = RISING;
       config.inputMinCheck = 1050;
       config.inputMaxCheck = 1900;
@@ -909,7 +967,6 @@ class Model
       config.vbatResMult = 1;
       config.vbatCellWarning = 35;
 
-      config.buzzer.pin = D0;
       config.buzzer.inverted = true;
     }
 
@@ -1003,10 +1060,10 @@ class Model
       config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);
 
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
-      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_TELEMETRY_FRSKY; // msp + blackbox + debug
+      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
 #if defined(ESP32)
-      config.serial[SERIAL_UART_2].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      config.serial[SERIAL_UART_2].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL;
 #endif
 #if defined(ESP8266)
       config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL;

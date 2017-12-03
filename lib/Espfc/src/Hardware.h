@@ -24,15 +24,12 @@ class Hardware
 
     int begin()
     {
-      Wire.begin();
-      //Wire.setClock(400000);
-      Wire.setClock(1000000); // in real ~640kHz on ESP8266
+      Wire.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL]);
+      Wire.setClock(400000);
+      //Wire.setClock(600000);
+      //Wire.setClock(1000000); // in real ~640kHz on ESP8266
 
-#if defined(ESP8266)
-      _model.logger.info().log(F("I2C")).log(Wire.status()).logln(Wire.status() == 0 ? F("OK") : F("FAIL"));
-#else
       _model.logger.info().logln(F("I2C"));
-#endif
 
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
@@ -49,7 +46,7 @@ class Hardware
         {
           sc.baud = 100000; // sbus
           sc.inverted = true;
-          sc.rx_pin = _model.config.inputPin;
+          //sc.rx_pin = _model.config.inputPin;
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("sbus"));
         }
@@ -124,7 +121,7 @@ class Hardware
       switch(portId)
       {
         case SERIAL_UART_0: return &uart0;
-        case SERIAL_UART_1: return &uart1;
+        case SERIAL_UART_1: return NULL; //return &uart1;
 #if defined(ESP32)
         case SERIAL_UART_2: return &uart2;
 #endif
@@ -144,13 +141,13 @@ class Hardware
       if(serial)
       {
         sbus.begin(serial);
-        model.logger.info().log(F("SBUS RX")).logln(model.config.inputPin);
+        model.logger.info().logln(F("SBUS RX"));//.logln(model.config.inputPin);
         return &sbus;
       }
-      else if(model.isActive(FEATURE_RX_PPM))
+      else if(model.isActive(FEATURE_RX_PPM) && model.config.pin[PIN_INPUT_RX] != -1)
       {
-        ppm.begin(model.config.inputPin, model.config.ppmMode);
-        model.logger.info().log(F("PPM RX")).log(model.config.inputPin).logln(model.config.ppmMode);
+        ppm.begin(model.config.pin[PIN_INPUT_RX], model.config.ppmMode);
+        model.logger.info().log(F("PPM RX")).log(model.config.pin[PIN_INPUT_RX]).logln(model.config.ppmMode);
         return &ppm;
       }
       return NULL;

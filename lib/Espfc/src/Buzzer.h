@@ -22,10 +22,10 @@ class Buzzer
 
     int begin()
     {
-      if(_model.config.buzzer.pin == -1) return 0;
+      if(_model.config.pin[PIN_BUZZER] == -1) return 0;
 
-      pinMode(_model.config.buzzer.pin, OUTPUT);
-      EspGpio::digitalWrite(_model.config.buzzer.pin, _model.config.buzzer.inverted);
+      pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
+      EspGpio::digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted);
       _model.state.buzzer.timer.setRate(100);
 
       return 1;
@@ -84,7 +84,7 @@ class Buzzer
 
     void _write(bool v)
     {
-      EspGpio::digitalWrite(_model.config.buzzer.pin, _model.config.buzzer.inverted ? !v : v);
+      EspGpio::digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted ? !v : v);
     }
 
     void _delay(int time)

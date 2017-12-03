@@ -4,7 +4,7 @@
 #include <cstring>
 #include <cctype>
 
-#ifdef ESP8266
+#if defined(ESP8266)
 extern "C" {
 #include "user_interface.h"
 }
@@ -183,12 +183,47 @@ class Cli
         Param(PSTR("telemetry"), &c.telemetry),
         Param(PSTR("telemetry_interval"), &c.telemetryInterval),
 
-        Param(PSTR("pin_out_0"), &c.outputPin[0]),
-        Param(PSTR("pin_out_1"), &c.outputPin[1]),
-        Param(PSTR("pin_out_2"), &c.outputPin[2]),
-        Param(PSTR("pin_out_3"), &c.outputPin[3]),
-        Param(PSTR("pin_input"), &c.inputPin),
-        Param(PSTR("pin_buzzer"), &c.buzzer.pin),
+#if defined(ESP8266)
+        Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
+        Param(PSTR("pin_output_0"), &c.pin[PIN_OUTPUT_0]),
+        Param(PSTR("pin_output_1"), &c.pin[PIN_OUTPUT_1]),
+        Param(PSTR("pin_output_2"), &c.pin[PIN_OUTPUT_2]),
+        Param(PSTR("pin_output_3"), &c.pin[PIN_OUTPUT_3]),
+        Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
+        Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
+        Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
+        Param(PSTR("pin_serial_1_tx"), &c.pin[PIN_SERIAL_1_TX]),
+        Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
+        Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
+        Param(PSTR("pin_input_adc"), &c.pin[PIN_INPUT_ADC_0]),
+#endif
+#if defined(ESP32)
+        Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
+        Param(PSTR("pin_output_0"), &c.pin[PIN_OUTPUT_0]),
+        Param(PSTR("pin_output_1"), &c.pin[PIN_OUTPUT_1]),
+        Param(PSTR("pin_output_2"), &c.pin[PIN_OUTPUT_2]),
+        Param(PSTR("pin_output_3"), &c.pin[PIN_OUTPUT_3]),
+        Param(PSTR("pin_output_4"), &c.pin[PIN_OUTPUT_4]),
+        Param(PSTR("pin_output_5"), &c.pin[PIN_OUTPUT_5]),
+        Param(PSTR("pin_output_6"), &c.pin[PIN_OUTPUT_6]),
+        Param(PSTR("pin_output_7"), &c.pin[PIN_OUTPUT_7]),
+        Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
+        Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
+        Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
+        Param(PSTR("pin_serial_1_tx"), &c.pin[PIN_SERIAL_1_TX]),
+        Param(PSTR("pin_serial_1_rx"), &c.pin[PIN_SERIAL_1_RX]),
+        Param(PSTR("pin_serial_2_tx"), &c.pin[PIN_SERIAL_2_TX]),
+        Param(PSTR("pin_serial_2_rx"), &c.pin[PIN_SERIAL_2_RX]),
+        Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
+        Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
+        Param(PSTR("pin_input_adc_0"), &c.pin[PIN_INPUT_ADC_0]),
+        Param(PSTR("pin_input_adc_1"), &c.pin[PIN_INPUT_ADC_1]),
+        Param(PSTR("pin_spi_0_sck"), &c.pin[PIN_SPI_0_SCK]),
+        Param(PSTR("pin_spi_0_mosi"), &c.pin[PIN_SPI_0_MOSI]),
+        Param(PSTR("pin_spi_0_miso"), &c.pin[PIN_SPI_0_MISO]),
+        Param(PSTR("pin_spi_0_cs_0"), &c.pin[PIN_SPI_0_CS0]),
+#endif
+
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
         Param()
       };

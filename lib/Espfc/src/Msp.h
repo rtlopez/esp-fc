@@ -920,7 +920,7 @@ class Msp
         case MSP_MOTOR:
           for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
-            if (i >= OUTPUT_CHANNELS || _model.config.outputPin[i] == -1)
+            if (i >= OUTPUT_CHANNELS || _model.config.pin[i + PIN_OUTPUT_0] == -1)
             {
               r.writeU16(0);
               continue;

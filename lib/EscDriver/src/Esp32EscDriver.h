@@ -28,7 +28,10 @@ class Esp32EscDriver
         rmt_item32_t items[DSHOT_BITS];
     };
 
-    Esp32EscDriver(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50) {}
+    Esp32EscDriver(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50)
+    {
+
+    }
 
     int begin(EscProtocol protocol, bool async, int16_t rate)
     {
@@ -49,7 +52,6 @@ class Esp32EscDriver
 
         _channel[i].dev.rmt_mode = RMT_MODE_TX;
         _channel[i].dev.channel = (rmt_channel_t)i;
-        _channel[i].dev.gpio_num = (gpio_num_t)(-1);
         _channel[i].dev.clk_div = _channel[i].divider;
         _channel[i].dev.mem_block_num = 1;
         _channel[i].dev.tx_config.loop_en = 0;
@@ -61,6 +63,12 @@ class Esp32EscDriver
         _channel[i].dev.tx_config.carrier_freq_hz = 1000;
         _channel[i].dev.tx_config.carrier_level = RMT_CARRIER_LEVEL_HIGH;
         _channel[i].dev.tx_config.carrier_en = 0;
+
+        if(_channel[i].dev.gpio_num != -1)
+        {
+          rmt_config(&_channel[i].dev);
+          rmt_driver_install(_channel[i].dev.channel, 0, 0);
+        }
       }
       return 1;
     }
@@ -68,17 +76,10 @@ class Esp32EscDriver
     int attach(size_t channel, int pin, int pulse)
     {
       if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
-
-      rmt_config_t * config = &_channel[channel].dev;
-      if(config->gpio_num != -1)
-      {
-        rmt_driver_uninstall(config->channel);
-      }
-      config->gpio_num = (gpio_num_t)pin;
-      rmt_config(config);
-      rmt_driver_install(config->channel, 0, 0);
       _channel[channel].pulse = pulse;
-
+      _channel[channel].dev.gpio_num = (gpio_num_t)pin;
+      pinMode(pin, OUTPUT);
+      digitalWrite(pin, LOW);
       return 1;
     }
 
@@ -218,7 +219,6 @@ class Esp32EscDriver
           return false;
       }
     }
-
 
   private:
     EscProtocol _protocol;
