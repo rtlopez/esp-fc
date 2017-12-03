@@ -1,10 +1,10 @@
 #ifndef _ESP8266_ESC_DRIVER_H_
 #define _ESP8266_ESC_DRIVER_H_
 
+#if defined(ESP8266)
+
 #include "EscDriver.h"
 #include "Arduino.h"
-
-#if defined(ESP8266)
 
 class Esp8266EscDriver
 {

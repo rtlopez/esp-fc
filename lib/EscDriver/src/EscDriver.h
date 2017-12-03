@@ -20,14 +20,12 @@ enum EscProtocol {
   #define ESC_CHANNEL_COUNT 4
   #include "Esp8266EscDriver.h"
   #define EscDriver Esp8266EscDriver
-  //typedef Esp8266EscDriver EscDriver;
 
 #elif defined(ESP32)
 
   #define ESC_CHANNEL_COUNT 4
   #include "Esp32EscDriver.h"
   #define EscDriver Esp32EscDriver
-  //typedef Esp32EscDriver EscDriver;
 
 #else
 
