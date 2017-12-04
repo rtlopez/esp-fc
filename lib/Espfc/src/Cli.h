@@ -193,6 +193,7 @@ class Cli
         Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
         Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
         Param(PSTR("pin_serial_1_tx"), &c.pin[PIN_SERIAL_1_TX]),
+        Param(PSTR("pin_serial_1_rx"), &c.pin[PIN_SERIAL_1_RX]),
         Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
         Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
         Param(PSTR("pin_input_adc"), &c.pin[PIN_INPUT_ADC_0]),

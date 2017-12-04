@@ -295,6 +295,7 @@ enum PinFunction {
   PIN_SERIAL_0_TX,
   PIN_SERIAL_0_RX,
   PIN_SERIAL_1_TX,
+  PIN_SERIAL_1_RX,
   PIN_I2C_0_SCL,
   PIN_I2C_0_SDA,
   PIN_INPUT_ADC_0,
@@ -714,6 +715,7 @@ class Model
       config.pin[PIN_SERIAL_0_TX] = 1;  // TX0
       config.pin[PIN_SERIAL_0_RX] = 3;  // RX0
       config.pin[PIN_SERIAL_1_TX] = 2;  // TX1, D4
+      config.pin[PIN_SERIAL_1_RX] = -1;  // RX1, unavailable
       config.pin[PIN_I2C_0_SCL] = 5;    // D1
       config.pin[PIN_I2C_0_SDA] = 4;    // D2
       config.pin[PIN_INPUT_ADC_0] = A0; // A0
@@ -732,8 +734,8 @@ class Model
       config.pin[PIN_BUZZER] = 15;
       config.pin[PIN_SERIAL_0_TX] = 1;
       config.pin[PIN_SERIAL_0_RX] = 3;
-      config.pin[PIN_SERIAL_1_TX] = 10;
-      config.pin[PIN_SERIAL_1_RX] = 9;
+      config.pin[PIN_SERIAL_1_TX] = 2;
+      config.pin[PIN_SERIAL_1_RX] = 4;
       config.pin[PIN_SERIAL_2_TX] = 17;
       config.pin[PIN_SERIAL_2_RX] = 16;
       config.pin[PIN_I2C_0_SCL] = 22;
@@ -820,7 +822,7 @@ class Model
 #endif
 
 #if defined(ESP8266)
-      config.serial[SERIAL_SOFT_0].id = 30;
+      config.serial[SERIAL_SOFT_0].id = 30; // present as soft serial
       config.serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
       config.serial[SERIAL_SOFT_0].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_SOFT_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
@@ -1251,7 +1253,7 @@ class Model
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x07;
+    static const uint8_t EEPROM_VERSION = 0x08;
 
     ModelState state;
     ModelConfig config;

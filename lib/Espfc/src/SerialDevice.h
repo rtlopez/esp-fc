@@ -4,14 +4,28 @@
 #include <Arduino.h>
 #include "EspSoftSerial.h"
 
-#if defined(ESP8266)
-#define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
-#define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
-#else
-#define SERIAL_RXD_INV 0
-#define SERIAL_TXD_INV 0
-#define SerialConfig int
+#if defined(ESP32)
+#include "soc/uart_struct.h"
 #endif
+
+#if defined(ESP8266)
+  #define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
+  #define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
+#endif
+
+#define SERIAL_UART_PARITY_NONE      0B00000000
+#define SERIAL_UART_PARITY_EVEN      0B00000010
+#define SERIAL_UART_PARITY_ODD       0B00000011
+
+#define SERIAL_UART_NB_BIT_5         0B00000000
+#define SERIAL_UART_NB_BIT_6         0B00000100
+#define SERIAL_UART_NB_BIT_7         0B00001000
+#define SERIAL_UART_NB_BIT_8         0B00001100
+
+#define SERIAL_UART_NB_STOP_BIT_0    0B00000000
+#define SERIAL_UART_NB_STOP_BIT_1    0B00010000
+#define SERIAL_UART_NB_STOP_BIT_15   0B00100000
+#define SERIAL_UART_NB_STOP_BIT_2    0B00110000
 
 namespace Espfc {
 
@@ -19,6 +33,13 @@ enum SerialDeviceConfigParity {
   SERIAL_PARITY_NONE,
   SERIAL_PARITY_EVEN,
   SERIAL_PARITY_ODD
+};
+
+enum SerialDeviceConfigStopBits {
+  SERIAL_STOP_BITS_0,
+  SERIAL_STOP_BITS_1,
+  SERIAL_STOP_BITS_15,
+  SERIAL_STOP_BITS_2
 };
 
 class SerialDeviceConfig
@@ -48,6 +69,26 @@ class SerialDevice: public Stream
     //using Print::write;
 };
 
+class HardwareSerialWrapper: public HardwareSerial
+{
+  public:
+    HardwareSerialWrapper(int uart_nr): HardwareSerial(uart_nr) {}
+
+#if defined(ESP32)
+    size_t availableForWrite() const
+    {
+      if(!_uart) return 0;
+      switch(_uart_nr)
+      {
+        case 0: return (127 - UART0.status.txfifo_cnt);
+        case 1: return (127 - UART1.status.txfifo_cnt);
+        case 2: return (127 - UART2.status.txfifo_cnt);
+      }
+      return 0;
+    }
+#endif
+};
+
 template<typename T>
 class SerialDeviceAdapter: public SerialDevice
 {
@@ -59,27 +100,55 @@ class SerialDeviceAdapter: public SerialDevice
     virtual int peek() { return _dev.peek(); }
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
-    virtual size_t availableForWrite()
-    {
-#if defined(ESP8266)
-      return _dev.availableForWrite();
-#else
-      return 127;
-#endif
-    }
+    virtual size_t availableForWrite() { return _dev.availableForWrite(); }
   private:
     T& _dev;
 };
 
-template<>
-void SerialDeviceAdapter<HardwareSerial>::begin(const SerialDeviceConfig& conf)
+template<typename T>
+void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
 {
-  int sc = SERIAL_8N1;
+  uint32_t sc = 0;
+  switch(conf.data_bits)
+  {
+    case 8: sc |= SERIAL_UART_NB_BIT_8; break;
+    case 7: sc |= SERIAL_UART_NB_BIT_7; break;
+    case 6: sc |= SERIAL_UART_NB_BIT_6; break;
+    case 5: sc |= SERIAL_UART_NB_BIT_5; break;
+    default: sc |= SERIAL_UART_NB_BIT_8; break;
+  }
+  switch(conf.parity)
+  {
+    case SERIAL_PARITY_EVEN: sc |= SERIAL_UART_PARITY_EVEN; break;
+    case SERIAL_PARITY_ODD:  sc |= SERIAL_UART_PARITY_ODD;  break;
+    default: break;
+  }
+  switch(conf.stop_bits)
+  {
+    case SERIAL_STOP_BITS_2:  sc |= SERIAL_UART_NB_STOP_BIT_2;  break;
+    case SERIAL_STOP_BITS_15: sc |= SERIAL_UART_NB_STOP_BIT_15; break;
+    case SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
+    default: break;
+  }
+
+#if defined(ESP8266)
+
   if(conf.inverted)
   {
     sc |= (SERIAL_RXD_INV | SERIAL_TXD_INV);
   }
   _dev.begin(conf.baud, (SerialConfig)sc);
+
+#elif defined(ESP32)
+
+  sc |= 0x8000000;
+  _dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
+
+#else
+
+  #error "Unsupported platform"
+
+#endif
 }
 
 #if defined(ESP8266)

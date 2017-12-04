@@ -10,11 +10,6 @@
 #include "InputPPM.h"
 #include "InputSBUS.h"
 
-#if defined(ESP32)
-HardwareSerial Serial1(1);
-HardwareSerial Serial2(1);
-#endif
-
 namespace Espfc {
 
 class Hardware
@@ -42,11 +37,13 @@ class Hardware
         bool srx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_RX_SERIAL;
 
         SerialDeviceConfig sc;
+        sc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
+        sc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
         if(srx)
         {
           sc.baud = 100000; // sbus
+          sc.stop_bits = SERIAL_STOP_BITS_2;
           sc.inverted = true;
-          //sc.rx_pin = _model.config.inputPin;
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("sbus"));
         }
@@ -108,20 +105,25 @@ class Hardware
 
     static SerialDevice * getSerialPortById(SerialPort portId)
     {
-      static SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-      static SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
 #if defined(ESP32)
-      static SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
+      HardwareSerialWrapper serialWrapper0(0);
+      HardwareSerialWrapper serialWrapper1(1);
+      HardwareSerialWrapper serialWrapper2(2);
+      static SerialDeviceAdapter<HardwareSerialWrapper> uart0(serialWrapper0);
+      static SerialDeviceAdapter<HardwareSerialWrapper> uart1(serialWrapper1);
+      static SerialDeviceAdapter<HardwareSerialWrapper> uart2(serialWrapper2);
 #endif
 #if defined(ESP8266)
       static EspSoftSerial softSerial;
+      static SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+      static SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
       static SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
 #endif
 
       switch(portId)
       {
         case SERIAL_UART_0: return &uart0;
-        case SERIAL_UART_1: return NULL; //return &uart1;
+        case SERIAL_UART_1: return &uart1;
 #if defined(ESP32)
         case SERIAL_UART_2: return &uart2;
 #endif
