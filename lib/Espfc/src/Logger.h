@@ -8,8 +8,11 @@
 #include "SPIFFS.h"
 #endif
 
+#define LOG_SERIAL_INIT()
 #define LOG_SERIAL_DEBUG(v)
-//#define LOG_SERIAL_DEBUG(v) Serial.println(v)
+
+//#define LOG_SERIAL_INIT() Serial.begin(115200)
+//#define LOG_SERIAL_DEBUG(v) Serial.print(' '); Serial.print(v)
 
 namespace Espfc {
 
@@ -18,7 +21,9 @@ class Logger
   public:
     int begin()
     {
+      LOG_SERIAL_INIT();
       _valid = false;
+#if defined(ESP8266)
       SPIFFS.begin();
       for(size_t i = 1; i < 1000; i++)
       {
@@ -32,6 +37,7 @@ class Logger
         }
       }
       info().logln(F("INIT"));
+#endif
       return 1;
     }
 
@@ -148,6 +154,7 @@ class Logger
     Logger& logln(const T& v)
     {
       LOG_SERIAL_DEBUG(v);
+      LOG_SERIAL_DEBUG('\n');
 #if defined(ESP8266)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");

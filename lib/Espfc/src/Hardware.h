@@ -20,16 +20,16 @@ class Hardware
     int begin()
     {
       Wire.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL]);
+      //Wire.setClock(100000);
       Wire.setClock(400000);
       //Wire.setClock(600000);
-      //Wire.setClock(1000000); // in real ~640kHz on ESP8266
+      //Wire.setClock(1000000); // ~640kHz on ESP8266
 
       _model.logger.info().logln(F("I2C"));
 
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
         SerialDevice * serial = getSerialPortById((SerialPort)i);
-        if(!serial) continue;
 
         bool bbx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_BLACKBOX;
         bool msp = _model.config.serial[i].functionMask & SERIAL_FUNCTION_MSP;
@@ -39,34 +39,67 @@ class Hardware
         SerialDeviceConfig sc;
         sc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
         sc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
+
         if(srx)
         {
           sc.baud = 100000; // sbus
           sc.stop_bits = SERIAL_STOP_BITS_2;
           sc.inverted = true;
-          serial->begin(sc);
+          if(serial)
+          {
+            serial->flush();
+            serial->begin(sc);
+          }
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("sbus"));
         }
         else if(bbx && msp)
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_115200);
-          serial->begin(sc);
+          if(serial)
+          {
+            serial->flush();
+            serial->begin(sc);
+          }
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).log(F("msp")).logln(F("blackbox"));
         }
         else if(bbx)
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_250000);
-          serial->begin(sc);
+          if(serial)
+          {
+            serial->flush();
+            serial->begin(sc);
+          }
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("blackbox"));
         }
         else if(msp || deb)
         {
           sc.baud = fromIndex((SerialSpeedIndex)_model.config.serial[i].baudIndex, SERIAL_SPEED_115200);
-          serial->begin(sc);
+          if(serial)
+          {
+            serial->flush();
+            serial->begin(sc);
+          }
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(msp ? F("msp") : F("")).logln(deb ? F("debug") : F(""));
         }
+        else
+        {
+          if(serial)
+          {
+            serial->flush();
+          }
+          _model.logger.info().log(F("UART")).log(i).logln(F("free"));
+        }
+
+        /*Serial.print(i); Serial.print(' ');
+        Serial.print(sc.baud); Serial.print(' ');
+        Serial.print(sc.tx_pin); Serial.print(' ');
+        Serial.print(sc.rx_pin); Serial.print(' ');
+        Serial.print(sc.inverted); Serial.print(' ');
+        Serial.print((uint32_t)serial, HEX); Serial.print(' ');
+        Serial.println();*/
       }
       return 1;
     }
@@ -106,12 +139,19 @@ class Hardware
     static SerialDevice * getSerialPortById(SerialPort portId)
     {
 #if defined(ESP32)
-      HardwareSerialWrapper serialWrapper0(0);
-      HardwareSerialWrapper serialWrapper1(1);
-      HardwareSerialWrapper serialWrapper2(2);
-      static SerialDeviceAdapter<HardwareSerialWrapper> uart0(serialWrapper0);
-      static SerialDeviceAdapter<HardwareSerialWrapper> uart1(serialWrapper1);
-      static SerialDeviceAdapter<HardwareSerialWrapper> uart2(serialWrapper2);
+      /*typedef HardwareSerial SerialDeviceType;
+      SerialDeviceType serialWrapper0(0);
+      SerialDeviceType serialWrapper1(1);
+      SerialDeviceType serialWrapper2(2);
+      static SerialDeviceAdapter<SerialDeviceType> uart0(serialWrapper0);
+      static SerialDeviceAdapter<SerialDeviceType> uart1(serialWrapper1);
+      static SerialDeviceAdapter<SerialDeviceType> uart2(serialWrapper2);
+      */
+      static HardwareSerial Serial1(1);
+      static HardwareSerial Serial2(2);
+      static SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+      static SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+      static SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
 #endif
 #if defined(ESP8266)
       static EspSoftSerial softSerial;
@@ -126,9 +166,8 @@ class Hardware
         case SERIAL_UART_1: return &uart1;
 #if defined(ESP32)
         case SERIAL_UART_2: return &uart2;
-#endif
-#if defined(ESP8266)
-        case SERIAL_SOFT_0: return &soft0;
+#elif defined(ESP8266)
+        case SERIAL_SOFT_0: return NULL; //&soft0;
 #endif
         default: return NULL;
       }

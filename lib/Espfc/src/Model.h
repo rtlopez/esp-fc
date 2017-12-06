@@ -804,6 +804,25 @@ class Model
       config.blackboxDev = 3;
       config.blackboxPdenom = 32;
 
+
+#if defined(ESP32)
+      config.serial[SERIAL_UART_0].id = SERIAL_UART_0;
+      config.serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      config.serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
+      config.serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+
+      config.serial[SERIAL_UART_1].id = SERIAL_UART_1;
+      config.serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_NONE;
+      config.serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
+      config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+
+      config.serial[SERIAL_UART_2].id = SERIAL_UART_2;
+      config.serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
+      config.serial[SERIAL_UART_2].baudIndex = SERIAL_SPEED_INDEX_115200;
+      config.serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+#endif
+
+#if defined(ESP8266)
       config.serial[SERIAL_UART_0].id = SERIAL_UART_0;
       config.serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
       config.serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
@@ -814,14 +833,6 @@ class Model
       config.serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
-#if defined(ESP32)
-      config.serial[SERIAL_UART_2].id = SERIAL_UART_2;
-      config.serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_NONE;
-      config.serial[SERIAL_UART_2].baudIndex = SERIAL_SPEED_INDEX_115200;
-      config.serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
-#endif
-
-#if defined(ESP8266)
       config.serial[SERIAL_SOFT_0].id = 30; // present as soft serial
       config.serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
       config.serial[SERIAL_SOFT_0].baudIndex = SERIAL_SPEED_INDEX_115200;
@@ -1061,14 +1072,16 @@ class Model
 
       config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);
 
+#if defined(ESP32)
+      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL; // msp + blackbox + debug
+      config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL;
+      config.serial[SERIAL_UART_2].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL;
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
+#elif defined(ESP8266)
       config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
-#if defined(ESP32)
-      config.serial[SERIAL_UART_2].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL;
-#endif
-#if defined(ESP8266)
       config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL;
+      config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
       config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
       //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
 #endif
@@ -1186,6 +1199,7 @@ class Model
 
     int load()
     {
+      return 0;
       int addr = 0;
       uint8_t magic = EEPROM.read(addr++);
       if(EEPROM_MAGIC != magic)
@@ -1253,7 +1267,7 @@ class Model
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x08;
+    static const uint8_t EEPROM_VERSION = 0x09;
 
     ModelState state;
     ModelConfig config;

@@ -66,7 +66,7 @@ class SerialDevice: public Stream
     virtual void flush() = 0;
     virtual size_t write(uint8_t c) = 0;
     virtual size_t availableForWrite() = 0;
-    //using Print::write;
+    using Print::write;
 };
 
 class HardwareSerialWrapper: public HardwareSerial
@@ -75,16 +75,17 @@ class HardwareSerialWrapper: public HardwareSerial
     HardwareSerialWrapper(int uart_nr): HardwareSerial(uart_nr) {}
 
 #if defined(ESP32)
-    size_t availableForWrite() const
+    int availableForWrite()
     {
-      if(!_uart) return 0;
+      return 127;
+      /*if(!_uart) return 0;
       switch(_uart_nr)
       {
         case 0: return (127 - UART0.status.txfifo_cnt);
         case 1: return (127 - UART1.status.txfifo_cnt);
         case 2: return (127 - UART2.status.txfifo_cnt);
       }
-      return 0;
+      return 0;*/
     }
 #endif
 };
@@ -100,7 +101,14 @@ class SerialDeviceAdapter: public SerialDevice
     virtual int peek() { return _dev.peek(); }
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
-    virtual size_t availableForWrite() { return _dev.availableForWrite(); }
+    virtual size_t availableForWrite()
+    {
+#if defined(ESP32)
+      return 128;
+#else
+      return _dev.availableForWrite();
+#endif
+    }
   private:
     T& _dev;
 };

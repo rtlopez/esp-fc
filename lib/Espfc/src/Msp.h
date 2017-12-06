@@ -220,34 +220,34 @@ class Msp
 
     void debugMessage(const MspMessage& m)
     {
-      /*
       if(debugSkip(m.cmd)) return;
+      SerialDevice * s = NULL; //Hardware::getSerialPortById(SERIAL_UART_0);
+      if(!s) return;
 
-      Serial1.print(m.dir == TYPE_REPLY ? '>' : '<'); Serial1.print(' ');
-      Serial1.print(m.cmd); Serial1.print(' ');
-      Serial1.print(m.expected); Serial1.print(' ');
+      s->print(m.dir == TYPE_REPLY ? '>' : '<'); s->print(' ');
+      s->print(m.cmd); s->print(' ');
+      s->print(m.expected); s->print(' ');
       for(size_t i = 0; i < m.expected; i++)
       {
-        Serial1.print(m.buffer[i]); Serial1.print(' ');
+        s->print(m.buffer[i]); s->print(' ');
       }
-      Serial1.println();
-      */
+      s->println();
     }
 
     void debugResponse(const MspResponse& r)
     {
-      /*
       if(debugSkip(r.cmd)) return;
+      SerialDevice * s = NULL; //Hardware::getSerialPortById(SERIAL_UART_0);
+      if(!s) return;
 
-      Serial1.print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); Serial1.print(' ');
-      Serial1.print(r.cmd); Serial1.print(' ');
-      Serial1.print(r.len); Serial1.print(' ');
+      s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); s->print(' ');
+      s->print(r.cmd); s->print(' ');
+      s->print(r.len); s->print(' ');
       for(size_t i = 0; i < r.len; i++)
       {
-        Serial1.print(r.data[i]); Serial1.print(' ');
+        s->print(r.data[i]); s->print(' ');
       }
-      Serial1.println();
-      */
+      s->println();
     }
 
     void processCommand(MspMessage& m, Stream& s)
