@@ -128,7 +128,7 @@ int EspSoftSerial::begin(int baud)
 
 int EspSoftSerial::begin(const EspSoftSerialConfig& conf)
 {
-  if(_instance)
+  if(_instance && _conf.rx_pin != -1)
   {
     timerStop();
     detachInterrupt(_conf.rx_pin);

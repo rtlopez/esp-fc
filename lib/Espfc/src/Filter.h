@@ -31,6 +31,7 @@ class FilterConfig
 struct FilterStatePt1 {
   float k;
   float v;
+  float v0;
 };
 
 struct FilterStatePt2 {
@@ -105,12 +106,15 @@ class Filter
       float rc = 1.f / (2.f * M_PI * _freq);
       float dt = 1.f / _rate;
       _state.pt1.k = dt / (dt + rc);
-      _state.pt1.v = 0;
+      _state.pt1.v = 0.f;
+      _state.pt1.v0 = 0.f;
     }
 
     float updatePt1(float v)
     {
       _state.pt1.v = _state.pt1.v + _state.pt1.k * (v - _state.pt1.v);
+      _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
+      _state.pt1.v0 = _state.pt1.v;
       return _state.pt1.v;
     }
 

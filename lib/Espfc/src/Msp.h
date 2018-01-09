@@ -13,6 +13,12 @@ static const char * boardIdentifier = "ESPF";
 
 #include "Model.h"
 
+#if defined(ESP32)
+#define MSP_DEBUG_PORT SERIAL_UART_2
+#else
+#define MSP_DEBUG_PORT SERIAL_UART_1
+#endif
+
 namespace Espfc {
 
 static const size_t MSP_BUF_SIZE = 192;
@@ -216,38 +222,6 @@ class Msp
       }
 
       return _msg.state != STATE_IDLE;
-    }
-
-    void debugMessage(const MspMessage& m)
-    {
-      if(debugSkip(m.cmd)) return;
-      SerialDevice * s = NULL; //Hardware::getSerialPortById(SERIAL_UART_0);
-      if(!s) return;
-
-      s->print(m.dir == TYPE_REPLY ? '>' : '<'); s->print(' ');
-      s->print(m.cmd); s->print(' ');
-      s->print(m.expected); s->print(' ');
-      for(size_t i = 0; i < m.expected; i++)
-      {
-        s->print(m.buffer[i]); s->print(' ');
-      }
-      s->println();
-    }
-
-    void debugResponse(const MspResponse& r)
-    {
-      if(debugSkip(r.cmd)) return;
-      SerialDevice * s = NULL; //Hardware::getSerialPortById(SERIAL_UART_0);
-      if(!s) return;
-
-      s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); s->print(' ');
-      s->print(r.cmd); s->print(' ');
-      s->print(r.len); s->print(' ');
-      for(size_t i = 0; i < r.len; i++)
-      {
-        s->print(r.data[i]); s->print(' ');
-      }
-      s->println();
     }
 
     void processCommand(MspMessage& m, Stream& s)
@@ -980,24 +954,6 @@ class Msp
       sendResponse(r, s);
     }
 
-    bool debugSkip(uint8_t cmd)
-    {
-      return true;
-      if(cmd == MSP_STATUS) return true;
-      if(cmd == MSP_STATUS_EX) return true;
-      if(cmd == MSP_BOXNAMES) return true;
-      if(cmd == MSP_ANALOG) return true;
-      if(cmd == MSP_ATTITUDE) return true;
-      if(cmd == MSP_RC) return true;
-      if(cmd == MSP_RAW_IMU) return true;
-      if(cmd == MSP_MOTOR) return true;
-      if(cmd == MSP_SERVO) return true;
-      if(cmd == MSP_BATTERY_STATE) return true;
-      if(cmd == MSP_VOLTAGE_METERS) return true;
-      if(cmd == MSP_CURRENT_METERS) return true;
-      return false;
-    }
-
     void sendResponse(MspResponse& r, Stream& s)
     {
       debugResponse(r);
@@ -1032,6 +988,57 @@ class Msp
         checksum ^= *data++;
       }
       return checksum;
+    }
+
+    bool debugSkip(uint8_t cmd)
+    {
+      return true;
+      return false;
+      if(cmd == MSP_STATUS) return true;
+      if(cmd == MSP_STATUS_EX) return true;
+      if(cmd == MSP_BOXNAMES) return true;
+      if(cmd == MSP_ANALOG) return true;
+      if(cmd == MSP_ATTITUDE) return true;
+      if(cmd == MSP_RC) return true;
+      if(cmd == MSP_RAW_IMU) return true;
+      if(cmd == MSP_MOTOR) return true;
+      if(cmd == MSP_SERVO) return true;
+      if(cmd == MSP_BATTERY_STATE) return true;
+      if(cmd == MSP_VOLTAGE_METERS) return true;
+      if(cmd == MSP_CURRENT_METERS) return true;
+      return false;
+    }
+
+    void debugMessage(const MspMessage& m)
+    {
+      if(debugSkip(m.cmd)) return;
+      SerialDevice * s = Hardware::getSerialPortById(MSP_DEBUG_PORT);
+      if(!s) return;
+
+      s->print(m.dir == TYPE_REPLY ? '>' : '<'); s->print(' ');
+      s->print(m.cmd); s->print(' ');
+      s->print(m.expected); s->print(' ');
+      for(size_t i = 0; i < m.expected; i++)
+      {
+        s->print(m.buffer[i]); s->print(' ');
+      }
+      s->println();
+    }
+
+    void debugResponse(const MspResponse& r)
+    {
+      if(debugSkip(r.cmd)) return;
+      SerialDevice * s = Hardware::getSerialPortById(MSP_DEBUG_PORT);
+      if(!s) return;
+
+      s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); s->print(' ');
+      s->print(r.cmd); s->print(' ');
+      s->print(r.len); s->print(' ');
+      for(size_t i = 0; i < r.len; i++)
+      {
+        s->print(r.data[i]); s->print(' ');
+      }
+      s->println();
     }
 
   private:

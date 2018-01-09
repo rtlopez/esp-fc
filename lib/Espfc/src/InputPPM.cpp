@@ -43,8 +43,11 @@ void InputPPM::handle()
   {
     _channels[_channel] = width;
   }
+  if(_channel == 3)
+  {
+    _new_data = true; // increase responsivnes for sticks channels
+  }
   _channel++;
-  if(_channel == 4) _new_data = true; // increase responsivnes for sticks channels
 }
 
 void InputPPM::handle_isr()

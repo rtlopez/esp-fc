@@ -734,10 +734,14 @@ class Model
       config.pin[PIN_BUZZER] = 15;
       config.pin[PIN_SERIAL_0_TX] = 1;
       config.pin[PIN_SERIAL_0_RX] = 3;
+      //config.pin[PIN_SERIAL_0_TX] = 17;
+      //config.pin[PIN_SERIAL_0_RX] = 16;
       config.pin[PIN_SERIAL_1_TX] = 2;
       config.pin[PIN_SERIAL_1_RX] = 4;
       config.pin[PIN_SERIAL_2_TX] = 17;
       config.pin[PIN_SERIAL_2_RX] = 16;
+      //config.pin[PIN_SERIAL_2_TX] = 1;
+      //config.pin[PIN_SERIAL_2_RX] = 3;
       config.pin[PIN_I2C_0_SCL] = 22;
       config.pin[PIN_I2C_0_SDA] = 21;
       config.pin[PIN_INPUT_ADC_0] = 36;
@@ -807,7 +811,8 @@ class Model
 
 #if defined(ESP32)
       config.serial[SERIAL_UART_0].id = SERIAL_UART_0;
-      config.serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      config.serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
+      //config.serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
       config.serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
@@ -817,7 +822,8 @@ class Model
       config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       config.serial[SERIAL_UART_2].id = SERIAL_UART_2;
-      config.serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
+      config.serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      //config.serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_MSP;
       config.serial[SERIAL_UART_2].baudIndex = SERIAL_SPEED_INDEX_115200;
       config.serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 #endif
@@ -829,9 +835,11 @@ class Model
       config.serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       config.serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      config.serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      //config.serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      config.serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
       config.serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
-      config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      //config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      config.serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
 
       config.serial[SERIAL_SOFT_0].id = 30; // present as soft serial
       config.serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
@@ -878,9 +886,6 @@ class Model
       // swap yaw and throttle for AETR
       config.inputMap[2] = 3; // replace input 2 with rx channel 3, yaw
       config.inputMap[3] = 2; // replace input 3 with rx channel 2, throttle
-
-      //config.inputMin[AXIS_YAW] = 2000;        // invert Yaw axis
-      //config.inputMax[AXIS_YAW] = 1000;
 
       config.failsafeMode[AXIS_ROLL] = 0;
       config.failsafeMode[AXIS_PITCH] = 0;
@@ -1078,9 +1083,10 @@ class Model
       config.serial[SERIAL_UART_2].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL;
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
 #elif defined(ESP8266)
-      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL; // msp + blackbox + debug
+      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY/* | SERIAL_FUNCTION_RX_SERIAL*/; // msp + blackbox + debug
       config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL;
+      config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP/* | SERIAL_FUNCTION_RX_SERIAL*/;
+
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
       config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
       //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
@@ -1100,6 +1106,8 @@ class Model
 
       state.buzzer.beeperMask = config.buzzer.beeperMask;
       config.debugMode = DEBUG_NOTCH;
+      //config.debugMode = DEBUG_GYRO;
+      //config.debugMode = DEBUG_RC_INTERPOLATION;
 
       // init timers
       // sample rate = clock / ( divider + 1)
@@ -1199,7 +1207,7 @@ class Model
 
     int load()
     {
-      return 0;
+      //return 0;
       int addr = 0;
       uint8_t magic = EEPROM.read(addr++);
       if(EEPROM_MAGIC != magic)
@@ -1267,7 +1275,7 @@ class Model
     }
 
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x09;
+    static const uint8_t EEPROM_VERSION = 0x0A;
 
     ModelState state;
     ModelConfig config;

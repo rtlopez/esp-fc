@@ -69,7 +69,7 @@ class Timer
 
     float getDelta() const
     {
-      return deltaUs / 1000000.f;
+      return deltaUs * 0.000001f;
     }
 
     uint32_t interval;

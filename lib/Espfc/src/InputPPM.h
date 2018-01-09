@@ -32,8 +32,8 @@ class InputPPM: public InputDevice
     {
       if(_new_data)
       {
-        return INPUT_RECEIVED;
         _new_data = false;
+        return INPUT_RECEIVED;
       }
       if(fail()) return INPUT_FAILED;
       return INPUT_IDLE;

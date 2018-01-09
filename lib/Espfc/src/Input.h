@@ -64,47 +64,59 @@ class Input
 
       if(status == INPUT_RECEIVED)
       {
+        _model.state.inputLinkValid = true;
+        _read();
+        step = 0.f;
         switch(_model.config.inputInterpolation)
         {
           case INPUT_INTERPOLATION_AUTO:
             {
               uint32_t now = micros();
-              inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)30000) * 0.000001f;
+              inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f;
               prevTm = now;
             }
             break;
           case INPUT_INTERPOLATION_MANUAL:
             inputDt = _model.config.inputInterpolationInterval * 0.001f;
             break;
+          case INPUT_INTERPOLATION_OFF:
+            for(size_t i = 0; i < INPUT_CHANNELS; ++i)
+            {
+              _model.state.input[i] = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
+              _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, _model.config.inputMin[i], _model.config.inputMax[i]));
+            }
+            break;
           default:
             inputDt = 0.02f;
             break;
         }
-        _model.state.inputLinkValid = true;
-        _read();
-        step = 0.f;
       }
 
       if(_model.config.inputInterpolation != INPUT_INTERPOLATION_OFF)
       {
-        float interpolationStep = _model.state.loopTimer.getDelta() / inputDt;
-        if(step < 1.f) step += interpolationStep;
+        const float loopDt = _model.state.loopTimer.getDelta();
+        const float interpolationStep = loopDt / inputDt;
+        if(step < 1.f)
+        {
+          step += interpolationStep;
+        }
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {
-          float curr = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
-          float prev = Math::map3((float)_get(i, 1), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
-          float val  = i < 3 ? Math::bound(_interpolate(prev, curr, step), -1.5f, 1.5f) : curr;
-          //_model.state.input[i] = _model.state.input[i] * (1.f - _model.state.inputFilterAlpha) + val * _model.state.inputFilterAlpha;
-          _model.state.input[i] = val;
+          float val = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
+          if(i < 3)
+          {
+            float prev = Math::map3((float)_get(i, 1), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
+            val =_interpolate(prev, val, step);
+          }
+          _model.state.input[i] = Math::bound(val, -1.5f, 1.5f);
           _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, _model.config.inputMin[i], _model.config.inputMax[i]));
         }
-      }
-      else if(status == INPUT_RECEIVED)
-      {
-        for(size_t i = 0; i < INPUT_CHANNELS; ++i)
+        if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
         {
-          _model.state.input[i] = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
-          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, _model.config.inputMin[i], _model.config.inputMax[i]));
+          _model.state.debug[0] = 1000 * inputDt;
+          _model.state.debug[1] = 10000 * loopDt;
+          _model.state.debug[2] = 1000 * interpolationStep;
+          _model.state.debug[3] = 1000 * step;
         }
       }
 
@@ -140,7 +152,7 @@ class Input
 
     uint32_t _get(size_t c, size_t b)
     {
-      //return _buff[b][i];
+      //return _buff[b][c];
       return (_buff[b][c] + _buff[b + 1][c] + 1) / 2; // avg last two samples
     }
 
