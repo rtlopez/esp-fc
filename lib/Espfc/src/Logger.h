@@ -60,10 +60,20 @@ class Logger
 
     void show(Stream * s, int i)
     {
-      if(!s) return;
-#if defined(ESP8266)
       String name;
       _mkname(name, i);
+      show(s, name);
+    }
+
+    void show(Stream * s)
+    {
+      show(s, _name);
+    }
+
+    void show(Stream * s, const String& name)
+    {
+      if(!s) return;
+#if defined(ESP8266)
       File f = SPIFFS.open(name, "r");
       if(!f)
       {

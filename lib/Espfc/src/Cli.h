@@ -139,7 +139,7 @@ class Cli
         const char ** choices;
     };
 
-    Cli(Model& model): _model(model), _index(0), _msp(model), _ignore(false)
+    Cli(Model& model): _model(model), _index(0), _msp(model), _ignore(false), _active(false)
     {
       _params = initialize(_model.config);
     }
@@ -255,6 +255,15 @@ class Cli
 
     bool process(const char c)
     {
+      // configurator handshake
+      if(!_active && c == '#')
+      {
+        //FIXME: detect disconnection
+        _active = true;
+        println(F("ESP-FC CLI mode, type help"));
+        return true;
+      }
+
       bool endl = c == '\n' || c == '\r';
       if(_index && endl)
       {
@@ -316,12 +325,12 @@ class Cli
           "calgyro\n calmag\n calinfo\n "
           "load\n save\n eeprom\n defaults\n reboot\n "
           "fsinfo\n fsformat\n logs\n log\n "
-          "stats\n info\n version"
+          "stats\n info\n version\n exit"
         ));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
-        println(F("0.1"));
+        println(F("ESP-FC v0.1"));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("info")) == 0)
       {
@@ -561,8 +570,7 @@ class Cli
       {
         if(!_cmd.args[1])
         {
-          println(F("missing log id"));
-          println();
+          _model.logger.show(_stream);
           return;
         }
         int id = String(_cmd.args[1]).toInt();
@@ -582,9 +590,13 @@ class Cli
       {
         _model.reset();
       }
+      else if(strcmp_P(_cmd.args[0], PSTR("exit")) == 0)
+      {
+        _active = false;
+      }
       else
       {
-        print(F("command not found: "));
+        print(F("unknown command: "));
         println(_cmd.args[0]);
       }
       println();
@@ -645,6 +657,7 @@ class Cli
     Cmd _cmd;
     Msp _msp;
     bool _ignore;
+    bool _active;
 };
 
 }
