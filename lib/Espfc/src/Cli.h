@@ -32,6 +32,7 @@ class Cli
       PARAM_NONE,   // unused
       PARAM_BOOL,   // boolean
       PARAM_BYTE,   // 8 bit int
+      PARAM_BYTE_U, // 8 bit uint
       PARAM_SHORT,  // 16 bit int
       PARAM_INT,    // 32 bit int
       PARAM_FLOAT   // 32 bit float
@@ -46,6 +47,7 @@ class Cli
 
         Param(const char * n, bool    * a): Param(n, reinterpret_cast<char*>(a), PARAM_BOOL, NULL) {}
         Param(const char * n, int8_t  * a): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE, NULL) {}
+        Param(const char * n, uint8_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE_U, NULL) {}
         Param(const char * n, int16_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_SHORT, NULL) {}
         Param(const char * n, int32_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_INT, NULL) {}
 
@@ -68,6 +70,9 @@ class Cli
               break;
             case PARAM_BYTE:
               print(stream, *reinterpret_cast<int8_t*>(addr));
+              break;
+            case PARAM_BYTE_U:
+              print(stream, *reinterpret_cast<uint8_t*>(addr));
               break;
             case PARAM_SHORT:
               print(stream, *reinterpret_cast<int16_t*>(addr));
@@ -107,17 +112,30 @@ class Cli
               if(*v == '1') *addr = 1;
               break;
             case PARAM_BYTE:
+              write((int8_t)parse(v));
+              break;
+            case PARAM_BYTE_U:
+              write((uint8_t)parse(v));
+              break;
             case PARAM_SHORT:
+              write((int16_t)parse(v));
+              break;
             case PARAM_INT:
-              *addr = parse(v);
+              write((int32_t)parse(v));
               break;
             case PARAM_FLOAT:
-              *addr = String(v).toFloat();
+              write(String(v).toFloat());
               break;
             case PARAM_NONE:
             default:
               break;
           }
+        }
+
+        template<typename T>
+        void write(const T v) const
+        {
+          *reinterpret_cast<T*>(addr) = v;
         }
 
         int32_t parse(const char * v) const
@@ -168,6 +186,8 @@ class Cli
         Param(PSTR("angle_limit"), &c.angleLimit),
         Param(PSTR("angle_rate_limit"), &c.angleRateLimit),
 
+        Param(PSTR("accel_filter_freq"), &c.accelFilter.freq),
+
         Param(PSTR("gyro_cal_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_cal_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_cal_z"), &c.gyroBias[2]),
@@ -182,6 +202,22 @@ class Cli
         Param(PSTR("mag_cal_scale_z"), &c.magCalibrationScale[2]),
         Param(PSTR("telemetry"), &c.telemetry),
         Param(PSTR("telemetry_interval"), &c.telemetryInterval),
+
+        Param(PSTR("pid_roll_p"), &c.pid[PID_ROLL].P),
+        Param(PSTR("pid_roll_i"), &c.pid[PID_ROLL].I),
+        Param(PSTR("pid_roll_d"), &c.pid[PID_ROLL].D),
+
+        Param(PSTR("pid_pitch_p"), &c.pid[PID_PITCH].P),
+        Param(PSTR("pid_pitch_i"), &c.pid[PID_PITCH].I),
+        Param(PSTR("pid_pitch_d"), &c.pid[PID_PITCH].D),
+
+        Param(PSTR("pid_yaw_p"), &c.pid[PID_YAW].P),
+        Param(PSTR("pid_yaw_i"), &c.pid[PID_YAW].I),
+        Param(PSTR("pid_yaw_d"), &c.pid[PID_YAW].D),
+
+        Param(PSTR("pid_level_p"), &c.pid[PID_LEVEL].P),
+        Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
+        Param(PSTR("pid_level_d"), &c.pid[PID_LEVEL].D),
 
 #if defined(ESP8266)
         Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
