@@ -12,6 +12,8 @@ static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
 static const char * boardIdentifier = "ESPF";
 
 #include "Model.h"
+#include "Hardware.h"
+#include "SerialDevice.h"
 
 #if defined(ESP32)
 #define MSP_DEBUG_PORT SERIAL_UART_2
@@ -906,7 +908,7 @@ class Msp
         case MSP_SET_MOTOR:
           for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
-            _model.state.outputDisarmed[i] = m.readU16();
+            //_model.state.outputDisarmed[i] = m.readU16();
           }
           break;
 

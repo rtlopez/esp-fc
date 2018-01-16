@@ -43,7 +43,7 @@ class Mixer
     void updateBalancingRobot()
     {
       float p = _model.state.output[AXIS_PITCH];
-      float y = _model.state.output[AXIS_YAW];
+      float y = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? -1 : 1);
       float out[2];
       out[0] = p + y;
       out[1] = p - y;
@@ -111,10 +111,10 @@ class Mixer
           _model.state.outputUs[i] = (int16_t)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
         }
       }
-      _write(_model.state.outputUs, OUTPUT_CHANNELS);
+      _write();
     }
 
-    void _write(int16_t * out, size_t axes)
+    void _write()
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -125,7 +125,10 @@ class Mixer
 
     bool _stop(void)
     {
-      return !_model.isActive(MODE_ARMED) || (_model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck);
+      if(!_model.isActive(MODE_ARMED)) return true;
+      if(_model.config.mixerType == FRAME_QUAD_X && _model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck) return true;
+      return false;
+      //return !_model.isActive(MODE_ARMED) || (_model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck);
     }
 
     Model& _model;

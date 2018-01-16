@@ -3,17 +3,10 @@
 
 #include "Arduino.h"
 #include "FS.h"
+#include "Debug.h"
 
 #if defined(ESP32)
 #include "SPIFFS.h"
-#endif
-
-#if 0
-#define LOG_SERIAL_INIT() Serial.begin(115200)
-#define LOG_SERIAL_DEBUG(v) Serial.print(' '); Serial.print(v)
-#else
-#define LOG_SERIAL_INIT()
-#define LOG_SERIAL_DEBUG(v)
 #endif
 
 namespace Espfc {

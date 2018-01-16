@@ -3,30 +3,9 @@
 
 #include <cmath>
 #include <algorithm>
+#include "ModelConfig.h"
 
 namespace Espfc {
-
-enum FilterType {
-  FILTER_PT1,
-  FILTER_BIQUAD,
-  FILTER_FIR,
-  FILTER_NOTCH,
-  FILTER_NONE,
-};
-
-enum BiquadFilterType {
-  BIQUAD_FILTER_LPF,
-  BIQUAD_FILTER_NOTCH,
-  BIQUAD_FILTER_BPF
-};
-
-class FilterConfig
-{
-  public:
-    int8_t type;
-    int16_t freq;
-    int16_t cutoff;
-};
 
 struct FilterStatePt1 {
   float k;
@@ -113,8 +92,8 @@ class Filter
     float updatePt1(float v)
     {
       _state.pt1.v = _state.pt1.v + _state.pt1.k * (v - _state.pt1.v);
-      _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
-      _state.pt1.v0 = _state.pt1.v;
+      //_state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
+      //_state.pt1.v0 = _state.pt1.v;
       return _state.pt1.v;
     }
 

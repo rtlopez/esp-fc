@@ -1,6 +1,7 @@
 #ifndef _ESPFC_PID_H_
 #define _ESPFC_PID_H_
 
+#include "ModelConfig.h"
 #include "Math.h"
 #include "Filter.h"
 
@@ -19,14 +20,6 @@
 #define LEVEL_DTERM_SCALE 0.001f  // 1/1000
 
 namespace Espfc {
-
-class PidConfig
-{
-  public:
-    uint8_t P;
-    uint8_t I;
-    uint8_t D;
-};
 
 class Pid
 {

@@ -38,11 +38,11 @@ class Fusion
             rtqfFusion();
             break;
           case FUSION_KALMAN:
-            updatePoseFromAccelMag();
+            //updatePoseFromAccelMag();
             kalmanFusion();
             break;
           case FUSION_COMPLEMENTARY:
-            updatePoseFromAccelMag();
+            //updatePoseFromAccelMag();
             complementaryFusion();
             break;
           case FUSION_SIMPLE:
@@ -56,6 +56,12 @@ class Fusion
             ;
          }
        }
+       if(_model.config.debugMode == DEBUG_ALTITUDE)
+       {
+         _model.state.debug[0] = lrintf(degrees(_model.state.angle[0]) * 10);
+         _model.state.debug[1] = lrintf(degrees(_model.state.angle[1]) * 10);
+         _model.state.debug[2] = lrintf(degrees(_model.state.angle[2]) * 10);
+       }
        _model.state.stats.end(COUNTER_IMU_FUSION);
        return 1;
     }
@@ -66,46 +72,56 @@ class Fusion
       Quaternion r = Quaternion::lerp(Quaternion(), _model.state.accel.accelToQuaternion(), 0.5);
       _model.state.angle.eulerFromQuaternion(r);
       _model.state.angle *= 2.f;
-      _model.state.rate = _model.state.gyro;
     }
 
     void simpleFusion()
     {
-      _model.state.rate = _model.state.gyro;
-      _model.state.angle = _model.state.accel.accelToEuler();
+      _model.state.pose = _model.state.accel.accelToEuler();
+      _model.state.angle.x = _model.state.pose.x;
+      _model.state.angle.y = _model.state.pose.y;
+      _model.state.angle.z += _model.state.gyroTimer.getDelta() * _model.state.gyro.z;
+      if(_model.state.angle.z > PI) _model.state.angle.z -= TWO_PI;
+      if(_model.state.angle.z < -PI) _model.state.angle.z += TWO_PI;
     }
 
     void kalmanFusion()
     {
+      _model.state.pose = _model.state.accel.accelToEuler();
+      _model.state.pose.z = _model.state.angle.z;
+      const float dt = _model.state.gyroTimer.getDelta();
       for(size_t i = 0; i < 3; i++)
       {
-        float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), _model.state.gyroTimer.getDelta());
+        float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), dt);
         _model.state.angle.set(i, angle);
         _model.state.rate.set(i, _model.state.kalman[i].getRate());
       }
-      //_model.state.rate = _model.state.gyro;
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
 
     void complementaryFusion()
     {
-      float alpha = 0.01f;
+      _model.state.pose = _model.state.accel.accelToEuler();
+      _model.state.pose.z = _model.state.angle.z;
+      const float dt = _model.state.gyroTimer.getDelta();
+      const float alpha = 0.002f;
       for(size_t i = 0; i < 3; i++)
       {
-        float angle = (_model.state.angle[i] + _model.state.gyro[i] * _model.state.gyroTimer.getDelta()) * (1.f - alpha) + _model.state.pose[i] * alpha;
-        if(angle > M_PI) angle -= M_PI;
-        if(angle < M_PI) angle += M_PI;
+        float angle = (_model.state.angle[i] + _model.state.gyro[i] * dt) * (1.f - alpha) + _model.state.pose[i] * alpha;
+        if(angle > PI) angle -= TWO_PI;
+        if(angle < -PI) angle += TWO_PI;
         _model.state.angle.set(i, angle);
       }
-      _model.state.rate  = _model.state.gyro;
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();
+      //_model.state.angle.eulerFromQuaternion(_model.state.angleQ); // causes NaN
     }
 
     void complementaryFusionOld()
     {
-      float alpha = 0.01f;
-      _model.state.angle = (_model.state.angle + _model.state.gyro * _model.state.gyroTimer.getDelta()) * (1.f - alpha) + _model.state.pose * alpha;
-      _model.state.rate  = _model.state.gyro;
+      const float alpha = 0.01f;
+      const float dt = _model.state.gyroTimer.getDelta();
+      _model.state.pose = _model.state.accel.accelToEuler();
+      _model.state.pose.z = _model.state.angle.z;
+      _model.state.angle = (_model.state.angle + _model.state.gyro * dt) * (1.f - alpha) + _model.state.pose * alpha;
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
 

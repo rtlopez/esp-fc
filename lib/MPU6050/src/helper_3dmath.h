@@ -302,7 +302,7 @@ public:
     Quaternion accelToQuaternion() const
     {
        VectorBase<T> na = getNormalized();
-       VectorBase<T> gravity(0, 0, 1.0);
+       VectorBase<T> gravity(0.f, 0.f, 1.f);
        float angle = acos(dotProduct(gravity, na));
        VectorBase<T> v = crossProduct(na, gravity).getNormalized();
        Quaternion q;
@@ -334,13 +334,6 @@ public:
       y =  asin(2.0 * (q.w * q.y - q.x * q.z));
       z = atan2(2.0 * (q.x * q.y + q.w * q.z), 1 - 2.0 * (q.y * q.y + q.z * q.z));
       return *this;
-    }
-
-    VectorBase<T> eulerFromQuaternionAlt(const Quaternion& q)
-    {
-      x = atan2(2 * q.x * q.w - 2 * q.y * q.z, 1 - 2 * q.x * q.x - 2 * q.z * q.z);
-      y = atan2(2 * q.y * q.w - 2 * q.x * q.z, 1 - 2 * q.y * q.y - 2 * q.z * q.z);
-      z =  asin(2 * q.x * q.y + 2 * q.z * q.w);
     }
 
     // vector arithmetics

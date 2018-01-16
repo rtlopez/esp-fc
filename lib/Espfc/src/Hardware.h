@@ -21,9 +21,9 @@ class Hardware
     {
       Wire.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL]);
       //Wire.setClock(100000);
-      Wire.setClock(500000);
+      //Wire.setClock(500000);
       //Wire.setClock(600000);
-      //Wire.setClock(1000000); // ~640kHz on ESP8266
+      Wire.setClock(1000000); // ~640kHz on ESP8266
 
       _model.logger.info().logln(F("I2C"));
 
