@@ -24,7 +24,7 @@ class Cli
     {
       public:
         Cmd() { for(size_t i = 0; i < ARGS_SIZE; ++i) args[i] = NULL; }
-        static const size_t ARGS_SIZE = 8;
+        static const size_t ARGS_SIZE = 12;
         const char * args[ARGS_SIZE];
     };
 
@@ -35,7 +35,9 @@ class Cli
       PARAM_BYTE_U, // 8 bit uint
       PARAM_SHORT,  // 16 bit int
       PARAM_INT,    // 32 bit int
-      PARAM_FLOAT   // 32 bit float
+      PARAM_FLOAT,   // 32 bit float
+      PARAM_INPUT_CHANNEL,  // input channel config
+      PARAM_OUTPUT_CHANNEL,  // output channel config
     };
 
     class Param
@@ -50,6 +52,8 @@ class Cli
         Param(const char * n, uint8_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE_U, NULL) {}
         Param(const char * n, int16_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_SHORT, NULL) {}
         Param(const char * n, int32_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_INT, NULL) {}
+        Param(const char * n, InputChannelConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_INPUT_CHANNEL, NULL) {}
+        Param(const char * n, OutputChannelConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_OUTPUT_CHANNEL, NULL) {}
 
         Param(const char * n, int8_t  * a, const char ** c): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE, c) {}
 
@@ -83,7 +87,41 @@ class Cli
             case PARAM_FLOAT:
               stream.print(*reinterpret_cast<float*>(addr), 4);
               break;
+            case PARAM_INPUT_CHANNEL:
+              print(stream, *reinterpret_cast<InputChannelConfig*>(addr));
+              break;
+            case PARAM_OUTPUT_CHANNEL:
+              print(stream, *reinterpret_cast<OutputChannelConfig*>(addr));
+              break;
           }
+        }
+
+        void print(Stream& stream, const OutputChannelConfig& och) const
+        {
+          stream.print(och.servo ? 'S' : 'M');
+          stream.print(' ');
+          stream.print(och.reverse ? 'R' : 'N');
+          stream.print(' ');
+          stream.print(och.min);
+          stream.print(' ');
+          stream.print(och.neutral);
+          stream.print(' ');
+          stream.print(och.max);
+        }
+
+        void print(Stream& stream, const InputChannelConfig& ich) const
+        {
+          stream.print(ich.map);
+          stream.print(' ');
+          stream.print(ich.min);
+          stream.print(' ');
+          stream.print(ich.neutral);
+          stream.print(' ');
+          stream.print(ich.max);
+          stream.print(' ');
+          stream.print(ich.fsMode == 0 ? 'A' : (ich.fsMode == 1 ? 'H' : (ich.fsMode == 2 ? 'S' : '?')));
+          stream.print(' ');
+          stream.print(ich.fsValue);
         }
 
         void print(Stream& stream, int32_t v) const
@@ -102,8 +140,9 @@ class Cli
           stream.print(v);
         }
 
-        void update(const char * v) const
+        void update(const char ** args) const
         {
+          const char * v = args[2];
           if(!addr || !v) return;
           switch(type)
           {
@@ -126,10 +165,35 @@ class Cli
             case PARAM_FLOAT:
               write(String(v).toFloat());
               break;
+            case PARAM_OUTPUT_CHANNEL:
+              write(*reinterpret_cast<OutputChannelConfig*>(addr), args);
+              break;
+            case PARAM_INPUT_CHANNEL:
+              write(*reinterpret_cast<InputChannelConfig*>(addr), args);
+              break;
             case PARAM_NONE:
             default:
               break;
           }
+        }
+
+        void write(OutputChannelConfig& och, const char ** args) const
+        {
+          if(args[2]) och.servo = *args[2] == 'S';
+          if(args[3]) och.reverse = *args[3] == 'R';
+          if(args[4]) och.min = String(args[4]).toInt();
+          if(args[5]) och.neutral = String(args[5]).toInt();
+          if(args[6]) och.max = String(args[6]).toInt();
+        }
+
+        void write(InputChannelConfig& ich, const char ** args) const
+        {
+          if(args[2]) ich.map = String(args[2]).toInt();
+          if(args[3]) ich.min = String(args[3]).toInt();
+          if(args[4]) ich.neutral = String(args[4]).toInt();
+          if(args[5]) ich.max = String(args[5]).toInt();
+          if(args[6]) ich.fsMode = *args[6] == 'A' ? 0 : (*args[6] == 'H' ? 1 : (*args[6] == 'S' ? 2 : 0));
+          if(args[7]) ich.fsValue = String(args[7]).toInt();
         }
 
         template<typename T>
@@ -183,10 +247,11 @@ class Cli
         Param(PSTR("mixer_sync"), &c.mixerSync),
         Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
         Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
-        Param(PSTR("angle_limit"), &c.angleLimit),
-        Param(PSTR("angle_rate_limit"), &c.angleRateLimit),
+        Param(PSTR("level_limit"), &c.angleLimit),
+        Param(PSTR("level_rate_max"), &c.angleRateLimit),
 
-        Param(PSTR("accel_filter_freq"), &c.accelFilter.freq),
+        Param(PSTR("gyro_filter_lpf"), &c.gyroFilter.freq),
+        Param(PSTR("accel_filter_lpf"), &c.accelFilter.freq),
 
         Param(PSTR("gyro_cal_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_cal_y"), &c.gyroBias[1]),
@@ -200,8 +265,6 @@ class Cli
         Param(PSTR("mag_cal_scale_x"), &c.magCalibrationScale[0]),
         Param(PSTR("mag_cal_scale_y"), &c.magCalibrationScale[1]),
         Param(PSTR("mag_cal_scale_z"), &c.magCalibrationScale[2]),
-        Param(PSTR("telemetry"), &c.telemetry),
-        Param(PSTR("telemetry_interval"), &c.telemetryInterval),
 
         Param(PSTR("pid_roll_p"), &c.pid[PID_ROLL].P),
         Param(PSTR("pid_roll_i"), &c.pid[PID_ROLL].I),
@@ -219,6 +282,20 @@ class Cli
         Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
         Param(PSTR("pid_level_d"), &c.pid[PID_LEVEL].D),
 
+        Param(PSTR("input_0"), &c.input.channel[0]),
+        Param(PSTR("input_1"), &c.input.channel[1]),
+        Param(PSTR("input_2"), &c.input.channel[2]),
+        Param(PSTR("input_3"), &c.input.channel[3]),
+        Param(PSTR("input_4"), &c.input.channel[4]),
+        Param(PSTR("input_5"), &c.input.channel[5]),
+        Param(PSTR("input_6"), &c.input.channel[6]),
+        Param(PSTR("input_7"), &c.input.channel[7]),
+
+        Param(PSTR("output_0"), &c.output.channel[0]),
+        Param(PSTR("output_1"), &c.output.channel[1]),
+        Param(PSTR("output_2"), &c.output.channel[2]),
+        Param(PSTR("output_3"), &c.output.channel[3]),
+
 #if defined(ESP8266)
         Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
         Param(PSTR("pin_output_0"), &c.pin[PIN_OUTPUT_0]),
@@ -234,7 +311,13 @@ class Cli
         Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
         Param(PSTR("pin_input_adc"), &c.pin[PIN_INPUT_ADC_0]),
 #endif
+
 #if defined(ESP32)
+        Param(PSTR("output_4"), &c.output.channel[4]),
+        Param(PSTR("output_5"), &c.output.channel[5]),
+        Param(PSTR("output_6"), &c.output.channel[6]),
+        Param(PSTR("output_7"), &c.output.channel[7]),
+
         Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
         Param(PSTR("pin_output_0"), &c.pin[PIN_OUTPUT_0]),
         Param(PSTR("pin_output_1"), &c.pin[PIN_OUTPUT_1]),
@@ -262,6 +345,9 @@ class Cli
 #endif
 
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+        Param(PSTR("telemetry"), &c.telemetry),
+        Param(PSTR("telemetry_interval"), &c.telemetryInterval),
+
         Param()
       };
       return params;
@@ -455,7 +541,7 @@ class Cli
         {
           if(strcmp_P(_cmd.args[1], _params[i].name) == 0)
           {
-            _params[i].update(_cmd.args[2]);
+            _params[i].update(_cmd.args);
             print(_params[i]);
             found = true;
             break;

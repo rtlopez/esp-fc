@@ -27,14 +27,14 @@ class Model
     {
       logger.begin();
       EEPROM.begin(1024);
-      load();
+      //load();
       update();
     }
 
     void initialize()
     {
       config = ModelConfig();
-      config.brobot();
+      //config.brobot();
     }
 
     bool isActive(FlightMode mode) const

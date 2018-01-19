@@ -702,10 +702,11 @@ class ModelConfig
       output.maxThrottle = 2000;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
+        output.channel[i].servo = false;
         output.channel[i].reverse = false;
-        output.channel[i].min = output.minThrottle;
-        output.channel[i].max = output.maxThrottle;
-        output.channel[i].neutral = (output.minThrottle + output.maxThrottle + 1) / 2;
+        output.channel[i].min = 1000;
+        output.channel[i].max = 2000;
+        output.channel[i].neutral = 1500;
       }
 
       mixerType = FRAME_QUAD_X;
@@ -728,18 +729,12 @@ class ModelConfig
         input.channel[i].min = 1000;
         input.channel[i].neutral = input.midRc;
         input.channel[i].max = 2000;
-        input.channel[i].fsMode = 2;
-        input.channel[i].fsValue = 1500;
+        input.channel[i].fsMode = i < AXIS_THRUST ? 0 : 2;
+        input.channel[i].fsValue = i >= AXIS_THRUST ? 1000 : 1500;
       }
       // swap yaw and throttle for AETR
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
       input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
-
-      input.channel[AXIS_ROLL].fsMode = 0;
-      input.channel[AXIS_PITCH].fsMode = 0;
-      input.channel[AXIS_YAW].fsMode = 0;
-      input.channel[AXIS_THRUST].fsMode = 0;
-      input.channel[AXIS_THRUST].fsValue = 1000;
 
       for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
       {
@@ -856,13 +851,6 @@ class ModelConfig
       output.rate = 100;    // ROBOT
       output.async = true;  // ROBOT
 
-      output.minThrottle = 1000; // ROBOT
-      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
-      {
-        output.channel[i].min = output.minThrottle;
-        output.channel[i].max = output.maxThrottle;
-        output.channel[i].neutral = (output.minThrottle + output.maxThrottle + 1) / 2;
-      }
       output.channel[0].servo = true;   // ROBOT
       output.channel[1].servo = true;   // ROBOT
       output.channel[0].reverse = true; // ROBOT

@@ -33,7 +33,7 @@ class Input
         const InputChannelConfig& ich = _model.config.input.channel[i];
         if(ich.fsMode == FAILSAFE_MODE_HOLD) continue;
         _model.state.inputUs[i] = ich.fsValue;
-        _model.state.input[i] = Math::map3((float)_get(i, 0), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
+        _model.state.input[i] = Math::map((float)ich.fsValue, 1000.f, 2000.f, -1.f, 1.f);
       }
     }
 
