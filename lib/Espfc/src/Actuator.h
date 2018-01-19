@@ -100,7 +100,7 @@ class Actuator
     bool canActivate(FlightMode mode)
     {
       if(mode == MODE_ANGLE && !_model.accelActive()) return false;
-      if(mode == MODE_ARMED && _model.state.inputUs[AXIS_THRUST] > _model.config.inputMinCheck) return false;
+      if(mode == MODE_ARMED && _model.state.inputUs[AXIS_THRUST] > _model.config.input.minCheck) return false;
       return true;
     }
 

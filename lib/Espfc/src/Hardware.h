@@ -187,8 +187,8 @@ class Hardware
       }
       else if(model.isActive(FEATURE_RX_PPM) && model.config.pin[PIN_INPUT_RX] != -1)
       {
-        ppm.begin(model.config.pin[PIN_INPUT_RX], model.config.ppmMode);
-        model.logger.info().log(F("PPM RX")).log(model.config.pin[PIN_INPUT_RX]).logln(model.config.ppmMode);
+        ppm.begin(model.config.pin[PIN_INPUT_RX], model.config.input.ppmMode);
+        model.logger.info().log(F("PPM RX")).log(model.config.pin[PIN_INPUT_RX]).logln(model.config.input.ppmMode);
         return &ppm;
       }
       return NULL;

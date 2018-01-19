@@ -30,9 +30,10 @@ class Input
     {
       for(size_t i = 0; i < INPUT_CHANNELS; ++i)
       {
-        if(_model.config.failsafeMode[i] == FAILSAFE_MODE_HOLD) continue;
-        _model.state.inputUs[i] = _model.config.failsafeValue[i];
-        _model.state.input[i] = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
+        const InputChannelConfig& ich = _model.config.input.channel[i];
+        if(ich.fsMode == FAILSAFE_MODE_HOLD) continue;
+        _model.state.inputUs[i] = ich.fsValue;
+        _model.state.input[i] = Math::map3((float)_get(i, 0), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
       }
     }
 
@@ -67,7 +68,7 @@ class Input
         _model.state.inputLinkValid = true;
         _read();
         step = 0.f;
-        switch(_model.config.inputInterpolation)
+        switch(_model.config.input.interpolationMode)
         {
           case INPUT_INTERPOLATION_AUTO:
             {
@@ -77,13 +78,14 @@ class Input
             }
             break;
           case INPUT_INTERPOLATION_MANUAL:
-            inputDt = _model.config.inputInterpolationInterval * 0.001f;
+            inputDt = _model.config.input.interpolationInterval * 0.001f;
             break;
           case INPUT_INTERPOLATION_OFF:
             for(size_t i = 0; i < INPUT_CHANNELS; ++i)
             {
-              _model.state.input[i] = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
-              _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, _model.config.inputMin[i], _model.config.inputMax[i]));
+              const InputChannelConfig& ich = _model.config.input.channel[i];
+              _model.state.input[i] = Math::map3((float)_get(i, 0), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
+              _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, ich.min, ich.max));
             }
             break;
           default:
@@ -92,7 +94,7 @@ class Input
         }
       }
 
-      if(_model.config.inputInterpolation != INPUT_INTERPOLATION_OFF)
+      if(_model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF)
       {
         const float loopDt = _model.state.loopTimer.getDelta();
         const float interpolationStep = loopDt / inputDt;
@@ -102,14 +104,15 @@ class Input
         }
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {
-          float val = Math::map3((float)_get(i, 0), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
+          const InputChannelConfig& ich = _model.config.input.channel[i];
+          float val = Math::map3((float)_get(i, 0), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
           if(i < 3)
           {
-            float prev = Math::map3((float)_get(i, 1), _model.config.inputMin[i], _model.config.inputNeutral[i], _model.config.inputMax[i], -1.f, 0.f, 1.f);
+            float prev = Math::map3((float)_get(i, 1), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
             val =_interpolate(prev, val, step);
           }
           _model.state.input[i] = Math::bound(val, -1.5f, 1.5f);
-          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, _model.config.inputMin[i], _model.config.inputMax[i]));
+          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, ich.min, ich.max));
         }
         if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
         {
@@ -134,7 +137,7 @@ class Input
       _shift();
       for(size_t c = 0; c < INPUT_CHANNELS; ++c)
       {
-        int pulse = _device->get(_model.config.inputMap[c]);
+        int pulse = _device->get(_model.config.input.channel[c].map);
         _set(c, pulse);
       }
     }
@@ -160,7 +163,7 @@ class Input
     {
       if(c < 3)
       {
-        v = (int16_t)Math::deadband((int)v - _model.config.inputMidRc, (int)_model.config.inputDeadband) + _model.config.inputMidRc;
+        v = (int16_t)Math::deadband((int)v - _model.config.input.midRc, (int)_model.config.input.deadband) + _model.config.input.midRc;
       }
       _buff[0][c] = v;
     }

@@ -145,7 +145,7 @@ class Controller
 
     void resetIterm()
     {
-      if(!_model.isActive(MODE_ARMED) || (_model.config.lowThrottleZeroIterm && !_model.isActive(MODE_AIRMODE) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck))
+      if(!_model.isActive(MODE_ARMED) || (_model.config.lowThrottleZeroIterm && !_model.isActive(MODE_AIRMODE) && _model.state.inputUs[AXIS_THRUST] < _model.config.input.minCheck))
       {
         for(size_t i = 0; i < AXES; i++)
         {
@@ -159,8 +159,8 @@ class Controller
     {
       if(axis == AXIS_YAW) input *= -1.f;
 
-      float rcRate = _model.config.inputRate[axis] / 100.0f;
-      const uint8_t rcExpo = _model.config.inputExpo[axis];
+      float rcRate = _model.config.input.rate[axis] / 100.0f;
+      const uint8_t rcExpo = _model.config.input.expo[axis];
 
       if (rcRate > 2.0f)
       {
@@ -175,9 +175,9 @@ class Controller
       }
 
       float angleRate = 200.0f * rcRate * input;
-      if (_model.config.inputSuperRate[axis])
+      if (_model.config.input.superRate[axis])
       {
-        const float rcSuperfactor = 1.0f / (Math::bound(1.0f - (inputAbs * (_model.config.inputSuperRate[axis] / 100.0f)), 0.01f, 1.00f));
+        const float rcSuperfactor = 1.0f / (Math::bound(1.0f - (inputAbs * (_model.config.input.superRate[axis] / 100.0f)), 0.01f, 1.00f));
         angleRate *= rcSuperfactor;
       }
       return radians(Math::bound(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)

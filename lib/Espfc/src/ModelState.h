@@ -118,7 +118,7 @@ struct ModelState
   bool inputLinkValid;
   int16_t inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
-  uint32_t inputDelay;
+  float command[INPUT_CHANNELS];
 
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];

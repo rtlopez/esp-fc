@@ -76,17 +76,17 @@ class Blackbox
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
 
       controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
-      rp->rcRate8 = _model.config.inputRate[ROLL];
-      rp->rcExpo8 = _model.config.inputExpo[ROLL];
-      rp->rcYawRate8 = _model.config.inputRate[YAW];
-      rp->rcYawExpo8 = _model.config.inputExpo[YAW];
+      rp->rcRate8 = _model.config.input.rate[ROLL];
+      rp->rcExpo8 = _model.config.input.expo[ROLL];
+      rp->rcYawRate8 = _model.config.input.rate[YAW];
+      rp->rcYawExpo8 = _model.config.input.expo[YAW];
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
       rp->dynThrPID = 0;
       rp->tpa_breakpoint = 1650;
-      rp->rates[ROLL] = _model.config.inputSuperRate[ROLL];
-      rp->rates[PITCH] = _model.config.inputSuperRate[PITCH];
-      rp->rates[YAW] = _model.config.inputSuperRate[YAW];
+      rp->rates[ROLL] = _model.config.input.superRate[ROLL];
+      rp->rates[PITCH] = _model.config.input.superRate[PITCH];
+      rp->rates[YAW] = _model.config.input.superRate[YAW];
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
       for(size_t i = 0; i < PID_ITEM_COUNT; i++)
@@ -104,8 +104,8 @@ class Blackbox
       cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
       cp->dtermSetpointWeight = _model.config.dtermSetpointWeight;
 
-      rcControlsConfigMutable()->deadband = _model.config.inputDeadband;
-      rcControlsConfigMutable()->yaw_deadband = _model.config.inputDeadband;
+      rcControlsConfigMutable()->deadband = _model.config.input.deadband;
+      rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
 
       gyroConfigMutable()->gyro_lpf = _model.config.gyroDlpf;
       gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilter.type;
@@ -139,8 +139,8 @@ class Blackbox
 
       batteryConfigMutable()->voltageMeterSource = VOLTAGE_METER_ADC;
 
-      rxConfigMutable()->rcInterpolation = _model.config.inputInterpolation;
-      rxConfigMutable()->rcInterpolationInterval = _model.config.inputInterpolationInterval;
+      rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
+      rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
 
       blackboxInit();
 

@@ -570,7 +570,7 @@ class Msp
         case MSP_RX_MAP:
           for(size_t i = 0; i < INPUT_CHANNELS; i++)
           {
-            r.writeU8(_model.config.inputMap[i]);
+            r.writeU8(_model.config.input.channel[i].map);
           }
           break;
 
@@ -604,14 +604,14 @@ class Msp
           break;
 
         case MSP_RC_DEADBAND:
-          r.writeU8(_model.config.inputDeadband);
+          r.writeU8(_model.config.input.deadband);
           r.writeU8(0); // yaw deadband
           r.writeU8(0); // alt hod deadband
           r.writeU16(0); // deadband 3d throttle
           break;
 
         case MSP_SET_RC_DEADBAND:
-          _model.config.inputDeadband = m.readU8();
+          _model.config.input.deadband = m.readU8();
           m.readU8(); // yaw deadband
           m.readU8(); // alt hod deadband
           m.readU16(); // deadband 3d throttle
@@ -619,14 +619,14 @@ class Msp
 
         case MSP_RX_CONFIG:
           r.writeU8(0); // serialrx_provider
-          r.writeU16(_model.config.inputMaxCheck); //maxcheck
-          r.writeU16(_model.config.inputMidRc); //midrc
-          r.writeU16(_model.config.inputMinCheck); //mincheck
+          r.writeU16(_model.config.input.maxCheck); //maxcheck
+          r.writeU16(_model.config.input.midRc); //midrc
+          r.writeU16(_model.config.input.minCheck); //mincheck
           r.writeU8(0); // spectrum bind
-          r.writeU16(_model.config.inputMinRc); //min_us
-          r.writeU16(_model.config.inputMaxRc); //max_us
-          r.writeU8(_model.config.inputInterpolation); // rc interpolation
-          r.writeU8(_model.config.inputInterpolationInterval); // rc interpolation interval
+          r.writeU16(_model.config.input.minRc); //min_us
+          r.writeU16(_model.config.input.maxRc); //max_us
+          r.writeU8(_model.config.input.interpolationMode); // rc interpolation
+          r.writeU8(_model.config.input.interpolationInterval); // rc interpolation interval
           r.writeU16(1500); // airmode activate threshold
           r.writeU8(0); // rx spi prot
           r.writeU32(0); // rx spi id
@@ -636,14 +636,14 @@ class Msp
 
         case MSP_SET_RX_CONFIG:
           m.readU8(); // serialrx_provider
-          _model.config.inputMaxCheck = m.readU16(); //maxcheck
-          _model.config.inputMidRc = m.readU16(); //midrc
-          _model.config.inputMinCheck = m.readU16(); //mincheck
+          _model.config.input.maxCheck = m.readU16(); //maxcheck
+          _model.config.input.midRc = m.readU16(); //midrc
+          _model.config.input.minCheck = m.readU16(); //mincheck
           m.readU8(); // spectrum bind
-          _model.config.inputMinRc = m.readU16(); //min_us
-          _model.config.inputMaxRc = m.readU16(); //max_us
-          _model.config.inputInterpolation = m.readU8(); // rc interpolation
-          _model.config.inputInterpolationInterval = m.readU8(); // rc interpolation interval
+          _model.config.input.minRc = m.readU16(); //min_us
+          _model.config.input.maxRc = m.readU16(); //max_us
+          _model.config.input.interpolationMode = m.readU8(); // rc interpolation
+          _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
           m.readU16(); // airmode activate threshold
           m.readU8(); // rx spi prot
           m.readU32(); // rx spi id
@@ -673,8 +673,8 @@ class Msp
         case MSP_RXFAIL_CONFIG:
           for (size_t i = 0; i < INPUT_CHANNELS; i++)
           {
-            r.writeU8(_model.config.failsafeMode[i]);
-            r.writeU16(_model.config.failsafeValue[i]);
+            r.writeU8(_model.config.input.channel[i].fsMode);
+            r.writeU16(_model.config.input.channel[i].fsValue);
           }
           break;
 
@@ -682,8 +682,8 @@ class Msp
           {
             size_t i = m.readU8();
             if (i < INPUT_CHANNELS) {
-              _model.config.failsafeMode[i] = m.readU8(); // mode
-              _model.config.failsafeValue[i] = m.readU16(); // pulse
+              _model.config.input.channel[i].fsMode = m.readU8(); // mode
+              _model.config.input.channel[i].fsValue = m.readU16(); // pulse
             } else {
               r.result = -1;
             }
@@ -698,28 +698,28 @@ class Msp
           break;
 
         case MSP_RC_TUNING:
-          r.writeU8(_model.config.inputRate[0]);
-          r.writeU8(_model.config.inputExpo[0]);
+          r.writeU8(_model.config.input.rate[AXIS_ROLL]);
+          r.writeU8(_model.config.input.expo[AXIS_ROLL]);
           for(size_t i = 0; i < 3; i++)
           {
-            r.writeU8(_model.config.inputSuperRate[i]);
+            r.writeU8(_model.config.input.superRate[i]);
           }
           r.writeU8(0); // dyn thr pid
           r.writeU8(50); // thrMid8
           r.writeU8(0);  // thr expo
           r.writeU16(1650); // tpa breakpoint
-          r.writeU8(_model.config.inputExpo[2]); // yaw expo
-          r.writeU8(_model.config.inputRate[2]); // yaw rate
+          r.writeU8(_model.config.input.expo[AXIS_YAW]); // yaw expo
+          r.writeU8(_model.config.input.rate[AXIS_YAW]); // yaw rate
           break;
 
         case MSP_SET_RC_TUNING:
           if(m.remain() >= 10)
           {
-            _model.config.inputRate[0] = _model.config.inputRate[1] = m.readU8();
-            _model.config.inputExpo[0] = _model.config.inputExpo[1] = m.readU8();
+            _model.config.input.rate[AXIS_ROLL] = _model.config.input.rate[AXIS_PITCH] = m.readU8();
+            _model.config.input.expo[AXIS_ROLL] = _model.config.input.expo[AXIS_PITCH] = m.readU8();
             for(size_t i = 0; i < 3; i++)
             {
-              _model.config.inputSuperRate[i] = m.readU8();
+              _model.config.input.superRate[i] = m.readU8();
             }
             m.readU8(); // dyn thr pid
             m.readU8(); // thrMid8
@@ -727,11 +727,11 @@ class Msp
             m.readU16(); // tpa breakpoint
             if(m.remain() >= 1)
             {
-              _model.config.inputExpo[2] = m.readU8(); // yaw expo
+              _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo
             }
             if(m.remain() >= 1)
             {
-              _model.config.inputRate[2]  = m.readU8(); // yaw rate
+              _model.config.input.rate[AXIS_YAW]  = m.readU8(); // yaw rate
             }
           }
           else

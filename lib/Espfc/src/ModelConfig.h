@@ -403,6 +403,44 @@ class PidConfig
     uint8_t D;
 };
 
+class InputChannelConfig
+{
+  public:
+    int16_t min;
+    int16_t neutral;
+    int16_t max;
+    int8_t map;
+    int8_t fsMode;
+    int16_t fsValue;
+};
+
+class InputConfig
+{
+  public:
+    int8_t ppmMode;
+
+    int16_t maxCheck;
+    int16_t minCheck;
+    int16_t minRc;
+    int16_t midRc;
+    int16_t maxRc;
+
+    int8_t interpolationMode;
+    int8_t interpolationInterval;
+    int8_t deadband;
+
+    uint8_t expo[3];
+    uint8_t rate[3];
+    uint8_t superRate[3];
+
+    InputChannelConfig channel[INPUT_CHANNELS];
+};
+
+class OutputConfig
+{
+
+};
+
 // persistent data
 class ModelConfig
 {
@@ -432,30 +470,7 @@ class ModelConfig
 
     int8_t baroDev;
 
-    int8_t ppmMode;
-
-    int16_t inputMaxCheck;
-    int16_t inputMinCheck;
-    int16_t inputMinRc;
-    int16_t inputMidRc;
-    int16_t inputMaxRc;
-
-    int8_t inputInterpolation;
-    int8_t inputInterpolationInterval;
-
-    int16_t inputMin[INPUT_CHANNELS];
-    int16_t inputNeutral[INPUT_CHANNELS];
-    int16_t inputMax[INPUT_CHANNELS];
-    int8_t inputMap[INPUT_CHANNELS];
-
-    int8_t failsafeMode[INPUT_CHANNELS];
-    int16_t failsafeValue[INPUT_CHANNELS];
-
-    int8_t inputDeadband;
-
-    uint8_t inputExpo[3];
-    uint8_t inputRate[3];
-    uint8_t inputSuperRate[3];
+    InputConfig input;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
 
@@ -691,44 +706,44 @@ class ModelConfig
       outputAsync = false;
 
       // input config
-      ppmMode = RISING;
-      inputMinCheck = 1050;
-      inputMaxCheck = 1900;
-      inputMinRc = 850;
-      inputMaxRc = 2150;
-      inputMidRc = 1500;
+      input.ppmMode = RISING;
+      input.minCheck = 1050;
+      input.maxCheck = 1900;
+      input.minRc = 850;
+      input.midRc = 1500;
+      input.maxRc = 2150;
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
-        inputMap[i] = i;
-        inputMin[i] = 1000;
-        inputNeutral[i] = inputMidRc;
-        inputMax[i] = 2000;
-        failsafeMode[i] = 2;
-        failsafeValue[i] = 1500;
+        input.channel[i].map = i;
+        input.channel[i].min = 1000;
+        input.channel[i].neutral = input.midRc;
+        input.channel[i].max = 2000;
+        input.channel[i].fsMode = 2;
+        input.channel[i].fsValue = 1500;
       }
       // swap yaw and throttle for AETR
-      inputMap[2] = 3; // replace input 2 with rx channel 3, yaw
-      inputMap[3] = 2; // replace input 3 with rx channel 2, throttle
+      input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
+      input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
 
-      failsafeMode[AXIS_ROLL] = 0;
-      failsafeMode[AXIS_PITCH] = 0;
-      failsafeMode[AXIS_YAW] = 0;
-      failsafeMode[AXIS_THRUST] = 0;
-      failsafeValue[AXIS_THRUST] = 1000;
+      input.channel[AXIS_ROLL].fsMode = 0;
+      input.channel[AXIS_PITCH].fsMode = 0;
+      input.channel[AXIS_YAW].fsMode = 0;
+      input.channel[AXIS_THRUST].fsMode = 0;
+      input.channel[AXIS_THRUST].fsValue = 1000;
 
       for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
       {
-        inputRate[i] = 70;
-        inputExpo[i] = 0;
-        inputSuperRate[i] = 80;
+        input.rate[i] = 70;
+        input.expo[i] = 0;
+        input.superRate[i] = 80;
       }
-      inputRate[AXIS_YAW] = 120;
-      inputExpo[AXIS_YAW] = 0;
-      inputSuperRate[AXIS_YAW] = 50;
+      input.rate[AXIS_YAW] = 120;
+      input.expo[AXIS_YAW] = 0;
+      input.superRate[AXIS_YAW] = 50;
 
-      inputInterpolation = INPUT_INTERPOLATION_MANUAL; // mode
-      inputInterpolationInterval = 26;
-      inputDeadband = 3; // us
+      input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode
+      input.interpolationInterval = 26;
+      input.deadband = 3; // us
 
       // PID controller config
       pid[PID_ROLL]  = { .P = 45,  .I = 45, .D = 15 };
