@@ -18,8 +18,8 @@ class Mixer
         _driver.attach(i, _model.config.pin[i + PIN_OUTPUT_0], _model.state.outputDisarmed[i]);
         _model.logger.info().log(F("OUTPUT PIN")).log(i).logln(_model.config.pin[i + PIN_OUTPUT_0]);
       }
-      _driver.begin((EscProtocol)_model.config.outputProtocol, _model.config.outputAsync, _model.config.outputRate);
-      _model.logger.info().log(F("OUTPUT CONF")).log(_model.config.outputProtocol).log(_model.config.outputAsync).logln(_model.config.outputRate);
+      _driver.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate);
+      _model.logger.info().log(F("OUTPUT CONF")).log(_model.config.output.protocol).log(_model.config.output.async).logln(_model.config.output.rate);
       return 1;
     }
 
@@ -108,7 +108,15 @@ class Mixer
         else
         {
           float v = Math::bound(out[i], -1.f, 1.f);
-          _model.state.outputUs[i] = (int16_t)Math::map3(v, -1.f, 0.f, 1.f, _model.config.outputMin[i], _model.config.outputNeutral[i], _model.config.outputMax[i]);
+          const OutputChannelConfig& och = _model.config.output.channel[i];
+          if(och.servo)
+          {
+            _model.state.outputUs[i] = (int16_t)Math::map3(v, -1.f, 0.f, 1.f, och.reverse ? och.max : och.min, och.neutral, och.reverse ? och.min : och.max);
+          }
+          else
+          {
+            _model.state.outputUs[i] = (int16_t)Math::map(v, -1.f, 1.f, _model.config.output.minThrottle, _model.config.output.maxThrottle);
+          }
         }
       }
       _write();

@@ -100,33 +100,33 @@ class Model
       }
       config.gyroSampleRate = 8000 / config.gyroSync;
 
-      if(config.outputProtocol != ESC_PROTOCOL_PWM && config.outputProtocol != ESC_PROTOCOL_ONESHOT125)
+      if(config.output.protocol != ESC_PROTOCOL_PWM && config.output.protocol != ESC_PROTOCOL_ONESHOT125)
       {
-        config.outputProtocol = ESC_PROTOCOL_PWM;
+        config.output.protocol = ESC_PROTOCOL_PWM;
       }
 
-      if(config.outputAsync)
+      if(config.output.async)
       {
         // for async limit pwm rate
-        if(config.outputProtocol == ESC_PROTOCOL_PWM)
+        if(config.output.protocol == ESC_PROTOCOL_PWM)
         {
-          config.outputRate = std::min((int)config.outputRate, 480);
+          config.output.rate = std::min((int)config.output.rate, 480);
         }
-        else if(config.outputProtocol == ESC_PROTOCOL_ONESHOT125)
+        else if(config.output.protocol == ESC_PROTOCOL_ONESHOT125)
         {
-          config.outputRate = std::min((int)config.outputRate, 1000);
+          config.output.rate = std::min((int)config.output.rate, 1000);
         }
       }
       else
       {
         // for synced and standard PWM limit loop rate and pwm pulse width
-        if(config.outputProtocol == ESC_PROTOCOL_PWM && config.gyroSampleRate > 500)
+        if(config.output.protocol == ESC_PROTOCOL_PWM && config.gyroSampleRate > 500)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((config.gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
           int loopRate = config.gyroSampleRate / config.loopSync;
-          if(loopRate > 480 && config.outputMaxThrottle > 1950)
+          if(loopRate > 480 && config.output.maxThrottle > 1950)
           {
-            config.outputMaxThrottle = 1950;
+            config.output.maxThrottle = 1950;
           }
         }
       }
@@ -180,8 +180,14 @@ class Model
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        //state.outputDisarmed[i] = config.outputMinCommand;
-        state.outputDisarmed[i] = config.outputNeutral[i]; // ROBOT
+        if(config.output.channel[i].servo)
+        {
+          state.outputDisarmed[i] = config.output.channel[i].neutral; // ROBOT
+        }
+        else
+        {
+          state.outputDisarmed[i] = config.output.minCommand;
+        }
       }
 
       // load sensor calibration data

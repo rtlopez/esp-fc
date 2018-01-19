@@ -436,9 +436,28 @@ class InputConfig
     InputChannelConfig channel[INPUT_CHANNELS];
 };
 
+class OutputChannelConfig
+{
+  public:
+    int16_t min;
+    int16_t neutral;
+    int16_t max;
+    bool reverse;
+    bool servo;
+};
+
 class OutputConfig
 {
+  public:
+    int8_t protocol;
+    int16_t async;
+    int16_t rate;
 
+    int16_t minCommand;
+    int16_t minThrottle;
+    int16_t maxThrottle;
+
+    OutputChannelConfig channel[OUTPUT_CHANNELS];
 };
 
 // persistent data
@@ -479,19 +498,9 @@ class ModelConfig
     int16_t actuatorMin[3];
     int16_t actuatorMax[3];
 
+    OutputConfig output;
+
     int8_t mixerType;
-
-    int16_t outputMinThrottle;
-    int16_t outputMaxThrottle;
-    int16_t outputMinCommand;
-
-    int16_t outputMin[OUTPUT_CHANNELS];
-    int16_t outputNeutral[OUTPUT_CHANNELS];
-    int16_t outputMax[OUTPUT_CHANNELS];
-
-    int8_t outputProtocol;
-    int16_t outputAsync;
-    int16_t outputRate;
     int8_t yawReverse;
 
     PidConfig pid[PID_ITEM_COUNT];
@@ -688,22 +697,23 @@ class ModelConfig
 #endif
 
       // output config
-      outputMinCommand  = 1000;
-      outputMinThrottle = 1050;
-      outputMaxThrottle = 2000;
+      output.minCommand  = 1000;
+      output.minThrottle = 1050;
+      output.maxThrottle = 2000;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        outputMin[i] = outputMinThrottle;
-        outputMax[i] = outputMaxThrottle;
-        outputNeutral[i] = (outputMin[i] + outputMax[i] + 1) / 2;
+        output.channel[i].reverse = false;
+        output.channel[i].min = output.minThrottle;
+        output.channel[i].max = output.maxThrottle;
+        output.channel[i].neutral = (output.minThrottle + output.maxThrottle + 1) / 2;
       }
 
       mixerType = FRAME_QUAD_X;
       yawReverse = 0;
 
-      outputProtocol = ESC_PROTOCOL_ONESHOT125;
-      outputRate = 480;    // max 500 for PWM, 2000 for Oneshot125
-      outputAsync = false;
+      output.protocol = ESC_PROTOCOL_ONESHOT125;
+      output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
+      output.async = false;
 
       // input config
       input.ppmMode = RISING;
@@ -833,29 +843,29 @@ class ModelConfig
       pin[PIN_OUTPUT_2] = 15;    // D8 // ROBOT
       pin[PIN_OUTPUT_3] = 0;     // D3 // ROBOT
 
-      //fusionMode = FUSION_SIMPLE; // ROBOT
+      //fusionMode = FUSION_SIMPLE;    // ROBOT
       //fusionMode = FUSION_COMPLEMENTARY; // ROBOT
-
-      //accelFilter.freq = 30; // ROBOT
+      //accelFilter.freq = 30;        // ROBOT
 
       lowThrottleZeroIterm = false; // ROBOT
       itermWindupPointPercent = 10; // ROBOT
-      dtermSetpointWeight = 0; // ROBOT
-      angleLimit = 8;  // deg // ROBOT
+      dtermSetpointWeight = 0;      // ROBOT
+      angleLimit = 10;       // deg // ROBOT
 
-      outputProtocol = ESC_PROTOCOL_PWM; // ROBOT
-      outputRate = 100;    // ROBOT
-      outputAsync = true; // ROBOT
+      output.protocol = ESC_PROTOCOL_PWM; // ROBOT
+      output.rate = 100;    // ROBOT
+      output.async = true;  // ROBOT
 
-      outputMinThrottle = 1000; // ROBOT
+      output.minThrottle = 1000; // ROBOT
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        outputMin[i] = outputMinThrottle;
-        outputMax[i] = outputMaxThrottle;
-        outputNeutral[i] = (outputMin[i] + outputMax[i] + 1) / 2;
+        output.channel[i].min = output.minThrottle;
+        output.channel[i].max = output.maxThrottle;
+        output.channel[i].neutral = (output.minThrottle + output.maxThrottle + 1) / 2;
       }
-      outputMin[0] = outputMaxThrottle; // ROBOT
-      outputMax[0] = outputMinThrottle; // ROBOT
+      output.channel[0].servo = true;   // ROBOT
+      output.channel[1].servo = true;   // ROBOT
+      output.channel[0].reverse = true; // ROBOT
 
       actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH; // ROBOT
       //actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_YAW; // ROBOT

@@ -579,15 +579,15 @@ class Msp
           break;
 
         case MSP_MOTOR_CONFIG:
-          r.writeU16(_model.config.outputMinThrottle); // minthrottle
-          r.writeU16(_model.config.outputMaxThrottle); // maxthrottle
-          r.writeU16(_model.config.outputMinCommand); // mincommand
+          r.writeU16(_model.config.output.minThrottle); // minthrottle
+          r.writeU16(_model.config.output.maxThrottle); // maxthrottle
+          r.writeU16(_model.config.output.minCommand); // mincommand
           break;
 
         case MSP_SET_MOTOR_CONFIG:
-          _model.config.outputMinThrottle = m.readU16(); // minthrottle
-          _model.config.outputMaxThrottle = m.readU16(); // maxthrottle
-          _model.config.outputMinCommand = m.readU16(); // mincommand
+          _model.config.output.minThrottle = m.readU16(); // minthrottle
+          _model.config.output.maxThrottle = m.readU16(); // maxthrottle
+          _model.config.output.minCommand = m.readU16(); // mincommand
           _model.update();
           break;
 
@@ -744,9 +744,9 @@ class Msp
         case MSP_ADVANCED_CONFIG:
           r.writeU8(_model.config.gyroSync);
           r.writeU8(_model.config.loopSync);
-          r.writeU8(_model.config.outputAsync);
-          r.writeU8(_model.config.outputProtocol);
-          r.writeU16(_model.config.outputRate);
+          r.writeU8(_model.config.output.async);
+          r.writeU8(_model.config.output.protocol);
+          r.writeU16(_model.config.output.rate);
           r.writeU16(450); // dshot idle
           r.writeU8(0); // 32k gyro
           r.writeU8(0); // PWM inversion
@@ -755,9 +755,9 @@ class Msp
         case MSP_SET_ADVANCED_CONFIG:
           _model.config.gyroSync = m.readU8();
           _model.config.loopSync = m.readU8();
-          _model.config.outputAsync = m.readU8();
-          _model.config.outputProtocol = m.readU8();
-          _model.config.outputRate = m.readU16();
+          _model.config.output.async = m.readU8();
+          _model.config.output.protocol = m.readU8();
+          _model.config.output.rate = m.readU16();
           m.readU16(); // dshot idle
           m.readU8();  // 32k gyro
           m.readU8();  // PWM inversion

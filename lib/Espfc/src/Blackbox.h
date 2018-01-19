@@ -120,17 +120,17 @@ class Blackbox
       barometerConfigMutable()->baro_hardware = _model.config.baroDev;
       compassConfigMutable()->mag_hardware = _model.config.magDev;
 
-      motorConfigMutable()->dev.useUnsyncedPwm = _model.config.outputAsync;
-      motorConfigMutable()->dev.motorPwmProtocol = _model.config.outputProtocol;
-      motorConfigMutable()->dev.motorPwmRate = _model.config.outputRate;
+      motorConfigMutable()->dev.useUnsyncedPwm = _model.config.output.async;
+      motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;
+      motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
 
       blackboxConfigMutable()->p_denom = _model.config.blackboxPdenom;
       blackboxConfigMutable()->device = _model.config.blackboxDev;
 
       targetPidLooptime = gyro.targetLooptime = _model.state.gyroTimer.interval;
 
-      motorConfigMutable()->minthrottle = motorOutputLow = _model.config.outputMinThrottle;
-      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.outputMaxThrottle;
+      motorConfigMutable()->minthrottle = motorOutputLow = _model.config.output.minThrottle;
+      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.output.maxThrottle;
 
       gyroConfigMutable()->gyro_sync_denom = _model.config.gyroSync;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
