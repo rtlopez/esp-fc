@@ -908,7 +908,7 @@ class Msp
         case MSP_SET_MOTOR:
           for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
-            //_model.state.outputDisarmed[i] = m.readU16();
+            _model.state.outputDisarmed[i] = m.readU16();
           }
           break;
 

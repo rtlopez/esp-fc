@@ -157,6 +157,7 @@ class Esp32EscDriver
         case ESC_PROTOCOL_ONESHOT125: return ( 125 * 1000) / ((div * DURATION) / 2);
         case ESC_PROTOCOL_ONESHOT42:  return (  42 * 1000) / ((div * DURATION) / 2);
         case ESC_PROTOCOL_MULTISHOT:  return (   5 * 1000) / ((div * DURATION) / 2);
+        case ESC_PROTOCOL_BRUSHED: // TODO
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
@@ -175,6 +176,7 @@ class Esp32EscDriver
         case ESC_PROTOCOL_ONESHOT125: return ( 250 * 1000) / ((div * DURATION) / 2);
         case ESC_PROTOCOL_ONESHOT42:  return (  84 * 1000) / ((div * DURATION) / 2);
         case ESC_PROTOCOL_MULTISHOT:  return (  20 * 1000) / ((div * DURATION) / 2);
+        case ESC_PROTOCOL_BRUSHED: // TODO
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
@@ -193,6 +195,7 @@ class Esp32EscDriver
         case ESC_PROTOCOL_DSHOT300:  return width / ((div * DURATION) / 2) * 2;
         case ESC_PROTOCOL_DSHOT600:  return width / ((div * DURATION) / 2);
         case ESC_PROTOCOL_DSHOT1200: return width / ((div * DURATION) / 2) / 2;
+        case ESC_PROTOCOL_BRUSHED: // TODO
         case ESC_PROTOCOL_PWM:
         case ESC_PROTOCOL_ONESHOT125:
         case ESC_PROTOCOL_ONESHOT42:
@@ -211,10 +214,6 @@ class Esp32EscDriver
         case ESC_PROTOCOL_DSHOT600:
         case ESC_PROTOCOL_DSHOT1200:
           return true;
-        case ESC_PROTOCOL_PWM:
-        case ESC_PROTOCOL_ONESHOT125:
-        case ESC_PROTOCOL_ONESHOT42:
-        case ESC_PROTOCOL_MULTISHOT:
         default:
           return false;
       }

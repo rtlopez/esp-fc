@@ -100,9 +100,11 @@ class Model
       }
       config.gyroSampleRate = 8000 / config.gyroSync;
 
-      if(config.output.protocol != ESC_PROTOCOL_PWM && config.output.protocol != ESC_PROTOCOL_ONESHOT125)
+      config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
+
+      if(config.output.protocol == ESC_PROTOCOL_BRUSHED) // force async mode for brushed
       {
-        config.output.protocol = ESC_PROTOCOL_PWM;
+        config.output.async = true;
       }
 
       if(config.output.async)
@@ -115,6 +117,10 @@ class Model
         else if(config.output.protocol == ESC_PROTOCOL_ONESHOT125)
         {
           config.output.rate = std::min((int)config.output.rate, 1000);
+        }
+        else if(config.output.protocol == ESC_PROTOCOL_BRUSHED)
+        {
+          config.output.rate = std::min((int)config.output.rate, 2000);
         }
       }
       else

@@ -62,15 +62,39 @@ void Esp8266EscDriver::handle(void)
     {
       commit();
     }
+
+    const Esp8266EscDriver::Slot * first = NULL;
     for(it = begin(); it != en; ++it)
     {
       if(it->pin == -1) continue;
+      if(it->pulse <= 80) continue; // ~1us
+      if(!first) first = it;
       EspGpio::digitalWrite(it->pin, HIGH);
     }
-    it = begin();
-    while(it->pin == -1 && it != en) ++it;
-    if(it != en) timer_write(it->diff);
-    return;
+    //it = begin();
+    //while(it->pin == -1 && it != en) ++it;
+    //if(it != en) timer_write(it->diff);
+    //return;
+
+    if(!first && _async) // nothing done, if async mode, trigger to next cycle
+    {
+      timer_write(_space);
+      return;
+    }
+
+    it = first; // at least one pin enabled
+    if(it)
+    {
+      if(it->diff > ISR_COMPENSATION)
+      {
+        timer_write(it->diff);
+        return;
+      }
+      else
+      {
+        delay_ticks(it->diff);
+      }
+    }
   }
 
   // suppress similar pulses
@@ -80,7 +104,7 @@ void Esp8266EscDriver::handle(void)
     ++it;
     if(it == en) break;
     if(it->pin == -1) continue;
-    if(it->diff > 200)
+    if(it->diff > ISR_COMPENSATION)
     {
       // jump to next cycle
       timer_write(it->diff);
@@ -100,6 +124,7 @@ void Esp8266EscDriver::handle(void)
   if(_async)
   {
     timer_write(_space);
+    return;
   }
 }
 
@@ -132,7 +157,8 @@ void Esp8266EscDriver::commit()
 
 Esp8266EscDriver::Esp8266EscDriver(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _isr_busy(false)
 {
-  _interval = usToTicks(1000000L / _rate, true);
+  _interval_us = 1000000L / _rate;
+  _interval = usToTicksReal(_interval_us);
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
   {
     _slots[i] = Slot();
@@ -145,7 +171,8 @@ int Esp8266EscDriver::begin(EscProtocol protocol, bool async, int16_t rate)
   _protocol = protocol;
   _async = async;
   _rate = rate;
-  _interval = usToTicks(1000000L / _rate, true);
+  _interval_us = 1000000L / _rate;
+  _interval = usToTicksReal(_interval_us);
   if(!_instance)
   {
     _instance = this;

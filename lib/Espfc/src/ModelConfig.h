@@ -611,7 +611,8 @@ class ModelConfig
       gyroDlpf = GYRO_DLPF_256;
       gyroFsr  = GYRO_FS_2000;
       accelFsr = ACCEL_FS_8;
-      gyroSync = 16;
+      //gyroSync = 16;
+      gyroSync = 8;
 
       magDev = MAG_NONE;
       magSampleRate = MAG_RATE_75;
@@ -712,9 +713,13 @@ class ModelConfig
       mixerType = FRAME_QUAD_X;
       yawReverse = 0;
 
+      //output.protocol = ESC_PROTOCOL_PWM;
       output.protocol = ESC_PROTOCOL_ONESHOT125;
+      //output.protocol = ESC_PROTOCOL_BRUSHED;
+      //output.rate = 2000;    // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
       output.async = false;
+      //output.async = true;
 
       // input config
       input.ppmMode = RISING;

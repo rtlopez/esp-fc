@@ -12,11 +12,15 @@ class Esp8266EscDriver
     class Slot
     {
       public:
-        Slot(): pulse(1000), diff(0), pin(-1) {}
+        Slot(): pulse(0), diff(0), pin(-1) {}
         volatile uint32_t pulse;
         volatile uint32_t diff;
         volatile uint8_t pin;
-        bool operator<(const Slot& rhs) const { return this->pulse < rhs.pulse; }
+        bool operator<(const Slot& rhs) const
+        {
+          //if(pin == -1) return false;
+          return this->pulse < rhs.pulse;
+        }
     };
 
     Esp8266EscDriver();
@@ -25,7 +29,7 @@ class Esp8266EscDriver
 
     int attach(size_t channel, int pin, int pulse);
 
-    int write(size_t channel, int pulse) ICACHE_RAM_ATTR;
+    int write(size_t channel, int pulse);
 
     void apply() ICACHE_RAM_ATTR;
 
@@ -57,22 +61,28 @@ class Esp8266EscDriver
       return _async;
     }
 
-    inline uint32_t usToTicks(uint32_t us, bool real = false) const ICACHE_RAM_ATTR
+    inline uint32_t usToTicksReal(uint32_t us) const
     {
-      //uint32_t ticks = microsecondsToClockCycles(us); // timer0
-      uint32_t ticks = APB_CLK_FREQ / 1000000L * us; // timer1
-      if(!real)
+      //return  microsecondsToClockCycles(us); // timer0
+      return APB_CLK_FREQ / 1000000L * us; // timer1
+    }
+
+    inline uint32_t usToTicks(uint32_t us) const
+    {
+      uint32_t ticks = usToTicksReal(us);
+      switch(_protocol)
       {
-        switch(_protocol)
-        {
-          case ESC_PROTOCOL_ONESHOT125:
-            ticks = ticks >> 3;
-            break;
-          default:
-            break;
-        }
+        case ESC_PROTOCOL_ONESHOT125:
+          ticks >>= 3; // divide by 8
+          break;
+        case ESC_PROTOCOL_BRUSHED:
+          ticks = map(constrain(us, 1001, 1999), 1000, 2000, 0, _interval);
+          break;
+        default:
+          break;
       }
-      return ticks - 180; // ~180 cycles compensation for isr trigger
+      if(ticks > TICK_COMPENSATION) return ticks - TICK_COMPENSATION;
+      else return ticks;
     }
 
   private:
@@ -83,10 +93,14 @@ class Esp8266EscDriver
     bool _async;
     int16_t _rate;
     uint32_t _interval;
+    uint32_t _interval_us;
     uint32_t _space;
     volatile bool _isr_busy;
 
     static Esp8266EscDriver * _instance;
+
+    static const uint32_t ISR_COMPENSATION = 180; // ~180 cycles compensation for isr trigger
+    static const uint32_t TICK_COMPENSATION = 240;
 };
 
 #endif // ESP8266
