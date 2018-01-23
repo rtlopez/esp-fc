@@ -27,7 +27,7 @@ class Model
     {
       logger.begin();
       EEPROM.begin(1024);
-      //load();
+      load();
       update();
     }
 
@@ -217,8 +217,8 @@ class Model
       }
 
       float pidScale[] = { 1.f, 1.f, 1.f };
-      pidScale[AXIS_YAW] = 0.2f; // ROBOT
-      pidScale[AXIS_PITCH] = 20.f; // ROBOT
+      //pidScale[AXIS_YAW] = 0.2f; // ROBOT
+      //pidScale[AXIS_PITCH] = 20.f; // ROBOT
       for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
         PidConfig * pc = &config.pid[i];
@@ -254,22 +254,22 @@ class Model
           radians(config.angleRateLimit)
         );
 
-        state.outerPid[i].iLimit = 0.3f; // ROBOT
+        //state.outerPid[i].iLimit = 0.3f; // ROBOT
         //state.outerPid[i].dGamma = config.dtermSetpointWeight / 100.0f;  // ROBOT
-        state.outerPid[i].oLimit = 1.f;  // ROBOT
+        //state.outerPid[i].oLimit = 1.f;  // ROBOT
 
         state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         state.outerPid[i].ptermFilter.begin(); // unused
       }
 
-      config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH; // ROBOT
+      //config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH; // ROBOT
       //config.actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_YAW; // ROBOT
-      config.actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH; // ROBOT
-      config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH; // ROBOT
+      //config.actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH; // ROBOT
+      //config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH; // ROBOT
 
-      config.actuatorConfig[0] = ACT_OUTER_P | ACT_AXIS_PITCH; // ROBOT
-      config.actuatorConfig[1] = ACT_OUTER_I | ACT_AXIS_PITCH; // ROBOT
+      //config.actuatorConfig[0] = ACT_OUTER_P | ACT_AXIS_PITCH; // ROBOT
+      //config.actuatorConfig[1] = ACT_OUTER_I | ACT_AXIS_PITCH; // ROBOT
     }
 
     void preSave()

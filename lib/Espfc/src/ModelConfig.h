@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "EscDriver.h"
 
-#define EEPROM_VERSION_NUM 0x0B
+#define EEPROM_VERSION_NUM 0x00
 
 namespace Espfc {
 
@@ -734,7 +734,7 @@ class ModelConfig
         input.channel[i].min = 1000;
         input.channel[i].neutral = input.midRc;
         input.channel[i].max = 2000;
-        input.channel[i].fsMode = i < AXIS_THRUST ? 0 : 2;
+        input.channel[i].fsMode = i <= AXIS_THRUST ? 0 : 2;
         input.channel[i].fsValue = i >= AXIS_THRUST ? 1000 : 1500;
       }
       // swap yaw and throttle for AETR
@@ -802,7 +802,7 @@ class ModelConfig
       actuatorMin[0] = 25;  // %
       actuatorMax[0] = 400;
 
-      actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL | ACT_AXIS_YAW;
+      actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
       actuatorChannels[1] = 6;
       actuatorMin[1] = 25;
       actuatorMax[1] = 400;
