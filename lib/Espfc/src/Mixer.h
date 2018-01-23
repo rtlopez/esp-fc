@@ -72,19 +72,23 @@ class Mixer
       // airmode logic
       if(_model.isActive(MODE_AIRMODE))
       {
-        float min = 0, max = 0;
+        float min = 0.f, max = 0.f;
         for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
         {
           max = std::max(max, out[i]);
           min = std::min(min, out[i]);
         }
-        float range = (max - min) / 2.f;
+        float range = (max - min) * 0.5f;
         if(range > 1.f)
         {
           for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
             out[i] /= range;
           }
+          t = 0.f;
+        }
+        else
+        {
           t = Math::bound(t, -1.f + range, 1.f - range);
         }
       }
