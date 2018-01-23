@@ -169,9 +169,9 @@ class Blackbox
         axisPID_P[i] = _model.state.innerPid[i].pTerm * 1000.f;
         axisPID_I[i] = _model.state.innerPid[i].iTerm * 1000.f;
         axisPID_D[i] = _model.state.innerPid[i].dTerm * 1000.f;
-        rcCommand[i] = _model.state.inputUs[i] - 1500;
+        rcCommand[i] = _model.state.input[i] * (i == AXIS_YAW ? -500.f : 500.f);
       }
-      rcCommand[AXIS_THRUST] = _model.state.inputUs[AXIS_THRUST];
+      rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
       for(size_t i = 0; i < 4; i++)
       {
         motor[i] = Math::bound((int)_model.state.outputUs[i], 1000, 2000);
