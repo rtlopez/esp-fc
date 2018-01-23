@@ -217,8 +217,12 @@ class Model
       }
 
       float pidScale[] = { 1.f, 1.f, 1.f };
-      //pidScale[AXIS_YAW] = 0.2f; // ROBOT
-      //pidScale[AXIS_PITCH] = 20.f; // ROBOT
+      if(config.mixerType == FRAME_BALANCE_ROBOT)
+      {
+        pidScale[AXIS_YAW] = 0.2f; // ROBOT
+        pidScale[AXIS_PITCH] = 20.f; // ROBOT
+      }
+      
       for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
         PidConfig * pc = &config.pid[i];
@@ -232,14 +236,8 @@ class Model
         );
         state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
-        if(i == AXIS_YAW)
-        {
-          state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
-        }
-        else
-        {
-          state.innerPid[i].ptermFilter.begin(); // no filter
-        }
+        if(i == AXIS_YAW) state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
+        else state.innerPid[i].ptermFilter.begin(); // no filter
       }
 
       for(size_t i = 0; i <= AXIS_YAW; i++)
@@ -263,13 +261,12 @@ class Model
         state.outerPid[i].ptermFilter.begin(); // unused
       }
 
-      //config.actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH; // ROBOT
-      //config.actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_YAW; // ROBOT
-      //config.actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH; // ROBOT
-      //config.actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH; // ROBOT
-
-      //config.actuatorConfig[0] = ACT_OUTER_P | ACT_AXIS_PITCH; // ROBOT
-      //config.actuatorConfig[1] = ACT_OUTER_I | ACT_AXIS_PITCH; // ROBOT
+      //config.scaler[0].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[1].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_YAW);   // ROBOT
+      //config.scaler[1].dimention = (ScalerDimention)(ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[2].dimention = (ScalerDimention)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[0].dimention = (ScalerDimention)(ACT_OUTER_P | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[1].dimention = (ScalerDimention)(ACT_OUTER_I | ACT_AXIS_PITCH); // ROBOT
     }
 
     void preSave()

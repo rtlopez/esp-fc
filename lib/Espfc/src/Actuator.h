@@ -30,14 +30,14 @@ class Actuator
   private:
     void updateScaler()
     {
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i < SCALER_COUNT; i++)
       {
-        short mode = _model.config.actuatorConfig[i];
+        short mode = _model.config.scaler[i].dimention;
         if(!mode) continue;
-        short c = _model.config.actuatorChannels[i];
+        short c = _model.config.scaler[i].channel;
         float v = _model.state.input[c];
-        float min = _model.config.actuatorMin[i] / 100.f;
-        float max = _model.config.actuatorMax[i] / 100.f;
+        float min = _model.config.scaler[i].minScale * 0.01f;
+        float max = _model.config.scaler[i].maxScale * 0.01f;
         float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
         for(size_t x = 0; x < AXES; x++)
         {
@@ -70,12 +70,12 @@ class Actuator
         ActuatorCondition * c = &_model.config.conditions[i];
         if(!(c->min < c->max)) continue; // inactive
 
-        uint16_t min = c->min * 25 + 900;
-        uint16_t max = c->max * 25 + 900;
-        size_t ch = c->ch + AXIS_AUX_1;
+        int16_t min = c->min; // * 25 + 900;
+        int16_t max = c->max; // * 25 + 900;
+        size_t ch = c->ch;    // + AXIS_AUX_1;
         if(ch < AXIS_AUX_1 || ch >= AXIS_COUNT) continue; // invalid channel
 
-        uint16_t val = _model.state.inputUs[ch];
+        int16_t val = _model.state.inputUs[ch];
         if(val > min && val < max)
         {
           newMask |= 1 << c->id;

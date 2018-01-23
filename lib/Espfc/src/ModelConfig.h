@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "EscDriver.h"
 
-#define EEPROM_VERSION_NUM 0x00
+#define EEPROM_VERSION_NUM 0x02
 
 namespace Espfc {
 
@@ -105,7 +105,7 @@ enum ModelFrame {
   FRAME_GIMBAL        = 0x04
 };
 
-enum ActuatorConfig {
+enum ScalerDimention {
   ACT_INNER_P     = 1 << 0,
   ACT_INNER_I     = 1 << 1,
   ACT_INNER_D     = 1 << 2,
@@ -117,6 +117,16 @@ enum ActuatorConfig {
   ACT_AXIS_YAW    = 1 << 8,
   ACT_AXIS_THRUST = 1 << 9,
   ACT_GYRO_THRUST = 1 << 10
+};
+
+const size_t SCALER_COUNT = 3;
+
+class ScalerConfig {
+  public:
+    ScalerDimention dimention;
+    int16_t minScale;
+    int16_t maxScale;
+    int8_t channel;
 };
 
 enum DebugMode {
@@ -321,8 +331,8 @@ class ActuatorCondition
   public:
     uint8_t id;
     uint8_t ch;
-    uint8_t min;
-    uint8_t max;
+    int16_t min;
+    int16_t max;
 };
 
 class SerialPortConfig
@@ -493,10 +503,7 @@ class ModelConfig
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
 
-    int32_t actuatorConfig[3];
-    int8_t actuatorChannels[3];
-    int16_t actuatorMin[3];
-    int16_t actuatorMax[3];
+    ScalerConfig scaler[SCALER_COUNT];
 
     OutputConfig output;
 
@@ -741,12 +748,14 @@ class ModelConfig
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
       input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
 
-      for(size_t i = AXIS_ROLL; i <= AXIS_PITCH; i++)
-      {
-        input.rate[i] = 70;
-        input.expo[i] = 0;
-        input.superRate[i] = 80;
-      }
+      input.rate[AXIS_ROLL] = 70;
+      input.expo[AXIS_ROLL] = 0;
+      input.superRate[AXIS_ROLL] = 80;
+
+      input.rate[AXIS_PITCH] = 70;
+      input.expo[AXIS_PITCH] = 0;
+      input.superRate[AXIS_PITCH] = 80;
+
       input.rate[AXIS_YAW] = 120;
       input.expo[AXIS_YAW] = 0;
       input.superRate[AXIS_YAW] = 50;
@@ -771,15 +780,23 @@ class ModelConfig
 
       lowThrottleZeroIterm = true;
 
+      for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+      {
+        conditions[i].id = 0;
+        conditions[i].ch = AXIS_AUX_1 + 0;
+        conditions[i].min = 900;
+        conditions[i].max = 900;
+      }
+
       conditions[0].id = MODE_ARMED;
-      conditions[0].ch = 0; // aux1
-      conditions[0].min = (1700 - 900) / 25;
-      conditions[0].max = (2100 - 900) / 25;
+      conditions[0].ch = AXIS_AUX_1 + 0;
+      conditions[0].min = 1700;
+      conditions[0].max = 2100;
 
       conditions[1].id = MODE_ANGLE;
-      conditions[1].ch = 0; // aux1
-      conditions[1].min = (1700 - 900) / 25;
-      conditions[1].max = (2100 - 900) / 25;
+      conditions[1].ch = AXIS_AUX_1 + 0; // aux1
+      conditions[1].min = 1700;
+      conditions[1].max = 2100;
 
       //conditions[2].id = MODE_AIRMODE;
       //conditions[2].ch = 0; // aux1
@@ -797,20 +814,20 @@ class ModelConfig
       //conditions[4].max = (2100 - 900) / 25;
 
       // actuator config - pid scaling
-      actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
-      actuatorChannels[0] = 5;
-      actuatorMin[0] = 25;  // %
-      actuatorMax[0] = 400;
+      scaler[0].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+      scaler[0].channel = 5;
+      scaler[0].minScale = 25; //%
+      scaler[0].maxScale = 400;
 
-      actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
-      actuatorChannels[1] = 6;
-      actuatorMin[1] = 25;
-      actuatorMax[1] = 400;
+      scaler[1].dimention = (ScalerDimention)(ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+      scaler[1].channel = 6;
+      scaler[1].minScale = 25; //%
+      scaler[1].maxScale = 400;
 
-      actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL;
-      actuatorChannels[2] = 7;
-      actuatorMin[2] = 25;
-      actuatorMax[2] = 400;
+      scaler[2].dimention = (ScalerDimention)(ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+      scaler[2].channel = 7;
+      scaler[2].minScale = 25; //%
+      scaler[2].maxScale = 400;
 
       // default callibration values
       gyroBias[0] = 0;
@@ -860,10 +877,10 @@ class ModelConfig
       output.channel[1].servo = true;   // ROBOT
       output.channel[0].reverse = true; // ROBOT
 
-      actuatorConfig[0] = ACT_INNER_P | ACT_AXIS_PITCH; // ROBOT
-      //actuatorConfig[1] = ACT_INNER_P | ACT_AXIS_YAW; // ROBOT
-      actuatorConfig[1] = ACT_INNER_I | ACT_AXIS_PITCH; // ROBOT
-      actuatorConfig[2] = ACT_INNER_D | ACT_AXIS_PITCH; // ROBOT
+      scaler[0].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
+      //scaler[1].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_YAW); // ROBOT
+      scaler[1].dimention = (ScalerDimention)(ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
+      scaler[2].dimention = (ScalerDimention)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
     }
 };
 

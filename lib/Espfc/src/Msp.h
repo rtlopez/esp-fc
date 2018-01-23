@@ -327,9 +327,9 @@ class Msp
           for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
           {
             r.writeU8(_model.config.conditions[i].id);
-            r.writeU8(_model.config.conditions[i].ch);
-            r.writeU8(_model.config.conditions[i].min);
-            r.writeU8(_model.config.conditions[i].max);
+            r.writeU8(_model.config.conditions[i].ch - AXIS_AUX_1);
+            r.writeU8((_model.config.conditions[i].min - 900) / 25);
+            r.writeU8((_model.config.conditions[i].max - 900) / 25);
           }
           break;
 
@@ -339,9 +339,9 @@ class Msp
             if(i < ACTUATOR_CONDITIONS)
             {
               _model.config.conditions[i].id = m.readU8();
-              _model.config.conditions[i].ch = m.readU8();
-              _model.config.conditions[i].min = m.readU8();
-              _model.config.conditions[i].max = m.readU8();
+              _model.config.conditions[i].ch = m.readU8() + AXIS_AUX_1;
+              _model.config.conditions[i].min = m.readU8() * 25 + 900;
+              _model.config.conditions[i].max = m.readU8() * 25 + 900;
             }
             else
             {

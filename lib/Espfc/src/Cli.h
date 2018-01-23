@@ -38,6 +38,8 @@ class Cli
       PARAM_FLOAT,   // 32 bit float
       PARAM_INPUT_CHANNEL,  // input channel config
       PARAM_OUTPUT_CHANNEL,  // output channel config
+      PARAM_SCALER,  // scaler config
+      PARAM_MODE,  // scaler config
     };
 
     class Param
@@ -54,6 +56,8 @@ class Cli
         Param(const char * n, int32_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_INT, NULL) {}
         Param(const char * n, InputChannelConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_INPUT_CHANNEL, NULL) {}
         Param(const char * n, OutputChannelConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_OUTPUT_CHANNEL, NULL) {}
+        Param(const char * n, ScalerConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_SCALER, NULL) {}
+        Param(const char * n, ActuatorCondition * a): Param(n, reinterpret_cast<char*>(a), PARAM_MODE, NULL) {}
 
         Param(const char * n, int8_t  * a, const char ** c): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE, c) {}
 
@@ -93,6 +97,12 @@ class Cli
             case PARAM_OUTPUT_CHANNEL:
               print(stream, *reinterpret_cast<OutputChannelConfig*>(addr));
               break;
+            case PARAM_SCALER:
+              print(stream, *reinterpret_cast<ScalerConfig*>(addr));
+              break;
+            case PARAM_MODE:
+              print(stream, *reinterpret_cast<ActuatorCondition*>(addr));
+              break;
           }
         }
 
@@ -122,6 +132,28 @@ class Cli
           stream.print(ich.fsMode == 0 ? 'A' : (ich.fsMode == 1 ? 'H' : (ich.fsMode == 2 ? 'S' : '?')));
           stream.print(' ');
           stream.print(ich.fsValue);
+        }
+
+        void print(Stream& stream, const ScalerConfig& sc) const
+        {
+          stream.print(sc.dimention);
+          stream.print(' ');
+          stream.print(sc.channel);
+          stream.print(' ');
+          stream.print(sc.minScale);
+          stream.print(' ');
+          stream.print(sc.maxScale);
+        }
+
+        void print(Stream& stream, const ActuatorCondition& ac) const
+        {
+          stream.print(ac.id);
+          stream.print(' ');
+          stream.print(ac.ch);
+          stream.print(' ');
+          stream.print(ac.min);
+          stream.print(' ');
+          stream.print(ac.max);
         }
 
         void print(Stream& stream, int32_t v) const
@@ -171,8 +203,13 @@ class Cli
             case PARAM_INPUT_CHANNEL:
               write(*reinterpret_cast<InputChannelConfig*>(addr), args);
               break;
+            case PARAM_SCALER:
+              write(*reinterpret_cast<ScalerConfig*>(addr), args);
+              break;
+            case PARAM_MODE:
+              write(*reinterpret_cast<ActuatorCondition*>(addr), args);
+              break;
             case PARAM_NONE:
-            default:
               break;
           }
         }
@@ -194,6 +231,22 @@ class Cli
           if(args[5]) ich.max = String(args[5]).toInt();
           if(args[6]) ich.fsMode = *args[6] == 'A' ? 0 : (*args[6] == 'H' ? 1 : (*args[6] == 'S' ? 2 : 0));
           if(args[7]) ich.fsValue = String(args[7]).toInt();
+        }
+
+        void write(ScalerConfig& sc, const char ** args) const
+        {
+          if(args[2]) sc.dimention = (ScalerDimention)String(args[2]).toInt();
+          if(args[3]) sc.channel = String(args[3]).toInt();
+          if(args[4]) sc.minScale = String(args[4]).toInt();
+          if(args[5]) sc.maxScale = String(args[5]).toInt();
+        }
+
+        void write(ActuatorCondition& ac, const char ** args) const
+        {
+          if(args[2]) ac.id = String(args[2]).toInt();
+          if(args[3]) ac.ch = String(args[3]).toInt();
+          if(args[4]) ac.min = String(args[4]).toInt();
+          if(args[5]) ac.max = String(args[5]).toInt();
         }
 
         template<typename T>
@@ -281,6 +334,19 @@ class Cli
         Param(PSTR("pid_level_p"), &c.pid[PID_LEVEL].P),
         Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
         Param(PSTR("pid_level_d"), &c.pid[PID_LEVEL].D),
+
+        Param(PSTR("scaler_0"), &c.scaler[0]),
+        Param(PSTR("scaler_1"), &c.scaler[1]),
+        Param(PSTR("scaler_2"), &c.scaler[2]),
+
+        Param(PSTR("mode_0"), &c.conditions[0]),
+        Param(PSTR("mode_1"), &c.conditions[1]),
+        Param(PSTR("mode_2"), &c.conditions[2]),
+        Param(PSTR("mode_3"), &c.conditions[3]),
+        Param(PSTR("mode_4"), &c.conditions[4]),
+        Param(PSTR("mode_5"), &c.conditions[5]),
+        Param(PSTR("mode_6"), &c.conditions[6]),
+        Param(PSTR("mode_7"), &c.conditions[7]),
 
         Param(PSTR("input_0"), &c.input.channel[0]),
         Param(PSTR("input_1"), &c.input.channel[1]),
@@ -442,13 +508,19 @@ class Cli
 
       if(strcmp_P(_cmd.args[0], PSTR("help")) == 0)
       {
-        println(F("available commands:\n "
-          "help\n dump\n get param\n set param value\n "
-          "calgyro\n calmag\n calinfo\n "
-          "load\n save\n eeprom\n defaults\n reboot\n "
-          "fsinfo\n fsformat\n logs\n log\n "
-          "stats\n info\n version\n exit"
-        ));
+        static const char * helps[] = {
+          PSTR("available commands:"),
+          PSTR(" help"), PSTR(" dump"), PSTR(" get param"), PSTR(" set param value ..."),
+          PSTR(" calgyro"), PSTR(" calmag"), PSTR(" calinfo"),
+          PSTR(" load"), PSTR(" save"), PSTR(" eeprom"),
+          PSTR(" defaults"), PSTR(" reboot"),
+          PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
+          PSTR(" stats"), PSTR(" info"), PSTR(" version"),
+          NULL
+        };
+        for(const char ** ptr = helps; *ptr; ptr++) {
+          println(FPSTR(*ptr));
+        }
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
