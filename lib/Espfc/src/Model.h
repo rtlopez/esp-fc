@@ -130,9 +130,9 @@ class Model
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((config.gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
           int loopRate = config.gyroSampleRate / config.loopSync;
-          if(loopRate > 480 && config.output.maxThrottle > 1950)
+          if(loopRate > 480 && config.output.maxThrottle > 1940)
           {
-            config.output.maxThrottle = 1950;
+            config.output.maxThrottle = 1940;
           }
         }
       }
@@ -222,7 +222,7 @@ class Model
         pidScale[AXIS_YAW] = 0.2f; // ROBOT
         pidScale[AXIS_PITCH] = 20.f; // ROBOT
       }
-      
+
       for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
         PidConfig * pc = &config.pid[i];

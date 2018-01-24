@@ -18,9 +18,11 @@ class Esp8266EscDriver
         volatile uint8_t pin;
         bool operator<(const Slot& rhs) const
         {
-          //if(pin == -1) return false;
+          if(!active()) return false;
+          else if(!rhs.active()) return true;
           return this->pulse < rhs.pulse;
         }
+        inline bool active() const { return pin != -1; }
     };
 
     Esp8266EscDriver();
@@ -39,26 +41,14 @@ class Esp8266EscDriver
 
     static void handle_isr() ICACHE_RAM_ATTR;
 
-    void trigger() ICACHE_RAM_ATTR;
-
-    Slot * begin() ICACHE_RAM_ATTR
+    const Slot * begin() const ICACHE_RAM_ATTR
     {
       return _slots;
     }
 
-    Slot * end() ICACHE_RAM_ATTR
+    const Slot * end() const ICACHE_RAM_ATTR
     {
       return _slots + ESC_CHANNEL_COUNT;
-    }
-
-    uint32_t space() const ICACHE_RAM_ATTR
-    {
-      return _space;
-    }
-
-    bool async() const ICACHE_RAM_ATTR
-    {
-      return _async;
     }
 
     inline uint32_t usToTicksReal(uint32_t us) const
@@ -85,6 +75,9 @@ class Esp8266EscDriver
       else return ticks;
     }
 
+    static const uint32_t ISR_COMPENSATION = 180; // ~180 cycles compensation for isr trigger
+    static const uint32_t TICK_COMPENSATION = 240;
+
   private:
     Slot _buffer[ESC_CHANNEL_COUNT];
     Slot _slots[ESC_CHANNEL_COUNT];
@@ -98,9 +91,6 @@ class Esp8266EscDriver
     volatile bool _isr_busy;
 
     static Esp8266EscDriver * _instance;
-
-    static const uint32_t ISR_COMPENSATION = 180; // ~180 cycles compensation for isr trigger
-    static const uint32_t TICK_COMPENSATION = 240;
 };
 
 #endif // ESP8266
