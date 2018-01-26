@@ -28,7 +28,14 @@ class Fusion
         switch(_model.config.fusionMode)
         {
           case FUSION_MADGWICK:
-            madgwickFusion();
+            if(_model.config.accelMode == ACCEL_DELAYED)
+            {
+              madgwickFusion1();
+            }
+            else
+            {
+              madgwickFusion();
+            }
             break;
           case FUSION_LERP:
             lerpFusion();
@@ -64,6 +71,16 @@ class Fusion
        }
        _model.state.stats.end(COUNTER_IMU_FUSION);
        return 1;
+    }
+
+    void updateDelayed()
+    {
+      _model.state.stats.start(COUNTER_IMU_FUSION2);
+      if(_model.config.accelDev != ACCEL_NONE && _model.config.accelMode == ACCEL_DELAYED && _model.config.fusionMode == FUSION_MADGWICK)
+      {
+        madgwickFusion2();
+      }
+      _model.state.stats.end(COUNTER_IMU_FUSION2);
     }
 
     void experimentalFusion()
@@ -287,7 +304,7 @@ class Fusion
       }
       else
       {
-        _madgwick.updateIMU(
+        _madgwick.update(
           _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
           _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
         );
@@ -298,6 +315,32 @@ class Fusion
       _model.state.angleQ.z = _madgwick.q3;
       _model.state.angle.eulerFromQuaternion(_model.state.angleQ);
       _model.state.rate = _model.state.gyro;
+    }
+
+    void madgwickFusion1()
+    {
+      // prediction phase
+      _madgwick.update(
+        _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+        0, 0, 0
+      );
+      _model.state.angleQ.w = _madgwick.q0;
+      _model.state.angleQ.x = _madgwick.q1;
+      _model.state.angleQ.y = _madgwick.q2;
+      _model.state.angleQ.z = _madgwick.q3;
+      _model.state.angle.x = _madgwick.getRoll();
+      _model.state.angle.y = _madgwick.getPitch();
+      _model.state.angle.z = _madgwick.getYaw();
+      //_model.state.angle.eulerFromQuaternion(_model.state.angleQ);
+    }
+
+    void madgwickFusion2()
+    {
+      // correction phase
+      _madgwick.update(
+        0, 0, 0,
+        _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
+      );
     }
 
   private:

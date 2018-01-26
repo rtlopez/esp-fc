@@ -43,15 +43,7 @@ class Sensor
       updateSensors();
       _model.state.stats.end(COUNTER_GYRO_FILTER);
 
-      if(_model.config.fusionDelay)
-      {
-        // if fusion is delayed, update attitude using current gyro reading
-        //_model.state.angle += _model.state.gyro * _model.state.gyroTimer.delta;
-      }
-      else
-      {
-        _fusion.update();
-      }
+      _fusion.update();
       return 1;
     }
 
@@ -77,10 +69,7 @@ class Sensor
         _model.state.stats.end(COUNTER_MAG_FILTER);
       }
 
-      if(_model.config.fusionDelay)
-      {
-        _fusion.update();
-      }
+      _fusion.updateDelayed();
 
       if(_model.state.battery.timer.check())
       {
@@ -113,7 +102,7 @@ class Sensor
       {
         case ACCEL_GYRO_FIFO:
         case ACCEL_GYRO:
-          updateAccel();
+          updateAccel(); // no break here
         case ACCEL_OFF:
         case ACCEL_DELAYED:
         default:
@@ -174,23 +163,12 @@ class Sensor
       align(_model.state.gyroRaw, _model.config.gyroAlign);
 
       _model.state.gyro = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
-      for(size_t i = 0; i < 3; ++i)
+      if(_model.state.gyroBiasSamples > 0) // calibration
       {
-        if(_model.config.debugMode == DEBUG_NOTCH)
+        for(size_t i = 0; i < 3; ++i)
         {
-          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+          _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
         }
-        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
-        _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
-        if(_model.config.debugMode == DEBUG_GYRO)
-        {
-          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
-        }
-        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
-      }
-
-      if(_model.state.gyroBiasSamples > 0)
-      {
         VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
         _model.state.accelPrev = _model.state.accel;
         if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO &&
@@ -205,7 +183,26 @@ class Sensor
           }
         }
       }
-      _model.state.gyro -= _model.state.gyroBias;
+      else
+      {
+        _model.state.gyro -= _model.state.gyroBias;
+      }
+
+      // filtering
+      for(size_t i = 0; i < 3; ++i)
+      {
+        if(_model.config.debugMode == DEBUG_NOTCH)
+        {
+          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+        }
+        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
+        if(_model.config.debugMode == DEBUG_GYRO)
+        {
+          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+        }
+        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
+      }
     }
 
     void updateAccel()
