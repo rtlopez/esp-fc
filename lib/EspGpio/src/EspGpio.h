@@ -6,7 +6,7 @@
 class EspGpio
 {
   public:
-    static inline void digitalWrite(uint8_t pin, uint8_t val) ICACHE_RAM_ATTR
+    static inline void digitalWrite(uint8_t pin, uint8_t val)
     {
 #if defined(ESP8266)
       if(pin < 16)
@@ -24,7 +24,7 @@ class EspGpio
 #endif
     }
 
-    static inline int digitalRead(uint8_t pin) ICACHE_RAM_ATTR
+    static inline int digitalRead(uint8_t pin) 
     {
 #if defined(ESP8266)
       if(pin < 16)

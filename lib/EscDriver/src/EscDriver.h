@@ -16,8 +16,9 @@ enum EscProtocol {
 
 #if defined(ESP8266)
 
-  // supports only pwm, oneshot125 and brushed
-  #define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED || p == ESC_PROTOCOL_ONESHOT42 || p == ESC_PROTOCOL_MULTISHOT) ? ESC_PROTOCOL_PWM : p)
+  // doesn't support digital
+  //#define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED || p > ESC_PROTOCOL_MULTISHOT) ? ESC_PROTOCOL_PWM : p)
+  #define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED) ? ESC_PROTOCOL_PWM : p)
 
   #define ESC_CHANNEL_COUNT 4
   #include "Esp8266EscDriver.h"

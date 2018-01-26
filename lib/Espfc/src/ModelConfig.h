@@ -4,7 +4,9 @@
 #include <Arduino.h>
 #include "EscDriver.h"
 
-#define EEPROM_VERSION_NUM 0x02
+#define EEPROM_VERSION_NUM 0x03
+
+//#define USE_SOFT_SERIAL
 
 namespace Espfc {
 

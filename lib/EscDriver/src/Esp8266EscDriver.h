@@ -6,6 +6,10 @@
 #include "EscDriver.h"
 #include "Arduino.h"
 
+//#define usToTicksReal(us) (microsecondsToClockCycles(us)) // timer0
+//#define usToTicksReal(us) (F_CPU / 1000000L * us) // timer0
+#define usToTicksReal(us) (APB_CLK_FREQ / 1000000L * us) // timer1
+
 class Esp8266EscDriver
 {
   public:
@@ -39,6 +43,8 @@ class Esp8266EscDriver
 
     void handle() ICACHE_RAM_ATTR;
 
+    void handle_serial() ICACHE_RAM_ATTR;
+
     static void handle_isr() ICACHE_RAM_ATTR;
 
     const Slot * begin() const ICACHE_RAM_ATTR
@@ -51,32 +57,31 @@ class Esp8266EscDriver
       return _slots + ESC_CHANNEL_COUNT;
     }
 
-    inline uint32_t usToTicksReal(uint32_t us) const
-    {
-      //return  microsecondsToClockCycles(us); // timer0
-      return APB_CLK_FREQ / 1000000L * us; // timer1
-    }
-
     inline uint32_t usToTicks(uint32_t us) const
     {
-      uint32_t ticks = usToTicksReal(us);
+      uint32_t ticks = 0;
       switch(_protocol)
       {
         case ESC_PROTOCOL_ONESHOT125:
-          ticks >>= 3; // divide by 8
+          ticks = map(us, 1000, 2000, usToTicksReal(125), usToTicksReal(250));
+          break;
+        case ESC_PROTOCOL_ONESHOT42:
+          ticks = map(us, 1000, 2000, usToTicksReal(42), usToTicksReal(84));
+          break;
+        case ESC_PROTOCOL_MULTISHOT:
+          ticks = map(us, 1000, 2000, usToTicksReal(5), usToTicksReal(20));
           break;
         case ESC_PROTOCOL_BRUSHED:
-          ticks = map(constrain(us, 1001, 1999), 1000, 2000, 0, _interval);
+          ticks = map(constrain(us, 1001, 1999), 1000, 2000, 0, _interval); // strange behaviour at edges of range
           break;
         default:
+          ticks = usToTicksReal(us); // PWM
           break;
       }
-      if(ticks > TICK_COMPENSATION) return ticks - TICK_COMPENSATION;
-      else return ticks;
+      return ticks;
     }
 
-    static const uint32_t ISR_COMPENSATION = 180; // ~180 cycles compensation for isr trigger
-    static const uint32_t TICK_COMPENSATION = 240;
+    static const uint32_t PULSE_COMPENSATION = 290; // ~200 cycles compensation for isr trigger
 
   private:
     Slot _buffer[ESC_CHANNEL_COUNT];

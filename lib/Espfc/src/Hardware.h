@@ -154,10 +154,12 @@ class Hardware
       static SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
 #endif
 #if defined(ESP8266)
+  #if defined(USE_SOFT_SERIAL)
       static EspSoftSerial softSerial;
+      static SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
+  #endif
       static SerialDeviceAdapter<HardwareSerial> uart0(Serial);
       static SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-      static SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
 #endif
 
       switch(portId)
@@ -166,8 +168,8 @@ class Hardware
         case SERIAL_UART_1: return &uart1;
 #if defined(ESP32)
         case SERIAL_UART_2: return &uart2;
-#elif defined(ESP8266)
-        case SERIAL_SOFT_0: return NULL; //&soft0;
+#elif defined(ESP8266) && defined(USE_SOFT_SERIAL)
+        case SERIAL_SOFT_0: return &soft0;
 #endif
         default: return NULL;
       }

@@ -87,11 +87,11 @@ class Model
     void update()
     {
       config.debugMode = DEBUG_NONE;
-      //config.debugMode = DEBUG_NOTCH;
+      config.debugMode = DEBUG_NOTCH;
       //config.debugMode = DEBUG_ALTITUDE; // for fusion
       //config.debugMode = DEBUG_GYRO;
       //config.debugMode = DEBUG_RC_INTERPOLATION;
-      config.debugMode = DEBUG_ANGLERATE;
+      //config.debugMode = DEBUG_ANGLERATE;
 
       config.gyroSync = std::max((int)config.gyroSync, 8); // max 1khz
       if(config.gyroDlpf != GYRO_DLPF_256)
@@ -121,6 +121,10 @@ class Model
         else if(config.output.protocol == ESC_PROTOCOL_BRUSHED)
         {
           config.output.rate = std::min((int)config.output.rate, 2000);
+        }
+        else
+        {
+          config.output.rate = std::min((int)config.output.rate, 4000);
         }
       }
       else

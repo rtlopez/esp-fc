@@ -5,6 +5,8 @@
 #include "EspGpio.h"
 #include <algorithm>
 
+// uart activity brakes timer0 events, lets not use it
+
 static inline void timer_write(uint32_t ticks)
 {
   //timer0_write(ESP.getCycleCount() + ticks);
@@ -13,8 +15,8 @@ static inline void timer_write(uint32_t ticks)
 
 static inline void delay_ticks(uint32_t ticks)
 {
-  if(ticks < 20) return;
-  uint32_t end = ESP.getCycleCount() + ticks - 10;
+  if(ticks < 30) return;
+  uint32_t end = ESP.getCycleCount() + ticks - 20;
   while(ESP.getCycleCount() < end)
   {
     __asm__ volatile ("nop");
@@ -40,21 +42,31 @@ int Esp8266EscDriver::write(size_t channel, int pulse)
 void Esp8266EscDriver::apply()
 {
   if(_async || _isr_busy == true) return;
-  handle();
+  handle_isr();
 }
 
 void Esp8266EscDriver::handle_isr(void)
 {
-  if(_instance) _instance->handle();
+  if(!_instance) return;
+  switch(_instance->_protocol)
+  {
+    //case ESC_PROTOCOL_ONESHOT42:
+    case ESC_PROTOCOL_MULTISHOT:
+      _instance->handle_serial();
+      break;
+    default:
+      _instance->handle();
+      break;
+  }
 }
 
 // update timer or do active waiting
 static bool _wait_or_yield(uint32_t ticks) ICACHE_RAM_ATTR;
 static bool _wait_or_yield(uint32_t ticks)
 {
-  if(ticks > Esp8266EscDriver::ISR_COMPENSATION)
+  if(ticks > Esp8266EscDriver::PULSE_COMPENSATION)
   {
-    timer_write(ticks);
+    timer_write(ticks - Esp8266EscDriver::PULSE_COMPENSATION + 20);
     return true;
   }
   delay_ticks(ticks);
@@ -69,11 +81,62 @@ static const Esp8266EscDriver::Slot * _activate_all(const Esp8266EscDriver::Slot
   for(; it != end; it++)
   {
     if(!it->active()) continue;
-    if(it->pulse <= 80) continue; // less than 1us for brushed PWM
+    if(it->pulse <= 80) continue; // less than 1us(80 ticks) for brushed PWM (80 for timer1)
     if(!first) first = it;
     EspGpio::digitalWrite(it->pin, HIGH);
   }
   return first ? first : end;
+}
+
+void Esp8266EscDriver::handle_serial(void)
+{
+  static const Slot * en = end();
+  static const Slot * it = NULL;
+
+  if(!it)
+  {
+    _isr_busy = true;
+    _space = _interval;
+    std::copy(_buffer, _buffer + ESC_CHANNEL_COUNT, _slots);
+    const Slot * first = NULL;
+    for(it = begin(); it != en; ++it)
+    {
+      if(!it->active()) continue;
+      if(!first) first = it;
+      _space -= it->pulse;
+    }
+    it = first ? first : en;
+
+    if(it != en)
+    {
+      EspGpio::digitalWrite(it->pin, HIGH);
+      timer_write(it->pulse - 180);
+      return;
+    }
+  }
+
+  while(it != en)
+  {
+    EspGpio::digitalWrite(it->pin, LOW);
+
+    it++;
+    if(it == en) break;
+    if(!it->active()) continue;
+
+    EspGpio::digitalWrite(it->pin, HIGH);
+    timer_write(it->pulse - 150);
+    return;
+  }
+
+  // finish cycle
+  it = NULL;
+  _isr_busy = false;
+
+  if(_async)
+  {
+    timer_write(_space);
+    return;
+  }
 }
 
 void Esp8266EscDriver::handle(void)
@@ -105,8 +168,8 @@ void Esp8266EscDriver::handle(void)
   }
 
   // finish cycle
-  _isr_busy = false;
   it = NULL;
+  _isr_busy = false;
 
   // trigger next cycle in async mode
   if(_async)
@@ -147,9 +210,9 @@ Esp8266EscDriver::Esp8266EscDriver(): _protocol(ESC_PROTOCOL_PWM), _async(true),
 
 int Esp8266EscDriver::begin(EscProtocol protocol, bool async, int16_t rate)
 {
-  _protocol = protocol;
+  _protocol = ESC_PROTOCOL_SANITIZE(protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // ignore async for brushed
-  _rate = std::max(rate, (int16_t)50);
+  _rate = constrain(rate, 50, 4000);
   _interval_us = 1000000L / _rate;
   _interval = usToTicksReal(_interval_us);
   if(!_instance)
@@ -162,8 +225,8 @@ int Esp8266EscDriver::begin(EscProtocol protocol, bool async, int16_t rate)
     timer1_attachInterrupt(Esp8266EscDriver::handle_isr);
     timer1_enable(TIM_DIV1, TIM_EDGE, TIM_SINGLE);
     interrupts();
+    if(_async) timer_write(_interval);
   }
-  if(_async) timer_write(_interval);
   return 1;
 }
 

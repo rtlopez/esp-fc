@@ -159,7 +159,7 @@ void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
 #endif
 }
 
-#if defined(ESP8266)
+#if defined(ESP8266) && defined(USE_SOFT_SERIAL)
 template<>
 void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
 {
