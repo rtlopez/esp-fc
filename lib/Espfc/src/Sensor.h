@@ -49,7 +49,8 @@ class Sensor
 
     int updateDelayed()
     {
-      if(_model.config.accelMode == ACCEL_DELAYED)
+      bool accelDelayed = _model.config.accelDev != ACCEL_NONE && _model.config.accelMode == ACCEL_DELAYED;
+      if(accelDelayed)
       {
         _model.state.stats.start(COUNTER_ACCEL_READ);
         readAccel();
@@ -69,7 +70,11 @@ class Sensor
         _model.state.stats.end(COUNTER_MAG_FILTER);
       }
 
-      _fusion.updateDelayed();
+      if(accelDelayed)
+      {
+        _fusion.updateDelayed();
+      }
+
 
       if(_model.state.battery.timer.check())
       {
@@ -83,6 +88,10 @@ class Sensor
   private:
     int readSensors()
     {
+      if(_model.config.accelDev == ACCEL_NONE)
+      {
+        return readGyro();
+      }
       switch(_model.config.accelMode)
       {
         case ACCEL_GYRO_FIFO:
@@ -98,6 +107,11 @@ class Sensor
 
     void updateSensors()
     {
+      if(_model.config.accelDev == ACCEL_NONE)
+      {
+        updateGyro();
+        return;
+      }
       switch(_model.config.accelMode)
       {
         case ACCEL_GYRO_FIFO:

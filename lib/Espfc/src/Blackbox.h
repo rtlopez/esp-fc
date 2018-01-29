@@ -117,6 +117,7 @@ class Blackbox
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
+      blackboxConfigMutable()->record_acc = _model.config.accelDev != ACCEL_NONE && _model.config.accelMode != ACCEL_OFF;
       barometerConfigMutable()->baro_hardware = _model.config.baroDev;
       compassConfigMutable()->mag_hardware = _model.config.magDev;
 
@@ -141,7 +142,8 @@ class Blackbox
 
       rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
       rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
-
+      rxConfigMutable()->rssi_channel = 0;
+      
       blackboxInit();
 
       return 1;

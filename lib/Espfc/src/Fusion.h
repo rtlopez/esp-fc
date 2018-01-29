@@ -76,7 +76,7 @@ class Fusion
     void updateDelayed()
     {
       _model.state.stats.start(COUNTER_IMU_FUSION2);
-      if(_model.config.accelDev != ACCEL_NONE && _model.config.accelMode == ACCEL_DELAYED && _model.config.fusionMode == FUSION_MADGWICK)
+      if(_model.config.fusionMode == FUSION_MADGWICK)
       {
         madgwickFusion2();
       }

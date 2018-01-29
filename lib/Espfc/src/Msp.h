@@ -484,6 +484,7 @@ class Msp
         case MSP_CF_SERIAL_CONFIG:
           for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
           {
+            if(_model.config.serial[i].id >= 30 && !_model.isActive(FEATURE_SOFTSERIAL)) break;
             r.writeU8(_model.config.serial[i].id); // identifier
             r.writeU16(_model.config.serial[i].functionMask); // functionMask
             r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex

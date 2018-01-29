@@ -93,7 +93,11 @@ class Model
       //config.debugMode = DEBUG_RC_INTERPOLATION;
       //config.debugMode = DEBUG_ANGLERATE;
 
-      config.gyroSync = std::max((int)config.gyroSync, 8); // max 1khz
+      int gyroSyncMax = 4; // max 2khz
+      if(config.accelDev != ACCEL_NONE) gyroSyncMax = 8; // max 1khz
+      if(config.magDev != MAG_NONE) gyroSyncMax = 16; // max 500hz
+
+      config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax); // max 1khz
       if(config.gyroDlpf != GYRO_DLPF_256)
       {
         config.gyroSync = ((config.gyroSync + 7) / 8) * 8;
@@ -141,7 +145,7 @@ class Model
         }
       }
 
-      config.featureMask = config.featureMask & (FEATURE_MOTOR_STOP | FEATURE_TELEMETRY);
+      config.featureMask = config.featureMask & (FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY | FEATURE_SOFTSERIAL);
 
 #if defined(ESP32)
       config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL; // msp + blackbox + debug

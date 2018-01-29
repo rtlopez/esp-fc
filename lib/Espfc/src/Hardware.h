@@ -31,6 +31,8 @@ class Hardware
       {
         SerialDevice * serial = getSerialPortById((SerialPort)i);
 
+        if(!_model.isActive(FEATURE_SOFTSERIAL) && _model.config.serial[i].id >= 30) continue;
+
         bool bbx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_BLACKBOX;
         bool msp = _model.config.serial[i].functionMask & SERIAL_FUNCTION_MSP;
         bool deb = _model.config.serial[i].functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY;
