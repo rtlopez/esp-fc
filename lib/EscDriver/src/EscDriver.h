@@ -17,7 +17,7 @@ enum EscProtocol {
 #if defined(ESP8266)
 
   // doesn't support digital
-  //#define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED || p > ESC_PROTOCOL_MULTISHOT) ? ESC_PROTOCOL_PWM : p)
+  //#define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED || p == ESC_PROTOCOL_MULTISHOT) ? ESC_PROTOCOL_PWM : p)
   #define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED) ? ESC_PROTOCOL_PWM : p)
 
   #define ESC_CHANNEL_COUNT 4

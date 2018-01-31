@@ -330,9 +330,9 @@ public:
 
     VectorBase<T> eulerFromQuaternion(const Quaternion& q)
     {
-      x = atan2(2.0 * (q.y * q.z + q.w * q.x), 1 - 2.0 * (q.x * q.x + q.y * q.y));
-      y =  asin(2.0 * (q.w * q.y - q.x * q.z));
-      z = atan2(2.0 * (q.x * q.y + q.w * q.z), 1 - 2.0 * (q.y * q.y + q.z * q.z));
+      x = atan2(2.0f * (q.y * q.z + q.w * q.x), 1.f - 2.0f * (q.x * q.x + q.y * q.y));
+      y =  asin(2.0f * (q.w * q.y - q.x * q.z));
+      z = atan2(2.0f * (q.x * q.y + q.w * q.z), 1.f - 2.0f * (q.y * q.y + q.z * q.z));
       return *this;
     }
 
