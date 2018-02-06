@@ -1,17 +1,17 @@
-#ifndef _ESP32_ESC_DRIVER_H_
-#define _ESP32_ESC_DRIVER_H_
+#ifndef _ESC_DRIVER_ESP32_H_
+#define _ESC_DRIVER_ESP32_H_
 
 #if defined(ESP32)
 
 #include "EscDriver.h"
-#include "Arduino.h"
+#include <Arduino.h>
 #include <driver/rmt.h>
 
 //#define DURATION  12.5 /* flash 80MHz => minimum time unit in ns */
 static const size_t DURATION = 25; // duoble value to increase precision
 static const size_t DSHOT_BITS = 16;
 
-class Esp32EscDriver
+class EscDriverEsp32
 {
   public:
     class Slot {
@@ -28,7 +28,7 @@ class Esp32EscDriver
         rmt_item32_t items[DSHOT_BITS];
     };
 
-    Esp32EscDriver(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50)
+    EscDriverEsp32(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50)
     {
 
     }

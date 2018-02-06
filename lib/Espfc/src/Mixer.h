@@ -2,6 +2,7 @@
 #define _ESPFC_MIXER_H_
 
 #include "Model.h"
+#include "Hardware.h"
 #include "EscDriver.h"
 
 namespace Espfc {
@@ -9,17 +10,12 @@ namespace Espfc {
 class Mixer
 {
   public:
-    Mixer(Model& model): _model(model) {}
+    Mixer(Model& model): _model(model), _driver(NULL) {}
 
     int begin()
     {
-      for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
-      {
-        _driver.attach(i, _model.config.pin[i + PIN_OUTPUT_0], _model.state.outputDisarmed[i]);
-        _model.logger.info().log(F("OUTPUT PIN")).log(i).logln(_model.config.pin[i + PIN_OUTPUT_0]);
-      }
-      _driver.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate);
-      _model.logger.info().log(F("OUTPUT CONF")).log(_model.config.output.protocol).log(_model.config.output.async).logln(_model.config.output.rate);
+      _driver = Hardware::getEscDriver(_model);
+      if(!_driver) return 0;
       return 1;
     }
 
@@ -128,11 +124,12 @@ class Mixer
 
     void _write()
     {
+      if(!_driver) return;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        _driver.write(i, _model.state.outputUs[i]);
+        _driver->write(i, _model.state.outputUs[i]);
       }
-      _driver.apply();
+      _driver->apply();
     }
 
     bool _stop(void)
@@ -144,7 +141,7 @@ class Mixer
     }
 
     Model& _model;
-    EscDriver _driver;
+    EscDriver * _driver;
 };
 
 }

@@ -16,13 +16,12 @@ enum EscProtocol {
 
 #if defined(ESP8266)
 
-  // doesn't support digital
-  //#define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED || p == ESC_PROTOCOL_MULTISHOT) ? ESC_PROTOCOL_PWM : p)
+  // support only analog
   #define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED) ? ESC_PROTOCOL_PWM : p)
 
   #define ESC_CHANNEL_COUNT 4
-  #include "Esp8266EscDriver.h"
-  #define EscDriver Esp8266EscDriver
+  #include "EscDriverEsp8266.h"
+  #define EscDriver EscDriverEsp8266
 
 #elif defined(ESP32)
 
@@ -30,8 +29,8 @@ enum EscProtocol {
   #define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_BRUSHED ? ESC_PROTOCOL_PWM : p)
 
   #define ESC_CHANNEL_COUNT RMT_CHANNEL_MAX
-  #include "Esp32EscDriver.h"
-  #define EscDriver Esp32EscDriver
+  #include "EscDriverEsp32.h"
+  #define EscDriver EscDriverEsp32
 
 #else
 

@@ -2,13 +2,16 @@
 #define _ESPFC_SERIAL_H_
 
 #include <Wire.h>
-#include "Arduino.h"
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+
 #include "Model.h"
 #include "EspSoftSerial.h"
 #include "SerialDevice.h"
 #include "InputDevice.h"
 #include "InputPPM.h"
 #include "InputSBUS.h"
+#include "EscDriver.h"
 
 namespace Espfc {
 
@@ -19,6 +22,9 @@ class Hardware
 
     int begin()
     {
+      WiFi.disconnect();
+      WiFi.mode(WIFI_OFF);
+
       Wire.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL]);
       //Wire.setClock(100000);
       //Wire.setClock(500000);
@@ -196,6 +202,30 @@ class Hardware
         return &ppm;
       }
       return NULL;
+    }
+
+    static EscDriver * getEscDriver(Model& model)
+    {
+      static EscDriver driver;
+
+      driver.begin((EscProtocol)model.config.output.protocol, model.config.output.async, model.config.output.rate);
+      model.logger.info().log(F("OUTPUT CONF")).log(model.config.output.protocol).log(model.config.output.rate).logln(model.config.output.async);
+
+      for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
+      {
+        driver.attach(i, model.config.pin[PIN_OUTPUT_0 + i], model.state.outputDisarmed[i]);
+        model.logger.info().log(F("OUTPUT PIN")).log(i).logln(model.config.pin[PIN_OUTPUT_0 + i]);
+      }
+
+      return &driver;
+    }
+
+    static void reboot(Model& model)
+    {
+      getEscDriver(model)->end();
+      delay(10);
+      ESP.restart();
+      while(true);
     }
 
   private:

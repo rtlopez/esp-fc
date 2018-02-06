@@ -981,7 +981,10 @@ class Msp
 
     void postCommand()
     {
-      if(_reboot) ESP.restart();
+      if(_reboot)
+      {
+        Hardware::reboot(_model);
+      }
     }
 
     uint8_t crc(uint8_t checksum, const uint8_t *data, int len)

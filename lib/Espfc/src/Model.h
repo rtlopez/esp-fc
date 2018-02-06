@@ -114,21 +114,23 @@ class Model
       if(config.output.async)
       {
         // for async limit pwm rate
-        if(config.output.protocol == ESC_PROTOCOL_PWM)
+        switch(config.output.protocol)
         {
-          config.output.rate = std::min((int)config.output.rate, 480);
-        }
-        else if(config.output.protocol == ESC_PROTOCOL_ONESHOT125)
-        {
-          config.output.rate = std::min((int)config.output.rate, 1000);
-        }
-        else if(config.output.protocol == ESC_PROTOCOL_BRUSHED)
-        {
-          config.output.rate = std::min((int)config.output.rate, 2000);
-        }
-        else
-        {
-          config.output.rate = std::min((int)config.output.rate, 4000);
+          case ESC_PROTOCOL_PWM:
+            config.output.rate = constrain(config.output.rate, 50, 480);
+            break;
+          case ESC_PROTOCOL_ONESHOT125:
+            config.output.rate = constrain(config.output.rate, 50, 2000);
+            break;
+          case ESC_PROTOCOL_ONESHOT42:
+            config.output.rate = constrain(config.output.rate, 50, 4000);
+            break;
+          case ESC_PROTOCOL_MULTISHOT:
+            config.output.rate = constrain(config.output.rate, 50, 8000);
+            break;
+          default:
+            config.output.rate = constrain(config.output.rate, 50, 2000);
+            break;
         }
       }
       else
@@ -138,7 +140,7 @@ class Model
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((config.gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
           int loopRate = config.gyroSampleRate / config.loopSync;
-          if(loopRate > 480 && config.output.maxThrottle > 1940)
+          if(loopRate > 480 && config.output.maxThrottle > 1950)
           {
             config.output.maxThrottle = 1940;
           }
