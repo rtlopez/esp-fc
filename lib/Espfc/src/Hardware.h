@@ -26,12 +26,10 @@ class Hardware
       WiFi.mode(WIFI_OFF);
 
       Wire.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL]);
-      //Wire.setClock(100000);
-      //Wire.setClock(500000);
-      //Wire.setClock(600000);
-      Wire.setClock(1000000); // ~640kHz on ESP8266
+      Wire.setClock(_model.config.i2cSpeed * 1000);
+      //Wire.setClockStretchLimit(230);
 
-      _model.logger.info().logln(F("I2C"));
+      _model.logger.info().log(F("I2C")).logln(_model.config.i2cSpeed);
 
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {

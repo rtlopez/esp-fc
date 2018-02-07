@@ -562,6 +562,7 @@ class ModelConfig
     BuzzerConfig buzzer;
 
     int8_t pin[PIN_COUNT];
+    int16_t i2cSpeed;
 
     ModelConfig()
     {
@@ -610,6 +611,7 @@ class ModelConfig
       pin[PIN_SPI_0_MISO] = 19;
       pin[PIN_SPI_0_CS0] = 5;
 #endif
+      i2cSpeed = 1000;
 
       gyroDev = ACCEL_MPU6050;
       accelDev = ACCEL_MPU6050;

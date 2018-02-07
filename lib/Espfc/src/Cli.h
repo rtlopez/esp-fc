@@ -292,6 +292,7 @@ class Cli
       static const Param params[] = {
         Param(PSTR("gyro_sync"), &c.gyroSync),
         Param(PSTR("gyro_lpf"), &c.gyroDlpf, gyroDlpfChoices),
+        Param(PSTR("i2c_speed"), &c.i2cSpeed),
         Param(PSTR("accel_dev"), &c.accelDev, accelDevChoices),
         Param(PSTR("accel_mode"), &c.accelMode, accelModeChoices),
         Param(PSTR("fusion_delay"), &c.fusionDelay),
@@ -594,7 +595,6 @@ class Cli
             print(_params[i]);
             println();
             found = true;
-            break;
           }
         }
         if(!found)

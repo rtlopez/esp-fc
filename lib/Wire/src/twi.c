@@ -78,7 +78,8 @@ void twi_setClock(unsigned int freq){
   else if(freq <= 1000000) twi_dcount = 2;//about 1000KHz
   else twi_dcount = 1;//above 1MHz
 #else
-  if(freq <= 100000) twi_dcount = 32;//about 100KHz
+  if(freq <= 50000) twi_dcount = 64;//about 50KHz
+  else if(freq <= 100000) twi_dcount = 32;//about 100KHz
   else if(freq <= 200000) twi_dcount = 14;//about 200KHz
   else if(freq <= 300000) twi_dcount = 8;//about 300KHz
   else if(freq <= 400000) twi_dcount = 5;//about 400KHz
@@ -102,14 +103,35 @@ void twi_init(unsigned char sda, unsigned char scl){
   twi_setClockStretchLimit(230); // default value is 230 uS
 }
 
-
 void twi_stop(void){
   pinMode(twi_sda, INPUT);
   pinMode(twi_scl, INPUT);
 }
 
-static void twi_delay(unsigned char v){
-  unsigned int reg;
+static inline unsigned int _getCycleCount()
+{
+    unsigned int ccount;
+    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+    return ccount;
+}
+
+static void twi_delay(unsigned char v)
+{
+  unsigned int end;
+  switch(v)
+  {
+    case 2:
+      end = _getCycleCount();
+    case 1:
+      end = _getCycleCount();
+    case 0:
+      end = _getCycleCount();
+      break;
+    default:
+      end = _getCycleCount() + v * 20;
+      while(_getCycleCount() <= end);
+  }
+  /*unsigned int reg;
   for(unsigned int i = 0; i < v; i++)
   {
 #if defined(ESP8266)
@@ -121,6 +143,7 @@ static void twi_delay(unsigned char v){
 #endif
   }
   (void)reg;
+  */
 }
 
 static bool twi_write_start(void) {
@@ -152,7 +175,7 @@ static bool twi_write_bit(bool bit) {
   SCL_LOW();
   if (bit) SDA_HIGH();
   else SDA_LOW();
-  twi_delay(twi_dcount+1);
+  twi_delay(twi_dcount); //twi_delay(twi_dcount+1);
   SCL_HIGH();
   while (SCL_READ() == 0 && (i++) < twi_clockStretchLimit);// Clock stretching
   twi_delay(twi_dcount);
@@ -163,7 +186,7 @@ static bool twi_read_bit(void) {
   uint32_t i = 0;
   SCL_LOW();
   SDA_HIGH();
-  twi_delay(twi_dcount+2);
+  twi_delay(twi_dcount); //twi_delay(twi_dcount+2);
   SCL_HIGH();
   while (SCL_READ() == 0 && (i++) < twi_clockStretchLimit);// Clock stretching
   bool bit = SDA_READ();
