@@ -46,7 +46,10 @@ extern const char * pidnames;
 #define XYZ_AXIS_COUNT 3
 #define DEBUG16_VALUE_COUNT 4
 
-#define STATIC_UNIT_TESTED static
+//#define STATIC_UNIT_TESTED static
+#define UNIT_TEST
+#define STATIC_UNIT_TESTED
+
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
 #define UNUSED(v) ((void)v)
 #define ARRAYLEN(x) (sizeof(x) / sizeof((x)[0]))

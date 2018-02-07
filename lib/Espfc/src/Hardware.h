@@ -220,12 +220,25 @@ class Hardware
       return &driver;
     }
 
-    static void reboot(Model& model)
+    static void restart(Model& model)
     {
       getEscDriver(model)->end();
-      delay(10);
-      ESP.restart();
-      while(true);
+
+      // pin setup to ensure boot from flash
+      pinMode(0, OUTPUT); digitalWrite(0, HIGH); // GPIO0 to HI
+      pinMode(2, OUTPUT); digitalWrite(2, HIGH); // GPIO2 to HI
+      pinMode(15, OUTPUT); digitalWrite(15, LOW); // GPIO15 to LO
+      pinMode(0, INPUT);
+      pinMode(2, INPUT);
+      pinMode(15, INPUT);
+
+      //Serial.println("hard reset");
+      ESP.reset();
+
+      //Serial.println("normal restart");
+      //ESP.restart();
+
+      while(1);
     }
 
   private:

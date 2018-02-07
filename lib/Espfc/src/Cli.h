@@ -448,7 +448,8 @@ class Cli
       {
         //FIXME: detect disconnection
         _active = true;
-        println(F("ESP-FC CLI mode, type help"));
+        printVersion();
+        println(F(", CLI mode, type help"));
         return true;
       }
 
@@ -524,54 +525,56 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
       {
-        println(F("ESP-FC v0.1"));
+        printVersion();
+        println();
       }
       else if(strcmp_P(_cmd.args[0], PSTR("info")) == 0)
       {
-        print(F(" bool: ")); println(sizeof(bool));
-        print(F(" char: ")); println(sizeof(char));
-        print(F("short: ")); println(sizeof(short));
-        print(F("  int: ")); println(sizeof(int));
-        print(F(" long: ")); println(sizeof(long));
-        print(F("float: ")); println(sizeof(float));
-        print(F("model: ")); println(sizeof(ModelConfig));
+        print(F("  bool: ")); println(sizeof(bool));
+        print(F("  char: ")); println(sizeof(char));
+        print(F(" short: ")); println(sizeof(short));
+        print(F("   int: ")); println(sizeof(int));
+        print(F("  long: ")); println(sizeof(long));
+        print(F(" float: ")); println(sizeof(float));
+        print(F("double: ")); println(sizeof(double));
+        print(F(" model: ")); println(sizeof(ModelConfig));
         println();
 
 #if defined(ESP8266)
         const rst_info * resetInfo = system_get_rst_info();
-        print(F("system_get_rst_info() reset reason: "));
+        print(F("system_get_rst_info reset reason: "));
         println(resetInfo->reason);
 
-        print(F("system_get_free_heap_size(): "));
+        print(F("system_get_free_heap_size: "));
         println(system_get_free_heap_size());
 
-        print(F("system_get_os_print(): "));
+        print(F("system_get_os_print: "));
         println(system_get_os_print());
 
         //system_print_meminfo();
 
-        print(F("system_get_chip_id(): 0x"));
+        print(F("system_get_chip_id: 0x"));
         println(system_get_chip_id(), HEX);
 
-        print(F("system_get_sdk_version(): "));
+        print(F("system_get_sdk_version: "));
         println(system_get_sdk_version());
 
-        print(F("system_get_boot_version(): "));
+        print(F("system_get_boot_version: "));
         println(system_get_boot_version());
 
-        print(F("system_get_userbin_addr(): 0x"));
+        print(F("system_get_userbin_addr: 0x"));
         println(system_get_userbin_addr(), HEX);
 
-        print(F("system_get_boot_mode(): "));
+        print(F("system_get_boot_mode: "));
         println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
 
-        print(F("system_get_cpu_freq(): "));
+        print(F("system_get_cpu_freq: "));
         println(system_get_cpu_freq());
 
-        print(F("system_get_flash_size_map(): "));
+        print(F("system_get_flash_size_map: "));
         println(system_get_flash_size_map());
 
-        print(F("system_get_time(): "));
+        print(F("system_get_time: "));
         println(system_get_time() / 1000000);
 #endif
       }
@@ -778,7 +781,7 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("reboot")) == 0)
       {
-        ESP.restart();
+        Hardware::restart(_model);
       }
       else if(strcmp_P(_cmd.args[0], PSTR("defaults")) == 0)
       {
@@ -839,6 +842,21 @@ class Cli
       print(' ');
       param.print(*_stream);
       println();
+    }
+
+    void printVersion()
+    {
+      print(TARGET_BOARD_IDENTIFIER);
+      print(' ');
+      print(targetName);
+      print(' ');
+      print(FC_VERSION_STRING);
+      print(' ');
+      print(shortGitRevision);
+      print(' ');
+      print(buildDate);
+      print(' ');
+      print(buildTime);
     }
 
     static const size_t BUFF_SIZE = 64;

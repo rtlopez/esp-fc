@@ -2,6 +2,7 @@
 
 #include "EscDriverEsp8266.h"
 #include <algorithm>
+#include <user_interface.h>
 
 #if defined(USE_FRC1_NMI)
 static void ICACHE_RAM_ATTR _isr_nmi()
@@ -48,25 +49,7 @@ static void _isr_init()
 #endif
 }
 
-static void _isr_end()
-{
-#if defined(USE_FRC2)
-  ETS_INTR_LOCK();
-  ETS_INTR_DISABLE(ETS_FRC_TIMER2_INUM);
-  ETS_INTR_UNLOCK();
-#elif defined(USE_FRC1)
-  ETS_INTR_LOCK();
-  ETS_INTR_DISABLE(ETS_FRC_TIMER1_INUM);
-  ETS_INTR_UNLOCK();
-#elif defined(USE_FRC0)
-  ETS_INTR_LOCK();
-  ETS_INTR_DISABLE(ETS_CCOMPARE0_INUM);
-  ETS_INTR_UNLOCK();
-#elif defined(USE_UNIT)
-#else
-  #error "Missing timer definition"
-#endif
-}
+
 
 static void ICACHE_RAM_ATTR _isr_begin()
 {
@@ -131,6 +114,33 @@ static void ICACHE_RAM_ATTR _isr_start()
   TEIE |= TEIE1;
 #elif defined(USE_FRC0)
   timer0_write(ESP.getCycleCount() + 100UL);
+#elif defined(USE_UNIT)
+#else
+  #error "Missing timer definition"
+#endif
+}
+
+static void ICACHE_RAM_ATTR _isr_reboot(void* p)
+{
+  _isr_begin();
+}
+
+static void _isr_end()
+{
+#if defined(USE_FRC2)
+  ETS_INTR_LOCK();
+  ETS_INTR_DISABLE(ETS_FRC_TIMER2_INUM);
+  ets_isr_attach(ETS_FRC_TIMER2_INUM, _isr_reboot, NULL);
+  ETS_INTR_ENABLE(ETS_FRC_TIMER2_INUM);
+  ETS_INTR_UNLOCK();
+#elif defined(USE_FRC1)
+  ETS_INTR_LOCK();
+  ETS_INTR_DISABLE(ETS_FRC_TIMER1_INUM);
+  ETS_INTR_UNLOCK();
+#elif defined(USE_FRC0)
+  ETS_INTR_LOCK();
+  ETS_INTR_DISABLE(ETS_CCOMPARE0_INUM);
+  ETS_INTR_UNLOCK();
 #elif defined(USE_UNIT)
 #else
   #error "Missing timer definition"

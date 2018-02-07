@@ -58,7 +58,7 @@ class Espfc
         PIN_DEBUG(false);
       }
 
-      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.gyroTimer.sync(_model.state.loopTimer);
+      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.loopTimer.syncTo(_model.state.gyroTimer);
       if(_model.state.loopUpdate)
       {
         PIN_DEBUG(true);
@@ -72,7 +72,7 @@ class Espfc
         PIN_DEBUG(false);
       }
 
-      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.loopTimer.sync(_model.state.mixerTimer);
+      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.mixerTimer.syncTo(_model.state.loopTimer);
       if(_model.state.mixerUpdate)
       {
         PIN_DEBUG(true);
@@ -80,17 +80,17 @@ class Espfc
         PIN_DEBUG(false);
       }
 
-      if(_model.state.loopUpdate && _model.blackboxEnabled())
-      {
-        PIN_DEBUG(true);
-        _blackbox.update();
-        PIN_DEBUG(false);
-      }
-
       if(_model.state.gyroUpdate)
       {
         PIN_DEBUG(true);
         _sensor.updateDelayed();
+        PIN_DEBUG(false);
+      }
+
+      if(_model.state.loopUpdate && _model.blackboxEnabled())
+      {
+        PIN_DEBUG(true);
+        _blackbox.update();
         PIN_DEBUG(false);
       }
 

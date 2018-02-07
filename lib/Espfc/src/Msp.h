@@ -983,7 +983,7 @@ class Msp
     {
       if(_reboot)
       {
-        Hardware::reboot(_model);
+        Hardware::restart(_model);
       }
     }
 
