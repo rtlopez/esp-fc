@@ -70,27 +70,6 @@ class SerialDevice: public Stream
     using Print::write;
 };
 
-class HardwareSerialWrapper: public HardwareSerial
-{
-  public:
-    HardwareSerialWrapper(int uart_nr): HardwareSerial(uart_nr) {}
-
-#if defined(ESP32)
-    int availableForWrite()
-    {
-      return 127;
-      /*if(!_uart) return 0;
-      switch(_uart_nr)
-      {
-        case 0: return (127 - UART0.status.txfifo_cnt);
-        case 1: return (127 - UART1.status.txfifo_cnt);
-        case 2: return (127 - UART2.status.txfifo_cnt);
-      }
-      return 0;*/
-    }
-#endif
-};
-
 template<typename T>
 class SerialDeviceAdapter: public SerialDevice
 {

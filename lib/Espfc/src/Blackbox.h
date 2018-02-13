@@ -164,32 +164,29 @@ class Blackbox
   private:
     void updateData()
     {
-      if(blackboxShouldLogPFrame() || blackboxShouldLogIFrame())
+      for(size_t i = 0; i < 3; i++)
       {
-        for(size_t i = 0; i < 3; i++)
-        {
-          gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
-          acc.accSmooth[i] = _model.state.accel[i] * 2048.f;
-          axisPID_P[i] = _model.state.innerPid[i].pTerm * 1000.f;
-          axisPID_I[i] = _model.state.innerPid[i].iTerm * 1000.f;
-          axisPID_D[i] = _model.state.innerPid[i].dTerm * 1000.f;
-          rcCommand[i] = _model.state.input[i] * (i == AXIS_YAW ? -500.f : 500.f);
-        }
-        rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
-        for(size_t i = 0; i < 4; i++)
-        {
-          motor[i] = Math::bound((int)_model.state.outputUs[i], 1000, 2000);
-          debug[i] = _model.state.debug[i];
-        }
+        gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
+        acc.accSmooth[i] = _model.state.accel[i] * 2048.f;
+        axisPID_P[i] = _model.state.innerPid[i].pTerm * 1000.f;
+        axisPID_I[i] = _model.state.innerPid[i].iTerm * 1000.f;
+        axisPID_D[i] = _model.state.innerPid[i].dTerm * 1000.f;
+        rcCommand[i] = _model.state.input[i] * (i == AXIS_YAW ? -500.f : 500.f);
+      }
+      rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
+      for(size_t i = 0; i < 4; i++)
+      {
+        motor[i] = Math::bound((int)_model.state.outputUs[i], 1000, 2000);
+        debug[i] = _model.state.debug[i];
       }
     }
 
     void updateArmed()
     {
       static uint32_t beep = 0;
-      if(beep != 0 && beep < _model.state.gyroTimer.last)
+      if(beep != 0 && beep < _model.state.loopTimer.last)
       {
-        setArmingBeepTimeMicros(_model.state.gyroTimer.last);
+        setArmingBeepTimeMicros(_model.state.loopTimer.last);
         beep = 0;
       }
 
@@ -198,7 +195,7 @@ class Blackbox
       if(armed)
       {
         ENABLE_ARMING_FLAG(ARMED);
-        beep = _model.state.gyroTimer.last + 50000; // delay arming beep event ~50ms
+        beep = _model.state.loopTimer.last + 200000; // delay arming beep event ~50ms (200ms)
       }
       else
       {

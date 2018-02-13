@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "EscDriver.h"
 
-#define EEPROM_VERSION_NUM 0x03
+#define EEPROM_VERSION_NUM 0x00
 
 #define USE_SOFT_SERIAL
 
@@ -580,7 +580,7 @@ class ModelConfig
       pin[PIN_I2C_0_SCL] = 5;    // D1
       pin[PIN_I2C_0_SDA] = 4;    // D2
       pin[PIN_INPUT_ADC_0] = 17; // A0
-      pin[PIN_BUZZER] = -1;//16;      // D0
+      pin[PIN_BUZZER] = 16;      // D0
 #endif
 #if defined(ESP32)
       pin[PIN_INPUT_RX] = 35;

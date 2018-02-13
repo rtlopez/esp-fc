@@ -19,12 +19,7 @@ class Timer
       return 1;
     }
 
-    int setRate(uint32_t rate)
-    {
-      return setRate(rate, 1);
-    }
-
-    int setRate(uint32_t rate, uint32_t denom)
+    int setRate(uint32_t rate, uint32_t denom = 1)
     {
       this->rate = rate / denom;
       this->interval = 1000000UL / this->rate;
@@ -48,8 +43,7 @@ class Timer
     {
       if(interval == 0) return false;
       if(last + interval > now) return false;
-      update(now);
-      return true;
+      return update(now);
     }
 
     int update(uint32_t now)
@@ -70,8 +64,7 @@ class Timer
     bool syncTo(const Timer& t)
     {
       if(t.iteration % denom != 0) return false;
-      update();
-      return true;
+      return update();
     }
 
     float getDelta() const

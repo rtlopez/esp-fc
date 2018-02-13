@@ -94,21 +94,21 @@ class Espfc
 
       if(_model.state.loopUpdate && _model.blackboxEnabled())
       {
-        //PIN_DEBUG(true);
+        PIN_DEBUG(true);
         _blackbox.update();
-        //PIN_DEBUG(false);
+        PIN_DEBUG(false);
       }
 
       _model.state.telemetryUpdate = _model.config.telemetry && _model.state.telemetryTimer.check();
-      //if(_model.state.telemetryUpdate)
-      //{
-      //  _telemetry.update();
-      //}
+      if(_model.state.telemetryUpdate)
+      {
+        _telemetry.update();
+      }
 
-      //PIN_DEBUG(true);
+      PIN_DEBUG(true);
       _cli.update();
       _buzzer.update();
-      //PIN_DEBUG(false);
+      PIN_DEBUG(false);
 
       if(_model.state.stats.timer.check())
       {

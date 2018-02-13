@@ -24,11 +24,11 @@ class Hardware
     {
       WiFi.disconnect();
       WiFi.mode(WIFI_OFF);
+      _model.logger.info().logln(F("WIFI 0"));
 
       Wire.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL]);
       Wire.setClock(_model.config.i2cSpeed * 1000);
       //Wire.setClockStretchLimit(230);
-
       _model.logger.info().log(F("I2C")).logln(_model.config.i2cSpeed);
 
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)

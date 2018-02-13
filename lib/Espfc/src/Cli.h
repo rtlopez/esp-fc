@@ -759,6 +759,7 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("fsformat")) == 0)
       {
+        print(F("wait... "));
         _model.logger.format();
         println(F("OK"));
       }

@@ -20,18 +20,40 @@ class Logger
       _valid = false;
 #if defined(ESP8266)
       SPIFFS.begin();
-      for(size_t i = 1; i < 1000; i++)
+      int count = 0;
+      int first = 0;
+      int last = 0;
+
+      Dir dir = SPIFFS.openDir("");
+      while(dir.next())
       {
-        String name;
-        _mkname(name, i);
-        if(!SPIFFS.exists(name))
-        {
-          _name = name;
-          _valid = true;
-          break;
-        }
+        String fn = dir.fileName();
+        int id = String(fn).toInt();
+        if(!id) continue;
+
+        last = max(last, id);
+        if(!first) first = id;
+        first = min(first, id);
+        count++;
       }
-      info().logln(F("INIT"));
+      int next = last + 1;
+      int remove = count > 20 && first;
+
+      String name;
+      if(remove)
+      {
+        _mkname(name, first);
+        SPIFFS.remove(name);
+      }
+
+      _mkname(_name, next);
+      _valid = true;
+      info().logln(F("LOG INIT"));
+
+      if(remove)
+      {
+        info().log(F("LOG RM")).logln(name);
+      }
 #endif
       return 1;
     }
