@@ -288,6 +288,13 @@ class Cli
       static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
       static const char* fusionModeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
                                                  PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
+     static const char* debugModeChoices[] = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"),
+                                               PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
+                                               PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"),
+                                               PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"),
+                                               PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"),
+                                               PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"),
+                                               NULL };
 
       static const Param params[] = {
         Param(PSTR("gyro_sync"), &c.gyroSync),
@@ -303,6 +310,7 @@ class Cli
         Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
         Param(PSTR("level_limit"), &c.angleLimit),
         Param(PSTR("level_rate_max"), &c.angleRateLimit),
+        Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
 
         Param(PSTR("gyro_filter_lpf"), &c.gyroFilter.freq),
         Param(PSTR("accel_filter_lpf"), &c.accelFilter.freq),

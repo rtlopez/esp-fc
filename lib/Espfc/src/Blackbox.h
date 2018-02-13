@@ -52,6 +52,19 @@ bool rxIsReceivingSignal(void)
   return ((*_model_ptr).state.inputLinkValid);
 }
 
+static uint32_t activeFeaturesLatch = 0;
+static uint32_t enabledSensors = 0;
+
+bool feature(uint32_t mask)
+{
+    return activeFeaturesLatch & mask;
+}
+
+bool sensors(uint32_t mask)
+{
+    return enabledSensors & mask;
+}
+
 }
 
 namespace Espfc {
@@ -118,6 +131,10 @@ class Blackbox
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
       blackboxConfigMutable()->record_acc = _model.config.accelDev != ACCEL_NONE && _model.config.accelMode != ACCEL_OFF;
+      if(blackboxConfigMutable()->record_acc)
+      {
+          enabledSensors |= SENSOR_ACC;
+      }
       barometerConfigMutable()->baro_hardware = _model.config.baroDev;
       compassConfigMutable()->mag_hardware = _model.config.magDev;
 
@@ -138,7 +155,8 @@ class Blackbox
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
-      batteryConfigMutable()->voltageMeterSource = VOLTAGE_METER_ADC;
+      batteryConfigMutable()->voltageMeterSource = VOLTAGE_METER_NONE; //VOLTAGE_METER_ADC;
+      batteryConfigMutable()->currentMeterSource = CURRENT_METER_NONE;
 
       rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
       rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;

@@ -86,8 +86,8 @@ class Model
 
     void update()
     {
-      config.debugMode = DEBUG_NONE;
-      config.debugMode = DEBUG_NOTCH;
+      //config.debugMode = DEBUG_NONE;
+      //config.debugMode = DEBUG_NOTCH;
       //config.debugMode = DEBUG_ALTITUDE; // for fusion
       //config.debugMode = DEBUG_GYRO;
       //config.debugMode = DEBUG_RC_INTERPOLATION;

@@ -60,7 +60,6 @@ static serialPortConfig_t _spc = {
     .blackbox_baudrateIndex = 5,
     .identifier = SERIAL_PORT_USART1
 };
-static uint32_t activeFeaturesLatch = 0;
 
 int gcd(int num, int denom)
 {
@@ -88,31 +87,19 @@ bool IS_RC_MODE_ACTIVE(boxId_e boxId)
     return bitArrayGet(&rcModeActivationMask, boxId);
 }
 
-bool feature(uint32_t mask)
-{
-    false;
-    return activeFeaturesLatch & mask;
-}
-
-bool sensors(uint32_t mask)
-{
-    return true;
-    //return enabledSensors & mask;
-}
-
 serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction)
 {
-  return &_sp;
+    return &_sp;
 }
 
 void mspSerialReleasePortIfAllocated(struct serialPort_s *serialPort)
 {
-  UNUSED(serialPort);
+    UNUSED(serialPort);
 }
 
 serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function)
 {
-  return &_spc;
+    return &_spc;
 }
 
 serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, uint32_t baudRate, portMode_e mode, portOptions_e options)
@@ -122,7 +109,7 @@ serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFuncti
 
 void closeSerialPort(serialPort_t *serialPort)
 {
-  UNUSED(serialPort);
+    UNUSED(serialPort);
 }
 
 void mspSerialAllocatePorts(void)
@@ -131,22 +118,22 @@ void mspSerialAllocatePorts(void)
 
 portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function)
 {
-  return PORTSHARING_UNUSED;
+    return PORTSHARING_UNUSED;
 }
 
 failsafePhase_e failsafePhase()
 {
-  return FAILSAFE_IDLE;
+    return FAILSAFE_IDLE;
 }
 
 bool rxAreFlightChannelsValid(void)
 {
-  return true;
+    return true;
 }
 
 uint8_t getMotorCount()
 {
-  return MAX_SUPPORTED_MOTORS;
+    return MAX_SUPPORTED_MOTORS;
 }
 
 bool areMotorsRunning(void)
@@ -168,7 +155,7 @@ static uint32_t armingBeepTimeUs = 0;
 
 void setArmingBeepTimeMicros(uint32_t ts)
 {
-  armingBeepTimeUs = ts;
+    armingBeepTimeUs = ts;
 }
 
 uint32_t getArmingBeepTimeMicros(void)
