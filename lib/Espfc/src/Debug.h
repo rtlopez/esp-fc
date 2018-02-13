@@ -1,12 +1,14 @@
 #ifndef _ESPFC_DEBUG_H_
 #define _ESPFC_DEBUG_H_
 
+#include <EspGpio.h>
+
 #if 0
 #define PIN_DEBUG(v) EspGpio::digitalWrite(D0, v)
-#define PIN_DEBUG_INIT(v) pinMode(D0, v)
+#define PIN_DEBUG_INIT() pinMode(D0, OUTPUT)
 #else
 #define PIN_DEBUG(v)
-#define PIN_DEBUG_INIT(v)
+#define PIN_DEBUG_INIT()
 #endif
 
 #if 0

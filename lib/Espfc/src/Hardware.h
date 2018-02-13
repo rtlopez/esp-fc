@@ -35,6 +35,7 @@ class Hardware
       {
         SerialDevice * serial = getSerialPortById((SerialPort)i);
 
+        if(!serial) continue;
         if(!_model.isActive(FEATURE_SOFTSERIAL) && _model.config.serial[i].id >= 30) continue;
 
         bool bbx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_BLACKBOX;
@@ -43,69 +44,51 @@ class Hardware
         bool srx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_RX_SERIAL;
 
         SerialDeviceConfig sc;
+
+    #if defined(ESP32)
         sc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
         sc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
+    #endif
 
         if(srx)
         {
           sc.baud = 100000; // sbus
           sc.stop_bits = SERIAL_STOP_BITS_2;
+          sc.parity = SERIAL_PARITY_EVEN;
           sc.inverted = true;
-          if(serial)
-          {
-            serial->flush();
-            serial->begin(sc);
-          }
+          sc.rx_pin = _model.config.pin[PIN_INPUT_RX];
+          serial->flush();
+          serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("sbus"));
         }
         else if(bbx && msp)
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_115200);
-          if(serial)
-          {
-            serial->flush();
-            serial->begin(sc);
-          }
+          serial->flush();
+          serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).log(F("msp")).logln(F("blackbox"));
         }
         else if(bbx)
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_250000);
-          if(serial)
-          {
-            serial->flush();
-            serial->begin(sc);
-          }
+          serial->flush();
+          serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("blackbox"));
         }
         else if(msp || deb)
         {
           sc.baud = fromIndex((SerialSpeedIndex)_model.config.serial[i].baudIndex, SERIAL_SPEED_115200);
-          if(serial)
-          {
-            serial->flush();
-            serial->begin(sc);
-          }
+          serial->flush();
+          serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(msp ? F("msp") : F("")).logln(deb ? F("debug") : F(""));
         }
         else
         {
-          if(serial)
-          {
-            serial->flush();
-          }
+          serial->flush();
           _model.logger.info().log(F("UART")).log(i).logln(F("free"));
         }
-
-        /*Serial.print(i); Serial.print(' ');
-        Serial.print(sc.baud); Serial.print(' ');
-        Serial.print(sc.tx_pin); Serial.print(' ');
-        Serial.print(sc.rx_pin); Serial.print(' ');
-        Serial.print(sc.inverted); Serial.print(' ');
-        Serial.print((uint32_t)serial, HEX); Serial.print(' ');
-        Serial.println();*/
       }
       return 1;
     }
@@ -145,14 +128,6 @@ class Hardware
     static SerialDevice * getSerialPortById(SerialPort portId)
     {
 #if defined(ESP32)
-      /*typedef HardwareSerial SerialDeviceType;
-      SerialDeviceType serialWrapper0(0);
-      SerialDeviceType serialWrapper1(1);
-      SerialDeviceType serialWrapper2(2);
-      static SerialDeviceAdapter<SerialDeviceType> uart0(serialWrapper0);
-      static SerialDeviceAdapter<SerialDeviceType> uart1(serialWrapper1);
-      static SerialDeviceAdapter<SerialDeviceType> uart2(serialWrapper2);
-      */
       static HardwareSerial Serial1(1);
       static HardwareSerial Serial2(2);
       static SerialDeviceAdapter<HardwareSerial> uart0(Serial);
@@ -190,7 +165,7 @@ class Hardware
       if(serial)
       {
         sbus.begin(serial);
-        model.logger.info().logln(F("SBUS RX"));//.logln(model.config.inputPin);
+        model.logger.info().log(F("SBUS RX")).logln(model.config.pin[PIN_INPUT_RX]);
         return &sbus;
       }
       else if(model.isActive(FEATURE_RX_PPM) && model.config.pin[PIN_INPUT_RX] != -1)

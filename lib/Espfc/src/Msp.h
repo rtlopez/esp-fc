@@ -619,7 +619,7 @@ class Msp
           break;
 
         case MSP_RX_CONFIG:
-          r.writeU8(0); // serialrx_provider
+          r.writeU8(2); // serialrx_provider
           r.writeU16(_model.config.input.maxCheck); //maxcheck
           r.writeU16(_model.config.input.midRc); //midrc
           r.writeU16(_model.config.input.minCheck); //mincheck

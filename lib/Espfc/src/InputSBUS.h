@@ -53,7 +53,7 @@ class InputSBUS: public InputDevice
     int begin(SerialDevice * serial)
     {
       _serial = serial;
-      for(size_t i = 0; i < DATA_SIZE; i++)
+      for(size_t i = 0; i < SBUS_FRAME_SIZE; i++)
       {
         _data[i] = 0;
         if(i < 16) _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
@@ -65,9 +65,12 @@ class InputSBUS: public InputDevice
     {
       if(!_serial) return INPUT_IDLE;
 
-      while((*_serial).available())
+      if((*_serial).available() >= (int)SBUS_FRAME_SIZE)
       {
-        parse((*_serial).read());
+        while((*_serial).available())
+        {
+          parse((*_serial).read());
+        }
       }
 
       if(_new_data)
@@ -85,9 +88,17 @@ class InputSBUS: public InputDevice
       return _channels[i];
     }
 
-  private:
-    void parse(uint8_t c)
+    void print(char c) const
     {
+      Serial1.write(c);
+    }
+
+  private:
+    void parse(int d)
+    {
+      char c = (char)(d & 0xff);
+      //print(c);
+      //print(checkParityEven(d));
       switch(_state)
       {
         case SBUS_START:
@@ -98,8 +109,12 @@ class InputSBUS: public InputDevice
           }
           break;
         case SBUS_DATA:
-          _data[_idx++] = c;
-          if(_idx >= DATA_SIZE - 1)
+          if(!_serial->isSoft() || checkParityEven(d))
+          {
+            _prev[_idx] = _data[_idx];
+            _data[_idx] = c;
+          }
+          if(++_idx >= SBUS_FRAME_SIZE - 1)
           {
             _state = SBUS_END;
           }
@@ -111,9 +126,19 @@ class InputSBUS: public InputDevice
             _state = SBUS_START;
             _idx = 0;
             apply();
-            _new_data = true;
           }
+          break;
        }
+    }
+
+    bool checkParityEven(int d) const
+    {
+      bool parity = (d >> 8) & 0x1;
+      for(size_t i = 0; i < 8; i++)
+      {
+        if(d & (1 << i)) parity = !parity;
+      }
+      return !parity;
     }
 
     void apply()
@@ -136,22 +161,25 @@ class InputSBUS: public InputDevice
       _channels[14] = convert(frame->chan14);
       _channels[15] = convert(frame->chan15);
       _flags = frame->flags;
+      _new_data = true;
     }
 
-    inline uint16_t convert(uint16_t v)
+    inline uint16_t convert(int v)
     {
-      return ((v * 5 + 4) / 8) + 880;
+      return constrain(((v * 5) / 8) + 880 - 18, 800, 2200);
+      //return ((v * 5 + 4) / 8) + 880;
       //return map(v, 220, 1820, 1000, 2000);
     }
 
-    const static size_t DATA_SIZE = sizeof(SbusData);
+    const static size_t SBUS_FRAME_SIZE = sizeof(SbusData);
 
     SerialDevice * _serial;
     SbusState _state;
     uint8_t _idx = 0;
     bool _new_data;
 
-    uint8_t _data[DATA_SIZE];
+    uint8_t _data[SBUS_FRAME_SIZE];
+    uint8_t _prev[SBUS_FRAME_SIZE];
     uint16_t _channels[16];
     uint8_t _flags;
 };

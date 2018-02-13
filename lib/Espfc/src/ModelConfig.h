@@ -6,7 +6,7 @@
 
 #define EEPROM_VERSION_NUM 0x03
 
-//#define USE_SOFT_SERIAL
+#define USE_SOFT_SERIAL
 
 namespace Espfc {
 
@@ -107,7 +107,7 @@ enum ModelFrame {
   FRAME_GIMBAL        = 0x04
 };
 
-enum ScalerDimention {
+enum ScalerDimension {
   ACT_INNER_P     = 1 << 0,
   ACT_INNER_I     = 1 << 1,
   ACT_INNER_D     = 1 << 2,
@@ -125,7 +125,7 @@ const size_t SCALER_COUNT = 3;
 
 class ScalerConfig {
   public:
-    ScalerDimention dimention;
+    ScalerDimension dimension;
     int16_t minScale;
     int16_t maxScale;
     int8_t channel;
@@ -265,6 +265,7 @@ enum PidIndex {
 
 enum Feature {
   FEATURE_RX_PPM     = 1 << 0,
+  FEATURE_RX_SERIAL  = 1 << 3,
   FEATURE_MOTOR_STOP = 1 << 4,
   FEATURE_SOFTSERIAL = 1 << 6,
   FEATURE_TELEMETRY  = 1 << 10,
@@ -290,10 +291,6 @@ enum PinFunction {
   PIN_OUTPUT_2,
   PIN_OUTPUT_3,
   PIN_BUZZER,
-  PIN_SERIAL_0_TX,
-  PIN_SERIAL_0_RX,
-  PIN_SERIAL_1_TX,
-  PIN_SERIAL_1_RX,
   PIN_I2C_0_SCL,
   PIN_I2C_0_SDA,
   PIN_INPUT_ADC_0,
@@ -563,23 +560,27 @@ class ModelConfig
 
     int8_t pin[PIN_COUNT];
     int16_t i2cSpeed;
+    bool softSerialGuard;
+    bool serialRxGuard;
 
     ModelConfig()
     {
 #if defined(ESP8266)
+      pin[PIN_OUTPUT_0] = -1;
+      pin[PIN_OUTPUT_1] = -1;
+      pin[PIN_OUTPUT_2] = -1;
+      pin[PIN_OUTPUT_3] = -1;
+
       pin[PIN_OUTPUT_0] = 0;     // D3
       pin[PIN_OUTPUT_1] = 14;    // D5
       pin[PIN_OUTPUT_2] = 12;    // D6
       pin[PIN_OUTPUT_3] = 15;    // D8
+
       pin[PIN_INPUT_RX] = 13;    // D7
-      pin[PIN_SERIAL_0_TX] = 1;  // TX0
-      pin[PIN_SERIAL_0_RX] = 3;  // RX0
-      pin[PIN_SERIAL_1_TX] = 2;  // TX1, D4
-      pin[PIN_SERIAL_1_RX] = -1;  // RX1, unavailable
       pin[PIN_I2C_0_SCL] = 5;    // D1
       pin[PIN_I2C_0_SDA] = 4;    // D2
       pin[PIN_INPUT_ADC_0] = 17; // A0
-      pin[PIN_BUZZER] = 16;      // D0
+      pin[PIN_BUZZER] = -1;//16;      // D0
 #endif
 #if defined(ESP32)
       pin[PIN_INPUT_RX] = 35;
@@ -619,7 +620,7 @@ class ModelConfig
       accelAlign = ALIGN_DEFAULT;
       magAlign = ALIGN_DEFAULT;
 
-      accelMode = ACCEL_GYRO;
+      accelMode = ACCEL_DELAYED;
       gyroDlpf = GYRO_DLPF_256;
       gyroFsr  = GYRO_FS_2000;
       accelFsr = ACCEL_FS_8;
@@ -639,7 +640,7 @@ class ModelConfig
       fusionDelay = 0;
 
       gyroFilter.type = FILTER_PT1;
-      gyroFilter.freq = 70;
+      gyroFilter.freq = 100;
       gyroNotch1Filter.type = FILTER_NOTCH;
       gyroNotch1Filter.cutoff = 70;
       gyroNotch1Filter.freq = 150;
@@ -654,19 +655,21 @@ class ModelConfig
       magFilter.freq = 15;
 
       dtermFilter.type = FILTER_BIQUAD;
-      dtermFilter.freq = 50;
+      dtermFilter.freq = 70;
 
       dtermNotchFilter.type = FILTER_BIQUAD;
       dtermNotchFilter.cutoff = 70;
       dtermNotchFilter.freq = 130;
 
       yawFilter.type = FILTER_PT1;
-      yawFilter.freq = 50;
+      yawFilter.freq = 90;
 
       telemetry = 0;
       telemetryInterval = 1000;
 
       debugMode = DEBUG_NONE;
+      softSerialGuard = false;
+      serialRxGuard = false;
 
       blackboxDev = 3;
       blackboxPdenom = 32;
@@ -697,11 +700,11 @@ class ModelConfig
       serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
-      //serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      //serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_SOFT_0].id = 30; // present as soft serial
       serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
@@ -727,6 +730,7 @@ class ModelConfig
 
       //output.protocol = ESC_PROTOCOL_PWM;
       output.protocol = ESC_PROTOCOL_ONESHOT125;
+      //output.protocol = ESC_PROTOCOL_MULTISHOT;
       //output.protocol = ESC_PROTOCOL_BRUSHED;
       //output.rate = 2000;    // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
@@ -765,6 +769,7 @@ class ModelConfig
       input.expo[AXIS_YAW] = 0;
       input.superRate[AXIS_YAW] = 50;
 
+      //input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
       input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode
       input.interpolationInterval = 26;
       input.deadband = 3; // us
@@ -782,6 +787,7 @@ class ModelConfig
       angleRateLimit = 300;  // deg
 
       featureMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP;
+      //featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_MOTOR_STOP;
 
       lowThrottleZeroIterm = true;
 
@@ -819,17 +825,17 @@ class ModelConfig
       //conditions[4].max = (2100 - 900) / 25;
 
       // actuator config - pid scaling
-      scaler[0].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+      scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
       scaler[0].channel = 5;
       scaler[0].minScale = 25; //%
       scaler[0].maxScale = 400;
 
-      scaler[1].dimention = (ScalerDimention)(ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+      scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
       scaler[1].channel = 6;
       scaler[1].minScale = 25; //%
       scaler[1].maxScale = 400;
 
-      scaler[2].dimention = (ScalerDimention)(ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+      scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
       scaler[2].channel = 7;
       scaler[2].minScale = 25; //%
       scaler[2].maxScale = 400;
@@ -882,10 +888,10 @@ class ModelConfig
       output.channel[1].servo = true;   // ROBOT
       output.channel[0].reverse = true; // ROBOT
 
-      scaler[0].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
-      //scaler[1].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_YAW); // ROBOT
-      scaler[1].dimention = (ScalerDimention)(ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
-      scaler[2].dimention = (ScalerDimention)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
+      scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
+      //scaler[1].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_YAW); // ROBOT
+      scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
+      scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
     }
 };
 

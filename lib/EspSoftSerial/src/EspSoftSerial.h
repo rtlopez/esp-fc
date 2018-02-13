@@ -4,8 +4,7 @@
 #if defined(ESP8266)
 
 #include "Arduino.h"
-#include "EspGpio.h"
-#include "Queue.h"
+#include "Buffer.h"
 
 class EspSoftSerialConfig
 {
@@ -29,29 +28,28 @@ class EspSoftSerial
     enum State
     {
       STATE_IDLE,
-      STATE_START,
       STATE_DATA,
       STATE_PARITY,
-      STATE_STOP
+      STATE_STOP,
     };
 
-    EspSoftSerial(): _rx_state(STATE_IDLE), _rx_buff(128) {}
+    EspSoftSerial(): _rx_state(STATE_IDLE), _rx_data(0) {}
 
     int begin(int baud);
 
     int begin(const EspSoftSerialConfig& conf);
 
-    size_t available()
+    int available()
     {
       return _rx_buff.count();
     }
 
-    char read()
+    int read()
     {
-      return _rx_buff.pop();
+      return _rx_buff.get();
     }
 
-    char peek()
+    int peek()
     {
       return _rx_buff.peek();
     }
@@ -81,17 +79,17 @@ class EspSoftSerial
     uint32_t nsToTicks(uint32_t ns);
     void timerInit();
     void timerStop();
-    void timerWrite(uint32_t ticks) ICACHE_RAM_ATTR;
 
     EspSoftSerialConfig _conf;
     uint32_t _delay;
     uint32_t _delay_start;
 
     State _rx_state;
-    uint8_t _rx_data;
-    uint8_t _rx_data_count;
+    int32_t _rx_data_count;
+    int32_t _rx_data;
 
-    Queue<char> _rx_buff;
+    Buffer<int16_t, 64> _rx_buff;
+
     static EspSoftSerial * _instance;
 };
 

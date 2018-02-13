@@ -66,6 +66,7 @@ class SerialDevice: public Stream
     virtual void flush() = 0;
     virtual size_t write(uint8_t c) = 0;
     virtual size_t availableForWrite() = 0;
+    virtual bool isSoft() const = 0;
     using Print::write;
 };
 
@@ -101,6 +102,7 @@ class SerialDeviceAdapter: public SerialDevice
     virtual int peek() { return _dev.peek(); }
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
+    virtual bool isSoft() const;
     virtual size_t availableForWrite()
     {
 #if defined(ESP32)
@@ -159,7 +161,11 @@ void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
 #endif
 }
 
+template<typename T>
+bool SerialDeviceAdapter<T>::isSoft() const { return false; }
+
 #if defined(ESP8266) && defined(USE_SOFT_SERIAL)
+
 template<>
 void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
 {
@@ -167,8 +173,15 @@ void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
   ec.baud = conf.baud;
   ec.rx_pin = conf.rx_pin;
   ec.inverted = conf.inverted;
+  ec.data_bits = conf.data_bits;
+  ec.parity_type = conf.parity;
+  ec.stop_bits = conf.stop_bits;
   _dev.begin(ec);
 }
+
+template<>
+bool SerialDeviceAdapter<EspSoftSerial>::isSoft() const { return true; }
+
 #endif
 
 }

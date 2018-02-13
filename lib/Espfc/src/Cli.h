@@ -136,7 +136,7 @@ class Cli
 
         void print(Stream& stream, const ScalerConfig& sc) const
         {
-          stream.print(sc.dimention);
+          stream.print(sc.dimension);
           stream.print(' ');
           stream.print(sc.channel);
           stream.print(' ');
@@ -235,7 +235,7 @@ class Cli
 
         void write(ScalerConfig& sc, const char ** args) const
         {
-          if(args[2]) sc.dimention = (ScalerDimention)String(args[2]).toInt();
+          if(args[2]) sc.dimension = (ScalerDimension)String(args[2]).toInt();
           if(args[3]) sc.channel = String(args[3]).toInt();
           if(args[4]) sc.minScale = String(args[4]).toInt();
           if(args[5]) sc.maxScale = String(args[5]).toInt();
@@ -336,6 +336,9 @@ class Cli
         Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
         Param(PSTR("pid_level_d"), &c.pid[PID_LEVEL].D),
 
+        Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
+        Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
+
         Param(PSTR("scaler_0"), &c.scaler[0]),
         Param(PSTR("scaler_1"), &c.scaler[1]),
         Param(PSTR("scaler_2"), &c.scaler[2]),
@@ -370,10 +373,10 @@ class Cli
         Param(PSTR("pin_output_2"), &c.pin[PIN_OUTPUT_2]),
         Param(PSTR("pin_output_3"), &c.pin[PIN_OUTPUT_3]),
         Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
-        Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
-        Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
-        Param(PSTR("pin_serial_1_tx"), &c.pin[PIN_SERIAL_1_TX]),
-        Param(PSTR("pin_serial_1_rx"), &c.pin[PIN_SERIAL_1_RX]),
+        //Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
+        //Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
+        //Param(PSTR("pin_serial_1_tx"), &c.pin[PIN_SERIAL_1_TX]),
+        //Param(PSTR("pin_serial_1_rx"), &c.pin[PIN_SERIAL_1_RX]),
         Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
         Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
         Param(PSTR("pin_input_adc"), &c.pin[PIN_INPUT_ADC_0]),

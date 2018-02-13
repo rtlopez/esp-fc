@@ -28,7 +28,7 @@ class Espfc
 
     int begin()
     {
-      PIN_DEBUG_INIT(OUTPUT);
+      PIN_DEBUG_INIT();
       _model.begin();
       _hardware.begin();
       _buzzer.begin();
@@ -63,11 +63,16 @@ class Espfc
       {
         PIN_DEBUG(true);
         _input.update();
+        PIN_DEBUG(false);
         _model.state.actuatorUpdate = _model.state.actuatorTimer.check();
         if(_model.state.actuatorUpdate)
         {
+          PIN_DEBUG(true);
           _actuator.update();
+          PIN_DEBUG(false);
         }
+
+        PIN_DEBUG(true);
         _controller.update();
         PIN_DEBUG(false);
       }
@@ -89,19 +94,21 @@ class Espfc
 
       if(_model.state.loopUpdate && _model.blackboxEnabled())
       {
-        PIN_DEBUG(true);
+        //PIN_DEBUG(true);
         _blackbox.update();
-        PIN_DEBUG(false);
+        //PIN_DEBUG(false);
       }
 
       _model.state.telemetryUpdate = _model.config.telemetry && _model.state.telemetryTimer.check();
-      if(_model.state.telemetryUpdate)
-      {
-        _telemetry.update();
-      }
+      //if(_model.state.telemetryUpdate)
+      //{
+      //  _telemetry.update();
+      //}
 
+      //PIN_DEBUG(true);
       _cli.update();
       _buzzer.update();
+      //PIN_DEBUG(false);
 
       if(_model.state.stats.timer.check())
       {

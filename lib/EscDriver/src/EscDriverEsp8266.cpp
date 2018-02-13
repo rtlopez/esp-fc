@@ -49,8 +49,6 @@ static void _isr_init()
 #endif
 }
 
-
-
 static void ICACHE_RAM_ATTR _isr_begin()
 {
 #if defined(USE_FRC2)
@@ -107,13 +105,13 @@ static void ICACHE_RAM_ATTR _isr_start()
 {
 #if defined(USE_FRC2)
   //T2L = 0;
-  T2A = (uint32_t)T2V + 50UL;
+  T2A = (uint32_t)T2V + 100UL;
   //T2I = 0;
 #elif defined(USE_FRC1)
-  T1L = 50;
+  T1L = 100UL;
   TEIE |= TEIE1;
 #elif defined(USE_FRC0)
-  timer0_write(ESP.getCycleCount() + 100UL);
+  timer0_write(ESP.getCycleCount() + 200UL);
 #elif defined(USE_UNIT)
 #else
   #error "Missing timer definition"

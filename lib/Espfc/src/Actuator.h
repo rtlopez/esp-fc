@@ -32,7 +32,7 @@ class Actuator
     {
       for(size_t i = 0; i < SCALER_COUNT; i++)
       {
-        short mode = _model.config.scaler[i].dimention;
+        uint32_t mode = _model.config.scaler[i].dimension;
         if(!mode) continue;
         short c = _model.config.scaler[i].channel;
         float v = _model.state.input[c];

@@ -156,13 +156,15 @@ class Input
     uint32_t _get(size_t c, size_t b)
     {
       //return _buff[b][c];
-      return (_buff[b][c] + _buff[b + 1][c] + 1) / 2; // avg last two samples
+      return (_buff[b][c] + _buff[b + 1][c] + 1) >> 1; // avg last two samples
+      //return (_buff[b][c] + _buff[b + 1][c] + 1) / 2; // avg last two samples
     }
 
     void _set(size_t c, int16_t v)
     {
       if(c < 3)
       {
+        // move deadband to update method
         v = (int16_t)Math::deadband((int)v - _model.config.input.midRc, (int)_model.config.input.deadband) + _model.config.input.midRc;
       }
       _buff[0][c] = v;

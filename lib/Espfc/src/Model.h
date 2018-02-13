@@ -147,26 +147,36 @@ class Model
         }
       }
 
-      config.featureMask = config.featureMask & (FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY | FEATURE_SOFTSERIAL);
+      uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
+      if(config.softSerialGuard)
+      {
+        featureAllowMask |= FEATURE_SOFTSERIAL;
+      }
+      if(config.serialRxGuard)
+      {
+        featureAllowMask |= FEATURE_RX_SERIAL;
+        serialFunctionAllowedMask |= SERIAL_FUNCTION_RX_SERIAL;
+      }
+      config.featureMask = config.featureMask & featureAllowMask;
 
 #if defined(ESP32)
-      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL; // msp + blackbox + debug
-      config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL;
-      config.serial[SERIAL_UART_2].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_RX_SERIAL;
-      config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
+      config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
+      config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
+      config.serial[SERIAL_UART_2].functionMask &= serialFunctionAllowedMask;
 #elif defined(ESP8266)
-      config.serial[SERIAL_UART_0].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY/* | SERIAL_FUNCTION_RX_SERIAL*/; // msp + blackbox + debug
-      config.serial[SERIAL_UART_1].functionMask &= SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      config.serial[SERIAL_SOFT_0].functionMask &= SERIAL_FUNCTION_MSP/* | SERIAL_FUNCTION_RX_SERIAL*/;
-
-      config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
-      config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
+      config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
+      config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
+      config.serial[SERIAL_SOFT_0].functionMask &= serialFunctionAllowedMask;
+      //config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
       //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
 #endif
+      //config.featureMask |= FEATURE_RX_PPM; // force ppm
+      //config.featureMask &= ~FEATURE_RX_PPM; // disallow ppm
 
-      config.featureMask |= FEATURE_RX_PPM; // force ppm
+      config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
 
-      // only few beeper allowed
+      // only few beeper modes allowed
       config.buzzer.beeperMask &=
         1 << (BEEPER_GYRO_CALIBRATED - 1) |
         1 << (BEEPER_SYSTEM_INIT - 1) |
@@ -271,12 +281,12 @@ class Model
         state.outerPid[i].ptermFilter.begin(); // unused
       }
 
-      //config.scaler[0].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
-      //config.scaler[1].dimention = (ScalerDimention)(ACT_INNER_P | ACT_AXIS_YAW);   // ROBOT
-      //config.scaler[1].dimention = (ScalerDimention)(ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
-      //config.scaler[2].dimention = (ScalerDimention)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
-      //config.scaler[0].dimention = (ScalerDimention)(ACT_OUTER_P | ACT_AXIS_PITCH); // ROBOT
-      //config.scaler[1].dimention = (ScalerDimention)(ACT_OUTER_I | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_YAW);   // ROBOT
+      //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[0].dimension = (ScalerDimension)(ACT_OUTER_P | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[1].dimension = (ScalerDimension)(ACT_OUTER_I | ACT_AXIS_PITCH); // ROBOT
     }
 
     void preSave()

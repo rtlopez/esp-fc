@@ -11,7 +11,6 @@
 #include <MadgwickAHRS.h>
 #include <printf.h>
 #include <blackbox/blackbox.h>
-#include <Queue.h>
 #include <EspSoftSerial.h>
 #include <EspGpio.h>
 #include <EscDriver.h>
