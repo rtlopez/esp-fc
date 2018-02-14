@@ -775,10 +775,10 @@ class ModelConfig
       input.deadband = 3; // us
 
       // PID controller config
-      pid[PID_ROLL]  = { .P = 45,  .I = 45, .D = 15 };
-      pid[PID_PITCH] = { .P = 70,  .I = 55, .D = 20 };
-      pid[PID_YAW]   = { .P = 125, .I = 75, .D = 5 };
-      pid[PID_LEVEL] = { .P = 30,  .I = 0,  .D = 0 };
+      pid[PID_ROLL]  = { .P = 45,  .I = 40, .D = 15 };
+      pid[PID_PITCH] = { .P = 65,  .I = 55, .D = 20 };
+      pid[PID_YAW]   = { .P = 90,  .I = 75, .D = 5 };
+      pid[PID_LEVEL] = { .P = 35,  .I = 0,  .D = 0 };
 
       itermWindupPointPercent = 30;
       dtermSetpointWeight = 50;

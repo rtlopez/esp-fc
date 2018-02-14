@@ -742,6 +742,31 @@ class Cli
         }
         println();
       }
+      else if(strcmp_P(_cmd.args[0], PSTR("scaler")) == 0)
+      {
+        for(size_t i = 0; i < SCALER_COUNT; i++)
+        {
+          uint32_t mode = _model.config.scaler[i].dimension;
+          if(!mode) continue;
+          short c = _model.config.scaler[i].channel;
+          float v = _model.state.input[c];
+          float min = _model.config.scaler[i].minScale * 0.01f;
+          float max = _model.config.scaler[i].maxScale * 0.01f;
+          float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
+          print(F("scaler: "));
+          print(i);
+          print(' ');
+          print(mode);
+          print(' ');
+          print(min);
+          print(' ');
+          print(max);
+          print(' ');
+          print(v);
+          print(' ');
+          println(scale);
+        }
+      }
       else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
       {
         for(size_t i = 0; i < COUNTER_COUNT; ++i)

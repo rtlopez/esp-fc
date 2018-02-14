@@ -92,8 +92,8 @@ class Filter
     float updatePt1(float v)
     {
       _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
-      //_state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
-      //_state.pt1.v0 = _state.pt1.v;
+      _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
+      _state.pt1.v0 = _state.pt1.v;
       return _state.pt1.v;
     }
 
