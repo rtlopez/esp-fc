@@ -116,9 +116,8 @@ struct ModelState
   Pid outerPid[AXES];
 
   bool inputLinkValid;
-  int16_t inputUs[INPUT_CHANNELS];
+  float inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
-  float command[INPUT_CHANNELS];
 
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];

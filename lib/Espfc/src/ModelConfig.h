@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "EscDriver.h"
 
-#define EEPROM_VERSION_NUM 0x00
+#define EEPROM_VERSION_NUM 0x01
 
 #define USE_SOFT_SERIAL
 

@@ -16,6 +16,7 @@ class Logger
   public:
     int begin()
     {
+      return 0;
       LOG_SERIAL_INIT();
       _valid = false;
 #if defined(ESP8266)

@@ -694,7 +694,7 @@ class Msp
         case MSP_RC:
           for(size_t i = 0; i < INPUT_CHANNELS; i++)
           {
-            r.writeU16(_model.state.inputUs[i]);
+            r.writeU16(lrintf(_model.state.inputUs[i]));
           }
           break;
 

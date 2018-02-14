@@ -83,9 +83,7 @@ class Input
           case INPUT_INTERPOLATION_OFF:
             for(size_t i = 0; i < INPUT_CHANNELS; ++i)
             {
-              const InputChannelConfig& ich = _model.config.input.channel[i];
-              _model.state.input[i] = Math::map3((float)_get(i, 0), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
-              _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, ich.min, ich.max));
+              _model.state.inputUs[i] = (float)_get(i, 0);
             }
             break;
           default:
@@ -104,15 +102,13 @@ class Input
         }
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {
-          const InputChannelConfig& ich = _model.config.input.channel[i];
-          float val = Math::map3((float)_get(i, 0), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
+          float val = (float)_get(i, 0);
           if(i < 3)
           {
-            float prev = Math::map3((float)_get(i, 1), ich.min, ich.neutral, ich.max, -1.f, 0.f, 1.f);
+            float prev = (float)_get(i, 1);
             val =_interpolate(prev, val, step);
           }
-          _model.state.input[i] = Math::bound(val, -1.5f, 1.5f);
-          _model.state.inputUs[i] = (uint16_t)lrintf(Math::map(_model.state.input[i], -1.f, 1.f, ich.min, ich.max));
+          _model.state.inputUs[i] = val;
         }
         if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
         {
@@ -121,6 +117,12 @@ class Input
           _model.state.debug[2] = 1000 * interpolationStep;
           _model.state.debug[3] = 1000 * step;
         }
+      }
+
+      for(size_t i = 0; i < INPUT_CHANNELS; ++i)
+      {
+        const InputChannelConfig& ich = _model.config.input.channel[i];
+        _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
       }
 
       return 1;
@@ -153,24 +155,29 @@ class Input
       }
     }
 
-    uint32_t _get(size_t c, size_t b)
+    int16_t _get(size_t c, size_t b)
     {
-      //return _buff[b][c];
-      return (_buff[b][c] + _buff[b + 1][c] + 1) >> 1; // avg last two samples
-      //return (_buff[b][c] + _buff[b + 1][c] + 1) / 2; // avg last two samples
+      int16_t v = (_buff[b][c] + _buff[b + 1][c] + 1) >> 1; // avg last two samples
+      //int v = _buff[b][c];
+      return v;
     }
 
     void _set(size_t c, int16_t v)
     {
-      if(c < 3)
-      {
-        // move deadband to update method
-        v = (int16_t)Math::deadband((int)v - _model.config.input.midRc, (int)_model.config.input.deadband) + _model.config.input.midRc;
-      }
-      _buff[0][c] = v;
+      const InputChannelConfig& ich = _model.config.input.channel[c];
+      float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, 1000.f, 1500.f, 2000.f);
+      t = Math::bound(t, 800.f, 2200.f);
+      _buff[0][c] = _deadband(c, lrintf(t));
     }
+
+    int16_t _deadband(size_t c, int16_t v)
+    {
+      if(c >= 3) return v;
+      const int16_t mid = _model.config.input.midRc;
+      return Math::deadband(v - mid, (int)_model.config.input.deadband) + mid;
+    }
+
     static const size_t INPUT_BUFF_SIZE = 3;
-    static const size_t INPUT_BUFF_SIZE_HALF = INPUT_BUFF_SIZE / 2;
 
     Model& _model;
     int16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];

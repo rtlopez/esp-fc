@@ -171,7 +171,6 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::apply()
 void ICACHE_RAM_ATTR EscDriverEsp8266::handle(void * p)
 {
   // Time critical section
-  _instance->_busy = true;
   _isr_begin();
 
   static Item * it = NULL;
@@ -179,6 +178,7 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::handle(void * p)
 
   if(!it)
   {
+    _instance->_busy = true;
     _instance->commit();
     it = _instance->_items;
   }
@@ -228,7 +228,7 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::commit()
   {
     if(!it->active()) break;
     item->set_mask |= (1 << it->pin);
-    if(!item->ticks) item->ticks = it->pulse;
+    if(it == sorted) item->ticks = it->pulse;
   }
   item++;
 
@@ -256,7 +256,11 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::commit()
   if(_async)
   {
     item->ticks = _interval;
-    if(last) item->ticks -= last->pulse;
+    if(last)
+    {
+      if(last->pulse + TIMER_TICKS_MIN < item->ticks) item->ticks -= last->pulse;
+      else item->ticks = TIMER_TICKS_MIN;
+    }
   }
 }
 
@@ -275,7 +279,7 @@ uint32_t ICACHE_RAM_ATTR EscDriverEsp8266::usToTicks(uint32_t us)
       ticks = map(us, 1000, 2000, usToTicksReal(5), usToTicksReal(20));
       break;
     case ESC_PROTOCOL_BRUSHED:
-      ticks = map(constrain(us, 1000 - 1, 1999 + 1), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
+      ticks = map(constrain(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
       break;
     default:
       ticks = usToTicksReal(us); // PWM
@@ -296,7 +300,7 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate)
   _protocol = ESC_PROTOCOL_SANITIZE(protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // ignore async for brushed
   _rate = constrain(rate, 50, 8000);
-  _interval = usToTicksReal(1000000L / _rate);
+  _interval = usToTicksReal(1000000L / _rate) - 400UL;
   _isr_init();
   if(_async) _isr_start();
   return 1;

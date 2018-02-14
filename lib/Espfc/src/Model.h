@@ -125,6 +125,7 @@ class Model
           case ESC_PROTOCOL_ONESHOT42:
             config.output.rate = constrain(config.output.rate, 50, 4000);
             break;
+          case ESC_PROTOCOL_BRUSHED:
           case ESC_PROTOCOL_MULTISHOT:
             config.output.rate = constrain(config.output.rate, 50, 8000);
             break;

@@ -6,23 +6,27 @@
 #include "EscDriver.h"
 #include <Arduino.h>
 
-#define USE_FRC2
 //#define USE_FRC1
 //#define USE_FRC1_NMI
+#define USE_FRC2
 //#define USE_FRC0 // cycle counter
 //#define USE_UNIT // unit test
 
 #if defined(USE_FRC0)
   #define TIMER_CLOCK_FREQ F_CPU
+  #define TIMER_TICKS_MIN 250UL
 #elif defined(USE_UNIT)
   #define TIMER_CLOCK_FREQ 80000000UL
+  #define TIMER_TICKS_MIN 150UL
 #else
   #define TIMER_CLOCK_FREQ APB_CLK_FREQ
+  #define TIMER_TICKS_MIN 150UL
 #endif
 
 #define ETS_FRC_TIMER2_INUM 10
 #define usToTicksReal(us) (TIMER_CLOCK_FREQ / 1000000L * us) // timer1, timer2
-#define DELTA_TICKS_MAX usToTicksReal(5000)
+
+#define DELTA_TICKS_MAX usToTicksReal(50000)
 #define DELTA_TICKS_MIN 5
 
 class EscDriverEsp8266
