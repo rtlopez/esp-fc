@@ -887,7 +887,8 @@ class Cli
       print(' ');
       print(targetName);
       print(' ');
-      print(FC_VERSION_STRING);
+      print('v');
+      print(targetVersion);
       print(' ');
       print(shortGitRevision);
       print(' ');

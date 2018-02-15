@@ -6,6 +6,14 @@
 #include <stdint.h>
 #include "printf.h"
 
+#if defined(ESP8266)
+#define ESPFC_TARGET "ESP8266"
+#elif defined(ESP32)
+#define ESPFC_TARGET "ESP32"
+#else
+  #error "Wrong platform"
+#endif
+
 #define MAX_SUPPORTED_MOTORS 4
 #define MAX_SUPPORTED_SERVOS 0
 #define PID_PROCESS_DENOM_DEFAULT       1
@@ -33,6 +41,8 @@ extern const char * const buildDate;  // "MMM DD YYYY" MMM = Jan/Feb/...
 extern const char * const buildTime;  // "HH:MM:SS"
 
 extern const char * pidnames;
+
+extern const char * const targetVersion;
 
 #define TARGET_BOARD_IDENTIFIER "ESPFC"
 

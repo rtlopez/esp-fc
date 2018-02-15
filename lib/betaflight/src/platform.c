@@ -1,7 +1,8 @@
 #include "platform.h"
 
-const char * const targetName = "ESP8266"; //__TARGET__;
-const char * const shortGitRevision = STR(__REVISION__);
+const char * const targetName = ESPFC_TARGET;
+const char * const targetVersion = STR(ESPFC_VERSION);
+const char * const shortGitRevision = STR(ESPFC_REVISION);
 const char * const buildTime = __TIME__;
 const char * const buildDate = __DATE__;
 
