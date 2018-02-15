@@ -42,8 +42,8 @@ To be able to build, you need to download or clone repository, and then open pro
 To build binary file press F7 and pick option 'PIO Build(d1_mini).
 To upload, press F7 and choose 'PIO Upload(d1_mini)'
 
-## Connection diagram
-TODO
+## Wiring diagram
+![ESP-FC Wemos D1 mini wiring diagram](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_wemos_d1_mini_wiring.png?raw=true)
 
 ## Issues
 You can Report issues using Github tracker
