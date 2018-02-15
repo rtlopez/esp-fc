@@ -542,6 +542,8 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("info")) == 0)
       {
+        printVersion();
+        println();
         print(F("  bool: ")); println(sizeof(bool));
         print(F("  char: ")); println(sizeof(char));
         print(F(" short: ")); println(sizeof(short));
@@ -641,6 +643,9 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("dump")) == 0)
       {
+        print('#');
+        printVersion();
+        println();
         for(size_t i = 0; _params[i].name; ++i)
         {
           print(_params[i]);
