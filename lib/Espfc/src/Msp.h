@@ -748,7 +748,7 @@ class Msp
           r.writeU8(_model.config.output.async);
           r.writeU8(_model.config.output.protocol);
           r.writeU16(_model.config.output.rate);
-          r.writeU16(450); // dshot idle
+          r.writeU16(_model.config.output.dshotIdle);
           r.writeU8(0); // 32k gyro
           r.writeU8(0); // PWM inversion
           break;
@@ -759,7 +759,7 @@ class Msp
           _model.config.output.async = m.readU8();
           _model.config.output.protocol = m.readU8();
           _model.config.output.rate = m.readU16();
-          m.readU16(); // dshot idle
+          _model.config.output.dshotIdle = m.readU16(); // dshot idle
           m.readU8();  // 32k gyro
           m.readU8();  // PWM inversion
           _model.update();

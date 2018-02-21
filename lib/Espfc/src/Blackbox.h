@@ -131,7 +131,7 @@ class Blackbox
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
       blackboxConfigMutable()->record_acc = _model.config.accelDev != ACCEL_NONE && _model.config.accelMode != ACCEL_OFF;
-      if(blackboxConfigMutable()->record_acc)
+      if(blackboxConfig()->record_acc)
       {
           enabledSensors |= SENSOR_ACC;
       }
@@ -141,8 +141,10 @@ class Blackbox
       motorConfigMutable()->dev.useUnsyncedPwm = _model.config.output.async;
       motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;
       motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
-      motorConfigMutable()->minthrottle = motorOutputLow = _model.config.output.minThrottle;
-      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.config.output.maxThrottle;
+      motorConfigMutable()->minthrottle = motorOutputLow = _model.state.minThrottle;
+      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.state.maxThrottle;
+      motorConfigMutable()->mincommand = _model.config.output.minCommand;
+      motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
 
       blackboxConfigMutable()->p_denom = _model.config.blackboxPdenom;
       blackboxConfigMutable()->device = _model.config.blackboxDev;

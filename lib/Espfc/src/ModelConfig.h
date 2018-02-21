@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "EscDriver.h"
 
-#define EEPROM_VERSION_NUM 0x01
+#define EEPROM_VERSION_NUM 0x02
 
 #define USE_SOFT_SERIAL
 
@@ -466,6 +466,7 @@ class OutputConfig
     int16_t minCommand;
     int16_t minThrottle;
     int16_t maxThrottle;
+    int16_t dshotIdle;
 
     OutputChannelConfig channel[OUTPUT_CHANNELS];
 };

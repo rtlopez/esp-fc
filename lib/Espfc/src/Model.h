@@ -106,9 +106,18 @@ class Model
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
-      if(config.output.protocol == ESC_PROTOCOL_BRUSHED) // force async mode for brushed
+      switch(config.output.protocol)
       {
-        config.output.async = true;
+        case ESC_PROTOCOL_BRUSHED:
+          config.output.async = true;
+          break;
+        case ESC_PROTOCOL_DSHOT150:
+        case ESC_PROTOCOL_DSHOT300:
+        case ESC_PROTOCOL_DSHOT600:
+        case ESC_PROTOCOL_DSHOT1200:
+        case ESC_PROTOCOL_PROSHOT:
+          config.output.async = false;
+          break;
       }
 
       if(config.output.async)

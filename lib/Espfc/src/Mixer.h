@@ -16,6 +16,16 @@ class Mixer
     {
       _driver = Hardware::getEscDriver(_model);
       if(!_driver) return 0;
+
+      _model.state.minThrottle = _model.config.output.minThrottle;
+      _model.state.maxThrottle = _model.config.output.maxThrottle;
+      _model.state.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
+      if(_model.state.digitalOutput)
+      {
+        _model.state.minThrottle = (_model.config.output.dshotIdle * 0.0001f * 1000.f) + 1000.f;
+        _model.state.maxThrottle = 2000.f;
+      }
+
       return 1;
     }
 
@@ -109,13 +119,13 @@ class Mixer
         {
           float v = Math::bound(out[i], -1.f, 1.f);
           const OutputChannelConfig& och = _model.config.output.channel[i];
-          if(och.servo)
+          if(!_model.state.digitalOutput && och.servo)
           {
-            _model.state.outputUs[i] = (int16_t)Math::map3(v, -1.f, 0.f, 1.f, och.reverse ? och.max : och.min, och.neutral, och.reverse ? och.min : och.max);
+            _model.state.outputUs[i] = lrintf(Math::map3(v, -1.f, 0.f, 1.f, och.reverse ? och.max : och.min, och.neutral, och.reverse ? och.min : och.max));
           }
           else
           {
-            _model.state.outputUs[i] = (int16_t)Math::map(v, -1.f, 1.f, _model.config.output.minThrottle, _model.config.output.maxThrottle);
+            _model.state.outputUs[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
           }
         }
       }

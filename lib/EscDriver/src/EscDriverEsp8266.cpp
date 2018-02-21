@@ -314,34 +314,40 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate)
   _interval = usToTicksReal(1000000L / _rate) - 400UL;
   switch(_protocol)
   {
+    // pulse delays experimentally selected
     case ESC_PROTOCOL_DSHOT150:
-      _dh = 63 + 16;
-      _dl = 63 - 15;
+      {
+        const float base = 206;
+        _dh = lrintf(base * 0.35f);
+        _dl = lrintf(base * 0.30f);
+      }
       break;
     case ESC_PROTOCOL_DSHOT300:
-      _dh = 30 + 8;
-      _dl = 30 - 7;
+      {
+        const float base = 101;
+        _dh = lrintf(base * 0.35f);
+        _dl = lrintf(base * 0.30f);
+      }
       break;
     case ESC_PROTOCOL_DSHOT600:
     case ESC_PROTOCOL_DSHOT1200:
-      _dh = 14 + 4;
-      _dl = 14 - 4;
+    case ESC_PROTOCOL_PROSHOT:
+      {
+        const float base = 47;
+        _dh = lrintf(base * 0.36f);
+        _dl = lrintf(base * 0.28f);
+      }
       break;
-    default:
+    default: // analog
       _isr_init();
       if(_async) _isr_start();
   }
-  //static const int dr = 13; // dshot600
-  //static const int dr1 = dr + 3; // dshot600
-  //static const int dr2 = dr - 6; // dshot600
-  //static const int dr = 31; // dshot300
-  //static const int dr = 66; // dshot150
   return 1;
 }
 
 void EscDriverEsp8266::end()
 {
-  if(_protocol < ESC_PROTOCOL_DSHOT150)
+  if(_protocol < ESC_PROTOCOL_DSHOT150) // analog
   {
     _isr_end();
   }
@@ -372,18 +378,19 @@ void EscDriverEsp8266::dshotWrite()
   // compute bits
   for(size_t c = 0; c < ESC_CHANNEL_COUNT; c++)
   {
-    if(_slots[c].pin == -1) continue;
+    if(_slots[c].pin > 16 || _slots[c].pin < 0) continue;
     mask_t mask = (1U << _slots[c].pin);
-    uint16_t pulse = _slots[c].pulse;
-    uint16_t value = 0;
+    int pulse = constrain(_slots[c].pulse, 0, 2000);
+    int value = 0; // disarmed
+    // scale to dshot commands (0 or 48-2047)
     if(pulse > 1000)
     {
-      value = (constrain(pulse, 1000, 2000) - 1000) * 2 + 47;
+      value = ((pulse - 1000) * 2) + 47;
     }
     uint16_t frame = dshotEncode(value);
     for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
     {
-      int val = (frame >> (DSHOT_BIT_COUNT - i - 1)) & 0x01;
+      int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
       dshotSetMask[i] |= mask;
       dshotClrMask[(i << 1) + val] |= mask;
     }

@@ -146,6 +146,9 @@ struct ModelState
 
   Timer mixerTimer;
   bool mixerUpdate;
+  float minThrottle;
+  float maxThrottle;
+  bool digitalOutput;
 
   Timer actuatorTimer;
 
