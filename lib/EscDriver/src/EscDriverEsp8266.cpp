@@ -164,6 +164,11 @@ int ICACHE_RAM_ATTR EscDriverEsp8266::write(size_t channel, int pulse)
 
 void ICACHE_RAM_ATTR EscDriverEsp8266::apply()
 {
+  if(_protocol >= ESC_PROTOCOL_DSHOT150)
+  {
+    dshotWrite();
+    return;
+  }
   if(_async || _busy) return;
   _isr_start();
 }
@@ -276,10 +281,16 @@ uint32_t ICACHE_RAM_ATTR EscDriverEsp8266::usToTicks(uint32_t us)
       ticks = map(us, 1000, 2000, usToTicksReal(42), usToTicksReal(84));
       break;
     case ESC_PROTOCOL_MULTISHOT:
-      ticks = map(us, 1000, 2000, usToTicksReal(5), usToTicksReal(20));
+      ticks = map(us, 1000, 2000, usToTicksReal(5), usToTicksReal(25));
       break;
     case ESC_PROTOCOL_BRUSHED:
       ticks = map(constrain(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
+      break;
+    case ESC_PROTOCOL_DSHOT150:
+    case ESC_PROTOCOL_DSHOT300:
+    case ESC_PROTOCOL_DSHOT600:
+    case ESC_PROTOCOL_DSHOT1200:
+      ticks = us;
       break;
     default:
       ticks = usToTicksReal(us); // PWM
@@ -301,19 +312,109 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate)
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // ignore async for brushed
   _rate = constrain(rate, 50, 8000);
   _interval = usToTicksReal(1000000L / _rate) - 400UL;
-  _isr_init();
-  if(_async) _isr_start();
+  switch(_protocol)
+  {
+    case ESC_PROTOCOL_DSHOT150:
+      _dh = 63 + 16;
+      _dl = 63 - 15;
+      break;
+    case ESC_PROTOCOL_DSHOT300:
+      _dh = 30 + 8;
+      _dl = 30 - 7;
+      break;
+    case ESC_PROTOCOL_DSHOT600:
+    case ESC_PROTOCOL_DSHOT1200:
+      _dh = 14 + 4;
+      _dl = 14 - 4;
+      break;
+    default:
+      _isr_init();
+      if(_async) _isr_start();
+  }
+  //static const int dr = 13; // dshot600
+  //static const int dr1 = dr + 3; // dshot600
+  //static const int dr2 = dr - 6; // dshot600
+  //static const int dr = 31; // dshot300
+  //static const int dr = 66; // dshot150
   return 1;
 }
 
 void EscDriverEsp8266::end()
 {
-  _isr_end();
+  if(_protocol < ESC_PROTOCOL_DSHOT150)
+  {
+    _isr_end();
+  }
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
   {
     if(_slots[i].pin == -1) continue;
     digitalWrite(_slots[i].pin, LOW);
   }
+}
+
+static inline void dshotDelay(int delay)
+{
+  while(delay--) __asm__ __volatile__ ("nop");
+}
+
+void EscDriverEsp8266::dshotWrite()
+{
+  // zero mask arrays
+  mask_t * sm = dshotSetMask;
+  mask_t * cm = dshotClrMask;
+  for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+  {
+    *sm = 0; sm++;
+    *cm = 0; cm++;
+    *cm = 0; cm++;
+  }
+
+  // compute bits
+  for(size_t c = 0; c < ESC_CHANNEL_COUNT; c++)
+  {
+    if(_slots[c].pin == -1) continue;
+    mask_t mask = (1U << _slots[c].pin);
+    uint16_t pulse = _slots[c].pulse;
+    uint16_t value = 0;
+    if(pulse > 1000)
+    {
+      value = (constrain(pulse, 1000, 2000) - 1000) * 2 + 47;
+    }
+    uint16_t frame = dshotEncode(value);
+    for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+    {
+      int val = (frame >> (DSHOT_BIT_COUNT - i - 1)) & 0x01;
+      dshotSetMask[i] |= mask;
+      dshotClrMask[(i << 1) + val] |= mask;
+    }
+  }
+
+  // write output
+  sm = dshotSetMask;
+  cm = dshotClrMask;
+  for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+  {
+    GPOS = *sm; sm++; dshotDelay(_dh);
+    GPOC = *cm; cm++; dshotDelay(_dh);
+    GPOC = *cm; cm++; dshotDelay(_dl);
+  }
+}
+
+uint16_t EscDriverEsp8266::dshotEncode(uint16_t value)
+{
+  value <<= 1;
+
+  // compute checksum
+  int csum = 0;
+  int csum_data = value;
+  for (int i = 0; i < 3; i++)
+  {
+    csum ^= csum_data; // xor
+    csum_data >>= 4;
+  }
+  csum &= 0xf;
+
+  return (value << 4) | csum;
 }
 
 EscDriverEsp8266 * EscDriverEsp8266::_instance = NULL;

@@ -58,33 +58,43 @@ class EscDriverEsp8266
         void reset() { *this = Item(); }
     };
 
+    typedef uint32_t mask_t;
+
     EscDriverEsp8266();
 
     int begin(EscProtocol protocol, bool async, int16_t rate);
-
     void end();
 
     int attach(size_t channel, int pin, int pulse) ICACHE_RAM_ATTR;
 
     int write(size_t channel, int pulse) ICACHE_RAM_ATTR;
-
     void apply() ICACHE_RAM_ATTR;
-
-    void commit() ICACHE_RAM_ATTR;
 
     static void handle(void * p) ICACHE_RAM_ATTR;
 
+  private:
+
+    void commit() ICACHE_RAM_ATTR;
     uint32_t usToTicks(uint32_t us) ICACHE_RAM_ATTR;
 
-  private:
+    uint16_t dshotEncode(const uint16_t value);
+    void dshotWrite();
+
     volatile bool _busy;
     bool _async;
     EscProtocol _protocol;
     int _rate;
     uint32_t _interval;
 
+    int _dh;
+    int _dl;
+
     Slot _slots[ESC_CHANNEL_COUNT];
     Item _items[ESC_CHANNEL_COUNT * 2];
+
+    static const size_t DSHOT_BIT_COUNT = 16;
+    mask_t dshotSetMask[DSHOT_BIT_COUNT];
+    mask_t dshotClrMask[DSHOT_BIT_COUNT * 2];
 
     static EscDriverEsp8266 * _instance;
 };

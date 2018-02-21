@@ -17,7 +17,8 @@ enum EscProtocol {
 #if defined(ESP8266)
 
   // support only analog
-  #define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED) ? ESC_PROTOCOL_PWM : p)
+  //#define ESC_PROTOCOL_SANITIZE(p) ((p > ESC_PROTOCOL_BRUSHED) ? ESC_PROTOCOL_PWM : p)
+  #define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_DSHOT600 ? ESC_PROTOCOL_DSHOT600 : p)
 
   #define ESC_CHANNEL_COUNT 4
   #include "EscDriverEsp8266.h"
