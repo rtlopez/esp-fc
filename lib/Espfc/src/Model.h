@@ -216,14 +216,7 @@ class Model
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        if(config.output.channel[i].servo)
-        {
-          state.outputDisarmed[i] = config.output.channel[i].neutral; // ROBOT
-        }
-        else
-        {
-          state.outputDisarmed[i] = config.output.minCommand;
-        }
+        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
       }
 
       // load sensor calibration data
