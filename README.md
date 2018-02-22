@@ -1,16 +1,16 @@
 # ESP-FC Flight Controller
-The mini, DIY, ~$5 cost, ESP8266 based, high performance flight controller similar to Betaflight
+The mini, DIY, ~$5 cost, ESP8266 based, high performance flight controller.
 
 ## Features
 * Frames (Quad X)
 * Betaflight contiguration tool compatible
 * Receiver protocol (8 channel PPM)
-* ESC protocols (PWM, Oneshot125, Oneshot42, Multishot, Brushed)
+* ESC protocols (PWM, Oneshot125, Oneshot42, Multishot, Brushed, Dshot150, Dshot300, Dshot600)
 * Configurable Gyro Filters (LPF, Notch, dTerm)
-* Blackbox serial recording (OpenLog)
+* Blackbox recording (OpenLog serial)
 * In flight PID Tuning
 * Flight modes (ACRO, ANGLE, AIRMODE, ARM)
-* Up to 2kHz gyro/loop in acro, 1kHz with accelerometer
+* Up to 2kHz gyro/loop in acro, 1kHz with accelerometer (level)
 * MSP protocol interface
 * Cli interface
 * Resorce mapping
@@ -21,12 +21,13 @@ The mini, DIY, ~$5 cost, ESP8266 based, high performance flight controller simil
 ## Requirements
 Hardware:
 * Wemos D1 Mini board (D1 Mini Lite too, ESP-12 for experienced users)
-* MPU6050 I2C gyro (GY-88, GY-521 or similar)
+* MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar)
 
 Software:
 * PlatformIo Arduino Espressif8266 v2.4 SDK
 * Atom IDE
 * CH340 usb-serial converter driver
+* Betaflight configurator
 
 ## Optional
 * Buzzer and some electronic components.
@@ -57,7 +58,6 @@ You can Report issues using Github tracker
 * Magnetometer (HMC5883, AK8963)
 * GPS navigation
 * ESP32 board
-* ESP32 Dshot
 * ESP32 SPI Gyro (MPU9250)
 
 ## Licence
@@ -73,5 +73,6 @@ SOFTWARE.
 
 ## Donations
 If you like this project and you want it to be still developed, you can support me a little.
+
 * BTC: 1Lopez7yPtbyjfLGe892JfheDFJMMt43tW
 * LTC: LV3G3sJxz9AYpDMYUp8e1LCmerFYxVY3ak
