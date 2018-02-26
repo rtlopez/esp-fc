@@ -13,11 +13,6 @@ struct FilterStatePt1 {
   float v0;
 };
 
-struct FilterStatePt2 {
-  float k;
-  float v[2];
-};
-
 struct FilterStateBiquad {
   float b0, b1, b2, a1, a2;
   float x1, x2, y1, y2;
@@ -68,11 +63,11 @@ class Filter
         case FILTER_PT1:
           return updatePt1(v);
         case FILTER_BIQUAD:
-          return updateBiquad(v);
+          return updateBiquadDF2(v);
         case FILTER_FIR:
           return updatePt1(v);
         case FILTER_NOTCH:
-          return updateBiquad(v);
+          return updateBiquadDF2(v);
         case FILTER_NONE:
         default:
           return v;
@@ -110,7 +105,7 @@ class Filter
 
     void initBiquad(BiquadFilterType filterType, float q)
     {
-      const float omega = 2.0f * M_PI * _freq * _rate * 0.000001f;
+      const float omega = 2.0f * M_PI * _freq / _rate;
       const float sn = sinf(omega);
       const float cs = cosf(omega);
       const float alpha = sn / (2.0f * q);
@@ -121,11 +116,11 @@ class Filter
       {
         case BIQUAD_FILTER_LPF:
           b0 = (1 - cs) * 0.5f;
-          b1 = 1 - cs;
+          b1 =  1 - cs;
           b2 = (1 - cs) * 0.5f;
-          a0 = 1 + alpha;
+          a0 =  1 + alpha;
           a1 = -2 * cs;
-          a2 = 1 - alpha;
+          a2 =  1 - alpha;
           break;
         case BIQUAD_FILTER_NOTCH:
           b0 =  1;
@@ -136,12 +131,12 @@ class Filter
           a2 =  1 - alpha;
           break;
         case BIQUAD_FILTER_BPF:
-          b0 = alpha;
-          b1 = 0;
+          b0 =  alpha;
+          b1 =  0;
           b2 = -alpha;
-          a0 = 1 + alpha;
+          a0 =  1 + alpha;
           a1 = -2 * cs;
-          a2 = 1 - alpha;
+          a2 =  1 - alpha;
           break;
       }
 
@@ -157,7 +152,28 @@ class Filter
       _state.bq.y1 = _state.bq.y2 = 0;
     }
 
-    float updateBiquad(float v)
+    float updateBiquadDF1(float v)
+    {
+      /* compute result */
+      const float result =
+        _state.bq.b0 * v +
+        _state.bq.b1 * _state.bq.x1 +
+        _state.bq.b2 * _state.bq.x2 -
+        _state.bq.a1 * _state.bq.y1 -
+        _state.bq.a2 * _state.bq.y2;
+
+      /* shift x1 to x2, input to x1 */
+      _state.bq.x2 = _state.bq.x1;
+      _state.bq.x1 = v;
+
+      /* shift y1 to y2, result to y1 */
+      _state.bq.y2 = _state.bq.y1;
+      _state.bq.y1 = result;
+
+      return result;
+    }
+
+    float updateBiquadDF2(float v)
     {
       const float result = _state.bq.b0 * v + _state.bq.x1;
       _state.bq.x1 = _state.bq.b1 * v - _state.bq.a1 * result + _state.bq.x2;
@@ -183,7 +199,6 @@ class Filter
     union {
       FilterStatePt1 pt1;
       FilterStateBiquad bq;
-      FilterStatePt2 pt2;
     } _state;
 };
 
