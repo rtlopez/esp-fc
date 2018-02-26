@@ -182,6 +182,7 @@ class Logger
     Logger& logln(const T& v)
     {
       LOG_SERIAL_DEBUG(v);
+      LOG_SERIAL_DEBUG('\r');
       LOG_SERIAL_DEBUG('\n');
 #if defined(ESP8266)
       if(!_available()) return *this;

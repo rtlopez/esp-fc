@@ -20,10 +20,9 @@ class Fusion
 
     int update()
     {
-      //if(!_model.state.fusionTimer.check()) return 0;
       _model.state.stats.start(COUNTER_IMU_FUSION);
       _model.state.rate = _model.state.gyro;
-      if(_model.config.accelDev != ACCEL_NONE)
+      if(_model.accelActive())
       {
         switch(_model.config.fusionMode)
         {
@@ -63,6 +62,8 @@ class Fusion
             ;
          }
        }
+       //else madgwickFusion1();
+
        if(_model.config.debugMode == DEBUG_ALTITUDE)
        {
          _model.state.debug[0] = lrintf(degrees(_model.state.angle[0]) * 10);

@@ -49,7 +49,7 @@ class Sensor
 
     int updateDelayed()
     {
-      bool accelDelayed = _model.config.accelDev != ACCEL_NONE && _model.config.accelMode == ACCEL_DELAYED;
+      bool accelDelayed = _model.accelActive() && _model.config.accelMode == ACCEL_DELAYED;
       if(accelDelayed)
       {
         _model.state.stats.start(COUNTER_ACCEL_READ);
@@ -88,7 +88,7 @@ class Sensor
   private:
     int readSensors()
     {
-      if(_model.config.accelDev == ACCEL_NONE)
+      if(!_model.accelActive())
       {
         return readGyro();
       }
@@ -107,7 +107,7 @@ class Sensor
 
     void updateSensors()
     {
-      if(_model.config.accelDev == ACCEL_NONE)
+      if(_model.accelActive())
       {
         updateGyro();
         return;
@@ -179,16 +179,11 @@ class Sensor
       _model.state.gyro = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
       if(_model.state.gyroBiasSamples > 0) // calibration
       {
-        for(size_t i = 0; i < 3; ++i)
-        {
-          _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
-        }
         VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
         _model.state.accelPrev = _model.state.accel;
-        if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO &&
-          _model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
+        if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO && _model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
         {
-          _model.state.gyroBias = (_model.state.gyroBias * (1.0 - _model.state.gyroBiasAlpha)) + (_model.state.gyro * _model.state.gyroBiasAlpha);
+          _model.state.gyroBias += (_model.state.gyro - _model.state.gyroBias) * _model.state.gyroBiasAlpha;
           _model.state.gyroBiasSamples--;
           if(_model.state.gyroBiasSamples == 0)
           {
@@ -197,10 +192,7 @@ class Sensor
           }
         }
       }
-      else
-      {
-        _model.state.gyro -= _model.state.gyroBias;
-      }
+      _model.state.gyro -= _model.state.gyroBias;
 
       // filtering
       for(size_t i = 0; i < 3; ++i)

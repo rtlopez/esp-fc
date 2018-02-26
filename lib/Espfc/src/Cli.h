@@ -315,18 +315,18 @@ class Cli
         Param(PSTR("gyro_filter_lpf"), &c.gyroFilter.freq),
         Param(PSTR("accel_filter_lpf"), &c.accelFilter.freq),
 
-        Param(PSTR("gyro_cal_x"), &c.gyroBias[0]),
-        Param(PSTR("gyro_cal_y"), &c.gyroBias[1]),
-        Param(PSTR("gyro_cal_z"), &c.gyroBias[2]),
-        Param(PSTR("accel_cal_x"), &c.accelBias[0]),
-        Param(PSTR("accel_cal_y"), &c.accelBias[1]),
-        Param(PSTR("accel_cal_z"), &c.accelBias[2]),
-        Param(PSTR("mag_cal_offset_x"), &c.magCalibrationOffset[0]),
-        Param(PSTR("mag_cal_offset_y"), &c.magCalibrationOffset[1]),
-        Param(PSTR("mag_cal_offset_z"), &c.magCalibrationOffset[2]),
-        Param(PSTR("mag_cal_scale_x"), &c.magCalibrationScale[0]),
-        Param(PSTR("mag_cal_scale_y"), &c.magCalibrationScale[1]),
-        Param(PSTR("mag_cal_scale_z"), &c.magCalibrationScale[2]),
+        Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
+        Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
+        Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
+        Param(PSTR("accel_offset_x"), &c.accelBias[0]),
+        Param(PSTR("accel_offset_y"), &c.accelBias[1]),
+        Param(PSTR("accel_offset_z"), &c.accelBias[2]),
+        Param(PSTR("mag_offset_x"), &c.magCalibrationOffset[0]),
+        Param(PSTR("mag_offset_y"), &c.magCalibrationOffset[1]),
+        Param(PSTR("mag_offset_z"), &c.magCalibrationOffset[2]),
+        Param(PSTR("mag_scale_x"), &c.magCalibrationScale[0]),
+        Param(PSTR("mag_scale_y"), &c.magCalibrationScale[1]),
+        Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
 
         Param(PSTR("pid_roll_p"), &c.pid[PID_ROLL].P),
         Param(PSTR("pid_roll_i"), &c.pid[PID_ROLL].I),
@@ -675,7 +675,7 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("calinfo")) == 0)
       {
-        print(F("gyro offset: "));
+        print(F(" gyro offset: "));
         print(_model.config.gyroBias[0]); print(' ');
         print(_model.config.gyroBias[1]); print(' ');
         print(_model.config.gyroBias[2]); print(F(" ["));
@@ -699,7 +699,7 @@ class Cli
         print(_model.state.magCalibrationOffset[1]); print(' ');
         print(_model.state.magCalibrationOffset[2]); println(F("]"));
 
-        print(F("mag scale: "));
+        print(F(" mag scale: "));
         print(_model.config.magCalibrationScale[0]); print(' ');
         print(_model.config.magCalibrationScale[1]); print(' ');
         print(_model.config.magCalibrationScale[2]); print(F(" ["));

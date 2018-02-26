@@ -67,12 +67,20 @@ class Model
       return config.magDev != MAG_NONE;
     }
 
+    bool calibrationActive()
+    {
+      return state.sensorCalibration || state.accelBiasSamples || state.gyroBiasSamples;
+    }
+
     void calibrate()
     {
       state.sensorCalibration = true;
       state.gyroBiasSamples  = 2 * state.gyroTimer.rate;
-      state.accelBiasSamples = 2 * state.gyroTimer.rate;
-      state.accelBias.z += 1.f;
+      if(accelActive())
+      {
+        state.accelBiasSamples = 2 * state.gyroTimer.rate;
+        state.accelBias.z += 1.f;
+      }
     }
 
     void finishCalibration()
@@ -94,15 +102,56 @@ class Model
       //config.debugMode = DEBUG_ANGLERATE;
 
       int gyroSyncMax = 4; // max 2khz
-      if(config.accelDev != ACCEL_NONE) gyroSyncMax = 8; // max 1khz
+      if(accelActive()) gyroSyncMax = 8; // max 1khz
       if(config.magDev != MAG_NONE) gyroSyncMax = 16; // max 500hz
 
       config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax); // max 1khz
+      int gyroClock = 8000;
       if(config.gyroDlpf != GYRO_DLPF_256)
       {
+        gyroClock = 1000;
         config.gyroSync = ((config.gyroSync + 7) / 8) * 8;
       }
-      config.gyroSampleRate = 8000 / config.gyroSync;
+      int gyroSampleRate = 8000 / config.gyroSync;
+
+      // init timers
+      // sample rate = clock / ( divider + 1)
+      state.gyroDivider = (gyroClock / (gyroSampleRate + 1)) + 1;
+      state.gyroTimer.setRate(gyroClock / state.gyroDivider);
+      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
+      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
+      state.actuatorTimer.setRate(25); // 25 hz
+      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
+      state.stats.timer.setRate(10);
+
+      // configure calibration
+      state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
+      state.accelBiasAlpha = 5.0f / state.gyroTimer.rate;
+      state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
+
+      // load sensor calibration data
+      for(size_t i = 0; i <= AXIS_YAW; i++)
+      {
+        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
+        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
+        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
+        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
+      }
+
+      for(size_t i = 0; i <= AXIS_YAW; i++)
+      {
+        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
+        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
+        state.accelFilter[i].begin(config.accelFilter, state.gyroTimer.rate);
+        state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
+      }
+
+      // ensure disarmed pulses
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
+      }
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
@@ -146,10 +195,10 @@ class Model
       else
       {
         // for synced and standard PWM limit loop rate and pwm pulse width
-        if(config.output.protocol == ESC_PROTOCOL_PWM && config.gyroSampleRate > 500)
+        if(config.output.protocol == ESC_PROTOCOL_PWM && gyroSampleRate > 500)
         {
-          config.loopSync = std::max(config.loopSync, (int8_t)((config.gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
-          int loopRate = config.gyroSampleRate / config.loopSync;
+          config.loopSync = std::max(config.loopSync, (int8_t)((gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
+          int loopRate = gyroSampleRate / config.loopSync;
           if(loopRate > 480 && config.output.maxThrottle > 1950)
           {
             config.output.maxThrottle = 1940;
@@ -157,6 +206,7 @@ class Model
         }
       }
 
+      // configure serial ports
       uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
       uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
       if(config.softSerialGuard)
@@ -198,47 +248,7 @@ class Model
 
       state.buzzer.beeperMask = config.buzzer.beeperMask;
 
-      // init timers
-      // sample rate = clock / ( divider + 1)
-      int clock = config.gyroDlpf == GYRO_DLPF_256 ? 8000 : 1000;
-      state.gyroDivider = (clock / (config.gyroSampleRate + 1)) + 1;
-      state.gyroTimer.setRate(clock / state.gyroDivider);
-      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
-      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
-      state.actuatorTimer.setRate(25); // 25 hz
-      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(10);
-
-      state.gyroBiasAlpha = 4.0f / state.gyroTimer.rate;
-      state.accelBiasAlpha = 4.0f / state.gyroTimer.rate;
-      state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
-
-      // ensure disarmed pulses
-      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
-      {
-        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
-      }
-
-      // load sensor calibration data
-      for(size_t i = 0; i < 3; i++)
-      {
-        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
-        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
-        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
-        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
-      }
-
-      state.fusionTimer.setRate(500);
-
-      for(size_t i = 0; i <= AXIS_YAW; i++)
-      {
-        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
-        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
-        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
-        state.accelFilter[i].begin(config.accelFilter, state.gyroTimer.rate);
-        state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
-      }
-
+      // configure PIDs
       float pidScale[] = { 1.f, 1.f, 1.f };
       if(config.mixerType == FRAME_BALANCE_ROBOT)
       {
