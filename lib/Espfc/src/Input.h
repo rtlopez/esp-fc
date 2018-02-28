@@ -165,6 +165,7 @@ class Input
     void _set(size_t c, int16_t v)
     {
       const InputChannelConfig& ich = _model.config.input.channel[c];
+      v -= _model.config.input.midRc - 1500;
       float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, 1000.f, 1500.f, 2000.f);
       t = Math::bound(t, 800.f, 2200.f);
       _buff[0][c] = _deadband(c, lrintf(t));
@@ -173,8 +174,7 @@ class Input
     int16_t _deadband(size_t c, int16_t v)
     {
       if(c >= 3) return v;
-      const int16_t mid = _model.config.input.midRc;
-      return Math::deadband(v - mid, (int)_model.config.input.deadband) + mid;
+      return Math::deadband(v - 1500, (int)_model.config.input.deadband) + 1500;
     }
 
     static const size_t INPUT_BUFF_SIZE = 3;
