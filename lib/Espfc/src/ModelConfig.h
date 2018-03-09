@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "EscDriver.h"
 
-#define EEPROM_VERSION_NUM 0x03
+#define EEPROM_VERSION_NUM 0x04
 
 #define USE_SOFT_SERIAL
 
@@ -562,6 +562,8 @@ class ModelConfig
     int16_t i2cSpeed;
     bool softSerialGuard;
     bool serialRxGuard;
+    int8_t tpaScale;
+    int16_t tpaBreakpoint;
 
     ModelConfig()
     {
@@ -790,6 +792,9 @@ class ModelConfig
       //featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_MOTOR_STOP;
 
       lowThrottleZeroIterm = true;
+      
+      tpaScale = 10;
+      tpaBreakpoint = 1650;
 
       for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
       {

@@ -95,8 +95,8 @@ class Blackbox
       rp->rcYawExpo8 = _model.config.input.expo[YAW];
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
-      rp->dynThrPID = 0;
-      rp->tpa_breakpoint = 1650;
+      rp->dynThrPID = _model.config.tpaScale;
+      rp->tpa_breakpoint = _model.config.tpaBreakpoint;
       rp->rates[ROLL] = _model.config.input.superRate[ROLL];
       rp->rates[PITCH] = _model.config.input.superRate[PITCH];
       rp->rates[YAW] = _model.config.input.superRate[YAW];
@@ -141,10 +141,15 @@ class Blackbox
       motorConfigMutable()->dev.useUnsyncedPwm = _model.config.output.async;
       motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;
       motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
-      motorConfigMutable()->minthrottle = motorOutputLow = _model.state.minThrottle;
-      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.state.maxThrottle;
       motorConfigMutable()->mincommand = _model.config.output.minCommand;
       motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
+      motorConfigMutable()->minthrottle = motorOutputLow = _model.state.minThrottle;
+      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.state.maxThrottle;
+      if(_model.state.digitalOutput)
+      {
+        motorOutputLow = (_model.state.minThrottle - 1000) * 2 + 47;
+        motorOutputHigh = (_model.state.maxThrottle - 1000) * 2 + 47;
+      }
 
       blackboxConfigMutable()->p_denom = _model.config.blackboxPdenom;
       blackboxConfigMutable()->device = _model.config.blackboxDev;
@@ -227,6 +232,9 @@ class Blackbox
 
     void updateMode()
     {
+      if(_model.isActive(MODE_ARMED)) bitArraySet(&rcModeActivationMask, BOXARM);
+      else bitArrayClr(&rcModeActivationMask, BOXARM);
+
       if(_model.isActive(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
       else bitArrayClr(&rcModeActivationMask, BOXANGLE);
 
