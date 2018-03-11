@@ -385,7 +385,7 @@ void EscDriverEsp8266::dshotWrite()
     // scale to dshot commands (0 or 48-2047)
     if(pulse > 1000)
     {
-      value = ((pulse - 1000) * 2) + 47;
+      value =  PWM_TO_DSHOT(pulse);
     }
     uint16_t frame = dshotEncode(value);
     for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)

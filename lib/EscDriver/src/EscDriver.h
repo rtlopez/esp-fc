@@ -15,6 +15,8 @@ enum EscProtocol {
   ESC_PROTOCOL_COUNT
 };
 
+#define PWM_TO_DSHOT(v) (((v - 1000) * 2) + 47)
+
 #if defined(ESP8266)
 
   // supports dshot600 max

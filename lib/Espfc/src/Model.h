@@ -291,7 +291,7 @@ class Model
 
         state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
-        state.outerPid[i].ptermFilter.begin(); // unused
+        state.outerPid[i].ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
       }
 
       //config.scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT

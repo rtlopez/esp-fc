@@ -136,15 +136,15 @@ class Controller
     void innerLoop()
     {
       const float dt = _model.state.loopTimer.getDelta();
-      const float tpaScale = getTpaScale();
+      const float tpaFactor = getTpaFactor();
       for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
-        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], dt) * tpaScale;
+        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], dt) * tpaFactor;
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
     }
 
-    float getTpaScale() const
+    float getTpaFactor() const
     {
       if(_model.config.tpaScale == 0) return 1.f;
       float t = Math::bound(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);

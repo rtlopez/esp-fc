@@ -22,7 +22,7 @@ class Mixer
       _model.state.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
       if(_model.state.digitalOutput)
       {
-        _model.state.minThrottle = (_model.config.output.dshotIdle/* * 0.0001f * 1000.f*/) + 1001.f;
+        _model.state.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
         _model.state.maxThrottle = 2000.f;
       }
 

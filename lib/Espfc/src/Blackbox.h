@@ -3,6 +3,7 @@
 
 #include "Model.h"
 #include "Hardware.h"
+#include "EscDriver.h"
 
 extern "C" {
 #include "blackbox/blackbox.h"
@@ -147,8 +148,8 @@ class Blackbox
       motorConfigMutable()->maxthrottle = motorOutputHigh = _model.state.maxThrottle;
       if(_model.state.digitalOutput)
       {
-        motorOutputLow = (_model.state.minThrottle - 1000) * 2 + 47;
-        motorOutputHigh = (_model.state.maxThrottle - 1000) * 2 + 47;
+        motorOutputLow = PWM_TO_DSHOT(_model.state.minThrottle);
+        motorOutputHigh = PWM_TO_DSHOT(_model.state.maxThrottle);
       }
 
       blackboxConfigMutable()->p_denom = _model.config.blackboxPdenom;
@@ -202,6 +203,9 @@ class Blackbox
       for(size_t i = 0; i < 4; i++)
       {
         motor[i] = Math::bound((int)_model.state.outputUs[i], 1000, 2000);
+        if(_model.state.digitalOutput) {
+          motor[i] = PWM_TO_DSHOT(motor[i]);
+        }
         debug[i] = _model.state.debug[i];
       }
     }

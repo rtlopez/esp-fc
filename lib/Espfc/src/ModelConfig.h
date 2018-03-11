@@ -516,6 +516,7 @@ class ModelConfig
 
     FilterConfig dtermFilter;
     FilterConfig dtermNotchFilter;
+    FilterConfig levelPtermFilter;
 
     uint8_t dtermSetpointWeight;
     int8_t itermWindupPointPercent;
@@ -666,6 +667,9 @@ class ModelConfig
       yawFilter.type = FILTER_PT1;
       yawFilter.freq = 90;
 
+      levelPtermFilter.type = FILTER_PT1;
+      levelPtermFilter.freq = 50;
+
       telemetry = 0;
       telemetryInterval = 1000;
 
@@ -777,22 +781,22 @@ class ModelConfig
       input.deadband = 3; // us
 
       // PID controller config
-      pid[PID_ROLL]  = { .P = 45,  .I = 40, .D = 15 };
-      pid[PID_PITCH] = { .P = 65,  .I = 55, .D = 20 };
-      pid[PID_YAW]   = { .P = 90,  .I = 75, .D = 5 };
-      pid[PID_LEVEL] = { .P = 35,  .I = 0,  .D = 0 };
+      pid[PID_ROLL]  = { .P = 40,  .I = 40, .D = 30 };
+      pid[PID_PITCH] = { .P = 58,  .I = 50, .D = 35 };
+      pid[PID_YAW]   = { .P = 70,  .I = 45, .D = 10 };
+      pid[PID_LEVEL] = { .P = 55,  .I = 0,  .D = 0 };
 
       itermWindupPointPercent = 30;
-      dtermSetpointWeight = 50;
+      dtermSetpointWeight = 30;
 
-      angleLimit = 50;  // deg
+      angleLimit = 55;  // deg
       angleRateLimit = 300;  // deg
 
       featureMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP;
       //featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_MOTOR_STOP;
 
       lowThrottleZeroIterm = true;
-      
+
       tpaScale = 10;
       tpaBreakpoint = 1650;
 
