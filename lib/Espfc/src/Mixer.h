@@ -145,9 +145,8 @@ class Mixer
     bool _stop(void)
     {
       if(!_model.isActive(MODE_ARMED)) return true;
-      if(_model.config.mixerType == FRAME_QUAD_X && _model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.input.minCheck) return true;
+      if(_model.config.mixerType == FRAME_QUAD_X && _model.isActive(FEATURE_MOTOR_STOP) && _model.isThrottleLow()) return true;
       return false;
-      //return !_model.isActive(MODE_ARMED) || (_model.isActive(FEATURE_MOTOR_STOP) && _model.state.inputUs[AXIS_THRUST] < _model.config.inputMinCheck);
     }
 
     Model& _model;

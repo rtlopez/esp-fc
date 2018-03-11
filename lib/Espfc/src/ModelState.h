@@ -170,7 +170,10 @@ struct ModelState
   Stats stats;
 
   uint32_t modeMask;
+  uint32_t modeMaskNew;
   uint32_t modeMaskPrev;
+
+  bool airmodeAllowed;
 
   bool sensorCalibration;
 

@@ -14,6 +14,7 @@ class Actuator
     int begin()
     {
       _model.state.modeMask = 0;
+      _model.state.airmodeAllowed = false;
       return 1;
     }
 
@@ -21,6 +22,7 @@ class Actuator
     {
       _model.state.stats.start(COUNTER_ACTUATOR);
       updateModeMask();
+      updateAirMode();
       updateScaler();
       updateBuzzer();
       _model.state.stats.end(COUNTER_ACTUATOR);
@@ -82,11 +84,13 @@ class Actuator
         }
       }
 
+      _model.state.modeMaskNew = newMask;
+
       for(size_t i = 0; i < MODE_COUNT; i++)
       {
         bool curr = newMask & (1 << i);
-        bool prev = _model.state.modeMask & (1 << i);
-        if(!canActivate((FlightMode)i) && curr != prev)
+        bool prev = _model.state.modeMaskPrev & (1 << i);
+        if(curr != prev && !canChange((FlightMode)i, curr))
         {
           if(curr) newMask &= ~(1 << i); // block activation
           else newMask |= (1 << i); // keep previous
@@ -97,11 +101,24 @@ class Actuator
       _model.state.modeMask = newMask;
     }
 
-    bool canActivate(FlightMode mode)
+    bool canChange(FlightMode mode, bool val)
     {
       if(mode == MODE_ANGLE && !_model.accelActive()) return false;
-      if(mode == MODE_ARMED && (_model.state.inputUs[AXIS_THRUST] > _model.config.input.minCheck || _model.calibrationActive())) return false;
+      if(mode == MODE_ARMED && (!_model.isThrottleLow() || _model.calibrationActive())) return false;
+      if(mode == MODE_AIRMODE && val && !_model.state.airmodeAllowed) return false;
       return true;
+    }
+
+    void updateAirMode()
+    {
+      if(!_model.state.airmodeAllowed && _model.isActive(MODE_ARMED) && _model.state.inputUs[AXIS_THRUST] > 1400) // activate airmode in the air
+      {
+        _model.state.airmodeAllowed = true;
+      }
+      if(!_model.isActive(MODE_ARMED))
+      {
+        _model.state.airmodeAllowed = false;
+      }
     }
 
     void updateBuzzer()

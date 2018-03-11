@@ -236,13 +236,13 @@ class Blackbox
 
     void updateMode()
     {
-      if(_model.isActive(MODE_ARMED)) bitArraySet(&rcModeActivationMask, BOXARM);
+      if(_model.isSwitchActive(MODE_ARMED)) bitArraySet(&rcModeActivationMask, BOXARM);
       else bitArrayClr(&rcModeActivationMask, BOXARM);
 
-      if(_model.isActive(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
+      if(_model.isSwitchActive(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
       else bitArrayClr(&rcModeActivationMask, BOXANGLE);
 
-      if(_model.isActive(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
+      if(_model.isSwitchActive(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
       else bitArrayClr(&rcModeActivationMask, BOXAIRMODE);
     }
 

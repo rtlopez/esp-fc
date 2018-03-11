@@ -42,6 +42,11 @@ class Model
       return state.modeMask & (1 << mode);
     }
 
+    bool isSwitchActive(FlightMode mode) const
+    {
+      return state.modeMaskNew & (1 << mode);
+    }
+
     bool hasChanged(FlightMode mode) const
     {
       return (state.modeMask & (1 << mode)) != (state.modeMaskPrev & (1 << mode));
@@ -50,6 +55,11 @@ class Model
     bool isActive(Feature feature) const
     {
       return config.featureMask & feature;
+    }
+
+    bool isThrottleLow() const
+    {
+      return state.inputUs[AXIS_THRUST] < config.input.minCheck;
     }
 
     bool blackboxEnabled() const

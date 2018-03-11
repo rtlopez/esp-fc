@@ -148,15 +148,13 @@ class Controller
     {
       if(_model.config.tpaScale == 0) return 1.f;
       float t = Math::bound(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
-      return Math::map(t, (float)_model.config.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.tpaScale / 100));
+      return Math::map(t, (float)_model.config.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.tpaScale * 0.01f));
     }
 
     void resetIterm()
     {
-      if(
-        _model.hasChanged(MODE_ARMED) || // on arming or disarming
-        !_model.isActive(MODE_ARMED) ||  // when disarmed
-        (_model.config.lowThrottleZeroIterm && !_model.isActive(MODE_AIRMODE) && _model.state.inputUs[AXIS_THRUST] < _model.config.input.minCheck) // on low throttle
+      if(!_model.isActive(MODE_ARMED)   // when disarmed
+        || (!_model.isActive(MODE_AIRMODE) && _model.config.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
       )
       {
         for(size_t i = 0; i < AXES; i++)
