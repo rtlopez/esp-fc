@@ -135,7 +135,6 @@ class Mixer
         outputs[i] = 0.f;
       }
 
-      //const MixerConfig * mixer = getMixer((MixerType)_model.config.mixerType);
       const MixerConfig& mixer = _model.state.currentMixer;
 
       // mix stabilized first
@@ -151,11 +150,6 @@ class Mixer
         }
         entry++;
       } while(true);
-
-      _model.state.debug[0] = lrintf(outputs[0] * 1000);
-      _model.state.debug[1] = lrintf(outputs[1] * 1000);
-      _model.state.debug[2] = lrintf(outputs[2] * 1000);
-      _model.state.debug[3] = lrintf(outputs[3] * 1000);
 
       // airmode logic
       float thrust = sources[MIXER_SOURCE_THRUST];
@@ -211,14 +205,14 @@ class Mixer
       bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
+        const OutputChannelConfig& och = _model.config.output.channel[i];
         if(i >= axes || stop)
         {
-          _model.state.outputUs[i] = _model.state.outputDisarmed[i];
+          _model.state.outputUs[i] = och.servo && _model.state.outputDisarmed[i] == 1000 ? och.neutral : _model.state.outputDisarmed[i];
         }
         else
         {
           float v = Math::bound(out[i], -1.f, 1.f);
-          const OutputChannelConfig& och = _model.config.output.channel[i];
           if(!_model.state.digitalOutput && och.servo)
           {
             _model.state.outputUs[i] = lrintf(Math::map3(v, -1.f, 0.f, 1.f, och.reverse ? och.max : och.min, och.neutral, och.reverse ? och.min : och.max));

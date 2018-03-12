@@ -694,7 +694,7 @@ class ModelConfig
       fusionDelay = 0;
 
       gyroFilter.type = FILTER_PT1;
-      gyroFilter.freq = 100;
+      gyroFilter.freq = 90;
       gyroNotch1Filter.type = FILTER_NOTCH;
       gyroNotch1Filter.cutoff = 70;
       gyroNotch1Filter.freq = 150;
