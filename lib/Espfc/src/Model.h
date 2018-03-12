@@ -260,7 +260,7 @@ class Model
 
       // configure PIDs
       float pidScale[] = { 1.f, 1.f, 1.f };
-      if(config.mixerType == FRAME_BALANCE_ROBOT)
+      if(config.mixerType == MIXER_GIMBAL)
       {
         pidScale[AXIS_YAW] = 0.2f; // ROBOT
         pidScale[AXIS_PITCH] = 20.f; // ROBOT
@@ -303,6 +303,7 @@ class Model
         state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         state.outerPid[i].ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
       }
+      state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
 
       //config.scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
       //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_YAW);   // ROBOT

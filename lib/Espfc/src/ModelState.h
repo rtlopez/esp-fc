@@ -10,6 +10,7 @@
 #include "Filter.h"
 #include "Stats.h"
 #include "Timer.h"
+#include "ModelConfig.h"
 
 namespace Espfc {
 
@@ -70,6 +71,16 @@ class BatteryState
     int8_t cells;
     int8_t samples;
     Timer timer;
+};
+
+class MixerConfig {
+  public:
+    MixerConfig(): count(0), mixes(NULL) {}
+    MixerConfig(const MixerConfig& c): count(c.count), mixes(c.mixes) {}
+    MixerConfig(int8_t c, MixerEntry * m): count(c), mixes(m) {}
+    
+    int8_t count;
+    MixerEntry * mixes;
 };
 
 // working data
@@ -185,6 +196,9 @@ struct ModelState
   BuzzerState buzzer;
 
   BatteryState battery;
+
+  MixerConfig currentMixer;
+  MixerConfig customMixer;
 };
 
 }

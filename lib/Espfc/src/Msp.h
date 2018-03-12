@@ -447,12 +447,12 @@ class Msp
           break;
 
         case MSP_MIXER_CONFIG:
-          r.writeU8(3); // mixerMode, QUAD_X
+          r.writeU8(_model.config.mixerType); // mixerMode, QUAD_X
           r.writeU8(_model.config.yawReverse); // yaw_motors_reversed
           break;
 
         case MSP_SET_MIXER_CONFIG:
-          m.readU8(); // mixerMode, QUAD_X
+          _model.config.mixerType = m.readU8(); // mixerMode, QUAD_X
           _model.config.yawReverse = m.readU8(); // yaw_motors_reversed
           break;
 

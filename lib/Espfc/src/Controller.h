@@ -26,7 +26,7 @@ class Controller
     {
       _model.state.stats.start(COUNTER_OUTER_PID);
       resetIterm();
-      if(_model.config.mixerType == FRAME_BALANCE_ROBOT)
+      if(_model.config.mixerType == MIXER_GIMBAL)
       {
         outerLoopRobot();
       }
@@ -37,7 +37,7 @@ class Controller
       _model.state.stats.end(COUNTER_OUTER_PID);
 
       _model.state.stats.start(COUNTER_INNER_PID);
-      if(_model.config.mixerType == FRAME_BALANCE_ROBOT)
+      if(_model.config.mixerType == MIXER_GIMBAL)
       {
         innerLoopRobot();
       }

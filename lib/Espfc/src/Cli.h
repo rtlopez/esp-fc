@@ -40,26 +40,29 @@ class Cli
       PARAM_OUTPUT_CHANNEL,  // output channel config
       PARAM_SCALER,  // scaler config
       PARAM_MODE,  // scaler config
+      PARAM_MIXER,  // mixer config
     };
 
     class Param
     {
       public:
-        Param(): Param(NULL, NULL, PARAM_NONE, NULL) {}
-        Param(const Param& p): Param(p.name, p.addr, p.type, p.choices) {}
-        Param(const char * n, char * a, ParamType t, const char ** c): name(n), addr(a), type(t), choices(c) {}
+        Param(): Param(NULL, PARAM_NONE, NULL, NULL) {}
+        Param(const Param& p): Param(p.name, p.type, p.addr, p.choices) {}
 
-        Param(const char * n, bool    * a): Param(n, reinterpret_cast<char*>(a), PARAM_BOOL, NULL) {}
-        Param(const char * n, int8_t  * a): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE, NULL) {}
-        Param(const char * n, uint8_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE_U, NULL) {}
-        Param(const char * n, int16_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_SHORT, NULL) {}
-        Param(const char * n, int32_t * a): Param(n, reinterpret_cast<char*>(a), PARAM_INT, NULL) {}
-        Param(const char * n, InputChannelConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_INPUT_CHANNEL, NULL) {}
-        Param(const char * n, OutputChannelConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_OUTPUT_CHANNEL, NULL) {}
-        Param(const char * n, ScalerConfig * a): Param(n, reinterpret_cast<char*>(a), PARAM_SCALER, NULL) {}
-        Param(const char * n, ActuatorCondition * a): Param(n, reinterpret_cast<char*>(a), PARAM_MODE, NULL) {}
+        Param(const char * n, ParamType t, char * a, const char ** c): name(n), type(t), addr(a), choices(c) {}
 
-        Param(const char * n, int8_t  * a, const char ** c): Param(n, reinterpret_cast<char*>(a), PARAM_BYTE, c) {}
+        Param(const char * n, bool    * a): Param(n, PARAM_BOOL,   reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, int8_t  * a): Param(n, PARAM_BYTE,   reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, uint8_t * a): Param(n, PARAM_BYTE_U, reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, int16_t * a): Param(n, PARAM_SHORT,  reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, int32_t * a): Param(n, PARAM_INT,    reinterpret_cast<char*>(a), NULL) {}
+
+        Param(const char * n, int8_t * a, const char ** c): Param(n, PARAM_BYTE, reinterpret_cast<char*>(a), c) {}
+        Param(const char * n, InputChannelConfig * a):  Param(n, PARAM_INPUT_CHANNEL,  reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, OutputChannelConfig * a): Param(n, PARAM_OUTPUT_CHANNEL, reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, ScalerConfig * a):        Param(n, PARAM_SCALER, reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, ActuatorCondition * a):   Param(n, PARAM_MODE,   reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, MixerEntry * a):          Param(n, PARAM_MIXER,  reinterpret_cast<char*>(a), NULL) {}
 
         void print(Stream& stream) const
         {
@@ -102,6 +105,9 @@ class Cli
               break;
             case PARAM_MODE:
               print(stream, *reinterpret_cast<ActuatorCondition*>(addr));
+              break;
+            case PARAM_MIXER:
+              print(stream, *reinterpret_cast<MixerEntry*>(addr));
               break;
           }
         }
@@ -154,6 +160,15 @@ class Cli
           stream.print(ac.min);
           stream.print(' ');
           stream.print(ac.max);
+        }
+
+        void print(Stream& stream, const MixerEntry& me) const
+        {
+          stream.print(me.src);
+          stream.print(' ');
+          stream.print(me.dst);
+          stream.print(' ');
+          stream.print(me.rate);
         }
 
         void print(Stream& stream, int32_t v) const
@@ -209,6 +224,9 @@ class Cli
             case PARAM_MODE:
               write(*reinterpret_cast<ActuatorCondition*>(addr), args);
               break;
+            case PARAM_MIXER:
+              write(*reinterpret_cast<MixerEntry*>(addr), args);
+              break;
             case PARAM_NONE:
               break;
           }
@@ -249,6 +267,13 @@ class Cli
           if(args[5]) ac.max = String(args[5]).toInt();
         }
 
+        void write(MixerEntry& ac, const char ** args) const
+        {
+          if(args[2]) ac.src = Math::bound((int)String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
+          if(args[3]) ac.dst = Math::bound((int)String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
+          if(args[4]) ac.rate = Math::bound((int)String(args[4]).toInt(), -125, 125);
+        }
+
         template<typename T>
         void write(const T v) const
         {
@@ -269,8 +294,8 @@ class Cli
         }
 
         const char * name;
-        char * addr;
         ParamType type;
+        char * addr;
         const char ** choices;
     };
 
@@ -288,7 +313,7 @@ class Cli
       static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
       static const char* fusionModeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
                                                  PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
-     static const char* debugModeChoices[] = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"),
+      static const char* debugModeChoices[] = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"),
                                                PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
                                                PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"),
                                                PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"),
@@ -381,15 +406,10 @@ class Cli
         Param(PSTR("pin_output_2"), &c.pin[PIN_OUTPUT_2]),
         Param(PSTR("pin_output_3"), &c.pin[PIN_OUTPUT_3]),
         Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
-        //Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
-        //Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
-        //Param(PSTR("pin_serial_1_tx"), &c.pin[PIN_SERIAL_1_TX]),
-        //Param(PSTR("pin_serial_1_rx"), &c.pin[PIN_SERIAL_1_RX]),
         Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
         Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
         Param(PSTR("pin_input_adc"), &c.pin[PIN_INPUT_ADC_0]),
 #endif
-
 #if defined(ESP32)
         Param(PSTR("output_4"), &c.output.channel[4]),
         Param(PSTR("output_5"), &c.output.channel[5]),
@@ -423,6 +443,15 @@ class Cli
 #endif
 
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+
+        Param(PSTR("mix_outputs"), &c.customMixerCount),
+        Param(PSTR("mix_0"), &c.customMixes[0]),
+        Param(PSTR("mix_1"), &c.customMixes[1]),
+        Param(PSTR("mix_2"), &c.customMixes[2]),
+        Param(PSTR("mix_3"), &c.customMixes[3]),
+        Param(PSTR("mix_4"), &c.customMixes[4]),
+        Param(PSTR("mix_5"), &c.customMixes[5]),
+
         Param(PSTR("telemetry"), &c.telemetry),
         Param(PSTR("telemetry_interval"), &c.telemetryInterval),
 
@@ -771,6 +800,26 @@ class Cli
           print(' ');
           println(scale);
         }
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("mixer")) == 0)
+      {
+        const MixerConfig& mixer = _model.state.currentMixer;
+        print(F("set mix_outputs "));
+        println(mixer.count);
+        Param p;
+        for(size_t i = 0; i < MIXER_RULE_MAX; i++)
+        {
+          if(mixer.mixes[i].src == MIXER_SOURCE_NULL) break;
+          print(F("set mix_"));
+          print(i);
+          print(' ');
+          p.print(*_stream, mixer.mixes[i]);
+          println();
+        }
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("status")) == 0)
+      {
+        print(F("status: "));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
       {
