@@ -271,7 +271,7 @@ class Cli
         {
           if(args[2]) ac.src = Math::bound((int)String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
           if(args[3]) ac.dst = Math::bound((int)String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
-          if(args[4]) ac.rate = Math::bound((int)String(args[4]).toInt(), -125, 125);
+          if(args[4]) ac.rate = Math::bound((int)String(args[4]).toInt(), -1000, 1000);
         }
 
         template<typename T>
@@ -306,52 +306,120 @@ class Cli
 
     static const Param * initialize(ModelConfig& c)
     {
-      static const char* gyroDlpfChoices[]  = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
-      static const char* accelDevChoices[]  = { PSTR("AUTO"), PSTR("NONE"), PSTR("RESERVED"), PSTR("MPU6050"), NULL };
-      static const char* accelModeChoices[] = { PSTR("OFF"), PSTR("DELAYED"), PSTR("GYRO"), PSTR("GYROFIFO"), NULL };
-      static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
-      static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
+      static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
+      static const char* accelDevChoices[]   = { PSTR("AUTO"), PSTR("NONE"), PSTR("RESERVED"), PSTR("MPU6050"), NULL };
+      static const char* accelModeChoices[]  = { PSTR("OFF"), PSTR("DELAYED"), PSTR("GYRO"), PSTR("GYROFIFO"), NULL };
+      //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
+      //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
       static const char* fusionModeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
                                                  PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
-      static const char* debugModeChoices[] = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"),
-                                               PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
-                                               PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"),
-                                               PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"),
-                                               PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"),
-                                               PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"),
-                                               NULL };
+      static const char* debugModeChoices[]  = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"),
+                                                 PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
+                                                 PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"),
+                                                 PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"),
+                                                 PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"),
+                                                 PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
+      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("FIR"), NULL };
+      static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
+      static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
+                                                 PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
+                                                 PSTR("HEX6X"), PSTR("OCTOX8"), PSTR("OCTOFLATP"), PSTR("OCTOFLATX"), PSTR("AIRPLANE"),
+                                                 PSTR("HELI120"), PSTR("HELI90"), PSTR("VTAIL4"), PSTR("HEX6H"), PSTR("PPMSERVO"),
+                                                 PSTR("DUALCOPTER"), PSTR("SINGLECOPTER"), PSTR("ATAIL4"), PSTR("CUSTOM"), PSTR("CUSTOMAIRPLANE"),
+                                                 PSTR("CUSTOMTRI"), PSTR("QUADX1234"), NULL };
+      static const char* interpolChoices[]   = { PSTR("NONE"), PSTR("DEFAULT"), PSTR("AUTO"), PSTR("MANUAL"), NULL };
+      static const char* protocolChoices[]   = { PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
+                                                 PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("DSHOT1200"), PSTR("PROSHOT1000"), NULL };
+
       size_t i = 0;
       static const Param params[] = {
-        Param(PSTR("gyro_sync"), &c.gyroSync),
-        Param(PSTR("gyro_lpf"), &c.gyroDlpf, gyroDlpfChoices),
-        Param(PSTR("i2c_speed"), &c.i2cSpeed),
-        Param(PSTR("accel_dev"), &c.accelDev, accelDevChoices),
-        Param(PSTR("accel_mode"), &c.accelMode, accelModeChoices),
-        Param(PSTR("fusion_delay"), &c.fusionDelay),
-        Param(PSTR("fusion_mode"), &c.fusionMode, fusionModeChoices),
-        Param(PSTR("loop_sync"), &c.loopSync),
-        Param(PSTR("mixer_sync"), &c.mixerSync),
-        Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
-        Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
-        Param(PSTR("level_limit"), &c.angleLimit),
-        Param(PSTR("level_rate_max"), &c.angleRateLimit),
+
+        Param(PSTR("features"), &c.featureMask),
         Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
 
-        Param(PSTR("gyro_filter_lpf"), &c.gyroFilter.freq),
-        Param(PSTR("accel_filter_lpf"), &c.accelFilter.freq),
-
+        Param(PSTR("gyro_dlpf"), &c.gyroDlpf, gyroDlpfChoices),
+        Param(PSTR("gyro_sync"), &c.gyroSync),
+        Param(PSTR("gyro_align"), &c.gyroAlign, alignChoices),
+        Param(PSTR("gyro_lpf_type"), &c.gyroFilter.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf_freq"), &c.gyroFilter.freq),
+        Param(PSTR("gyro_notch1_freq"), &c.gyroNotch1Filter.freq),
+        Param(PSTR("gyro_notch1_cutoff"), &c.gyroNotch1Filter.cutoff),
+        Param(PSTR("gyro_notch2_freq"), &c.gyroNotch2Filter.freq),
+        Param(PSTR("gyro_notch2_cutoff"), &c.gyroNotch2Filter.cutoff),
         Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
+
+        Param(PSTR("accel_dev"), &c.accelDev, accelDevChoices),
+        Param(PSTR("accel_mode"), &c.accelMode, accelModeChoices),
+        Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
+        Param(PSTR("accel_lpf_type"), &c.accelFilter.type, filterTypeChoices),
+        Param(PSTR("accel_lpf_lpf"), &c.accelFilter.freq),
         Param(PSTR("accel_offset_x"), &c.accelBias[0]),
         Param(PSTR("accel_offset_y"), &c.accelBias[1]),
         Param(PSTR("accel_offset_z"), &c.accelBias[2]),
+
+        /*
+        Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
+        Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
+        Param(PSTR("mag_align"), &c.magAlign, alignChoices),
+        Param(PSTR("mag_filter_type"), &c.magFilter.type),
+        Param(PSTR("mag_filter_lpf"), &c.magFilter.freq),
         Param(PSTR("mag_offset_x"), &c.magCalibrationOffset[0]),
         Param(PSTR("mag_offset_y"), &c.magCalibrationOffset[1]),
         Param(PSTR("mag_offset_z"), &c.magCalibrationOffset[2]),
         Param(PSTR("mag_scale_x"), &c.magCalibrationScale[0]),
         Param(PSTR("mag_scale_y"), &c.magCalibrationScale[1]),
         Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
+        */
+
+        Param(PSTR("fusion_delay"), &c.fusionDelay),
+        Param(PSTR("fusion_mode"), &c.fusionMode, fusionModeChoices),
+
+        Param(PSTR("input_roll_rate"), &c.input.rate[0]),
+        Param(PSTR("input_roll_srate"), &c.input.superRate[0]),
+        Param(PSTR("input_roll_expo"), &c.input.expo[0]),
+
+        Param(PSTR("input_pitch_rate"), &c.input.rate[1]),
+        Param(PSTR("input_pitch_srate"), &c.input.superRate[1]),
+        Param(PSTR("input_pitch_expo"), &c.input.expo[1]),
+
+        Param(PSTR("input_yaw_rate"), &c.input.rate[2]),
+        Param(PSTR("input_yaw_srate"), &c.input.superRate[2]),
+        Param(PSTR("input_yaw_expo"), &c.input.expo[2]),
+
+        Param(PSTR("input_deadband"), &c.input.deadband),
+
+        Param(PSTR("input_min"), &c.input.minRc),
+        Param(PSTR("input_mid"), &c.input.midRc),
+        Param(PSTR("input_max"), &c.input.maxRc),
+
+        Param(PSTR("input_interpolation"), &c.input.interpolationMode, interpolChoices),
+        Param(PSTR("input_interpolation_interval"), &c.input.interpolationInterval),
+
+        Param(PSTR("input_0"), &c.input.channel[0]),
+        Param(PSTR("input_1"), &c.input.channel[1]),
+        Param(PSTR("input_2"), &c.input.channel[2]),
+        Param(PSTR("input_3"), &c.input.channel[3]),
+        Param(PSTR("input_4"), &c.input.channel[4]),
+        Param(PSTR("input_5"), &c.input.channel[5]),
+        Param(PSTR("input_6"), &c.input.channel[6]),
+        Param(PSTR("input_7"), &c.input.channel[7]),
+
+        Param(PSTR("scaler_0"), &c.scaler[0]),
+        Param(PSTR("scaler_1"), &c.scaler[1]),
+        Param(PSTR("scaler_2"), &c.scaler[2]),
+
+        Param(PSTR("mode_0"), &c.conditions[0]),
+        Param(PSTR("mode_1"), &c.conditions[1]),
+        Param(PSTR("mode_2"), &c.conditions[2]),
+        Param(PSTR("mode_3"), &c.conditions[3]),
+        Param(PSTR("mode_4"), &c.conditions[4]),
+        Param(PSTR("mode_5"), &c.conditions[5]),
+        Param(PSTR("mode_6"), &c.conditions[6]),
+        Param(PSTR("mode_7"), &c.conditions[7]),
+
+        Param(PSTR("pid_sync"), &c.loopSync),
 
         Param(PSTR("pid_roll_p"), &c.pid[PID_ROLL].P),
         Param(PSTR("pid_roll_i"), &c.pid[PID_ROLL].I),
@@ -369,30 +437,37 @@ class Cli
         Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
         Param(PSTR("pid_level_d"), &c.pid[PID_LEVEL].D),
 
-        Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
-        Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
+        Param(PSTR("pid_level_angle_limit"), &c.angleLimit),
+        Param(PSTR("pid_level_rate_limit"), &c.angleRateLimit),
+        Param(PSTR("pid_level_lpf_type"), &c.levelPtermFilter.type, filterTypeChoices),
+        Param(PSTR("pid_level_lpf_freq"), &c.levelPtermFilter.freq),
 
-        Param(PSTR("scaler_0"), &c.scaler[0]),
-        Param(PSTR("scaler_1"), &c.scaler[1]),
-        Param(PSTR("scaler_2"), &c.scaler[2]),
+        Param(PSTR("pid_yaw_lpf_type"), &c.yawFilter.type, filterTypeChoices),
+        Param(PSTR("pid_yaw_lpf_freq"), &c.yawFilter.freq),
 
-        Param(PSTR("mode_0"), &c.conditions[0]),
-        Param(PSTR("mode_1"), &c.conditions[1]),
-        Param(PSTR("mode_2"), &c.conditions[2]),
-        Param(PSTR("mode_3"), &c.conditions[3]),
-        Param(PSTR("mode_4"), &c.conditions[4]),
-        Param(PSTR("mode_5"), &c.conditions[5]),
-        Param(PSTR("mode_6"), &c.conditions[6]),
-        Param(PSTR("mode_7"), &c.conditions[7]),
+        Param(PSTR("pid_dterm_lpf_type"), &c.dtermFilter.type, filterTypeChoices),
+        Param(PSTR("pid_dterm_lpf_freq"), &c.dtermFilter.freq),
+        Param(PSTR("pid_dterm_notch_freq"), &c.dtermNotchFilter.freq),
+        Param(PSTR("pid_dterm_notch_cutoff"), &c.dtermNotchFilter.cutoff),
 
-        Param(PSTR("input_0"), &c.input.channel[0]),
-        Param(PSTR("input_1"), &c.input.channel[1]),
-        Param(PSTR("input_2"), &c.input.channel[2]),
-        Param(PSTR("input_3"), &c.input.channel[3]),
-        Param(PSTR("input_4"), &c.input.channel[4]),
-        Param(PSTR("input_5"), &c.input.channel[5]),
-        Param(PSTR("input_6"), &c.input.channel[6]),
-        Param(PSTR("input_7"), &c.input.channel[7]),
+        Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
+        Param(PSTR("pid_iterm_limit"), &c.itermWindupPointPercent),
+        Param(PSTR("pid_iterm_zero"), &c.lowThrottleZeroIterm),
+        Param(PSTR("pid_tpa_scale"), &c.tpaScale),
+        Param(PSTR("pid_tpa_breakpoint"), &c.tpaBreakpoint),
+
+        Param(PSTR("mixer_sync"), &c.mixerSync),
+        Param(PSTR("mixer_type"), &c.mixerType, mixerTypeChoices),
+        Param(PSTR("mixer_yaw_reverse"), &c.yawReverse),
+
+        Param(PSTR("output_protocol"), &c.output.protocol, protocolChoices),
+        Param(PSTR("output_async"), &c.output.async),
+        Param(PSTR("output_rate"), &c.output.rate),
+
+        Param(PSTR("output_min_command"), &c.output.minCommand),
+        Param(PSTR("output_min_throttle"), &c.output.minThrottle),
+        Param(PSTR("output_max_throttle"), &c.output.maxThrottle),
+        Param(PSTR("output_dshot_idle"), &c.output.dshotIdle),
 
         Param(PSTR("output_0"), &c.output.channel[0]),
         Param(PSTR("output_1"), &c.output.channel[1]),
@@ -443,6 +518,12 @@ class Cli
 #endif
 
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+
+        Param(PSTR("i2c_speed"), &c.i2cSpeed),
+        //Param(PSTR("telemetry"), &c.telemetry),
+        //Param(PSTR("telemetry_interval"), &c.telemetryInterval),
+        //Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
+        //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
         Param(PSTR("mix_outputs"), &c.customMixerCount),
         Param(PSTR("mix_0"), &c.customMixes[i++]),
@@ -509,9 +590,6 @@ class Cli
         Param(PSTR("mix_61"), &c.customMixes[i++]),
         Param(PSTR("mix_62"), &c.customMixes[i++]),
         Param(PSTR("mix_63"), &c.customMixes[i++]),
-
-        Param(PSTR("telemetry"), &c.telemetry),
-        Param(PSTR("telemetry_interval"), &c.telemetryInterval),
 
         Param()
       };
@@ -615,7 +693,7 @@ class Cli
           PSTR(" load"), PSTR(" save"), PSTR(" eeprom"),
           PSTR(" defaults"), PSTR(" reboot"),
           PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
-          PSTR(" stats"), PSTR(" info"), PSTR(" version"),
+          PSTR(" stats"), PSTR(" status"), PSTR(" info"), PSTR(" version"),
           NULL
         };
         for(const char ** ptr = helps; *ptr; ptr++) {
@@ -643,39 +721,39 @@ class Cli
 
 #if defined(ESP8266)
         const rst_info * resetInfo = system_get_rst_info();
-        print(F("system_get_rst_info reset reason: "));
+        print(F("reset reason: "));
         println(resetInfo->reason);
 
-        print(F("system_get_free_heap_size: "));
+        print(F("free_heap_size: "));
         println(system_get_free_heap_size());
 
-        print(F("system_get_os_print: "));
+        print(F("os_print: "));
         println(system_get_os_print());
 
         //system_print_meminfo();
 
-        print(F("system_get_chip_id: 0x"));
+        print(F("chip_id: 0x"));
         println(system_get_chip_id(), HEX);
 
-        print(F("system_get_sdk_version: "));
+        print(F("sdk_version: "));
         println(system_get_sdk_version());
 
-        print(F("system_get_boot_version: "));
+        print(F("boot_version: "));
         println(system_get_boot_version());
 
-        print(F("system_get_userbin_addr: 0x"));
+        print(F("userbin_addr: 0x"));
         println(system_get_userbin_addr(), HEX);
 
-        print(F("system_get_boot_mode: "));
+        print(F("boot_mode: "));
         println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
 
-        print(F("system_get_cpu_freq: "));
+        print(F("cpu_freq: "));
         println(system_get_cpu_freq());
 
-        print(F("system_get_flash_size_map: "));
+        print(F("flash_size_map: "));
         println(system_get_flash_size_map());
 
-        print(F("system_get_time: "));
+        print(F("time: "));
         println(system_get_time() / 1000000);
 #endif
       }
@@ -877,10 +955,27 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("status")) == 0)
       {
+        printVersion();
+        println();
         print(F("status: "));
+        println();
       }
       else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
       {
+        printVersion();
+        println();
+        print(F("    cpu freq: "));
+        print(system_get_cpu_freq());
+        println(F(" MHz"));
+        print(F("   gyro rate: "));
+        print(_model.state.gyroTimer.rate);
+        println(F(" Hz"));
+        print(F("   loop rate: "));
+        print(_model.state.loopTimer.rate);
+        println(F(" Hz"));
+        print(F("  mixer rate: "));
+        print(_model.state.mixerTimer.rate);
+        println(F(" Hz"));
         for(size_t i = 0; i < COUNTER_COUNT; ++i)
         {
           print(FPSTR(_model.state.stats.getName((StatCounter)i)));

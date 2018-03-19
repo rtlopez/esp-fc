@@ -25,9 +25,7 @@ class Mixer
         _model.state.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
         _model.state.maxThrottle = 2000.f;
       }
-
       _model.state.currentMixer = getMixer((MixerType)_model.config.mixerType);
-
       return 1;
     }
 
@@ -44,7 +42,7 @@ class Mixer
     {
       // default empty mixer
       static MixerEntry mixesEmpty[] = {
-        MixerEntry(MIXER_SOURCE_NULL, 0, 0) // terminator
+        MixerEntry() // terminator
       };
 
       // quadX mixer
@@ -54,7 +52,7 @@ class Mixer
         MixerEntry(MIXER_SOURCE_PITCH,  0,  100), MixerEntry(MIXER_SOURCE_PITCH,  1, -100), MixerEntry(MIXER_SOURCE_PITCH,  2,  100), MixerEntry(MIXER_SOURCE_PITCH,  3, -100),
         MixerEntry(MIXER_SOURCE_YAW,    0, -100), MixerEntry(MIXER_SOURCE_YAW,    1,  100), MixerEntry(MIXER_SOURCE_YAW,    2,  100), MixerEntry(MIXER_SOURCE_YAW,    3, -100),
         MixerEntry(MIXER_SOURCE_THRUST, 0,  100), MixerEntry(MIXER_SOURCE_THRUST, 1,  100), MixerEntry(MIXER_SOURCE_THRUST, 2,  100), MixerEntry(MIXER_SOURCE_THRUST, 3,  100),
-        MixerEntry(MIXER_SOURCE_NULL,   0, 0) // terminator
+        MixerEntry() // terminator
       };
 
       // quadX mixer
@@ -64,7 +62,7 @@ class Mixer
         MixerEntry(MIXER_SOURCE_PITCH,  0, -100), MixerEntry(MIXER_SOURCE_PITCH,  1, -100), MixerEntry(MIXER_SOURCE_PITCH,  2,  100), MixerEntry(MIXER_SOURCE_PITCH,  3,  100),
         MixerEntry(MIXER_SOURCE_YAW,    0, -100), MixerEntry(MIXER_SOURCE_YAW,    1,  100), MixerEntry(MIXER_SOURCE_YAW,    2, -100), MixerEntry(MIXER_SOURCE_YAW,    3,  100),
         MixerEntry(MIXER_SOURCE_THRUST, 0,  100), MixerEntry(MIXER_SOURCE_THRUST, 1,  100), MixerEntry(MIXER_SOURCE_THRUST, 2,  100), MixerEntry(MIXER_SOURCE_THRUST, 3,  100),
-        MixerEntry(MIXER_SOURCE_NULL,   0, 0) // terminator
+        MixerEntry() // terminator
       };
 
       // tricopter mixer
@@ -74,7 +72,7 @@ class Mixer
         MixerEntry(MIXER_SOURCE_PITCH,  0,  133), MixerEntry(MIXER_SOURCE_PITCH,  1,  -67), MixerEntry(MIXER_SOURCE_PITCH,  2,  -67), MixerEntry(MIXER_SOURCE_PITCH,  3,    0),
         MixerEntry(MIXER_SOURCE_YAW,    0,    0), MixerEntry(MIXER_SOURCE_YAW,    1,    0), MixerEntry(MIXER_SOURCE_YAW,    2,    0), MixerEntry(MIXER_SOURCE_YAW,    3,  100),
         MixerEntry(MIXER_SOURCE_THRUST, 0,  100), MixerEntry(MIXER_SOURCE_THRUST, 1,  100), MixerEntry(MIXER_SOURCE_THRUST, 2,  100), MixerEntry(MIXER_SOURCE_THRUST, 3,    0),
-        MixerEntry(MIXER_SOURCE_NULL,   0, 0) // terminator
+        MixerEntry() // terminator
       };
 
       // tricopter mixer
@@ -82,7 +80,7 @@ class Mixer
         // L                                      R
         MixerEntry(MIXER_SOURCE_PITCH,  0,  100), MixerEntry(MIXER_SOURCE_PITCH,  1,   100),
         MixerEntry(MIXER_SOURCE_YAW,    0,  100), MixerEntry(MIXER_SOURCE_YAW,    1,  -100),
-        MixerEntry(MIXER_SOURCE_NULL,   0, 0) // terminator
+        MixerEntry() // terminator
       };
 
       switch(mixer)
@@ -137,19 +135,19 @@ class Mixer
 
       const MixerConfig& mixer = _model.state.currentMixer;
 
-      // mix stabilized first
+      // mix stabilized sources first
       const MixerEntry * entry = mixer.mixes;
       size_t counter = 0;
-      do
+      while(true)
       {
         if(++counter >= MIXER_RULE_MAX) break;
         if(entry->src == MIXER_SOURCE_NULL) break; // break on terminator
-        if(entry->src <= MIXER_SOURCE_YAW && entry->dst < mixer.count)
+        if(entry->src <= MIXER_SOURCE_YAW && entry->dst < mixer.count && entry->rate != 0)
         {
           outputs[entry->dst] += sources[entry->src] * (entry->rate * 0.01f);
         }
         entry++;
-      } while(true);
+      }
 
       // airmode logic
       float thrust = sources[MIXER_SOURCE_THRUST];
@@ -179,7 +177,7 @@ class Mixer
       // apply other channels
       entry = mixer.mixes;
       counter = 0;
-      do
+      while(true)
       {
         if(++counter >= MIXER_RULE_MAX) break;
         if(entry->src == MIXER_SOURCE_NULL) break; // break on terminator
@@ -189,13 +187,13 @@ class Mixer
           {
             outputs[entry->dst] += thrust * (entry->rate * 0.01f);
           }
-          else if(entry->src > MIXER_SOURCE_THRUST)
+          else if(entry->src > MIXER_SOURCE_THRUST && entry->src < MIXER_SOURCE_MAX)
           {
             outputs[entry->dst] += sources[entry->src] * (entry->rate * 0.01f);
           }
         }
         entry++;
-      } while(true);
+      }
 
       writeOutput(outputs, mixer.count);
     }

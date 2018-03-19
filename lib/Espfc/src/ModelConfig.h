@@ -556,7 +556,7 @@ class ModelConfig
     OutputConfig output;
 
     int8_t mixerType;
-    int8_t yawReverse;
+    bool yawReverse;
 
     PidConfig pid[PID_ITEM_COUNT];
 
@@ -709,7 +709,7 @@ class ModelConfig
       magFilter.freq = 15;
 
       dtermFilter.type = FILTER_BIQUAD;
-      dtermFilter.freq = 70;
+      dtermFilter.freq = 100;
 
       dtermNotchFilter.type = FILTER_BIQUAD;
       dtermNotchFilter.cutoff = 70;
@@ -719,7 +719,7 @@ class ModelConfig
       yawFilter.freq = 90;
 
       levelPtermFilter.type = FILTER_PT1;
-      levelPtermFilter.freq = 50;
+      levelPtermFilter.freq = 70;
 
       telemetry = 0;
       telemetryInterval = 1000;
