@@ -773,6 +773,7 @@ class ModelConfig
       output.minCommand  = 1000;
       output.minThrottle = 1050;
       output.maxThrottle = 2000;
+      output.dshotIdle = 450;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         output.channel[i].servo = false;

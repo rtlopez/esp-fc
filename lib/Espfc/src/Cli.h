@@ -688,12 +688,11 @@ class Cli
       {
         static const char * helps[] = {
           PSTR("available commands:"),
-          PSTR(" help"), PSTR(" dump"), PSTR(" get param"), PSTR(" set param value ..."),
-          PSTR(" calgyro"), PSTR(" calmag"), PSTR(" calinfo"),
-          PSTR(" load"), PSTR(" save"), PSTR(" eeprom"),
-          PSTR(" defaults"), PSTR(" reboot"),
-          PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
-          PSTR(" stats"), PSTR(" status"), PSTR(" info"), PSTR(" version"),
+          PSTR(" help"), PSTR(" dump"), PSTR(" get param"), PSTR(" set param value ..."), PSTR(" cal [gyro]"),
+          PSTR(" defaults"), PSTR(" save"), PSTR(" reboot"), PSTR(" scaler"), PSTR(" mixer"),
+          PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"),
+          //PSTR(" load"), PSTR(" eeprom"),
+          //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
           NULL
         };
         for(const char ** ptr = helps; *ptr; ptr++) {
@@ -705,7 +704,7 @@ class Cli
         printVersion();
         println();
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("info")) == 0)
+      else if(strcmp_P(_cmd.args[0], PSTR("devinfo")) == 0)
       {
         printVersion();
         println();
@@ -724,33 +723,33 @@ class Cli
         print(F("reset reason: "));
         println(resetInfo->reason);
 
-        print(F("free_heap_size: "));
+        print(F("free heap: "));
         println(system_get_free_heap_size());
 
-        print(F("os_print: "));
+        print(F("os print: "));
         println(system_get_os_print());
 
         //system_print_meminfo();
 
-        print(F("chip_id: 0x"));
+        print(F("chip id: 0x"));
         println(system_get_chip_id(), HEX);
 
-        print(F("sdk_version: "));
+        print(F("sdk version: "));
         println(system_get_sdk_version());
 
-        print(F("boot_version: "));
+        print(F("boot version: "));
         println(system_get_boot_version());
 
-        print(F("userbin_addr: 0x"));
+        print(F("userbin addr: 0x"));
         println(system_get_userbin_addr(), HEX);
 
-        print(F("boot_mode: "));
+        print(F("boot mode: "));
         println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
 
-        print(F("cpu_freq: "));
+        print(F("cpu freq: "));
         println(system_get_cpu_freq());
 
-        print(F("flash_size_map: "));
+        print(F("flash size map: "));
         println(system_get_flash_size_map());
 
         print(F("time: "));
@@ -759,27 +758,22 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("get")) == 0)
       {
-        if(!_cmd.args[1])
-        {
-          println(F("param required"));
-          println();
-          return;
-        }
         bool found = false;
         for(size_t i = 0; _params[i].name; ++i)
         {
-          if(strcmp_P(_cmd.args[1], _params[i].name) == 0)
+          String ts = FPSTR(_params[i].name);
+          if(!_cmd.args[1] || ts.indexOf(_cmd.args[1]) >= 0)
           {
             print(_params[i]);
-            println();
             found = true;
           }
         }
         if(!found)
         {
           print(F("param not found: "));
-          println(_cmd.args[1]);
+          print(_cmd.args[1]);
         }
+        println();
       }
       else if(strcmp_P(_cmd.args[0], PSTR("set")) == 0)
       {
@@ -816,61 +810,66 @@ class Cli
           print(_params[i]);
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("calmag")) == 0)
+      else if(strcmp_P(_cmd.args[0], PSTR("cal")) == 0)
       {
-        if(!_cmd.args[1]) {}
-        else if(_cmd.args[1][0] == '1')
+        if(!_cmd.args[1])
         {
-          _model.state.magCalibration = 1;
-          //_model.config.telemetry = 1;
-          //_model.config.telemetryInterval = 200;
-          print(F("mag calibration on"));
+          print(F(" gyro offset: "));
+          print(_model.config.gyroBias[0]); print(' ');
+          print(_model.config.gyroBias[1]); print(' ');
+          print(_model.config.gyroBias[2]); print(F(" ["));
+          print(_model.state.gyroBias[0]); print(' ');
+          print(_model.state.gyroBias[1]); print(' ');
+          print(_model.state.gyroBias[2]); println(F("]"));
+
+          print(F("accel offset: "));
+          print(_model.config.accelBias[0]); print(' ');
+          print(_model.config.accelBias[1]); print(' ');
+          print(_model.config.accelBias[2]); print(F(" ["));
+          print(_model.state.accelBias[0]); print(' ');
+          print(_model.state.accelBias[1]); print(' ');
+          print(_model.state.accelBias[2]); println(F("]"));
+
+          /*
+          print(F("mag offset: "));
+          print(_model.config.magCalibrationOffset[0]); print(' ');
+          print(_model.config.magCalibrationOffset[1]); print(' ');
+          print(_model.config.magCalibrationOffset[2]); print(F(" ["));
+          print(_model.state.magCalibrationOffset[0]); print(' ');
+          print(_model.state.magCalibrationOffset[1]); print(' ');
+          print(_model.state.magCalibrationOffset[2]); println(F("]"));
+
+          print(F(" mag scale: "));
+          print(_model.config.magCalibrationScale[0]); print(' ');
+          print(_model.config.magCalibrationScale[1]); print(' ');
+          print(_model.config.magCalibrationScale[2]); print(F(" ["));
+          print(_model.state.magCalibrationScale[0]); print(' ');
+          print(_model.state.magCalibrationScale[1]); print(' ');
+          print(_model.state.magCalibrationScale[2]); println(F("]"));
+          */
         }
-        else if(_cmd.args[1][0] == '0')
+        else if(strcmp_P(_cmd.args[1], PSTR("gyro")) == 0)
         {
-          _model.state.magCalibration = 0;
-          //_model.config.telemetry = 0;
-          print(F("mag calibration off"));
+          if(!_model.isActive(MODE_ARMED)) _model.calibrate();
+          println(F("OK"));
         }
-      }
-      else if(strcmp_P(_cmd.args[0], PSTR("calgyro")) == 0)
-      {
-        if(!_model.isActive(MODE_ARMED)) _model.calibrate();
-        println(F("OK"));
-      }
-      else if(strcmp_P(_cmd.args[0], PSTR("calinfo")) == 0)
-      {
-        print(F(" gyro offset: "));
-        print(_model.config.gyroBias[0]); print(' ');
-        print(_model.config.gyroBias[1]); print(' ');
-        print(_model.config.gyroBias[2]); print(F(" ["));
-        print(_model.state.gyroBias[0]); print(' ');
-        print(_model.state.gyroBias[1]); print(' ');
-        print(_model.state.gyroBias[2]); println(F("]"));
-
-        print(F("accel offset: "));
-        print(_model.config.accelBias[0]); print(' ');
-        print(_model.config.accelBias[1]); print(' ');
-        print(_model.config.accelBias[2]); print(F(" ["));
-        print(_model.state.accelBias[0]); print(' ');
-        print(_model.state.accelBias[1]); print(' ');
-        print(_model.state.accelBias[2]); println(F("]"));
-
-        print(F("mag offset: "));
-        print(_model.config.magCalibrationOffset[0]); print(' ');
-        print(_model.config.magCalibrationOffset[1]); print(' ');
-        print(_model.config.magCalibrationOffset[2]); print(F(" ["));
-        print(_model.state.magCalibrationOffset[0]); print(' ');
-        print(_model.state.magCalibrationOffset[1]); print(' ');
-        print(_model.state.magCalibrationOffset[2]); println(F("]"));
-
-        print(F(" mag scale: "));
-        print(_model.config.magCalibrationScale[0]); print(' ');
-        print(_model.config.magCalibrationScale[1]); print(' ');
-        print(_model.config.magCalibrationScale[2]); print(F(" ["));
-        print(_model.state.magCalibrationScale[0]); print(' ');
-        print(_model.state.magCalibrationScale[1]); print(' ');
-        print(_model.state.magCalibrationScale[2]); println(F("]"));
+        else if(strcmp_P(_cmd.args[1], PSTR("mag")) == 0)
+        {
+          if(!_cmd.args[2]) {}
+          else if(_cmd.args[2][0] == '1')
+          {
+            _model.state.magCalibration = 1;
+            //_model.config.telemetry = 1;
+            //_model.config.telemetryInterval = 200;
+            print(F("mag calibration on"));
+          }
+          else if(_cmd.args[2][0] == '0')
+          {
+            _model.state.magCalibration = 0;
+            //_model.config.telemetry = 0;
+            print(F("mag calibration off"));
+          }
+        }
       }
       else if(strcmp_P(_cmd.args[0], PSTR("load")) == 0)
       {
@@ -892,7 +891,9 @@ class Cli
 
         for(int i = start; i < start + 32; ++i)
         {
-          print(EEPROM.read(i), HEX);
+          uint8_t v = EEPROM.read(i);
+          if(v <= 0xf) print('0');
+          print(v, HEX);
           print(' ');
         }
         println();
@@ -900,14 +901,6 @@ class Cli
         for(int i = start; i < start + 32; ++i)
         {
           print((int8_t)EEPROM.read(i));
-          print(' ');
-        }
-        println();
-
-        for(int i = start; i < start + 32; i += 2)
-        {
-          int16_t v = EEPROM.read(i) | EEPROM.read(i + 1) << 8;
-          print(v);
           print(' ');
         }
         println();
@@ -945,12 +938,12 @@ class Cli
         Param p;
         for(size_t i = 0; i < MIXER_RULE_MAX; i++)
         {
-          if(mixer.mixes[i].src == MIXER_SOURCE_NULL) break;
           print(F("set mix_"));
           print(i);
           print(' ');
           p.print(*_stream, mixer.mixes[i]);
           println();
+          if(mixer.mixes[i].src == MIXER_SOURCE_NULL) break;
         }
       }
       else if(strcmp_P(_cmd.args[0], PSTR("status")) == 0)
@@ -976,6 +969,7 @@ class Cli
         print(F("  mixer rate: "));
         print(_model.state.mixerTimer.rate);
         println(F(" Hz"));
+        println();
         for(size_t i = 0; i < COUNTER_COUNT; ++i)
         {
           print(FPSTR(_model.state.stats.getName((StatCounter)i)));
