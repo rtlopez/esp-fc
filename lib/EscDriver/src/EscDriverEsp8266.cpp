@@ -232,7 +232,10 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::commit()
   for(Slot * it = sorted; it != end; ++it)
   {
     if(!it->active()) break;
-    item->set_mask |= (1 << it->pin);
+    if(!(_protocol == ESC_PROTOCOL_BRUSHED && it->pulse <= _intervalMin))
+    {
+      item->set_mask |= (1 << it->pin);
+    }
     if(it == sorted) item->ticks = it->pulse;
   }
   item++;
@@ -241,7 +244,10 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::commit()
   {
     if(!it->active()) break;
     if(last) {
-      item->clr_mask |= (1 << last->pin);
+      if(!(_protocol == ESC_PROTOCOL_BRUSHED && last->pulse >= _intervalMax))
+      {
+        item->clr_mask |= (1 << last->pin);
+      }
       uint32_t delta = it->pulse - last->pulse;
       if(delta > DELTA_TICKS_MIN && delta < DELTA_TICKS_MAX)
       {
@@ -256,7 +262,10 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::commit()
   item->last = true;
   if(last)
   {
-    item->clr_mask |= (1 << last->pin);
+    if(!(_protocol == ESC_PROTOCOL_BRUSHED && last->pulse >= _intervalMax))
+    {
+      item->clr_mask |= (1 << last->pin);
+    }
   }
   if(_async)
   {
@@ -309,9 +318,11 @@ EscDriverEsp8266::EscDriverEsp8266(): _busy(false), _async(true), _protocol(ESC_
 int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate)
 {
   _protocol = ESC_PROTOCOL_SANITIZE(protocol);
-  _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // ignore async for brushed
+  _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // force async for brushed
   _rate = constrain(rate, 50, 8000);
-  _interval = usToTicksReal(1000000L / _rate) - 400UL;
+  _interval = usToTicksReal(1000000L / _rate) - 400; // small compensation to keep frequency
+  _intervalMin = _interval / 500; // do not generate brushed pulses if duty < ~0.2%  (1002)
+  _intervalMax = _interval - _intervalMin; // set brushed output hi if duty > ~99.8% (1998)
   switch(_protocol)
   {
     // pulse delays experimentally selected

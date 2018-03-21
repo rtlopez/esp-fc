@@ -14,13 +14,13 @@
 
 #if defined(USE_FRC0)
   #define TIMER_CLOCK_FREQ F_CPU
-  #define TIMER_TICKS_MIN 250UL
+  #define TIMER_TICKS_MIN 250L
 #elif defined(USE_UNIT)
-  #define TIMER_CLOCK_FREQ 80000000UL
-  #define TIMER_TICKS_MIN 150UL
+  #define TIMER_CLOCK_FREQ 80000000L
+  #define TIMER_TICKS_MIN 150L
 #else
   #define TIMER_CLOCK_FREQ APB_CLK_FREQ
-  #define TIMER_TICKS_MIN 150UL
+  #define TIMER_TICKS_MIN 150L
 #endif
 
 #define ETS_FRC_TIMER2_INUM 10
@@ -53,7 +53,7 @@ class EscDriverEsp8266
         Item(): set_mask(0), clr_mask(0), ticks(0), last(0) {}
         uint32_t set_mask; // pin set mask
         uint32_t clr_mask; // pin clear mask
-        uint32_t ticks;    // delay to next cycle
+        int32_t ticks;    // delay to next cycle
         uint32_t last;
         void reset() { *this = Item(); }
     };
@@ -84,7 +84,9 @@ class EscDriverEsp8266
     bool _async;
     EscProtocol _protocol;
     int _rate;
-    uint32_t _interval;
+    int32_t _interval;
+    int32_t _intervalMin; // for brushed
+    int32_t _intervalMax; // for brushed
 
     int _dh;
     int _dl;
