@@ -11,9 +11,10 @@ namespace Device {
 class BusI2C: public BusDevice
 {
   public:
-    int init() override
+    int begin(int sda, int scl, int speed)
     {
-      Wire.begin();
+      Wire.begin(sda, scl);
+      Wire.setClock(speed);
       return 0;
     }
 

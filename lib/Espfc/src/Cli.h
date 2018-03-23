@@ -308,7 +308,7 @@ class Cli
     {
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
       static const char* accelDevChoices[]   = { PSTR("AUTO"), PSTR("NONE"), PSTR("RESERVED"), PSTR("MPU6050"), NULL };
-      static const char* accelModeChoices[]  = { PSTR("OFF"), PSTR("DELAYED"), PSTR("GYRO"), PSTR("GYROFIFO"), NULL };
+      static const char* accelModeChoices[]  = { PSTR("DELAYED"), PSTR("GYRO"), NULL };
       //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
       //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
       static const char* fusionModeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
@@ -373,7 +373,6 @@ class Cli
         Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
         */
 
-        Param(PSTR("fusion_delay"), &c.fusionDelay),
         Param(PSTR("fusion_mode"), &c.fusionMode, fusionModeChoices),
 
         Param(PSTR("input_roll_rate"), &c.input.rate[0]),

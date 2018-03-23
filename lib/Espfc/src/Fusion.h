@@ -295,7 +295,7 @@ class Fusion
 
     void madgwickFusion()
     {
-      if(_model.config.magDev != MAG_NONE)
+      if(_model.magActive())
       {
         _madgwick.update(
           _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,

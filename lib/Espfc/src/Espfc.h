@@ -1,8 +1,6 @@
 #ifndef _ESPFC_ESPFC_H_
 #define _ESPFC_ESPFC_H_
 
-#include <Wire.h>
-
 #include "Model.h"
 #include "Controller.h"
 #include "Input.h"

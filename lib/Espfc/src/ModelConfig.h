@@ -35,10 +35,8 @@ enum AccelGain {
 };
 
 enum AccelMode {
-  ACCEL_OFF       = 0x00,
-  ACCEL_DELAYED   = 0x01,
-  ACCEL_GYRO      = 0x02,
-  ACCEL_GYRO_FIFO = 0x03
+  ACCEL_DELAYED   = 0x00,
+  ACCEL_GYRO      = 0x01,
 };
 
 enum MagGain {
@@ -589,7 +587,6 @@ class ModelConfig
     SerialPortConfig serial[SERIAL_UART_COUNT];
 
     int8_t fusionMode;
-    bool fusionDelay;
 
     int16_t gyroBias[3];
     int16_t accelBias[3];
@@ -691,7 +688,6 @@ class ModelConfig
       mixerSync = 1;
 
       fusionMode = FUSION_MADGWICK;
-      fusionDelay = 0;
 
       gyroFilter.type = FILTER_PT1;
       gyroFilter.freq = 90;

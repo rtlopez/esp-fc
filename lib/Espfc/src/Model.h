@@ -77,6 +77,11 @@ class Model
       return config.magDev != MAG_NONE;
     }
 
+    bool baroActive()
+    {
+      return config.baroDev != BARO_NONE;
+    }
+
     bool calibrationActive()
     {
       return state.sensorCalibration || state.accelBiasSamples || state.gyroBiasSamples;

@@ -4,6 +4,7 @@
 #include "BusDevice.h"
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
+#include "Debug.h"
 
 #define MPU6050_ADDRESS_AD0_LOW     0x68 // address pin low (GND), default for InvenSense evaluation board
 #define MPU6050_ADDRESS_AD0_HIGH    0x69 // address pin high (VCC)
@@ -80,17 +81,21 @@ namespace Device {
 class GyroMPU6050: public GyroDevice
 {
   public:
-    GyroMPU6050(BusDevice * bus, uint8_t addr = MPU6050_DEFAULT_ADDRESS): _bus(bus), _addr(addr) {}
-
-    int init() override
+    int begin(BusDevice * bus, uint8_t addr = MPU6050_DEFAULT_ADDRESS)
     {
+      _bus = bus;
+      _addr = addr;
+
+      D("gyro_addr", addr);
+
       setClockSource(MPU6050_CLOCK_PLL_XGYRO);
-      setFullScaleGyroRange(MPU6050_GYRO_FS_2000);
-      setFullScaleAccelRange(MPU6050_ACCEL_FS_8);
+      //setFullScaleGyroRange(MPU6050_GYRO_FS_2000);
+      //setFullScaleAccelRange(MPU6050_ACCEL_FS_8);
+      //setDLPFMode(MPU6050_DLPF_BW_256);
+      //setRate(8);
       setSleepEnabled(false);
-      setDLPFMode(MPU6050_DLPF_BW_256);
-      setRate(8);
-      return getDeviceID() == 0x34;
+
+      return testConnection();
     }
 
     int readGyro(VectorInt16& v) override
@@ -108,7 +113,7 @@ class GyroMPU6050: public GyroDevice
 
     int readAccel(VectorInt16& v) override
     {
-      uint8_t buffer[12];
+      uint8_t buffer[6];
 
       _bus->read(_addr, MPU6050_RA_ACCEL_XOUT_H, 6, buffer);
 
@@ -119,44 +124,51 @@ class GyroMPU6050: public GyroDevice
       return 1;
     }
 
-    void setDLPFMode(uint8_t mode)
+    void setDLPFMode(uint8_t mode) override
     {
-      _bus->writeBits(_addr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, mode);
+      int res = _bus->writeBits(_addr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, mode);
+      D("gyro_dlfp", mode, res);
     }
 
-    void setRate(uint8_t rate)
+    void setRate(uint8_t rate) override
     {
-      _bus->writeByte(_addr, MPU6050_RA_SMPLRT_DIV, rate);
+      int res = _bus->writeByte(_addr, MPU6050_RA_SMPLRT_DIV, rate);
+      D("gyro_rate", rate, res);
     }
 
-    uint8_t getDeviceID()
+    void setFullScaleGyroRange(uint8_t range) override
     {
-      uint8_t whoami;
-      _bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
-      return whoami;
+      int res = _bus->writeBits(_addr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
+      D("gyro_range", range, res);
     }
 
-  private:
-    void setClockSource(uint8_t source)
+    void setFullScaleAccelRange(uint8_t range) override
     {
-      _bus->writeBits(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);
+      int res = _bus->writeBits(_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
+      D("accel_range", range, res);
     }
 
-    void setFullScaleGyroRange(uint8_t range)
+    bool testConnection() override
     {
-      _bus->writeBits(_addr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
-    }
-
-    void setFullScaleAccelRange(uint8_t range)
-    {
-      _bus->writeBits(_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
+      uint8_t whoami = 0;
+      int res = _bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
+      D("gyro_whoami", whoami, res);
+      return whoami == 0x34;
     }
 
     void setSleepEnabled(bool enabled)
     {
-      _bus->writeBit(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, enabled);
+      int res = _bus->writeBit(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, enabled);
+      D("gyro_sleep", enabled, res);
     }
 
+    void setClockSource(uint8_t source)
+    {
+      int res = _bus->writeBits(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);
+      D("gyro_clock", source, res);
+    }
+
+  private:
     BusDevice * _bus;
     uint8_t _addr;
 };

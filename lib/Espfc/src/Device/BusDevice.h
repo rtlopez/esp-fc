@@ -12,11 +12,9 @@ namespace Device {
 class BusDevice
 {
   public:
-    virtual int init();
+    virtual int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) = 0;
 
-    virtual int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT);
-
-    virtual bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data);
+    virtual bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) = 0;
 
     int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT)
     {

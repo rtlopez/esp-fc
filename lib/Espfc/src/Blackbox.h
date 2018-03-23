@@ -131,7 +131,7 @@ class Blackbox
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
-      blackboxConfigMutable()->record_acc = _model.config.accelDev != ACCEL_NONE && _model.config.accelMode != ACCEL_OFF;
+      blackboxConfigMutable()->record_acc = _model.config.accelDev != ACCEL_NONE;
       if(blackboxConfig()->record_acc)
       {
           enabledSensors |= SENSOR_ACC;

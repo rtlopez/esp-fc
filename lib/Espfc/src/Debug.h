@@ -19,4 +19,22 @@
 #define LOG_SERIAL_DEBUG(v)
 #endif
 
+#if 1
+template <typename T>
+void D(T t)
+{
+  Serial.println(t);
+}
+
+template<typename T, typename... Args>
+void D(T t, Args... args) // recursive variadic function
+{
+  Serial.print(t);
+  Serial.print(' ');
+  D(args...) ;
+}
+#else
+#define D(...)
+#endif
+
 #endif

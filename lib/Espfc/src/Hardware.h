@@ -12,6 +12,15 @@
 #include "InputPPM.h"
 #include "InputSBUS.h"
 #include "EscDriver.h"
+#include "Device/BusI2C.h"
+#include "Device/GyroMPU6050.h"
+#include "Device/MagHMC5338L.h"
+
+namespace {
+  static Espfc::Device::BusI2C i2cBus;
+  static Espfc::Device::GyroMPU6050 mpu6050;
+  static Espfc::Device::MagHMC5338L hmc5883l;
+}
 
 namespace Espfc {
 
@@ -24,13 +33,27 @@ class Hardware
     {
       WiFi.disconnect();
       WiFi.mode(WIFI_OFF);
-      _model.logger.info().logln(F("WIFI 0"));
+      _model.logger.info().logln(F("WIFI OFF"));
 
-      Wire.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL]);
-      Wire.setClock(_model.config.i2cSpeed * 1000);
-      //Wire.setClockStretchLimit(230);
+      int res = 0;
+
+      res = i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
+      D("i2c_init", res);
       _model.logger.info().log(F("I2C")).logln(_model.config.i2cSpeed);
 
+      res = mpu6050.begin(&i2cBus);
+      D("gyro_mpu6050", res);
+
+      res = hmc5883l.begin(&i2cBus);
+      D("mag_hmc5883l", res);
+
+      initSerial();
+
+      return 1;
+    }
+
+    void initSerial()
+    {
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
         SerialDevice * serial = getSerialPortById((SerialPort)i);
@@ -90,7 +113,6 @@ class Hardware
           _model.logger.info().log(F("UART")).log(i).logln(F("free"));
         }
       }
-      return 1;
     }
 
     static SerialDevice * getSerialPort(SerialPortConfig * config, SerialFunction sf)
@@ -154,6 +176,21 @@ class Hardware
 #endif
         default: return NULL;
       }
+    }
+
+    static Device::BusDevice * getI2CDevice(const Model& model)
+    {
+      return &i2cBus;
+    }
+
+    static Device::GyroDevice * getGyroDevice(const Model& model)
+    {
+      return &mpu6050;
+    }
+
+    static Device::MagDevice * getMagDevice(const Model& model)
+    {
+      return &hmc5883l;
     }
 
     static InputDevice * getInputDevice(Model& model)

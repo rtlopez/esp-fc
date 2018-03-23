@@ -2,13 +2,13 @@
 #define _ESPFC_SENSOR_H_
 
 #include "Arduino.h"
-#include <MPU6050.h>
-#include <HMC5883L.h>
-#include <Adafruit_BMP280.h>
+#include "Device/GyroDevice.h"
+#include "Device/MagDevice.h"
 
 #include "Model.h"
 #include "Filter.h"
 #include "Fusion.h"
+#include "Hardware.h"
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
 #define ESPFC_FUZZY_GYRO_ZERO 0.20
@@ -22,26 +22,33 @@ class Sensor
 
     int begin()
     {
-      _model.logger.info().log(F("SENSOR")).log(_model.config.accelMode).logln(_model.config.fusionDelay);
+      _model.logger.info().log(F("SENSOR")).logln(_model.config.accelMode);
       initGyro();
       initMag();
       initPresure();
       _fusion.begin();
       _model.state.battery.timer.setRate(20);
-      _model.state.battery.samples = 20;
+      _model.state.battery.samples = 40;
       return 1;
     }
 
     int update()
     {
-      _model.state.stats.start(COUNTER_GYRO_READ);
-      int ret = readSensors();
-      _model.state.stats.end(COUNTER_GYRO_READ);
+      bool accelDelayed = _model.config.accelMode == ACCEL_DELAYED;
+
+      int ret = readGyro();
+      if(!accelDelayed)
+      {
+        ret &= readAccel();
+      }
+
       if(!ret) return 0;
 
-      _model.state.stats.start(COUNTER_GYRO_FILTER);
-      updateSensors();
-      _model.state.stats.end(COUNTER_GYRO_FILTER);
+      updateGyro();
+      if(!accelDelayed)
+      {
+        updateAccel();
+      }
 
       _fusion.update();
       return 1;
@@ -49,25 +56,17 @@ class Sensor
 
     int updateDelayed()
     {
-      bool accelDelayed = _model.accelActive() && _model.config.accelMode == ACCEL_DELAYED;
+      bool accelDelayed = _model.config.accelMode == ACCEL_DELAYED;
       if(accelDelayed)
       {
-        _model.state.stats.start(COUNTER_ACCEL_READ);
         readAccel();
-        _model.state.stats.end(COUNTER_ACCEL_READ);
-        _model.state.stats.start(COUNTER_ACCEL_FILTER);
         updateAccel();
-        _model.state.stats.end(COUNTER_ACCEL_FILTER);
       }
 
       if(_model.config.magDev != MAG_NONE)
       {
-        _model.state.stats.start(COUNTER_MAG_READ);
         readMag();
-        _model.state.stats.end(COUNTER_MAG_READ);
-        _model.state.stats.start(COUNTER_MAG_FILTER);
         updateMag();
-        _model.state.stats.end(COUNTER_MAG_FILTER);
       }
 
       if(accelDelayed)
@@ -86,94 +85,38 @@ class Sensor
     }
 
   private:
-    int readSensors()
-    {
-      if(!_model.accelActive())
-      {
-        return readGyro();
-      }
-      switch(_model.config.accelMode)
-      {
-        case ACCEL_GYRO_FIFO:
-          return readGyroAccelFifo();
-        case ACCEL_GYRO:
-          return readGyroAccel();
-        case ACCEL_OFF:
-        case ACCEL_DELAYED:
-        default:
-          return readGyro();
-      }
-    }
-
-    void updateSensors()
-    {
-      if(_model.accelActive())
-      {
-        updateGyro();
-        return;
-      }
-      switch(_model.config.accelMode)
-      {
-        case ACCEL_GYRO_FIFO:
-        case ACCEL_GYRO:
-          updateAccel(); // no break here
-        case ACCEL_OFF:
-        case ACCEL_DELAYED:
-        default:
-          updateGyro();
-      }
-    }
-
-    int readGyroAccelFifo()
-    {
-      uint8_t buf[FIFO_SIZE];
-      int numSamples = 0;
-      do
-      {
-        int fifoCount = _gyro.getFIFOCount();
-        if(fifoCount < FIFO_SIZE) return 0;
-        numSamples = fifoCount / FIFO_SIZE;
-        _gyro.getFIFOBytes(buf, FIFO_SIZE);
-      }
-      while(numSamples > 1); // discard late samples and use only latest
-      toVector(_model.state.accelRaw, buf);
-      toVector(_model.state.gyroRaw, buf + 6);
-      return 1;
-    }
-
-    int readGyroAccel()
-    {
-      _gyro.getMotion6(
-        &_model.state.accelRaw.x, &_model.state.accelRaw.y, &_model.state.accelRaw.z,
-        &_model.state.gyroRaw.x,  &_model.state.gyroRaw.y,  &_model.state.gyroRaw.z
-      );
-      return 1;
-    }
-
     int readGyro()
     {
-      _gyro.getRotation(&_model.state.gyroRaw.x,  &_model.state.gyroRaw.y,  &_model.state.gyroRaw.z);
+      _model.state.stats.start(COUNTER_GYRO_READ);
+      _gyro->readGyro(_model.state.gyroRaw);
+      _model.state.stats.end(COUNTER_GYRO_READ);
       return 1;
     }
 
     int readAccel()
     {
-      _gyro.getAcceleration(&_model.state.accelRaw.x, &_model.state.accelRaw.y, &_model.state.accelRaw.z);
+      if(!_model.accelActive()) return 0;
+
+      _model.state.stats.start(COUNTER_ACCEL_READ);
+      _gyro->readAccel(_model.state.accelRaw);
+      _model.state.stats.end(COUNTER_ACCEL_READ);
       return 1;
     }
 
     int readMag()
     {
-      if(_model.config.magDev != MAG_NONE && _model.state.magTimer.check())
-      {
-        _mag.getHeading(&_model.state.magRaw.x, &_model.state.magRaw.y, &_model.state.magRaw.z);
-        return 1;
-      }
-      return 0;
+      if(!_model.magActive() || !_model.state.magTimer.check()) return 0;
+
+      _model.state.stats.start(COUNTER_MAG_READ);
+      _mag->readMag(_model.state.magRaw);
+      _model.state.stats.start(COUNTER_MAG_READ);
+      return 1;
     }
 
     void updateGyro()
     {
+      _model.state.stats.start(COUNTER_GYRO_FILTER);
+
       align(_model.state.gyroRaw, _model.config.gyroAlign);
 
       _model.state.gyro = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
@@ -209,10 +152,15 @@ class Sensor
         }
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
       }
+      _model.state.stats.end(COUNTER_GYRO_FILTER);
     }
 
     void updateAccel()
     {
+      if(!_model.accelActive()) return;
+
+      _model.state.stats.start(COUNTER_ACCEL_FILTER);
+
       align(_model.state.accelRaw, _model.config.accelAlign);
 
       _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
@@ -235,30 +183,35 @@ class Sensor
       {
         _model.state.accel -= _model.state.accelBias;
       }
+
+      _model.state.stats.end(COUNTER_ACCEL_FILTER);
     }
 
     void updateMag()
     {
-      if(_model.config.magDev != MAG_NONE)
+      if(!_model.magActive()) return;
+
+      _model.state.stats.start(COUNTER_MAG_FILTER);
+
+      align(_model.state.magRaw, _model.config.magAlign);
+      _model.state.mag  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
+      for(size_t i = 0; i < 3; i++)
       {
-        align(_model.state.magRaw, _model.config.magAlign);
-        _model.state.mag  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
-        for(size_t i = 0; i < 3; i++)
-        {
-          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
-        }
-        if(_model.state.magCalibrationValid && _model.state.magCalibration == 0)
-        {
-          _model.state.mag -= _model.state.magCalibrationOffset;
-          _model.state.mag *= _model.state.magCalibrationScale;
-        }
-        collectMagCalibration();
+        _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
       }
+      if(_model.state.magCalibrationValid && _model.state.magCalibration == 0)
+      {
+        _model.state.mag -= _model.state.magCalibrationOffset;
+        _model.state.mag *= _model.state.magCalibrationScale;
+      }
+      collectMagCalibration();
+
+      _model.state.stats.end(COUNTER_MAG_FILTER);
     }
 
     void collectMagCalibration()
     {
-      if(_model.config.magDev == MAG_NONE) return;
+      if(!_model.magActive()) return;
       if(_model.state.magCalibration == 1)
       {
         resetMagCalibration();
@@ -276,7 +229,7 @@ class Sensor
 
     void resetMagCalibration()
     {
-      if(_model.config.magDev == MAG_NONE) return;
+      if(!_model.magActive()) return;
       for(int i = 0; i < 3; i++)
       {
         _model.state.magCalibrationData[i][0] = 0;
@@ -287,7 +240,7 @@ class Sensor
 
     void updateMagCalibration()
     {
-      if(_model.config.magDev == MAG_NONE) return;
+      if(!_model.magActive()) return;
       // just in case when the calibration data is not valid
       _model.state.magCalibrationValid = false;
       for(int i = 0; i < 3; i++)
@@ -329,34 +282,10 @@ class Sensor
 
     void initGyro()
     {
-      _gyro.initialize();
-      _model.logger.info().log(F("GYRO INIT")).log(_model.config.gyroDev).log(_gyro.getDeviceID()).logln(_gyro.testConnection());
+      _gyro = Hardware::getGyroDevice(_model);
 
-      setSampleRate();
-      setGyroScale();
-      setAccelScale();
+      _model.logger.info().log(F("GYRO INIT")).log(_model.config.gyroDev).logln(_gyro->testConnection());
 
-      // setup fifo
-      if(_model.config.accelMode == ACCEL_GYRO_FIFO)
-      {
-        _gyro.setAccelFIFOEnabled(true);
-        _gyro.setXGyroFIFOEnabled(true);
-        _gyro.setYGyroFIFOEnabled(true);
-        _gyro.setZGyroFIFOEnabled(true);
-        _gyro.resetFIFO();
-        _gyro.setFIFOEnabled(true);
-      }
-    }
-
-    void setSampleRate()
-    {
-      _gyro.setDLPFMode(_model.config.gyroDlpf);
-      _gyro.setRate(_model.state.gyroDivider - 1);
-      _model.logger.info().log(F("GYRO RATE")).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
-    }
-
-    void setGyroScale()
-    {
       switch(_model.config.gyroFsr)
       {
         case GYRO_FS_2000: _model.state.gyroScale = M_PI /  (16.384 * 180.0); break;
@@ -364,11 +293,8 @@ class Sensor
         case GYRO_FS_500:  _model.state.gyroScale = M_PI /  (65.535 * 180.0); break;
         case GYRO_FS_250:  _model.state.gyroScale = M_PI / (131.072 * 180.0); break;
       }
-      _gyro.setFullScaleGyroRange(_model.config.gyroFsr);
-    }
+      _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
 
-    void setAccelScale()
-    {
       switch(_model.config.accelFsr)
       {
         case ACCEL_FS_16: _model.state.accelScale = 1.0 /  2048.0; break;
@@ -376,25 +302,24 @@ class Sensor
         case ACCEL_FS_4:  _model.state.accelScale = 1.0 /  8192.0; break;
         case ACCEL_FS_2:  _model.state.accelScale = 1.0 / 16384.0; break;
       }
-      _gyro.setFullScaleAccelRange(_model.config.accelFsr);
+      _gyro->setFullScaleAccelRange(_model.config.accelFsr);
+
+      _gyro->setDLPFMode(_model.config.gyroDlpf);
+      _gyro->setRate(_model.state.gyroDivider - 1);
+      _model.logger.info().log(F("GYRO RATE")).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
     }
 
     void initMag()
     {
-      if(_model.config.magDev == MAG_NONE) return;
-      _mag.initialize();
+      if(!_model.magActive()) return;
 
-      _model.logger.info().log(F("MAG INIT")).logln(_mag.testConnection());
+      _mag = Hardware::getMagDevice(_model);
 
-      _mag.setSampleAveraging(_model.config.magAvr);
-      _mag.setMode(HMC5883L_MODE_CONTINUOUS);
+      _model.logger.info().log(F("MAG INIT")).logln(_mag->testConnection());
 
-      setMagSampleRate();
-      setMagScale();
-    }
+      _mag->setSampleAveraging(_model.config.magAvr);
+      _mag->setMode(HMC5883L_MODE_CONTINUOUS);
 
-    void setMagSampleRate()
-    {
       int rate = -1;
       switch(_model.config.magSampleRate)
       {
@@ -405,14 +330,11 @@ class Sensor
         case MAG_RATE_75:   rate = 75; break;
         default: _model.config.magSampleRate = MAG_RATE_15; rate = 15; return;
       }
-      _mag.setDataRate(_model.config.magSampleRate + 0x02);
+      _mag->setSampleRate(_model.config.magSampleRate + 0x02);
       _model.state.magTimer.setRate(rate);
       _model.logger.info().log(F("MAG RATE")).log(_model.config.magSampleRate).log(_model.state.magTimer.rate).logln(_model.state.magTimer.interval);
-    }
 
-    void setMagScale()
-    {
-      const float base = 1.0f;//1000.0;
+      const float base = 1.0f; // 1000.0;
       switch(_model.config.magFsr)
       {
         case MAG_GAIN_1370: _model.state.magScale = base / 1370; break;
@@ -424,7 +346,7 @@ class Sensor
         case MAG_GAIN_330:  _model.state.magScale = base / 330; break;
         case MAG_GAIN_220:  _model.state.magScale = base / 220; break;
       }
-      _mag.setGain(_model.config.magFsr);
+      _mag->setGain(_model.config.magFsr);
     }
 
     void initPresure()
@@ -513,9 +435,8 @@ class Sensor
 
     Model& _model;
     Fusion _fusion;
-    MPU6050 _gyro;
-    HMC5883L _mag;
-    Adafruit_BMP280 _baro;
+    Device::GyroDevice * _gyro;
+    Device::MagDevice * _mag;
 };
 
 }
