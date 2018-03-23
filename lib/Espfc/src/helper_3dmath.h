@@ -1,34 +1,3 @@
-// I2C device class (I2Cdev) demonstration Arduino sketch for MPU6050 class, 3D math helper
-// 6/5/2012 by Jeff Rowberg <jeff@rowberg.net>
-// Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
-//
-// Changelog:
-//     2012-06-05 - add 3D math helper file to DMP6 example sketch
-
-/* ============================================
-I2Cdev device library code is placed under the MIT license
-Copyright (c) 2012 Jeff Rowberg
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-===============================================
-*/
-
 #ifndef _HELPER_3DMATH_H_
 #define _HELPER_3DMATH_H_
 
@@ -151,8 +120,8 @@ class Quaternion {
           }
 
           // Calculate temporary values.
-          float halfTheta = acos(cosHalfTheta);
-          float sinHalfTheta = sqrt(1.0 - cosHalfTheta * cosHalfTheta);
+          float halfTheta = acosf(cosHalfTheta);
+          float sinHalfTheta = sqrtf(1.0 - cosHalfTheta * cosHalfTheta);
 
           // if theta = 180 degrees then result is not fully defined
           // we could rotate around any axis normal to q1 or q2
@@ -162,8 +131,8 @@ class Quaternion {
           }
 
           // calculate result
-          float ra = sin((1.f - pc) * halfTheta) / sinHalfTheta;
-          float rb = sin(pc * halfTheta) / sinHalfTheta;
+          float ra = sinf((1.f - pc) * halfTheta) / sinHalfTheta;
+          float rb = sinf(pc * halfTheta) / sinHalfTheta;
 
           return qa * ra + qb * rb;
         }
@@ -171,8 +140,8 @@ class Quaternion {
         template<typename T>
         void toAngleVector(float& angle, VectorBase<T>& v) const
         {
-          float halfTheta = acos(w);
-          float sinHalfTheta = sin(halfTheta);
+          float halfTheta = acosf(w);
+          float sinHalfTheta = sinf(halfTheta);
           angle = 2.0 * halfTheta;
           if (sinHalfTheta == 0) {
             v.x = 1.0;
@@ -189,7 +158,7 @@ class Quaternion {
         void fromAngleVector(float angle, const VectorBase<T>& v)
         {
           float sinHalfTheta = sin(angle / 2.0);
-          w = cos(angle / 2.0);
+          w = cosf(angle / 2.0);
           x = v.x * sinHalfTheta;
           y = v.y * sinHalfTheta;
           z = v.z * sinHalfTheta;
@@ -226,7 +195,7 @@ public:
     }
 
     float getMagnitude() const {
-      return sqrt(x * x + y * y + z * z);
+      return sqrtf(x * x + y * y + z * z);
     }
 
     void normalize() {
@@ -293,8 +262,8 @@ public:
     {
       VectorBase<T> rpy; // roll pitch yaw
       VectorBase<T> na = getNormalized();
-      rpy.x =  atan2(na.y, na.z);
-      rpy.y = -atan2(na.x, sqrt(na.y * na.y + na.z * na.z));
+      rpy.x =  atan2f(na.y, na.z);
+      rpy.y = -atan2f(na.x, sqrt(na.y * na.y + na.z * na.z));
       rpy.z = 0.f;
       return rpy;
     }
@@ -313,12 +282,12 @@ public:
     Quaternion eulerToQuaternion() const
     {
       Quaternion q;
-      float cosX2 = cos(x / 2.0f);
-      float sinX2 = sin(x / 2.0f);
-      float cosY2 = cos(y / 2.0f);
-      float sinY2 = sin(y / 2.0f);
-      float cosZ2 = cos(z / 2.0f);
-      float sinZ2 = sin(z / 2.0f);
+      float cosX2 = cosf(x / 2.0f);
+      float sinX2 = sinf(x / 2.0f);
+      float cosY2 = cosf(y / 2.0f);
+      float sinY2 = sinf(y / 2.0f);
+      float cosZ2 = cosf(z / 2.0f);
+      float sinZ2 = sinf(z / 2.0f);
 
       q.w = cosX2 * cosY2 * cosZ2 + sinX2 * sinY2 * sinZ2;
       q.x = sinX2 * cosY2 * cosZ2 - cosX2 * sinY2 * sinZ2;
@@ -330,9 +299,9 @@ public:
 
     VectorBase<T> eulerFromQuaternion(const Quaternion& q)
     {
-      x = atan2(2.0f * (q.y * q.z + q.w * q.x), 1.f - 2.0f * (q.x * q.x + q.y * q.y));
-      y =  asin(2.0f * (q.w * q.y - q.x * q.z));
-      z = atan2(2.0f * (q.x * q.y + q.w * q.z), 1.f - 2.0f * (q.y * q.y + q.z * q.z));
+      x = atan2f(2.0f * (q.y * q.z + q.w * q.x), 1.f - 2.0f * (q.x * q.x + q.y * q.y));
+      y =  asinf(2.0f * (q.w * q.y - q.x * q.z));
+      z = atan2f(2.0f * (q.x * q.y + q.w * q.z), 1.f - 2.0f * (q.y * q.y + q.z * q.z));
       return *this;
     }
 

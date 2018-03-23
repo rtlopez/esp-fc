@@ -239,6 +239,8 @@ void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, floa
 
 float MadgwickAHRS::invSqrt(float x) {
 	//return 1.f / sqrt(x);
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 	float halfx = 0.5f * x;
 	float y = x;
 	long i = *(long*)&y;
@@ -246,6 +248,7 @@ float MadgwickAHRS::invSqrt(float x) {
 	y = *(float*)&i;
 	y = y * (1.5f - (halfx * y * y));
 	y = y * (1.5f - (halfx * y * y));
+	#pragma GCC diagnostic pop
 	return y;
 }
 
