@@ -36,6 +36,8 @@ class BusI2C: public BusDevice
 
       if (timeout > 0 && millis() - t1 >= timeout && count < length) count = -1; // timeout
 
+      if(onError && count != length) onError();
+
       return count;
     }
 
@@ -48,6 +50,9 @@ class BusI2C: public BusDevice
         Wire.write(data[i]);
       }
       uint8_t status = Wire.endTransmission();
+
+      if(onError && status != 0) onError();
+
       return status == 0;
     }
 };

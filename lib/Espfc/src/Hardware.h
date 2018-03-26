@@ -38,8 +38,9 @@ class Hardware
       int res = 0;
 
       res = i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
-      D("i2c_init", res);
+      i2cBus.onError = std::bind(&Hardware::onI2CError, this);
       _model.logger.info().log(F("I2C")).logln(_model.config.i2cSpeed);
+      D("i2c_init", res);
 
       res = mpu6050.begin(&i2cBus);
       D("gyro_mpu6050", res);
@@ -50,6 +51,11 @@ class Hardware
       initSerial();
 
       return 1;
+    }
+
+    void onI2CError()
+    {
+      _model.state.i2cErrorCount++;
     }
 
     void initSerial()

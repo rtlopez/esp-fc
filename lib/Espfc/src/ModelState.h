@@ -78,7 +78,7 @@ class MixerConfig {
     MixerConfig(): count(0), mixes(NULL) {}
     MixerConfig(const MixerConfig& c): count(c.count), mixes(c.mixes) {}
     MixerConfig(int8_t c, MixerEntry * m): count(c), mixes(m) {}
-    
+
     int8_t count;
     MixerEntry * mixes;
 };
@@ -199,6 +199,8 @@ struct ModelState
 
   MixerConfig currentMixer;
   MixerConfig customMixer;
+
+  int16_t i2cErrorCount = 0;
 };
 
 }

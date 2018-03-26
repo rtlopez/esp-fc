@@ -70,6 +70,8 @@ class BusDevice
         return false;
       }
     }
+
+    std::function<void(void)> onError;
 };
 
 }
