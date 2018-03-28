@@ -281,9 +281,9 @@ class Model
           pc->P * PTERM_SCALE * pidScale[i],
           pc->I * ITERM_SCALE * pidScale[i],
           pc->D * DTERM_SCALE * pidScale[i],
-          config.itermWindupPointPercent / 100.0f,
+          0.15f,
           config.dtermSetpointWeight / 100.0f,
-          1.0f
+          0.5f
         );
         state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
@@ -298,7 +298,7 @@ class Model
           pc->P * LEVEL_PTERM_SCALE,
           pc->I * LEVEL_ITERM_SCALE,
           pc->D * LEVEL_DTERM_SCALE,
-          radians(config.angleRateLimit) * 0.05f,
+          radians(config.angleRateLimit) * 0.1f,
           0,
           radians(config.angleRateLimit)
         );
@@ -319,6 +319,8 @@ class Model
       //config.scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
       //config.scaler[0].dimension = (ScalerDimension)(ACT_OUTER_P | ACT_AXIS_PITCH); // ROBOT
       //config.scaler[1].dimension = (ScalerDimension)(ACT_OUTER_I | ACT_AXIS_PITCH); // ROBOT
+
+      //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_YAW | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
     }
 
     void preSave()

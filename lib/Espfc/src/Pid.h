@@ -6,14 +6,18 @@
 #include "Filter.h"
 
 // bataflight scalers
-//#define PTERM_SCALE 0.032029f
-//#define ITERM_SCALE 0.244381f
-//#define DTERM_SCALE 0.000529f
+#define PTERM_SCALE_BETAFLIGHT 0.032029f
+#define ITERM_SCALE_BETAFLIGHT 0.244381f
+#define DTERM_SCALE_BETAFLIGHT 0.000529f
 
 // espfc scalers
-#define PTERM_SCALE 0.0035f  // 0.005f // 1/200    // prev: 1/500
-#define ITERM_SCALE 0.01f    // 0.005f   // 1/200    // prev: 1/500
-#define DTERM_SCALE 0.00004f // 0.00005f // 1/20000  // prev: 1/25000
+//#define PTERM_SCALE 0.0035f  // 0.005f  : 1/200    // prev: 1/500
+//#define ITERM_SCALE 0.01f    // 0.005f  : 1/200    // prev: 1/500
+//#define DTERM_SCALE 0.00004f // 0.00005f: 1/20000  // prev: 1/25000
+
+#define PTERM_SCALE (PTERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.00183 = 0.032029f * 57.29 / 1000
+#define ITERM_SCALE (ITERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.014f
+#define DTERM_SCALE (DTERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.0000303f
 
 #define LEVEL_PTERM_SCALE 0.1f    // 1/10
 #define LEVEL_ITERM_SCALE 0.1f    // 1/10

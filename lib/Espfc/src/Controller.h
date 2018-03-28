@@ -140,6 +140,7 @@ class Controller
       for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
         _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], dt) * tpaFactor;
+        _model.state.debug[i] = lrintf(_model.state.innerPid[i].iTerm * 1000);
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
     }

@@ -98,17 +98,17 @@ enum FlightMode {
 };
 
 enum ScalerDimension {
-  ACT_INNER_P     = 1 << 0,
-  ACT_INNER_I     = 1 << 1,
-  ACT_INNER_D     = 1 << 2,
-  ACT_OUTER_P     = 1 << 3,
-  ACT_OUTER_I     = 1 << 4,
-  ACT_OUTER_D     = 1 << 5,
-  ACT_AXIS_ROLL   = 1 << 6,
-  ACT_AXIS_PITCH  = 1 << 7,
-  ACT_AXIS_YAW    = 1 << 8,
-  ACT_AXIS_THRUST = 1 << 9,
-  ACT_GYRO_THRUST = 1 << 10
+  ACT_INNER_P     = 1 << 0, // 1
+  ACT_INNER_I     = 1 << 1, // 2
+  ACT_INNER_D     = 1 << 2, // 4
+  ACT_OUTER_P     = 1 << 3, // 8
+  ACT_OUTER_I     = 1 << 4, // 16
+  ACT_OUTER_D     = 1 << 5, // 32
+  ACT_AXIS_ROLL   = 1 << 6, // 64
+  ACT_AXIS_PITCH  = 1 << 7, // 128
+  ACT_AXIS_YAW    = 1 << 8, // 256
+  ACT_AXIS_THRUST = 1 << 9, // 512
+  ACT_GYRO_THRUST = 1 << 10 // 1024
 };
 
 const size_t SCALER_COUNT = 3;

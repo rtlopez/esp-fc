@@ -113,12 +113,12 @@ class Actuator
 
       for(size_t i = 0; i < MODE_COUNT; i++)
       {
-        bool curr = newMask & (1 << i);
+        bool next = newMask & (1 << i);
         bool prev = _model.state.modeMaskPrev & (1 << i);
-        if(curr != prev && !canChange((FlightMode)i, curr))
+        if(next != prev && !canChangeMode((FlightMode)i, next))
         {
-          if(curr) newMask &= ~(1 << i); // block activation
-          else newMask |= (1 << i); // keep previous
+          if(next) newMask &= ~(1 << i); // block activation, clear bit
+          else newMask |= (1 << i); // keep previous, set bit
         }
       }
 
@@ -126,7 +126,7 @@ class Actuator
       _model.state.modeMask = newMask;
     }
 
-    bool canChange(FlightMode mode, bool val)
+    bool canChangeMode(FlightMode mode, bool val)
     {
       switch(mode)
       {
@@ -135,7 +135,7 @@ class Actuator
         case MODE_ANGLE:
           return _model.accelActive();
         case MODE_AIRMODE:
-          return _model.state.airmodeAllowed;
+          return (val && _model.state.airmodeAllowed) || !val;
         default:
           return true;
       }
@@ -143,13 +143,14 @@ class Actuator
 
     void updateAirMode()
     {
-      if(!_model.state.airmodeAllowed && _model.isActive(MODE_ARMED) && _model.state.inputUs[AXIS_THRUST] > 1400) // activate airmode in the air
-      {
-        _model.state.airmodeAllowed = true;
-      }
-      if(!_model.isActive(MODE_ARMED))
+      bool armed = _model.isActive(MODE_ARMED);
+      if(!armed)
       {
         _model.state.airmodeAllowed = false;
+      }
+      if(armed && !_model.state.airmodeAllowed && _model.state.inputUs[AXIS_THRUST] > 1400) // activate airmode in the air
+      {
+        _model.state.airmodeAllowed = true;
       }
     }
 
