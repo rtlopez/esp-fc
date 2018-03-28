@@ -21,6 +21,7 @@ class Actuator
     int update()
     {
       _model.state.stats.start(COUNTER_ACTUATOR);
+      updateArming();
       updateModeMask();
       updateAirMode();
       updateScaler();
@@ -64,6 +65,30 @@ class Actuator
       }
     }
 
+    void updateArming()
+    {
+      int errors = _model.state.i2cErrorDelta;
+      int flags = 0;
+      if(!_model.state.gyroPresent || errors)
+      {
+        flags |= ARMING_DISABLED_NO_GYRO;
+      }
+      if(!_model.isThrottleLow())
+      {
+        flags |= ARMING_DISABLED_THROTTLE;
+      }
+      if(_model.calibrationActive())
+      {
+        flags |= ARMING_DISABLED_CALIBRATING;
+      }
+      if(_model.state.inputLinkValid)
+      {
+        flags |= ARMING_DISABLED_RX_FAILSAFE;
+      }
+      _model.state.armingDisabledFlags = (ArmingDisabledFlags)flags;
+      _model.state.i2cErrorDelta = 0;
+    }
+
     void updateModeMask()
     {
       uint32_t newMask = 0;
@@ -103,10 +128,17 @@ class Actuator
 
     bool canChange(FlightMode mode, bool val)
     {
-      if(mode == MODE_ANGLE && !_model.accelActive()) return false;
-      if(mode == MODE_ARMED && (!_model.isThrottleLow() || _model.calibrationActive())) return false;
-      if(mode == MODE_AIRMODE && val && !_model.state.airmodeAllowed) return false;
-      return true;
+      switch(mode)
+      {
+        case MODE_ARMED:
+          return (val && !_model.armingDisabled()) || (!val && _model.isThrottleLow());
+        case MODE_ANGLE:
+          return _model.accelActive();
+        case MODE_AIRMODE:
+          return _model.state.airmodeAllowed;
+        default:
+          return true;
+      }
     }
 
     void updateAirMode()
@@ -137,14 +169,7 @@ class Actuator
       }
       if((_model.hasChanged(MODE_ARMED)))
       {
-        if(_model.isActive(MODE_ARMED))
-        {
-          _model.state.buzzer.push(BEEPER_ARMING);
-        }
-        else
-        {
-          _model.state.buzzer.push(BEEPER_DISARMING);
-        }
+        _model.state.buzzer.push(_model.isActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
       }
     }
 

@@ -35,18 +35,17 @@ class Hardware
       WiFi.mode(WIFI_OFF);
       _model.logger.info().logln(F("WIFI OFF"));
 
-      int res = 0;
-
-      res = i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
+      i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
       i2cBus.onError = std::bind(&Hardware::onI2CError, this);
       _model.logger.info().log(F("I2C")).logln(_model.config.i2cSpeed);
-      D("i2c_init", res);
 
-      res = mpu6050.begin(&i2cBus);
-      D("gyro_mpu6050", res);
+      _model.state.gyroPresent = mpu6050.begin(&i2cBus);
+      _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != ACCEL_NONE;
 
-      res = hmc5883l.begin(&i2cBus);
-      D("mag_hmc5883l", res);
+      if(_model.config.magDev != MAG_NONE)
+      {
+        _model.state.magPresent = hmc5883l.begin(&i2cBus);
+      }
 
       initSerial();
 
@@ -56,6 +55,7 @@ class Hardware
     void onI2CError()
     {
       _model.state.i2cErrorCount++;
+      _model.state.i2cErrorDelta++;
     }
 
     void initSerial()

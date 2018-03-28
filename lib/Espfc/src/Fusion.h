@@ -209,7 +209,7 @@ class Fusion
       _model.state.pose = _model.state.accel.accelToEuler();
       //_model.state.accelPose = _model.state.pose;
 
-      if(_model.config.magDev != MAG_NONE)
+      if(_model.magActive())
       {
         // Quaternion q = _model.state.pose.eulerToQuaternion();
         // since Z is always 0, it can be optimized a bit
@@ -268,7 +268,7 @@ class Fusion
       _model.state.accelPose = _model.state.accel.accelToEuler();
       _model.state.accelPoseQ = _model.state.accelPose.eulerToQuaternion();
 
-      if(_model.config.magDev != MAG_NONE)
+      if(_model.magActive())
       {
         // use yaw from mag
         VectorFloat mag = _model.state.mag.getRotated(_model.state.accelPoseQ);

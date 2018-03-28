@@ -19,7 +19,7 @@
 #define LOG_SERIAL_DEBUG(v)
 #endif
 
-#if 1
+#if 0
 template <typename T>
 void D(T t)
 {

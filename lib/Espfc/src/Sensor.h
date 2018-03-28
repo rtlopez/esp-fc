@@ -27,6 +27,7 @@ class Sensor
       initMag();
       initPresure();
       _fusion.begin();
+      _model.state.accelRaw.z = 1.f;
       _model.state.battery.timer.setRate(20);
       _model.state.battery.samples = 40;
       return 1;
@@ -63,7 +64,7 @@ class Sensor
         updateAccel();
       }
 
-      if(_model.config.magDev != MAG_NONE)
+      if(_model.magActive())
       {
         readMag();
         updateMag();
@@ -73,7 +74,6 @@ class Sensor
       {
         _fusion.updateDelayed();
       }
-
 
       if(_model.state.battery.timer.check())
       {
@@ -115,6 +115,8 @@ class Sensor
 
     void updateGyro()
     {
+      if(!_model.gyroActive()) return;
+
       _model.state.stats.start(COUNTER_GYRO_FILTER);
 
       align(_model.state.gyroRaw, _model.config.gyroAlign);
@@ -284,8 +286,6 @@ class Sensor
     {
       _gyro = Hardware::getGyroDevice(_model);
 
-      _model.logger.info().log(F("GYRO INIT")).log(_model.config.gyroDev).logln(_gyro->testConnection());
-
       switch(_model.config.gyroFsr)
       {
         case GYRO_FS_2000: _model.state.gyroScale = M_PI /  (16.384 * 180.0); break;
@@ -306,7 +306,10 @@ class Sensor
 
       _gyro->setDLPFMode(_model.config.gyroDlpf);
       _gyro->setRate(_model.state.gyroDivider - 1);
+
       _model.logger.info().log(F("GYRO RATE")).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
+      _model.logger.info().log(F("GYRO INIT")).log(_model.config.gyroDev).logln(_model.state.gyroPresent);
+      _model.logger.info().log(F("ACCEL INIT")).log(_model.config.accelDev).logln(_model.state.accelPresent);
     }
 
     void initMag()
@@ -314,8 +317,6 @@ class Sensor
       if(!_model.magActive()) return;
 
       _mag = Hardware::getMagDevice(_model);
-
-      _model.logger.info().log(F("MAG INIT")).logln(_mag->testConnection());
 
       _mag->setSampleAveraging(_model.config.magAvr);
       _mag->setMode(HMC5883L_MODE_CONTINUOUS);
@@ -332,7 +333,6 @@ class Sensor
       }
       _mag->setSampleRate(_model.config.magSampleRate + 0x02);
       _model.state.magTimer.setRate(rate);
-      _model.logger.info().log(F("MAG RATE")).log(_model.config.magSampleRate).log(_model.state.magTimer.rate).logln(_model.state.magTimer.interval);
 
       const float base = 1.0f; // 1000.0;
       switch(_model.config.magFsr)
@@ -347,11 +347,13 @@ class Sensor
         case MAG_GAIN_220:  _model.state.magScale = base / 220; break;
       }
       _mag->setGain(_model.config.magFsr);
+
+      _model.logger.info().log(F("MAG RATE")).log(_model.config.magSampleRate).log(_model.state.magTimer.rate).logln(_model.state.magTimer.interval);
+      _model.logger.info().log(F("MAG INIT")).logln(_model.state.magPresent);
     }
 
     void initPresure()
     {
-      //_baro.begin();
     }
 
     void updateBattery()

@@ -126,46 +126,39 @@ class GyroMPU6050: public GyroDevice
 
     void setDLPFMode(uint8_t mode) override
     {
-      int res = _bus->writeBits(_addr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, mode);
-      D("gyro_dlfp", mode, res);
+      _bus->writeBits(_addr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, mode);
     }
 
     void setRate(uint8_t rate) override
     {
-      int res = _bus->writeByte(_addr, MPU6050_RA_SMPLRT_DIV, rate);
-      D("gyro_rate", rate, res);
+      _bus->writeByte(_addr, MPU6050_RA_SMPLRT_DIV, rate);
     }
 
     void setFullScaleGyroRange(uint8_t range) override
     {
-      int res = _bus->writeBits(_addr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
-      D("gyro_range", range, res);
+      _bus->writeBits(_addr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
     }
 
     void setFullScaleAccelRange(uint8_t range) override
     {
-      int res = _bus->writeBits(_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
-      D("accel_range", range, res);
+      _bus->writeBits(_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
     }
 
     bool testConnection() override
     {
       uint8_t whoami = 0;
-      int res = _bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
-      D("gyro_whoami", whoami, res);
+      _bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
       return whoami == 0x34;
     }
 
     void setSleepEnabled(bool enabled)
     {
-      int res = _bus->writeBit(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, enabled);
-      D("gyro_sleep", enabled, res);
+      _bus->writeBit(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, enabled);
     }
 
     void setClockSource(uint8_t source)
     {
-      int res = _bus->writeBits(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);
-      D("gyro_clock", source, res);
+      _bus->writeBits(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);
     }
 
   private:

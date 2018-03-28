@@ -67,22 +67,27 @@ class Model
       return config.blackboxDev == 3 && config.blackboxPdenom > 0;
     }
 
-    bool accelActive()
+    bool gyroActive() const
     {
-      return config.accelDev != ACCEL_NONE;
+      return state.gyroPresent && config.gyroDev != ACCEL_NONE;
     }
 
-    bool magActive()
+    bool accelActive() const
     {
-      return config.magDev != MAG_NONE;
+      return state.accelPresent && config.accelDev != ACCEL_NONE;
     }
 
-    bool baroActive()
+    bool magActive() const
     {
-      return config.baroDev != BARO_NONE;
+      return state.magPresent && config.magDev != MAG_NONE;
     }
 
-    bool calibrationActive()
+    bool baroActive() const
+    {
+      return state.baroPresent && config.baroDev != BARO_NONE;
+    }
+
+    bool calibrationActive() const
     {
       return state.sensorCalibration || state.accelBiasSamples || state.gyroBiasSamples;
     }
@@ -107,18 +112,16 @@ class Model
       }
     }
 
+    bool armingDisabled() const
+    {
+      return state.armingDisabledFlags != 0;
+    }
+
     void update()
     {
-      //config.debugMode = DEBUG_NONE;
-      //config.debugMode = DEBUG_NOTCH;
-      //config.debugMode = DEBUG_ALTITUDE; // for fusion
-      //config.debugMode = DEBUG_GYRO;
-      //config.debugMode = DEBUG_RC_INTERPOLATION;
-      //config.debugMode = DEBUG_ANGLERATE;
-
       int gyroSyncMax = 4; // max 2khz
-      if(accelActive()) gyroSyncMax = 8; // max 1khz
-      if(config.magDev != MAG_NONE) gyroSyncMax = 16; // max 500hz
+      if(config.accelDev != ACCEL_NONE) gyroSyncMax = 8; // max 1khz
+      if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax = 16; // max 500hz
 
       config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax); // max 1khz
       int gyroClock = 8000;
@@ -233,7 +236,7 @@ class Model
         featureAllowMask |= FEATURE_RX_SERIAL;
         serialFunctionAllowedMask |= SERIAL_FUNCTION_RX_SERIAL;
       }
-      config.featureMask = config.featureMask & featureAllowMask;
+      config.featureMask &= featureAllowMask;
 
 #if defined(ESP32)
       config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;

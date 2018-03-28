@@ -89,8 +89,8 @@ class MagHMC5338L: public MagDevice
       _bus->read(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
       if (_mode == HMC5883L_MODE_SINGLE) _bus->writeByte(_addr, HMC5883L_RA_MODE, HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
       v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
-      v.y = (((int16_t)buffer[4]) << 8) | buffer[5];
       v.z = (((int16_t)buffer[2]) << 8) | buffer[3];
+      v.y = (((int16_t)buffer[4]) << 8) | buffer[5];
       return 1;
     }
 
@@ -104,10 +104,10 @@ class MagHMC5338L: public MagDevice
       _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_RATE_BIT, HMC5883L_CRA_RATE_LENGTH, rate);
     }
 
-    void setMode(uint8_t newMode) override
+    void setMode(uint8_t mode) override
     {
-      _bus->writeByte(_addr, HMC5883L_RA_MODE, newMode << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
-      _mode = newMode; // track to tell if we have to clear bit 7 after a read
+      _bus->writeByte(_addr, HMC5883L_RA_MODE, mode << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
+      _mode = mode; // track to tell if we have to clear bit 7 after a read
     }
 
     void setGain(uint8_t gain) override

@@ -8,6 +8,8 @@
 #include "msp/msp_protocol.h"
 #include "platform.h"
 
+// TODO: update to 1.37 https://github.com/betaflight/betaflight/compare/v3.2.0...v3.3.0
+
 static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
 static const char * boardIdentifier = "ESPF";
 
@@ -280,13 +282,13 @@ class Msp
           r.writeU16(_model.state.loopTimer.interval);
           r.writeU16(_model.state.i2cErrorCount); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
-          r.writeU16(_model.accelActive() << 0 | 0 << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | 1 << 5);
+          r.writeU16(_model.accelActive() << 0 | _model.baroActive() << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | _model.gyroActive() << 5);
           r.writeU32(_model.state.modeMask); // flight mode flags
           r.writeU8(0); // pid profile
           r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
           if (m.cmd == MSP_STATUS_EX) {
-            r.writeU8(1);
-            r.writeU8(0);
+            r.writeU8(1); // max profile count
+            r.writeU8(0); // current rate profile index
           } else {  // MSP_STATUS
             r.writeU16(_model.state.gyroTimer.interval); // gyro cycle time
           }
@@ -295,8 +297,8 @@ class Msp
           r.writeU8(0); // count
 
           // Write arming disable flags
-          r.writeU8(16);  // 1 byte, flag count
-          r.writeU32(0);  // 4 bytes, flags
+          r.writeU8(ARMING_DISABLED_FLAGS_COUNT);  // 1 byte, flag count
+          r.writeU32(_model.state.armingDisabledFlags);  // 4 bytes, flags
           break;
 
         case MSP_NAME:

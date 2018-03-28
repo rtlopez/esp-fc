@@ -200,7 +200,15 @@ struct ModelState
   MixerConfig currentMixer;
   MixerConfig customMixer;
 
-  int16_t i2cErrorCount = 0;
+  int16_t i2cErrorCount;
+  int16_t i2cErrorDelta;
+
+  bool gyroPresent;
+  bool accelPresent;
+  bool magPresent;
+  bool baroPresent;
+
+  ArmingDisabledFlags armingDisabledFlags;
 };
 
 }
