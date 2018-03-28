@@ -12,7 +12,7 @@
 
 // espfc scalers
 #define PTERM_SCALE 0.0035f  // 0.005f // 1/200    // prev: 1/500
-#define ITERM_SCALE 0.001f   // 0.005f   // 1/200    // prev: 1/500
+#define ITERM_SCALE 0.01f    // 0.005f   // 1/200    // prev: 1/500
 #define DTERM_SCALE 0.00004f // 0.00005f // 1/20000  // prev: 1/25000
 
 #define LEVEL_PTERM_SCALE 0.1f    // 1/10

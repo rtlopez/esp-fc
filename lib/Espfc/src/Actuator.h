@@ -81,7 +81,7 @@ class Actuator
       {
         flags |= ARMING_DISABLED_CALIBRATING;
       }
-      if(_model.state.inputLinkValid)
+      if(!_model.state.inputLinkValid)
       {
         flags |= ARMING_DISABLED_RX_FAILSAFE;
       }
