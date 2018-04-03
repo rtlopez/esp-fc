@@ -11,7 +11,7 @@
 #define PIN_DEBUG_INIT()
 #endif
 
-#if 0
+#if 1
 #define LOG_SERIAL_INIT() Serial.begin(115200)
 #define LOG_SERIAL_DEBUG(v) Serial.print(' '); Serial.print(v)
 #else
@@ -19,7 +19,7 @@
 #define LOG_SERIAL_DEBUG(v)
 #endif
 
-#if 0
+#if 1
 template <typename T>
 void D(T t)
 {
@@ -31,7 +31,7 @@ void D(T t, Args... args) // recursive variadic function
 {
   Serial.print(t);
   Serial.print(' ');
-  D(args...) ;
+  D(args...);
 }
 #else
 #define D(...)

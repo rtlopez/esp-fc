@@ -33,6 +33,17 @@ class EscDriverEsp32
 
     }
 
+    void end()
+    {
+      for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
+      {
+        if(_channel[i].dev.gpio_num != -1)
+        {
+          rmt_driver_uninstall(_channel[i].dev.channel);
+        }
+      }
+    }
+
     int begin(EscProtocol protocol, bool async, int16_t rate)
     {
       _protocol = protocol;

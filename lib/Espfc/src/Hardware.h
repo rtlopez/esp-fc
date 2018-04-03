@@ -1,9 +1,11 @@
 #ifndef _ESPFC_SERIAL_H_
 #define _ESPFC_SERIAL_H_
 
-#include <Wire.h>
 #include <Arduino.h>
+
+#if defined(ESP8266)
 #include <ESP8266WiFi.h>
+#endif
 
 #include "Model.h"
 #include "EspSoftSerial.h"
@@ -13,12 +15,16 @@
 #include "InputSBUS.h"
 #include "EscDriver.h"
 #include "Device/BusI2C.h"
+#include "Device/BusSPI.h"
 #include "Device/GyroMPU6050.h"
+#include "Device/GyroMPU9250.h"
 #include "Device/MagHMC5338L.h"
 
 namespace {
   static Espfc::Device::BusI2C i2cBus;
+  static Espfc::Device::BusSPI spiBus;
   static Espfc::Device::GyroMPU6050 mpu6050;
+  static Espfc::Device::GyroMPU9250 mpu9250;
   static Espfc::Device::MagHMC5338L hmc5883l;
 }
 
@@ -31,15 +37,34 @@ class Hardware
 
     int begin()
     {
+      Serial.begin(115200);
+      Serial.flush();
+      delay(50);
+      Serial.println();
+
+#if defined(ESP8266)
       WiFi.disconnect();
       WiFi.mode(WIFI_OFF);
       _model.logger.info().logln(F("WIFI OFF"));
+#endif
 
+#if defined(ESP8266)
       i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
       i2cBus.onError = std::bind(&Hardware::onI2CError, this);
       _model.logger.info().log(F("I2C")).logln(_model.config.i2cSpeed);
-
       _model.state.gyroPresent = mpu6050.begin(&i2cBus);
+#endif
+
+#if defined(ESP32)
+      spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MISO], _model.config.pin[PIN_SPI_0_MOSI], -1);
+      _model.logger.info().log(F("SPI")).logln(1);
+      _model.state.gyroPresent = mpu9250.begin(&spiBus, _model.config.pin[PIN_SPI_0_CS0]);
+      pinMode(_model.config.pin[PIN_SPI_0_CS0], OUTPUT);
+      digitalWrite(_model.config.pin[PIN_SPI_0_CS0], HIGH);
+      D("gyro_present", _model.state.gyroPresent);
+      delay(50);
+#endif
+
       _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != ACCEL_NONE;
 
       if(_model.config.magDev != MAG_NONE)
@@ -184,14 +209,13 @@ class Hardware
       }
     }
 
-    static Device::BusDevice * getI2CDevice(const Model& model)
-    {
-      return &i2cBus;
-    }
-
     static Device::GyroDevice * getGyroDevice(const Model& model)
     {
+#if defined(ESP32)
+      return &mpu9250;
+#elif defined(ESP8266)
       return &mpu6050;
+#endif
     }
 
     static Device::MagDevice * getMagDevice(const Model& model)
@@ -240,6 +264,7 @@ class Hardware
     {
       getEscDriver(model)->end();
 
+#if defined(ESP8266)
       // pin setup to ensure boot from flash
       pinMode(0, OUTPUT); digitalWrite(0, HIGH); // GPIO0 to HI
       pinMode(2, OUTPUT); digitalWrite(2, HIGH); // GPIO2 to HI
@@ -247,14 +272,14 @@ class Hardware
       pinMode(0, INPUT);
       pinMode(2, INPUT);
       pinMode(15, INPUT);
-
       //Serial.println("hard reset");
       ESP.reset();
-
+#elif defined(ESP32)
       //Serial.println("normal restart");
-      //ESP.restart();
+      ESP.restart();
+#endif
 
-      while(1);
+      while(1) {}
     }
 
   private:

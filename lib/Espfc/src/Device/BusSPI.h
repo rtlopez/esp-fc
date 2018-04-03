@@ -11,10 +11,9 @@ namespace Device {
 class BusSPI: public BusDevice
 {
   public:
-    int init() override
+    int begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
-      //SPI.pins();
-      SPI.begin();
+      SPI.begin(sck, miso, mosi, ss);
       return 0;
     }
 

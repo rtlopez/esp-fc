@@ -90,7 +90,7 @@ class InputSBUS: public InputDevice
 
     void print(char c) const
     {
-      Serial1.write(c);
+      //Serial1.write(c);
     }
 
   private:

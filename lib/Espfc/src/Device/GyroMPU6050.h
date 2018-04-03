@@ -86,8 +86,6 @@ class GyroMPU6050: public GyroDevice
       _bus = bus;
       _addr = addr;
 
-      D("gyro_addr", addr);
-
       setClockSource(MPU6050_CLOCK_PLL_XGYRO);
       //setFullScaleGyroRange(MPU6050_GYRO_FS_2000);
       //setFullScaleAccelRange(MPU6050_ACCEL_FS_8);
@@ -148,6 +146,7 @@ class GyroMPU6050: public GyroDevice
     {
       uint8_t whoami = 0;
       _bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
+      D("mpu6050_whoami", _addr, whoami);
       return whoami == 0x34;
     }
 
@@ -161,7 +160,7 @@ class GyroMPU6050: public GyroDevice
       _bus->writeBits(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);
     }
 
-  private:
+  protected:
     BusDevice * _bus;
     uint8_t _addr;
 };

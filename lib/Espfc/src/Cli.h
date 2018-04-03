@@ -956,9 +956,9 @@ class Cli
       {
         printVersion();
         println();
-        print(F("    cpu freq: "));
-        print(system_get_cpu_freq());
-        println(F(" MHz"));
+        //print(F("    cpu freq: "));
+        //print(system_get_cpu_freq());
+        //println(F(" MHz"));
         print(F("   gyro rate: "));
         print(_model.state.gyroTimer.rate);
         println(F(" Hz"));
