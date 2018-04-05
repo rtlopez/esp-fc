@@ -204,6 +204,9 @@ struct ModelState
   int16_t i2cErrorDelta;
 
   bool gyroPresent;
+  int8_t gyroBus;
+  int8_t gyroDev;
+
   bool accelPresent;
   bool magPresent;
   bool baroPresent;

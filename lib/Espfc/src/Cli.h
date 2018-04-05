@@ -14,6 +14,7 @@ extern "C" {
 #include "Msp.h"
 #include "Hardware.h"
 #include "Logger.h"
+#include "Device/GyroDevice.h"
 
 namespace Espfc {
 
@@ -306,8 +307,9 @@ class Cli
 
     static const Param * initialize(ModelConfig& c)
     {
+      const char ** busDevChoices            = Device::BusDevice::getNames();
+      const char ** gyroDevChoices           = Device::GyroDevice::getNames();
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
-      static const char* accelDevChoices[]   = { PSTR("AUTO"), PSTR("NONE"), PSTR("RESERVED"), PSTR("MPU6050"), NULL };
       static const char* accelModeChoices[]  = { PSTR("DELAYED"), PSTR("GYRO"), NULL };
       //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
       //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
@@ -337,6 +339,8 @@ class Cli
         Param(PSTR("features"), &c.featureMask),
         Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
 
+        Param(PSTR("gyro_bus"), &c.gyroBus, busDevChoices),
+        Param(PSTR("gyro_dev"), &c.gyroDev, gyroDevChoices),
         Param(PSTR("gyro_dlpf"), &c.gyroDlpf, gyroDlpfChoices),
         Param(PSTR("gyro_sync"), &c.gyroSync),
         Param(PSTR("gyro_align"), &c.gyroAlign, alignChoices),
@@ -350,7 +354,8 @@ class Cli
         Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
 
-        Param(PSTR("accel_dev"), &c.accelDev, accelDevChoices),
+        Param(PSTR("accel_bus"), &c.accelBus, busDevChoices),
+        Param(PSTR("accel_dev"), &c.accelDev, gyroDevChoices),
         Param(PSTR("accel_mode"), &c.accelMode, accelModeChoices),
         Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
         Param(PSTR("accel_lpf_type"), &c.accelFilter.type, filterTypeChoices),
@@ -360,6 +365,7 @@ class Cli
         Param(PSTR("accel_offset_z"), &c.accelBias[2]),
 
         /*
+        Param(PSTR("mag_bus"), &c.magBus, busDevChoices),
         Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
         Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
         Param(PSTR("mag_align"), &c.magAlign, alignChoices),
@@ -723,7 +729,7 @@ class Cli
         println(resetInfo->reason);
 
         print(F("free heap: "));
-        println(system_get_free_heap_size());
+        println(ESP.getFreeHeap());
 
         print(F("os print: "));
         println(system_get_os_print());
@@ -746,7 +752,7 @@ class Cli
         println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
 
         print(F("cpu freq: "));
-        println(system_get_cpu_freq());
+        println(ESP.getCpuFreqMHz());
 
         print(F("flash size map: "));
         println(system_get_flash_size_map());
@@ -947,18 +953,27 @@ class Cli
       }
       else if(strcmp_P(_cmd.args[0], PSTR("status")) == 0)
       {
+        const char ** busNames = Device::BusDevice::getNames();
+        const char ** gyroNames = Device::GyroDevice::getNames();
+
         printVersion();
         println();
-        print(F("status: "));
+        print(F("STATUS: "));
         println();
+        print(F(" cpu freq : "));
+        println(ESP.getCpuFreqMHz());
+        print(F(" gyro bus : "));
+        println(FPSTR(busNames[_model.state.gyroBus]));
+        print(F(" gyro type: "));
+        println(FPSTR(gyroNames[_model.state.gyroDev]));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
       {
         printVersion();
         println();
-        //print(F("    cpu freq: "));
-        //print(system_get_cpu_freq());
-        //println(F(" MHz"));
+        print(F("    cpu freq: "));
+        print(ESP.getCpuFreqMHz());
+        println(F(" MHz"));
         print(F("   gyro rate: "));
         print(_model.state.gyroTimer.rate);
         println(F(" Hz"));

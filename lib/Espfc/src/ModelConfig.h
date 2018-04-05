@@ -3,8 +3,10 @@
 
 #include <Arduino.h>
 #include "EscDriver.h"
+#include "Device/GyroDevice.h"
+#include "Device/BusDevice.h"
 
-#define EEPROM_VERSION_NUM 0x04
+#define EEPROM_VERSION_NUM 0x00
 
 #define USE_SOFT_SERIAL
 
@@ -200,15 +202,6 @@ enum SerialFunction {
   SERIAL_FUNCTION_TELEMETRY_IBUS      = (1 << 12), // 4096
   SERIAL_FUNCTION_VTX_TRAMP           = (1 << 13), // 8192
   SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
-};
-
-enum AccelDev {
-  ACCEL_DEFAULT = 0,
-  ACCEL_NONE    = 1,
-  ACCEL_MPU6050 = 3,
-  ACCEL_MPU6000 = 7,
-  ACCEL_MPU6500 = 8,
-  ACCEL_MPU9250 = 9
 };
 
 enum MagDev {
@@ -544,6 +537,7 @@ static const size_t ARMING_DISABLED_FLAGS_COUNT = 18;
 class ModelConfig
 {
   public:
+    int8_t gyroBus;
     int8_t gyroDev;
     int8_t gyroDlpf;
     int8_t gyroFsr;
@@ -553,12 +547,14 @@ class ModelConfig
     FilterConfig gyroNotch1Filter;
     FilterConfig gyroNotch2Filter;
 
+    int8_t accelBus;
     int8_t accelDev;
     int8_t accelFsr;
     int8_t accelMode;
     int8_t accelAlign;
     FilterConfig accelFilter;
 
+    int8_t magBus;
     int8_t magDev;
     int8_t magSampleRate;
     int8_t magFsr;
@@ -566,6 +562,7 @@ class ModelConfig
     int8_t magAlign;
     FilterConfig magFilter;
 
+    int8_t baroBus;
     int8_t baroDev;
 
     InputConfig input;
@@ -639,7 +636,6 @@ class ModelConfig
 
     ModelConfig()
     {
-#if defined(ESP8266)
       pin[PIN_OUTPUT_0] = -1;
       pin[PIN_OUTPUT_1] = -1;
       pin[PIN_OUTPUT_2] = -1;
@@ -649,13 +645,12 @@ class ModelConfig
       pin[PIN_OUTPUT_1] = 14;    // D5
       pin[PIN_OUTPUT_2] = 12;    // D6
       pin[PIN_OUTPUT_3] = 15;    // D8
-
       pin[PIN_INPUT_RX] = 13;    // D7
       pin[PIN_I2C_0_SCL] = 5;    // D1
       pin[PIN_I2C_0_SDA] = 4;    // D2
       pin[PIN_INPUT_ADC_0] = 17; // A0
       pin[PIN_BUZZER] = 16;      // D0
-#endif
+
 #if defined(ESP32)
       pin[PIN_INPUT_RX] = 35;
       pin[PIN_OUTPUT_0] = 32;
@@ -688,23 +683,27 @@ class ModelConfig
 #endif
       i2cSpeed = 1000;
 
-      gyroDev = ACCEL_MPU6050;
-      accelDev = ACCEL_MPU6050;
+      gyroBus = BUS_AUTO;
+      gyroDev = GYRO_AUTO;
       gyroAlign = ALIGN_DEFAULT;
-      accelAlign = ALIGN_DEFAULT;
-      magAlign = ALIGN_DEFAULT;
-
-      accelMode = ACCEL_DELAYED;
       gyroDlpf = GYRO_DLPF_256;
       gyroFsr  = GYRO_FS_2000;
-      accelFsr = ACCEL_FS_8;
       //gyroSync = 16;
       gyroSync = 8;
 
+      accelBus = BUS_AUTO;
+      accelDev = GYRO_AUTO;
+      accelAlign = ALIGN_DEFAULT;
+      accelMode = ACCEL_DELAYED;
+      accelFsr = ACCEL_FS_16;
+
+      magBus = BUS_AUTO;
       magDev = MAG_NONE;
       magSampleRate = MAG_RATE_75;
       magAvr = MAG_AVERAGING_1;
+      magAlign = ALIGN_DEFAULT;
 
+      baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
 
       loopSync = 1;

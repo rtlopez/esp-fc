@@ -15,7 +15,7 @@ class BusI2C: public BusDevice
     {
       Wire.begin(sda, scl);
       Wire.setClock(speed);
-      return 0;
+      return 1;
     }
 
     int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override

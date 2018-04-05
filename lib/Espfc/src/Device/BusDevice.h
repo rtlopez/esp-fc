@@ -2,10 +2,19 @@
 #define _ESPFC_DEVICE_BUSDEVICE_H_
 
 #include "Arduino.h"
+#include "Debug.h"
+#include <functional>
 
-#define ESPFC_BUS_TIMEOUT 1000
+#define ESPFC_BUS_TIMEOUT 100
 
 namespace Espfc {
+
+enum BusId {
+  BUS_NONE,
+  BUS_AUTO,
+  BUS_I2C,
+  BUS_SPI,
+};
 
 namespace Device {
 
@@ -57,7 +66,7 @@ class BusDevice
 
     bool writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data)
     {
-      uint8_t b;
+      uint8_t b = 0;
       if (readByte(devAddr, regAddr, &b) != 0)
       {
         uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
@@ -69,6 +78,12 @@ class BusDevice
       } else {
         return false;
       }
+    }
+
+    static const char ** getNames()
+    {
+      static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), NULL };
+      return busDevChoices;
     }
 
     std::function<void(void)> onError;

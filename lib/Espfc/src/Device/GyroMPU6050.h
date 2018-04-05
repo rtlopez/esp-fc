@@ -29,6 +29,7 @@
 #define MPU6050_RA_GYRO_ZOUT_H      0x47
 #define MPU6050_RA_GYRO_ZOUT_L      0x48
 #define MPU6050_RA_PWR_MGMT_1       0x6B
+#define MPU6050_RA_PWR_MGMT_2       0x6C
 #define MPU6050_RA_FIFO_COUNTH      0x72
 #define MPU6050_RA_FIFO_COUNTL      0x73
 #define MPU6050_RA_FIFO_R_W         0x74
@@ -81,19 +82,22 @@ namespace Device {
 class GyroMPU6050: public GyroDevice
 {
   public:
-    int begin(BusDevice * bus, uint8_t addr = MPU6050_DEFAULT_ADDRESS)
+    int begin(BusDevice * bus, uint8_t addr = -1) override
     {
       _bus = bus;
-      _addr = addr;
+      _addr = addr != -1 ? addr : MPU6050_DEFAULT_ADDRESS;
+
+      if(!testConnection()) return 0;
 
       setClockSource(MPU6050_CLOCK_PLL_XGYRO);
-      //setFullScaleGyroRange(MPU6050_GYRO_FS_2000);
-      //setFullScaleAccelRange(MPU6050_ACCEL_FS_8);
-      //setDLPFMode(MPU6050_DLPF_BW_256);
-      //setRate(8);
       setSleepEnabled(false);
 
-      return testConnection();
+      return 1;
+    }
+
+    GyroDeviceType getType() const override
+    {
+      return GYRO_MPU6050;
     }
 
     int readGyro(VectorInt16& v) override
@@ -145,8 +149,9 @@ class GyroMPU6050: public GyroDevice
     bool testConnection() override
     {
       uint8_t whoami = 0;
-      _bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
-      D("mpu6050_whoami", _addr, whoami);
+      _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
+      //_bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
+      //D("mpu6050_whoami", _addr, whoami);
       return whoami == 0x34;
     }
 

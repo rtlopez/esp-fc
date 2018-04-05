@@ -69,12 +69,12 @@ class Model
 
     bool gyroActive() const
     {
-      return state.gyroPresent && config.gyroDev != ACCEL_NONE;
+      return state.gyroPresent && config.gyroDev != GYRO_NONE;
     }
 
     bool accelActive() const
     {
-      return state.accelPresent && config.accelDev != ACCEL_NONE;
+      return state.accelPresent && config.accelDev != GYRO_NONE;
     }
 
     bool magActive() const
@@ -119,9 +119,15 @@ class Model
 
     void update()
     {
+#if defined(ESP32) // TODO: if use SPI bus
+      int gyroSyncMax = 1; // max 8khz
+      if(config.accelDev != GYRO_NONE) gyroSyncMax = 2; // max 4khz
+      if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax = 4; // max 2khz
+#else // use I2C bus
       int gyroSyncMax = 4; // max 2khz
-      if(config.accelDev != ACCEL_NONE) gyroSyncMax = 8; // max 1khz
+      if(config.accelDev != GYRO_NONE) gyroSyncMax = 8; // max 1khz
       if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax = 16; // max 500hz
+#endif
 
       config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax); // max 1khz
       int gyroClock = 8000;
