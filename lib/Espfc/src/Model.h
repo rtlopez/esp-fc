@@ -104,13 +104,6 @@ class Model
 
     void update()
     {
-      //config.debugMode = DEBUG_NONE;
-      //config.debugMode = DEBUG_NOTCH;
-      //config.debugMode = DEBUG_ALTITUDE; // for fusion
-      //config.debugMode = DEBUG_GYRO;
-      //config.debugMode = DEBUG_RC_INTERPOLATION;
-      //config.debugMode = DEBUG_ANGLERATE;
-
       int gyroSyncMax = 4; // max 2khz
       if(accelActive()) gyroSyncMax = 8; // max 1khz
       if(config.magDev != MAG_NONE) gyroSyncMax = 16; // max 500hz

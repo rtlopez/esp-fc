@@ -871,6 +871,63 @@ class Cli
           }
         }
       }
+      else if(strcmp_P(_cmd.args[0], PSTR("preset")) == 0)
+      {
+        if(!_cmd.args[1])
+        {
+          println(F("Available presets: scaler, modes, micrus, brobot"));
+        }
+        else if(strcmp_P(_cmd.args[1], PSTR("scaler")) == 0)
+        {
+          _model.config.scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+          _model.config.scaler[0].channel = 5;
+          _model.config.scaler[0].minScale = 25; //%
+          _model.config.scaler[0].maxScale = 400;
+
+          _model.config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+          _model.config.scaler[1].channel = 6;
+          _model.config.scaler[1].minScale = 25; //%
+          _model.config.scaler[1].maxScale = 400;
+
+          _model.config.scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
+          _model.config.scaler[2].channel = 7;
+          _model.config.scaler[2].minScale = 25; //%
+          _model.config.scaler[2].maxScale = 400;
+
+          println(F("OK"));
+        }
+        else if(strcmp_P(_cmd.args[1], PSTR("modes")) == 0)
+        {
+          _model.config.conditions[0].id = MODE_ARMED;
+          _model.config.conditions[0].ch = AXIS_AUX_1 + 0;
+          _model.config.conditions[0].min = 1700;
+          _model.config.conditions[0].max = 2100;
+
+          _model.config.conditions[1].id = MODE_ANGLE;
+          _model.config.conditions[1].ch = AXIS_AUX_1 + 0; // aux1
+          _model.config.conditions[1].min = 1900;
+          _model.config.conditions[1].max = 2100;
+
+          _model.config.conditions[2].id = MODE_AIRMODE;
+          _model.config.conditions[2].ch = 0; // aux1
+          _model.config.conditions[2].min = (1700 - 900) / 25;
+          _model.config.conditions[2].max = (2100 - 900) / 25;
+
+          println(F("OK"));
+        }
+        else if(strcmp_P(_cmd.args[1], PSTR("micrus")) == 0)
+        {
+          println(F("OK"));
+        }
+        else if(strcmp_P(_cmd.args[1], PSTR("brobot")) == 0)
+        {
+          println(F("OK"));
+        }
+        else
+        {
+          println(F("NOT OK"));
+        }
+      }
       else if(strcmp_P(_cmd.args[0], PSTR("load")) == 0)
       {
         _model.load();
