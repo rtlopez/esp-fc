@@ -22,26 +22,24 @@ The mini, DIY, ~$5 cost, ESP8266 based, high performance flight controller.
 Hardware:
 * Wemos D1 Mini board (D1 Mini Lite too, ESP-12 for experienced users)
 * MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar)
+* PDB with 5V BEC
 
 Software:
-* PlatformIo Arduino Espressif8266 v2.4 SDK
 * Atom IDE
-* CH340 usb-serial converter driver
-* Betaflight configurator
+* PlatformIO Arduino Espressif8266 v2.4 SDK
+* CH340 usb-serial converter driver (for Windows)
+* Betaflight Configurator (v10.2)
+* Git client (optional)
 
 ## Optional
 * Buzzer and some electronic components.
 
-## Flashing
-The best way to flash your device is to install Atom IDE with platformio extension.
-* https://atom.io/
-* https://platformio.org/
-* http://docs.platformio.org/en/latest/ide/atom.html#installation
-* http://docs.platformio.org/en/latest/ide/atom.html#building-uploading-targets
+## Building and Flashing
+Read the [Installation instuction](https://github.com/rtlopez/esp-fc/blob/master/docs/installation.md)
 
-To be able to build, you need to download or clone repository, and then open project in PlatformIo.
-To build binary file press F7 and pick option 'PIO Build(d1_mini).
-To upload, press F7 and choose 'PIO Upload(d1_mini)'
+## Configuration
+The rule of thumb is if you cannot change specific option in Betaflight Configurator,
+that means it is not supported.
 
 ## Wiring diagram
 ![ESP-FC Wemos D1 mini wiring diagram](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_wemos_d1_mini_wiring.png?raw=true)
