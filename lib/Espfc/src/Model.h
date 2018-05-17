@@ -116,7 +116,6 @@ class Model
     {
       return state.armingDisabledFlags != 0;
     }
-
     void update()
     {
       int gyroSyncMax = 4; // max 2khz
