@@ -6,7 +6,7 @@
 #include "Device/GyroDevice.h"
 #include "Device/BusDevice.h"
 
-#define EEPROM_VERSION_NUM 0x00
+#define EEPROM_VERSION_NUM 0x05
 
 #define USE_SOFT_SERIAL
 
@@ -804,13 +804,13 @@ class ModelConfig
       mixerType = MIXER_QUADX;
       yawReverse = 0;
 
-      //output.protocol = ESC_PROTOCOL_PWM;
-      output.protocol = ESC_PROTOCOL_ONESHOT125;
+      output.protocol = ESC_PROTOCOL_PWM;
+      //output.protocol = ESC_PROTOCOL_ONESHOT125;
       //output.protocol = ESC_PROTOCOL_MULTISHOT;
       //output.protocol = ESC_PROTOCOL_BRUSHED;
-      //output.rate = 2000;    // max 500 for PWM, 2000 for Oneshot125
+      //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
-      output.async = false;
+      output.async = true;
       //output.async = true;
 
       // input config
@@ -845,8 +845,8 @@ class ModelConfig
       input.expo[AXIS_YAW] = 0;
       input.superRate[AXIS_YAW] = 50;
 
-      //input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
-      input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode
+      input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
+      //input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode
       input.interpolationInterval = 26;
       input.deadband = 3; // us
 
@@ -878,15 +878,15 @@ class ModelConfig
         conditions[i].max = 900;
       }
 
-      conditions[0].id = MODE_ARMED;
-      conditions[0].ch = AXIS_AUX_1 + 0;
-      conditions[0].min = 1700;
-      conditions[0].max = 2100;
+      //conditions[0].id = MODE_ARMED;
+      //conditions[0].ch = AXIS_AUX_1 + 0;
+      //conditions[0].min = 1700;
+      //conditions[0].max = 2100;
 
-      conditions[1].id = MODE_ANGLE;
-      conditions[1].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[1].min = 1900;
-      conditions[1].max = 2100;
+      //conditions[1].id = MODE_ANGLE;
+      //conditions[1].ch = AXIS_AUX_1 + 0; // aux1
+      //conditions[1].min = 1900;
+      //conditions[1].max = 2100;
 
       //conditions[2].id = MODE_AIRMODE;
       //conditions[2].ch = 0; // aux1
@@ -904,18 +904,18 @@ class ModelConfig
       //conditions[4].max = (2100 - 900) / 25;
 
       // actuator config - pid scaling
-      scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
-      scaler[0].channel = 5;
+      scaler[0].dimension = (ScalerDimension)(0);
+      scaler[0].channel = 0;
       scaler[0].minScale = 25; //%
       scaler[0].maxScale = 400;
 
-      scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
-      scaler[1].channel = 6;
+      scaler[1].dimension = (ScalerDimension)(0);
+      scaler[1].channel = 0;
       scaler[1].minScale = 25; //%
       scaler[1].maxScale = 400;
 
-      scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
-      scaler[2].channel = 7;
+      scaler[2].dimension = (ScalerDimension)(0);
+      scaler[2].channel = 0;
       scaler[2].minScale = 25; //%
       scaler[2].maxScale = 400;
 

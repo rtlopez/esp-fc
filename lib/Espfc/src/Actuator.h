@@ -37,7 +37,10 @@ class Actuator
       {
         uint32_t mode = _model.config.scaler[i].dimension;
         if(!mode) continue;
+
         short c = _model.config.scaler[i].channel;
+        if(c < AXIS_AUX_1) continue;
+
         float v = _model.state.input[c];
         float min = _model.config.scaler[i].minScale * 0.01f;
         float max = _model.config.scaler[i].maxScale * 0.01f;
