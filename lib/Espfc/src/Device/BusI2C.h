@@ -23,6 +23,8 @@ class BusI2C: public BusDevice
       int8_t count = 0;
       uint32_t t1 = millis();
 
+      //Serial.print("I2C R "); Serial.print(devAddr, HEX); Serial.print(' '); Serial.print(regAddr, HEX); Serial.print(' '); Serial.println(length);
+
       Wire.beginTransmission(devAddr);
       Wire.write(regAddr);
       Wire.endTransmission();
@@ -32,6 +34,7 @@ class BusI2C: public BusDevice
       for (; Wire.available() && (timeout == 0 || millis() - t1 < timeout); count++)
       {
         data[count] = Wire.read();
+        //Serial.print("I2C R "); Serial.print(count); Serial.print(' '); Serial.println(data[count], HEX);
       }
 
       if (timeout > 0 && millis() - t1 >= timeout && count < length) count = -1; // timeout
@@ -43,11 +46,14 @@ class BusI2C: public BusDevice
 
     bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) override
     {
+      //Serial.print("I2C W "); Serial.print(devAddr, HEX); Serial.print(' '); Serial.print(regAddr, HEX); Serial.print(' '); Serial.println(length);
+
       Wire.beginTransmission(devAddr);
       Wire.write((uint8_t) regAddr); // send address
       for (uint8_t i = 0; i < length; i++)
       {
         Wire.write(data[i]);
+        //Serial.print("I2C W "); Serial.print(i); Serial.print(' '); Serial.println(data[i], HEX);
       }
       uint8_t status = Wire.endTransmission();
 

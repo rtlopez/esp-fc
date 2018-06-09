@@ -82,14 +82,24 @@ namespace Device {
 class GyroMPU6050: public GyroDevice
 {
   public:
-    int begin(BusDevice * bus, uint8_t addr = -1) override
+    int begin(BusDevice * bus) override
+    {
+      return begin(bus, MPU6050_DEFAULT_ADDRESS);
+    }
+
+    int begin(BusDevice * bus, uint8_t addr) override
     {
       _bus = bus;
-      _addr = addr != -1 ? addr : MPU6050_DEFAULT_ADDRESS;
+      _addr = addr;
 
       if(!testConnection()) return 0;
 
+      _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, 0x80); // reset
+      delay(100);
+
       setClockSource(MPU6050_CLOCK_PLL_XGYRO);
+      delay(15);
+
       setSleepEnabled(false);
 
       return 1;
@@ -150,9 +160,10 @@ class GyroMPU6050: public GyroDevice
     {
       uint8_t whoami = 0;
       _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
+      //Serial.print("MPU6050 "); Serial.print(_addr, HEX); Serial.print(' '); Serial.println(whoami, HEX);
       //_bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
       //D("mpu6050_whoami", _addr, whoami);
-      return whoami == 0x34;
+      return whoami == 0x68 || whoami == 0x72;
     }
 
     void setSleepEnabled(bool enabled)

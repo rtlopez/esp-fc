@@ -16,8 +16,8 @@ class Logger
   public:
     int begin()
     {
-      return 0;
       LOG_SERIAL_INIT();
+      return 0;
       _valid = false;
 #if defined(ESP8266)
       SPIFFS.begin();

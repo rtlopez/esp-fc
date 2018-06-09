@@ -20,7 +20,8 @@ namespace Device {
 class GyroDevice
 {
   public:
-    virtual int begin(BusDevice * bus, uint8_t addr = -1) = 0;
+    virtual int begin(BusDevice * bus) = 0;
+    virtual int begin(BusDevice * bus, uint8_t addr) = 0;
 
     virtual GyroDeviceType getType() const = 0;
 

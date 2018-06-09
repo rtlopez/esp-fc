@@ -46,6 +46,7 @@ class Espfc
 
     int update()
     {
+      //return 0;
       _hardware.update();
 
       _model.state.gyroUpdate = _model.state.gyroTimer.check();

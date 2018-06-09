@@ -88,6 +88,7 @@ class Sensor
     int readGyro()
     {
       if(!_model.gyroActive()) return 0;
+      
       _model.state.stats.start(COUNTER_GYRO_READ);
       _gyro->readGyro(_model.state.gyroRaw);
       _model.state.stats.end(COUNTER_GYRO_READ);

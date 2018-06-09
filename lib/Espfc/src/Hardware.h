@@ -58,11 +58,11 @@ class Hardware
     {
       int i2cResult = i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
       i2cBus.onError = std::bind(&Hardware::onI2CError, this);
-      _model.logger.info().log(F("I2C")).log(_model.config.i2cSpeed).logln(i2cResult);
+      _model.logger.info().log(F("I2C SETUP")).log(_model.config.i2cSpeed).logln(i2cResult);
 
 #if defined(ESP32)
       int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MISO], _model.config.pin[PIN_SPI_0_MOSI]);
-      _model.logger.info().log(F("SPI")).logln(spiResult);
+      _model.logger.info().log(F("SPI SETUP")).logln(spiResult);
 #elif defined(ESP8266)
       //int spiResult = spiBus.begin();
       //_model.logger.info().log(F("SPI")).logln(spiResult);

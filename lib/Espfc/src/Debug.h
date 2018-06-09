@@ -12,7 +12,7 @@
 #endif
 
 #if 1
-#define LOG_SERIAL_INIT() Serial.begin(115200)
+#define LOG_SERIAL_INIT() Serial.begin(115200); Serial.flush(); Serial.println()
 #define LOG_SERIAL_DEBUG(v) Serial.print(' '); Serial.print(v)
 #else
 #define LOG_SERIAL_INIT()
