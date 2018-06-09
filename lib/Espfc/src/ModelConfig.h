@@ -6,7 +6,7 @@
 #include "Device/GyroDevice.h"
 #include "Device/BusDevice.h"
 
-#define EEPROM_VERSION_NUM 0x05
+#define EEPROM_VERSION_NUM 0x06
 
 #define USE_SOFT_SERIAL
 

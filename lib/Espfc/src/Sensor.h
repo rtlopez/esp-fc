@@ -286,6 +286,7 @@ class Sensor
     void initGyro()
     {
       _gyro = Hardware::getGyroDevice(_model);
+      if(!_gyro) return;
 
       switch(_model.config.gyroFsr)
       {

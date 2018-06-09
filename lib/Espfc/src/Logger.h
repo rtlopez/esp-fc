@@ -131,14 +131,14 @@ class Logger
 
     Logger& info()
     {
-      LOG_SERIAL_DEBUG("INF");
+      LOG_SERIAL_DEBUG("I");
 #if defined(ESP8266)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
         f.print(millis());
-        f.print(F(" INF"));
+        f.print(F(" I"));
         f.close();
       }
 #endif
@@ -147,14 +147,14 @@ class Logger
 
     Logger& err()
     {
-      LOG_SERIAL_DEBUG("ERR");
+      LOG_SERIAL_DEBUG("E");
 #if defined(ESP8266)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
         f.print(millis());
-        f.print(F(" ERR"));
+        f.print(F(" E"));
         f.close();
       }
 #endif

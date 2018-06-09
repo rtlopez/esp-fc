@@ -21,12 +21,12 @@ void setup()
 void loop()
 {
   espfc.update();
-  yield();
+  //yield();
 }
 
-int main()
+/*int main()
 {
   setup();
   while(true) loop();
   return 0;
-}
+}*/

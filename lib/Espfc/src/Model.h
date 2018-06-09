@@ -116,6 +116,7 @@ class Model
     {
       return state.armingDisabledFlags != 0;
     }
+
     void update()
     {
 #if defined(ESP32) // TODO: if use SPI bus

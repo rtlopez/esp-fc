@@ -56,17 +56,17 @@ class Hardware
 
     void initBus()
     {
-      int result = 0;
-      result = i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
+      int i2cResult = i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
       i2cBus.onError = std::bind(&Hardware::onI2CError, this);
-      _model.logger.info().log(F("I2C")).log(_model.config.i2cSpeed).logln(result);
+      _model.logger.info().log(F("I2C")).log(_model.config.i2cSpeed).logln(i2cResult);
 
 #if defined(ESP32)
-      result = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MISO], _model.config.pin[PIN_SPI_0_MOSI]);
+      int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MISO], _model.config.pin[PIN_SPI_0_MOSI]);
+      _model.logger.info().log(F("SPI")).logln(spiResult);
 #elif defined(ESP8266)
-      result = spiBus.begin();
+      //int spiResult = spiBus.begin();
+      //_model.logger.info().log(F("SPI")).logln(spiResult);
 #endif
-      _model.logger.info().log(F("SPI")).logln(result);
     }
 
     void detectGyro()
@@ -86,26 +86,37 @@ class Hardware
       if(detectedGyro) return;
       if(cs == -1) return;
 
+      int type = gyro.getType();
+
       pinMode(cs, OUTPUT);
       digitalWrite(cs, HIGH);
-      if(!gyro.begin(&bus, cs)) return;
+      bool status = gyro.begin(&bus, cs);
+
+      _model.logger.info().log(F("SPI DETECT")).log(type).logln(status);
+
+      if(!status) return;
 
       detectedGyro = &gyro;
 
       _model.state.gyroBus = BUS_SPI;
-      _model.state.gyroDev = gyro.getType();
+      _model.state.gyroDev = type;
     }
 
     void detectGyroDevice(Device::GyroDevice& gyro, Device::BusI2C& bus)
     {
       if(detectedGyro) return;
 
-      if(!gyro.begin(&bus)) return;
+      int type = gyro.getType();
+      bool status = gyro.begin(&bus);
+
+      _model.logger.info().log(F("I2C DETECT")).log(type).logln(status);
+
+      if(!status) return;
 
       detectedGyro = &gyro;
 
       _model.state.gyroBus = BUS_I2C;
-      _model.state.gyroDev = gyro.getType();
+      _model.state.gyroDev = type;
     }
 
     void detectMag()
@@ -253,7 +264,8 @@ class Hardware
 
     static Device::GyroDevice * getGyroDevice(const Model& model)
     {
-      return detectedGyro;
+      return &mpu6050;
+      //return detectedGyro;
     }
 
     static Device::MagDevice * getMagDevice(const Model& model)
