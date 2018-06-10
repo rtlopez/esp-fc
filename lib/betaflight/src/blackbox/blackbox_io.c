@@ -1,3 +1,23 @@
+/*
+ * This file is part of Cleanflight and Betaflight.
+ *
+ * Cleanflight and Betaflight are free software. You can redistribute
+ * this software and/or modify this software under the terms of the
+ * GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * Cleanflight and Betaflight are distributed in the hope that they
+ * will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this software.
+ *
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -6,7 +26,7 @@
 
 #include "platform.h"
 
-#ifdef BLACKBOX
+#ifdef USE_BLACKBOX
 
 #include "blackbox.h"
 #include "blackbox_io.h"
@@ -55,7 +75,7 @@ static struct {
 
 #endif // USE_SDCARD
 
-void blackboxOpen()
+void blackboxOpen(void)
 {
     serialPort_t *sharedBlackboxAndMspPort = findSharedSerialPort(FUNCTION_BLACKBOX, FUNCTION_MSP);
     if (sharedBlackboxAndMspPort) {
@@ -202,7 +222,7 @@ bool blackboxDeviceOpen(void)
                 portOptions |= SERIAL_STOPBITS_1;
             }
 
-            blackboxPort = openSerialPort(portConfig->identifier, FUNCTION_BLACKBOX, NULL, baudRates[baudRateIndex],
+            blackboxPort = openSerialPort(portConfig->identifier, FUNCTION_BLACKBOX, NULL, NULL, baudRates[baudRateIndex],
                 BLACKBOX_SERIAL_PORT_MODE, portOptions);
 
             /*
@@ -298,12 +318,13 @@ bool isBlackboxErased(void)
 #endif
 
 /**
- * Close the Blackbox logging device immediately without attempting to flush any remaining data.
+ * Close the Blackbox logging device.
  */
 void blackboxDeviceClose(void)
 {
     switch (blackboxConfig()->device) {
     case BLACKBOX_DEVICE_SERIAL:
+        // Can immediately close without attempting to flush any remaining data.
         // Since the serial port could be shared with other processes, we have to give it back here
         closeSerialPort(blackboxPort);
         blackboxPort = NULL;
@@ -316,6 +337,12 @@ void blackboxDeviceClose(void)
             mspSerialAllocatePorts();
         }
         break;
+#ifdef USE_FLASHFS
+    case BLACKBOX_DEVICE_FLASH:
+        // Some flash device, e.g., NAND devices, require explicit close to flush internally buffered data.
+        flashfsClose();
+        break;
+#endif
     default:
         ;
     }
@@ -351,7 +378,7 @@ static void blackboxLogFileCreated(afatfsFilePtr_t file)
     }
 }
 
-static void blackboxCreateLogFile()
+static void blackboxCreateLogFile(void)
 {
     uint32_t remainder = blackboxSDCard.largestLogFileNumber + 1;
 
@@ -372,7 +399,7 @@ static void blackboxCreateLogFile()
  *
  * Keep calling until the function returns true (open is complete).
  */
-static bool blackboxSDCardBeginLog()
+static bool blackboxSDCardBeginLog(void)
 {
     fatDirectoryEntry_t *directoryEntry;
 
@@ -511,7 +538,7 @@ bool isBlackboxDeviceFull(void)
     }
 }
 
-unsigned int blackboxGetLogNumber()
+unsigned int blackboxGetLogNumber(void)
 {
 #ifdef USE_SDCARD
     return blackboxSDCard.largestLogFileNumber;
@@ -523,7 +550,7 @@ unsigned int blackboxGetLogNumber()
  * Call once every loop iteration in order to maintain the global blackboxHeaderBudget with the number of bytes we can
  * transmit this iteration.
  */
-void blackboxReplenishHeaderBudget()
+void blackboxReplenishHeaderBudget(void)
 {
     int32_t freeSpace;
 

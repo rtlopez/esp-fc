@@ -1,6 +1,6 @@
 #pragma once
 
-#define BLACKBOX
+#define USE_BLACKBOX
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -20,7 +20,7 @@
 
 #define FC_FIRMWARE_NAME            "Betaflight"
 #define FC_VERSION_MAJOR            3  // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR            2  // increment when a minor release is made (small new feature, change etc)
+#define FC_VERSION_MINOR            4  // increment when a minor release is made (small new feature, change etc)
 #define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
 
 #define STR_HELPER(x) #x
@@ -78,6 +78,14 @@ int gcd(int num, int denom);
 
 unsigned long millis(void);
 unsigned long micros(void);
+
+#if __GNUC__ > 6
+#define FALLTHROUGH __attribute__ ((fallthrough))
+#else
+#define FALLTHROUGH do {} while(0)
+#endif
+
+#define FORMATTED_DATE_TIME_BUFSIZE 30
 /* UTILS END */
 
 /* PARAMETER GROUP START */
@@ -287,7 +295,7 @@ extern const uint32_t baudRates[];
 serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction);
 void mspSerialReleasePortIfAllocated(struct serialPort_s *serialPort);
 serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function);
-serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, uint32_t baudRate, portMode_e mode, portOptions_e options);
+serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options);
 void closeSerialPort(serialPort_t *serialPort);
 void mspSerialAllocatePorts(void);
 uint32_t serialTxBytesFree(const serialPort_t *instance);
@@ -522,15 +530,16 @@ typedef struct systemConfig_s {
 PG_DECLARE(systemConfig_t, systemConfig);
 
 typedef struct controlRateConfig_s {
-    uint8_t rcRate8;
-    uint8_t rcYawRate8;
-    uint8_t rcExpo8;
     uint8_t thrMid8;
     uint8_t thrExpo8;
+    uint8_t rates_type;
+    uint8_t rcRates[3];
+    uint8_t rcExpo[3];
     uint8_t rates[3];
     uint8_t dynThrPID;
-    uint8_t rcYawExpo8;
     uint16_t tpa_breakpoint;                // Breakpoint where TPA is activated
+    uint8_t throttle_limit_type;            // Sets the throttle limiting type - off, scale or clip
+    uint8_t throttle_limit_percent;         // Sets the maximum pilot commanded throttle limit
 } controlRateConfig_t;
 
 #define CONTROL_RATE_PROFILE_COUNT  1
@@ -564,8 +573,8 @@ typedef struct pid8_s {
 typedef struct pidProfile_s {
     pid8_t  pid[PID_ITEM_COUNT];
 
-    uint16_t yaw_lpf_hz;                    // Additional yaw filter when yaw axis too noisy
-    uint16_t dterm_lpf_hz;                  // Delta Filter in hz
+    uint16_t yaw_lowpass_hz;                    // Additional yaw filter when yaw axis too noisy
+    uint16_t dterm_lowpass_hz;                  // Delta Filter in hz
     uint16_t dterm_notch_hz;                // Biquad dterm notch hz
     uint16_t dterm_notch_cutoff;            // Biquad dterm notch low cutoff
     uint8_t dterm_filter_type;              // Filter selection for dterm
@@ -597,6 +606,7 @@ typedef struct pidProfile_s {
 //    pidCrashRecovery_e crash_recovery;      // off, on, on and beeps when it is in crash recovery mode
     uint16_t crash_limit_yaw;               // limits yaw errorRate, so crashes don't cause huge throttle increase
     uint16_t itermLimit;
+    uint16_t dterm_lowpass2_hz;             // Extra PT1 Filter on D in hz
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -607,7 +617,15 @@ typedef struct pidConfig_s {
 
 PG_DECLARE(pidConfig_t, pidConfig);
 
-extern float axisPID_P[3], axisPID_I[3], axisPID_D[3];
+typedef struct pidAxisData_s {
+    float P;
+    float I;
+    float D;
+    float Sum;
+} pidAxisData_t;
+
+extern pidAxisData_t pidData[3];
+
 extern struct pidProfile_s *currentPidProfile;
 extern uint32_t targetPidLooptime;
 /* PID END */
@@ -681,7 +699,7 @@ typedef struct accDev_s {
 typedef struct acc_s {
     accDev_t dev;
     uint32_t accSamplingInterval;
-    int32_t accSmooth[XYZ_AXIS_COUNT];
+    int32_t accADC[XYZ_AXIS_COUNT];
     bool isAccelUpdatedAtLeastOnce;
 } acc_t;
 
@@ -789,9 +807,11 @@ typedef struct gyroConfig_s {
     //sensor_align_e gyro_align;              // gyro alignment
     uint8_t  gyroMovementCalibrationThreshold; // people keep forgetting that moving model while init results in wrong gyro offsets. and then they never reset gyro. so this is now on by default.
     uint8_t  gyro_sync_denom;                  // Gyro sample divider
-    uint8_t  gyro_lpf;                         // gyro LPF setting - values are driver specific, in case of invalid number, a reasonable default ~30-40HZ is chosen.
-    uint8_t  gyro_soft_lpf_type;
-    uint8_t  gyro_soft_lpf_hz;
+    uint8_t  gyro_hardware_lpf;                         // gyro LPF setting - values are driver specific, in case of invalid number, a reasonable default ~30-40HZ is chosen.
+    uint8_t  gyro_lowpass_type;
+    uint16_t  gyro_lowpass_hz;
+    uint8_t  gyro_lowpass2_type;
+    uint16_t  gyro_lowpass2_hz;
     bool     gyro_use_32khz;
     uint8_t  gyro_to_use;
     uint16_t gyro_soft_notch_hz_1;
@@ -849,6 +869,8 @@ typedef struct rxConfig_s {
 PG_DECLARE(rxConfig_t, rxConfig);
 
 extern float rcCommand[4];
+uint16_t getRssi(void);
+
 /* RX START */
 
 /* FAILSAFE START */
