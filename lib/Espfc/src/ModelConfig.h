@@ -589,7 +589,7 @@ class ModelConfig
     FilterConfig dtermNotchFilter;
     FilterConfig levelPtermFilter;
 
-    uint8_t dtermSetpointWeight;
+    int16_t dtermSetpointWeight;
     int8_t itermWindupPointPercent;
 
     int8_t angleLimit;

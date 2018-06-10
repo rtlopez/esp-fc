@@ -289,7 +289,7 @@ class Model
           pc->I * ITERM_SCALE * pidScale[i],
           pc->D * DTERM_SCALE * pidScale[i],
           0.15f,
-          config.dtermSetpointWeight / 100.0f,
+          config.dtermSetpointWeight * 0.01f,
           0.5f
         );
         state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);

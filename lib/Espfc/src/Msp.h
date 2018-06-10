@@ -863,7 +863,7 @@ class Msp
           r.writeU8(0); // reserved
           r.writeU8(0); //vbatPidCompensation;
           r.writeU8(0); //setpointRelaxRatio;
-          r.writeU8(_model.config.dtermSetpointWeight);
+          r.writeU8((uint8_t)std::min(_model.config.dtermSetpointWeight, (int16_t)255));
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
@@ -873,6 +873,7 @@ class Msp
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); //itermThrottleThreshold;
           r.writeU16(0); //itermAcceleratorGain;
+          r.writeU16(_model.config.dtermSetpointWeight);
           break;
 
         case MSP_SET_PID_ADVANCED:
@@ -895,6 +896,9 @@ class Msp
           if (m.remain() >= 4) {
               m.readU16();
               m.readU16();
+          }
+          if (m.remain() >= 2) {
+            _model.config.dtermSetpointWeight = m.readU16();
           }
           _model.update();
           break;
