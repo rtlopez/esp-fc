@@ -5,7 +5,7 @@
 #include "EspWire.h"
 #include "Wire.h"
 
-#define WireImpl Wire
+#define WireImpl EspWire
 
 namespace Espfc {
 

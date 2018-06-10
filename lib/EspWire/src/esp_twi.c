@@ -60,32 +60,39 @@ static uint32_t esp_twi_clockStretchLimit;
 #define TWI_CLOCK_STRETCH_MULTIPLIER 6
 #endif
 
+#if defined(ESP32)
+#define TWI_PIN_MAX 32
+#else
+#define TWI_PIN_MAX 15
+#endif
+
 void esp_twi_setClock(unsigned int freq){
 #if F_CPU == FCPU80
-  if(freq <= 100000) esp_twi_dcount = 19;//about 100KHz
-  else if(freq <= 200000) esp_twi_dcount = 8;//about 200KHz
-  else if(freq <= 300000) esp_twi_dcount = 3;//about 300KHz
-  else if(freq <= 400000) esp_twi_dcount = 1;//about 400KHz
-  else esp_twi_dcount = 1;//about 400KHz
+  if(freq < 100000) esp_twi_dcount = 19;//about 100KHz
+  else if(freq < 200000) esp_twi_dcount = 8;//about 200KHz
+  else if(freq < 300000) esp_twi_dcount = 3;//about 300KHz
+  else if(freq < 400000) esp_twi_dcount = 1;//about 400KHz
+  else esp_twi_dcount = 0;//about 400KHz
 #elif F_CPU == FCPU240
   if(freq <= 100000) esp_twi_dcount = 75;//about 100KHz
-  else if(freq <= 200000) esp_twi_dcount = 35;//about 200KHz
-  else if(freq <= 300000) esp_twi_dcount = 21;//about 300KHz
-  else if(freq <= 400000) esp_twi_dcount = 15;//about 400KHz
-  else if(freq <= 500000) esp_twi_dcount = 10;//about 500KHz
-  else if(freq <= 600000) esp_twi_dcount = 8;//about 600KHz
-  else if(freq <= 800000) esp_twi_dcount = 4;//about 800KHz
-  else if(freq <= 1000000) esp_twi_dcount = 2;//about 1000KHz
+  else if(freq < 200000) esp_twi_dcount = 35;//about 200KHz
+  else if(freq < 300000) esp_twi_dcount = 21;//about 300KHz
+  else if(freq < 400000) esp_twi_dcount = 15;//about 400KHz
+  else if(freq < 500000) esp_twi_dcount = 10;//about 500KHz
+  else if(freq < 600000) esp_twi_dcount = 8;//about 600KHz
+  else if(freq < 800000) esp_twi_dcount = 4;//about 800KHz
+  else if(freq < 1000000) esp_twi_dcount = 2;//about 1000KHz
   else esp_twi_dcount = 1;//above 1MHz
-#else
-  if(freq <= 50000) esp_twi_dcount = 64;//about 50KHz
-  else if(freq <= 100000) esp_twi_dcount = 32;//about 100KHz
-  else if(freq <= 200000) esp_twi_dcount = 14;//about 200KHz
-  else if(freq <= 300000) esp_twi_dcount = 8;//about 300KHz
-  else if(freq <= 400000) esp_twi_dcount = 5;//about 400KHz
-  else if(freq <= 500000) esp_twi_dcount = 3;//about 500KHz
-  else if(freq <= 600000) esp_twi_dcount = 2;//about 600KHz
-  else esp_twi_dcount = 1;//about 700KHz
+#else // 160 mhz
+  if(freq < 50000) esp_twi_dcount = 64;//about 50KHz
+  else if(freq < 100000) esp_twi_dcount = 32;//about 100KHz
+  else if(freq < 200000) esp_twi_dcount = 14;//about 200KHz
+  else if(freq < 300000) esp_twi_dcount = 8;//about 300KHz
+  else if(freq < 400000) esp_twi_dcount = 5;//about 400KHz
+  else if(freq < 500000) esp_twi_dcount = 3;//about 500KHz
+  else if(freq < 600000) esp_twi_dcount = 2;//about 600KHz
+  else if(freq < 800000) esp_twi_dcount = 1;//about 800KHz
+  else esp_twi_dcount = 0; //about 700KHz
 #endif
 }
 
@@ -94,7 +101,7 @@ void esp_twi_setClockStretchLimit(uint32_t limit){
 }
 
 void esp_twi_init(unsigned char sda, unsigned char scl){
-  if(sda > 32 || scl > 32) return;
+  if(sda > TWI_PIN_MAX || scl > TWI_PIN_MAX) return;
   esp_twi_sda = sda;
   esp_twi_scl = scl;
   pinMode(esp_twi_sda, INPUT_PULLUP);
@@ -118,6 +125,7 @@ static inline unsigned int _getCycleCount()
 static void esp_twi_delay(unsigned char v)
 {
   unsigned int end;
+  int maxCount = 100;
   switch(v)
   {
     case 2:
@@ -129,7 +137,10 @@ static void esp_twi_delay(unsigned char v)
       break;
     default:
       end = _getCycleCount() + v * 20;
-      while(_getCycleCount() <= end);
+      while(_getCycleCount() <= end)
+      {
+          if(--maxCount == 0) break; // counter override protection
+      }
   }
   /*unsigned int reg;
   for(unsigned int i = 0; i < v; i++)
@@ -166,7 +177,6 @@ static bool esp_twi_write_stop(void){
   esp_twi_delay(esp_twi_dcount);
   SDA_HIGH();
   esp_twi_delay(esp_twi_dcount);
-
   return true;
 }
 
