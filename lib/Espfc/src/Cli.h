@@ -309,9 +309,9 @@ class Cli
     {
       const char ** busDevChoices            = Device::BusDevice::getNames();
       const char ** gyroDevChoices           = Device::GyroDevice::getNames();
-      static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), NULL };
+      static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
       static const char* accelModeChoices[]  = { PSTR("DELAYED"), PSTR("GYRO"), NULL };
-      //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("RHMC5883"), NULL };
+      //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), NULL };
       //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
       static const char* fusionModeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
                                                  PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
@@ -321,7 +321,7 @@ class Cli
                                                  PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"),
                                                  PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"),
                                                  PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
-      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("FIR"), NULL };
+      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("FIR"), PSTR("NOTCH"), PSTR("FIR2"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
                                                  PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
@@ -346,6 +346,10 @@ class Cli
         Param(PSTR("gyro_align"), &c.gyroAlign, alignChoices),
         Param(PSTR("gyro_lpf_type"), &c.gyroFilter.type, filterTypeChoices),
         Param(PSTR("gyro_lpf_freq"), &c.gyroFilter.freq),
+        Param(PSTR("gyro_lpf2_type"), &c.gyroFilter2.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf2_freq"), &c.gyroFilter2.freq),
+        Param(PSTR("gyro_lpf3_type"), &c.gyroFilter3.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf3_freq"), &c.gyroFilter3.freq),
         Param(PSTR("gyro_notch1_freq"), &c.gyroNotch1Filter.freq),
         Param(PSTR("gyro_notch1_cutoff"), &c.gyroNotch1Filter.cutoff),
         Param(PSTR("gyro_notch2_freq"), &c.gyroNotch2Filter.freq),
@@ -452,6 +456,8 @@ class Cli
 
         Param(PSTR("pid_dterm_lpf_type"), &c.dtermFilter.type, filterTypeChoices),
         Param(PSTR("pid_dterm_lpf_freq"), &c.dtermFilter.freq),
+        Param(PSTR("pid_dterm_lpf2_type"), &c.dtermFilter2.type, filterTypeChoices),
+        Param(PSTR("pid_dterm_lpf2_freq"), &c.dtermFilter2.freq),
         Param(PSTR("pid_dterm_notch_freq"), &c.dtermNotchFilter.freq),
         Param(PSTR("pid_dterm_notch_cutoff"), &c.dtermNotchFilter.cutoff),
 

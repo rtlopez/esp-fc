@@ -6,7 +6,7 @@
 #include "Device/GyroDevice.h"
 #include "Device/BusDevice.h"
 
-#define EEPROM_VERSION_NUM 0x06
+#define EEPROM_VERSION_NUM 0x07
 
 #define USE_SOFT_SERIAL
 
@@ -19,7 +19,8 @@ enum GyroDlpf {
   GYRO_DLPF_42  = 0x03,
   GYRO_DLPF_20  = 0x04,
   GYRO_DLPF_10  = 0x05,
-  GYRO_DLPF_5   = 0x06
+  GYRO_DLPF_5   = 0x06,
+  GYRO_DLPF_EX  = 0x07,
 };
 
 enum GyroGain {
@@ -371,6 +372,7 @@ enum FilterType {
   FILTER_BIQUAD,
   FILTER_FIR,
   FILTER_NOTCH,
+  FILTER_FIR2,
   FILTER_NONE,
 };
 
@@ -544,6 +546,8 @@ class ModelConfig
     int8_t gyroSync;
     int8_t gyroAlign;
     FilterConfig gyroFilter;
+    FilterConfig gyroFilter2;
+    FilterConfig gyroFilter3;
     FilterConfig gyroNotch1Filter;
     FilterConfig gyroNotch2Filter;
 
@@ -581,6 +585,7 @@ class ModelConfig
     FilterConfig yawFilter;
 
     FilterConfig dtermFilter;
+    FilterConfig dtermFilter2;
     FilterConfig dtermNotchFilter;
     FilterConfig levelPtermFilter;
 
@@ -713,6 +718,11 @@ class ModelConfig
 
       gyroFilter.type = FILTER_PT1;
       gyroFilter.freq = 90;
+      gyroFilter2.type = FILTER_PT1;
+      gyroFilter2.freq = 200;
+      gyroFilter3.type = FILTER_FIR2;
+      gyroFilter3.freq = 100;
+
       gyroNotch1Filter.type = FILTER_NOTCH;
       gyroNotch1Filter.cutoff = 70;
       gyroNotch1Filter.freq = 150;
@@ -726,12 +736,14 @@ class ModelConfig
       magFilter.type = FILTER_BIQUAD;
       magFilter.freq = 15;
 
-      dtermFilter.type = FILTER_BIQUAD;
+      dtermFilter.type = FILTER_PT1;
       dtermFilter.freq = 100;
+      dtermFilter2.type = FILTER_PT1;
+      dtermFilter2.freq = 200;
 
       dtermNotchFilter.type = FILTER_BIQUAD;
-      dtermNotchFilter.cutoff = 70;
-      dtermNotchFilter.freq = 130;
+      dtermNotchFilter.cutoff = 90;
+      dtermNotchFilter.freq = 150;
 
       yawFilter.type = FILTER_PT1;
       yawFilter.freq = 90;
@@ -851,10 +863,17 @@ class ModelConfig
       input.deadband = 3; // us
 
       // PID controller config
-      pid[PID_ROLL]  = { .P = 40,  .I = 40, .D = 30 };
-      pid[PID_PITCH] = { .P = 58,  .I = 50, .D = 35 };
-      pid[PID_YAW]   = { .P = 70,  .I = 45, .D = 10 };
-      pid[PID_LEVEL] = { .P = 55,  .I = 0,  .D = 0 };
+      pid[PID_ROLL]  = { .P = 46, .I = 45, .D = 25 };
+      pid[PID_PITCH] = { .P = 50, .I = 50, .D = 27 };
+      pid[PID_YAW]   = { .P = 65, .I = 45, .D = 10 };
+      pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0 };
+
+      pid[PID_ALT]   = { .P = 50, .I =  0, .D =  0 };
+      pid[PID_POS]   = { .P = 15, .I =  0, .D =  0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
+      pid[PID_POSR]  = { .P = 32, .I = 14, .D = 53 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
+      pid[PID_NAVR]  = { .P = 25, .I = 33, .D = 83 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
+      pid[PID_MAG]   = { .P = 40, .I =  0, .D =  0 };
+      pid[PID_VEL]   = { .P = 55, .I = 55, .D = 75 };
 
       itermWindupPointPercent = 30;
       dtermSetpointWeight = 30;

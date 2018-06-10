@@ -779,16 +779,25 @@ class Msp
           break;
 
         case MSP_FILTER_CONFIG:
-          r.writeU8(_model.config.gyroFilter.freq); // gyro lpf
-          r.writeU16(_model.config.dtermFilter.freq); // dterm lpf
-          r.writeU16(_model.config.yawFilter.freq);  // yaw lpf
-          r.writeU16(_model.config.gyroNotch1Filter.freq);  // gyro notch 1 hz
+          r.writeU8(_model.config.gyroFilter.freq);           // gyro lpf
+          r.writeU16(_model.config.dtermFilter.freq);         // dterm lpf
+          r.writeU16(_model.config.yawFilter.freq);           // yaw lpf
+          r.writeU16(_model.config.gyroNotch1Filter.freq);    // gyro notch 1 hz
           r.writeU16(_model.config.gyroNotch1Filter.cutoff);  // gyro notch 1 cutoff
-          r.writeU16(_model.config.dtermNotchFilter.freq);  // dterm notch hz
+          r.writeU16(_model.config.dtermNotchFilter.freq);    // dterm notch hz
           r.writeU16(_model.config.dtermNotchFilter.cutoff);  // dterm notch cutoff
-          r.writeU16(_model.config.gyroNotch2Filter.freq);  // gyro notch 2 hz
+          r.writeU16(_model.config.gyroNotch2Filter.freq);    // gyro notch 2 hz
           r.writeU16(_model.config.gyroNotch2Filter.cutoff);  // gyro notch 2 cutoff
-          r.writeU8(_model.config.dtermFilter.type);
+          r.writeU8(_model.config.dtermFilter.type);          // dterm type
+          r.writeU8(_model.config.gyroDlpf == GYRO_DLPF_256 ? 0 : (_model.config.gyroDlpf == GYRO_DLPF_EX ? 1 : 2)); // dlfp type
+          r.writeU8(0);                                       // dlfp 32khz type
+          r.writeU16(_model.config.gyroFilter.freq);          // lowpass1 freq
+          r.writeU16(_model.config.gyroFilter2.freq);         // lowpass2 freq
+          r.writeU8(_model.config.gyroFilter.type);           // lowpass1 type
+          r.writeU8(_model.config.gyroFilter2.type);          // lowpass2 type
+          r.writeU16(_model.config.dtermFilter2.freq);        // dterm lopwass2 freq
+
+
           break;
 
         case MSP_SET_FILTER_CONFIG:
@@ -807,6 +816,15 @@ class Msp
           }
           if (m.remain() >= 1) {
               _model.config.dtermFilter.type = (FilterType)m.readU8();
+          }
+          if (m.remain() >= 10) {
+            m.readU8(); // dlfp type
+            m.readU8(); // 32k dlfp type
+            _model.config.gyroFilter.freq = m.readU16();
+            _model.config.gyroFilter2.freq = m.readU16();
+            _model.config.gyroFilter.type = m.readU8();
+            _model.config.gyroFilter2.type = m.readU8();
+            _model.config.dtermFilter2.freq = m.readU16();
           }
           _model.update();
           break;

@@ -65,6 +65,7 @@ class Pid
       }
       dTerm = dtermNotchFilter.update(dTerm);
       dTerm = dtermFilter.update(dTerm);
+      dTerm = dtermFilter2.update(dTerm);
 
       float output = Math::bound(pTerm + iTerm + dTerm, -oLimit, oLimit);
 
@@ -87,6 +88,7 @@ class Pid
     float dScale;
 
     Filter dtermFilter;
+    Filter dtermFilter2;
     Filter dtermNotchFilter;
     Filter ptermFilter;
 

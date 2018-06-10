@@ -88,7 +88,7 @@ class Sensor
     int readGyro()
     {
       if(!_model.gyroActive()) return 0;
-      
+
       _model.state.stats.start(COUNTER_GYRO_READ);
       _gyro->readGyro(_model.state.gyroRaw);
       _model.state.stats.end(COUNTER_GYRO_READ);
@@ -144,17 +144,18 @@ class Sensor
       // filtering
       for(size_t i = 0; i < 3; ++i)
       {
+        if(_model.config.debugMode == DEBUG_GYRO)
+        {
+          _model.state.debug[i] = _model.state.gyroRaw[i];
+        }
         if(_model.config.debugMode == DEBUG_NOTCH)
         {
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
         }
         _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
         _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
-        if(_model.config.debugMode == DEBUG_GYRO)
-        {
-          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
-        }
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
       }
       _model.state.stats.end(COUNTER_GYRO_FILTER);
     }

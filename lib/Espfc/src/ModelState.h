@@ -109,6 +109,8 @@ struct ModelState
   Quaternion angleQ;
 
   Filter gyroFilter[3];
+  Filter gyroFilter2[3];
+  Filter gyroFilter3[3];
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
 

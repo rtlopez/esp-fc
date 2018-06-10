@@ -50,6 +50,9 @@ class Filter
         case FILTER_NOTCH:
           initBiquadNotch();
           break;
+        case FILTER_FIR2:
+          initFir2();
+          break;
         case FILTER_NONE:
         default:
           ;
@@ -65,9 +68,11 @@ class Filter
         case FILTER_BIQUAD:
           return updateBiquadDF2(v);
         case FILTER_FIR:
-          return updatePt1(v);
+          return updatePt1Fir2(v);
         case FILTER_NOTCH:
           return updateBiquadDF2(v);
+        case FILTER_FIR2:
+            return updateFir2(v);
         case FILTER_NONE:
         default:
           return v;
@@ -84,9 +89,28 @@ class Filter
       _state.pt1.v0 = 0.f;
     }
 
+    void initFir2()
+    {
+      _state.pt1.v = 0.f;
+      _state.pt1.v0 = 0.f;
+    }
+
     float updatePt1(float v)
     {
       _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
+      return _state.pt1.v;
+    }
+
+    float updatePt1Fir2(float v)
+    {
+      _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
+      _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
+      _state.pt1.v0 = _state.pt1.v;
+      return _state.pt1.v;
+    }
+
+    float updateFir2(float v)
+    {
       _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
       _state.pt1.v0 = _state.pt1.v;
       return _state.pt1.v;

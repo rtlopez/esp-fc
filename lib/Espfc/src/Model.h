@@ -164,6 +164,8 @@ class Model
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
         state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+        state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
+        state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
         state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
         state.accelFilter[i].begin(config.accelFilter, state.gyroTimer.rate);
@@ -291,6 +293,7 @@ class Model
           0.5f
         );
         state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        state.innerPid[i].dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
         state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         if(i == AXIS_YAW) state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
         else state.innerPid[i].ptermFilter.begin(); // no filter
