@@ -1,5 +1,5 @@
 /*
-  TwoWire.h - TWI/I2C library for Arduino & Wiring
+  EspTwoWire.h - TWI/I2C library for Arduino & Wiring
   Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
 
   This library is free software; you can redistribute it and/or
@@ -21,17 +21,15 @@
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
 */
 
-#ifndef TwoWire_h
-#define TwoWire_h
+#ifndef EspTwoWire_h
+#define EspTwoWire_h
 
 #include <inttypes.h>
 #include "Stream.h"
 
-
-
 #define BUFFER_LENGTH 32
 
-class TwoWire : public Stream
+class EspTwoWire : public Stream
 {
   private:
     static uint8_t rxBuffer[];
@@ -49,7 +47,7 @@ class TwoWire : public Stream
     static void onRequestService(void);
     static void onReceiveService(uint8_t*, int);
   public:
-    TwoWire();
+    EspTwoWire();
     void begin(int sda, int scl);
     void pins(int sda, int scl) __attribute__((deprecated)); // use begin(sda, scl) in new code
     void begin();
@@ -62,13 +60,13 @@ class TwoWire : public Stream
     uint8_t endTransmission(void);
     uint8_t endTransmission(uint8_t);
     size_t requestFrom(uint8_t address, size_t size, bool sendStop);
-	uint8_t status();
+	  uint8_t status();
 
     uint8_t requestFrom(uint8_t, uint8_t);
     uint8_t requestFrom(uint8_t, uint8_t, uint8_t);
     uint8_t requestFrom(int, int);
     uint8_t requestFrom(int, int, int);
-    
+
     virtual size_t write(uint8_t);
     virtual size_t write(const uint8_t *, size_t);
     virtual int available(void);
@@ -86,8 +84,7 @@ class TwoWire : public Stream
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_TWOWIRE)
-extern TwoWire Wire;
+extern EspTwoWire EspWire;
 #endif
 
 #endif
-

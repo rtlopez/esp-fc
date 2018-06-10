@@ -10,6 +10,7 @@
 #include <EspSoftSerial.h>
 #include <EspGpio.h>
 #include <EscDriver.h>
+#include <EspWire.h>
 
 Espfc::Espfc espfc;
 

@@ -2,7 +2,10 @@
 #define _ESPFC_DEVICE_BUSI2C_H_
 
 #include "BusDevice.h"
+#include "EspWire.h"
 #include "Wire.h"
+
+#define WireImpl Wire
 
 namespace Espfc {
 
@@ -13,8 +16,8 @@ class BusI2C: public BusDevice
   public:
     int begin(int sda, int scl, int speed)
     {
-      Wire.begin(sda, scl);
-      Wire.setClock(speed);
+      WireImpl.begin(sda, scl);
+      WireImpl.setClock(speed);
       return 1;
     }
 
@@ -25,15 +28,15 @@ class BusI2C: public BusDevice
 
       //Serial.print("I2C R "); Serial.print(devAddr, HEX); Serial.print(' '); Serial.print(regAddr, HEX); Serial.print(' '); Serial.println(length);
 
-      Wire.beginTransmission(devAddr);
-      Wire.write(regAddr);
-      Wire.endTransmission();
-      Wire.beginTransmission(devAddr);
-      Wire.requestFrom(devAddr, length);
+      WireImpl.beginTransmission(devAddr);
+      WireImpl.write(regAddr);
+      WireImpl.endTransmission();
+      WireImpl.beginTransmission(devAddr);
+      WireImpl.requestFrom(devAddr, length);
 
-      for (; Wire.available() && (timeout == 0 || millis() - t1 < timeout); count++)
+      for (; WireImpl.available() && (timeout == 0 || millis() - t1 < timeout); count++)
       {
-        data[count] = Wire.read();
+        data[count] = WireImpl.read();
         //Serial.print("I2C R "); Serial.print(count); Serial.print(' '); Serial.println(data[count], HEX);
       }
 
@@ -48,14 +51,14 @@ class BusI2C: public BusDevice
     {
       //Serial.print("I2C W "); Serial.print(devAddr, HEX); Serial.print(' '); Serial.print(regAddr, HEX); Serial.print(' '); Serial.println(length);
 
-      Wire.beginTransmission(devAddr);
-      Wire.write((uint8_t) regAddr); // send address
+      WireImpl.beginTransmission(devAddr);
+      WireImpl.write((uint8_t) regAddr); // send address
       for (uint8_t i = 0; i < length; i++)
       {
-        Wire.write(data[i]);
+        WireImpl.write(data[i]);
         //Serial.print("I2C W "); Serial.print(i); Serial.print(' '); Serial.println(data[i], HEX);
       }
-      uint8_t status = Wire.endTransmission();
+      uint8_t status = WireImpl.endTransmission();
 
       if(onError && status != 0) onError();
 
