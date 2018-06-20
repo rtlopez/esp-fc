@@ -684,10 +684,13 @@ class Msp
         case MSP_SET_RXFAIL_CONFIG:
           {
             size_t i = m.readU8();
-            if (i < INPUT_CHANNELS) {
+            if(i < INPUT_CHANNELS)
+            {
               _model.config.input.channel[i].fsMode = m.readU8(); // mode
               _model.config.input.channel[i].fsValue = m.readU16(); // pulse
-            } else {
+            }
+            else
+            {
               r.result = -1;
             }
           }
@@ -931,16 +934,61 @@ class Msp
           break;
 
         case MSP_SET_MOTOR:
-          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
             _model.state.outputDisarmed[i] = m.readU16();
           }
           break;
 
         case MSP_SERVO:
+          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            if (i >= OUTPUT_CHANNELS || _model.config.pin[i + PIN_OUTPUT_0] == -1)
+            {
+              r.writeU16(1500);
+              continue;
+            }
+            r.writeU16(_model.state.outputUs[i]);
+          }
+          break;
+
+        case MSP_SERVO_CONFIGURATIONS:
           for(size_t i = 0; i < 8; i++)
           {
-            r.writeU16(1500);
+            if(i < OUTPUT_CHANNELS)
+            {
+              r.writeU16(_model.config.output.channel[i].min);
+              r.writeU16(_model.config.output.channel[i].max);
+              r.writeU16(_model.config.output.channel[i].neutral);
+            }
+            else
+            {
+              r.writeU16(1000);
+              r.writeU16(2000);
+              r.writeU16(1500);
+            }
+            r.writeU8(100);
+            r.writeU8(-1);
+            r.writeU32(0);
+          }
+          break;
+
+        case MSP_SET_SERVO_CONFIGURATION:
+          {
+            uint8_t i = m.readU8();
+            if(i < OUTPUT_CHANNELS)
+            {
+              _model.config.output.channel[i].min = m.readU16();
+              _model.config.output.channel[i].max = m.readU16();
+              _model.config.output.channel[i].neutral = m.readU16();
+              m.readU8();
+              m.readU8();
+              m.readU32();
+            }
+            else
+            {
+              r.result = -1;
+            }
           }
           break;
 
