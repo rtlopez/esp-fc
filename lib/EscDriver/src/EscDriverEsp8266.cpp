@@ -66,9 +66,13 @@ static void ICACHE_RAM_ATTR _isr_begin()
 static bool ICACHE_RAM_ATTR _isr_wait(const uint32_t ticks)
 {
 #if defined(USE_FRC2)
-  if(ticks > 128) { // yield
-    T2A = ((uint32_t)T2V + ticks - 108UL);
-    //T2I = 0;
+  //if(ticks > 128) { // yield
+  if(ticks > 140) { // yield
+    //T2A = ((uint32_t)T2V + ticks - 108UL);
+    //T2A = ((uint32_t)T2V + ticks) - 120UL;
+    T2L = 0;
+    T2A = ticks - 120UL;
+    T2I = 0;
     return true;
   }
 #elif defined(USE_FRC1)
@@ -121,6 +125,7 @@ static void ICACHE_RAM_ATTR _isr_start()
 static void ICACHE_RAM_ATTR _isr_reboot(void* p)
 {
   _isr_begin();
+  (void)p;
 }
 
 static void _isr_end()
@@ -272,7 +277,7 @@ void ICACHE_RAM_ATTR EscDriverEsp8266::commit()
     item->ticks = _interval;
     if(last)
     {
-      if(last->pulse + TIMER_TICKS_MIN < item->ticks) item->ticks -= last->pulse;
+      if(item->ticks > last->pulse + TIMER_TICKS_MIN) item->ticks -= last->pulse;
       else item->ticks = TIMER_TICKS_MIN;
     }
   }
@@ -320,7 +325,7 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate)
   _protocol = ESC_PROTOCOL_SANITIZE(protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // force async for brushed
   _rate = constrain(rate, 50, 8000);
-  _interval = usToTicksReal(1000000L / _rate) - 400; // small compensation to keep frequency
+  _interval = usToTicksReal(1000000L / _rate)/* - 400*/; // small compensation to keep frequency
   _intervalMin = _interval / 500; // do not generate brushed pulses if duty < ~0.2%  (1002)
   _intervalMax = _interval - _intervalMin; // set brushed output hi if duty > ~99.8% (1998)
   switch(_protocol)
