@@ -11,7 +11,7 @@
 static const size_t DURATION = 25; // duoble value to increase precision
 static const size_t DSHOT_BITS = 16;
 
-class EscDriverEsp32
+class EscDriverEsp32: public EscDriverBase
 {
   public:
     class Slot {

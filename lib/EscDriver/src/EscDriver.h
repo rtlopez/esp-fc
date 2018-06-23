@@ -1,6 +1,8 @@
 #ifndef _ESC_DRIVER_H_
 #define _ESC_DRIVER_H_
 
+#include <Arduino.h>
+
 enum EscProtocol {
   ESC_PROTOCOL_PWM,
   ESC_PROTOCOL_ONESHOT125,
@@ -16,6 +18,27 @@ enum EscProtocol {
 };
 
 #define PWM_TO_DSHOT(v) (((v - 1000) * 2) + 47)
+
+class EscDriverBase
+{
+  public:
+    uint16_t dshotEncode(uint16_t value)
+    {
+      value <<= 1;
+
+      // compute checksum
+      int csum = 0;
+      int csum_data = value;
+      for (int i = 0; i < 3; i++)
+      {
+        csum ^= csum_data; // xor
+        csum_data >>= 4;
+      }
+      csum &= 0xf;
+
+      return (value << 4) | csum;
+    }
+};
 
 #if defined(ESP8266)
 

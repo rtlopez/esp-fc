@@ -17,6 +17,7 @@
 #ifndef MadgwickAHRS_h
 #define MadgwickAHRS_h
 #include <math.h>
+#include <Arduino.h>
 
 //--------------------------------------------------------------------------------------------
 // Variable declaration
@@ -27,7 +28,7 @@ public:
   float q2;
   float q3;	// quaternion of sensor frame relative to auxiliary frame
 private:
-    static float invSqrt(float x);
+    static float invSqrt(float x) ICACHE_RAM_ATTR;
     float beta;				// algorithm gain
     float invSampleFreq;
     float roll;

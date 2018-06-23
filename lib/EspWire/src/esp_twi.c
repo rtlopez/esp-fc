@@ -115,14 +115,14 @@ void esp_twi_stop(void){
   pinMode(esp_twi_scl, INPUT);
 }
 
-static inline unsigned int _getCycleCount()
+static inline ICACHE_RAM_ATTR unsigned int _getCycleCount()
 {
     unsigned int ccount;
     __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
     return ccount;
 }
 
-static void esp_twi_delay(unsigned char v)
+static inline ICACHE_RAM_ATTR void esp_twi_delay(unsigned char v)
 {
   unsigned int end;
   int maxCount = 100;
@@ -157,7 +157,7 @@ static void esp_twi_delay(unsigned char v)
   */
 }
 
-static bool esp_twi_write_start(void) {
+static ICACHE_RAM_ATTR bool esp_twi_write_start(void) {
   SCL_HIGH();
   SDA_HIGH();
   if (SDA_READ() == 0) return false;
@@ -167,7 +167,7 @@ static bool esp_twi_write_start(void) {
   return true;
 }
 
-static bool esp_twi_write_stop(void){
+static ICACHE_RAM_ATTR bool esp_twi_write_stop(void){
   uint32_t i = 0;
   SCL_LOW();
   SDA_LOW();
@@ -180,7 +180,7 @@ static bool esp_twi_write_stop(void){
   return true;
 }
 
-static bool esp_twi_write_bit(bool bit) {
+static ICACHE_RAM_ATTR bool esp_twi_write_bit(bool bit) {
   uint32_t i = 0;
   SCL_LOW();
   if (bit) SDA_HIGH();
@@ -192,7 +192,7 @@ static bool esp_twi_write_bit(bool bit) {
   return true;
 }
 
-static bool esp_twi_read_bit(void) {
+static ICACHE_RAM_ATTR bool esp_twi_read_bit(void) {
   uint32_t i = 0;
   SCL_LOW();
   SDA_HIGH();
@@ -204,7 +204,7 @@ static bool esp_twi_read_bit(void) {
   return bit;
 }
 
-static bool esp_twi_write_byte(unsigned char byte) {
+static ICACHE_RAM_ATTR bool esp_twi_write_byte(unsigned char byte) {
   unsigned char bit;
   for (bit = 0; bit < 8; bit++) {
     esp_twi_write_bit(byte & 0x80);
@@ -213,7 +213,7 @@ static bool esp_twi_write_byte(unsigned char byte) {
   return !esp_twi_read_bit();//NACK/ACK
 }
 
-static unsigned char esp_twi_read_byte(bool nack) {
+static ICACHE_RAM_ATTR unsigned char esp_twi_read_byte(bool nack) {
   unsigned char byte = 0;
   unsigned char bit;
   for (bit = 0; bit < 8; bit++) byte = (byte << 1) | esp_twi_read_bit();

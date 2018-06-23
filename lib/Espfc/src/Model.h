@@ -67,7 +67,7 @@ class Model
       return config.blackboxDev == 3 && config.blackboxPdenom > 0;
     }
 
-    bool gyroActive() const
+    bool gyroActive() const ICACHE_RAM_ATTR
     {
       return state.gyroPresent && config.gyroDev != GYRO_NONE;
     }
@@ -112,10 +112,11 @@ class Model
       }
     }
 
-    bool armingDisabled() const
+    bool armingDisabled() const ICACHE_RAM_ATTR
     {
       return state.armingDisabledFlags != 0;
     }
+
     void update()
     {
 #if defined(ESP32) // TODO: if use SPI bus

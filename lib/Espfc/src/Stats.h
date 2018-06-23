@@ -38,12 +38,12 @@ class Stats
       }
     }
 
-    void start(StatCounter c)
+    void start(StatCounter c) ICACHE_RAM_ATTR
     {
       _start[c] = micros();
     }
 
-    void end(StatCounter c)
+    void end(StatCounter c) ICACHE_RAM_ATTR
     {
       uint32_t diff = micros() - _start[c];
       _sum[c] += diff;

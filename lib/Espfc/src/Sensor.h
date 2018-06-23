@@ -385,7 +385,7 @@ class Sensor
       _model.state.battery.cellVoltage = _model.state.battery.voltage / std::max((int)_model.state.battery.cells, 1);
     }
 
-    void align(VectorInt16& dest, uint8_t rotation)
+    void align(VectorInt16& dest, uint8_t rotation) ICACHE_RAM_ATTR
     {
       const int16_t x = dest.x;
       const int16_t y = dest.y;

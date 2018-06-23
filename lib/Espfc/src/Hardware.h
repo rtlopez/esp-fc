@@ -29,6 +29,8 @@ namespace {
   static Espfc::Device::GyroMPU9250 mpu9250;
   static Espfc::Device::MagHMC5338L hmc5883l;
   static Espfc::Device::GyroDevice * detectedGyro = nullptr;
+  static EscDriver escMotor;
+  static EscDriver escServo;
 }
 
 namespace Espfc {
@@ -45,6 +47,7 @@ class Hardware
       initBus();
       detectGyro();
       detectMag();
+      initEscDrivers();
       return 1;
     }
 
@@ -264,8 +267,8 @@ class Hardware
 
     static Device::GyroDevice * getGyroDevice(const Model& model)
     {
-      return &mpu6050;
-      //return detectedGyro;
+      //return &mpu6050;
+      return detectedGyro;
     }
 
     static Device::MagDevice * getMagDevice(const Model& model)
@@ -294,25 +297,44 @@ class Hardware
       return NULL;
     }
 
-    static EscDriver * getEscDriver(Model& model)
+    void initEscDrivers()
     {
-      static EscDriver driver;
+      escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_TIMER1);
+      _model.logger.info().log(F("MOTOR CONF")).log(ESC_DRIVER_TIMER1).log(_model.config.output.protocol).log(_model.config.output.async).logln(_model.config.output.rate);
 
-      driver.begin((EscProtocol)model.config.output.protocol, model.config.output.async, model.config.output.rate);
-      model.logger.info().log(F("OUTPUT CONF")).log(model.config.output.protocol).log(model.config.output.rate).logln(model.config.output.async);
+      escServo.begin(ESC_PROTOCOL_PWM, true, _model.config.output.servoRate, ESC_DRIVER_TIMER2);
+      _model.logger.info().log(F("SERVO CONF")).log(ESC_DRIVER_TIMER2).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate);
 
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {
-        driver.attach(i, model.config.pin[PIN_OUTPUT_0 + i], model.state.outputDisarmed[i]);
-        model.logger.info().log(F("OUTPUT PIN")).log(i).logln(model.config.pin[PIN_OUTPUT_0 + i]);
+        const OutputChannelConfig& occ = _model.config.output.channel[i];
+        if(occ.servo)
+        {
+          escServo.attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1500);
+          _model.logger.info().log(F("SERVO PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
+        }
+        else
+        {
+          escMotor.attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1000);
+          _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
+        }
       }
+    }
 
-      return &driver;
+    static EscDriver * getMotorDriver()
+    {
+      return &escMotor;
+    }
+
+    static EscDriver * getServoDriver()
+    {
+      return &escServo;
     }
 
     static void restart(Model& model)
     {
-      getEscDriver(model)->end();
+      getMotorDriver()->end();
+      getServoDriver()->end();
 
 #if defined(ESP8266)
       // pin setup to ensure boot from flash

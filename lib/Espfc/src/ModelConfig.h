@@ -6,7 +6,7 @@
 #include "Device/GyroDevice.h"
 #include "Device/BusDevice.h"
 
-#define EEPROM_VERSION_NUM 0x07
+#define EEPROM_VERSION_NUM 0x08
 
 #define USE_SOFT_SERIAL
 
@@ -447,6 +447,7 @@ class OutputConfig
     int8_t protocol;
     int16_t async;
     int16_t rate;
+    int16_t servoRate;
 
     int16_t minCommand;
     int16_t minThrottle;
@@ -823,7 +824,8 @@ class ModelConfig
       //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
       output.async = true;
-      //output.async = true;
+      //output.async = false;
+      output.servoRate = 50;
 
       // input config
       input.ppmMode = RISING;

@@ -471,9 +471,10 @@ class Cli
         Param(PSTR("mixer_type"), &c.mixerType, mixerTypeChoices),
         Param(PSTR("mixer_yaw_reverse"), &c.yawReverse),
 
-        Param(PSTR("output_protocol"), &c.output.protocol, protocolChoices),
-        Param(PSTR("output_async"), &c.output.async),
-        Param(PSTR("output_rate"), &c.output.rate),
+        Param(PSTR("output_motor_protocol"), &c.output.protocol, protocolChoices),
+        Param(PSTR("output_motor_async"), &c.output.async),
+        Param(PSTR("output_motor_rate"), &c.output.rate),
+        Param(PSTR("output_servo_rate"), &c.output.servoRate),
 
         Param(PSTR("output_min_command"), &c.output.minCommand),
         Param(PSTR("output_min_throttle"), &c.output.minThrottle),
