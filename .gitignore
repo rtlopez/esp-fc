@@ -36,3 +36,4 @@
 *.log
 .directory
 /tmp
+.vscode
