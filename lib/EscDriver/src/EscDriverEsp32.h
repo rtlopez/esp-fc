@@ -30,17 +30,18 @@ class EscDriverEsp32: public EscDriverBase
 
     EscDriverEsp32(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50)
     {
-
+      for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
+      {
+        _channel[i].dev.gpio_num = gpio_num_t(-1);
+      }
     }
 
     void end()
     {
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
-        if(_channel[i].dev.gpio_num != -1)
-        {
-          rmt_driver_uninstall(_channel[i].dev.channel);
-        }
+        if((int)_channel[i].dev.gpio_num == -1) continue;
+        rmt_driver_uninstall(_channel[i].dev.channel);
       }
     }
 
@@ -49,48 +50,49 @@ class EscDriverEsp32: public EscDriverBase
       _protocol = protocol;
       _async = async;
       _rate = rate;
-
-      for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
-      {
-        _channel[i].divider = getClockDivider();
-        _channel[i].pulse_min = getPulseMin();
-        _channel[i].pulse_max = getPulseMax();
-
-        _channel[i].dshot_t0h = getDshotPulse(625);
-        _channel[i].dshot_t0l = getDshotPulse(1045);
-        _channel[i].dshot_t1h = getDshotPulse(1250);
-        _channel[i].dshot_t1l = getDshotPulse(420);
-
-        _channel[i].dev.rmt_mode = RMT_MODE_TX;
-        _channel[i].dev.channel = (rmt_channel_t)i;
-        _channel[i].dev.clk_div = _channel[i].divider;
-        _channel[i].dev.mem_block_num = 1;
-        _channel[i].dev.tx_config.loop_en = 0;
-        _channel[i].dev.tx_config.idle_output_en = 1;
-        _channel[i].dev.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
-
-        // unused
-        _channel[i].dev.tx_config.carrier_duty_percent = 50;
-        _channel[i].dev.tx_config.carrier_freq_hz = 1000;
-        _channel[i].dev.tx_config.carrier_level = RMT_CARRIER_LEVEL_HIGH;
-        _channel[i].dev.tx_config.carrier_en = 0;
-
-        if(_channel[i].dev.gpio_num != -1)
-        {
-          rmt_config(&_channel[i].dev);
-          rmt_driver_install(_channel[i].dev.channel, 0, 0);
-        }
-      }
       return 1;
+    }
+
+    void initChannel(int i, gpio_num_t pin, int pulse)
+    {
+      pinMode(pin, OUTPUT);
+      digitalWrite(pin, LOW);
+
+      _channel[i].pulse = pulse;
+      _channel[i].dev.gpio_num = pin;
+      _channel[i].divider   = getClockDivider();
+      _channel[i].pulse_min = getPulseMin();
+      _channel[i].pulse_max = getPulseMax();
+
+      _channel[i].dshot_t0h = getDshotPulse(625);
+      _channel[i].dshot_t0l = getDshotPulse(1045);
+      _channel[i].dshot_t1h = getDshotPulse(1250);
+      _channel[i].dshot_t1l = getDshotPulse(420);
+
+      _channel[i].dev.rmt_mode = RMT_MODE_TX;
+      _channel[i].dev.channel = (rmt_channel_t)i;
+      _channel[i].dev.clk_div = _channel[i].divider;
+      _channel[i].dev.mem_block_num = 1;
+      _channel[i].dev.tx_config.loop_en = 0;
+      _channel[i].dev.tx_config.idle_output_en = 1;
+      _channel[i].dev.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
+
+      // unused
+      _channel[i].dev.tx_config.carrier_duty_percent = 50;
+      _channel[i].dev.tx_config.carrier_freq_hz = 1000;
+      _channel[i].dev.tx_config.carrier_level = RMT_CARRIER_LEVEL_HIGH;
+      _channel[i].dev.tx_config.carrier_en = 0;
+
+      if((int)_channel[i].dev.gpio_num == -1) return;
+      
+      rmt_config(&_channel[i].dev);
+      rmt_driver_install(_channel[i].dev.channel, 0, 0);
     }
 
     int attach(size_t channel, int pin, int pulse)
     {
       if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
-      _channel[channel].pulse = pulse;
-      _channel[channel].dev.gpio_num = (gpio_num_t)pin;
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, LOW);
+      initChannel(channel, (gpio_num_t)pin, pulse);
       return 1;
     }
 
@@ -103,10 +105,11 @@ class EscDriverEsp32: public EscDriverBase
 
     void apply()
     {
+      bool digital = isDigital();
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
-        if(_channel[i].dev.gpio_num == -1) continue;
-        if(isDigital())
+        if((int)_channel[i].dev.gpio_num == -1) continue;
+        if(digital)
         {
           writeDshotCommand(i, _channel[i].pulse);
         }
@@ -129,7 +132,14 @@ class EscDriverEsp32: public EscDriverBase
 
     void writeDshotCommand(uint8_t channel, uint16_t pulse)
     {
-      uint16_t val = pulse; // map(pulse, 1000, 2000, _channel[channel].pulse_min, _channel[channel].pulse_max);
+      pulse = constrain(pulse, 0, 2000);
+      int value = 0; // disarmed
+      // scale to dshot commands (0 or 48-2047)
+      if(pulse > 1000)
+      {
+        value = PWM_TO_DSHOT(pulse);
+      }
+      uint16_t val = dshotEncode(value);
       for(int b = 0; b < DSHOT_BITS; b++)
       {
         if((val >> b) & 1)

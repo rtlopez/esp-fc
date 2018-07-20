@@ -95,13 +95,13 @@ class Filter
       _state.pt1.v0 = 0.f;
     }
 
-    float updatePt1(float v) ICACHE_RAM_ATTR
+    float updatePt1(float v) /* ICACHE_RAM_ATTR */
     {
       _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
       return _state.pt1.v;
     }
 
-    float updatePt1Fir2(float v) ICACHE_RAM_ATTR
+    float updatePt1Fir2(float v) /* ICACHE_RAM_ATTR */
     {
       _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
       _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
@@ -109,7 +109,7 @@ class Filter
       return _state.pt1.v;
     }
 
-    float updateFir2(float v) ICACHE_RAM_ATTR
+    float updateFir2(float v) /* ICACHE_RAM_ATTR */
     {
       _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
       _state.pt1.v0 = _state.pt1.v;
@@ -176,7 +176,7 @@ class Filter
       _state.bq.y1 = _state.bq.y2 = 0;
     }
 
-    float updateBiquadDF1(float v) ICACHE_RAM_ATTR
+    float updateBiquadDF1(float v) /* ICACHE_RAM_ATTR */
     {
       /* compute result */
       const float result =
@@ -197,7 +197,7 @@ class Filter
       return result;
     }
 
-    float updateBiquadDF2(float v) ICACHE_RAM_ATTR
+    float updateBiquadDF2(float v) /* ICACHE_RAM_ATTR */
     {
       const float result = _state.bq.b0 * v + _state.bq.x1;
       _state.bq.x1 = _state.bq.b1 * v - _state.bq.a1 * result + _state.bq.x2;

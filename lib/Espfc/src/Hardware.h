@@ -299,11 +299,17 @@ class Hardware
 
     void initEscDrivers()
     {
-      escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_TIMER1);
-      _model.logger.info().log(F("MOTOR CONF")).log(ESC_DRIVER_TIMER1).log(_model.config.output.protocol).log(_model.config.output.async).logln(_model.config.output.rate);
-
-      escServo.begin(ESC_PROTOCOL_PWM, true, _model.config.output.servoRate, ESC_DRIVER_TIMER2);
-      _model.logger.info().log(F("SERVO CONF")).log(ESC_DRIVER_TIMER2).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate);
+      #if defined(ESP8266)
+        escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_TIMER1);
+        _model.logger.info().log(F("MOTOR CONF")).log(ESC_DRIVER_TIMER1).log(_model.config.output.protocol).log(_model.config.output.async).logln(_model.config.output.rate);
+        escServo.begin(ESC_PROTOCOL_PWM, true, _model.config.output.servoRate, ESC_DRIVER_TIMER2);
+        _model.logger.info().log(F("SERVO CONF")).log(ESC_DRIVER_TIMER2).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate);
+      #elif defined(ESP32)
+        escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate);
+        _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).logln(_model.config.output.rate);
+        escServo.begin(ESC_PROTOCOL_PWM, true, _model.config.output.servoRate);
+        _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate);
+      #endif
 
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {

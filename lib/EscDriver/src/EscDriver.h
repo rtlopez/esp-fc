@@ -52,7 +52,7 @@ class EscDriverBase
 #elif defined(ESP32)
 
   // supports analog only for now
-  #define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_BRUSHED ? ESC_PROTOCOL_PWM : p)
+  #define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_DSHOT600 ? ESC_PROTOCOL_DSHOT600 : p)
 
   #define ESC_CHANNEL_COUNT RMT_CHANNEL_MAX
   #include "EscDriverEsp32.h"

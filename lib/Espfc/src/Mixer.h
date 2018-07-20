@@ -10,7 +10,7 @@ namespace Espfc {
 class Mixer
 {
   public:
-    Mixer(Model& model): _model(model), _motor(NULL) {}
+    Mixer(Model& model): _model(model), _motor(NULL), _servo(NULL) {}
 
     int begin()
     {

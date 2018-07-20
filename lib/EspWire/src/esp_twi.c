@@ -22,7 +22,7 @@
 #include "pins_arduino.h"
 #include "wiring_private.h"
 
-unsigned char esp_twi_dcount = 18;
+uint16_t esp_twi_dcount = 18;
 static unsigned char esp_twi_sda, esp_twi_scl;
 static uint32_t esp_twi_clockStretchLimit;
 
@@ -74,15 +74,23 @@ void esp_twi_setClock(unsigned int freq){
   else if(freq < 400000) esp_twi_dcount = 1;//about 400KHz
   else esp_twi_dcount = 0;//about 400KHz
 #elif F_CPU == FCPU240
-  if(freq <= 100000) esp_twi_dcount = 75;//about 100KHz
-  else if(freq < 200000) esp_twi_dcount = 35;//about 200KHz
-  else if(freq < 300000) esp_twi_dcount = 21;//about 300KHz
-  else if(freq < 400000) esp_twi_dcount = 15;//about 400KHz
-  else if(freq < 500000) esp_twi_dcount = 10;//about 500KHz
-  else if(freq < 600000) esp_twi_dcount = 8;//about 600KHz
-  else if(freq < 800000) esp_twi_dcount = 4;//about 800KHz
-  else if(freq < 1000000) esp_twi_dcount = 2;//about 1000KHz
-  else esp_twi_dcount = 1;//above 1MHz
+  if(freq <= 60000) esp_twi_dcount = 280;      //about  50kHz
+  else if(freq <  80000) esp_twi_dcount = 180; //about  80kHz
+  else if(freq < 100000) esp_twi_dcount = 140; //about 100kHz
+  else if(freq < 150000) esp_twi_dcount = 90;  //about 150kHz
+  else if(freq < 200000) esp_twi_dcount = 65;  //about 200kHz
+  else if(freq < 250000) esp_twi_dcount = 50;  //about 250kHz
+  else if(freq < 300000) esp_twi_dcount = 39;  //about 300kHz
+  else if(freq < 400000) esp_twi_dcount = 27;  //about 400kHz
+  else if(freq < 500000) esp_twi_dcount = 20;  //about 500kHz
+  else if(freq < 600000) esp_twi_dcount = 15;  //about 600kHz
+  else if(freq < 700000) esp_twi_dcount = 11;  //about 700kHz
+  else if(freq < 800000) esp_twi_dcount = 8;   //about 800kHz
+  else if(freq < 900000) esp_twi_dcount = 7;   //about 900kHz
+  else if(freq < 1000000) esp_twi_dcount = 4;  //about 1.0MHz
+  else if(freq < 1100000) esp_twi_dcount = 3;  //about 1.1MHz
+  else if(freq < 1200000) esp_twi_dcount = 2;  //about 1.2MHz
+  else esp_twi_dcount = 1;                     //above 1.2MHz
 #else // 160 mhz
   if(freq < 50000) esp_twi_dcount = 64;//about 50KHz
   else if(freq < 100000) esp_twi_dcount = 32;//about 100KHz
@@ -122,24 +130,24 @@ static inline ICACHE_RAM_ATTR unsigned int _getCycleCount()
     return ccount;
 }
 
-static inline ICACHE_RAM_ATTR void esp_twi_delay(unsigned char v)
+static inline ICACHE_RAM_ATTR void esp_twi_delay(unsigned int v)
 {
   unsigned int end;
-  int maxCount = 100;
+  int maxCount = 200;
   switch(v)
   {
-    case 2:
-      end = _getCycleCount();
-    case 1:
-      end = _getCycleCount();
+    //case 2:
+    //  end = _getCycleCount();
+    //case 1:
+    //  end = _getCycleCount();
     case 0:
-      end = _getCycleCount();
+      //end = _getCycleCount();
       break;
     default:
-      end = _getCycleCount() + v * 20;
+      end = _getCycleCount() + (v << 3); // * 8
       while(_getCycleCount() <= end)
       {
-          if(--maxCount == 0) break; // counter override protection
+        if(--maxCount == 0) break; // counter override protection
       }
   }
   /*unsigned int reg;
