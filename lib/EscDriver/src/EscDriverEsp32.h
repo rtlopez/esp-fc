@@ -8,8 +8,10 @@
 #include <driver/rmt.h>
 
 //#define DURATION  12.5 /* flash 80MHz => minimum time unit in ns */
-static const size_t DURATION = 25; // [ns] duoble value to increase precision
+static const size_t DURATION_CLOCK = 25; // [ns] duoble value to increase precision
 static const size_t DSHOT_BITS = 16;
+static const size_t ITEM_COUNT = DSHOT_BITS + 1;
+static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
 #define TO_INTERVAL(v) (1*1000*1000 / (v)) // [us]
 
@@ -22,17 +24,46 @@ class EscDriverEsp32: public EscDriverBase
     class Slot {
       public:
         rmt_config_t dev;
-        rmt_item32_t items[DSHOT_BITS + 1];
+        rmt_item32_t items[ITEM_COUNT];
         EscProtocol protocol;
         int32_t pulse_min;
         int32_t pulse_max;
         int32_t pulse_space;
-        uint16_t pulse;
+        int32_t pulse;
         uint16_t divider;
         uint16_t dshot_t0h;
         uint16_t dshot_t0l;
         uint16_t dshot_t1h;
         uint16_t dshot_t1l;
+
+        void setTerminate(int item)
+        {
+          items[item].val = 0;
+        }
+
+        void setDuration(int item, int duration, bool val)
+        {
+          if(duration >= 4)
+          {
+            int half = duration / 2;
+            items[item].level0 = val;
+            items[item].duration0 = half & DURATION_MAX;
+            items[item].level1 = val;
+            items[item].duration1 = (duration - half) & DURATION_MAX;
+          }
+          else
+          {
+            items[item].level0 = 0;
+            items[item].duration0 = 4;
+            items[item].level1 = 0;
+            items[item].duration1 = 4;
+          }
+        }
+
+        bool attached()
+        {
+          return (int)dev.gpio_num != -1;
+        }
     };
 
     EscDriverEsp32(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50)
@@ -48,7 +79,7 @@ class EscDriverEsp32: public EscDriverBase
     {
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
-        if((int)_channel[i].dev.gpio_num == -1) continue;
+        if(!_channel[i].attached()) continue;
         rmt_driver_uninstall(_channel[i].dev.channel);
       }
     }
@@ -58,7 +89,7 @@ class EscDriverEsp32: public EscDriverBase
       if(_async) rmt_register_tx_end_callback(NULL, NULL); // unregister old callback
 
       _protocol = protocol;
-      _async = async & false;
+      _async = async;// && false;
       _rate = rate;
       _interval = TO_INTERVAL(_rate);
       
@@ -97,17 +128,16 @@ class EscDriverEsp32: public EscDriverBase
 
       _channel[i].protocol = _protocol;
       _channel[i].pulse = pulse;
-      _channel[i].dev.gpio_num = pin;
       _channel[i].divider   = getClockDivider();
       _channel[i].pulse_min = getPulseMin();
       _channel[i].pulse_max = getPulseMax();
       _channel[i].pulse_space = getPulseInterval();
-
       _channel[i].dshot_t0h = getDshotPulse(625);
       _channel[i].dshot_t0l = getDshotPulse(1045);
       _channel[i].dshot_t1h = getDshotPulse(1250);
       _channel[i].dshot_t1l = getDshotPulse(420);
 
+      _channel[i].dev.gpio_num = pin;
       _channel[i].dev.rmt_mode = RMT_MODE_TX;
       _channel[i].dev.channel = (rmt_channel_t)i;
       _channel[i].dev.clk_div = _channel[i].divider;
@@ -132,14 +162,13 @@ class EscDriverEsp32: public EscDriverBase
 
     static void txDoneCallback(rmt_channel_t channel, void *arg)
     {
-      if(!instances[channel]) return;
-      EscDriverEsp32* instance = instances[channel];
-      instance->transmitOne(channel);
+      if(!instances[channel] || !instances[channel]->_async) return;
+      instances[channel]->transmitOne(channel);
     }
 
     void transmitOne(uint8_t i)
     {
-      if((int)_channel[i].dev.gpio_num == -1) return;
+      if(!_channel[i].attached()) return;
       if(isDigital())
       {
         writeDshotCommand(i, _channel[i].pulse);
@@ -155,7 +184,7 @@ class EscDriverEsp32: public EscDriverBase
     {
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
-        if((int)_channel[i].dev.gpio_num == -1) continue;
+        if(!_channel[i].attached()) continue;
         if(isDigital())
         {
           writeDshotCommand(i, _channel[i].pulse);
@@ -167,58 +196,41 @@ class EscDriverEsp32: public EscDriverBase
       }
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
-        if((int)_channel[i].dev.gpio_num == -1) continue;
+        if(!_channel[i].attached()) continue;
         transmitCommand(i);
       }
     }
 
     void writeAnalogCommand(uint8_t channel, int32_t pulse)
     {
-      pulse = constrain(pulse, 1000, 2000) - 1000;
-      uint16_t val = fixPulse(map(pulse, 0, 1000, _channel[channel].pulse_min, _channel[channel].pulse_max));
-      int space = _async ? _channel[channel].pulse_space - val : 0;
-
-      int i = 0;
-
-      _channel[channel].items[i].duration0 = val;
-      _channel[channel].items[i].level0 = 1;
-      _channel[channel].items[i].duration1 = 0;
-      _channel[channel].items[i].level1 = 0;
-
-      int filled = 0;
-      while(true)
+      int minPulse = 800;
+      int maxPulse = 2200;
+      if(_protocol == ESC_PROTOCOL_BRUSHED)
       {
-        i++;
-  
-        int fill = fixPulse(space - filled);
-        _channel[channel].items[i].duration0 = (uint16_t)fill;
-        _channel[channel].items[i].level0 = 1;
-        filled += fill;
-
-        fill = fixPulse(space - filled);
-        _channel[channel].items[i].duration1 = (uint16_t)fill;
-        _channel[channel].items[i].level1 = 0;
-        filled += fill;
-
-        if(filled >= space || i >= DSHOT_BITS - 1) break;
+        minPulse = 1000;
+        maxPulse = 2000;
+      }
+      pulse = constrain(pulse, minPulse, maxPulse);
+      int duration = map(pulse, 1000, 2000, _channel[channel].pulse_min, _channel[channel].pulse_max);
+      
+      int count = 2;
+      if(_async)
+      {
+        int space = _channel[channel].pulse_space - duration;
+        _channel[channel].setDuration(0, duration, 1);
+        _channel[channel].setDuration(1, space, 0);
+        _channel[channel].setTerminate(2);
+        count = 3;
+      }
+      else
+      {
+        _channel[channel].setDuration(0, duration, 1);
+        _channel[channel].setTerminate(1);
       }
 
-      i++;
-      //_channel[channel].items[1].val = 0; // terminator
-      _channel[channel].items[i].duration0 = 0;
-      _channel[channel].items[i].level0 = 0;
-      _channel[channel].items[i].duration1 = 0;
-      _channel[channel].items[i].level1 = 0;
 
-      rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, i + 1, 0);
+      rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, count, 0);
       //rmt_write_items(_channel[channel].dev.channel, _channel[channel].items, 1, 0);
-    }
-
-    uint16_t fixPulse(int32_t pulse)
-    {
-      if(pulse < 0) return 0;
-      if(pulse > 0x7fff) return 0x7fff;
-      return pulse;
     }
 
     void writeDshotCommand(uint8_t channel, int32_t pulse)
@@ -244,15 +256,11 @@ class EscDriverEsp32: public EscDriverBase
         {
           _channel[channel].items[b].duration0 = _channel[channel].dshot_t0h;
           _channel[channel].items[b].level0 = 1;
-          _channel[channel].items[b].duration1 = _channel[channel].dshot_t1l;
+          _channel[channel].items[b].duration1 = _channel[channel].dshot_t0l;
           _channel[channel].items[b].level1 = 0;
         }
       }
-      //_channel[channel].items[DSHOT_BITS].val = 0; // terminator
-      _channel[channel].items[DSHOT_BITS].duration0 = 0;
-      _channel[channel].items[DSHOT_BITS].level0 = 0;
-      _channel[channel].items[DSHOT_BITS].duration1 = 0;
-      _channel[channel].items[DSHOT_BITS].level1 = 0;
+      _channel[channel].items[DSHOT_BITS].val = 0; // terminator
 
       rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, DSHOT_BITS + 1, 0);
       //rmt_write_items(_channel[channel].dev.channel, _channel[channel].items, DSHOT_BITS, 0);
@@ -267,9 +275,12 @@ class EscDriverEsp32: public EscDriverBase
     {
       switch(_protocol)
       {
-        case ESC_PROTOCOL_BRUSHED: return 6;
-        case ESC_PROTOCOL_PWM: return 6;
-        default: return 2;
+        case ESC_PROTOCOL_PWM: return 24;
+        case ESC_PROTOCOL_ONESHOT125: return 4;
+        case ESC_PROTOCOL_ONESHOT42: return 2;
+        case ESC_PROTOCOL_MULTISHOT: return 2;
+        case ESC_PROTOCOL_BRUSHED: return 8;
+        default: return 1;
       }
     }
 
@@ -299,7 +310,7 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_ONESHOT125: return getAnalogPulse( 250 * 1000);
         case ESC_PROTOCOL_ONESHOT42:  return getAnalogPulse(  84 * 1000);
         case ESC_PROTOCOL_MULTISHOT:  return getAnalogPulse(  25 * 1000);
-        case ESC_PROTOCOL_BRUSHED:    return getAnalogPulse(_interval);
+        case ESC_PROTOCOL_BRUSHED:    return getAnalogPulse(_interval * 1000);
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
@@ -311,13 +322,13 @@ class EscDriverEsp32: public EscDriverBase
 
     uint32_t getPulseInterval() const
     {
-      return getAnalogPulse(_interval);
+      return getAnalogPulse(_interval * 1000);
     }
 
-    uint32_t getAnalogPulse(int32_t width) const
+    uint32_t getAnalogPulse(int32_t ns) const
     {
       int div = getClockDivider();
-      return width / ((div * DURATION) / 2);
+      return ns / ((div * DURATION_CLOCK) / 2);
     }
 
     uint16_t getDshotPulse(uint16_t width) const
@@ -325,11 +336,11 @@ class EscDriverEsp32: public EscDriverBase
       int div = getClockDivider();
       switch(_protocol)
       {
-        case ESC_PROTOCOL_DSHOT150:  return width / ((div * DURATION) / 2) * 4;
-        case ESC_PROTOCOL_DSHOT300:  return width / ((div * DURATION) / 2) * 2;
-        case ESC_PROTOCOL_DSHOT600:  return width / ((div * DURATION) / 2);
-        case ESC_PROTOCOL_DSHOT1200: return width / ((div * DURATION) / 2) / 2;
-        case ESC_PROTOCOL_BRUSHED: // TODO
+        case ESC_PROTOCOL_DSHOT150:  return width / ((div * DURATION_CLOCK * 2));
+        case ESC_PROTOCOL_DSHOT300:  return width / ((div * DURATION_CLOCK));
+        case ESC_PROTOCOL_DSHOT600:  return width / ((div * DURATION_CLOCK) / 2);
+        case ESC_PROTOCOL_DSHOT1200: return width / ((div * DURATION_CLOCK) / 4);
+        case ESC_PROTOCOL_BRUSHED:
         case ESC_PROTOCOL_PWM:
         case ESC_PROTOCOL_ONESHOT125:
         case ESC_PROTOCOL_ONESHOT42:
@@ -358,6 +369,8 @@ class EscDriverEsp32: public EscDriverBase
     int32_t _async;
     int32_t _rate;
     int32_t _interval;
+
+   
 };
 
 #endif

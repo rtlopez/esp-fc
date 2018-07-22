@@ -55,22 +55,22 @@ class EspTwoWire : public Stream
     void begin(int);
     void setClock(uint32_t);
     void setClockStretchLimit(uint32_t);
-    void beginTransmission(uint8_t)ICACHE_RAM_ATTR;
+    void beginTransmission(uint8_t)/* ICACHE_RAM_ATTR */;
     void beginTransmission(int);
-    uint8_t endTransmission(void) ICACHE_RAM_ATTR;
+    uint8_t endTransmission(void) /* ICACHE_RAM_ATTR */;
     uint8_t endTransmission(uint8_t);
     size_t requestFrom(uint8_t address, size_t size, bool sendStop);
 	  uint8_t status();
 
-    uint8_t requestFrom(uint8_t, uint8_t) ICACHE_RAM_ATTR;
+    uint8_t requestFrom(uint8_t, uint8_t) /* ICACHE_RAM_ATTR */;
     uint8_t requestFrom(uint8_t, uint8_t, uint8_t);
     uint8_t requestFrom(int, int);
     uint8_t requestFrom(int, int, int);
 
-    virtual size_t write(uint8_t) ICACHE_RAM_ATTR;
+    virtual size_t write(uint8_t) /* ICACHE_RAM_ATTR */;
     virtual size_t write(const uint8_t *, size_t);
-    virtual int available(void) ICACHE_RAM_ATTR;
-    virtual int read(void) ICACHE_RAM_ATTR;
+    virtual int available(void) /* ICACHE_RAM_ATTR */;
+    virtual int read(void) /* ICACHE_RAM_ATTR */;
     virtual int peek(void);
     virtual void flush(void);
     void onReceive( void (*)(int) );
