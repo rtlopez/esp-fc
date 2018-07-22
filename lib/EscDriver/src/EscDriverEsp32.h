@@ -50,7 +50,7 @@ class EscDriverEsp32: public EscDriverBase
 
         void setDuration(int item, int duration, bool val)
         {
-          if(duration >= 4)
+          if(duration >= 2)
           {
             int half = duration / 2;
             items[item].level0 = val;
@@ -61,9 +61,9 @@ class EscDriverEsp32: public EscDriverBase
           else
           {
             items[item].level0 = 0;
-            items[item].duration0 = 4;
+            items[item].duration0 = 1;
             items[item].level1 = 0;
-            items[item].duration1 = 4;
+            items[item].duration1 = 1;
           }
         }
 
@@ -139,10 +139,18 @@ class EscDriverEsp32: public EscDriverBase
       _channel[i].pulse_min = getPulseMin();
       _channel[i].pulse_max = getPulseMax();
       _channel[i].pulse_space = getPulseInterval();
-      _channel[i].dshot_t0h = getDshotPulse(625);
-      _channel[i].dshot_t0l = getDshotPulse(1045);
-      _channel[i].dshot_t1h = getDshotPulse(1250);
-      _channel[i].dshot_t1l = getDshotPulse(420);
+
+      // spec
+      //_channel[i].dshot_t0h = getDshotPulse(625);
+      //_channel[i].dshot_t0l = getDshotPulse(1045);
+      //_channel[i].dshot_t1h = getDshotPulse(1250);
+      //_channel[i].dshot_t1l = getDshotPulse(420);
+
+      // betaflight 0:35%, 1:70% of 1670ns for dshot600
+      _channel[i].dshot_t0h = getDshotPulse(584 - 2);
+      _channel[i].dshot_t0l = getDshotPulse(1086 - 2);
+      _channel[i].dshot_t1h = getDshotPulse(1170 - 2);
+      _channel[i].dshot_t1l = getDshotPulse(500 - 2);
 
       _channel[i].dev.gpio_num = pin;
       _channel[i].dev.rmt_mode = RMT_MODE_TX;
@@ -329,10 +337,10 @@ class EscDriverEsp32: public EscDriverBase
       int div = getClockDivider();
       switch(_protocol)
       {
-        case ESC_PROTOCOL_DSHOT150:  return width / ((div * DURATION_CLOCK * 2));
-        case ESC_PROTOCOL_DSHOT300:  return width / ((div * DURATION_CLOCK));
-        case ESC_PROTOCOL_DSHOT600:  return width / ((div * DURATION_CLOCK) / 2);
-        case ESC_PROTOCOL_DSHOT1200: return width / ((div * DURATION_CLOCK) / 4);
+        case ESC_PROTOCOL_DSHOT150:  return (width / (div * DURATION_CLOCK / 2)) * 4;
+        case ESC_PROTOCOL_DSHOT300:  return (width / (div * DURATION_CLOCK / 2)) * 2;
+        case ESC_PROTOCOL_DSHOT600:  return (width / (div * DURATION_CLOCK / 2)) * 1;
+        case ESC_PROTOCOL_DSHOT1200: return (width / (div * DURATION_CLOCK / 2)) / 2;
         case ESC_PROTOCOL_BRUSHED:
         case ESC_PROTOCOL_PWM:
         case ESC_PROTOCOL_ONESHOT125:
