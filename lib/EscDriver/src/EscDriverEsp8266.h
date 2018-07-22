@@ -89,7 +89,6 @@ class EscDriverEsp8266: public EscDriverBase
     volatile Item * _it;
     const Item * _end;
 
-    static const size_t DSHOT_BIT_COUNT = 16;
     mask_t dshotSetMask[DSHOT_BIT_COUNT];
     mask_t dshotClrMask[DSHOT_BIT_COUNT * 2];
 

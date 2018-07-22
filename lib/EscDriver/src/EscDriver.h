@@ -38,6 +38,8 @@ class EscDriverBase
 
       return (value << 4) | csum;
     }
+    
+    static const size_t DSHOT_BIT_COUNT = 16;
 };
 
 #if defined(ESP8266)

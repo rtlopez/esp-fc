@@ -8,12 +8,11 @@
 #include <driver/rmt.h>
 
 //#define DURATION  12.5 /* flash 80MHz => minimum time unit in ns */
-static const size_t DURATION_CLOCK = 25; // [ns] duoble value to increase precision
-static const size_t DSHOT_BITS = 16;
-static const size_t ITEM_COUNT = DSHOT_BITS + 1;
+static const size_t DURATION_CLOCK = 25; // [ns] duobled value to increase precision
+static const size_t ITEM_COUNT = EscDriverBase::DSHOT_BIT_COUNT + 1;
 static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
-#define TO_INTERVAL(v) (1*1000*1000 / (v)) // [us]
+#define TO_INTERVAL(v) (1 * 1000 * 1000 / (v)) // [us]
 
 class EscDriverEsp32;
 static EscDriverEsp32* instances[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
@@ -39,6 +38,14 @@ class EscDriverEsp32: public EscDriverBase
         void setTerminate(int item)
         {
           items[item].val = 0;
+        }
+
+        void setDshotBit(int item, bool val)
+        {
+          items[item].duration0 = val ? dshot_t1h : dshot_t0h;
+          items[item].level0 = 1;
+          items[item].duration1 = val ? dshot_t1l : dshot_t0l;
+          items[item].level1 = 0;
         }
 
         void setDuration(int item, int duration, bool val)
@@ -230,7 +237,6 @@ class EscDriverEsp32: public EscDriverBase
 
 
       rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, count, 0);
-      //rmt_write_items(_channel[channel].dev.channel, _channel[channel].items, 1, 0);
     }
 
     void writeDshotCommand(uint8_t channel, int32_t pulse)
@@ -242,28 +248,15 @@ class EscDriverEsp32: public EscDriverBase
       {
         value = PWM_TO_DSHOT(pulse);
       }
-      uint16_t val = dshotEncode(value);
-      for(int b = 0; b < DSHOT_BITS; b++)
+      uint16_t frame = dshotEncode(value);
+      for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
       {
-        if((val >> b) & 1)
-        {
-          _channel[channel].items[b].duration0 = _channel[channel].dshot_t1h;
-          _channel[channel].items[b].level0 = 1;
-          _channel[channel].items[b].duration1 = _channel[channel].dshot_t1l;
-          _channel[channel].items[b].level1 = 0;
-        }
-        else
-        {
-          _channel[channel].items[b].duration0 = _channel[channel].dshot_t0h;
-          _channel[channel].items[b].level0 = 1;
-          _channel[channel].items[b].duration1 = _channel[channel].dshot_t0l;
-          _channel[channel].items[b].level1 = 0;
-        }
+        int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
+        _channel[channel].setDshotBit(i, val);
       }
-      _channel[channel].items[DSHOT_BITS].val = 0; // terminator
+      _channel[channel].setTerminate(DSHOT_BIT_COUNT);
 
-      rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, DSHOT_BITS + 1, 0);
-      //rmt_write_items(_channel[channel].dev.channel, _channel[channel].items, DSHOT_BITS, 0);
+      rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, ITEM_COUNT, 0);
     }
 
     void transmitCommand(uint8_t channel)
