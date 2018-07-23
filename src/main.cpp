@@ -1,3 +1,8 @@
+#ifdef ESP32
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#endif
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -14,9 +19,20 @@
 
 Espfc::Espfc espfc;
 
+#ifdef ESP32
+void otherTask(void *pvParameters)
+{
+  espfc.beginOther();
+  while(true) espfc.updateOther();
+}
+#endif
+
 void setup()
 {
   espfc.begin();
+  #ifdef ESP32
+  xTaskCreatePinnedToCore(otherTask, "wifiTask", 8192, NULL, 1, NULL, 0);
+  #endif
 }
 
 void loop()

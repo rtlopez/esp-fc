@@ -16,6 +16,11 @@ extern "C" {
 #include "Logger.h"
 #include "Device/GyroDevice.h"
 
+#if defined(ESP32)
+#include <freertos/task.h>
+#include <WiFi.h>
+#endif
+
 namespace Espfc {
 
 class Cli
@@ -610,14 +615,19 @@ class Cli
 
     int begin()
     {
-      _stream = (Stream*)Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_MSP);
+      _stream_main = (Stream*)Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_MSP);
       return 1;
     }
 
     int update()
     {
-      if(!_stream) return 0;
+      if(!_stream_main) return 0;
+      return update(_stream_main);
+    }
 
+    int update(Stream * s)
+    {
+      _stream = s; // UGLY, I know
       while((*_stream).available() > 0)
       {
         char c = (*_stream).read();
@@ -716,6 +726,25 @@ class Cli
         printVersion();
         println();
       }
+      #if defined(ESP32)
+      else if(strcmp_P(_cmd.args[0], PSTR("wifi")) == 0)
+      {
+        print(F("IP: "));
+        println(WiFi.localIP());
+      }
+      else if(strcmp_P(_cmd.args[0], PSTR("tasks")) == 0)
+      {
+        printVersion();
+        println();
+
+        size_t numTasks = uxTaskGetNumberOfTasks();
+
+        print(F("num tasks: "));
+        print(numTasks);
+        println();
+
+      }
+      #endif
       else if(strcmp_P(_cmd.args[0], PSTR("devinfo")) == 0)
       {
         printVersion();
@@ -1180,6 +1209,7 @@ class Cli
 
     Model& _model;
     Stream * _stream;
+    Stream * _stream_main;
     const Param * _params;
     char _buff[BUFF_SIZE];
     size_t _index;

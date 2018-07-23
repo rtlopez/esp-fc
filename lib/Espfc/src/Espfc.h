@@ -14,6 +14,12 @@
 #include "Hardware.h"
 #include "Buzzer.h"
 
+#ifdef ESP32
+#include <WiFi.h>
+const char* ssid = "XXX";
+const char* pass = "XXX";
+#endif
+
 namespace Espfc {
 
 class Espfc
@@ -22,6 +28,9 @@ class Espfc
     Espfc():
       _model(), _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
       _mixer(_model), _blackbox(_model), _telemetry(_model), _cli(_model), _buzzer(_model)
+      #ifdef ESP32
+      , server(1111)
+      #endif
       {}
 
     int begin()
@@ -117,6 +126,38 @@ class Espfc
       return 1;
     }
 
+#ifdef ESP32
+    int beginOther()
+    {
+      WiFi.begin(ssid, pass);
+      while (WiFi.status() != WL_CONNECTED)
+      {
+        delay(100);
+      }
+      server.begin();
+      return 1;
+    }
+
+    int updateOther()
+    {
+      if(!client.connected())
+      {
+        client = server.available();
+        return 0;
+      }
+
+      _cli.update(&client);
+
+      /*if(!client.connected())
+      {
+        client.stop();
+        return 0;
+      }*/
+
+      return 1;
+    }
+#endif
+
   private:
     Model _model;
     Hardware _hardware;
@@ -129,6 +170,10 @@ class Espfc
     Telemetry _telemetry;
     Cli _cli;
     Buzzer _buzzer;
+#ifdef ESP32
+    WiFiServer server;
+    WiFiClient client;
+#endif
 };
 
 }
