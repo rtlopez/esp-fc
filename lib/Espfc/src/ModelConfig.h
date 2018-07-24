@@ -536,6 +536,32 @@ enum ArmingDisabledFlags {
 
 static const size_t ARMING_DISABLED_FLAGS_COUNT = 18;
 
+enum WirelessMode {
+    WIRELESS_MODE_NULL = 0,  /**< null mode */
+    WIRELESS_MODE_STA,       /**< WiFi station mode */
+    WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
+    WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
+    WIRELESS_MODE_MAX
+};
+
+class WirelessConfig
+{
+  public:
+    static const size_t MAX_LEN = 32;
+    int8_t mode;
+    int16_t port;
+    char ssid[MAX_LEN + 1];
+    char pass[MAX_LEN + 1];
+    char ssidAp[MAX_LEN + 1];
+    char passAp[MAX_LEN + 1];
+
+    static const char ** getModeNames()
+    {
+      static const char* modeChoices[] = { PSTR("OFF"), PSTR("STA"), PSTR("AP"), PSTR("AP_STA"), NULL };
+      return modeChoices;
+    }
+};
+
 // persistent data
 class ModelConfig
 {
@@ -639,6 +665,8 @@ class ModelConfig
 
     int8_t customMixerCount;
     MixerEntry customMixes[MIXER_RULE_MAX];
+
+    WirelessConfig wireless;
 
     ModelConfig()
     {
@@ -960,6 +988,13 @@ class ModelConfig
       vbatCellWarning = 35;
 
       buzzer.inverted = true;
+
+      wireless.mode = WIRELESS_MODE_NULL;
+      wireless.ssid[0] = 0;
+      wireless.pass[0] = 0;
+      wireless.ssidAp[0] = 0;
+      wireless.passAp[0] = 0;
+      wireless.port = 1111;
     }
 
     void brobot()

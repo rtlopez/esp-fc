@@ -1,8 +1,3 @@
-#ifdef ESP32
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#endif
-
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -17,12 +12,17 @@
 #include <EscDriver.h>
 #include <EspWire.h>
 
+#if defined(ESP32)
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#endif
+
+
 Espfc::Espfc espfc;
 
-#ifdef ESP32
+#if defined(ESP32)
 void otherTask(void *pvParameters)
 {
-  espfc.beginOther();
   while(true) espfc.updateOther();
 }
 #endif
@@ -30,20 +30,15 @@ void otherTask(void *pvParameters)
 void setup()
 {
   espfc.begin();
-  #ifdef ESP32
-  xTaskCreatePinnedToCore(otherTask, "wifiTask", 8192, NULL, 1, NULL, 0);
+  #if defined(ESP32)
+  xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, NULL, 0);
   #endif
 }
 
 void loop()
 {
   espfc.update();
-  //yield();
+  #if !defined(ESP32)
+  espfc.updateOther();
+  #endif
 }
-
-/*int main()
-{
-  setup();
-  while(true) loop();
-  return 0;
-}*/

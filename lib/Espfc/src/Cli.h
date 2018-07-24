@@ -41,12 +41,13 @@ class Cli
       PARAM_BYTE_U, // 8 bit uint
       PARAM_SHORT,  // 16 bit int
       PARAM_INT,    // 32 bit int
-      PARAM_FLOAT,   // 32 bit float
+      PARAM_FLOAT,  // 32 bit float
       PARAM_INPUT_CHANNEL,  // input channel config
       PARAM_OUTPUT_CHANNEL,  // output channel config
       PARAM_SCALER,  // scaler config
-      PARAM_MODE,  // scaler config
-      PARAM_MIXER,  // mixer config
+      PARAM_MODE,    // scaler config
+      PARAM_MIXER,   // mixer config
+      PARAM_STRING,  // string
     };
 
     class Param
@@ -99,6 +100,9 @@ class Cli
               break;
             case PARAM_FLOAT:
               stream.print(*reinterpret_cast<float*>(addr), 4);
+              break;
+            case PARAM_STRING:
+              stream.print(addr);
               break;
             case PARAM_INPUT_CHANNEL:
               print(stream, *reinterpret_cast<InputChannelConfig*>(addr));
@@ -218,6 +222,9 @@ class Cli
             case PARAM_FLOAT:
               write(String(v).toFloat());
               break;
+            case PARAM_STRING:
+              write(String(v));
+              break;
             case PARAM_OUTPUT_CHANNEL:
               write(*reinterpret_cast<OutputChannelConfig*>(addr), args);
               break;
@@ -286,6 +293,11 @@ class Cli
           *reinterpret_cast<T*>(addr) = v;
         }
 
+        void write(const String& v) const
+        {
+          strncat(addr, v.c_str(), 16);
+        }
+
         int32_t parse(const char * v) const
         {
           if(choices)
@@ -337,6 +349,8 @@ class Cli
       static const char* interpolChoices[]   = { PSTR("NONE"), PSTR("DEFAULT"), PSTR("AUTO"), PSTR("MANUAL"), NULL };
       static const char* protocolChoices[]   = { PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
                                                  PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("DSHOT1200"), PSTR("PROSHOT1000"), NULL };
+
+      const char ** wifiModeChoices            = WirelessConfig::getModeNames();
 
       size_t i = 0;
       static const Param params[] = {
@@ -542,6 +556,13 @@ class Cli
         //Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
         //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
+        Param(PSTR("wifi_mode"), &c.wireless.mode, wifiModeChoices),
+        Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL),
+        Param(PSTR("wifi_pass"), PARAM_STRING, &c.wireless.pass[0], NULL),
+        Param(PSTR("wifi_ssid_ap"), PARAM_STRING, &c.wireless.ssidAp[0], NULL),
+        Param(PSTR("wifi_pass_ap"), PARAM_STRING, &c.wireless.passAp[0], NULL),
+        Param(PSTR("wifi_tcp_port"), &c.wireless.port),
+
         Param(PSTR("mix_outputs"), &c.customMixerCount),
         Param(PSTR("mix_0"), &c.customMixes[i++]),
         Param(PSTR("mix_1"), &c.customMixes[i++]),
@@ -627,11 +648,11 @@ class Cli
 
     int update(Stream * s)
     {
-      _stream = s; // UGLY, I know
-      while((*_stream).available() > 0)
+      while(s->available() > 0)
       {
-        char c = (*_stream).read();
-        bool consumed = _msp.process(c, *_stream);
+        _stream = s; // UGLY, I know
+        char c = s->read();
+        bool consumed = _msp.process(c, *s);
         if(!consumed)
         {
           process(c);

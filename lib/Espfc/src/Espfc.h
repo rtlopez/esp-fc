@@ -13,12 +13,7 @@
 #include "Cli.h"
 #include "Hardware.h"
 #include "Buzzer.h"
-
-#ifdef ESP32
-#include <WiFi.h>
-const char* ssid = "XXX";
-const char* pass = "XXX";
-#endif
+#include "Wireless.h"
 
 namespace Espfc {
 
@@ -27,15 +22,11 @@ class Espfc
   public:
     Espfc():
       _model(), _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
-      _mixer(_model), _blackbox(_model), _telemetry(_model), _cli(_model), _buzzer(_model)
-      #ifdef ESP32
-      , server(1111)
-      #endif
+      _mixer(_model), _blackbox(_model), _telemetry(_model), _cli(_model), _buzzer(_model), _wireless(_model, _cli)
       {}
 
     int begin()
     {
-      PIN_DEBUG_INIT();
       _model.begin();
       _hardware.begin();
       _buzzer.begin();
@@ -47,7 +38,7 @@ class Espfc
       _blackbox.begin();
       _telemetry.begin();
       _cli.begin();
-
+      _wireless.begin();
       _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
 
       return 1;
@@ -61,51 +52,44 @@ class Espfc
       _model.state.gyroUpdate = _model.state.gyroTimer.check();
       if(_model.state.gyroUpdate)
       {
-        PIN_DEBUG(true);
         _sensor.update();
-        PIN_DEBUG(false);
       }
 
       _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.loopTimer.syncTo(_model.state.gyroTimer);
       if(_model.state.loopUpdate)
       {
-        PIN_DEBUG(true);
         _input.update();
-        PIN_DEBUG(false);
         _model.state.actuatorUpdate = _model.state.actuatorTimer.check();
         if(_model.state.actuatorUpdate)
         {
-          PIN_DEBUG(true);
           _actuator.update();
-          PIN_DEBUG(false);
         }
 
-        PIN_DEBUG(true);
         _controller.update();
-        PIN_DEBUG(false);
       }
 
       _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.mixerTimer.syncTo(_model.state.loopTimer);
       if(_model.state.mixerUpdate)
       {
-        PIN_DEBUG(true);
         _mixer.update();
-        PIN_DEBUG(false);
       }
 
       if(_model.state.gyroUpdate)
       {
-        PIN_DEBUG(true);
         _sensor.updateDelayed();
-        PIN_DEBUG(false);
       }
 
       if(_model.state.loopUpdate && _model.blackboxEnabled())
       {
-        PIN_DEBUG(true);
         _blackbox.update();
-        PIN_DEBUG(false);
       }
+
+      return 1;
+    }
+
+    int updateOther()
+    {
+      _buzzer.update();
 
       _model.state.telemetryUpdate = _model.config.telemetry && _model.state.telemetryTimer.check();
       if(_model.state.telemetryUpdate)
@@ -113,50 +97,15 @@ class Espfc
         _telemetry.update();
       }
 
-      PIN_DEBUG(true);
       _cli.update();
-      _buzzer.update();
-      PIN_DEBUG(false);
+      _wireless.update();
 
       if(_model.state.stats.timer.check())
       {
         _model.state.stats.calculate();
       }
-
       return 1;
     }
-
-#ifdef ESP32
-    int beginOther()
-    {
-      WiFi.begin(ssid, pass);
-      while (WiFi.status() != WL_CONNECTED)
-      {
-        delay(100);
-      }
-      server.begin();
-      return 1;
-    }
-
-    int updateOther()
-    {
-      if(!client.connected())
-      {
-        client = server.available();
-        return 0;
-      }
-
-      _cli.update(&client);
-
-      /*if(!client.connected())
-      {
-        client.stop();
-        return 0;
-      }*/
-
-      return 1;
-    }
-#endif
 
   private:
     Model _model;
@@ -170,10 +119,7 @@ class Espfc
     Telemetry _telemetry;
     Cli _cli;
     Buzzer _buzzer;
-#ifdef ESP32
-    WiFiServer server;
-    WiFiClient client;
-#endif
+    Wireless _wireless;
 };
 
 }

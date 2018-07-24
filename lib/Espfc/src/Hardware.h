@@ -2,11 +2,6 @@
 #define _ESPFC_SERIAL_H_
 
 #include <Arduino.h>
-
-#if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#endif
-
 #include "Model.h"
 #include "EspSoftSerial.h"
 #include "SerialDevice.h"
@@ -60,7 +55,6 @@ class Hardware
     int begin()
     {
       initSerial();
-      initWifi();
       initBus();
       detectGyro();
       detectMag();
@@ -145,15 +139,6 @@ class Hardware
       {
         _model.state.magPresent = hmc5883l.begin(&i2cBus);
       }
-    }
-
-    void initWifi()
-    {
-#if defined(ESP8266)
-      WiFi.disconnect();
-      WiFi.mode(WIFI_OFF);
-      _model.logger.info().logln(F("WIFI OFF"));
-#endif
     }
 
     void initSerial()
