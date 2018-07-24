@@ -1,21 +1,21 @@
 #ifndef _ESPFC_TIMER_H_
 #define _ESPFC_TIMER_H_
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <cstdint>
 
 class Timer
 {
   public:
-    Timer(): interval(0), last(0), iteration(0), deltaUs(0) {}
+    Timer(): interval(0), last(0), iteration(0), delta(0) {}
 
     int setInterval(uint32_t interval)
     {
       this->interval = interval;
       this->rate = 1000000UL / interval;
       this->denom = 1;
+      this->intervalf = this->delta = this->interval * 0.000001f;
       iteration = 0;
-      deltaUs = 0;
       return 1;
     }
 
@@ -24,8 +24,8 @@ class Timer
       this->rate = rate / denom;
       this->interval = 1000000UL / this->rate;
       this->denom = denom;
+      this->intervalf = this->delta = this->interval * 0.000001f;
       iteration = 0;
-      deltaUs = 0;
       return 1;
     }
 
@@ -48,7 +48,7 @@ class Timer
 
     int update(uint32_t now)
     {
-      deltaUs = now - last;
+      delta = now - last;
       iteration++;
       last = now;
       return 1;
@@ -69,7 +69,12 @@ class Timer
 
     float getDelta() const
     {
-      return deltaUs * 0.000001f;
+      return intervalf;
+    }
+
+    float getDeltaReal() const
+    {
+      return delta * 0.000001f;
     }
 
     uint32_t interval;
@@ -78,7 +83,8 @@ class Timer
 
     uint32_t last;
     uint32_t iteration;
-    uint32_t deltaUs;
+    uint32_t delta;
+    float intervalf;
 };
 
 #endif

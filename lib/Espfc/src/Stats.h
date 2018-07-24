@@ -38,12 +38,12 @@ class Stats
       }
     }
 
-    void start(StatCounter c) /* ICACHE_RAM_ATTR */
+    void start(StatCounter c) ICACHE_RAM_ATTR
     {
       _start[c] = micros();
     }
 
-    void end(StatCounter c) /* ICACHE_RAM_ATTR */
+    void end(StatCounter c) ICACHE_RAM_ATTR
     {
       uint32_t diff = micros() - _start[c];
       _sum[c] += diff;
@@ -56,7 +56,7 @@ class Stats
     {
       for(size_t i = 0; i < COUNTER_COUNT; i++)
       {
-        _avg[i] = (float)_sum[i] / timer.deltaUs;
+        _avg[i] = (float)_sum[i] / timer.delta;
         _sum[i] = 0;
       }
     }

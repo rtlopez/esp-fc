@@ -154,6 +154,8 @@ struct ModelState
   Timer gyroTimer;
   bool gyroUpdate;
 
+  Timer accelTimer;
+
   Timer loopTimer;
   bool loopUpdate;
 

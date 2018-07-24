@@ -58,9 +58,10 @@ class Sensor
     int updateDelayed()
     {
       bool accelDelayed = _model.config.accelMode == ACCEL_DELAYED;
+      bool accelUpdated = false;
       if(accelDelayed)
       {
-        readAccel();
+        accelUpdated = readAccel();
         updateAccel();
       }
 
@@ -70,7 +71,7 @@ class Sensor
         updateMag();
       }
 
-      if(accelDelayed)
+      if(accelDelayed && accelUpdated)
       {
         _fusion.updateDelayed();
       }
@@ -92,16 +93,19 @@ class Sensor
       _model.state.stats.start(COUNTER_GYRO_READ);
       _gyro->readGyro(_model.state.gyroRaw);
       _model.state.stats.end(COUNTER_GYRO_READ);
+
       return 1;
     }
 
     int readAccel()
     {
       if(!_model.accelActive()) return 0;
+      if(!_model.state.accelTimer.check()) return 0;
 
       _model.state.stats.start(COUNTER_ACCEL_READ);
       _gyro->readAccel(_model.state.accelRaw);
       _model.state.stats.end(COUNTER_ACCEL_READ);
+
       return 1;
     }
 
@@ -112,6 +116,7 @@ class Sensor
       _model.state.stats.start(COUNTER_MAG_READ);
       _mag->readMag(_model.state.magRaw);
       _model.state.stats.start(COUNTER_MAG_READ);
+
       return 1;
     }
 

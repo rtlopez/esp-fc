@@ -147,10 +147,11 @@ class Model
       state.actuatorTimer.setRate(25); // 25 hz
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(10);
+      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
 
       // configure calibration
       state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
-      state.accelBiasAlpha = 5.0f / state.gyroTimer.rate;
+      state.accelBiasAlpha = 5.0f / state.accelTimer.rate;
       state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
 
       // load sensor calibration data
@@ -169,7 +170,7 @@ class Model
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
         state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
-        state.accelFilter[i].begin(config.accelFilter, state.gyroTimer.rate);
+        state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
         state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
       }
 
