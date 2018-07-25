@@ -330,8 +330,7 @@ class Cli
       static const char* accelModeChoices[]  = { PSTR("DELAYED"), PSTR("GYRO"), NULL };
       //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), NULL };
       //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
-      static const char* fusionModeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
-                                                 PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
+      const char ** fusionModeChoices        = FusionConfig::getModeNames();
       static const char* debugModeChoices[]  = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"),
                                                  PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
                                                  PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"),
@@ -402,7 +401,8 @@ class Cli
         Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
         */
 
-        Param(PSTR("fusion_mode"), &c.fusionMode, fusionModeChoices),
+        Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
+        Param(PSTR("fusion_gain"), &c.fusion.gain),
 
         Param(PSTR("input_roll_rate"), &c.input.rate[0]),
         Param(PSTR("input_roll_srate"), &c.input.superRate[0]),

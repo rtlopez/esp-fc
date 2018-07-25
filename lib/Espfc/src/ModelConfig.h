@@ -6,7 +6,7 @@
 #include "Device/GyroDevice.h"
 #include "Device/BusDevice.h"
 
-#define EEPROM_VERSION_NUM 0x08
+#define EEPROM_VERSION_NUM 0x09
 
 #define USE_SOFT_SERIAL
 
@@ -89,6 +89,27 @@ enum FusionMode {
   FUSION_LERP,
   FUSION_SIMPLE,
   FUSION_EXPERIMENTAL,
+  FUSION_MAX,
+};
+
+class FusionConfig
+{
+  public:
+    int8_t mode;
+    uint8_t gain;
+
+    static const char * getModeName(FusionMode mode)
+    {
+      if(mode >= FUSION_MAX) return PSTR("?");
+      return getModeNames()[mode];
+    }
+
+    static const char ** getModeNames()
+    {
+      static const char* modeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
+                                           PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
+      return modeChoices;
+    }
 };
 
 enum FlightMode {
@@ -644,7 +665,7 @@ class ModelConfig
 
     SerialPortConfig serial[SERIAL_UART_COUNT];
 
-    int8_t fusionMode;
+    FusionConfig fusion;
 
     int16_t gyroBias[3];
     int16_t accelBias[3];
@@ -749,7 +770,8 @@ class ModelConfig
       loopSync = 1;
       mixerSync = 1;
 
-      fusionMode = FUSION_MADGWICK;
+      fusion.mode = FUSION_MADGWICK;
+      fusion.gain = 50;
 
       gyroFilter.type = FILTER_PT1;
       gyroFilter.freq = 90;

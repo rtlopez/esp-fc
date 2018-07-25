@@ -89,6 +89,7 @@ class Espfc
 
     int updateOther()
     {
+      //return 0;
       _buzzer.update();
 
       _model.state.telemetryUpdate = _model.config.telemetry && _model.state.telemetryTimer.check();

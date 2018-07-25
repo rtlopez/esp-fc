@@ -14,8 +14,14 @@ class Fusion
     {
       _model.state.gyroPoseQ = Quaternion();
       _madgwick.begin(_model.state.gyroTimer.rate);
-      _model.logger.info().log(F("FUSION")).logln(_model.config.fusionMode);
+      _madgwick.setBeta(_model.config.fusion.gain * 0.05);
+      _model.logger.info().log(F("FUSION")).log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))).logln(_model.config.fusion.gain);
       return 1;
+    }
+
+    void restoreGain()
+    {
+      _madgwick.setBeta(_model.config.fusion.gain * 0.002);
     }
 
     int update()
@@ -24,7 +30,7 @@ class Fusion
       _model.state.rate = _model.state.gyro;
       if(_model.accelActive())
       {
-        switch(_model.config.fusionMode)
+        switch(_model.config.fusion.mode)
         {
           case FUSION_MADGWICK:
             if(_model.config.accelMode == ACCEL_DELAYED)
@@ -77,7 +83,7 @@ class Fusion
     void updateDelayed()
     {
       _model.state.stats.start(COUNTER_IMU_FUSION2);
-      if(_model.config.fusionMode == FUSION_MADGWICK)
+      if(_model.config.fusion.mode == FUSION_MADGWICK)
       {
         madgwickFusion2();
       }

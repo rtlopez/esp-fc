@@ -36,6 +36,17 @@ class Wireless
 
     int update()
     {
+      if(_model.config.wireless.mode == WIRELESS_MODE_NULL) return 0;
+
+      _model.state.stats.start(COUNTER_WIFI);
+      int ret = doUpdate();
+      _model.state.stats.end(COUNTER_WIFI);
+
+      return ret;
+    }
+
+    int doUpdate()
+    {
       if(!_initialized && WiFi.status() == WL_CONNECTED)
       {
         _server.begin(_model.config.wireless.port);
