@@ -555,6 +555,12 @@ class WirelessConfig
     char ssidAp[MAX_LEN + 1];
     char passAp[MAX_LEN + 1];
 
+    static const char * getModeName(WirelessMode mode)
+    {
+      if(mode >= WIRELESS_MODE_MAX) return PSTR("?");
+      return getModeNames()[mode];
+    }
+
     static const char ** getModeNames()
     {
       static const char* modeChoices[] = { PSTR("OFF"), PSTR("STA"), PSTR("AP"), PSTR("AP_STA"), NULL };

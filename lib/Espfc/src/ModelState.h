@@ -2,6 +2,7 @@
 #define _ESPFC_MODEL_STATE_H_
 
 #include <Arduino.h>
+#include <IPAddress.h>
 
 #include "Stats.h"
 #include "helper_3dmath.h"
@@ -216,6 +217,8 @@ struct ModelState
   bool baroPresent;
 
   ArmingDisabledFlags armingDisabledFlags;
+
+  IPAddress localIp;
 };
 
 }

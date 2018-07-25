@@ -24,9 +24,13 @@ class Wireless
       WiFi.mode(WIFI_OFF);
       _model.logger.info().logln(F("WIFI OFF"));
 #elif defined(ESP32)
-      WiFi.begin(_model.config.wireless.ssid, _model.config.wireless.pass);
+      WiFi.mode((WiFiMode_t)_model.config.wireless.mode);
+      if(_model.config.wireless.mode != WIRELESS_MODE_NULL)
+      {
+        WiFi.begin(_model.config.wireless.ssid, _model.config.wireless.pass);
+      }
+      _model.logger.info().log(F("WIFI")).log(FPSTR(WirelessConfig::getModeName((WirelessMode)_model.config.wireless.mode))).log(_model.config.wireless.ssid).logln(_model.config.wireless.pass);
 #endif
-      _model.logger.info().log(F("WIFI")).log(_model.config.wireless.mode).log(_model.config.wireless.ssid).logln(_model.config.wireless.pass);
       return 1;
     }
 
@@ -39,6 +43,8 @@ class Wireless
       }
       
       if(!_initialized) return 0;
+
+      _model.state.localIp = WiFi.localIP();
 
       if(!_client.connected())
       {

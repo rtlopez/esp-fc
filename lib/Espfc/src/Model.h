@@ -148,6 +148,7 @@ class Model
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(10);
       state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
+      state.accelTimer.setInterval(state.accelTimer.interval - 20);
 
       // configure calibration
       state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;

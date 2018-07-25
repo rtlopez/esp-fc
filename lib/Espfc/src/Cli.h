@@ -747,12 +747,14 @@ class Cli
         printVersion();
         println();
       }
-      #if defined(ESP32)
       else if(strcmp_P(_cmd.args[0], PSTR("wifi")) == 0)
       {
-        print(F("IP: "));
-        println(WiFi.localIP());
+        print(F("tcp://"));
+        print(_model.state.localIp);
+        print(F(":"));
+        println(_model.config.wireless.port);
       }
+      #if defined(ESP32)
       else if(strcmp_P(_cmd.args[0], PSTR("tasks")) == 0)
       {
         printVersion();
@@ -763,7 +765,6 @@ class Cli
         print(F("num tasks: "));
         print(numTasks);
         println();
-
       }
       #endif
       else if(strcmp_P(_cmd.args[0], PSTR("devinfo")) == 0)
