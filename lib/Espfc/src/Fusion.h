@@ -14,14 +14,15 @@ class Fusion
     {
       _model.state.gyroPoseQ = Quaternion();
       _madgwick.begin(_model.state.gyroTimer.rate);
-      _madgwick.setBeta(_model.config.fusion.gain * 0.05);
+      _madgwick.setBeta(_model.config.fusion.gain * 0.05f);
       _model.logger.info().log(F("FUSION")).log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))).logln(_model.config.fusion.gain);
       return 1;
     }
 
     void restoreGain()
     {
-      _madgwick.setBeta(_model.config.fusion.gain * 0.002);
+      float rate = (float)_model.state.gyroTimer.rate / _model.state.accelTimer.rate;
+      _madgwick.setBeta(_model.config.fusion.gain * 0.005f * rate);
     }
 
     int update()
@@ -343,6 +344,10 @@ class Fusion
 
     void madgwickFusion2()
     {
+      float mag = _model.state.accel.getMagnitude();
+      //_model.state.debug[0] = lrintf(mag * 1000);
+      if(mag > 1.5f || mag < 0.75f) return; // skip at high overloads or weightlessness
+
       // correction phase
       _madgwick.update(
         0, 0, 0,
