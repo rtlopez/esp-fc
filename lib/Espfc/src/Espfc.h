@@ -28,6 +28,7 @@ class Espfc
     int begin()
     {
       _model.begin();
+      _wireless.begin(); // must be initialized before esc
       _hardware.begin();
       _buzzer.begin();
       _sensor.begin();
@@ -38,7 +39,6 @@ class Espfc
       _blackbox.begin();
       _telemetry.begin();
       _cli.begin();
-      _wireless.begin();
       _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
 
       return 1;

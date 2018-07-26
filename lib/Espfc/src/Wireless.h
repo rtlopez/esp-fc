@@ -36,6 +36,10 @@ class Wireless
 
     int update()
     {
+#if defined(ESP8266)
+      return 0;
+#endif
+
       if(_model.config.wireless.mode == WIRELESS_MODE_NULL) return 0;
 
       _model.state.stats.start(COUNTER_WIFI);
