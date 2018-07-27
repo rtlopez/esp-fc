@@ -23,14 +23,6 @@ class Model
       initialize();
     }
 
-    void begin()
-    {
-      logger.begin();
-      EEPROM.begin(1024);
-      load();
-      update();
-    }
-
     void initialize()
     {
       config = ModelConfig();
@@ -117,69 +109,38 @@ class Model
       return state.armingDisabledFlags != 0;
     }
 
-    void update()
+    void begin()
     {
-#if defined(ESP32) // TODO: if use SPI bus
-      int gyroSyncMax = 1; // max 8khz
-      if(config.accelDev != GYRO_NONE) gyroSyncMax = 2; // max 4khz
-      if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax = 4; // max 2khz
-#else // use I2C bus
+      logger.begin();
+      EEPROM.begin(1024);
+      load();
+      sanitize();
+    }
+
+    void sanitize()
+    {
       int gyroSyncMax = 4; // max 2khz
-      if(config.accelDev != GYRO_NONE) gyroSyncMax = 8; // max 1khz
-      if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax = 16; // max 500hz
-#endif
+      if(state.gyroBus == BUS_SPI)
+      {
+        gyroSyncMax = 1; // max 8k
+        //if(config.accelDev != GYRO_NONE) gyroSyncMax /= 2; // max 4khz
+        //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 4; // max 2khz
+      }
+      else
+      {
+        //if(config.accelDev != GYRO_NONE) gyroSyncMax = 8; // max 1khz
+        //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax = 16; // max 500hz
+      }
 
       config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax); // max 1khz
-      int gyroClock = 8000;
+      state.gyroClock = 8000;
       if(config.gyroDlpf != GYRO_DLPF_256)
       {
-        gyroClock = 1000;
+        state.gyroClock = 1000;
         config.gyroSync = ((config.gyroSync + 7) / 8) * 8;
       }
       int gyroSampleRate = 8000 / config.gyroSync;
-
-      // init timers
-      // sample rate = clock / ( divider + 1)
-      state.gyroDivider = (gyroClock / (gyroSampleRate + 1)) + 1;
-      state.gyroTimer.setRate(gyroClock / state.gyroDivider);
-      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
-      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
-      state.actuatorTimer.setRate(25); // 25 hz
-      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(10);
-      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
-      state.accelTimer.setInterval(state.accelTimer.interval - 20);
-
-      // configure calibration
-      state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
-      state.accelBiasAlpha = 5.0f / state.accelTimer.rate;
-      state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
-
-      // load sensor calibration data
-      for(size_t i = 0; i <= AXIS_YAW; i++)
-      {
-        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
-        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
-        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
-        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
-      }
-
-      for(size_t i = 0; i <= AXIS_YAW; i++)
-      {
-        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
-        state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
-        state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
-        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
-        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
-        state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
-        state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
-      }
-
-      // ensure disarmed pulses
-      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
-      {
-        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
-      }
+      state.gyroDivider = (state.gyroClock / (gyroSampleRate + 1)) + 1;
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
@@ -273,6 +234,51 @@ class Model
         1 << (BEEPER_DISARMING - 1) |
         1 << (BEEPER_ARMING - 1) |
         1 << (BEEPER_BAT_LOW - 1);
+    }
+
+    void update()
+    {
+      // init timers
+      // sample rate = clock / ( divider + 1)
+      state.gyroTimer.setRate(state.gyroClock / state.gyroDivider);
+      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
+      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
+      state.actuatorTimer.setRate(25); // 25 hz
+      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
+      state.stats.timer.setRate(10);
+      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
+      state.accelTimer.setInterval(state.accelTimer.interval - 20);
+
+      // configure calibration
+      state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
+      state.accelBiasAlpha = 5.0f / state.accelTimer.rate;
+      state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
+
+      // load sensor calibration data
+      for(size_t i = 0; i <= AXIS_YAW; i++)
+      {
+        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
+        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
+        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
+        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
+      }
+
+      for(size_t i = 0; i <= AXIS_YAW; i++)
+      {
+        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+        state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
+        state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
+        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
+        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
+        state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
+        state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
+      }
+
+      // ensure disarmed pulses
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
+      }
 
       state.buzzer.beeperMask = config.buzzer.beeperMask;
 
@@ -407,10 +413,17 @@ class Model
       EEPROM.commit();
     }
 
+    void reload()
+    {
+      sanitize();
+      update();
+    }
+
     void reset()
     {
       initialize();
       save();
+      sanitize();
       update();
     }
 

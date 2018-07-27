@@ -12,7 +12,8 @@ enum GyroDeviceType {
   GYRO_MPU6000 = 2,
   GYRO_MPU6050 = 3,
   GYRO_MPU6500 = 4,
-  GYRO_MPU9250 = 5
+  GYRO_MPU9250 = 5,
+  GYRO_MAX
 };
 
 namespace Device {
@@ -37,8 +38,14 @@ class GyroDevice
 
     static const char ** getNames()
     {
-      static const char* devChoices[]   = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), NULL };
+      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), NULL };
       return devChoices;
+    }
+
+    static const char * getName(GyroDeviceType type)
+    {
+      if(type >= GYRO_MAX) return PSTR("?");
+      return getNames()[type];
     }
 };
 

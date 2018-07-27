@@ -365,7 +365,7 @@ class Msp
 
         case MSP_SET_FEATURE_CONFIG:
           _model.config.featureMask = m.readU32();
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_BATTERY_CONFIG:
@@ -468,7 +468,7 @@ class Msp
           _model.config.accelDev = m.readU8(); // 3 acc mpu6050
           _model.config.baroDev = m.readU8();  // 2 baro bmp085
           _model.config.magDev = m.readU8();   // 3 mag hmc5883l
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_SENSOR_ALIGNMENT:
@@ -523,7 +523,7 @@ class Msp
               _model.config.serial[k].blackboxBaudIndex = m.readU8();
             }
           }
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_BLACKBOX_CONFIG:
@@ -591,7 +591,7 @@ class Msp
           _model.config.output.minThrottle = m.readU16(); // minthrottle
           _model.config.output.maxThrottle = m.readU16(); // maxthrottle
           _model.config.output.minCommand = m.readU16(); // mincommand
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_MOTOR_3D_CONFIG:
@@ -652,7 +652,7 @@ class Msp
           m.readU32(); // rx spi id
           m.readU8(); // rx spi chan count
           m.readU8(); // fpv camera angle
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_FAILSAFE_CONFIG:
@@ -767,7 +767,7 @@ class Msp
           _model.config.output.dshotIdle = m.readU16(); // dshot idle
           m.readU8();  // 32k gyro
           m.readU8();  // PWM inversion
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_GPS_CONFIG:
@@ -829,7 +829,7 @@ class Msp
             _model.config.gyroFilter2.type = m.readU8();
             _model.config.dtermFilter2.freq = m.readU16();
           }
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_PID_CONTROLLER:
@@ -856,7 +856,7 @@ class Msp
             _model.config.pid[i].I = m.readU8();
             _model.config.pid[i].D = m.readU8();
           }
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_PID_ADVANCED:
@@ -903,7 +903,7 @@ class Msp
           if (m.remain() >= 2) {
             _model.config.dtermSetpointWeight = m.readU16();
           }
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_RAW_IMU:
@@ -1013,8 +1013,6 @@ class Msp
           if(!_model.isActive(MODE_ARMED))
           {
             _model.reset();
-            _model.load();
-            _model.update();
           }
           break;
 

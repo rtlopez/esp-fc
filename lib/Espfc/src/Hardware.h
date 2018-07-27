@@ -26,12 +26,12 @@ namespace {
   static Espfc::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
 #endif
 #if defined(ESP8266)
+  static Espfc::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+  static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
 #if defined(USE_SOFT_SERIAL)
   static EspSoftSerial softSerial;
   static Espfc::SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
 #endif
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
 #endif
   static Espfc::InputPPM ppm;
   static Espfc::InputSBUS sbus;
@@ -100,13 +100,13 @@ class Hardware
       if(detectedGyro) return;
       if(cs == -1) return;
 
-      int type = gyro.getType();
+      GyroDeviceType type = gyro.getType();
 
       pinMode(cs, OUTPUT);
       digitalWrite(cs, HIGH);
       bool status = gyro.begin(&bus, cs);
 
-      _model.logger.info().log(F("SPI DETECT")).log(type).logln(status);
+      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Device::GyroDevice::getName(type))).logln(status);
 
       if(!status) return;
 
@@ -120,10 +120,10 @@ class Hardware
     {
       if(detectedGyro) return;
 
-      int type = gyro.getType();
+      GyroDeviceType type = gyro.getType();
       bool status = gyro.begin(&bus);
 
-      _model.logger.info().log(F("I2C DETECT")).log(type).logln(status);
+      _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Device::GyroDevice::getName(type))).logln(status);
 
       if(!status) return;
 

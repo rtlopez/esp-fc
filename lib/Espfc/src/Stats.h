@@ -15,7 +15,8 @@ enum StatCounter {
   COUNTER_MAG_FILTER,
   COUNTER_IMU_FUSION,
   COUNTER_IMU_FUSION2,
-  COUNTER_INPUT,
+  COUNTER_INPUT_READ,
+  COUNTER_INPUT_FILTER,
   COUNTER_ACTUATOR,
   COUNTER_OUTER_PID,
   COUNTER_INNER_PID,
@@ -29,6 +30,22 @@ enum StatCounter {
 class Stats
 {
   public:
+    class Measure
+    {
+      public:
+        Measure(Stats& stats, StatCounter counter): _stats(stats), _counter(counter)
+        {
+          _stats.start(_counter);
+        }
+        ~Measure()
+        {
+          _stats.end(_counter);
+        }
+      private:
+        Stats& _stats;
+        StatCounter _counter;
+    };
+
     Stats()
     {
       for(size_t i = 0; i < COUNTER_COUNT; i++)
@@ -89,14 +106,15 @@ class Stats
       {
         case COUNTER_GYRO_READ:    return PSTR(" gyro_r");
         case COUNTER_GYRO_FILTER:  return PSTR(" gyro_f");
-        case COUNTER_ACCEL_READ:   return PSTR("accel_r");
-        case COUNTER_ACCEL_FILTER: return PSTR("accel_f");
+        case COUNTER_ACCEL_READ:   return PSTR("  acc_r");
+        case COUNTER_ACCEL_FILTER: return PSTR("  acc_f");
         case COUNTER_MAG_READ:     return PSTR("  mag_r");
         case COUNTER_MAG_FILTER:   return PSTR("  mag_f");
         case COUNTER_IMU_FUSION:   return PSTR("  imu_p");
         case COUNTER_IMU_FUSION2:  return PSTR("  imu_c");
-        case COUNTER_INPUT:        return PSTR("     rx");
-        case COUNTER_ACTUATOR:     return PSTR("    act");
+        case COUNTER_INPUT_READ:   return PSTR("   rx_r");
+        case COUNTER_INPUT_FILTER: return PSTR("   rx_f");
+        case COUNTER_ACTUATOR:     return PSTR("   rx_a");
         case COUNTER_OUTER_PID:    return PSTR("  pid_o");
         case COUNTER_INNER_PID:    return PSTR("  pid_i");
         case COUNTER_MIXER:        return PSTR("  mixer");

@@ -150,6 +150,7 @@ struct ModelState
   float gyroBiasAlpha;
   long gyroBiasSamples;
 
+  int32_t gyroClock;
   int8_t gyroDivider;
 
   Timer gyroTimer;

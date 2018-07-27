@@ -30,6 +30,7 @@ class Espfc
       _model.begin();
       _wireless.begin(); // must be initialized before esc
       _hardware.begin();
+      _model.update();
       _buzzer.begin();
       _sensor.begin();
       _input.begin();
