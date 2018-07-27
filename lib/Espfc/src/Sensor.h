@@ -62,7 +62,8 @@ class Sensor
       bool accelUpdated = false;
       if(accelDelayed)
       {
-        if(accelUpdated = readAccel())
+        accelUpdated = readAccel();
+        if(accelUpdated)
         {
           updateAccel();
         }

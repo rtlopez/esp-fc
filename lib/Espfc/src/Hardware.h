@@ -162,6 +162,8 @@ class Hardware
         sc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
     #endif
 
+        serial->flush();
+
         if(srx)
         {
           sc.baud = 100000; // sbus
@@ -171,7 +173,6 @@ class Hardware
           #if defined(ESP8266)
           sc.rx_pin = _model.config.pin[PIN_INPUT_RX];
           #endif
-          //serial->flush();
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("sbus"));
         }
@@ -179,7 +180,6 @@ class Hardware
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_115200);
-          //serial->flush();
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).log(F("msp")).logln(F("blackbox"));
         }
@@ -187,20 +187,17 @@ class Hardware
         {
           int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
           sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_250000);
-          //serial->flush();
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("blackbox"));
         }
         else if(msp || deb)
         {
           sc.baud = fromIndex((SerialSpeedIndex)_model.config.serial[i].baudIndex, SERIAL_SPEED_115200);
-          //serial->flush();
           serial->begin(sc);
           _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(msp ? F("msp") : F("")).logln(deb ? F("debug") : F(""));
         }
         else
         {
-          //serial->flush();
           _model.logger.info().log(F("UART")).log(i).logln(F("free"));
         }
       }

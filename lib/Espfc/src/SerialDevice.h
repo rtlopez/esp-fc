@@ -82,14 +82,7 @@ class SerialDeviceAdapter: public SerialDevice
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
     virtual bool isSoft() const;
-    virtual size_t availableForWrite()
-    {
-#if defined(ESP32)
-      return 128;
-#else
-      return _dev.availableForWrite();
-#endif
-    }
+    virtual size_t availableForWrite() { return _dev.availableForWrite(); }
   private:
     T& _dev;
 };
