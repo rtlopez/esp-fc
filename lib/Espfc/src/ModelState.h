@@ -179,6 +179,7 @@ struct ModelState
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
 
+  bool telemetry;
   Timer telemetryTimer;
   bool telemetryUpdate;
 

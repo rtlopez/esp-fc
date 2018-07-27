@@ -36,17 +36,18 @@ class Sensor
     int update()
     {
       bool accelDelayed = _model.config.accelMode == ACCEL_DELAYED;
+      bool accelUpdated = false;
 
       int ret = readGyro();
       if(!accelDelayed)
       {
-        ret &= readAccel();
+        accelUpdated = readAccel();
       }
 
       if(!ret) return 0;
 
       updateGyro();
-      if(!accelDelayed)
+      if(!accelDelayed && accelUpdated)
       {
         updateAccel();
       }
@@ -61,8 +62,10 @@ class Sensor
       bool accelUpdated = false;
       if(accelDelayed)
       {
-        accelUpdated = readAccel();
-        updateAccel();
+        if(accelUpdated = readAccel())
+        {
+          updateAccel();
+        }
       }
 
       if(_model.magActive())
@@ -90,9 +93,8 @@ class Sensor
     {
       if(!_model.gyroActive()) return 0;
 
-      _model.state.stats.start(COUNTER_GYRO_READ);
+      Stats::Measure measure(_model.state.stats, COUNTER_GYRO_READ);
       _gyro->readGyro(_model.state.gyroRaw);
-      _model.state.stats.end(COUNTER_GYRO_READ);
 
       return 1;
     }
@@ -102,9 +104,8 @@ class Sensor
       if(!_model.accelActive()) return 0;
       if(!_model.state.accelTimer.check()) return 0;
 
-      _model.state.stats.start(COUNTER_ACCEL_READ);
+      Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
       _gyro->readAccel(_model.state.accelRaw);
-      _model.state.stats.end(COUNTER_ACCEL_READ);
 
       return 1;
     }
@@ -113,18 +114,17 @@ class Sensor
     {
       if(!_model.magActive() || !_model.state.magTimer.check()) return 0;
 
-      _model.state.stats.start(COUNTER_MAG_READ);
+      Stats::Measure measure(_model.state.stats, COUNTER_MAG_READ);
       _mag->readMag(_model.state.magRaw);
-      _model.state.stats.start(COUNTER_MAG_READ);
 
       return 1;
     }
 
     void updateGyro()
     {
-      if(!_model.gyroActive()) return;
+      Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FILTER);
 
-      _model.state.stats.start(COUNTER_GYRO_FILTER);
+      if(!_model.gyroActive()) return;
 
       align(_model.state.gyroRaw, _model.config.gyroAlign);
 
@@ -163,14 +163,13 @@ class Sensor
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
         _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
       }
-      _model.state.stats.end(COUNTER_GYRO_FILTER);
     }
 
     void updateAccel()
     {
-      if(!_model.accelActive()) return;
+      Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
-      _model.state.stats.start(COUNTER_ACCEL_FILTER);
+      if(!_model.accelActive()) return;
 
       align(_model.state.accelRaw, _model.config.accelAlign);
 
@@ -194,15 +193,13 @@ class Sensor
       {
         _model.state.accel -= _model.state.accelBias;
       }
-
-      _model.state.stats.end(COUNTER_ACCEL_FILTER);
     }
 
     void updateMag()
     {
-      if(!_model.magActive()) return;
+      Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
 
-      _model.state.stats.start(COUNTER_MAG_FILTER);
+      if(!_model.magActive()) return;
 
       align(_model.state.magRaw, _model.config.magAlign);
       _model.state.mag  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
@@ -216,8 +213,6 @@ class Sensor
         _model.state.mag *= _model.state.magCalibrationScale;
       }
       collectMagCalibration();
-
-      _model.state.stats.end(COUNTER_MAG_FILTER);
     }
 
     void collectMagCalibration()

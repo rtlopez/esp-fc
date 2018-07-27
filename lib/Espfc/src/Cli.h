@@ -381,7 +381,7 @@ class Cli
         Param(PSTR("accel_mode"), &c.accelMode, accelModeChoices),
         Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
         Param(PSTR("accel_lpf_type"), &c.accelFilter.type, filterTypeChoices),
-        Param(PSTR("accel_lpf_lpf"), &c.accelFilter.freq),
+        Param(PSTR("accel_lpf_freq"), &c.accelFilter.freq),
         Param(PSTR("accel_offset_x"), &c.accelBias[0]),
         Param(PSTR("accel_offset_y"), &c.accelBias[1]),
         Param(PSTR("accel_offset_z"), &c.accelBias[2]),

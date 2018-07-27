@@ -338,6 +338,12 @@ class Model
       //config.scaler[1].dimension = (ScalerDimension)(ACT_OUTER_I | ACT_AXIS_PITCH); // ROBOT
 
       //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_YAW | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+
+      state.telemetry = config.telemetry;
+
+      // override temporary
+      //state.telemetry = true;
+      //state.telemetryTimer.setRate(200);
     }
 
     void preSave()

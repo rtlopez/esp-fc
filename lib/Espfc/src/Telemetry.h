@@ -20,12 +20,11 @@ class Telemetry
     int update()
     {
       if(!_stream) return 0;
-      _model.state.stats.start(COUNTER_TELEMETRY);
+      Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
       (*this)
         << F("")
       ;
       println();
-      _model.state.stats.end(COUNTER_TELEMETRY);
       return 1;
     }
 
