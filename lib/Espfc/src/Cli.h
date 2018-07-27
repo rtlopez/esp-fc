@@ -1109,7 +1109,7 @@ class Cli
           print("%");
           println();
         }
-        print(F("       TOTAL: "));
+        print(F("  TOTAL: "));
         print((int)(_model.state.stats.getTotalTime() * _model.state.loopTimer.interval));
         print(F("us, "));
         print(_model.state.stats.getTotalLoad(), 1);

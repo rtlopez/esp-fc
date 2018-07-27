@@ -1,5 +1,5 @@
-#ifndef _ESPFC_SERIAL_H_
-#define _ESPFC_SERIAL_H_
+#ifndef _ESPFC_HARDWARE_H_
+#define _ESPFC_HARDWARE_H_
 
 #include <Arduino.h>
 #include "Model.h"

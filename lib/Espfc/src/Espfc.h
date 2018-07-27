@@ -5,7 +5,7 @@
 #include "Controller.h"
 #include "Input.h"
 #include "Actuator.h"
-#include "Sensor.h"
+#include "SensorManager.h"
 #include "Fusion.h"
 #include "Mixer.h"
 #include "Blackbox.h"
@@ -115,7 +115,7 @@ class Espfc
     Controller _controller;
     Input _input;
     Actuator _actuator;
-    Sensor _sensor;
+    SensorManager _sensor;
     Mixer _mixer;
     Blackbox _blackbox;
     Telemetry _telemetry;
