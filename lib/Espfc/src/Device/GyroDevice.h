@@ -1,5 +1,5 @@
-#ifndef _ESPFC_GYRO_DEVICE_H_
-#define _ESPFC_GYRO_DEVICE_H_
+#ifndef _ESPFC_DEVICE_GYRO_DEVICE_H_
+#define _ESPFC_DEVICE_GYRO_DEVICE_H_
 
 #include "helper_3dmath.h"
 #include "BusDevice.h"
@@ -21,10 +21,12 @@ namespace Device {
 class GyroDevice
 {
   public:
+    typedef GyroDeviceType DeviceType;
+
     virtual int begin(BusDevice * bus) = 0;
     virtual int begin(BusDevice * bus, uint8_t addr) = 0;
 
-    virtual GyroDeviceType getType() const = 0;
+    virtual DeviceType getType() const = 0;
 
     virtual int readGyro(VectorInt16& v) = 0;
     virtual int readAccel(VectorInt16& v) = 0;
@@ -42,7 +44,7 @@ class GyroDevice
       return devChoices;
     }
 
-    static const char * getName(GyroDeviceType type)
+    static const char * getName(DeviceType type)
     {
       if(type >= GYRO_MAX) return PSTR("?");
       return getNames()[type];

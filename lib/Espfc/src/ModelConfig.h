@@ -3,8 +3,10 @@
 
 #include <Arduino.h>
 #include "EscDriver.h"
-#include "Device/GyroDevice.h"
 #include "Device/BusDevice.h"
+#include "Device/GyroDevice.h"
+#include "Device/MagDevice.h"
+#include "Device/BaroDevice.h"
 
 #define EEPROM_VERSION_NUM 0x09
 
@@ -226,22 +228,6 @@ enum SerialFunction {
   SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
 };
 
-enum MagDev {
-  MAG_DEFAULT = 0,
-  MAG_NONE    = 1,
-  MAG_HMC5883 = 2,
-  MAG_AK8975  = 3,
-  MAG_AK8963  = 4
-};
-
-enum BaroDev {
-  BARO_DEFAULT = 0,
-  BARO_NONE    = 1,
-  BARO_BMP085  = 2,
-  BARO_MS5611  = 3,
-  BARO_BMP280  = 4
-};
-
 enum Axis {
   AXIS_ROLL,    // x
   AXIS_PITCH,   // y
@@ -394,6 +380,7 @@ enum FilterType {
   FILTER_FIR,
   FILTER_NOTCH,
   FILTER_FIR2,
+  FILTER_MEDIAN3,
   FILTER_NONE,
 };
 

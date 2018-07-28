@@ -551,9 +551,14 @@ class Msp
           break;
 
         case MSP_ATTITUDE:
-          r.writeU16(lrintf(degrees(_model.state.angle.x) * 10)); // roll
-          r.writeU16(lrintf(degrees(_model.state.angle.y) * 10)); // pitch
-          r.writeU16(lrintf(degrees(-_model.state.angle.z))); // yaw
+          r.writeU16(lrintf(degrees(_model.state.angle.x) * 10.f)); // roll  [decidegrees]
+          r.writeU16(lrintf(degrees(_model.state.angle.y) * 10.f)); // pitch [decidegrees]
+          r.writeU16(lrintf(degrees(-_model.state.angle.z)));       // yaw   [degrees]
+          break;
+
+        case MSP_ALTITUDE:
+          r.writeU32(lrintf(_model.state.baroAltitude * 100.f));    // [cm]
+          r.writeU32(0);
           break;
 
         case MSP_BEEPER_CONFIG:
@@ -1075,6 +1080,7 @@ class Msp
       if(cmd == MSP_BOXNAMES) return true;
       if(cmd == MSP_ANALOG) return true;
       if(cmd == MSP_ATTITUDE) return true;
+      if(cmd == MSP_ALTITUDE) return true;
       if(cmd == MSP_RC) return true;
       if(cmd == MSP_RAW_IMU) return true;
       if(cmd == MSP_MOTOR) return true;

@@ -48,10 +48,7 @@ class Pid
 
       if(iScale > 0.01)
       {
-        if(std::abs(pTerm) < oLimit)
-        {
-          iTerm += Ki * error * dt * iScale;
-        }
+        iTerm += Ki * error * dt * iScale;
         iTerm = Math::bound(iTerm, -iLimit, iLimit);
       }
       else

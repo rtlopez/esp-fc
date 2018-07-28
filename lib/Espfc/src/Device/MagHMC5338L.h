@@ -1,5 +1,5 @@
-#ifndef _ESPFC_MAG_HMC5338L_H_
-#define _ESPFC_MAG_HMC5338L_H_
+#ifndef _ESPFC_DEVICE_MAG_HMC5338L_H_
+#define _ESPFC_DEVICE_MAG_HMC5338L_H_
 
 #include "MagDevice.h"
 #include "BusDevice.h"
@@ -92,6 +92,11 @@ class MagHMC5338L: public MagDevice
       v.z = (((int16_t)buffer[2]) << 8) | buffer[3];
       v.y = (((int16_t)buffer[4]) << 8) | buffer[5];
       return 1;
+    }
+
+    virtual MagDeviceType getType() const override
+    {
+      return MAG_HMC5883;
     }
 
     void setSampleAveraging(uint8_t averaging) override

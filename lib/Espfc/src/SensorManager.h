@@ -9,19 +9,21 @@
 #include "Sensor/GyroSensor.h"
 #include "Sensor/AccelSensor.h"
 #include "Sensor/MagSensor.h"
+#include "Sensor/BaroSensor.h"
 
 namespace Espfc {
 
 class SensorManager
 {
   public:
-    SensorManager(Model& model): _model(model), _gyro(model), _accel(model), _mag(model), _fusion(model) {}
+    SensorManager(Model& model): _model(model), _gyro(model), _accel(model), _mag(model), _baro(model), _fusion(model) {}
 
     int begin()
     {
       _gyro.begin();
       _accel.begin();
       _mag.begin();
+      _baro.begin();
       _fusion.begin();
 
       _model.state.accelRaw.z = 1.f;
@@ -35,6 +37,12 @@ class SensorManager
     {
       int ret = _gyro.update();
 
+      if(_model.state.gyroBiasSamples == 0)
+      {
+        _model.state.gyroBiasSamples = -1;
+        _fusion.restoreGain();
+      }
+
       if(!ret) return 0;
 
       _fusion.update();
@@ -45,16 +53,30 @@ class SensorManager
     int updateDelayed()
     {
       int accelUpdated = _accel.update();
-      int magUpdated = _mag.update();
+      int magUpdated = false;
+      int baroUpdated = false;
+
+      if(!accelUpdated)
+      {
+        magUpdated = _mag.update();
+      }
 
       if(magUpdated || accelUpdated)
       {
         _fusion.updateDelayed();
       }
 
-      if(_model.state.battery.timer.check())
+      if(!magUpdated && !accelUpdated)
       {
-        updateBattery();
+        baroUpdated = _baro.update();
+      }
+
+      if(!magUpdated && !accelUpdated && !baroUpdated)
+      {
+        if(_model.state.battery.timer.check())
+        {
+          updateBattery();
+        }
       }
 
       _model.finishCalibration();
@@ -64,6 +86,7 @@ class SensorManager
   private: 
     void updateBattery()
     {
+      return;
       // wemos d1 mini has divider 3.2:1 (220k:100k)
       // additionaly I've used divider 5.7:1 (4k7:1k)
       // total should equals ~18.24:1, 73:4 resDiv:resMult should be ideal,
@@ -91,6 +114,7 @@ class SensorManager
     Sensor::GyroSensor _gyro;
     Sensor::AccelSensor _accel;
     Sensor::MagSensor _mag;
+    Sensor::BaroSensor _baro;
     Fusion _fusion;
 };
 

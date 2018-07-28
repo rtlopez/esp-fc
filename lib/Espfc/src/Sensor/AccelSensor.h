@@ -4,8 +4,6 @@
 #include "BaseSensor.h"
 #include "Device/GyroDevice.h"
 
-#include <math.h>
-
 namespace Espfc {
 
 namespace Sensor {

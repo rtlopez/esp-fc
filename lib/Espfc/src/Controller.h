@@ -178,7 +178,7 @@ class Controller
         rcRate += RC_RATE_INCREMENTAL * (rcRate - 2.0f);
       }
 
-      const float inputAbs = std::abs(input);
+      const float inputAbs = abs(input);
       if(rcExpo)
       {
         const float expof = rcExpo / 100.0f;

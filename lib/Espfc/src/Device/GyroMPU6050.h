@@ -1,5 +1,5 @@
-#ifndef _ESPFC_GYRO_MPU6050_H_
-#define _ESPFC_GYRO_MPU6050_H_
+#ifndef _ESPFC_DEVICE_GYRO_MPU6050_H_
+#define _ESPFC_DEVICE_GYRO_MPU6050_H_
 
 #include "BusDevice.h"
 #include "GyroDevice.h"

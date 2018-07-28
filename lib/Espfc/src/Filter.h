@@ -1,9 +1,19 @@
 #ifndef _ESPFC_FILTER_H_
 #define _ESPFC_FILTER_H_
 
-#include <cmath>
-#include <algorithm>
+#include <Arduino.h>
+//#include "math.h"
+//#include <algorithm>
 #include "ModelConfig.h"
+
+// Quick median filter implementation
+// (c) N. Devillard - 1998
+// http://ndevilla.free.fr/median/median.pdf
+#define QMF_SORT(a,b) { if ((a)>(b)) QMF_SWAP((a),(b)); }
+#define QMF_SWAP(a,b) { int32_t temp=(a);(a)=(b);(b)=temp; }
+#define QMF_COPY(p,v,n) { for (size_t i=0; i<n; i++) p[i]=v[i]; }
+#define QMF_SORTF(a,b) { if ((a)>(b)) QMF_SWAPF((a),(b)); }
+#define QMF_SWAPF(a,b) { float temp=(a);(a)=(b);(b)=temp; }
 
 namespace Espfc {
 
@@ -17,6 +27,12 @@ struct FilterStateBiquad {
   float b0, b1, b2, a1, a2;
   float x1, x2, y1, y2;
 };
+
+struct FilterStateMedian {
+  float v[3];
+  int i;
+};
+
 
 class Filter
 {
@@ -32,9 +48,9 @@ class Filter
     {
       _type = (FilterType)config.type;
       _rate = rate;
-      _freq = std::min((int)config.freq, _rate / 2); // adj cut freq below nyquist rule
-      _cutoff = std::min((int)config.cutoff, _rate / 2); // adj cut freq below nyquist rule
-      _cutoff = std::min(_cutoff, _freq - 10); // sanitize cutoff to be slightly below filter freq
+      _freq = constrain((int)config.freq, 0, _rate / 2); // adj cut freq below nyquist rule
+      _cutoff = constrain((int)config.cutoff, 0, _rate / 2); // adj cut freq below nyquist rule
+      _cutoff = constrain(_cutoff, 0, _freq - 10); // sanitize cutoff to be slightly below filter freq
       if(_freq == 0) _type = FILTER_NONE; // turn off if filter freq equals zero
       switch(_type)
       {
@@ -52,6 +68,9 @@ class Filter
           break;
         case FILTER_FIR2:
           initFir2();
+          break;
+        case FILTER_MEDIAN3:
+          initMedian3();
           break;
         case FILTER_NONE:
         default:
@@ -72,7 +91,9 @@ class Filter
         case FILTER_NOTCH:
           return updateBiquadDF2(v);
         case FILTER_FIR2:
-            return updateFir2(v);
+          return updateFir2(v);
+        case FILTER_MEDIAN3:
+          return updateMedian3(v);
         case FILTER_NONE:
         default:
           return v;
@@ -82,7 +103,7 @@ class Filter
   private:
     void initPt1()
     {
-      float rc = 1.f / (2.f * M_PI * _freq);
+      float rc = 1.f / (2.f * PI * _freq);
       float dt = 1.f / _rate;
       _state.pt1.k = dt / (dt + rc);
       _state.pt1.v = 0.f;
@@ -93,6 +114,14 @@ class Filter
     {
       _state.pt1.v = 0.f;
       _state.pt1.v0 = 0.f;
+    }
+
+    void initMedian3()
+    {
+      _state.median.v[0] = 0.f;
+      _state.median.v[1] = 0.f;
+      _state.median.v[2] = 0.f;
+      _state.median.i = 0;
     }
 
     float updatePt1(float v) /* ICACHE_RAM_ATTR */
@@ -114,6 +143,17 @@ class Filter
       _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
       _state.pt1.v0 = _state.pt1.v;
       return _state.pt1.v;
+    }
+
+    float updateMedian3(float v)
+    {
+      _state.median.v[0] = _state.median.v[1];
+      _state.median.v[1] = _state.median.v[2];
+      _state.median.v[2] = v;
+      float p[3];
+      QMF_COPY(p, _state.median.v, 3);
+      QMF_SORTF(p[0], p[1]); QMF_SORTF(p[1], p[2]); QMF_SORTF(p[0], p[1]);
+      return p[1];
     }
 
     void initBiquadNotch()
@@ -223,6 +263,7 @@ class Filter
     union {
       FilterStatePt1 pt1;
       FilterStateBiquad bq;
+      FilterStateMedian median;
     } _state;
 };
 

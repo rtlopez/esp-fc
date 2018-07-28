@@ -81,7 +81,7 @@ class Model
 
     bool calibrationActive() const
     {
-      return state.sensorCalibration || state.accelBiasSamples || state.gyroBiasSamples;
+      return state.sensorCalibration || state.accelBiasSamples > 0 || state.gyroBiasSamples > 0;
     }
 
     void calibrate()
@@ -97,7 +97,7 @@ class Model
 
     void finishCalibration()
     {
-      if(state.sensorCalibration && state.accelBiasSamples == 0 && state.gyroBiasSamples == 0)
+      if(state.sensorCalibration && state.accelBiasSamples == 0 && state.gyroBiasSamples <= 0)
       {
         state.sensorCalibration = false;
         save();
@@ -342,8 +342,10 @@ class Model
       state.telemetry = config.telemetry;
 
       // override temporary
-      //state.telemetry = true;
-      //state.telemetryTimer.setRate(200);
+      state.telemetry = true;
+      state.telemetryTimer.setRate(100);
+
+      state.baroAlititudeBiasSamples = 200;
     }
 
     void preSave()

@@ -218,6 +218,14 @@ struct ModelState
   bool magPresent;
   bool baroPresent;
 
+  float baroTemperatureRaw;
+  float baroTemperature;
+  float baroPressureRaw;
+  float baroPressure;
+  float baroAltitude;
+  float baroAltitudeBias;
+  int32_t baroAlititudeBiasSamples;
+  
   ArmingDisabledFlags armingDisabledFlags;
 
   IPAddress localIp;
