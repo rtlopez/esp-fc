@@ -246,7 +246,7 @@ class Model
       state.actuatorTimer.setRate(25); // 25 hz
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(10);
-      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
+      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 200));
       state.accelTimer.setInterval(state.accelTimer.interval - 20);
 
       // configure calibration
@@ -340,12 +340,11 @@ class Model
       //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_YAW | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
 
       state.telemetry = config.telemetry;
+      state.baroAlititudeBiasSamples = 200;
 
       // override temporary
-      state.telemetry = true;
-      state.telemetryTimer.setRate(100);
-
-      state.baroAlititudeBiasSamples = 200;
+      //state.telemetry = true;
+      //state.telemetryTimer.setRate(100);
     }
 
     void preSave()

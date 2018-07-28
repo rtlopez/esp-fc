@@ -8,7 +8,7 @@
 #include "Device/MagDevice.h"
 #include "Device/BaroDevice.h"
 
-#define EEPROM_VERSION_NUM 0x09
+#define EEPROM_VERSION_NUM 0x0A
 
 #define USE_SOFT_SERIAL
 
@@ -595,7 +595,6 @@ class ModelConfig
     int8_t accelBus;
     int8_t accelDev;
     int8_t accelFsr;
-    int8_t accelMode;
     int8_t accelAlign;
     FilterConfig accelFilter;
 
@@ -609,6 +608,7 @@ class ModelConfig
 
     int8_t baroBus;
     int8_t baroDev;
+    FilterConfig baroFilter;
 
     InputConfig input;
 
@@ -742,7 +742,6 @@ class ModelConfig
       accelBus = BUS_AUTO;
       accelDev = GYRO_AUTO;
       accelAlign = ALIGN_DEFAULT;
-      accelMode = ACCEL_DELAYED;
       accelFsr = ACCEL_FS_16;
 
       magBus = BUS_AUTO;
@@ -753,6 +752,9 @@ class ModelConfig
 
       baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
+
+      baroFilter.type = FILTER_BIQUAD;
+      baroFilter.freq = 25;
 
       loopSync = 1;
       mixerSync = 1;
@@ -818,10 +820,13 @@ class ModelConfig
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_UART_2].id = SERIAL_UART_2;
-      serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_NONE;
+      //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_MSP;
+      serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_2].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      //serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 #endif
 
 #if defined(ESP8266)
@@ -860,14 +865,14 @@ class ModelConfig
       mixerType = MIXER_QUADX;
       yawReverse = 0;
 
-      output.protocol = ESC_PROTOCOL_PWM;
-      //output.protocol = ESC_PROTOCOL_ONESHOT125;
+      //output.protocol = ESC_PROTOCOL_PWM;
+      output.protocol = ESC_PROTOCOL_ONESHOT125;
       //output.protocol = ESC_PROTOCOL_MULTISHOT;
       //output.protocol = ESC_PROTOCOL_BRUSHED;
       //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
-      output.async = true;
-      //output.async = false;
+      //output.async = true;
+      output.async = false;
       output.servoRate = 50;
 
       // input config

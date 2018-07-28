@@ -22,6 +22,7 @@ class Telemetry
       if(!_stream) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
       (*this)
+        //<< _model.state.baroAltitude
         << F("")
       ;
       println();

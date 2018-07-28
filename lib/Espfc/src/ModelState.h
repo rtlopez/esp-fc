@@ -215,9 +215,14 @@ struct ModelState
   int8_t gyroDev;
 
   bool accelPresent;
+  
   bool magPresent;
-  bool baroPresent;
+  int8_t magBus;
+  int8_t magDev;
 
+  bool baroPresent;
+  int8_t baroBus;
+  int8_t baroDev;
   float baroTemperatureRaw;
   float baroTemperature;
   float baroPressureRaw;
@@ -225,7 +230,7 @@ struct ModelState
   float baroAltitude;
   float baroAltitudeBias;
   int32_t baroAlititudeBiasSamples;
-  
+
   ArmingDisabledFlags armingDisabledFlags;
 
   IPAddress localIp;

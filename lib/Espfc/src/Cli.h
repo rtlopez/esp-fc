@@ -326,8 +326,8 @@ class Cli
     {
       const char ** busDevChoices            = Device::BusDevice::getNames();
       const char ** gyroDevChoices           = Device::GyroDevice::getNames();
+      const char ** baroDevChoices           = Device::BaroDevice::getNames();
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
-      static const char* accelModeChoices[]  = { PSTR("DELAYED"), PSTR("GYRO"), NULL };
       //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), NULL };
       //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75hz"), NULL };
       const char ** fusionModeChoices        = FusionConfig::getModeNames();
@@ -337,7 +337,7 @@ class Cli
                                                  PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"),
                                                  PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"),
                                                  PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
-      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("FIR"), PSTR("NOTCH"), PSTR("FIR2"), PSTR("NONE"), NULL };
+      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("FIR"), PSTR("NOTCH"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
                                                  PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
@@ -378,7 +378,6 @@ class Cli
 
         Param(PSTR("accel_bus"), &c.accelBus, busDevChoices),
         Param(PSTR("accel_dev"), &c.accelDev, gyroDevChoices),
-        Param(PSTR("accel_mode"), &c.accelMode, accelModeChoices),
         Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
         Param(PSTR("accel_lpf_type"), &c.accelFilter.type, filterTypeChoices),
         Param(PSTR("accel_lpf_freq"), &c.accelFilter.freq),
@@ -391,7 +390,7 @@ class Cli
         Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
         Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
         Param(PSTR("mag_align"), &c.magAlign, alignChoices),
-        Param(PSTR("mag_filter_type"), &c.magFilter.type),
+        Param(PSTR("mag_filter_type"), &c.magFilter.type, filterTypeChoices),
         Param(PSTR("mag_filter_lpf"), &c.magFilter.freq),
         Param(PSTR("mag_offset_x"), &c.magCalibrationOffset[0]),
         Param(PSTR("mag_offset_y"), &c.magCalibrationOffset[1]),
@@ -400,6 +399,11 @@ class Cli
         Param(PSTR("mag_scale_y"), &c.magCalibrationScale[1]),
         Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
         */
+
+        Param(PSTR("baro_bus"), &c.baroBus, busDevChoices),
+        Param(PSTR("baro_dev"), &c.baroDev, baroDevChoices),
+        Param(PSTR("baro_lpf_type"), &c.baroFilter.type, filterTypeChoices),
+        Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
 
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
         Param(PSTR("fusion_gain"), &c.fusion.gain),
@@ -1070,6 +1074,7 @@ class Cli
       {
         const char ** busNames = Device::BusDevice::getNames();
         const char ** gyroNames = Device::GyroDevice::getNames();
+        const char ** baroNames = Device::BaroDevice::getNames();
 
         printVersion();
         println();
@@ -1081,6 +1086,10 @@ class Cli
         println(FPSTR(busNames[_model.state.gyroBus]));
         print(F(" gyro type: "));
         println(FPSTR(gyroNames[_model.state.gyroDev]));
+        print(F(" baro bus: "));
+        println(FPSTR(busNames[_model.state.baroBus]));
+        print(F(" baro type: "));
+        println(FPSTR(baroNames[_model.state.baroDev]));
       }
       else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
       {

@@ -14,7 +14,8 @@ class Fusion
     {
       _model.state.gyroPoseQ = Quaternion();
       _madgwick.begin(_model.state.gyroTimer.rate);
-      _madgwick.setBeta(_model.config.fusion.gain * 0.05f);
+      float rate = (float)_model.state.gyroTimer.rate / _model.state.accelTimer.rate;
+      _madgwick.setBeta(_model.config.fusion.gain * 0.05f * rate);
       _model.logger.info().log(F("FUSION")).log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))).logln(_model.config.fusion.gain);
       return 1;
     }
@@ -27,21 +28,15 @@ class Fusion
 
     int update()
     {
-      _model.state.stats.start(COUNTER_IMU_FUSION);
+      Stats::Measure measure(_model.state.stats, COUNTER_IMU_FUSION);
+
       _model.state.rate = _model.state.gyro;
       if(_model.accelActive())
       {
         switch(_model.config.fusion.mode)
         {
           case FUSION_MADGWICK:
-            if(_model.config.accelMode == ACCEL_DELAYED)
-            {
-              madgwickFusion1();
-            }
-            else
-            {
-              madgwickFusion();
-            }
+            madgwickFusion1();
             break;
           case FUSION_LERP:
             lerpFusion();
@@ -77,18 +72,16 @@ class Fusion
          _model.state.debug[1] = lrintf(degrees(_model.state.angle[1]) * 10);
          _model.state.debug[2] = lrintf(degrees(_model.state.angle[2]) * 10);
        }
-       _model.state.stats.end(COUNTER_IMU_FUSION);
        return 1;
     }
 
     void updateDelayed()
     {
-      _model.state.stats.start(COUNTER_IMU_FUSION2);
+      Stats::Measure measure(_model.state.stats, COUNTER_IMU_FUSION2);
       if(_model.config.fusion.mode == FUSION_MADGWICK)
       {
         madgwickFusion2();
       }
-      _model.state.stats.end(COUNTER_IMU_FUSION2);
     }
 
     void experimentalFusion()

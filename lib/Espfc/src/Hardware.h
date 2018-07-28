@@ -91,6 +91,9 @@ class Hardware
     {
       if(_model.config.gyroDev == GYRO_NONE) return;
 
+      _model.state.gyroDev = GYRO_NONE;
+      _model.state.gyroBus = BUS_NONE;
+
 #if defined(ESP32)
       detectGyroDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_0_CS0]);
 #endif
@@ -152,17 +155,31 @@ class Hardware
 
     void detectMag()
     {
+      _model.state.magDev = MAG_NONE;
+      _model.state.magBus = BUS_NONE;
       if(_model.config.magDev == MAG_NONE) return;
       int status = detectDevice(hmc5883l, i2cBus);
+      if(status)
+      {
+        _model.state.magDev = MAG_HMC5883;
+        _model.state.magBus = BUS_I2C;
+      }
       _model.state.magPresent = status;
     }
 
     void detectBaro()
     {
+      _model.state.baroDev = BARO_NONE;
+      _model.state.baroBus = BUS_NONE;
       if(_model.config.baroDev == BARO_NONE) return;
       int status = detectDevice(bmp085, i2cBus);
+      if(status)
+      {
+        _model.state.baroDev = BARO_BMP085;
+        _model.state.baroBus = BUS_I2C;
+      }
       _model.state.baroPresent = status;
-s    }
+    }
 
     void initSerial()
     {
@@ -280,11 +297,13 @@ s    }
 
     static Device::MagDevice * getMagDevice(const Model& model)
     {
+      if(model.config.magDev == BARO_NONE) return nullptr;
       return &hmc5883l;
     }
 
     static Device::BaroDevice * getBaroDevice(const Model& model)
     {
+      if(model.config.baroDev == BARO_NONE) return nullptr;
       return &bmp085;
     }
 

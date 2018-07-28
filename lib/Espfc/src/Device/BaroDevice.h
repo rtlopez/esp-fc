@@ -32,7 +32,7 @@ class BaroDevice
     virtual DeviceType getType() const = 0;
 
     virtual float readTemperature() = 0;
-    virtual float readPreassure() = 0;
+    virtual float readPressure() = 0;
     virtual int getDelay() const = 0;
     virtual void setMode(BaroDeviceMode mode) = 0;
 

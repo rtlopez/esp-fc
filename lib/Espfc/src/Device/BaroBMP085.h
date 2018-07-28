@@ -78,11 +78,12 @@ class BaroBMP085: public BaroDevice
 
       int32_t x1 = ((ut - (int32_t)_cal.ac6) * (int32_t)_cal.ac5) >> 15;
       int32_t x2 = ((int32_t)_cal.mc << 11) / (x1 + _cal.md);
-      _t_fine = x1 + x2;
+      //_t_fine = x1 + x2;
+      _t_fine = (_t_fine + x1 + x2 + 1) >> 1; // avg of last two samples
       return (float)((_t_fine + 8) >> 4) / 10.0f;
     }
 
-    virtual float readPreassure() override
+    virtual float readPressure() override
     {
       uint8_t buffer[3];
       _bus->read(_addr, BMP085_MEASUREMENT_REG, 3, buffer);
@@ -124,12 +125,13 @@ class BaroBMP085: public BaroDevice
 
     virtual int getDelay() const override
     {
-      if(_mode == BMP085_MEASURE_T) return 4500;        // temp
-      else if(_mode == BMP085_MEASURE_P0) return 4500;  // press_0
-      else if(_mode == BMP085_MEASURE_P1) return 7500;  // press_1
-      else if(_mode == BMP085_MEASURE_P2) return 13500; // press_2
-      else if(_mode == BMP085_MEASURE_P3) return 25500; // press_3
-      return 0; // invalid mode
+      const int comp = 50;
+      if(_mode == BMP085_MEASURE_T) return 4500 + comp;        // temp
+      else if(_mode == BMP085_MEASURE_P0) return 4500 + comp;  // press_0
+      else if(_mode == BMP085_MEASURE_P1) return 7500 + comp;  // press_1
+      else if(_mode == BMP085_MEASURE_P2) return 13500 + comp; // press_2
+      else if(_mode == BMP085_MEASURE_P3) return 25500 + comp; // press_3
+      else return 4500 + 50; // invalid mode
     }
 
     bool testConnection() override

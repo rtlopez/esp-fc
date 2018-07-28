@@ -13,6 +13,7 @@ enum StatCounter {
   COUNTER_ACCEL_FILTER,
   COUNTER_MAG_READ,
   COUNTER_MAG_FILTER,
+  COUNTER_BARO,
   COUNTER_IMU_FUSION,
   COUNTER_IMU_FUSION2,
   COUNTER_INPUT_READ,
@@ -110,6 +111,7 @@ class Stats
         case COUNTER_ACCEL_FILTER: return PSTR("  acc_f");
         case COUNTER_MAG_READ:     return PSTR("  mag_r");
         case COUNTER_MAG_FILTER:   return PSTR("  mag_f");
+        case COUNTER_BARO:         return PSTR(" baro_p");
         case COUNTER_IMU_FUSION:   return PSTR("  imu_p");
         case COUNTER_IMU_FUSION2:  return PSTR("  imu_c");
         case COUNTER_INPUT_READ:   return PSTR("   rx_r");
