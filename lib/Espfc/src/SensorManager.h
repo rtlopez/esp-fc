@@ -10,13 +10,14 @@
 #include "Sensor/AccelSensor.h"
 #include "Sensor/MagSensor.h"
 #include "Sensor/BaroSensor.h"
+#include "Sensor/VoltageSensor.h"
 
 namespace Espfc {
 
 class SensorManager
 {
   public:
-    SensorManager(Model& model): _model(model), _gyro(model), _accel(model), _mag(model), _baro(model), _fusion(model) {}
+    SensorManager(Model& model): _model(model), _gyro(model), _accel(model), _mag(model), _baro(model), _voltage(model), _fusion(model) {}
 
     int begin()
     {
@@ -24,18 +25,16 @@ class SensorManager
       _accel.begin();
       _mag.begin();
       _baro.begin();
+      _voltage.begin();
       _fusion.begin();
-
-      _model.state.accelRaw.z = 1.f;
-      _model.state.battery.timer.setRate(20);
-      _model.state.battery.samples = 40;
       
       return 1;
     }
 
+    // main task
     int update()
     {
-      int ret = _gyro.update();
+      int status = _gyro.update();
 
       if(_model.state.gyroBiasSamples == 0)
       {
@@ -43,71 +42,40 @@ class SensorManager
         _fusion.restoreGain();
       }
 
-      if(!ret) return 0;
-
-      _fusion.update();
-
-      return 1;
-    }
-
-    int updateDelayed()
-    {
-      int accelUpdated = _accel.update();
-      int magUpdated = false;
-      int baroUpdated = false;
-
-      if(!accelUpdated)
+      if(status)
       {
-        magUpdated = _mag.update();
+        _fusion.update();
       }
 
-      if(magUpdated || accelUpdated)
+      return status;
+    }
+
+    // sub task
+    int updateDelayed()
+    {
+      int status = _accel.update();
+      if(!status)
+      {
+        status = _mag.update();
+      }
+
+      if(status)
       {
         _fusion.updateDelayed();
       }
 
-      if(!magUpdated && !accelUpdated)
+      if(!status)
       {
-        baroUpdated = _baro.update();
+        status = _baro.update();
       }
 
-      if(!magUpdated && !accelUpdated && !baroUpdated)
+      if(!status)
       {
-        if(_model.state.battery.timer.check())
-        {
-          updateBattery();
-        }
+        _voltage.update();
       }
 
       _model.finishCalibration();
-      return 1;
-    }
-
-  private: 
-    void updateBattery()
-    {
-      return;
-      // wemos d1 mini has divider 3.2:1 (220k:100k)
-      // additionaly I've used divider 5.7:1 (4k7:1k)
-      // total should equals ~18.24:1, 73:4 resDiv:resMult should be ideal,
-      // but ~52:1 is real, did I miss something?
-      const float alpha = 0.33f;
-      float val = _model.state.battery.rawVoltage = analogRead(A0);
-      val *= (int)_model.config.vbatScale;
-      val /= 10.f;
-      val *= _model.config.vbatResMult;
-      val /= _model.config.vbatResDiv;
-      val = Math::bound(val, 0.f, 255.f);
-      val = (val * alpha + _model.state.battery.voltage * (1.f - alpha)); // smooth
-      _model.state.battery.voltage = (uint8_t)lrintf(val);
-
-      // cell count detection
-      if(_model.state.battery.samples > 0)
-      {
-        _model.state.battery.cells = ((int)_model.state.battery.voltage + 40) / 42;  // round
-        _model.state.battery.samples--;
-      }
-      _model.state.battery.cellVoltage = _model.state.battery.voltage / std::max((int)_model.state.battery.cells, 1);
+      return status;
     }
 
     Model& _model;
@@ -115,6 +83,7 @@ class SensorManager
     Sensor::AccelSensor _accel;
     Sensor::MagSensor _mag;
     Sensor::BaroSensor _baro;
+    Sensor::VoltageSensor _voltage;
     Fusion _fusion;
 };
 

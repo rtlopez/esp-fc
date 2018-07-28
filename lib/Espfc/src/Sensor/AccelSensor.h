@@ -15,6 +15,8 @@ class AccelSensor: public BaseSensor
 
     int begin()
     {
+      _model.state.accel.z = 1.f;
+
       _gyro = Hardware::getGyroDevice(_model);
       if(!_gyro) return 0;
 
