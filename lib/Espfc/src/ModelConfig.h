@@ -701,25 +701,21 @@ class ModelConfig
 
 #if defined(ESP32)
       pin[PIN_INPUT_RX] = 35;
-      pin[PIN_OUTPUT_0] = 32;
-      pin[PIN_OUTPUT_1] = 33;
+      pin[PIN_OUTPUT_0] = 0;
+      pin[PIN_OUTPUT_1] = 2;
       pin[PIN_OUTPUT_2] = 25;
       pin[PIN_OUTPUT_3] = 26;
       pin[PIN_OUTPUT_4] = 27;
-      pin[PIN_OUTPUT_5] = 14;
-      pin[PIN_OUTPUT_6] = 12;
-      pin[PIN_OUTPUT_7] = 13;
-      pin[PIN_BUZZER] = 15;
+      pin[PIN_OUTPUT_5] = 12;
+      pin[PIN_OUTPUT_6] = 13;
+      pin[PIN_OUTPUT_7] = 14;
+      pin[PIN_BUZZER] = 4;
       pin[PIN_SERIAL_0_TX] = 1;
       pin[PIN_SERIAL_0_RX] = 3;
-      //pin[PIN_SERIAL_0_TX] = 17;
-      //pin[PIN_SERIAL_0_RX] = 16;
-      pin[PIN_SERIAL_1_TX] = 2;
-      pin[PIN_SERIAL_1_RX] = 4;
+      pin[PIN_SERIAL_1_TX] = 33;
+      pin[PIN_SERIAL_1_RX] = 32;
       pin[PIN_SERIAL_2_TX] = 17;
       pin[PIN_SERIAL_2_RX] = 16;
-      //pin[PIN_SERIAL_2_TX] = 1;
-      //pin[PIN_SERIAL_2_RX] = 3;
       pin[PIN_I2C_0_SCL] = 22;
       pin[PIN_I2C_0_SDA] = 21;
       pin[PIN_INPUT_ADC_0] = 36;
