@@ -7,9 +7,10 @@
 
 extern "C" {
 #include "blackbox/blackbox.h"
+}
 
-static Espfc::SerialDevice * blackboxSerial = NULL;
-static Espfc::Model * _model_ptr = NULL;
+static Espfc::SerialDevice * blackboxSerial = nullptr;
+static Espfc::Model * _model_ptr = nullptr;
 
 void serialWrite(serialPort_t *instance, uint8_t ch)
 {
@@ -66,7 +67,6 @@ bool sensors(uint32_t mask)
   return enabledSensors & mask;
 }
 
-}
 
 namespace Espfc {
 
@@ -81,10 +81,10 @@ class Blackbox
 
       if(!_model.blackboxEnabled()) return 0;
 
-      _serial = Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_BLACKBOX);
-      if(!_serial) return 0;
+      SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+      if(!serial) return 0;
 
-      serialWriteInit(_serial);
+      serialWriteInit(serial);
 
       systemConfigMutable()->activeRateProfile = 0;
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
@@ -179,13 +179,12 @@ class Blackbox
 
     int update()
     {
-      if(!_serial) return 0;
-      _model.state.stats.start(COUNTER_BLACKBOX);
+      if(!blackboxSerial) return 0;
+      Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
       updateArmed();
       updateMode();
       updateData();
       blackboxUpdate(_model.state.loopTimer.last);
-      _model.state.stats.end(COUNTER_BLACKBOX);
       return 1;
     }
 
@@ -250,7 +249,6 @@ class Blackbox
 
     Model& _model;
     pidProfile_s _pidProfile;
-    SerialDevice * _serial;
 };
 
 }

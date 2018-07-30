@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "Model.h"
 #include "EspSoftSerial.h"
-#include "SerialDevice.h"
+#include "SerialDeviceAdapter.h"
 #include "InputDevice.h"
 #include "InputPPM.h"
 #include "InputSBUS.h"
@@ -19,6 +19,12 @@
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
 
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#elif defined(ESP32)
+#include <WiFi.h>
+#endif
+
 namespace {
 #if defined(ESP32)
   static HardwareSerial Serial1(1);
@@ -27,6 +33,7 @@ namespace {
   static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
   static Espfc::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
 #endif
+
 #if defined(ESP8266)
   static Espfc::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
   static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
@@ -34,6 +41,7 @@ namespace {
   static EspSoftSerial softSerial;
   static Espfc::SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
 #endif
+
 #endif
   static Espfc::InputPPM ppm;
   static Espfc::InputSBUS sbus;
@@ -58,6 +66,7 @@ class Hardware
     int begin()
     {
       initSerial();
+      initWifi();
       initBus();
       detectGyro();
       detectMag();
@@ -70,6 +79,28 @@ class Hardware
     {
       _model.state.i2cErrorCount++;
       _model.state.i2cErrorDelta++;
+    }
+
+    void initWifi()
+    {
+#if defined(ESP32)
+      int status = -1;
+      if(_model.config.wireless.mode != WIRELESS_MODE_NULL)
+      {
+        WiFi.mode((WiFiMode_t)_model.config.wireless.mode);
+        status = WiFi.begin(_model.config.wireless.ssid, _model.config.wireless.pass);
+      }
+      else
+      {
+        WiFi.disconnect();
+      }
+      const char * modeName = WirelessConfig::getModeName((WirelessMode)_model.config.wireless.mode);
+      _model.logger.info().log(F("WIFI")).log(FPSTR(modeName)).log(_model.config.wireless.ssid).log(_model.config.wireless.pass).logln(status);
+#elif defined(ESP8266)
+      WiFi.disconnect();
+      WiFi.mode(WIFI_OFF);
+      _model.logger.info().logln(F("WIFI OFF"));
+#endif
     }
 
     void initBus()
@@ -185,71 +216,55 @@ class Hardware
     {
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
-        SerialDevice * serial = getSerialPortById((SerialPort)i);
+        SerialDevice * port = getSerialPortById((SerialPort)i);
+        if(!port) continue;
 
-        if(!serial) continue;
-        if(!_model.isActive(FEATURE_SOFTSERIAL) && _model.config.serial[i].id >= 30) continue;
+        const SerialPortConfig& spc = _model.config.serial[i];
+        SerialDeviceConfig sdc;
 
-        bool bbx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_BLACKBOX;
-        bool msp = _model.config.serial[i].functionMask & SERIAL_FUNCTION_MSP;
-        bool deb = _model.config.serial[i].functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY;
-        bool srx = _model.config.serial[i].functionMask & SERIAL_FUNCTION_RX_SERIAL;
+#if defined(ESP32)
+        sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
+        sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
+#endif
 
-        SerialDeviceConfig sc;
+        sdc.baud = fromIndex((SerialSpeedIndex)spc.baudIndex, SERIAL_SPEED_115200);
 
-    #if defined(ESP32)
-        sc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
-        sc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
-    #endif
-
-        serial->flush();
-
-        if(srx)
+        if(spc.functionMask & SERIAL_FUNCTION_RX_SERIAL)
         {
-          sc.baud = 100000; // sbus
-          sc.stop_bits = SERIAL_STOP_BITS_2;
-          sc.parity = SERIAL_PARITY_EVEN;
-          sc.inverted = true;
-          #if defined(ESP8266)
-          sc.rx_pin = _model.config.pin[PIN_INPUT_RX];
-          #endif
-          serial->begin(sc);
-          _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("sbus"));
+          switch(_model.config.input.serialRxProvider)
+          {
+            case SERIALRX_SBUS:
+              sdc.baud = 100000;
+              sdc.parity = SERIAL_PARITY_EVEN;
+              sdc.stop_bits = SERIAL_STOP_BITS_2;
+              sdc.inverted = true;
+              break;
+            default:
+              break;
+          }
         }
-        else if(bbx && msp)
-        {
-          int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
-          sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_115200);
-          serial->begin(sc);
-          _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).log(F("msp")).logln(F("blackbox"));
-        }
-        else if(bbx)
-        {
-          int idx = _model.config.serial[i].blackboxBaudIndex == SERIAL_SPEED_INDEX_AUTO ? _model.config.serial[i].baudIndex : _model.config.serial[i].blackboxBaudIndex;
-          sc.baud = fromIndex((SerialSpeedIndex)idx, SERIAL_SPEED_250000);
-          serial->begin(sc);
-          _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(sc.inverted).logln(F("blackbox"));
-        }
-        else if(msp || deb)
-        {
-          sc.baud = fromIndex((SerialSpeedIndex)_model.config.serial[i].baudIndex, SERIAL_SPEED_115200);
-          serial->begin(sc);
-          _model.logger.info().log(F("UART")).log(i).log(sc.baud).log(msp ? F("msp") : F("")).logln(deb ? F("debug") : F(""));
-        }
-        else
-        {
-          _model.logger.info().log(F("UART")).log(i).logln(F("free"));
-        }
-      }
+
+        _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
+        port->flush();
+        delay(10);
+        port->begin(sdc);
+        _model.state.serial[i].stream = port;
+      }       
     }
 
-    static SerialDevice * getSerialPort(SerialPortConfig * config, SerialFunction sf)
+    static SerialDevice * getSerialPortById(SerialPort portId)
     {
-      for (int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
+      switch(portId)
       {
-        if(config[i].functionMask & sf) return getSerialPortById((SerialPort)i);
+        case SERIAL_UART_0: return &uart0;
+        case SERIAL_UART_1: return &uart1;
+#if defined(ESP32)
+        case SERIAL_UART_2: return &uart2;
+#elif defined(ESP8266) && defined(USE_SOFT_SERIAL)
+        case SERIAL_SOFT_0: return &soft0;
+#endif
+        default: return nullptr;
       }
-      return NULL;
     }
 
     SerialSpeed fromIndex(SerialSpeedIndex index, SerialSpeed defaultSpeed)
@@ -275,21 +290,6 @@ class Hardware
       return 1;
     }
 
-    static SerialDevice * getSerialPortById(SerialPort portId)
-    {
-      switch(portId)
-      {
-        case SERIAL_UART_0: return &uart0;
-        case SERIAL_UART_1: return &uart1;
-#if defined(ESP32)
-        case SERIAL_UART_2: return &uart2;
-#elif defined(ESP8266) && defined(USE_SOFT_SERIAL)
-        case SERIAL_SOFT_0: return &soft0;
-#endif
-        default: return NULL;
-      }
-    }
-
     static Device::GyroDevice * getGyroDevice(const Model& model)
     {
       return detectedGyro;
@@ -309,20 +309,20 @@ class Hardware
 
     static InputDevice * getInputDevice(Model& model)
     {
-      SerialDevice * serial = getSerialPort(model.config.serial, SERIAL_FUNCTION_RX_SERIAL);
-      if(serial)
+      SerialDevice * serial = model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
+      if(serial && model.isActive(FEATURE_RX_SERIAL) && model.config.input.serialRxProvider == SERIALRX_SBUS)
       {
         sbus.begin(serial);
-        model.logger.info().log(F("SBUS RX")).logln(model.config.pin[PIN_INPUT_RX]);
+        model.logger.info().logln(F("RX SBUS"));
         return &sbus;
       }
       else if(model.isActive(FEATURE_RX_PPM) && model.config.pin[PIN_INPUT_RX] != -1)
       {
         ppm.begin(model.config.pin[PIN_INPUT_RX], model.config.input.ppmMode);
-        model.logger.info().log(F("PPM RX")).log(model.config.pin[PIN_INPUT_RX]).logln(model.config.input.ppmMode);
+        model.logger.info().log(F("RX PPM")).log(model.config.pin[PIN_INPUT_RX]).logln(model.config.input.ppmMode);
         return &ppm;
       }
-      return NULL;
+      return nullptr;
     }
 
     void initEscDrivers()

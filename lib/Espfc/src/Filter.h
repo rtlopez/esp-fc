@@ -2,8 +2,6 @@
 #define _ESPFC_FILTER_H_
 
 #include <Arduino.h>
-//#include "math.h"
-//#include <algorithm>
 #include "ModelConfig.h"
 
 // Quick median filter implementation
@@ -169,7 +167,7 @@ class Filter
 
     void initBiquad(BiquadFilterType filterType, float q)
     {
-      const float omega = 2.0f * M_PI * _freq / _rate;
+      const float omega = 2.0f * PI * _freq / _rate;
       const float sn = sinf(omega);
       const float cs = cosf(omega);
       const float alpha = sn / (2.0f * q);

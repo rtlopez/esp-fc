@@ -6,14 +6,13 @@
 #include "Input.h"
 #include "Actuator.h"
 #include "SensorManager.h"
+#include "SerialManager.h"
 #include "Fusion.h"
 #include "Mixer.h"
 #include "Blackbox.h"
-#include "Telemetry.h"
 #include "Cli.h"
 #include "Hardware.h"
 #include "Buzzer.h"
-#include "Wireless.h"
 
 namespace Espfc {
 
@@ -21,14 +20,13 @@ class Espfc
 {
   public:
     Espfc():
-      _model(), _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
-      _mixer(_model), _blackbox(_model), _telemetry(_model), _cli(_model), _buzzer(_model), _wireless(_model, _cli)
+      _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
+      _mixer(_model), _blackbox(_model), _telemetry(_model), _buzzer(_model), _serial(_model)
       {}
 
     int begin()
     {
       _model.begin();
-      _wireless.begin(); // must be initialized before esc
       _hardware.begin();
       _model.update();
       _buzzer.begin();
@@ -38,8 +36,6 @@ class Espfc
       _controller.begin();
       _mixer.begin();
       _blackbox.begin();
-      _telemetry.begin();
-      _cli.begin();
       _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
 
       return 1;
@@ -85,27 +81,20 @@ class Espfc
         _blackbox.update();
       }
 
+      _buzzer.update();
+
       return 1;
     }
 
     int updateOther()
     {
-      //return 0;
-      _buzzer.update();
-
-      _model.state.telemetryUpdate = _model.state.telemetry && _model.state.telemetryTimer.check();
-      if(_model.state.telemetryUpdate)
-      {
-        _telemetry.update();
-      }
-
-      _cli.update();
-      _wireless.update();
+      _serial.update();
 
       if(_model.state.stats.timer.check())
       {
         _model.state.stats.calculate();
       }
+
       return 1;
     }
 
@@ -119,9 +108,8 @@ class Espfc
     Mixer _mixer;
     Blackbox _blackbox;
     Telemetry _telemetry;
-    Cli _cli;
     Buzzer _buzzer;
-    Wireless _wireless;
+    SerialManager _serial;
 };
 
 }

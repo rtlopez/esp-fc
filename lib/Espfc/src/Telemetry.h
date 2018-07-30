@@ -11,76 +11,62 @@ class Telemetry
   public:
     Telemetry(Model& model): _model(model) {}
 
-    int begin()
+    int process(Stream& s) const
     {
-      _stream = (Stream*)Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_TELEMETRY_FRSKY);
-      return 1;
-    }
-
-    int update()
-    {
-      if(!_stream) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
-      (*this)
-        //<< _model.state.baroAltitude
-        << F("")
-      ;
-      println();
+      print(s, _model.state.gyro.x, 3);
+      println(s);
       return 1;
     }
 
   private:
     template<typename T>
-    Telemetry& operator<<(T v)
+    void print(Stream& s, const T& v) const
     {
-      if(!_stream) return *this;
-      (*_stream).print(v);
-      (*_stream).print(' ');
-      return *this;
+      s.print(v);
+      s.print(' ');
     }
 
-    Telemetry& operator<<(long v)
+    void print(Stream& s, const long& v) const
     {
-      if(!_stream) return *this;
-      (*_stream).print(v);
-      (*_stream).print(' ');
-      return *this;
+      s.print(v);
+      s.print(' ');
     }
 
-    Telemetry& operator<<(float v)
+    void print(Stream& s, float& v, int len) const
     {
-      if(!_stream) return *this;
-      (*_stream).print(v, 4);
-      (*_stream).print(' ');
-      return *this;
+      s.print(v, len);
+      s.print(' ');
     }
 
-    Telemetry& operator<<(const VectorFloat& v)
+    void print(Stream& s, const VectorFloat& v) const
     {
-      (*this) << v.x << v.y << v.z;
-      return *this;
+      print(s, v.x);
+      print(s, v.y);
+      print(s, v.z);
     }
 
-    Telemetry& operator<<(const VectorInt16& v)
+    void print(Stream& s, const VectorInt16& v) const
     {
-      (*this) << v.x << v.y << v.z;
-      return *this;
+      print(s, v.x);
+      print(s, v.y);
+      print(s, v.z);
     }
 
-    Telemetry& operator<<(const Quaternion& q)
+    void print(Stream& s, const Quaternion& v) const
     {
-      (*this) << q.w << q.x << q.y << q.z;
-      return *this;
+      print(s, v.w);
+      print(s, v.x);
+      print(s, v.y);
+      print(s, v.z);
     }
 
-    void println()
+    void println(Stream& s) const
     {
-      if(!_stream) return;
-      (*_stream).println();
+      s.println();
     }
 
     Model& _model;
-    Stream * _stream;
 };
 
 }

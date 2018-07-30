@@ -2,7 +2,6 @@
 #define _ESPFC_PID_H_
 
 #include "ModelConfig.h"
-#include "Math.h"
 #include "Filter.h"
 
 // bataflight scalers
@@ -46,10 +45,10 @@ class Pid
       pTerm = Kp * error * pScale;
       pTerm = ptermFilter.update(pTerm);
 
-      if(iScale > 0.01)
+      if(abs(iScale) > 0.01)
       {
         iTerm += Ki * error * dt * iScale;
-        iTerm = Math::bound(iTerm, -iLimit, iLimit);
+        iTerm = constrain(iTerm, -iLimit, iLimit);
       }
       else
       {
@@ -64,7 +63,7 @@ class Pid
       dTerm = dtermFilter.update(dTerm);
       dTerm = dtermFilter2.update(dTerm);
 
-      float output = Math::bound(pTerm + iTerm + dTerm, -oLimit, oLimit);
+      float output = constrain(pTerm + iTerm + dTerm, -oLimit, oLimit);
 
       prevMeasure = measure;
       prevError = error;

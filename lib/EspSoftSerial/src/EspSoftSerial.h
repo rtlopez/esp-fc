@@ -22,7 +22,7 @@ class EspSoftSerialConfig
     int8_t data_bits;
 };
 
-class EspSoftSerial
+class EspSoftSerial: public Stream
 {
   public:
     enum State
@@ -39,27 +39,27 @@ class EspSoftSerial
 
     int begin(const EspSoftSerialConfig& conf);
 
-    int available()
+    int available() override
     {
       return _rx_buff.count();
     }
 
-    int read()
+    int read() override
     {
       return _rx_buff.get();
     }
 
-    int peek()
+    int peek() override
     {
       return _rx_buff.peek();
     }
 
-    virtual size_t write(uint8_t c)
+    virtual size_t write(uint8_t c) override
     {
       return 0;
     }
 
-    void flush()
+    void flush() override
     {
 
     }

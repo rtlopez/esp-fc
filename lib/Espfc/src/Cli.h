@@ -1,20 +1,19 @@
 #ifndef _ESPFC_CLI_H_
 #define _ESPFC_CLI_H_
 
-#include <cstring>
-#include <cctype>
+#include <Arduino.h>
+#include <algorithm>
+
+#include "Model.h"
+#include "Hardware.h"
+#include "Logger.h"
+#include "Device/GyroDevice.h"
 
 #if defined(ESP8266)
 extern "C" {
 #include "user_interface.h"
 }
 #endif //ESP8266
-
-#include "Model.h"
-#include "Msp.h"
-#include "Hardware.h"
-#include "Logger.h"
-#include "Device/GyroDevice.h"
 
 #if defined(ESP32)
 #include <freertos/task.h>
@@ -26,14 +25,6 @@ namespace Espfc {
 class Cli
 {
   public:
-    class Cmd
-    {
-      public:
-        Cmd() { for(size_t i = 0; i < ARGS_SIZE; ++i) args[i] = NULL; }
-        static const size_t ARGS_SIZE = 12;
-        const char * args[ARGS_SIZE];
-    };
-
     enum ParamType {
       PARAM_NONE,   // unused
       PARAM_BOOL,   // boolean
@@ -317,7 +308,7 @@ class Cli
         const char ** choices;
     };
 
-    Cli(Model& model): _model(model), _index(0), _msp(model), _ignore(false), _active(false)
+    Cli(Model& model): _model(model), _ignore(false), _active(false)
     {
       _params = initialize(_model.config);
     }
@@ -638,52 +629,26 @@ class Cli
       return params;
     }
 
-    int begin()
-    {
-      _stream_main = (Stream*)Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_MSP);
-      return 1;
-    }
-
-    int update()
-    {
-      if(!_stream_main) return 0;
-      return update(_stream_main);
-    }
-
-    int update(Stream * s)
-    {
-      while(s->available() > 0)
-      {
-        _stream = s; // UGLY, I know
-        char c = s->read();
-        bool consumed = _msp.process(c, *s);
-        if(!consumed)
-        {
-          process(c);
-        }
-      }
-      return 1;
-    }
-
-    bool process(const char c)
+    bool process(const char c, CliCmd& cmd, Stream& stream)
     {
       // configurator handshake
       if(!_active && c == '#')
       {
         //FIXME: detect disconnection
         _active = true;
-        printVersion();
-        println(F(", CLI mode, type help"));
+        printVersion(stream);
+        stream.println(F(", CLI mode, type help"));
         return true;
       }
 
       bool endl = c == '\n' || c == '\r';
-      if(_index && endl)
+      if(cmd.index && endl)
       {
-        parse();
-        execute();
-        _index = 0;
-        _buff[_index] = '\0';
+        parse(cmd);
+        execute(cmd, stream);
+        //cmd.index = 0;
+        //cmd.buff[cmd.index] = '\0';
+        cmd = CliCmd();
         return true;
       }
 
@@ -691,47 +656,46 @@ class Cli
       else if(endl) _ignore = false;
 
       // don't put characters into buffer in specific conditions
-      if(_ignore || endl || _index >= BUFF_SIZE - 1) return false;
+      if(_ignore || endl || cmd.index >= CLI_BUFF_SIZE - 1) return false;
 
       if(c == '\b') // handle backspace
       {
-        _buff[--_index] = '\0';
+        cmd.buff[--cmd.index] = '\0';
       }
       else
       {
-        _buff[_index] = c;
-        _buff[++_index] = '\0';
+        cmd.buff[cmd.index] = c;
+        cmd.buff[++cmd.index] = '\0';
       }
       return false;
     }
 
-    void parse()
+    void parse(CliCmd& cmd)
     {
-      _cmd = Cmd();
       const char * DELIM = " \t";
-      char * pch = std::strtok(_buff, DELIM);
+      char * pch = strtok(cmd.buff, DELIM);
       size_t count = 0;
       while(pch)
       {
-        _cmd.args[count++] = pch;
-        pch = std::strtok(NULL, DELIM);
+        cmd.args[count++] = pch;
+        pch = strtok(NULL, DELIM);
       }
     }
 
-    void execute()
+    void execute(CliCmd& cmd, Stream& s)
     {
-      if(_cmd.args[0]) print(F("# "));
-      for(size_t i = 0; i < Cmd::ARGS_SIZE; ++i)
+      if(cmd.args[0]) s.print(F("# "));
+      for(size_t i = 0; i < CLI_ARGS_SIZE; ++i)
       {
-        if(!_cmd.args[i]) break;
-        print(_cmd.args[i]);
-        print(' ');
+        if(!cmd.args[i]) break;
+        s.print(cmd.args[i]);
+        s.print(' ');
       }
-      println();
+      s.println();
 
-      if(!_cmd.args[0]) return;
+      if(!cmd.args[0]) return;
 
-      if(strcmp_P(_cmd.args[0], PSTR("help")) == 0)
+      if(strcmp_P(cmd.args[0], PSTR("help")) == 0)
       {
         static const char * helps[] = {
           PSTR("available commands:"),
@@ -742,209 +706,216 @@ class Cli
           //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
           NULL
         };
-        for(const char ** ptr = helps; *ptr; ptr++) {
-          println(FPSTR(*ptr));
+        for(const char ** ptr = helps; *ptr; ptr++)
+        {
+          s.println(FPSTR(*ptr));
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("version")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("version")) == 0)
       {
-        printVersion();
-        println();
+        printVersion(s);
+        s.println();
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("wifi")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("wifi")) == 0)
       {
-        print(F("tcp://"));
-        print(_model.state.localIp);
-        print(F(":"));
-        println(_model.config.wireless.port);
+        s.print(F("IPv4  : tcp://"));
+        s.print(WiFi.localIP());
+        s.print(F(":"));
+        s.println(_model.config.wireless.port);
+        s.print(F("IPv6  : tcp://"));
+        s.print(WiFi.localIPv6());
+        s.print(F(":"));
+        s.println(_model.config.wireless.port);
+        s.print(F("STATUS: "));
+        s.println(WiFi.status());
       }
       #if defined(ESP32)
-      else if(strcmp_P(_cmd.args[0], PSTR("tasks")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("tasks")) == 0)
       {
-        printVersion();
-        println();
+        printVersion(s);
+        s.println();
 
         size_t numTasks = uxTaskGetNumberOfTasks();
 
-        print(F("num tasks: "));
-        print(numTasks);
-        println();
+        s.print(F("num tasks: "));
+        s.print(numTasks);
+        s.println();
       }
       #endif
-      else if(strcmp_P(_cmd.args[0], PSTR("devinfo")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("devinfo")) == 0)
       {
-        printVersion();
-        println();
-        print(F("  bool: ")); println(sizeof(bool));
-        print(F("  char: ")); println(sizeof(char));
-        print(F(" short: ")); println(sizeof(short));
-        print(F("   int: ")); println(sizeof(int));
-        print(F("  long: ")); println(sizeof(long));
-        print(F(" float: ")); println(sizeof(float));
-        print(F("double: ")); println(sizeof(double));
-        print(F(" model: ")); println(sizeof(ModelConfig));
-        println();
+        printVersion(s);
+        s.println();
+        s.print(F("  bool: ")); s.println(sizeof(bool));
+        s.print(F("  char: ")); s.println(sizeof(char));
+        s.print(F(" short: ")); s.println(sizeof(short));
+        s.print(F("   int: ")); s.println(sizeof(int));
+        s.print(F("  long: ")); s.println(sizeof(long));
+        s.print(F(" float: ")); s.println(sizeof(float));
+        s.print(F("double: ")); s.println(sizeof(double));
+        s.print(F(" model: ")); s.println(sizeof(ModelConfig));
+        s.println();
 
 #if defined(ESP8266)
         const rst_info * resetInfo = system_get_rst_info();
-        print(F("reset reason: "));
-        println(resetInfo->reason);
+        s.print(F("reset reason: "));
+        s.println(resetInfo->reason);
 
-        print(F("free heap: "));
-        println(ESP.getFreeHeap());
+        s.print(F("free heap: "));
+        s.println(ESP.getFreeHeap());
 
-        print(F("os print: "));
-        println(system_get_os_print());
+        s.print(F("os s.print: "));
+        s.println(system_get_os_print());
 
         //system_print_meminfo();
 
-        print(F("chip id: 0x"));
-        println(system_get_chip_id(), HEX);
+        s.print(F("chip id: 0x"));
+        s.println(system_get_chip_id(), HEX);
 
-        print(F("sdk version: "));
-        println(system_get_sdk_version());
+        s.print(F("sdk version: "));
+        s.println(system_get_sdk_version());
 
-        print(F("boot version: "));
-        println(system_get_boot_version());
+        s.print(F("boot version: "));
+        s.println(system_get_boot_version());
 
-        print(F("userbin addr: 0x"));
-        println(system_get_userbin_addr(), HEX);
+        s.print(F("userbin addr: 0x"));
+        s.println(system_get_userbin_addr(), HEX);
 
-        print(F("boot mode: "));
-        println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
+        s.print(F("boot mode: "));
+        s.println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
 
-        print(F("cpu freq: "));
-        println(ESP.getCpuFreqMHz());
+        s.print(F("cpu freq: "));
+        s.println(ESP.getCpuFreqMHz());
 
-        print(F("flash size map: "));
-        println(system_get_flash_size_map());
+        s.print(F("flash size map: "));
+        s.println(system_get_flash_size_map());
 
-        print(F("time: "));
-        println(system_get_time() / 1000000);
+        s.print(F("time: "));
+        s.println(system_get_time() / 1000000);
 #endif
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("get")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("get")) == 0)
       {
         bool found = false;
         for(size_t i = 0; _params[i].name; ++i)
         {
           String ts = FPSTR(_params[i].name);
-          if(!_cmd.args[1] || ts.indexOf(_cmd.args[1]) >= 0)
+          if(!cmd.args[1] || ts.indexOf(cmd.args[1]) >= 0)
           {
-            print(_params[i]);
+            print(_params[i], s);
             found = true;
           }
         }
         if(!found)
         {
-          print(F("param not found: "));
-          print(_cmd.args[1]);
+          s.print(F("param not found: "));
+          s.print(cmd.args[1]);
         }
-        println();
+        s.println();
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("set")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("set")) == 0)
       {
-        if(!_cmd.args[1])
+        if(!cmd.args[1])
         {
-          println(F("param required"));
-          println();
+          s.println(F("param required"));
+          s.println();
           return;
         }
         bool found = false;
         for(size_t i = 0; _params[i].name; ++i)
         {
-          if(strcmp_P(_cmd.args[1], _params[i].name) == 0)
+          if(strcmp_P(cmd.args[1], _params[i].name) == 0)
           {
-            _params[i].update(_cmd.args);
-            print(_params[i]);
+            _params[i].update(cmd.args);
+            print(_params[i], s);
             found = true;
             break;
           }
         }
         if(!found)
         {
-          print(F("param not found: "));
-          println(_cmd.args[1]);
+          s.print(F("param not found: "));
+          s.println(cmd.args[1]);
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("dump")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("dump")) == 0)
       {
-        print('#');
-        printVersion();
-        println();
+        s.print('#');
+        printVersion(s);
+        s.println();
         for(size_t i = 0; _params[i].name; ++i)
         {
-          print(_params[i]);
+          print(_params[i], s);
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("cal")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("cal")) == 0)
       {
-        if(!_cmd.args[1])
+        if(!cmd.args[1])
         {
-          print(F(" gyro offset: "));
-          print(_model.config.gyroBias[0]); print(' ');
-          print(_model.config.gyroBias[1]); print(' ');
-          print(_model.config.gyroBias[2]); print(F(" ["));
-          print(_model.state.gyroBias[0]); print(' ');
-          print(_model.state.gyroBias[1]); print(' ');
-          print(_model.state.gyroBias[2]); println(F("]"));
+          s.print(F(" gyro offset: "));
+          s.print(_model.config.gyroBias[0]); s.print(' ');
+          s.print(_model.config.gyroBias[1]); s.print(' ');
+          s.print(_model.config.gyroBias[2]); s.print(F(" ["));
+          s.print(_model.state.gyroBias[0]); s.print(' ');
+          s.print(_model.state.gyroBias[1]); s.print(' ');
+          s.print(_model.state.gyroBias[2]); s.println(F("]"));
 
-          print(F("accel offset: "));
-          print(_model.config.accelBias[0]); print(' ');
-          print(_model.config.accelBias[1]); print(' ');
-          print(_model.config.accelBias[2]); print(F(" ["));
-          print(_model.state.accelBias[0]); print(' ');
-          print(_model.state.accelBias[1]); print(' ');
-          print(_model.state.accelBias[2]); println(F("]"));
+          s.print(F("accel offset: "));
+          s.print(_model.config.accelBias[0]); s.print(' ');
+          s.print(_model.config.accelBias[1]); s.print(' ');
+          s.print(_model.config.accelBias[2]); s.print(F(" ["));
+          s.print(_model.state.accelBias[0]); s.print(' ');
+          s.print(_model.state.accelBias[1]); s.print(' ');
+          s.print(_model.state.accelBias[2]); s.println(F("]"));
 
           /*
-          print(F("mag offset: "));
-          print(_model.config.magCalibrationOffset[0]); print(' ');
-          print(_model.config.magCalibrationOffset[1]); print(' ');
-          print(_model.config.magCalibrationOffset[2]); print(F(" ["));
-          print(_model.state.magCalibrationOffset[0]); print(' ');
-          print(_model.state.magCalibrationOffset[1]); print(' ');
-          print(_model.state.magCalibrationOffset[2]); println(F("]"));
+          s.print(F("mag offset: "));
+          s.print(_model.config.magCalibrationOffset[0]); s.print(' ');
+          s.print(_model.config.magCalibrationOffset[1]); s.print(' ');
+          s.print(_model.config.magCalibrationOffset[2]); s.print(F(" ["));
+          s.print(_model.state.magCalibrationOffset[0]); s.print(' ');
+          s.print(_model.state.magCalibrationOffset[1]); s.print(' ');
+          s.print(_model.state.magCalibrationOffset[2]); s.println(F("]"));
 
-          print(F(" mag scale: "));
-          print(_model.config.magCalibrationScale[0]); print(' ');
-          print(_model.config.magCalibrationScale[1]); print(' ');
-          print(_model.config.magCalibrationScale[2]); print(F(" ["));
-          print(_model.state.magCalibrationScale[0]); print(' ');
-          print(_model.state.magCalibrationScale[1]); print(' ');
-          print(_model.state.magCalibrationScale[2]); println(F("]"));
+          s.print(F(" mag scale: "));
+          s.print(_model.config.magCalibrationScale[0]); s.print(' ');
+          s.print(_model.config.magCalibrationScale[1]); s.print(' ');
+          s.print(_model.config.magCalibrationScale[2]); s.print(F(" ["));
+          s.print(_model.state.magCalibrationScale[0]); s.print(' ');
+          s.print(_model.state.magCalibrationScale[1]); s.print(' ');
+          s.print(_model.state.magCalibrationScale[2]); s.println(F("]"));
           */
         }
-        else if(strcmp_P(_cmd.args[1], PSTR("gyro")) == 0)
+        else if(strcmp_P(cmd.args[1], PSTR("gyro")) == 0)
         {
           if(!_model.isActive(MODE_ARMED)) _model.calibrate();
-          println(F("OK"));
+          s.println(F("OK"));
         }
-        else if(strcmp_P(_cmd.args[1], PSTR("mag")) == 0)
+        else if(strcmp_P(cmd.args[1], PSTR("mag")) == 0)
         {
-          if(!_cmd.args[2]) {}
-          else if(_cmd.args[2][0] == '1')
+          if(!cmd.args[2]) {}
+          else if(cmd.args[2][0] == '1')
           {
             _model.state.magCalibration = 1;
             //_model.config.telemetry = 1;
             //_model.config.telemetryInterval = 200;
-            print(F("mag calibration on"));
+            s.print(F("mag calibration on"));
           }
-          else if(_cmd.args[2][0] == '0')
+          else if(cmd.args[2][0] == '0')
           {
             _model.state.magCalibration = 0;
             //_model.config.telemetry = 0;
-            print(F("mag calibration off"));
+            s.print(F("mag calibration off"));
           }
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("preset")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("preset")) == 0)
       {
-        if(!_cmd.args[1])
+        if(!cmd.args[1])
         {
-          println(F("Available presets: scaler, modes, micrus, brobot"));
+          s.println(F("Available presets: scaler, modes, micrus, brobot"));
         }
-        else if(strcmp_P(_cmd.args[1], PSTR("scaler")) == 0)
+        else if(strcmp_P(cmd.args[1], PSTR("scaler")) == 0)
         {
           _model.config.scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
           _model.config.scaler[0].channel = 5;
@@ -961,9 +932,9 @@ class Cli
           _model.config.scaler[2].minScale = 25; //%
           _model.config.scaler[2].maxScale = 400;
 
-          println(F("OK"));
+          s.println(F("OK"));
         }
-        else if(strcmp_P(_cmd.args[1], PSTR("modes")) == 0)
+        else if(strcmp_P(cmd.args[1], PSTR("modes")) == 0)
         {
           _model.config.conditions[0].id = MODE_ARMED;
           _model.config.conditions[0].ch = AXIS_AUX_1 + 0;
@@ -980,56 +951,56 @@ class Cli
           _model.config.conditions[2].min = (1700 - 900) / 25;
           _model.config.conditions[2].max = (2100 - 900) / 25;
 
-          println(F("OK"));
+          s.println(F("OK"));
         }
-        else if(strcmp_P(_cmd.args[1], PSTR("micrus")) == 0)
+        else if(strcmp_P(cmd.args[1], PSTR("micrus")) == 0)
         {
-          println(F("OK"));
+          s.println(F("OK"));
         }
-        else if(strcmp_P(_cmd.args[1], PSTR("brobot")) == 0)
+        else if(strcmp_P(cmd.args[1], PSTR("brobot")) == 0)
         {
-          println(F("OK"));
+          s.println(F("OK"));
         }
         else
         {
-          println(F("NOT OK"));
+          s.println(F("NOT OK"));
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("load")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("load")) == 0)
       {
         _model.load();
-        println(F("OK"));
+        s.println(F("OK"));
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("save")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("save")) == 0)
       {
         _model.save();
-        println(F("OK"));
+        s.println(F("OK"));
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("eeprom")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("eeprom")) == 0)
       {
         int start = 0;
-        if(_cmd.args[1])
+        if(cmd.args[1])
         {
-          start = std::max(String(_cmd.args[1]).toInt(), 0L);
+          start = std::max(String(cmd.args[1]).toInt(), 0L);
         }
 
         for(int i = start; i < start + 32; ++i)
         {
           uint8_t v = EEPROM.read(i);
-          if(v <= 0xf) print('0');
-          print(v, HEX);
-          print(' ');
+          if(v <= 0xf) s.print('0');
+          s.print(v, HEX);
+          s.print(' ');
         }
-        println();
+        s.println();
 
         for(int i = start; i < start + 32; ++i)
         {
-          print((int8_t)EEPROM.read(i));
-          print(' ');
+          s.print((int8_t)EEPROM.read(i));
+          s.print(' ');
         }
-        println();
+        s.println();
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("scaler")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("scaler")) == 0)
       {
         for(size_t i = 0; i < SCALER_COUNT; i++)
         {
@@ -1040,212 +1011,169 @@ class Cli
           float min = _model.config.scaler[i].minScale * 0.01f;
           float max = _model.config.scaler[i].maxScale * 0.01f;
           float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
-          print(F("scaler: "));
-          print(i);
-          print(' ');
-          print(mode);
-          print(' ');
-          print(min);
-          print(' ');
-          print(max);
-          print(' ');
-          print(v);
-          print(' ');
-          println(scale);
+          s.print(F("scaler: "));
+          s.print(i);
+          s.print(' ');
+          s.print(mode);
+          s.print(' ');
+          s.print(min);
+          s.print(' ');
+          s.print(max);
+          s.print(' ');
+          s.print(v);
+          s.print(' ');
+          s.println(scale);
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("mixer")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("mixer")) == 0)
       {
         const MixerConfig& mixer = _model.state.currentMixer;
-        print(F("set mix_outputs "));
-        println(mixer.count);
+        s.print(F("set mix_outputs "));
+        s.println(mixer.count);
         Param p;
         for(size_t i = 0; i < MIXER_RULE_MAX; i++)
         {
-          print(F("set mix_"));
-          print(i);
-          print(' ');
-          p.print(*_stream, mixer.mixes[i]);
-          println();
+          s.print(F("set mix_"));
+          s.print(i);
+          s.print(' ');
+          p.print(s, mixer.mixes[i]);
+          s.println();
           if(mixer.mixes[i].src == MIXER_SOURCE_NULL) break;
         }
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("status")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("status")) == 0)
       {
         const char ** busNames = Device::BusDevice::getNames();
         const char ** gyroNames = Device::GyroDevice::getNames();
         const char ** baroNames = Device::BaroDevice::getNames();
 
-        printVersion();
-        println();
-        print(F("STATUS: "));
-        println();
-        print(F(" cpu freq : "));
-        println(ESP.getCpuFreqMHz());
-        print(F(" gyro bus : "));
-        println(FPSTR(busNames[_model.state.gyroBus]));
-        print(F(" gyro type: "));
-        println(FPSTR(gyroNames[_model.state.gyroDev]));
-        print(F(" baro bus: "));
-        println(FPSTR(busNames[_model.state.baroBus]));
-        print(F(" baro type: "));
-        println(FPSTR(baroNames[_model.state.baroDev]));
+        printVersion(s);
+        s.println();
+        s.print(F("STATUS: "));
+        s.println();
+        s.print(F(" cpu freq : "));
+        s.println(ESP.getCpuFreqMHz());
+        s.print(F(" gyro bus : "));
+        s.println(FPSTR(busNames[_model.state.gyroBus]));
+        s.print(F(" gyro type: "));
+        s.println(FPSTR(gyroNames[_model.state.gyroDev]));
+        s.print(F(" baro bus : "));
+        s.println(FPSTR(busNames[_model.state.baroBus]));
+        s.print(F(" baro type: "));
+        s.println(FPSTR(baroNames[_model.state.baroDev]));
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("stats")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
       {
-        printVersion();
-        println();
-        print(F("    cpu freq: "));
-        print(ESP.getCpuFreqMHz());
-        println(F(" MHz"));
-        print(F("   gyro rate: "));
-        print(_model.state.gyroTimer.rate);
-        println(F(" Hz"));
-        print(F("   loop rate: "));
-        print(_model.state.loopTimer.rate);
-        println(F(" Hz"));
-        print(F("  mixer rate: "));
-        print(_model.state.mixerTimer.rate);
-        println(F(" Hz"));
-        println();
+        printVersion(s);
+        s.println();
+        s.print(F("    cpu freq: "));
+        s.print(ESP.getCpuFreqMHz());
+        s.println(F(" MHz"));
+        s.print(F("   gyro rate: "));
+        s.print(_model.state.gyroTimer.rate);
+        s.println(F(" Hz"));
+        s.print(F("   loop rate: "));
+        s.print(_model.state.loopTimer.rate);
+        s.println(F(" Hz"));
+        s.print(F("  mixer rate: "));
+        s.print(_model.state.mixerTimer.rate);
+        s.println(F(" Hz"));
+        s.println();
         for(size_t i = 0; i < COUNTER_COUNT; ++i)
         {
-          print(FPSTR(_model.state.stats.getName((StatCounter)i)));
-          print(": ");
-          print((int)(_model.state.stats.getTime((StatCounter)i) * _model.state.loopTimer.interval), 1);
-          print("us, ");
-          print(_model.state.stats.getLoad((StatCounter)i), 1);
-          print("%");
-          println();
+          s.print(FPSTR(_model.state.stats.getName((StatCounter)i)));
+          s.print(": ");
+          s.print((int)(_model.state.stats.getTime((StatCounter)i) * _model.state.loopTimer.interval), 1);
+          s.print("us, ");
+          s.print(_model.state.stats.getLoad((StatCounter)i), 1);
+          s.print("%");
+          s.println();
         }
-        print(F("  TOTAL: "));
-        print((int)(_model.state.stats.getTotalTime() * _model.state.loopTimer.interval));
-        print(F("us, "));
-        print(_model.state.stats.getTotalLoad(), 1);
-        print(F("%"));
-        println();
+        s.print(F("  TOTAL: "));
+        s.print((int)(_model.state.stats.getTotalTime() * _model.state.loopTimer.interval));
+        s.print(F("us, "));
+        s.print(_model.state.stats.getTotalLoad(), 1);
+        s.print(F("%"));
+        s.println();
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("fsinfo")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("fsinfo")) == 0)
       {
-        _model.logger.info(_stream);
+        _model.logger.info(&s);
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("fsformat")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("fsformat")) == 0)
       {
-        print(F("wait... "));
+        s.print(F("wait... "));
         _model.logger.format();
-        println(F("OK"));
+        s.println(F("OK"));
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("logs")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
       {
-        _model.logger.list(_stream);
+        _model.logger.list(&s);
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("log")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("log")) == 0)
       {
-        if(!_cmd.args[1])
+        if(!cmd.args[1])
         {
-          _model.logger.show(_stream);
+          _model.logger.show(&s);
           return;
         }
-        int id = String(_cmd.args[1]).toInt();
+        int id = String(cmd.args[1]).toInt();
         if(!id)
         {
-          println(F("invalid log id"));
-          println();
+          s.println(F("invalid log id"));
+          s.println();
           return;
         }
-        _model.logger.show(_stream, id);
+        _model.logger.show(&s, id);
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("reboot")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0)
       {
         Hardware::restart(_model);
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("defaults")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("defaults")) == 0)
       {
         _model.reset();
       }
-      else if(strcmp_P(_cmd.args[0], PSTR("exit")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("exit")) == 0)
       {
         _active = false;
       }
       else
       {
-        print(F("unknown command: "));
-        println(_cmd.args[0]);
+        s.print(F("unknown command: "));
+        s.println(cmd.args[0]);
       }
-      println();
+      s.println();
     }
 
   private:
-    template<typename T>
-    void print(const T& t)
+    void print(const Param& param, Stream& s)
     {
-      if(!_stream) return;
-      (*_stream).print(t);
+      s.print(F("set "));
+      s.print(FPSTR(param.name));
+      s.print(' ');
+      param.print(s);
+      s.println();
     }
 
-    template<typename T, typename V>
-    void print(const T& t, const V& v)
+    void printVersion(Stream& s)
     {
-      if(!_stream) return;
-      (*_stream).print(t, v);
+      s.print(TARGET_BOARD_IDENTIFIER);
+      s.print(' ');
+      s.print(targetName);
+      s.print(' ');
+      s.print('v');
+      s.print(targetVersion);
+      s.print(' ');
+      s.print(shortGitRevision);
+      s.print(' ');
+      s.print(buildDate);
+      s.print(' ');
+      s.print(buildTime);
     }
-
-    template<typename T>
-    void println(const T& t)
-    {
-      if(!_stream) return;
-      (*_stream).println(t);
-    }
-
-    template<typename T, typename V>
-    void println(const T& t, const V& v)
-    {
-      if(!_stream) return;
-      (*_stream).println(t, v);
-    }
-
-    void println()
-    {
-      if(!_stream) return;
-      (*_stream).println();
-    }
-
-    void print(const Param& param)
-    {
-      if(!_stream) return;
-      print(F("set "));
-      print(FPSTR(param.name));
-      print(' ');
-      param.print(*_stream);
-      println();
-    }
-
-    void printVersion()
-    {
-      print(TARGET_BOARD_IDENTIFIER);
-      print(' ');
-      print(targetName);
-      print(' ');
-      print('v');
-      print(targetVersion);
-      print(' ');
-      print(shortGitRevision);
-      print(' ');
-      print(buildDate);
-      print(' ');
-      print(buildTime);
-    }
-
-    static const size_t BUFF_SIZE = 64;
 
     Model& _model;
-    Stream * _stream;
-    Stream * _stream_main;
     const Param * _params;
-    char _buff[BUFF_SIZE];
-    size_t _index;
-    Cmd _cmd;
-    Msp _msp;
     bool _ignore;
     bool _active;
 };

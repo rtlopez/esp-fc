@@ -1,21 +1,14 @@
 #ifndef _ESPFC_MSP_H_
 #define _ESPFC_MSP_H_
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <cstring>
-#include "Arduino.h"
-#include "msp/msp_protocol.h"
-#include "platform.h"
-
-// TODO: update to 1.37 https://github.com/betaflight/betaflight/compare/v3.2.0...v3.3.0
-
-static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
-static const char * boardIdentifier = "ESPF";
-
+#include <Arduino.h>
 #include "Model.h"
 #include "Hardware.h"
-#include "SerialDevice.h"
+
+extern "C" {
+#include "msp/msp_protocol.h"
+#include "platform.h"
+}
 
 #if defined(ESP32)
 #define MSP_DEBUG_PORT SERIAL_UART_2
@@ -23,214 +16,106 @@ static const char * boardIdentifier = "ESPF";
 #define MSP_DEBUG_PORT SERIAL_UART_1
 #endif
 
-namespace Espfc {
+// TODO: update to 1.37 https://github.com/betaflight/betaflight/compare/v3.2.0...v3.3.0
+static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
+static const char * boardIdentifier = "ESPF";
 
-static const size_t MSP_BUF_SIZE = 192;
+namespace Espfc {
 
 class Msp
 {
   public:
-    enum MspState
-    {
-      STATE_IDLE,
-      STATE_HEADER_START,
-      STATE_HEADER_M,
-      STATE_HEADER_ARROW,
-      STATE_HEADER_SIZE,
-      STATE_HEADER_CMD,
-      STATE_RECEIVED
-    };
-
-    enum MspType
-    {
-      TYPE_CMD,
-      TYPE_REPLY
-    };
-
-    class MspMessage
-    {
-      public:
-        MspMessage(): expected(0), received(0), read(0) {}
-        MspState state;
-        MspType dir;
-        uint8_t cmd;
-        uint8_t expected;
-        uint8_t received;
-        uint8_t read;
-        uint8_t buffer[MSP_BUF_SIZE];
-        uint8_t checksum;
-
-        int remain()
-        {
-          return received - read;
-        }
-
-        void advance(size_t size)
-        {
-          read += size;
-        }
-
-        uint8_t readU8()
-        {
-          return buffer[read++];
-        }
-
-        uint16_t readU16()
-        {
-          uint16_t ret;
-          ret = readU8();
-          ret |= readU8() << 8;
-          return ret;
-        }
-
-        uint32_t readU32()
-        {
-          uint32_t ret;
-          ret = readU8();
-          ret |= readU8() <<  8;
-          ret |= readU8() << 16;
-          ret |= readU8() << 24;
-          return ret;
-        }
-    };
-
-    class MspResponse {
-      public:
-        MspResponse(): len(0) {}
-        uint8_t cmd;
-        int8_t  result;
-        uint8_t direction;
-        uint8_t len;
-        uint8_t data[MSP_BUF_SIZE];
-
-        void writeData(const char * v, int size)
-        {
-          while(size-- > 0) writeU8(*v++);
-        }
-
-        void writeString(const char * v)
-        {
-          while(*v) writeU8(*v++);
-        }
-
-        void writeString(const __FlashStringHelper *ifsh)
-        {
-          PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-          while(true)
-          {
-            uint8_t c = pgm_read_byte(p++);
-            if (c == 0) break;
-            writeU8(c);
-          }
-        }
-
-        void writeU8(uint8_t v)
-        {
-          data[len++] = v;
-        }
-
-        void writeU16(uint16_t v)
-        {
-          writeU8(v >> 0);
-          writeU8(v >> 8);
-        }
-
-        void writeU32(uint32_t v)
-        {
-          writeU8(v >> 0);
-          writeU8(v >> 8);
-          writeU8(v >> 16);
-          writeU8(v >> 24);
-        }
-    };
-
-
     Msp(Model& model): _model(model) {}
 
-    bool process(char c, Stream& s)
+    bool process(char c, MspMessage& msg, MspResponse& res, Stream& s)
     {
-      switch(_msg.state)
+      switch(msg.state)
       {
-        case STATE_IDLE:               // sync char 1 '$'
-          if(c == '$') _msg.state = STATE_HEADER_START;
+        case MSP_STATE_IDLE:               // sync char 1 '$'
+          if(c == '$')
+          {
+            msg.state = MSP_STATE_HEADER_START;
+          }
           break;
 
-        case STATE_HEADER_START:       // sync char 2 'M'
-            if(c == 'M') _msg.state = STATE_HEADER_M;
-            else _msg.state = STATE_IDLE;
+        case MSP_STATE_HEADER_START:       // sync char 2 'M'
+            if(c == 'M') msg.state = MSP_STATE_HEADER_M;
+            else msg.state = MSP_STATE_IDLE;
             break;
 
-        case STATE_HEADER_M:               // direction (should be >)
+        case MSP_STATE_HEADER_M:               // direction (should be >)
           switch(c)
           {
             case '>':
-              _msg.dir = TYPE_REPLY;
-              _msg.state = STATE_HEADER_ARROW;
+              msg.dir = MSP_TYPE_REPLY;
+              msg.state = MSP_STATE_HEADER_ARROW;
               break;
             case '<':
-              _msg.dir = TYPE_CMD;
-              _msg.state = STATE_HEADER_ARROW;
+              msg.dir = MSP_TYPE_CMD;
+              msg.state = MSP_STATE_HEADER_ARROW;
               break;
             default:
-              _msg.state = STATE_IDLE;
+              msg.state = MSP_STATE_IDLE;
           }
           break;
-        case STATE_HEADER_ARROW:
-          if (c > MSP_BUF_SIZE) _msg.state = STATE_IDLE;
+        case MSP_STATE_HEADER_ARROW:
+          if (c > MSP_BUF_SIZE) msg.state = MSP_STATE_IDLE;
           else
           {
-            _msg.expected = c;
-            _msg.received = 0;
-            _msg.read = 0;
-            _msg.checksum = 0;
-            _msg.checksum ^= c;
-            _msg.state = STATE_HEADER_SIZE;
+            msg.expected = c;
+            msg.received = 0;
+            msg.read = 0;
+            msg.checksum = 0;
+            msg.checksum ^= c;
+            msg.state = MSP_STATE_HEADER_SIZE;
           }
           break;
 
-        case STATE_HEADER_SIZE:
-          _msg.cmd = c;
-          _msg.checksum ^= c;
-          _msg.state = STATE_HEADER_CMD;
+        case MSP_STATE_HEADER_SIZE:
+          msg.cmd = c;
+          msg.checksum ^= c;
+          msg.state = MSP_STATE_HEADER_CMD;
           break;
 
-        case STATE_HEADER_CMD:
-          if(_msg.received < _msg.expected)
+        case MSP_STATE_HEADER_CMD:
+          if(msg.received < msg.expected)
           {
-            _msg.checksum ^= c;
-            _msg.buffer[_msg.received++] = c;
+            msg.checksum ^= c;
+            msg.buffer[msg.received++] = c;
           }
-          else if(_msg.received >= _msg.expected)
+          else if(msg.received >= msg.expected)
           {
-            _msg.state = _msg.checksum == c ? STATE_RECEIVED : STATE_IDLE;
+            msg.state = msg.checksum == c ? MSP_STATE_RECEIVED : MSP_STATE_IDLE;
           }
 
         default:
+          //msg.state = MSP_STATE_IDLE;
           break;
       }
 
-      if(_msg.state == STATE_RECEIVED)
+      if(msg.state == MSP_STATE_RECEIVED)
       {
-        _msg.state = STATE_IDLE;
-        debugMessage(_msg);
-        switch(_msg.dir)
+        debugMessage(msg);
+        switch(msg.dir)
         {
-          case TYPE_CMD:
-            processCommand(_msg, s);
+          case MSP_TYPE_CMD:
+            processCommand(msg, res);
+            sendResponse(res, s);
+            msg = MspMessage();
+            res = MspResponse();
             break;
-          case TYPE_REPLY:
-            //processCommand(_msg, s);
+          case MSP_TYPE_REPLY:
+            //processCommand(msg, s);
             break;
         }
         return true;
       }
 
-      return _msg.state != STATE_IDLE;
+      return msg.state != MSP_STATE_IDLE;
     }
 
-    void processCommand(MspMessage& m, Stream& s)
+    void processCommand(MspMessage& m, MspResponse& r)
     {
-      MspResponse r;
       r.cmd = m.cmd;
       r.result = 1;
       switch(m.cmd)
@@ -306,7 +191,7 @@ class Msp
           break;
 
         case MSP_SET_NAME:
-          std::memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
+          memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
           for(size_t i = 0; i < std::min((size_t)m.received, MODEL_NAME_LEN); i++)
           {
             _model.config.modelName[i] = m.readU8();
@@ -626,7 +511,7 @@ class Msp
           break;
 
         case MSP_RX_CONFIG:
-          r.writeU8(2); // serialrx_provider
+          r.writeU8(_model.config.input.serialRxProvider); // serialrx_provider
           r.writeU16(_model.config.input.maxCheck); //maxcheck
           r.writeU16(_model.config.input.midRc); //midrc
           r.writeU16(_model.config.input.minCheck); //mincheck
@@ -643,7 +528,7 @@ class Msp
           break;
 
         case MSP_SET_RX_CONFIG:
-          m.readU8(); // serialrx_provider
+          _model.config.input.serialRxProvider = m.readU8(); // serialrx_provider
           _model.config.input.maxCheck = m.readU16(); //maxcheck
           _model.config.input.midRc = m.readU16(); //midrc
           _model.config.input.minCheck = m.readU16(); //mincheck
@@ -1029,7 +914,6 @@ class Msp
           r.result = 0;
           break;
       }
-      sendResponse(r, s);
     }
 
     void sendResponse(MspResponse& r, Stream& s)
@@ -1073,8 +957,8 @@ class Msp
 
     bool debugSkip(uint8_t cmd)
     {
-      return true;
-      return false;
+      //return true;
+      //return false;
       if(cmd == MSP_STATUS) return true;
       if(cmd == MSP_STATUS_EX) return true;
       if(cmd == MSP_BOXNAMES) return true;
@@ -1094,10 +978,10 @@ class Msp
     void debugMessage(const MspMessage& m)
     {
       if(debugSkip(m.cmd)) return;
-      SerialDevice * s = Hardware::getSerialPortById(MSP_DEBUG_PORT);
+      Stream * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
-      s->print(m.dir == TYPE_REPLY ? '>' : '<'); s->print(' ');
+      s->print(m.dir == MSP_TYPE_REPLY ? '>' : '<'); s->print(' ');
       s->print(m.cmd); s->print(' ');
       s->print(m.expected); s->print(' ');
       for(size_t i = 0; i < m.expected; i++)
@@ -1110,7 +994,7 @@ class Msp
     void debugResponse(const MspResponse& r)
     {
       if(debugSkip(r.cmd)) return;
-      SerialDevice * s = Hardware::getSerialPortById(MSP_DEBUG_PORT);
+      Stream * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
       s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); s->print(' ');
@@ -1125,7 +1009,6 @@ class Msp
 
   private:
     Model& _model;
-    MspMessage _msg;
     bool _reboot;
 };
 

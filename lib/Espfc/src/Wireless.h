@@ -2,35 +2,17 @@
 #define _ESPFC_WIRELESS_H_
 
 #include "Model.h"
-#include "Cli.h"
-
-#if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#elif defined(ESP32)
-#include <WiFi.h>
-#endif
+#include "SerialDeviceAdapter.h"
 
 namespace Espfc {
 
 class Wireless
 {
   public:
-    Wireless(Model& model, Cli& cli): _model(model), _cli(cli), _server(1111), _initialized(false) {}
+    Wireless(Model& model): _model(model), _server(1111), _adapter(_client), _initialized(false) {}
 
     int begin()
     {
-#if defined(ESP8266)
-      WiFi.disconnect();
-      WiFi.mode(WIFI_OFF);
-      _model.logger.info().logln(F("WIFI OFF"));
-#elif defined(ESP32)
-      WiFi.mode((WiFiMode_t)_model.config.wireless.mode);
-      if(_model.config.wireless.mode != WIRELESS_MODE_NULL)
-      {
-        WiFi.begin(_model.config.wireless.ssid, _model.config.wireless.pass);
-      }
-      _model.logger.info().log(F("WIFI")).log(FPSTR(WirelessConfig::getModeName((WirelessMode)_model.config.wireless.mode))).log(_model.config.wireless.ssid).logln(_model.config.wireless.pass);
-#endif
       return 1;
     }
 
@@ -41,42 +23,43 @@ class Wireless
 #endif
 
       if(_model.config.wireless.mode == WIRELESS_MODE_NULL) return 0;
+      //if(!(_model.config.serial[SERIAL_WIFI_0].functionMask & SERIAL_FUNCTION_MSP)) return 0;
 
-      _model.state.stats.start(COUNTER_WIFI);
-      int ret = doUpdate();
-      _model.state.stats.end(COUNTER_WIFI);
+      Stats::Measure measure(_model.state.stats, COUNTER_WIFI);
 
-      return ret;
-    }
-
-    int doUpdate()
-    {
       if(!_initialized && WiFi.status() == WL_CONNECTED)
       {
         _server.begin(_model.config.wireless.port);
+        _model.state.serial[SERIAL_WIFI_0].stream = &_adapter;
+        _model.state.localIp = WiFi.localIP();
         _initialized = true;
+        _model.logger.info().log(F("WIFI CON")).logln(WiFi.localIP());
       }
-      
+
+      if(_initialized && WiFi.status() != WL_CONNECTED)
+      {
+        _model.state.serial[SERIAL_WIFI_0].stream = nullptr;
+        _model.state.localIp = IPAddress(0,0,0,0);
+        _initialized = false;
+        _model.logger.info().log(F("WIFI DIS"));
+      }
+
       if(!_initialized) return 0;
 
-      _model.state.localIp = WiFi.localIP();
-
-      if(!_client.connected())
+      if(_server.hasClient())
       {
         _client = _server.available();
-        return 0;
       }
-
-      _cli.update(&_client);
 
       return 1;
     }
 
   private:
     Model& _model;
-    Cli& _cli;
     WiFiServer _server;
     WiFiClient _client;
+    SerialDeviceAdapter<WiFiClient> _adapter;
+
     bool _initialized;
 };
 

@@ -17,6 +17,11 @@
 #include "freertos/task.h"
 #endif
 
+#if CONFIG_FREERTOS_UNICORE
+#define ARDUINO_RUNNING_CORE 0
+#else
+#define ARDUINO_RUNNING_CORE 1
+#endif
 
 Espfc::Espfc espfc;
 
@@ -31,7 +36,7 @@ void setup()
 {
   espfc.begin();
   #if defined(ESP32)
-  xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
   #endif
 }
 

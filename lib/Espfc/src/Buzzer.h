@@ -3,7 +3,6 @@
 
 #include "Arduino.h"
 #include "Model.h"
-#include "EspGpio.h"
 
 namespace Espfc {
 
@@ -25,7 +24,7 @@ class Buzzer
       if(_model.config.pin[PIN_BUZZER] == -1) return 0;
 
       pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
-      EspGpio::digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted);
+      digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted);
       _model.state.buzzer.timer.setRate(100);
 
       return 1;
@@ -84,7 +83,7 @@ class Buzzer
 
     void _write(bool v)
     {
-      EspGpio::digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted ? !v : v);
+      digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted ? !v : v);
     }
 
     void _delay(int time)
