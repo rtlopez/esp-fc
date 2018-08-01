@@ -275,6 +275,7 @@ struct ModelState
 
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];
+  int16_t outputDisarmed[OUTPUT_CHANNELS];
 
   // other state
   Kalman kalman[AXES];
@@ -322,8 +323,6 @@ struct ModelState
   bool telemetry;
   Timer telemetryTimer;
   bool telemetryUpdate;
-
-  int16_t outputDisarmed[OUTPUT_CHANNELS];
 
   Stats stats;
 
@@ -376,6 +375,7 @@ struct ModelState
   IPAddress localIp;
 
   SerialPortState serial[SERIAL_UART_COUNT];
+  Timer serialTimer;
 };
 
 }

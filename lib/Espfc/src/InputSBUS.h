@@ -56,7 +56,7 @@ class InputSBUS: public InputDevice
       for(size_t i = 0; i < SBUS_FRAME_SIZE; i++)
       {
         _data[i] = 0;
-        if(i < 16) _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
+        if(i < CHANNELS) _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
       }
       return 1;
     }
@@ -90,7 +90,7 @@ class InputSBUS: public InputDevice
 
     void print(char c) const
     {
-      //Serial1.write(c);
+      //Serial.write(c);
     }
 
   private:
@@ -111,7 +111,6 @@ class InputSBUS: public InputDevice
         case SBUS_DATA:
           if(!_serial->isSoft() || checkParityEven(d))
           {
-            _prev[_idx] = _data[_idx];
             _data[_idx] = c;
           }
           if(++_idx >= SBUS_FRAME_SIZE - 1)
@@ -178,9 +177,10 @@ class InputSBUS: public InputDevice
     uint8_t _idx = 0;
     bool _new_data;
 
+    static const size_t CHANNELS = 16;
+
     uint8_t _data[SBUS_FRAME_SIZE];
-    uint8_t _prev[SBUS_FRAME_SIZE];
-    uint16_t _channels[16];
+    uint16_t _channels[CHANNELS];
     uint8_t _flags;
 };
 

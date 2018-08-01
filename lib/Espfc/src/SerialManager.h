@@ -24,36 +24,40 @@ class SerialManager
 
     int update()
     {
+      if(!_model.state.serialTimer.check()) return 0;
+
       SerialPortState& ss = _model.state.serial[_current];
       const SerialPortConfig& sc = _model.config.serial[_current];
-      if(!ss.stream || sc.functionMask & SERIAL_FUNCTION_RX_SERIAL) {
-        next();
-        return 0;
-      }
-
       Stream * stream = ss.stream;
-      size_t count = 0;
 
-      uint32_t now = millis();
-
-      if(!ss.availableFrom && stream->available()) ss.availableFrom = now;
-      bool timeout = ss.availableFrom && now - ss.availableFrom > 20;
-
-      if(stream->available() > 3 || timeout)
       {
-        ss.availableFrom = 0;
-        while(stream->available())
+        Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
+        if(!stream || sc.functionMask & SERIAL_FUNCTION_RX_SERIAL) {
+          next();
+          return 0;
+        }
+
+        uint32_t now = millis();
+        if(!ss.availableFrom && stream->available()) ss.availableFrom = now;
+        bool timeout = ss.availableFrom && now - ss.availableFrom > 10;
+
+        size_t count = 0;
+        if(stream->available() > 3 || timeout)
         {
-          char c = stream->read();
-          if(sc.functionMask & SERIAL_FUNCTION_MSP)
+          ss.availableFrom = 0;
+          while(stream->available())
           {
-            bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
-            if(!consumed)
+            char c = stream->read();
+            if(sc.functionMask & SERIAL_FUNCTION_MSP)
             {
-              _cli.process(c, ss.cliCmd, *stream);
+              bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
+              if(!consumed)
+              {
+                _cli.process(c, ss.cliCmd, *stream);
+              }
             }
+            if(++count > 127) break;
           }
-          if(++count > 127) break;
         }
       }
       if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())

@@ -8,7 +8,7 @@
 #include "Device/MagDevice.h"
 #include "Device/BaroDevice.h"
 
-#define EEPROM_VERSION_NUM 0x0C
+#define EEPROM_VERSION_NUM 0x0D
 
 #define USE_SOFT_SERIAL
 
@@ -254,6 +254,14 @@ enum Axis {
   AXIS_AUX_2,
   AXIS_AUX_3,
   AXIS_AUX_4,
+  AXIS_AUX_5,
+  AXIS_AUX_6,
+  AXIS_AUX_7,
+  AXIS_AUX_8,
+  AXIS_AUX_9,
+  AXIS_AUX_10,
+  AXIS_AUX_11,
+  AXIS_AUX_12,
   AXIS_COUNT
 };
 
@@ -950,8 +958,11 @@ class ModelConfig
       angleLimit = 55;  // deg
       angleRateLimit = 300;  // deg
 
-      featureMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP;
-      //featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_MOTOR_STOP;
+    #if defined(ESP8266)
+      featureMask = FEATURE_RX_PPM;
+    #elif defined(ESP32)
+      featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL;
+    #endif
 
       lowThrottleZeroIterm = true;
 

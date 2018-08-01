@@ -24,6 +24,7 @@ enum StatCounter {
   COUNTER_MIXER,
   COUNTER_BLACKBOX,
   COUNTER_TELEMETRY,
+  COUNTER_SERIAL,
   COUNTER_WIFI,
   COUNTER_COUNT
 };
@@ -122,6 +123,7 @@ class Stats
         case COUNTER_MIXER:        return PSTR("  mixer");
         case COUNTER_BLACKBOX:     return PSTR("  bblog");
         case COUNTER_TELEMETRY:    return PSTR("    tlm");
+        case COUNTER_SERIAL:       return PSTR(" serial");
         case COUNTER_WIFI:         return PSTR("   wifi");
         default:                   return PSTR("unknown");
       }

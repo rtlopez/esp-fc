@@ -100,7 +100,7 @@ class Input
           for(size_t i = 0; i < INPUT_CHANNELS; ++i)
           {
             float val = (float)_get(i, 0);
-            if(i < 3)
+            if(i < INTERPOLETE_COUNT)
             {
               float prev = (float)_get(i, 1);
               val =_interpolate(prev, val, step);
@@ -179,6 +179,7 @@ class Input
     Model& _model;
     int16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];
     InputDevice * _device;
+    static const size_t INTERPOLETE_COUNT = 4;
 };
 
 }

@@ -269,6 +269,7 @@ class Model
       state.stats.timer.setRate(10);
       state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 200));
       state.accelTimer.setInterval(state.accelTimer.interval - 20);
+      state.serialTimer.setRate(500);
 
       // configure calibration
       state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
