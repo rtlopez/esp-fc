@@ -17,7 +17,6 @@ extern "C" {
 
 #if defined(ESP32)
 #include <freertos/task.h>
-#include <WiFi.h>
 #endif
 
 namespace Espfc {
@@ -286,6 +285,7 @@ class Cli
 
         void write(const String& v) const
         {
+          *addr = 0;
           strncat(addr, v.c_str(), 16);
         }
 
@@ -638,6 +638,7 @@ class Cli
         _active = true;
         printVersion(stream);
         stream.println(F(", CLI mode, type help"));
+        cmd = CliCmd();
         return true;
       }
 
@@ -719,15 +720,9 @@ class Cli
       else if(strcmp_P(cmd.args[0], PSTR("wifi")) == 0)
       {
         s.print(F("IPv4  : tcp://"));
-        s.print(WiFi.localIP());
+        s.print(_model.state.localIp);
         s.print(F(":"));
         s.println(_model.config.wireless.port);
-        s.print(F("IPv6  : tcp://"));
-        s.print(WiFi.localIPv6());
-        s.print(F(":"));
-        s.println(_model.config.wireless.port);
-        s.print(F("STATUS: "));
-        s.println(WiFi.status());
       }
       #if defined(ESP32)
       else if(strcmp_P(cmd.args[0], PSTR("tasks")) == 0)
@@ -756,13 +751,19 @@ class Cli
         s.print(F(" model: ")); s.println(sizeof(ModelConfig));
         s.println();
 
-#if defined(ESP8266)
+        s.print(F("free heap: "));
+        s.println(ESP.getFreeHeap());
+
+        s.print(F(" cpu freq: "));
+        s.println(ESP.getCpuFreqMHz());
+
+#if defined(ESP32)
+
+#elif defined(ESP8266)
         const rst_info * resetInfo = system_get_rst_info();
         s.print(F("reset reason: "));
         s.println(resetInfo->reason);
 
-        s.print(F("free heap: "));
-        s.println(ESP.getFreeHeap());
 
         s.print(F("os s.print: "));
         s.println(system_get_os_print());

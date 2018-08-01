@@ -10,12 +10,6 @@ extern "C" {
 #include "platform.h"
 }
 
-#if defined(ESP32)
-#define MSP_DEBUG_PORT SERIAL_UART_2
-#else
-#define MSP_DEBUG_PORT SERIAL_UART_1
-#endif
-
 // TODO: update to 1.37 https://github.com/betaflight/betaflight/compare/v3.2.0...v3.3.0
 static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
 static const char * boardIdentifier = "ESPF";
@@ -155,8 +149,9 @@ class Msp
             r.writeU32(ESP.getFlashChipId());
             r.writeU32(ESP.getFlashChipSize());
 #else
-            r.writeU32(0);
-            r.writeU32(0);
+            int64_t mac = ESP.getEfuseMac();
+            r.writeU32((uint32_t)mac);
+            r.writeU32((uint32_t)(mac >> 32));
             r.writeU32(0);
 #endif
           }

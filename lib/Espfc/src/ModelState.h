@@ -152,6 +152,7 @@ class SerialPortState
     MspResponse mspResponse;
     CliCmd cliCmd;
     SerialDevice * stream;
+    uint32_t availableFrom;
 };
 
 class BuzzerState

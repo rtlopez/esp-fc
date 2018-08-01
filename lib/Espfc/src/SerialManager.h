@@ -18,6 +18,7 @@ class SerialManager
 
     int begin()
     {
+      _wireless.begin();
       return 1;
     }
 
@@ -33,25 +34,28 @@ class SerialManager
       Stream * stream = ss.stream;
       size_t count = 0;
 
-      if(_current == SERIAL_WIFI_0)
-      {
-        Serial.println(stream->available());
-      }
+      uint32_t now = millis();
 
-      while(stream->available() > 0)
+      if(!ss.availableFrom && stream->available()) ss.availableFrom = now;
+      bool timeout = ss.availableFrom && now - ss.availableFrom > 20;
+
+      if(stream->available() > 3 || timeout)
       {
-        char c = stream->read();
-        if(sc.functionMask & SERIAL_FUNCTION_MSP)
+        ss.availableFrom = 0;
+        while(stream->available())
         {
-          bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
-          if(!consumed)
+          char c = stream->read();
+          if(sc.functionMask & SERIAL_FUNCTION_MSP)
           {
-            _cli.process(c, ss.cliCmd, *stream);
+            bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
+            if(!consumed)
+            {
+              _cli.process(c, ss.cliCmd, *stream);
+            }
           }
+          if(++count > 127) break;
         }
-        if(++count > 127) break;
       }
-
       if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
       {
         _telemetry.process(*stream);

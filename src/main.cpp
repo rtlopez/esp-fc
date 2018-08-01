@@ -15,17 +15,17 @@
 #if defined(ESP32)
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <WiFi.h>
+#if !CONFIG_FREERTOS_UNICORE
+#define ESPFC_DUAL_CORE 1
 #endif
-
-#if CONFIG_FREERTOS_UNICORE
-#define ARDUINO_RUNNING_CORE 0
-#else
-#define ARDUINO_RUNNING_CORE 1
+#elif defined(ESP8266)
+#include <ESP8266WiFi.h>
 #endif
 
 Espfc::Espfc espfc;
 
-#if defined(ESP32)
+#if defined(ESPFC_DUAL_CORE)
 void otherTask(void *pvParameters)
 {
   while(true) espfc.updateOther();
@@ -35,15 +35,15 @@ void otherTask(void *pvParameters)
 void setup()
 {
   espfc.begin();
-  #if defined(ESP32)
-  xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
+  #if defined(ESPFC_DUAL_CORE)
+  xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, NULL, 0); // run on PRO(0) core, loopTask is on APP(1)
   #endif
 }
 
 void loop()
 {
   espfc.update();
-  #if !defined(ESP32)
+  #if !defined(ESPFC_DUAL_CORE)
   espfc.updateOther();
   #endif
 }

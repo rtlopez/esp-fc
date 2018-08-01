@@ -26,7 +26,9 @@ class Espfc
 
     int begin()
     {
+      //Serial.setDebugOutput(true);
       _model.begin();
+      _serial.begin();
       _hardware.begin();
       _model.update();
       _buzzer.begin();
@@ -83,17 +85,17 @@ class Espfc
 
       _buzzer.update();
 
+      if(_model.state.stats.timer.check())
+      {
+        _model.state.stats.calculate();
+      }
+
       return 1;
     }
 
     int updateOther()
     {
       _serial.update();
-
-      if(_model.state.stats.timer.check())
-      {
-        _model.state.stats.calculate();
-      }
 
       return 1;
     }

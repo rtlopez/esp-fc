@@ -66,7 +66,6 @@ class Hardware
     int begin()
     {
       initSerial();
-      initWifi();
       initBus();
       detectGyro();
       detectMag();
@@ -79,28 +78,6 @@ class Hardware
     {
       _model.state.i2cErrorCount++;
       _model.state.i2cErrorDelta++;
-    }
-
-    void initWifi()
-    {
-#if defined(ESP32)
-      int status = -1;
-      if(_model.config.wireless.mode != WIRELESS_MODE_NULL)
-      {
-        WiFi.mode((WiFiMode_t)_model.config.wireless.mode);
-        status = WiFi.begin(_model.config.wireless.ssid, _model.config.wireless.pass);
-      }
-      else
-      {
-        WiFi.disconnect();
-      }
-      const char * modeName = WirelessConfig::getModeName((WirelessMode)_model.config.wireless.mode);
-      _model.logger.info().log(F("WIFI")).log(FPSTR(modeName)).log(_model.config.wireless.ssid).log(_model.config.wireless.pass).logln(status);
-#elif defined(ESP8266)
-      WiFi.disconnect();
-      WiFi.mode(WIFI_OFF);
-      _model.logger.info().logln(F("WIFI OFF"));
-#endif
     }
 
     void initBus()
@@ -246,7 +223,7 @@ class Hardware
 
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
         port->flush();
-        delay(10);
+        delay(20);
         port->begin(sdc);
         _model.state.serial[i].stream = port;
       }       
