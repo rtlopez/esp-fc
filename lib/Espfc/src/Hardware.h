@@ -59,7 +59,6 @@ class Hardware
 
     int begin()
     {
-      initSerial();
       initBus();
       detectGyro();
       detectMag();
@@ -183,46 +182,6 @@ class Hardware
       _model.state.baroPresent = status;
     }
 
-    void initSerial()
-    {
-      for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
-      {
-        SerialDevice * port = getSerialPortById((SerialPort)i);
-        if(!port) continue;
-
-        const SerialPortConfig& spc = _model.config.serial[i];
-        SerialDeviceConfig sdc;
-
-#if defined(ESP32)
-        sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
-        sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
-#endif
-
-        sdc.baud = fromIndex((SerialSpeedIndex)spc.baudIndex, SERIAL_SPEED_115200);
-
-        if(spc.functionMask & SERIAL_FUNCTION_RX_SERIAL)
-        {
-          switch(_model.config.input.serialRxProvider)
-          {
-            case SERIALRX_SBUS:
-              sdc.baud = 100000;
-              sdc.parity = SERIAL_PARITY_EVEN;
-              sdc.stop_bits = SERIAL_STOP_BITS_2;
-              sdc.inverted = true;
-              break;
-            default:
-              break;
-          }
-        }
-
-        _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
-        port->flush();
-        delay(20);
-        port->begin(sdc);
-        _model.state.serial[i].stream = port;
-      }       
-    }
-
     static SerialDevice * getSerialPortById(SerialPort portId)
     {
       switch(portId)
@@ -238,7 +197,7 @@ class Hardware
       }
     }
 
-    SerialSpeed fromIndex(SerialSpeedIndex index, SerialSpeed defaultSpeed)
+    static SerialSpeed fromIndex(SerialSpeedIndex index, SerialSpeed defaultSpeed)
     {
       switch(index)
       {

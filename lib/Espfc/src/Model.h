@@ -7,7 +7,7 @@
 #include "Debug.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
-#include "EEPROM.h"
+#include "Storage.h"
 #include "Logger.h"
 #include "Math.h"
 #include "EspGpio.h"
@@ -132,7 +132,7 @@ class Model
     void begin()
     {
       logger.begin();
-      EEPROM.begin(1024);
+      _storage.begin();
       load();
       sanitize();
     }
@@ -383,63 +383,14 @@ class Model
 
     int load()
     {
-      int addr = 0;
-      uint8_t magic = EEPROM.read(addr++);
-      if(EEPROM_MAGIC != magic)
-      {
-        logger.err().logln(F("EEPROM bad magic"));
-        return -1;
-      }
-
-      uint8_t version = EEPROM.read(addr++);
-      if(version != EEPROM_VERSION)
-      {
-        logger.err().logln(F("EEPROM wrong version"));
-        return -1;
-      }
-
-      uint16_t size = 0;
-      size = EEPROM.read(addr++);
-      size |= EEPROM.read(addr++) << 8;
-      if(size != sizeof(ModelConfig))
-      {
-        logger.info().logln(F("EEPROM size mismatch"));
-      }
-
-      size = std::min(size, (uint16_t)sizeof(ModelConfig));
-
-      uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
-      uint8_t * end = begin + size;
-      for(uint8_t * it = begin; it < end; ++it)
-      {
-        *it = EEPROM.read(addr++);
-      }
-      logger.info().logln(F("EEPROM loaded"));
+      _storage.load(config, logger);
       return 1;
     }
 
     void save()
     {
       preSave();
-      write(config);
-      logger.info().logln(F("EEPROM saved"));
-    }
-
-    void write(const ModelConfig& config)
-    {
-      int addr = 0;
-      uint16_t size = sizeof(ModelConfig);
-      EEPROM.write(addr++, EEPROM_MAGIC);
-      EEPROM.write(addr++, EEPROM_VERSION);
-      EEPROM.write(addr++, size & 0xFF);
-      EEPROM.write(addr++, size >> 8);
-      const uint8_t * begin = reinterpret_cast<const uint8_t*>(&config);
-      const uint8_t * end = begin + sizeof(ModelConfig);
-      for(const uint8_t * it = begin; it < end; ++it)
-      {
-        EEPROM.write(addr++, *it);
-      }
-      EEPROM.commit();
+      _storage.write(config, logger);
     }
 
     void reload()
@@ -456,12 +407,12 @@ class Model
       update();
     }
 
-    static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = EEPROM_VERSION_NUM;
-
     ModelState state;
     ModelConfig config;
     Logger logger;
+
+  private:
+    Storage _storage;
 };
 
 }

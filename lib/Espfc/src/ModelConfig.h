@@ -8,8 +8,6 @@
 #include "Device/MagDevice.h"
 #include "Device/BaroDevice.h"
 
-#define EEPROM_VERSION_NUM 0x0D
-
 #define USE_SOFT_SERIAL
 
 namespace Espfc {
@@ -108,8 +106,10 @@ class FusionConfig
 
     static const char ** getModeNames()
     {
-      static const char* modeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
-                                           PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"), NULL };
+      static const char* modeChoices[] = {
+        PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
+        PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"),
+        NULL };
       return modeChoices;
     }
 };
@@ -429,6 +429,7 @@ class PidConfig
     uint8_t P;
     uint8_t I;
     uint8_t D;
+    int16_t F;
 };
 
 class InputChannelConfig
@@ -836,7 +837,7 @@ class ModelConfig
       serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_MSP;
+      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_RX_SERIAL;
       serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
@@ -940,17 +941,17 @@ class ModelConfig
       input.deadband = 3; // us
 
       // PID controller config
-      pid[PID_ROLL]  = { .P = 46, .I = 45, .D = 25 };
-      pid[PID_PITCH] = { .P = 50, .I = 50, .D = 27 };
-      pid[PID_YAW]   = { .P = 65, .I = 45, .D = 10 };
-      pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0 };
+      pid[PID_ROLL]  = { .P = 46, .I = 45, .D = 25, .F = 0 };
+      pid[PID_PITCH] = { .P = 50, .I = 50, .D = 27, .F = 0 };
+      pid[PID_YAW]   = { .P = 65, .I = 45, .D = 10, .F = 0 };
+      pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
 
-      pid[PID_ALT]   = { .P = 50, .I =  0, .D =  0 };
-      pid[PID_POS]   = { .P = 15, .I =  0, .D =  0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
-      pid[PID_POSR]  = { .P = 32, .I = 14, .D = 53 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
-      pid[PID_NAVR]  = { .P = 25, .I = 33, .D = 83 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
-      pid[PID_MAG]   = { .P = 40, .I =  0, .D =  0 };
-      pid[PID_VEL]   = { .P = 55, .I = 55, .D = 75 };
+      pid[PID_ALT]   = { .P = 50, .I =  0, .D =  0, .F = 0 };
+      pid[PID_POS]   = { .P = 15, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
+      pid[PID_POSR]  = { .P = 32, .I = 14, .D = 53, .F = 0 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
+      pid[PID_NAVR]  = { .P = 25, .I = 33, .D = 83, .F = 0 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
+      pid[PID_MAG]   = { .P = 40, .I =  0, .D =  0, .F = 0 };
+      pid[PID_VEL]   = { .P = 55, .I = 55, .D = 75, .F = 0 };
 
       itermWindupPointPercent = 30;
       dtermSetpointWeight = 30;
@@ -963,6 +964,8 @@ class ModelConfig
     #elif defined(ESP32)
       featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL;
     #endif
+
+      input.serialRxProvider = SERIALRX_SBUS;
 
       lowThrottleZeroIterm = true;
 

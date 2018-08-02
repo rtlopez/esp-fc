@@ -45,7 +45,6 @@ class Espfc
 
     int update()
     {
-      //return 0;
       _hardware.update();
 
       _model.state.gyroUpdate = _model.state.gyroTimer.check();
@@ -83,18 +82,14 @@ class Espfc
         _blackbox.update();
       }
 
-      _buzzer.update();
-
-      if(_model.state.stats.timer.check())
-      {
-        _model.state.stats.calculate();
-      }
-
       return 1;
     }
 
+    // other task
     int updateOther()
     {
+      _model.state.stats.calculate();
+      _buzzer.update();
       _serial.update();
 
       return 1;

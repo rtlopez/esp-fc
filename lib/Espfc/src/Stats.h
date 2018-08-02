@@ -71,6 +71,7 @@ class Stats
 
     void calculate()
     {
+      if(!timer.check()) return;
       for(size_t i = 0; i < COUNTER_COUNT; i++)
       {
         _avg[i] = (float)_sum[i] / timer.delta;

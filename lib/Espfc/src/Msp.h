@@ -762,6 +762,17 @@ class Msp
           r.writeU16(0); //itermThrottleThreshold;
           r.writeU16(0); //itermAcceleratorGain;
           r.writeU16(_model.config.dtermSetpointWeight);
+          r.writeU8(0); //iterm rotation
+          r.writeU8(0); //smart feed forward
+          r.writeU8(0); //iterm relax
+          r.writeU8(0); //iterm ralx type
+          r.writeU8(0); //abs control gain
+          r.writeU8(0); //throttle boost
+          r.writeU8(0); //acro trainer max angle
+          r.writeU16(_model.config.pid[PID_ROLL].F); //pid roll f
+          r.writeU16(_model.config.pid[PID_PITCH].F); //pid pitch f
+          r.writeU16(_model.config.pid[PID_YAW].F); //pid yaw f
+          r.writeU8(0); //antigravity mode
           break;
 
         case MSP_SET_PID_ADVANCED:
@@ -788,6 +799,20 @@ class Msp
           if (m.remain() >= 2) {
             _model.config.dtermSetpointWeight = m.readU16();
           }
+          if (m.remain() >= 14) {
+            m.readU8(); //iterm rotation
+            m.readU8(); //smart feed forward
+            m.readU8(); //iterm relax
+            m.readU8(); //iterm ralx type
+            m.readU8(); //abs control gain
+            m.readU8(); //throttle boost
+            m.readU8(); //acro trainer max angle
+            _model.config.pid[PID_ROLL].F = m.readU16(); // pid roll f
+            _model.config.pid[PID_PITCH].F = m.readU16(); // pid pitch f
+            _model.config.pid[PID_YAW].F = m.readU16(); // pid yaw f
+            m.readU8(); //antigravity mode
+          }
+
           _model.reload();
           break;
 
