@@ -67,7 +67,7 @@ class Input
             case INPUT_INTERPOLATION_AUTO:
               {
                 uint32_t now = micros();
-                inputDt = Math::bound(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f;
+                inputDt = constrain(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f;
                 prevTm = now;
               }
               break;
@@ -164,7 +164,7 @@ class Input
       const InputChannelConfig& ich = _model.config.input.channel[c];
       v -= _model.config.input.midRc - 1500;
       float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, 1000.f, 1500.f, 2000.f);
-      t = Math::bound(t, 800.f, 2200.f);
+      t = constrain(t, 800.f, 2200.f);
       _buff[0][c] = _deadband(c, lrintf(t));
     }
 

@@ -612,10 +612,10 @@ class Msp
             {
               _model.config.input.superRate[i] = m.readU8();
             }
-            _model.config.tpaScale = Math::bound((int)m.readU8(), 0, 90); // dyn thr pid
+            _model.config.tpaScale = constrain(m.readU8(), 0, 90); // dyn thr pid
             m.readU8(); // thrMid8
             m.readU8();  // thr expo
-            _model.config.tpaBreakpoint = Math::bound((int)m.readU16(), 1000, 2000); // tpa breakpoint
+            _model.config.tpaBreakpoint = constrain(m.readU16(), 1000, 2000); // tpa breakpoint
             if(m.remain() >= 1)
             {
               _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo

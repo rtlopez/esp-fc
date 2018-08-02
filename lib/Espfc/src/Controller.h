@@ -148,7 +148,7 @@ class Controller
     float getTpaFactor() const
     {
       if(_model.config.tpaScale == 0) return 1.f;
-      float t = Math::bound(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
+      float t = constrain(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
       return Math::map(t, (float)_model.config.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.tpaScale * 0.01f));
     }
 
@@ -188,10 +188,10 @@ class Controller
       float angleRate = 200.0f * rcRate * input;
       if (_model.config.input.superRate[axis])
       {
-        const float rcSuperfactor = 1.0f / (Math::bound(1.0f - (inputAbs * (_model.config.input.superRate[axis] / 100.0f)), 0.01f, 1.00f));
+        const float rcSuperfactor = 1.0f / (constrain(1.0f - (inputAbs * (_model.config.input.superRate[axis] / 100.0f)), 0.01f, 1.00f));
         angleRate *= rcSuperfactor;
       }
-      return radians(Math::bound(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)
+      return radians(constrain(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)
     }
 
   private:

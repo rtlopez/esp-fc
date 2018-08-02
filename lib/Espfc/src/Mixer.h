@@ -170,7 +170,7 @@ class Mixer
         }
         else
         {
-          thrust = Math::bound(thrust, -1.f + range, 1.f - range);
+          thrust = constrain(thrust, -1.f + range, 1.f - range);
         }
       }
 
@@ -213,11 +213,11 @@ class Mixer
           if(och.servo)
           {
             const int16_t tmp = lrintf(Math::map3(out[i], -1.f, 0.f, 1.f, och.reverse ? 2000 : 1000, och.neutral, och.reverse ? 1000 : 2000));
-            _model.state.outputUs[i] = Math::bound(tmp, och.min, och.max);
+            _model.state.outputUs[i] = constrain(tmp, och.min, och.max);
           }
           else
           {
-            float v = Math::bound(out[i], -1.f, 1.f);
+            float v = constrain(out[i], -1.f, 1.f);
             _model.state.outputUs[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
           }
         }

@@ -38,7 +38,7 @@ class VoltageSensor: public BaseSensor
       val /= 10.f;
       val *= _model.config.vbatResMult;
       val /= _model.config.vbatResDiv;
-      val = Math::bound(val, 0.f, 255.f);
+      val = constrain(val, 0.f, 255.f);
       val = (val * alpha + _model.state.battery.voltage * (1.f - alpha)); // smooth
       _model.state.battery.voltage = (uint8_t)lrintf(val);
 
@@ -48,7 +48,7 @@ class VoltageSensor: public BaseSensor
         _model.state.battery.cells = ((int)_model.state.battery.voltage + 40) / 42;  // round
         _model.state.battery.samples--;
       }
-      _model.state.battery.cellVoltage = _model.state.battery.voltage / std::max((int)_model.state.battery.cells, 1);
+      _model.state.battery.cellVoltage = _model.state.battery.voltage / constrain(_model.state.battery.cells, 1, 6);
 
       return 1;
     }

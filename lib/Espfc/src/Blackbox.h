@@ -203,7 +203,7 @@ class Blackbox
       rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
       for(size_t i = 0; i < 4; i++)
       {
-        motor[i] = Math::bound((int)_model.state.outputUs[i], 1000, 2000);
+        motor[i] = constrain(_model.state.outputUs[i], 1000, 2000);
         if(_model.state.digitalOutput) {
           motor[i] = PWM_TO_DSHOT(motor[i]);
         }

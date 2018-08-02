@@ -28,7 +28,7 @@ class FreqAnalyzer
       _noise = _bpf.update(v);
       bool sign = _noise > 0.f;
       if(sign != _sign_prev) {
-        _pitch_freq = (float)constrain(_rate / (std::max(_pitch_count, 1) * 2.f), 125, 425);
+        _pitch_freq = constrain(_rate / (std::max(_pitch_count, 1) * 2.f), 125, 425);
         _pitch_count = 0;
       }
       _sign_prev = sign;

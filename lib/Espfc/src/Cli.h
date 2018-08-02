@@ -272,9 +272,9 @@ class Cli
 
         void write(MixerEntry& ac, const char ** args) const
         {
-          if(args[2]) ac.src = Math::bound((int)String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
-          if(args[3]) ac.dst = Math::bound((int)String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
-          if(args[4]) ac.rate = Math::bound((int)String(args[4]).toInt(), -1000, 1000);
+          if(args[2]) ac.src = constrain(String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
+          if(args[3]) ac.dst = constrain(String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
+          if(args[4]) ac.rate = constrain(String(args[4]).toInt(), -1000, 1000);
         }
 
         template<typename T>
