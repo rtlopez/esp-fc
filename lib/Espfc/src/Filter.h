@@ -62,6 +62,7 @@ class Filter
           initPt1();
           break;
         case FILTER_NOTCH:
+        case FILTER_NOTCH_DF1:
           initBiquadNotch();
           break;
         case FILTER_FIR2:
@@ -69,6 +70,9 @@ class Filter
           break;
         case FILTER_MEDIAN3:
           initMedian3();
+          break;
+        case FILTER_BPF:
+          initBiquadBpf();
           break;
         case FILTER_NONE:
         default:
@@ -92,10 +96,22 @@ class Filter
           return updateFir2(v);
         case FILTER_MEDIAN3:
           return updateMedian3(v);
+        case FILTER_BPF:
+          return updateBiquadDF2(v);
+        case FILTER_NOTCH_DF1:
+          return updateBiquadDF1(v);
         case FILTER_NONE:
         default:
           return v;
       }
+    }
+
+    void reconfigureNotchDF1(float freq, float cutoff)
+    {
+      //float q = 1.7f; // or const Q factor
+      float q = getNotchQApprox(freq, cutoff);
+      _freq = freq;
+      initBiquadCoefficients(BIQUAD_FILTER_NOTCH, q);
     }
 
   private:
@@ -160,12 +176,18 @@ class Filter
       initBiquad(BIQUAD_FILTER_NOTCH, q);
     }
 
+    void initBiquadBpf()
+    {
+      float q = getNotchQ(_freq, _cutoff);
+      initBiquad(BIQUAD_FILTER_BPF, q);
+    }
+
     void initBiquadLpf()
     {
       initBiquad(BIQUAD_FILTER_LPF, 1.0f / sqrtf(2.0f)); /* quality factor - butterworth for lpf */
     }
 
-    void initBiquad(BiquadFilterType filterType, float q)
+    void initBiquadCoefficients(BiquadFilterType filterType, float q)
     {
       const float omega = 2.0f * PI * _freq / _rate;
       const float sn = sinf(omega);
@@ -208,6 +230,11 @@ class Filter
       _state.bq.b2 = b2 / a0;
       _state.bq.a1 = a1 / a0;
       _state.bq.a2 = a2 / a0;
+    }
+
+    void initBiquad(BiquadFilterType filterType, float q)
+    {
+      initBiquadCoefficients(filterType, q);
 
       // zero initial samples
       _state.bq.x1 = _state.bq.x2 = 0;
@@ -243,7 +270,7 @@ class Filter
       return result;
     }
 
-    float getNotchQApprox(int freq, int cutoff)
+    float getNotchQApprox(float freq, float cutoff)
     {
       return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
     }

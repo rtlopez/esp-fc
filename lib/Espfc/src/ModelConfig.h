@@ -271,6 +271,7 @@ enum Feature {
   FEATURE_MOTOR_STOP = 1 << 4,
   FEATURE_SOFTSERIAL = 1 << 6,
   FEATURE_TELEMETRY  = 1 << 10,
+  FEATURE_DYNAMIC_FILTER = 1 << 29,
 };
 
 enum InputInterpolation {
@@ -392,6 +393,8 @@ enum FilterType {
   FILTER_NOTCH,
   FILTER_FIR2,
   FILTER_MEDIAN3,
+  FILTER_BPF,
+  FILTER_NOTCH_DF1,
   FILTER_NONE,
 };
 
@@ -404,6 +407,8 @@ enum BiquadFilterType {
 class FilterConfig
 {
   public:
+    FilterConfig() {}
+    FilterConfig(FilterType t, int16_t f, int16_t c = 0): type(t), freq(f), cutoff(c) {}
     int8_t type;
     int16_t freq;
     int16_t cutoff;
@@ -962,7 +967,7 @@ class ModelConfig
     #if defined(ESP8266)
       featureMask = FEATURE_RX_PPM;
     #elif defined(ESP32)
-      featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL;
+      featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_DYNAMIC_FILTER;
     #endif
 
       input.serialRxProvider = SERIALRX_SBUS;

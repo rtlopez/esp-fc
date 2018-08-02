@@ -217,7 +217,7 @@ class Model
 
       // configure serial ports
       uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
-      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
+      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY | FEATURE_DYNAMIC_FILTER;
       if(config.softSerialGuard || !ESPFC_GUARD)
       {
         featureAllowMask |= FEATURE_SOFTSERIAL;
@@ -287,6 +287,11 @@ class Model
 
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
+        if(isActive(FEATURE_DYNAMIC_FILTER))
+        {
+          state.gyroAnalyzer[i].begin(state.gyroTimer.rate);
+          state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 350), state.gyroTimer.rate);
+        }
         state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
         state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);

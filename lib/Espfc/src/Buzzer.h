@@ -1,7 +1,7 @@
 #ifndef _ESPFC_BUZZER_H_
 #define _ESPFC_BUZZER_H_
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Model.h"
 
 namespace Espfc {

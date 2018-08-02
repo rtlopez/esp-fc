@@ -13,6 +13,7 @@
 #include "Stats.h"
 #include "Timer.h"
 #include "SerialDevice.h"
+#include "Math/FreqAnalyzer.h"
 
 namespace Espfc {
 
@@ -254,7 +255,10 @@ struct ModelState
   Filter gyroFilter3[3];
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
-
+  Filter gyroDynamicFilter[3];
+  Math::FreqAnalyzer gyroAnalyzer[3];
+  float gyroAnalyzerFreq[3];
+  
   Filter accelFilter[3];
   Filter magFilter[3];
 

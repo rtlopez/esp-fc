@@ -3,15 +3,14 @@
 
 namespace Espfc {
 
-class Math
-{
-public:
-  float static map(float x, float in_min, float in_max, float out_min, float out_max)
+namespace Math {
+
+  static float map(float x, float in_min, float in_max, float out_min, float out_max)
   {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
   }
 
-  float static map3(float x, float in_min, float in_neutral, float in_max, float out_min, float out_neutral, float out_max)
+  static float map3(float x, float in_min, float in_neutral, float in_max, float out_min, float out_neutral, float out_max)
   {
     return (x < in_neutral)
       ? Math::map(x, in_min, in_neutral, out_min, out_neutral)
@@ -20,7 +19,7 @@ public:
   }
 
   template<typename T>
-  T static deadband(const T value, const T band)
+  T deadband(const T value, const T band)
   {
     if(value > band) return value - band;
     else if(value < -band) return value + band;
@@ -28,13 +27,14 @@ public:
   }
 
   template<typename T>
-  T static bound(const T x, const T min, const T max)
+  T bound(const T x, const T min, const T max)
   {
     if(x > max) return max;
     if(x < min) return min;
     return x;
   }
-};
+
+}
 
 }
 
