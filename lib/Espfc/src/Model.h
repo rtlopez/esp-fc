@@ -217,7 +217,14 @@ class Model
 
       // configure serial ports
       uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
-      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY | FEATURE_DYNAMIC_FILTER;
+      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
+
+      // allow dynamic filter only above 1k sampling rate
+      if(gyroSampleRate >= 1000)
+      {
+        featureAllowMask |= FEATURE_DYNAMIC_FILTER;
+      }
+
       if(config.softSerialGuard || !ESPFC_GUARD)
       {
         featureAllowMask |= FEATURE_SOFTSERIAL;
@@ -233,7 +240,7 @@ class Model
       config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_2].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_WIFI_0].functionMask &= serialFunctionAllowedMask & ~(FEATURE_RX_SERIAL);
+      config.serial[SERIAL_WIFI_0].functionMask &= serialFunctionAllowedMask & ~FEATURE_RX_SERIAL;
 #elif defined(ESP8266)
       config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
@@ -269,7 +276,7 @@ class Model
       state.stats.timer.setRate(10);
       state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 200));
       state.accelTimer.setInterval(state.accelTimer.interval - 20);
-      state.serialTimer.setRate(500);
+      state.serialTimer.setRate(1000);
 
       // configure calibration
       state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
