@@ -294,16 +294,14 @@ class Model
 
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
-        if(isActive(FEATURE_DYNAMIC_FILTER))
-        {
-          state.gyroAnalyzer[i].begin(state.gyroTimer.rate);
-          state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 350), state.gyroTimer.rate);
-        }
+        state.gyroAnalyzer[i].begin(state.gyroTimer.rate);
+        state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
+        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
+        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
         state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
         state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
-        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
-        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
+        
         state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
         state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
       }

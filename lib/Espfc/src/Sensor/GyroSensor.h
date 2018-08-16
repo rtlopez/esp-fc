@@ -88,22 +88,20 @@ class GyroSensor: public BaseSensor
 
           // dynamic filter start
           bool dynamicFilter = _model.isActive(FEATURE_DYNAMIC_FILTER);
-          float freq = 0;
           if(dynamicFilter || _model.config.debugMode == DEBUG_FFT_FREQ)
           {
-            freq = _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
+            _model.state.gyroAnalyzerFreq[i] = _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
             if(_model.config.debugMode == DEBUG_FFT_FREQ)
             {
-              _model.state.debug[i] = lrintf(freq);
+              _model.state.debug[i] = lrintf(_model.state.gyroAnalyzerFreq[i]);
               if(i == 0) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
             }
           }
           if(dynamicFilter)
           {
-            if(abs(_model.state.gyroAnalyzerFreq[i] - freq) > 10)
+            if((_model.state.gyroTimer.iteration & 0x1f) == 0) // every 8th (0x07) sample
             {
-              _model.state.gyroAnalyzerFreq[i] = freq;
-              _model.state.gyroDynamicFilter[i].reconfigureNotchDF1(freq, freq - 50);
+              _model.state.gyroDynamicFilter[i].reconfigureNotchDF1(_model.state.gyroAnalyzerFreq[i], (_model.state.gyroAnalyzerFreq[i] - 50));
             }
             _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
           }

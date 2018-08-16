@@ -77,7 +77,7 @@ class Storage
 
   private:
     static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x00;
+    static const uint8_t EEPROM_VERSION = 0x01;
     static const size_t  EEPROM_SIZE    = 2048;
 };
 

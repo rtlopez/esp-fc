@@ -829,6 +829,7 @@ class ModelConfig
       telemetryInterval = 1000;
 
       debugMode = DEBUG_NONE;
+      //debugMode = DEBUG_FFT_FREQ;
       softSerialGuard = false;
       serialRxGuard = false;
 

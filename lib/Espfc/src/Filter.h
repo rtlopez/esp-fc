@@ -108,9 +108,11 @@ class Filter
 
     void reconfigureNotchDF1(float freq, float cutoff)
     {
-      //float q = 1.7f; // or const Q factor
-      float q = getNotchQApprox(freq, cutoff);
       _freq = freq;
+      _cutoff = cutoff;
+      //float q = 1.7f; // or const Q factor
+      //float q = getNotchQApprox(freq, cutoff);
+      float q = getNotchQ(freq, cutoff);
       initBiquadCoefficients(BIQUAD_FILTER_NOTCH, q);
     }
 
@@ -147,15 +149,16 @@ class Filter
     float updatePt1Fir2(float v) /* ICACHE_RAM_ATTR */
     {
       _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
+      const float t = _state.pt1.v;
       _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
-      _state.pt1.v0 = _state.pt1.v;
+      _state.pt1.v0 = t;
       return _state.pt1.v;
     }
 
     float updateFir2(float v) /* ICACHE_RAM_ATTR */
     {
-      _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
-      _state.pt1.v0 = _state.pt1.v;
+      _state.pt1.v = (v + _state.pt1.v0) * 0.5f;
+      _state.pt1.v0 = v;
       return _state.pt1.v;
     }
 
@@ -199,28 +202,28 @@ class Filter
       switch (filterType)
       {
         case BIQUAD_FILTER_LPF:
-          b0 = (1 - cs) * 0.5f;
-          b1 =  1 - cs;
-          b2 = (1 - cs) * 0.5f;
-          a0 =  1 + alpha;
-          a1 = -2 * cs;
-          a2 =  1 - alpha;
+          b0 = (1.f - cs) * 0.5f;
+          b1 =  1.f - cs;
+          b2 = (1.f - cs) * 0.5f;
+          a0 =  1.f + alpha;
+          a1 = -2.f * cs;
+          a2 =  1.f - alpha;
           break;
         case BIQUAD_FILTER_NOTCH:
-          b0 =  1;
-          b1 = -2 * cs;
-          b2 =  1;
-          a0 =  1 + alpha;
-          a1 = -2 * cs;
-          a2 =  1 - alpha;
+          b0 =  1.f;
+          b1 = -2.f * cs;
+          b2 =  1.f;
+          a0 =  1.f + alpha;
+          a1 = -2.f * cs;
+          a2 =  1.f - alpha;
           break;
         case BIQUAD_FILTER_BPF:
           b0 =  alpha;
           b1 =  0;
           b2 = -alpha;
-          a0 =  1 + alpha;
-          a1 = -2 * cs;
-          a2 =  1 - alpha;
+          a0 =  1.f + alpha;
+          a1 = -2.f * cs;
+          a2 =  1.f - alpha;
           break;
       }
 
