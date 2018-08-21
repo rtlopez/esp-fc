@@ -139,20 +139,14 @@ class Model
 
     void sanitize()
     {
-      int gyroSyncMax = 4; // max 2khz
-      if(state.gyroBus == BUS_SPI)
-      {
-        gyroSyncMax = 1; // max 8k
-        //if(config.accelDev != GYRO_NONE) gyroSyncMax /= 2; // max 4khz
-        //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 4; // max 2khz
-      }
-      else
-      {
-        //if(config.accelDev != GYRO_NONE) gyroSyncMax = 8; // max 1khz
-        //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax = 16; // max 500hz
-      }
+      int gyroSyncMax = 1; // max 8kHz
+      #if defined(ESP8266)
+        gyroSyncMax = 4; // max 2khz     
+      #endif    
+      //if(config.accelDev != GYRO_NONE) gyroSyncMax /= 2;
+      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 2;
 
-      config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax); // max 1khz
+      config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax);
       state.gyroClock = 8000;
       if(config.gyroDlpf != GYRO_DLPF_256)
       {
@@ -212,6 +206,10 @@ class Model
           {
             config.output.maxThrottle = 1940;
           }
+        }
+        if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && gyroSampleRate > 2000)
+        {
+          config.loopSync = std::max(config.loopSync, (int8_t)((gyroSampleRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
         }
       }
 

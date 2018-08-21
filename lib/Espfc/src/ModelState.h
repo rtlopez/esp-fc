@@ -354,18 +354,10 @@ struct ModelState
   int16_t i2cErrorDelta;
 
   bool gyroPresent;
-  int8_t gyroBus;
-  int8_t gyroDev;
-
   bool accelPresent;
-  
   bool magPresent;
-  int8_t magBus;
-  int8_t magDev;
-
   bool baroPresent;
-  int8_t baroBus;
-  int8_t baroDev;
+  
   float baroTemperatureRaw;
   float baroTemperature;
   float baroPressureRaw;

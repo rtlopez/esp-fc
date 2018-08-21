@@ -49,8 +49,7 @@ class BaroBMP085: public BaroDevice
 
     int begin(BusDevice * bus, uint8_t addr) override
     {
-      _bus = bus;
-      _addr = addr;
+      setBus(bus, addr);
 
       if(!testConnection()) return 0;
 
@@ -142,8 +141,6 @@ class BaroBMP085: public BaroDevice
     }
 
   protected:
-    BusDevice * _bus;
-    uint8_t _addr;
     int8_t _mode;
     int32_t _t_fine;
     CalibrationData _cal;

@@ -89,8 +89,7 @@ class GyroMPU6050: public GyroDevice
 
     int begin(BusDevice * bus, uint8_t addr) override
     {
-      _bus = bus;
-      _addr = addr;
+      setBus(bus, addr);
 
       if(!testConnection()) return 0;
 
@@ -175,10 +174,6 @@ class GyroMPU6050: public GyroDevice
     {
       _bus->writeBits(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, source);
     }
-
-  protected:
-    BusDevice * _bus;
-    uint8_t _addr;
 };
 
 }

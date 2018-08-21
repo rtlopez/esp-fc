@@ -9,11 +9,12 @@
 
 namespace Espfc {
 
-enum BusId {
+enum BusType {
   BUS_NONE,
   BUS_AUTO,
   BUS_I2C,
   BUS_SPI,
+  BUS_MAX
 };
 
 namespace Device {
@@ -21,6 +22,8 @@ namespace Device {
 class BusDevice
 {
   public:
+    virtual BusType getType() const = 0;
+
     virtual int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) = 0;
 
     virtual bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) = 0;
@@ -84,6 +87,12 @@ class BusDevice
     {
       static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), NULL };
       return busDevChoices;
+    }
+
+    static const char * getName(BusType type)
+    {
+      if(type >= BUS_MAX) return PSTR("?");
+      return getNames()[type];
     }
 
     std::function<void(void)> onError;

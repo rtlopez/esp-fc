@@ -2,6 +2,7 @@
 #define _ESPFC_DEVICE_BARO_DEVICE_H_
 
 #include "BusDevice.h"
+#include "BusAwareDevice.h"
 
 namespace Espfc {
 
@@ -21,7 +22,7 @@ enum BaroDeviceMode {
 
 namespace Device {
 
-class BaroDevice
+class BaroDevice: public BusAwareDevice
 {
   public:
     typedef BaroDeviceType DeviceType;

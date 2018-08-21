@@ -14,6 +14,8 @@ class BusSPI: public BusDevice
   public:
     static const uint8_t SPI_READ = 0x80;
 
+    BusType getType() const override { return BUS_SPI; }
+
     int begin(int8_t sck = -1, int8_t miso = -1, int8_t mosi = -1, int8_t ss = -1)
     {
       if(sck == -1 || miso == -1 || mosi == -1) return 0;
@@ -46,8 +48,11 @@ class BusSPI: public BusDevice
     void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *in, uint8_t *out)
     {
       //SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
+      //SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE3));
-      SPI.beginTransaction(SPISettings(12000000, MSBFIRST, SPI_MODE3));
+      //SPI.beginTransaction(SPISettings(12000000, MSBFIRST, SPI_MODE3));
+      //SPI.beginTransaction(SPISettings(16000000, MSBFIRST, SPI_MODE3));
+      SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE3));
       digitalWrite(devAddr, LOW);
       SPI.transfer(regAddr); // specify the starting register address
       //SPI.transferBytes(in, out, length);

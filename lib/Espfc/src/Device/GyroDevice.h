@@ -3,6 +3,7 @@
 
 #include "helper_3dmath.h"
 #include "BusDevice.h"
+#include "BusAwareDevice.h"
 
 namespace Espfc {
 
@@ -18,7 +19,7 @@ enum GyroDeviceType {
 
 namespace Device {
 
-class GyroDevice
+class GyroDevice: public BusAwareDevice
 {
   public:
     typedef GyroDeviceType DeviceType;
@@ -27,7 +28,7 @@ class GyroDevice
     virtual int begin(BusDevice * bus, uint8_t addr) = 0;
 
     virtual DeviceType getType() const = 0;
-
+    
     virtual int readGyro(VectorInt16& v) = 0;
     virtual int readAccel(VectorInt16& v) = 0;
 

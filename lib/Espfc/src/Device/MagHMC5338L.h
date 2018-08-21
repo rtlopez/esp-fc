@@ -77,8 +77,7 @@ class MagHMC5338L: public MagDevice
   public:
     int begin(BusDevice * bus, uint8_t addr = HMC5883L_DEFAULT_ADDRESS)
     {
-      _bus = bus;
-      _addr = addr;
+      setBus(bus, addr);
       _mode = HMC5883L_MODE_CONTINUOUS;
       return testConnection();
     }
@@ -131,8 +130,6 @@ class MagHMC5338L: public MagDevice
     }
 
   private:
-    BusDevice * _bus;
-    uint8_t _addr;
     uint8_t _mode;
 };
 

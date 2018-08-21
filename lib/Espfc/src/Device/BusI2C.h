@@ -18,6 +18,8 @@ namespace Device {
 class BusI2C: public BusDevice
 {
   public:
+    BusType getType() const override { return BUS_I2C; }
+
     int begin(int sda, int scl, int speed)
     {
       WireImpl.begin(sda, scl);

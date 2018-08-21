@@ -2,6 +2,7 @@
 #define _ESPFC_DEVICE_MAG_DEVICE_H_
 
 #include "helper_3dmath.h"
+#include "BusAwareDevice.h"
 
 namespace Espfc {
 
@@ -16,12 +17,13 @@ enum MagDeviceType {
 
 namespace Device {
 
-class MagDevice
+class MagDevice: public BusAwareDevice
 {
   public:
     typedef MagDeviceType DeviceType;
 
     virtual DeviceType getType() const = 0;
+
     virtual int readMag(VectorInt16& v) = 0;
 
     virtual void setSampleAveraging(uint8_t averaging) = 0;

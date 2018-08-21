@@ -322,7 +322,9 @@ enum PinFunction {
   PIN_SPI_0_SCK,
   PIN_SPI_0_MOSI,
   PIN_SPI_0_MISO,
-  PIN_SPI_0_CS0,
+  PIN_SPI_CS0,
+  PIN_SPI_CS1,
+  PIN_SPI_CS2,
 #endif
   PIN_COUNT
 };
@@ -755,7 +757,9 @@ class ModelConfig
       pin[PIN_SPI_0_SCK] = 18;
       pin[PIN_SPI_0_MOSI] = 23;
       pin[PIN_SPI_0_MISO] = 19;
-      pin[PIN_SPI_0_CS0] = 5;
+      pin[PIN_SPI_CS0] = 5;
+      pin[PIN_SPI_CS1] = 15;
+      pin[PIN_SPI_CS2] = -1;
 #endif
       i2cSpeed = 1000;
 

@@ -540,7 +540,9 @@ class Cli
         Param(PSTR("pin_spi_0_sck"), &c.pin[PIN_SPI_0_SCK]),
         Param(PSTR("pin_spi_0_mosi"), &c.pin[PIN_SPI_0_MOSI]),
         Param(PSTR("pin_spi_0_miso"), &c.pin[PIN_SPI_0_MISO]),
-        Param(PSTR("pin_spi_0_cs_0"), &c.pin[PIN_SPI_0_CS0]),
+        Param(PSTR("pin_spi_cs_0"), &c.pin[PIN_SPI_CS0]),
+        Param(PSTR("pin_spi_cs_1"), &c.pin[PIN_SPI_CS1]),
+        Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
 #endif
 
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
@@ -1044,9 +1046,6 @@ class Cli
       }
       else if(strcmp_P(cmd.args[0], PSTR("status")) == 0)
       {
-        const char ** busNames = Device::BusDevice::getNames();
-        const char ** gyroNames = Device::GyroDevice::getNames();
-        const char ** baroNames = Device::BaroDevice::getNames();
 
         printVersion(s);
         s.println();
@@ -1054,14 +1053,45 @@ class Cli
         s.println();
         s.print(F(" cpu freq : "));
         s.println(ESP.getCpuFreqMHz());
-        s.print(F(" gyro bus : "));
-        s.println(FPSTR(busNames[_model.state.gyroBus]));
-        s.print(F(" gyro type: "));
-        s.println(FPSTR(gyroNames[_model.state.gyroDev]));
-        s.print(F(" baro bus : "));
-        s.println(FPSTR(busNames[_model.state.baroBus]));
-        s.print(F(" baro type: "));
-        s.println(FPSTR(baroNames[_model.state.baroDev]));
+
+        Device::GyroDevice * gyro = Hardware::getGyroDevice(_model);
+        Device::BaroDevice * baro = Hardware::getBaroDevice(_model);
+        Device::MagDevice  * mag  = Hardware::getMagDevice(_model);
+        if(gyro)
+        {
+          s.print(F("gyro : "));
+          s.print(FPSTR(Device::GyroDevice::getName(gyro->getType())));
+          s.print('@');
+          s.println(FPSTR(Device::BusDevice::getName(gyro->getBus()->getType())));
+        }
+        else
+        {
+          s.println(F("gyro : NONE"));
+        }
+
+        if(baro)
+        {
+          s.print(F("baro : "));
+          s.print(FPSTR(Device::BaroDevice::getName(baro->getType())));
+          s.print('@');
+          s.println(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
+        }
+        else
+        {
+          s.println(F("baro : NONE"));
+        }
+
+        if(mag)
+        {
+          s.print(F(" mag : "));
+          s.print(FPSTR(Device::MagDevice::getName(mag->getType())));
+          s.print('@');
+          s.println(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
+        }
+        else
+        {
+          s.println(F(" mag : NONE"));
+        }
       }
       else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
       {

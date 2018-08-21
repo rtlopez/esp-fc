@@ -20,8 +20,7 @@ class GyroMPU9250: public GyroMPU6050
 
     int begin(BusDevice * bus, uint8_t addr) override
     {
-      _bus = bus;
-      _addr = addr;
+      setBus(bus, addr);
 
       if(!testConnection()) return 0;
 

@@ -140,7 +140,7 @@ class EscDriverEsp32: public EscDriverBase
       _channel[i].pulse_max = getPulseMax();
       _channel[i].pulse_space = getPulseInterval();
 
-      // spec
+      // specification 0:37%, 1:75% of 1670ns for dshot600
       //_channel[i].dshot_t0h = getDshotPulse(625);
       //_channel[i].dshot_t0l = getDshotPulse(1045);
       //_channel[i].dshot_t1h = getDshotPulse(1250);

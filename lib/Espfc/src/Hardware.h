@@ -46,6 +46,8 @@ namespace {
   static Espfc::Device::MagHMC5338L hmc5883l;
   static Espfc::Device::BaroBMP085 bmp085;
   static Espfc::Device::GyroDevice * detectedGyro = nullptr;
+  static Espfc::Device::BaroDevice * detectedBaro = nullptr;
+  static Espfc::Device::MagDevice  * detectedMag  = nullptr;
   static EscDriver escMotor;
   static EscDriver escServo;
 }
@@ -92,53 +94,51 @@ class Hardware
     {
       if(_model.config.gyroDev == GYRO_NONE) return;
 
-      _model.state.gyroDev = GYRO_NONE;
-      _model.state.gyroBus = BUS_NONE;
-
 #if defined(ESP32)
-      detectGyroDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_0_CS0]);
+      if(_model.config.pin[PIN_SPI_CS0] != -1)
+      {
+        pinMode(_model.config.pin[PIN_SPI_CS0], OUTPUT);
+        digitalWrite(_model.config.pin[PIN_SPI_CS0], HIGH);
+        if(!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
+      }
+      if(_model.config.pin[PIN_SPI_CS2] != -1)
+      {
+        pinMode(_model.config.pin[PIN_SPI_CS2], OUTPUT);
+        digitalWrite(_model.config.pin[PIN_SPI_CS2], HIGH);
+      }
 #endif
-      detectGyroDevice(mpu9250, i2cBus);
-      detectGyroDevice(mpu6050, i2cBus);
+      if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
+      if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
 
       _model.state.gyroPresent = (bool)detectedGyro;
       _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != GYRO_NONE;
     }
 
-    void detectGyroDevice(Device::GyroDevice& gyro, Device::BusSPI& bus, int cs)
+    void detectMag()
     {
-      if(detectedGyro) return;
-      
-      bool status = detectDevice(gyro, bus, cs);
-
-      if(!status) return;
-
-      detectedGyro = &gyro;
-
-      _model.state.gyroBus = BUS_SPI;
-      _model.state.gyroDev = gyro.getType();
+      if(_model.config.magDev == MAG_NONE) return;
+      if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
+      _model.state.magPresent = (bool)detectedMag;
     }
 
-    void detectGyroDevice(Device::GyroDevice& gyro, Device::BusI2C& bus)
+    void detectBaro()
     {
-      if(detectedGyro) return;
-
-      bool status = detectDevice(gyro, bus);
-
-      if(!status) return;
-
-      detectedGyro = &gyro;
-
-      _model.state.gyroBus = BUS_I2C;
-      _model.state.gyroDev = gyro.getType();
+      if(_model.config.baroDev == BARO_NONE) return;
+#if defined(ESP32)
+      if(_model.config.pin[PIN_SPI_CS1] != -1)
+      {
+        pinMode(_model.config.pin[PIN_SPI_CS1], OUTPUT);
+        digitalWrite(_model.config.pin[PIN_SPI_CS1], HIGH);
+        if(!detectedBaro && detectDevice(bmp085, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
+      }
+#endif
+      if(!detectedBaro && detectDevice(bmp085, i2cBus)) detectedBaro = &bmp085;
+      _model.state.baroPresent = (bool)detectedBaro;
     }
 
     template<typename Dev>
     bool detectDevice(Dev& dev, Device::BusSPI& bus, int cs)
     {
-      if(cs == -1) return false;
-      pinMode(cs, OUTPUT);
-      digitalWrite(cs, HIGH);
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus, cs);
       _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).logln(status);
@@ -152,34 +152,6 @@ class Hardware
       bool status = dev.begin(&bus);
       _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status);
       return status;
-    }
-
-    void detectMag()
-    {
-      _model.state.magDev = MAG_NONE;
-      _model.state.magBus = BUS_NONE;
-      if(_model.config.magDev == MAG_NONE) return;
-      int status = detectDevice(hmc5883l, i2cBus);
-      if(status)
-      {
-        _model.state.magDev = MAG_HMC5883;
-        _model.state.magBus = BUS_I2C;
-      }
-      _model.state.magPresent = status;
-    }
-
-    void detectBaro()
-    {
-      _model.state.baroDev = BARO_NONE;
-      _model.state.baroBus = BUS_NONE;
-      if(_model.config.baroDev == BARO_NONE) return;
-      int status = detectDevice(bmp085, i2cBus);
-      if(status)
-      {
-        _model.state.baroDev = BARO_BMP085;
-        _model.state.baroBus = BUS_I2C;
-      }
-      _model.state.baroPresent = status;
     }
 
     static SerialDevice * getSerialPortById(SerialPort portId)
