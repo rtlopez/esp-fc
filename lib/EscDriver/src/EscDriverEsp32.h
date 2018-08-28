@@ -14,6 +14,47 @@ static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
 #define TO_INTERVAL(v) (1 * 1000 * 1000 / (v)) // [us]
 
+// faster esc response, but unsafe (no task synchronisation)
+#define ESPFC_RMT_BYPASS_WRITE_SYNC 1
+
+#if ESPFC_RMT_BYPASS_WRITE_SYNC
+IRAM_ATTR static esp_err_t _rmt_fill_tx_items(rmt_channel_t channel, const rmt_item32_t* item, uint16_t item_num, uint16_t mem_offset)
+{
+  //RMT_CHECK(channel < RMT_CHANNEL_MAX, RMT_CHANNEL_ERROR_STR, (0));
+  //RMT_CHECK((item != NULL), RMT_ADDR_ERROR_STR, ESP_ERR_INVALID_ARG);
+  //RMT_CHECK((item_num > 0), RMT_DRIVER_LENGTH_ERROR_STR, ESP_ERR_INVALID_ARG);
+
+  /*Each block has 64 x 32 bits of data*/
+  //uint8_t mem_cnt = RMT.conf_ch[channel].conf0.mem_size;
+  //RMT_CHECK((mem_cnt * RMT_MEM_ITEM_NUM >= item_num), RMT_WR_MEM_OVF_ERROR_STR, ESP_ERR_INVALID_ARG);
+
+  //rmt_fill_memory(channel, item, item_num, mem_offset);
+  //portENTER_CRITICAL(&rmt_spinlock);
+  RMT.apb_conf.fifo_mask = RMT_DATA_MODE_MEM;
+  //portEXIT_CRITICAL(&rmt_spinlock);
+  for(size_t i = 0; i < item_num; i++) {
+    RMTMEM.chan[channel].data32[i + mem_offset].val = item[i].val;
+  }
+  return ESP_OK;
+}
+IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
+{
+  //RMT_CHECK(channel < RMT_CHANNEL_MAX, RMT_CHANNEL_ERROR_STR, ESP_ERR_INVALID_ARG);
+  //portENTER_CRITICAL(&rmt_spinlock);
+  if(tx_idx_rst) {
+    RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
+  }
+  RMT.conf_ch[channel].conf1.mem_owner = RMT_MEM_OWNER_TX;
+  RMT.conf_ch[channel].conf1.tx_start = 1;
+  //portEXIT_CRITICAL(&rmt_spinlock);
+  return ESP_OK;
+}
+#else
+#define _rmt_tx_start rmt_tx_start
+#define _rmt_fill_tx_items rmt_fill_tx_items
+#endif
+
+
 class EscDriverEsp32;
 static EscDriverEsp32* instances[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
@@ -243,8 +284,7 @@ class EscDriverEsp32: public EscDriverBase
         _channel[channel].setTerminate(1);
       }
 
-
-      rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, count, 0);
+      _rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, count, 0);
     }
 
     void writeDshotCommand(uint8_t channel, int32_t pulse)
@@ -264,12 +304,12 @@ class EscDriverEsp32: public EscDriverBase
       }
       _channel[channel].setTerminate(DSHOT_BIT_COUNT);
 
-      rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, ITEM_COUNT, 0);
+      _rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, ITEM_COUNT, 0);
     }
 
     void transmitCommand(uint8_t channel)
     {
-      rmt_tx_start(_channel[channel].dev.channel, true);
+      _rmt_tx_start(_channel[channel].dev.channel, true);
     }
 
     uint32_t getClockDivider() const
