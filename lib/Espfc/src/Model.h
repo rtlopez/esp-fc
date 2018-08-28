@@ -279,7 +279,7 @@ class Model
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
       state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
-      //state.accelTimer.setInterval(state.accelTimer.interval - 10);
+      state.accelTimer.setInterval(state.accelTimer.interval - 10);
       //state.accelTimer.setRate(state.gyroTimer.rate, 2);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
@@ -334,41 +334,41 @@ class Model
 
       for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
-        PidConfig * pc = &config.pid[i];
-        state.innerPid[i].configure(
-          pc->P * PTERM_SCALE * pidScale[i],
-          pc->I * ITERM_SCALE * pidScale[i],
-          pc->D * DTERM_SCALE * pidScale[i],
-          0.15f,
-          config.dtermSetpointWeight * 0.01f,
-          0.5f
-        );
-        state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
-        state.innerPid[i].dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
-        state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
-        if(i == AXIS_YAW) state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
-        else state.innerPid[i].ptermFilter.begin(); // no filter
+        const PidConfig& pc = config.pid[i];
+        Pid& pid = state.innerPid[i];
+        pid.Kp = pc.P * PTERM_SCALE * pidScale[i];
+        pid.Ki = pc.I * ITERM_SCALE * pidScale[i];
+        pid.Kd = pc.D * DTERM_SCALE * pidScale[i];
+        pid.Kf = pc.F * FTERM_SCALE * pidScale[i];
+        pid.iLimit = 0.15f;
+        pid.oLimit = 0.5f;
+        pid.rate = state.loopTimer.rate;
+        pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        pid.dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
+        pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
+        pid.ftermFilter.begin(FilterConfig(FILTER_PT1, 15), state.loopTimer.rate);
+        if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
+        else pid.ptermFilter.begin(); // no filter
+        pid.begin();
       }
 
-      for(size_t i = 0; i <= AXIS_YAW; i++)
+      for(size_t i = 0; i < AXIS_YAW; i++)
       {
-        PidConfig * pc = &config.pid[PID_LEVEL];
-        state.outerPid[i].configure(
-          pc->P * LEVEL_PTERM_SCALE,
-          pc->I * LEVEL_ITERM_SCALE,
-          pc->D * LEVEL_DTERM_SCALE,
-          radians(config.angleRateLimit) * 0.1f,
-          0,
-          radians(config.angleRateLimit)
-        );
-
-        //state.outerPid[i].iLimit = 0.3f; // ROBOT
-        //state.outerPid[i].dGamma = config.dtermSetpointWeight / 100.0f;  // ROBOT
-        //state.outerPid[i].oLimit = 1.f;  // ROBOT
-
+        PidConfig& pc = config.pid[PID_LEVEL];
+        Pid& pid = state.innerPid[i];
+        pid.Kp = pc.P * LEVEL_PTERM_SCALE;
+        pid.Ki = pc.I * LEVEL_ITERM_SCALE;
+        pid.Kd = pc.D * LEVEL_DTERM_SCALE;
+        pid.Kf = pc.F * 0.f;
+        pid.iLimit = radians(config.angleRateLimit) * 0.1f;
+        pid.oLimit = radians(config.angleRateLimit);
+        pid.rate = state.loopTimer.rate;
         state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         state.outerPid[i].ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
+        //pid.iLimit = 0.3f; // ROBOT
+        //pid.oLimit = 1.f;  // ROBOT
+        pid.begin();
       }
       state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
 
@@ -378,7 +378,6 @@ class Model
       //config.scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
       //config.scaler[0].dimension = (ScalerDimension)(ACT_OUTER_P | ACT_AXIS_PITCH); // ROBOT
       //config.scaler[1].dimension = (ScalerDimension)(ACT_OUTER_I | ACT_AXIS_PITCH); // ROBOT
-
       //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_YAW | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
 
       state.telemetry = config.telemetry;

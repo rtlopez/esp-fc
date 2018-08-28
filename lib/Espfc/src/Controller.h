@@ -62,7 +62,7 @@ class Controller
       }
       else
       {
-        angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input[AXIS_PITCH], speed, _model.state.loopTimer.getDelta()) * radians(_model.config.angleRateLimit);
+        angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input[AXIS_PITCH], speed) * radians(_model.config.angleRateLimit);
       }
       _model.state.desiredAngle.set(AXIS_PITCH, angle);
       _model.state.desiredRate[AXIS_YAW] = _model.state.input[AXIS_YAW] * radians(_model.config.angleRateLimit);
@@ -84,9 +84,8 @@ class Controller
       const bool stabilize = angle < radians(_model.config.angleLimit);
       if(stabilize)
       {
-        const float dt = _model.state.loopTimer.getDelta();
-        _model.state.output[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH], dt);
-        _model.state.output[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro[AXIS_YAW], dt);
+        _model.state.output[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
+        _model.state.output[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro[AXIS_YAW]);
       }
       else
       {
@@ -106,14 +105,13 @@ class Controller
     {
       if(_model.isActive(MODE_ANGLE))
       {
-        const float dt = _model.state.loopTimer.getDelta();
         _model.state.desiredAngle = VectorFloat(
           _model.state.input[AXIS_ROLL] * radians(_model.config.angleLimit),
           _model.state.input[AXIS_PITCH] * radians(_model.config.angleLimit),
           _model.state.angle[AXIS_YAW]
         );
-        _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL], dt);
-        _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH], dt);
+        _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL]);
+        _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
       }
       else
       {
@@ -134,11 +132,10 @@ class Controller
 
     void innerLoop()
     {
-      const float dt = _model.state.loopTimer.getDelta();
       const float tpaFactor = getTpaFactor();
       for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
-        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i], dt) * tpaFactor;
+        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i]) * tpaFactor;
         //_model.state.debug[i] = lrintf(_model.state.innerPid[i].iTerm * 1000);
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];

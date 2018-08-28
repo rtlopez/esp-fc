@@ -56,10 +56,7 @@ class Espfc
           {
             _mixer.update();
           }
-          if(_model.blackboxEnabled())
-          {
-            _blackbox.update();
-          }
+          _blackbox.update();
         }
         _sensor.updateDelayed();
       }

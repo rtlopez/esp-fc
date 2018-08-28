@@ -179,6 +179,7 @@ class Blackbox
 
     int update()
     {
+      if(!_model.blackboxEnabled()) return 0;
       if(!blackboxSerial) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
       updateArmed();
@@ -198,6 +199,7 @@ class Blackbox
         pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
         pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
         pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
+        pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
         rcCommand[i] = _model.state.input[i] * (i == AXIS_YAW ? -500.f : 500.f);
       }
       rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
