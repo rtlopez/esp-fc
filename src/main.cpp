@@ -4,7 +4,8 @@
 #include <EEPROM.h>
 #include <Espfc.h>
 #include <Kalman.h>
-#include <MadgwickAHRS.h>
+#include <Madgwick.h>
+#include <Mahony.h>
 #include <printf.h>
 #include <blackbox/blackbox.h>
 #include <EspSoftSerial.h>

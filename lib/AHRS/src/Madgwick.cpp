@@ -1,8 +1,8 @@
 //=============================================================================================
-// MadgwickAHRSAHRS.c
+// MadgwickAHRS.c
 //=============================================================================================
 //
-// Implementation of MadgwickAHRS's IMU and AHRS algorithms.
+// Implementation of Madgwick's IMU and AHRS algorithms.
 // See: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms/
 //
 // From the x-io website "Open-source resources available on this website are
@@ -10,17 +10,16 @@
 // is provided in source."
 //
 // Date			Author          Notes
-// 29/09/2011	SOH MadgwickAHRS    Initial release
-// 02/10/2011	SOH MadgwickAHRS	Optimised for reduced CPU load
-// 19/02/2012	SOH MadgwickAHRS	Magnetometer measurement is normalised
+// 29/09/2011	SOH Madgwick    Initial release
+// 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
+// 19/02/2012	SOH Madgwick	Magnetometer measurement is normalised
 //
 //=============================================================================================
 
 //-------------------------------------------------------------------------------------------
 // Header files
 
-#include "MadgwickAHRS.h"
-#include <math.h>
+#include "Madgwick.h"
 
 //-------------------------------------------------------------------------------------------
 // Definitions
@@ -35,7 +34,7 @@
 //-------------------------------------------------------------------------------------------
 // AHRS algorithm update
 
-MadgwickAHRS::MadgwickAHRS() {
+Madgwick::Madgwick() {
 	beta = betaDef;
 	q0 = 1.0f;
 	q1 = 0.0f;
@@ -45,7 +44,7 @@ MadgwickAHRS::MadgwickAHRS() {
 	anglesComputed = 0;
 }
 
-void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
+void Madgwick::update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) {
 	float recipNorm;
 	float s0, s1, s2, s3;
 	float qDot1, qDot2, qDot3, qDot4;
@@ -150,10 +149,10 @@ void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, floa
 //-------------------------------------------------------------------------------------------
 // IMU algorithm update
 
-void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, float az) {
+void Madgwick::update(float gx, float gy, float gz, float ax, float ay, float az) {
 	float recipNorm;
 	float s0, s1, s2, s3;
-	float qDot1, qDot2, qDot3, qDot4;
+	float qDot1 = 0, qDot2 = 0, qDot3 = 0, qDot4 = 0;
 	float _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2 ,_8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
 
 	// Convert gyroscope degrees/sec to radians/sec
@@ -170,11 +169,6 @@ void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, floa
 		qDot2 = 0.5f * ( q0 * gx + q2 * gz - q3 * gy);
 		qDot3 = 0.5f * ( q0 * gy - q1 * gz + q3 * gx);
 		qDot4 = 0.5f * ( q0 * gz + q1 * gy - q2 * gx);
-	} else {
-		qDot1 = 0.f;
-		qDot2 = 0.f;
-		qDot3 = 0.f;
-		qDot4 = 0.f;
 	}
 
 	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
@@ -234,27 +228,8 @@ void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, floa
 }
 
 //-------------------------------------------------------------------------------------------
-// Fast inverse square-root
-// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 
-float MadgwickAHRS::invSqrt(float x) {
-	//return 1.f / sqrt(x);
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-	float halfx = 0.5f * x;
-	float y = x;
-	long i = *(long*)&y;
-	i = 0x5f3759df - (i>>1);
-	y = *(float*)&i;
-	y = y * (1.5f - (halfx * y * y));
-	y = y * (1.5f - (halfx * y * y));
-	#pragma GCC diagnostic pop
-	return y;
-}
-
-//-------------------------------------------------------------------------------------------
-
-void MadgwickAHRS::computeAngles()
+void Madgwick::computeAngles()
 {
 	roll = atan2f(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2);
 	pitch = asinf(-2.0f * (q1*q3 - q0*q2));

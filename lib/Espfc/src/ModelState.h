@@ -236,6 +236,8 @@ struct ModelState
   VectorFloat accel;
   VectorFloat mag;
 
+  VectorFloat gyroImu;
+
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;
   VectorFloat accelPose;
@@ -246,7 +248,6 @@ struct ModelState
   VectorFloat pose;
   Quaternion poseQ;
 
-  VectorFloat rate;
   VectorFloat angle;
   Quaternion angleQ;
 
@@ -257,7 +258,6 @@ struct ModelState
   Filter gyroNotch2Filter[3];
   Filter gyroDynamicFilter[3];
   Math::FreqAnalyzer gyroAnalyzer[3];
-  float gyroAnalyzerFreq[3];
   
   Filter accelFilter[3];
   Filter magFilter[3];
@@ -296,18 +296,17 @@ struct ModelState
   long gyroBiasSamples;
 
   int32_t gyroClock;
-  int8_t gyroDivider;
+  int32_t gyroRate;
+  int32_t gyroDivider;
 
   Timer gyroTimer;
-  bool gyroUpdate;
 
   Timer accelTimer;
 
+  int32_t loopRate;
   Timer loopTimer;
-  bool loopUpdate;
 
   Timer mixerTimer;
-  bool mixerUpdate;
   float minThrottle;
   float maxThrottle;
   bool digitalOutput;

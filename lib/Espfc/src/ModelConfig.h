@@ -83,6 +83,7 @@ enum SensorAlign {
 enum FusionMode {
   FUSION_NONE,
   FUSION_MADGWICK,
+  FUSION_MAHONY,
   FUSION_COMPLEMENTARY,
   FUSION_KALMAN,
   FUSION_RTQF,
@@ -107,7 +108,7 @@ class FusionConfig
     static const char ** getModeNames()
     {
       static const char* modeChoices[] = {
-        PSTR("NONE"), PSTR("MADGWICK"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
+        PSTR("NONE"), PSTR("MADGWICK"), PSTR("MAHONY"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
         PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"),
         NULL };
       return modeChoices;

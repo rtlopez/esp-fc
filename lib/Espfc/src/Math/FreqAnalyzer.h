@@ -22,7 +22,7 @@ class FreqAnalyzer
     }
 
     // return noise pitch freq
-    float update(float v)
+    void update(float v)
     {
       // pitch detection
       _noise = _bpf.update(v);
@@ -34,9 +34,14 @@ class FreqAnalyzer
       _sign_prev = sign;
       _pitch_count++;
 
-      return _lpf.update(_pitch_freq);
+      freq = lrintf(_lpf.update(_pitch_freq));
+      cutoff = freq - 50;
     }
-  
+
+    int freq;
+    int cutoff;
+
+  private:
     Filter _bpf;
     Filter _lpf;
     int _rate;

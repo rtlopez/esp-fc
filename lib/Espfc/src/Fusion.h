@@ -2,7 +2,8 @@
 #define _ESPFC_FUSION_H_
 
 #include "Model.h"
-#include "MadgwickAHRS.h"
+#include "Madgwick.h"
+#include "Mahony.h"
 
 namespace Espfc {
 
@@ -13,30 +14,37 @@ class Fusion
     int begin()
     {
       _model.state.gyroPoseQ = Quaternion();
-      _madgwick.begin(_model.state.gyroTimer.rate);
-      float rate = (float)_model.state.gyroTimer.rate / _model.state.accelTimer.rate;
-      _madgwick.setBeta(_model.config.fusion.gain * 0.05f * rate);
+
+      _madgwick.begin(_model.state.accelTimer.rate);
+      _madgwick.setKp(_model.config.fusion.gain * 0.05f);
+
+      _mahony.begin(_model.state.accelTimer.rate);
+      _mahony.setKp(_model.config.fusion.gain * 0.05f);
+
       _model.logger.info().log(F("FUSION")).log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))).logln(_model.config.fusion.gain);
+
       return 1;
     }
 
     void restoreGain()
     {
-      float rate = (float)_model.state.gyroTimer.rate / _model.state.accelTimer.rate;
-      _madgwick.setBeta(_model.config.fusion.gain * 0.005f * rate);
+      _madgwick.setKp(_model.config.fusion.gain * 0.002f);
+      _mahony.setKp(_model.config.fusion.gain * 0.002f);
     }
 
     int update()
     {
       Stats::Measure measure(_model.state.stats, COUNTER_IMU_FUSION);
 
-      _model.state.rate = _model.state.gyro;
       if(_model.accelActive())
       {
         switch(_model.config.fusion.mode)
         {
           case FUSION_MADGWICK:
-            madgwickFusion1();
+            madgwickFusion();
+            break;
+          case FUSION_MAHONY:
+            mahonyFusion();
             break;
           case FUSION_LERP:
             lerpFusion();
@@ -78,9 +86,14 @@ class Fusion
     void updateDelayed()
     {
       Stats::Measure measure(_model.state.stats, COUNTER_IMU_FUSION2);
-      if(_model.config.fusion.mode == FUSION_MADGWICK)
+      switch(_model.config.fusion.mode)
       {
-        madgwickFusion2();
+        case FUSION_MADGWICK:
+          madgwickFusion2();
+          break;
+        case FUSION_MAHONY:
+          mahonyFusion2();
+          break;
       }
     }
 
@@ -111,7 +124,7 @@ class Fusion
       {
         float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), dt);
         _model.state.angle.set(i, angle);
-        _model.state.rate.set(i, _model.state.kalman[i].getRate());
+        //_model.state.rate.set(i, _model.state.kalman[i].getRate());
       }
       _model.state.angleQ = _model.state.angle.eulerToQuaternion();
     }
@@ -201,7 +214,6 @@ class Fusion
 
       _model.state.angleQ = fusionQPose;
       _model.state.angle.eulerFromQuaternion(fusionQPose);
-      _model.state.rate  = _model.state.gyro;
     }
 
     void updatePoseFromAccelMag()
@@ -310,12 +322,8 @@ class Fusion
           _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
         );
       }
-      _model.state.angleQ.w = _madgwick.q0;
-      _model.state.angleQ.x = _madgwick.q1;
-      _model.state.angleQ.y = _madgwick.q2;
-      _model.state.angleQ.z = _madgwick.q3;
-      _model.state.angle.eulerFromQuaternion(_model.state.angleQ);
-      _model.state.rate = _model.state.gyro;
+      _model.state.angleQ = _madgwick.getQuaternion();
+      _model.state.angle  = _madgwick.getEuler();
     }
 
     void madgwickFusion1()
@@ -323,27 +331,66 @@ class Fusion
       // prediction phase
       _madgwick.update(
         _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
-        0, 0, 0
+        0.f, 0.f, 0.f
       );
-      _model.state.angleQ.w = _madgwick.q0;
-      _model.state.angleQ.x = _madgwick.q1;
-      _model.state.angleQ.y = _madgwick.q2;
-      _model.state.angleQ.z = _madgwick.q3;
-      _model.state.angle.x = _madgwick.getRoll();
-      _model.state.angle.y = _madgwick.getPitch();
-      _model.state.angle.z = _madgwick.getYaw();
-      //_model.state.angle.eulerFromQuaternion(_model.state.angleQ);
+      _model.state.angleQ = _madgwick.getQuaternion();
+      _model.state.angle  = _madgwick.getEuler();
     }
 
     void madgwickFusion2()
     {
-      float mag = _model.state.accel.getMagnitude();
+      //float mag = _model.state.accel.getMagnitude();
       //_model.state.debug[0] = lrintf(mag * 1000);
-      if(mag > 1.5f || mag < 0.75f) return; // skip at high overloads or weightlessness
+      //if(mag > 1.5f || mag < 0.75f) return; // skip at high overloads or weightlessness
 
       // correction phase
       _madgwick.update(
-        0, 0, 0,
+        0.f, 0.f, 0.f,
+        _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
+      );
+    }
+
+    void mahonyFusion()
+    {
+      if(_model.magActive())
+      {
+        _mahony.update(
+          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.accel.x, _model.state.accel.y, _model.state.accel.z,
+          _model.state.mag.x,   _model.state.mag.y,   _model.state.mag.z
+        );
+      }
+      else
+      {
+        _mahony.update(
+          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
+        );
+      }
+      _model.state.angleQ = _mahony.getQuaternion();
+      _model.state.angle  = _mahony.getEuler();
+    }
+
+    void mahonyFusion1()
+    {
+      // prediction phase
+      _mahony.update(
+        _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+        0.f, 0.f, 0.f
+      );
+      _model.state.angleQ = _mahony.getQuaternion();
+      _model.state.angle  = _mahony.getEuler();
+    }
+
+    void mahonyFusion2()
+    {
+      //float mag = _model.state.accel.getMagnitude();
+      //_model.state.debug[0] = lrintf(mag * 1000);
+      //if(mag > 1.5f || mag < 0.75f) return; // skip at high overloads or weightlessness
+
+      // correction phase
+      _mahony.update(
+        0.f, 0.f, 0.f,
         _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
       );
     }
@@ -351,7 +398,8 @@ class Fusion
   private:
     Model& _model;
     bool _first;
-    MadgwickAHRS _madgwick;
+    Madgwick _madgwick;
+    Mahony _mahony;
 };
 
 }

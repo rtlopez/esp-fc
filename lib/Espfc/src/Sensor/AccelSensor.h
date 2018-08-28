@@ -30,6 +30,11 @@ class AccelSensor: public BaseSensor
       _gyro->setFullScaleAccelRange(_model.config.accelFsr);
       _model.logger.info().log(F("ACCEL INIT")).log(_model.config.accelDev).logln(_model.state.accelPresent);
 
+      for(size_t i = 0; i < 3; i++)
+      {
+        _filter[i].begin(FilterConfig(FILTER_PT1, 30), _model.state.accelTimer.rate);
+      }
+
       return 1;
     }
 
@@ -52,6 +57,7 @@ class AccelSensor: public BaseSensor
         _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
         for(size_t i = 0; i < 3; i++)
         {
+          _model.state.accel.set(i, _filter[i].update(_model.state.accel[i]));
           _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accel[i]));
         }
 
@@ -77,6 +83,7 @@ class AccelSensor: public BaseSensor
   private:
     Model& _model;
     Device::GyroDevice * _gyro;
+    Filter _filter[3];
 };
 
 }

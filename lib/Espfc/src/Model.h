@@ -141,20 +141,29 @@ class Model
     {
       int gyroSyncMax = 1; // max 8kHz
       #if defined(ESP8266)
-        gyroSyncMax = 4; // max 2khz     
-      #endif    
+        gyroSyncMax = 4; // max 2khz
+      #endif
       //if(config.accelDev != GYRO_NONE) gyroSyncMax /= 2;
       //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 2;
-
       config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax);
-      state.gyroClock = 8000;
-      if(config.gyroDlpf != GYRO_DLPF_256)
+
+      switch(config.gyroDlpf)
       {
-        state.gyroClock = 1000;
-        config.gyroSync = ((config.gyroSync + 7) / 8) * 8;
+        case GYRO_DLPF_256:
+        case GYRO_DLPF_EX:
+          state.gyroClock = 8000;
+          state.gyroRate = 8000 / config.gyroSync;
+          state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
+          break;
+        default:
+          config.gyroSync = ((config.gyroSync + 7) / 8) * 8; // multiply 8x and round (BF GUI uses this convention)
+          state.gyroClock = 1000;
+          state.gyroRate = 8000 / config.gyroSync;
+          state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
+          break;
       }
-      int gyroSampleRate = 8000 / config.gyroSync;
-      state.gyroDivider = (state.gyroClock / (gyroSampleRate + 1)) + 1;
+
+      state.loopRate = state.gyroRate / config.loopSync;
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
@@ -198,18 +207,20 @@ class Model
       else
       {
         // for synced and standard PWM limit loop rate and pwm pulse width
-        if(config.output.protocol == ESC_PROTOCOL_PWM && gyroSampleRate > 500)
+        if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
         {
-          config.loopSync = std::max(config.loopSync, (int8_t)((gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
-          int loopRate = gyroSampleRate / config.loopSync;
-          if(loopRate > 480 && config.output.maxThrottle > 1950)
+          config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 499) / 500)); // align loop rate to lower than 500Hz
+          state.loopRate = state.gyroRate / config.loopSync;
+          if(state.loopRate > 480 && config.output.maxThrottle > 1940)
           {
             config.output.maxThrottle = 1940;
           }
         }
-        if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && gyroSampleRate > 2000)
+        // for onshot125 limit loop rate to 2kHz
+        if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
         {
-          config.loopSync = std::max(config.loopSync, (int8_t)((gyroSampleRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
+          config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
+          state.loopRate = state.gyroRate / config.loopSync;
         }
       }
 
@@ -218,7 +229,7 @@ class Model
       uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
 
       // allow dynamic filter only above 1k sampling rate
-      if(gyroSampleRate >= 1000)
+      if(false && state.gyroRate >= 1000)
       {
         featureAllowMask |= FEATURE_DYNAMIC_FILTER;
       }
@@ -266,14 +277,15 @@ class Model
     {
       // init timers
       // sample rate = clock / ( divider + 1)
-      state.gyroTimer.setRate(state.gyroClock / state.gyroDivider);
+      state.gyroTimer.setRate(state.gyroRate);
+      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
+      //state.accelTimer.setInterval(state.accelTimer.interval - 10);
+      //state.accelTimer.setRate(state.gyroTimer.rate, 2);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
       state.actuatorTimer.setRate(25); // 25 hz
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(10);
-      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 200));
-      state.accelTimer.setInterval(state.accelTimer.interval - 20);
       state.serialTimer.setRate(1000);
 
       // configure calibration
@@ -290,6 +302,7 @@ class Model
         state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
       }
 
+      // configure filters
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
         state.gyroAnalyzer[i].begin(state.gyroTimer.rate);
@@ -299,7 +312,6 @@ class Model
         state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
         state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
-        
         state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
         state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
       }

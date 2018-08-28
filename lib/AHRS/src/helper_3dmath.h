@@ -4,6 +4,24 @@
 #include "Arduino.h"
 #include <math.h>
 
+// Fast inverse square-root
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+inline float invSqrt(float x)
+{
+	//return 1.f / sqrt(x);
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+	float halfx = 0.5f * x;
+	float y = x;
+	long i = *(long*)&y;
+	i = 0x5f3759df - (i>>1);
+	y = *(float*)&i;
+	y = y * (1.5f - (halfx * y * y));
+	y = y * (1.5f - (halfx * y * y));
+	#pragma GCC diagnostic pop
+	return y;
+}
+
 template<typename T>
 class VectorBase;
 
@@ -142,7 +160,7 @@ class Quaternion {
         {
           float halfTheta = acosf(w);
           float sinHalfTheta = sinf(halfTheta);
-          angle = 2.0 * halfTheta;
+          angle = 2.0f * halfTheta;
           if (sinHalfTheta == 0) {
             v.x = 1.0;
             v.y = 0;
@@ -157,7 +175,7 @@ class Quaternion {
         template<typename T>
         void fromAngleVector(float angle, const VectorBase<T>& v)
         {
-          float sinHalfTheta = sin(angle / 2.0);
+          float sinHalfTheta = sinf(angle * 0.5f);
           w = cosf(angle / 2.0);
           x = v.x * sinHalfTheta;
           y = v.y * sinHalfTheta;

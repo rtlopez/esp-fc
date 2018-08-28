@@ -15,37 +15,36 @@ class Controller
 
     int begin()
     {
-      FilterConfig fc;
-      fc.freq = 10;
-      fc.type = FILTER_BIQUAD;
-      _speedFilter.begin(fc, _model.state.loopTimer.rate);
+      _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
       return 1;
     }
 
     int update()
     {
-      _model.state.stats.start(COUNTER_OUTER_PID);
-      resetIterm();
-      if(_model.config.mixerType == MIXER_GIMBAL)
       {
-        outerLoopRobot();
+        Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
+        resetIterm();
+        if(_model.config.mixerType == MIXER_GIMBAL)
+        {
+          outerLoopRobot();
+        }
+        else
+        {
+          outerLoop();
+        }
       }
-      else
-      {
-        outerLoop();
-      }
-      _model.state.stats.end(COUNTER_OUTER_PID);
 
-      _model.state.stats.start(COUNTER_INNER_PID);
-      if(_model.config.mixerType == MIXER_GIMBAL)
       {
-        innerLoopRobot();
+        Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
+        if(_model.config.mixerType == MIXER_GIMBAL)
+        {
+          innerLoopRobot();
+        }
+        else
+        {
+          innerLoop();
+        }
       }
-      else
-      {
-        innerLoop();
-      }
-      _model.state.stats.end(COUNTER_INNER_PID);
 
       return 1;
     }
@@ -87,7 +86,7 @@ class Controller
       {
         const float dt = _model.state.loopTimer.getDelta();
         _model.state.output[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH], dt);
-        _model.state.output[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.rate[AXIS_YAW], dt);
+        _model.state.output[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro[AXIS_YAW], dt);
       }
       else
       {
@@ -139,7 +138,7 @@ class Controller
       const float tpaFactor = getTpaFactor();
       for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
-        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], dt) * tpaFactor;
+        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i], dt) * tpaFactor;
         //_model.state.debug[i] = lrintf(_model.state.innerPid[i].iTerm * 1000);
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];

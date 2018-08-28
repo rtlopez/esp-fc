@@ -58,18 +58,18 @@ class Stats
       }
     }
 
-    void start(StatCounter c) ICACHE_RAM_ATTR
+    void start(StatCounter c) /* ICACHE_RAM_ATTR */
     {
       _start[c] = micros();
     }
 
-    void end(StatCounter c) ICACHE_RAM_ATTR
+    void end(StatCounter c) /* ICACHE_RAM_ATTR */
     {
       uint32_t diff = micros() - _start[c];
       _sum[c] += diff;
     }
 
-    void calculate()
+    void update()
     {
       if(!timer.check()) return;
       for(size_t i = 0; i < COUNTER_COUNT; i++)

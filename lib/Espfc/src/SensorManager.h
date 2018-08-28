@@ -42,11 +42,6 @@ class SensorManager
         _fusion.restoreGain();
       }
 
-      if(status)
-      {
-        _fusion.update();
-      }
-
       return status;
     }
 
@@ -61,7 +56,7 @@ class SensorManager
 
       if(status)
       {
-        _fusion.updateDelayed();
+        _fusion.update();
       }
 
       if(!status)

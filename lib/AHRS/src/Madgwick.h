@@ -1,5 +1,5 @@
 //=============================================================================================
-// MadgwickAHRS.h
+// Madgwick.h
 //=============================================================================================
 //
 // Implementation of Madgwick's IMU and AHRS algorithms.
@@ -14,51 +14,44 @@
 // 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
 //
 //=============================================================================================
-#ifndef MadgwickAHRS_h
-#define MadgwickAHRS_h
-#include <math.h>
+#ifndef Madgwick_h
+#define Madgwick_h
 #include <Arduino.h>
+#include "helper_3dmath.h"
 
 //--------------------------------------------------------------------------------------------
 // Variable declaration
-class MadgwickAHRS {
-public:
-  float q0;
-  float q1;
-  float q2;
-  float q3;	// quaternion of sensor frame relative to auxiliary frame
-private:
-    static float invSqrt(float x) ICACHE_RAM_ATTR;
+class Madgwick {
+  private:
+    float q0, q1, q2, q3;	// quaternion of sensor frame relative to auxiliary frame
     float beta;				// algorithm gain
     float invSampleFreq;
-    float roll;
-    float pitch;
-    float yaw;
-    char anglesComputed;
+    float roll, pitch, yaw;
+    bool anglesComputed;
+
     void computeAngles();
 
 //-------------------------------------------------------------------------------------------
 // Function declarations
-public:
-    MadgwickAHRS();
+  public:
+    Madgwick();
     void begin(float sampleFrequency) { invSampleFreq = 1.0f / sampleFrequency; }
+
     void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
     void update(float gx, float gy, float gz, float ax, float ay, float az);
-    float getRoll() {
-        if (!anglesComputed) computeAngles();
-        return roll;
-    }
-    float getPitch() {
-        if (!anglesComputed) computeAngles();
-        return pitch;
-    }
-    float getYaw() {
-        if (!anglesComputed) computeAngles();
-        return yaw;
-    }
-    void setBeta(float b) {
-        beta = b;
-    }
 
+    void setKp(float p) {
+      beta = p;
+    }
+    void setKi(float i) {
+      (void)i;
+    }
+	const Quaternion getQuaternion() const {
+	  return Quaternion(q0, q1, q2, q3);
+    }
+	const VectorFloat getEuler() {
+	  if (!anglesComputed) computeAngles();
+	  return VectorFloat(roll, pitch, yaw);
+	}
 };
 #endif

@@ -45,53 +45,33 @@ class Espfc
 
     int update()
     {
-      _hardware.update();
-
-      _model.state.gyroUpdate = _model.state.gyroTimer.check();
-      if(_model.state.gyroUpdate)
+      if(_sensor.update())
       {
-        _sensor.update();
-      }
-
-      _model.state.loopUpdate = _model.state.gyroUpdate && _model.state.loopTimer.syncTo(_model.state.gyroTimer);
-      if(_model.state.loopUpdate)
-      {
-        _input.update();
-        _model.state.actuatorUpdate = _model.state.actuatorTimer.check();
-        if(_model.state.actuatorUpdate)
+        if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
+          _input.update();
           _actuator.update();
+          _controller.update();
+          if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
+          {
+            _mixer.update();
+          }
+          if(_model.blackboxEnabled())
+          {
+            _blackbox.update();
+          }
         }
-
-        _controller.update();
-      }
-
-      _model.state.mixerUpdate = _model.state.loopUpdate && _model.state.mixerTimer.syncTo(_model.state.loopTimer);
-      if(_model.state.mixerUpdate)
-      {
-        _mixer.update();
-      }
-
-      if(_model.state.gyroUpdate)
-      {
         _sensor.updateDelayed();
       }
-
-      if(_model.state.loopUpdate && _model.blackboxEnabled())
-      {
-        _blackbox.update();
-      }
-
       return 1;
     }
 
     // other task
     int updateOther()
     {
-      _model.state.stats.calculate();
+      _model.state.stats.update();
       _buzzer.update();
       _serial.update();
-
       return 1;
     }
 

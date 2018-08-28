@@ -20,13 +20,14 @@ class Actuator
 
     int update()
     {
-      _model.state.stats.start(COUNTER_ACTUATOR);
+      if(!_model.state.actuatorTimer.check()) return 0;
+
+      Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
       updateArming();
       updateModeMask();
       updateAirMode();
       updateScaler();
       updateBuzzer();
-      _model.state.stats.end(COUNTER_ACTUATOR);
       return 1;
     }
 
