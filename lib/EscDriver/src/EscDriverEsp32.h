@@ -78,15 +78,18 @@ class EscDriverEsp32: public EscDriverBase
 
         void setTerminate(int item)
         {
-          items[item].val = 0;
+          items[item].val = 0ul;
         }
 
         void setDshotBit(int item, bool val)
         {
-          items[item].duration0 = val ? dshot_t1h : dshot_t0h;
-          items[item].level0 = 1;
-          items[item].duration1 = val ? dshot_t1l : dshot_t0l;
-          items[item].level1 = 0;
+          const uint32_t th = (val ? dshot_t1h : dshot_t0h) & 0x7fff;
+          const uint32_t tl = (val ? dshot_t1l : dshot_t0l) & 0x7fff;
+          items[item].val = th | 1 << 15 | tl << 16;
+          //items[item].duration0 = th;
+          //items[item].level0 = 1;
+          //items[item].duration1 = tl;
+          //items[item].level1 = 0;
         }
 
         void setDuration(int item, int duration, bool val)
@@ -238,10 +241,11 @@ class EscDriverEsp32: public EscDriverBase
 
     void transmitAll()
     {
+      bool digital = isDigital();
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
         if(!_channel[i].attached()) continue;
-        if(isDigital())
+        if(digital)
         {
           writeDshotCommand(i, _channel[i].pulse);
         }
@@ -259,6 +263,7 @@ class EscDriverEsp32: public EscDriverBase
 
     void writeAnalogCommand(uint8_t channel, int32_t pulse)
     {
+      Slot& slot = _channel[channel];
       int minPulse = 800;
       int maxPulse = 2200;
       if(_protocol == ESC_PROTOCOL_BRUSHED)
@@ -267,21 +272,21 @@ class EscDriverEsp32: public EscDriverBase
         maxPulse = 2000;
       }
       pulse = constrain(pulse, minPulse, maxPulse);
-      int duration = map(pulse, 1000, 2000, _channel[channel].pulse_min, _channel[channel].pulse_max);
+      int duration = map(pulse, 1000, 2000, slot.pulse_min, slot.pulse_max);
       
       int count = 2;
       if(_async)
       {
-        int space = _channel[channel].pulse_space - duration;
-        _channel[channel].setDuration(0, duration, 1);
-        _channel[channel].setDuration(1, space, 0);
-        _channel[channel].setTerminate(2);
+        int space = slot.pulse_space - duration;
+        slot.setDuration(0, duration, 1);
+        slot.setDuration(1, space, 0);
+        slot.setTerminate(2);
         count = 3;
       }
       else
       {
-        _channel[channel].setDuration(0, duration, 1);
-        _channel[channel].setTerminate(1);
+        slot.setDuration(0, duration, 1);
+        slot.setTerminate(1);
       }
 
       _rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, count, 0);
@@ -290,21 +295,19 @@ class EscDriverEsp32: public EscDriverBase
     void writeDshotCommand(uint8_t channel, int32_t pulse)
     {
       pulse = constrain(pulse, 0, 2000);
-      int value = 0; // disarmed
       // scale to dshot commands (0 or 48-2047)
-      if(pulse > 1000)
-      {
-        value = PWM_TO_DSHOT(pulse);
-      }
+      int value = pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;
       uint16_t frame = dshotEncode(value);
+
+      Slot& slot = _channel[channel];
       for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
       {
         int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
-        _channel[channel].setDshotBit(i, val);
+        slot.setDshotBit(i, val);
       }
-      _channel[channel].setTerminate(DSHOT_BIT_COUNT);
+      slot.setTerminate(DSHOT_BIT_COUNT);
 
-      _rmt_fill_tx_items(_channel[channel].dev.channel, _channel[channel].items, ITEM_COUNT, 0);
+      _rmt_fill_tx_items(slot.dev.channel, slot.items, ITEM_COUNT, 0);
     }
 
     void transmitCommand(uint8_t channel)
@@ -410,8 +413,6 @@ class EscDriverEsp32: public EscDriverBase
     int32_t _async;
     int32_t _rate;
     int32_t _interval;
-
-   
 };
 
 #endif
