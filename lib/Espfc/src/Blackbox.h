@@ -57,7 +57,7 @@ bool rxIsReceivingSignal(void)
 static uint32_t activeFeaturesLatch = 0;
 static uint32_t enabledSensors = 0;
 
-bool feature(uint32_t mask)
+bool featureIsEnabled(uint32_t mask)
 {
   return activeFeaturesLatch & mask;
 }
@@ -116,7 +116,7 @@ class Blackbox
       cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
       cp->yaw_lowpass_hz = _model.config.yawFilter.freq;
       cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
-      cp->dtermSetpointWeight = _model.config.dtermSetpointWeight;
+      cp->antiGravityMode = 0;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
