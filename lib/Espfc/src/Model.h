@@ -313,6 +313,7 @@ class Model
         state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
         state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
+        state.gyroFilterImu[i].begin(FilterConfig(FILTER_PT1_FIR2, state.accelTimer.rate / 2), state.gyroTimer.rate);
         state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
       }
 

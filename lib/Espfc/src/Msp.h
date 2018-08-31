@@ -159,7 +159,7 @@ class Msp
 
         case MSP_STATUS_EX:
         case MSP_STATUS:
-          r.writeU16(_model.state.loopTimer.interval);
+          r.writeU16(lrintf(_model.state.loopTimer.getDeltaReal() * 1000000.f));
           r.writeU16(_model.state.i2cErrorCount); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
           r.writeU16(_model.accelActive() << 0 | _model.baroActive() << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | _model.gyroActive() << 5);

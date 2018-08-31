@@ -59,10 +59,12 @@ class Actuator
             if(mode & ACT_INNER_P) _model.state.innerPid[x].pScale = scale;
             if(mode & ACT_INNER_I) _model.state.innerPid[x].iScale = scale;
             if(mode & ACT_INNER_D) _model.state.innerPid[x].dScale = scale;
+            if(mode & ACT_INNER_F) _model.state.innerPid[x].fScale = scale;
 
             if(mode & ACT_OUTER_P) _model.state.outerPid[x].pScale = scale;
             if(mode & ACT_OUTER_I) _model.state.outerPid[x].iScale = scale;
             if(mode & ACT_OUTER_D) _model.state.outerPid[x].dScale = scale;
+            if(mode & ACT_OUTER_F) _model.state.outerPid[x].fScale = scale;
 
           }
         }

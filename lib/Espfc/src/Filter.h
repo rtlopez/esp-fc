@@ -58,7 +58,7 @@ class Filter
         case FILTER_BIQUAD:
           initBiquadLpf();
           break;
-        case FILTER_FIR:
+        case FILTER_PT1_FIR2:
           initPt1();
           break;
         case FILTER_NOTCH:
@@ -88,7 +88,7 @@ class Filter
           return updatePt1(v);
         case FILTER_BIQUAD:
           return updateBiquadDF2(v);
-        case FILTER_FIR:
+        case FILTER_PT1_FIR2:
           return updatePt1Fir2(v);
         case FILTER_NOTCH:
           return updateBiquadDF2(v);

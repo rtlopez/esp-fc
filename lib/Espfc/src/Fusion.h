@@ -310,7 +310,7 @@ class Fusion
       if(_model.magActive())
       {
         _madgwick.update(
-          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
           _model.state.accel.x, _model.state.accel.y, _model.state.accel.z,
           _model.state.mag.x,   _model.state.mag.y,   _model.state.mag.z
         );
@@ -318,7 +318,7 @@ class Fusion
       else
       {
         _madgwick.update(
-          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
           _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
         );
       }
@@ -330,7 +330,7 @@ class Fusion
     {
       // prediction phase
       _madgwick.update(
-        _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+        _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
         0.f, 0.f, 0.f
       );
       _model.state.angleQ = _madgwick.getQuaternion();
@@ -355,7 +355,7 @@ class Fusion
       if(_model.magActive())
       {
         _mahony.update(
-          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
           _model.state.accel.x, _model.state.accel.y, _model.state.accel.z,
           _model.state.mag.x,   _model.state.mag.y,   _model.state.mag.z
         );
@@ -363,7 +363,7 @@ class Fusion
       else
       {
         _mahony.update(
-          _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+          _model.state.gyroImu.x,  _model.state.gyroImu.y,  _model.state.gyroImu.z,
           _model.state.accel.x, _model.state.accel.y, _model.state.accel.z
         );
       }
@@ -375,7 +375,7 @@ class Fusion
     {
       // prediction phase
       _mahony.update(
-        _model.state.gyro.x,  _model.state.gyro.y,  _model.state.gyro.z,
+        _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
         0.f, 0.f, 0.f
       );
       _model.state.angleQ = _mahony.getQuaternion();

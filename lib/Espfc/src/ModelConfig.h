@@ -125,17 +125,19 @@ enum FlightMode {
 };
 
 enum ScalerDimension {
-  ACT_INNER_P     = 1 << 0, // 1
-  ACT_INNER_I     = 1 << 1, // 2
-  ACT_INNER_D     = 1 << 2, // 4
-  ACT_OUTER_P     = 1 << 3, // 8
-  ACT_OUTER_I     = 1 << 4, // 16
-  ACT_OUTER_D     = 1 << 5, // 32
-  ACT_AXIS_ROLL   = 1 << 6, // 64
-  ACT_AXIS_PITCH  = 1 << 7, // 128
-  ACT_AXIS_YAW    = 1 << 8, // 256
-  ACT_AXIS_THRUST = 1 << 9, // 512
-  ACT_GYRO_THRUST = 1 << 10 // 1024
+  ACT_INNER_P     = 1 << 0,  // 1
+  ACT_INNER_I     = 1 << 1,  // 2
+  ACT_INNER_D     = 1 << 2,  // 4
+  ACT_INNER_F     = 1 << 3,  // 8
+  ACT_OUTER_P     = 1 << 4,  // 16
+  ACT_OUTER_I     = 1 << 5,  // 32
+  ACT_OUTER_D     = 1 << 6,  // 64
+  ACT_OUTER_F     = 1 << 7,  // 128
+  ACT_AXIS_ROLL   = 1 << 8,  // 256
+  ACT_AXIS_PITCH  = 1 << 9,  // 512
+  ACT_AXIS_YAW    = 1 << 10, // 1024
+  ACT_AXIS_THRUST = 1 << 11, // 2048
+  ACT_GYRO_THRUST = 1 << 12  // 4096
 };
 
 const size_t SCALER_COUNT = 3;
@@ -392,7 +394,7 @@ class BuzzerConfig
 enum FilterType {
   FILTER_PT1,
   FILTER_BIQUAD,
-  FILTER_FIR,
+  FILTER_PT1_FIR2,
   FILTER_NOTCH,
   FILTER_FIR2,
   FILTER_MEDIAN3,
