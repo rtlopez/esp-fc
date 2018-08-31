@@ -318,16 +318,13 @@ class Cli
       const char ** busDevChoices            = Device::BusDevice::getNames();
       const char ** gyroDevChoices           = Device::GyroDevice::getNames();
       const char ** baroDevChoices           = Device::BaroDevice::getNames();
+      const char ** fusionModeChoices        = FusionConfig::getModeNames();
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
       //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), NULL };
       //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75Hz"), NULL };
-      const char ** fusionModeChoices        = FusionConfig::getModeNames();
-      static const char* debugModeChoices[]  = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"),
-                                                 PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
-                                                 PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"),
-                                                 PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"),
-                                                 PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"),
-                                                 PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
+      static const char* debugModeChoices[]  = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"), PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
+                                                 PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"), PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), 
+                                                 PSTR("STACK"), PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"), PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
       static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT1_FIR2"), PSTR("NOTCH"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
@@ -428,6 +425,14 @@ class Cli
         Param(PSTR("input_5"), &c.input.channel[5]),
         Param(PSTR("input_6"), &c.input.channel[6]),
         Param(PSTR("input_7"), &c.input.channel[7]),
+        Param(PSTR("input_8"), &c.input.channel[8]),
+        Param(PSTR("input_9"), &c.input.channel[9]),
+        Param(PSTR("input_10"), &c.input.channel[10]),
+        Param(PSTR("input_11"), &c.input.channel[11]),
+        Param(PSTR("input_12"), &c.input.channel[12]),
+        Param(PSTR("input_13"), &c.input.channel[13]),
+        Param(PSTR("input_14"), &c.input.channel[14]),
+        Param(PSTR("input_15"), &c.input.channel[15]),
 
         Param(PSTR("scaler_0"), &c.scaler[0]),
         Param(PSTR("scaler_1"), &c.scaler[1]),
@@ -495,12 +500,12 @@ class Cli
         Param(PSTR("output_max_throttle"), &c.output.maxThrottle),
         Param(PSTR("output_dshot_idle"), &c.output.dshotIdle),
 
+#if defined(ESP8266)
         Param(PSTR("output_0"), &c.output.channel[0]),
         Param(PSTR("output_1"), &c.output.channel[1]),
         Param(PSTR("output_2"), &c.output.channel[2]),
         Param(PSTR("output_3"), &c.output.channel[3]),
 
-#if defined(ESP8266)
         Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
         Param(PSTR("pin_output_0"), &c.pin[PIN_OUTPUT_0]),
         Param(PSTR("pin_output_1"), &c.pin[PIN_OUTPUT_1]),
@@ -510,8 +515,12 @@ class Cli
         Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
         Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
         Param(PSTR("pin_input_adc"), &c.pin[PIN_INPUT_ADC_0]),
-#endif
-#if defined(ESP32)
+        Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+#elif defined(ESP32)
+        Param(PSTR("output_0"), &c.output.channel[0]),
+        Param(PSTR("output_1"), &c.output.channel[1]),
+        Param(PSTR("output_2"), &c.output.channel[2]),
+        Param(PSTR("output_3"), &c.output.channel[3]),
         Param(PSTR("output_4"), &c.output.channel[4]),
         Param(PSTR("output_5"), &c.output.channel[5]),
         Param(PSTR("output_6"), &c.output.channel[6]),
@@ -543,9 +552,8 @@ class Cli
         Param(PSTR("pin_spi_cs_0"), &c.pin[PIN_SPI_CS0]),
         Param(PSTR("pin_spi_cs_1"), &c.pin[PIN_SPI_CS1]),
         Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
-#endif
-
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+#endif
 
         Param(PSTR("i2c_speed"), &c.i2cSpeed),
         //Param(PSTR("telemetry"), &c.telemetry),
