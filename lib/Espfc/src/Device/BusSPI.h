@@ -32,15 +32,15 @@ class BusSPI: public BusDevice
 
     int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override
     {
-      transfer(devAddr, regAddr | SPI_READ, length, NULL, data);
       //D("spi:r", regAddr, length, *data);
+      transfer(devAddr, regAddr | SPI_READ, length, NULL, data);
       return length;
     }
 
     bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) override
     {
       //D("spi:w", regAddr, length, *data);
-      transfer(devAddr, regAddr, length, data, NULL);
+      transfer(devAddr, regAddr & ~SPI_READ, length, data, NULL);
       return true;
     }
 

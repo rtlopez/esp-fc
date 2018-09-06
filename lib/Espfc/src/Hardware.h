@@ -18,6 +18,7 @@
 #include "Device/MagHMC5338L.h"
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
+#include "Device/BaroBMP280.h"
 
 namespace {
 #if defined(ESP32)
@@ -45,6 +46,7 @@ namespace {
   static Espfc::Device::GyroMPU9250 mpu9250;
   static Espfc::Device::MagHMC5338L hmc5883l;
   static Espfc::Device::BaroBMP085 bmp085;
+  static Espfc::Device::BaroBMP280 bmp280;
   static Espfc::Device::GyroDevice * detectedGyro = nullptr;
   static Espfc::Device::BaroDevice * detectedBaro = nullptr;
   static Espfc::Device::MagDevice  * detectedMag  = nullptr;
@@ -129,9 +131,11 @@ class Hardware
       {
         pinMode(_model.config.pin[PIN_SPI_CS1], OUTPUT);
         digitalWrite(_model.config.pin[PIN_SPI_CS1], HIGH);
+        if(!detectedBaro && detectDevice(bmp280, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp280;
         if(!detectedBaro && detectDevice(bmp085, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
       }
 #endif
+      if(!detectedBaro && detectDevice(bmp280, i2cBus)) detectedBaro = &bmp280;
       if(!detectedBaro && detectDevice(bmp085, i2cBus)) detectedBaro = &bmp085;
       _model.state.baroPresent = (bool)detectedBaro;
     }
@@ -199,14 +203,14 @@ class Hardware
 
     static Device::MagDevice * getMagDevice(const Model& model)
     {
-      if(model.config.magDev == BARO_NONE) return nullptr;
+      if(model.config.magDev == MAG_NONE) return nullptr;
       return &hmc5883l;
     }
 
     static Device::BaroDevice * getBaroDevice(const Model& model)
     {
       if(model.config.baroDev == BARO_NONE) return nullptr;
-      return &bmp085;
+      return detectedBaro;
     }
 
     static InputDevice * getInputDevice(Model& model)

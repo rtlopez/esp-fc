@@ -33,14 +33,8 @@ class BaroSensor: public BaseSensor
       int interval = _model.state.gyroTimer.interval * toGyroRate;
       int rate = 1000000 / interval;
 
-      FilterConfig tfc;
-      tfc.type = FILTER_FIR2;
-      _temperatureFilter.begin(tfc, rate);
-
-      FilterConfig pfc;
-      pfc.type = FILTER_MEDIAN3;
-      _pressureFilter.begin(pfc, rate);
-
+      _temperatureFilter.begin(FilterConfig(FILTER_PT1, 10), rate);
+      _pressureFilter.begin(FilterConfig(FILTER_MEDIAN3, 10), rate);
       _altitudeFilter.begin(_model.config.baroFilter, rate);
 
       _model.logger.info().log(F("BARO INIT")).log(toGyroRate).log(rate).logln(_model.config.baroFilter.freq);
@@ -55,8 +49,7 @@ class BaroSensor: public BaseSensor
       
       Stats::Measure measure(_model.state.stats, COUNTER_BARO);
       
-      uint32_t now = micros();
-      if(_wait > now) return 0;
+      if(_wait > micros()) return 0;
 
       switch(_state)
       {
