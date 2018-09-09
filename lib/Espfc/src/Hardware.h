@@ -16,6 +16,7 @@
 #include "Device/GyroMPU6050.h"
 #include "Device/GyroMPU9250.h"
 #include "Device/MagHMC5338L.h"
+#include "Device/MagAK8963.h"
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
 #include "Device/BaroBMP280.h"
@@ -45,6 +46,7 @@ namespace {
   static Espfc::Device::GyroMPU6050 mpu6050;
   static Espfc::Device::GyroMPU9250 mpu9250;
   static Espfc::Device::MagHMC5338L hmc5883l;
+  static Espfc::Device::MagAK8963 ak8963;
   static Espfc::Device::BaroBMP085 bmp085;
   static Espfc::Device::BaroBMP280 bmp280;
   static Espfc::Device::GyroDevice * detectedGyro = nullptr;
@@ -119,7 +121,16 @@ class Hardware
     void detectMag()
     {
       if(_model.config.magDev == MAG_NONE) return;
+      if(_model.config.pin[PIN_SPI_CS0] != -1 && detectedGyro->getType() == GYRO_MPU9250)
+      {
+        if(!detectedMag && detectDevice(ak8963, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
+      }
+
       if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
+      if(detectedGyro->getType() == GYRO_MPU9250)
+      { 
+        if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
+      }
       _model.state.magPresent = (bool)detectedMag;
     }
 

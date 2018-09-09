@@ -49,10 +49,10 @@ class BusSPI: public BusDevice
     {
       //SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
-      //SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE3));
+      SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(12000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(16000000, MSBFIRST, SPI_MODE3));
-      SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE3));
+      //SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE3));
       digitalWrite(devAddr, LOW);
       SPI.transfer(regAddr); // specify the starting register address
       //SPI.transferBytes(in, out, length);

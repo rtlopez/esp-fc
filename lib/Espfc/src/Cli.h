@@ -320,8 +320,8 @@ class Cli
       const char ** baroDevChoices           = Device::BaroDevice::getNames();
       const char ** fusionModeChoices        = FusionConfig::getModeNames();
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
-      //static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), NULL };
-      //static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75Hz"), NULL };
+      static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), NULL };
+      static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75Hz"), NULL };
       static const char* debugModeChoices[]  = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"), PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
                                                  PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"), PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), 
                                                  PSTR("STACK"), PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"), PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
@@ -373,7 +373,7 @@ class Cli
         Param(PSTR("accel_offset_y"), &c.accelBias[1]),
         Param(PSTR("accel_offset_z"), &c.accelBias[2]),
 
-        /*
+        
         Param(PSTR("mag_bus"), &c.magBus, busDevChoices),
         Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
         Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
@@ -386,7 +386,7 @@ class Cli
         Param(PSTR("mag_scale_x"), &c.magCalibrationScale[0]),
         Param(PSTR("mag_scale_y"), &c.magCalibrationScale[1]),
         Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
-        */
+        
 
         Param(PSTR("baro_bus"), &c.baroBus, busDevChoices),
         Param(PSTR("baro_dev"), &c.baroDev, baroDevChoices),

@@ -22,6 +22,10 @@ class MagDevice: public BusAwareDevice
   public:
     typedef MagDeviceType DeviceType;
 
+    virtual int begin(BusDevice * bus) = 0;
+    virtual int begin(BusDevice * bus, uint8_t addr) = 0;
+    virtual int begin(BusDevice * bus, uint8_t addr, uint8_t masterAddr) = 0;
+
     virtual DeviceType getType() const = 0;
 
     virtual int readMag(VectorInt16& v) = 0;

@@ -75,9 +75,19 @@ namespace Device {
 class MagHMC5338L: public MagDevice
 {
   public:
-    int begin(BusDevice * bus, uint8_t addr = HMC5883L_DEFAULT_ADDRESS)
+    int begin(BusDevice * bus) override
     {
-      setBus(bus, addr);
+      return begin(bus, HMC5883L_DEFAULT_ADDRESS, 0);
+    }
+
+    int begin(BusDevice * bus, uint8_t addr) override
+    {
+      return begin(bus, addr, 0);
+    }
+
+    int begin(BusDevice * bus, uint8_t addr, uint8_t masterAddr) override
+    {
+      setBus(bus, addr, masterAddr);
       _mode = HMC5883L_MODE_CONTINUOUS;
       return testConnection();
     }
