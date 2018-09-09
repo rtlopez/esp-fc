@@ -105,15 +105,12 @@ class Hardware
         digitalWrite(_model.config.pin[PIN_SPI_CS0], HIGH);
         if(!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
       }
-      if(_model.config.pin[PIN_SPI_CS2] != -1)
-      {
-        pinMode(_model.config.pin[PIN_SPI_CS2], OUTPUT);
-        digitalWrite(_model.config.pin[PIN_SPI_CS2], HIGH);
-      }
 #endif
-      if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
-      if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
-
+      if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+      {
+        if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
+        if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
+      }
       _model.state.gyroPresent = (bool)detectedGyro;
       _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != GYRO_NONE;
     }
@@ -121,15 +118,20 @@ class Hardware
     void detectMag()
     {
       if(_model.config.magDev == MAG_NONE) return;
+
+#if defined(ESP32)
       if(_model.config.pin[PIN_SPI_CS0] != -1 && detectedGyro->getType() == GYRO_MPU9250)
       {
         if(!detectedMag && detectDevice(ak8963, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
       }
-
-      if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
-      if(detectedGyro->getType() == GYRO_MPU9250)
-      { 
-        if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
+#endif
+      if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+      {
+        if(detectedGyro->getType() == GYRO_MPU9250)
+        {
+          if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
+        }
+        if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
       }
       _model.state.magPresent = (bool)detectedMag;
     }
@@ -137,6 +139,7 @@ class Hardware
     void detectBaro()
     {
       if(_model.config.baroDev == BARO_NONE) return;
+
 #if defined(ESP32)
       if(_model.config.pin[PIN_SPI_CS1] != -1)
       {
@@ -146,8 +149,11 @@ class Hardware
         if(!detectedBaro && detectDevice(bmp085, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
       }
 #endif
-      if(!detectedBaro && detectDevice(bmp280, i2cBus)) detectedBaro = &bmp280;
-      if(!detectedBaro && detectDevice(bmp085, i2cBus)) detectedBaro = &bmp085;
+      if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+      {
+        if(!detectedBaro && detectDevice(bmp280, i2cBus)) detectedBaro = &bmp280;
+        if(!detectedBaro && detectDevice(bmp085, i2cBus)) detectedBaro = &bmp085;
+      }
       _model.state.baroPresent = (bool)detectedBaro;
     }
 
@@ -215,7 +221,7 @@ class Hardware
     static Device::MagDevice * getMagDevice(const Model& model)
     {
       if(model.config.magDev == MAG_NONE) return nullptr;
-      return &hmc5883l;
+      return detectedMag;
     }
 
     static Device::BaroDevice * getBaroDevice(const Model& model)

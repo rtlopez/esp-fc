@@ -40,26 +40,26 @@ class BusSPI: public BusDevice
     bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) override
     {
       //D("spi:w", regAddr, length, *data);
-      transfer(devAddr, regAddr & ~SPI_READ, length, data, NULL);
+      transfer(devAddr, regAddr, length, data, NULL);
       return true;
     }
 
   private:
     void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *in, uint8_t *out)
     {
-      //SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
+      //SPI.beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE3));
+      SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE3));
-      SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE3));
+      //SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(12000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(16000000, MSBFIRST, SPI_MODE3));
       //SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE3));
       digitalWrite(devAddr, LOW);
       SPI.transfer(regAddr); // specify the starting register address
-      //SPI.transferBytes(in, out, length);
       for(uint8_t i = 0; i < length; i++)
       {
         uint8_t v = SPI.transfer(in ? in[i] : 0);
-        if(out) out[i] = v; // write the data
+        if(out) out[i] = v; // write received data
       }
       digitalWrite(devAddr, HIGH);
       SPI.endTransaction();

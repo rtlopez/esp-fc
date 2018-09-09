@@ -62,6 +62,7 @@ class MagSensor: public BaseSensor
     {
       if(!_model.magActive() || !_model.state.magTimer.check()) return 0;
       if(!_mag) return 0;
+      //return 1;
 
       {
         Stats::Measure measure(_model.state.stats, COUNTER_MAG_READ);

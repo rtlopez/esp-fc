@@ -6,6 +6,11 @@
 #include "helper_3dmath.h"
 #include "Debug.h"
 
+#define MPU9250_USER_CTRL         0x6A
+#define MPU9250_I2C_MST_EN        0x20
+#define MPU9250_I2C_MST_CLK       0x0D
+#define MPU9250_I2C_MST_CTRL      0x24
+
 namespace Espfc {
 
 namespace Device {
@@ -31,6 +36,17 @@ class GyroMPU9250: public GyroMPU6050
       delay(15);
 
       setSleepEnabled(false);
+      delay(10);
+
+      setDLPFMode(GYRO_DLPF_188);
+      setRate(9); // 1000 / (9+1) = 100hz for mag, will be overwritten in GyroSensor
+
+      // enable I2C master mode
+      _bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_EN);
+
+      // set the I2C bus speed to 400 kHz
+      _bus->writeByte(_addr, MPU9250_I2C_MST_CTRL, MPU9250_I2C_MST_CLK);
+      delay(10);
 
       return 1;
     }

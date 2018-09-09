@@ -43,8 +43,8 @@ class GyroSensor: public BaseSensor
     int update()
     {
       if(!_model.gyroActive()) return 0;
-
       if(!_model.state.gyroTimer.check()) return 0;
+      //return 1;
 
       {
         Stats::Measure measure(_model.state.stats, COUNTER_GYRO_READ);
