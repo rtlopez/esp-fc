@@ -134,6 +134,7 @@ class Hardware
         if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
       }
       _model.state.magPresent = (bool)detectedMag;
+      _model.state.magRate = detectedMag ? detectedMag->getRate() : 0;
     }
 
     void detectBaro()

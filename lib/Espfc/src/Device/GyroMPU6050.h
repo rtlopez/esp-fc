@@ -66,6 +66,8 @@
 #define MPU6050_ACCEL_FS_8          0x02
 #define MPU6050_ACCEL_FS_16         0x03
 
+#define MPU6050_RESET               0x80
+
 #define MPU6050_ACONFIG_AFS_SEL_BIT         4
 #define MPU6050_ACONFIG_AFS_SEL_LENGTH      2
 
@@ -74,6 +76,7 @@
 
 #define MPU6050_USERCTRL_FIFO_EN_BIT            6
 #define MPU6050_USERCTRL_FIFO_RESET_BIT         2
+
 
 namespace Espfc {
 
@@ -93,7 +96,7 @@ class GyroMPU6050: public GyroDevice
 
       if(!testConnection()) return 0;
 
-      _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, 0x80); // reset
+      _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_RESET);
       delay(100);
 
       setClockSource(MPU6050_CLOCK_PLL_XGYRO);

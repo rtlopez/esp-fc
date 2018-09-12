@@ -8,8 +8,10 @@
 
 #define MPU9250_USER_CTRL         0x6A
 #define MPU9250_I2C_MST_EN        0x20
-#define MPU9250_I2C_MST_CLK       0x0D
+#define MPU9250_I2C_MST_400       0x0D
+#define MPU9250_I2C_MST_500       0x09
 #define MPU9250_I2C_MST_CTRL      0x24
+#define MPU9250_I2C_MST_RESET     0x02
 
 namespace Espfc {
 
@@ -29,24 +31,30 @@ class GyroMPU9250: public GyroMPU6050
 
       if(!testConnection()) return 0;
 
-      _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, 0x80); // reset
+      _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_RESET);
       delay(100);
 
       setClockSource(MPU6050_CLOCK_PLL_XGYRO);
-      delay(15);
 
       setSleepEnabled(false);
-      delay(10);
+      
 
       setDLPFMode(GYRO_DLPF_188);
       setRate(9); // 1000 / (9+1) = 100hz for mag, will be overwritten in GyroSensor
+
+      // reset I2C master
+      //_bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_RESET);
+
+      // disable I2C master to reset slave registers allocation
+      _bus->writeByte(_addr, MPU9250_USER_CTRL, 0);
+      delay(100);
 
       // enable I2C master mode
       _bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_EN);
 
       // set the I2C bus speed to 400 kHz
-      _bus->writeByte(_addr, MPU9250_I2C_MST_CTRL, MPU9250_I2C_MST_CLK);
-      delay(10);
+      _bus->writeByte(_addr, MPU9250_I2C_MST_CTRL, MPU9250_I2C_MST_400);
+      delay(100);
 
       return 1;
     }

@@ -29,11 +29,8 @@ class MagDevice: public BusAwareDevice
     virtual DeviceType getType() const = 0;
 
     virtual int readMag(VectorInt16& v) = 0;
-
-    virtual void setSampleAveraging(uint8_t averaging) = 0;
-    virtual void setSampleRate(uint8_t rate) = 0;
-    virtual void setMode(uint8_t mode) = 0;
-    virtual void setGain(uint8_t scale) = 0;
+    virtual const VectorFloat convert(const VectorInt16& v) const = 0;
+    virtual int getRate() const = 0;
 
     virtual bool testConnection() = 0;
 

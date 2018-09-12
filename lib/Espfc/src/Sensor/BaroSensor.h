@@ -37,7 +37,7 @@ class BaroSensor: public BaseSensor
       _pressureFilter.begin(FilterConfig(FILTER_MEDIAN3, 10), rate);
       _altitudeFilter.begin(_model.config.baroFilter, rate);
 
-      _model.logger.info().log(F("BARO INIT")).log(toGyroRate).log(rate).logln(_model.config.baroFilter.freq);
+      _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(toGyroRate).log(rate).logln(_model.config.baroFilter.freq);
 
       return 1;
     }

@@ -42,32 +42,6 @@ enum AccelMode {
   ACCEL_GYRO      = 0x01,
 };
 
-enum MagGain {
-  MAG_GAIN_1370 = 0x00,
-  MAG_GAIN_1090 = 0x01,
-  MAG_GAIN_820  = 0x02,
-  MAG_GAIN_660  = 0x03,
-  MAG_GAIN_440  = 0x04,
-  MAG_GAIN_390  = 0x05,
-  MAG_GAIN_330  = 0x06,
-  MAG_GAIN_220  = 0x07,
-};
-
-enum MagRate {
-  MAG_RATE_3    = 0x00,
-  MAG_RATE_7P5  = 0x01,
-  MAG_RATE_15   = 0x02,
-  MAG_RATE_30   = 0x03,
-  MAG_RATE_75   = 0x04,
-};
-
-enum MagAvg {
-  MAG_AVERAGING_1 = 0x00,
-  MAG_AVERAGING_2 = 0x01,
-  MAG_AVERAGING_4 = 0x02,
-  MAG_AVERAGING_8 = 0x03
-};
-
 enum SensorAlign {
   ALIGN_DEFAULT        = 0,
   ALIGN_CW0_DEG        = 1,
@@ -637,9 +611,6 @@ class ModelConfig
 
     int8_t magBus;
     int8_t magDev;
-    int8_t magSampleRate;
-    int8_t magFsr;
-    int8_t magAvr;
     int8_t magAlign;
     FilterConfig magFilter;
 
@@ -780,9 +751,7 @@ class ModelConfig
       accelFsr = ACCEL_FS_16;
 
       magBus = BUS_AUTO;
-      magDev = MAG_NONE;
-      magSampleRate = MAG_RATE_75;
-      magAvr = MAG_AVERAGING_1;
+      magDev = MAG_DEFAULT;
       magAlign = ALIGN_DEFAULT;
 
       baroBus = BUS_AUTO;

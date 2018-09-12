@@ -318,10 +318,10 @@ class Cli
       const char ** busDevChoices            = Device::BusDevice::getNames();
       const char ** gyroDevChoices           = Device::GyroDevice::getNames();
       const char ** baroDevChoices           = Device::BaroDevice::getNames();
+      const char ** magDevChoices            = Device::MagDevice::getNames();
+
       const char ** fusionModeChoices        = FusionConfig::getModeNames();
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
-      static const char* magDevChoices[]    = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), NULL };
-      static const char* magRateChoices[]   = { PSTR("3Hz"), PSTR("7P5Hz"), PSTR("15hz"), PSTR("30Hz"), PSTR("75Hz"), NULL };
       static const char* debugModeChoices[]  = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"), PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
                                                  PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"), PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), 
                                                  PSTR("STACK"), PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"), PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
@@ -376,7 +376,6 @@ class Cli
         
         Param(PSTR("mag_bus"), &c.magBus, busDevChoices),
         Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
-        Param(PSTR("mag_rate"), &c.magSampleRate, magRateChoices),
         Param(PSTR("mag_align"), &c.magAlign, alignChoices),
         Param(PSTR("mag_filter_type"), &c.magFilter.type, filterTypeChoices),
         Param(PSTR("mag_filter_lpf"), &c.magFilter.freq),
@@ -452,14 +451,17 @@ class Cli
         Param(PSTR("pid_roll_p"), &c.pid[PID_ROLL].P),
         Param(PSTR("pid_roll_i"), &c.pid[PID_ROLL].I),
         Param(PSTR("pid_roll_d"), &c.pid[PID_ROLL].D),
+        Param(PSTR("pid_roll_f"), &c.pid[PID_ROLL].F),
 
         Param(PSTR("pid_pitch_p"), &c.pid[PID_PITCH].P),
         Param(PSTR("pid_pitch_i"), &c.pid[PID_PITCH].I),
         Param(PSTR("pid_pitch_d"), &c.pid[PID_PITCH].D),
+        Param(PSTR("pid_pitch_f"), &c.pid[PID_PITCH].F),
 
         Param(PSTR("pid_yaw_p"), &c.pid[PID_YAW].P),
         Param(PSTR("pid_yaw_i"), &c.pid[PID_YAW].I),
         Param(PSTR("pid_yaw_d"), &c.pid[PID_YAW].D),
+        Param(PSTR("pid_yaw_f"), &c.pid[PID_YAW].F),
 
         Param(PSTR("pid_level_p"), &c.pid[PID_LEVEL].P),
         Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
@@ -794,9 +796,6 @@ class Cli
 
         s.print(F("boot mode: "));
         s.println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
-
-        s.print(F("cpu freq: "));
-        s.println(ESP.getCpuFreqMHz());
 
         s.print(F("flash size map: "));
         s.println(system_get_flash_size_map());

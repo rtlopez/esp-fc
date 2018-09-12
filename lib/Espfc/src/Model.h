@@ -287,6 +287,10 @@ class Model
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(10);
       state.serialTimer.setRate(1000);
+      if(magActive())
+      {
+        state.magTimer.setRate(state.magRate);
+      }
 
       // configure calibration
       state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
@@ -314,7 +318,10 @@ class Model
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
         state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
         state.gyroFilterImu[i].begin(FilterConfig(FILTER_PT1_FIR2, state.accelTimer.rate / 2), state.gyroTimer.rate);
-        state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
+        if(magActive())
+        {
+          state.magFilter[i].begin(config.magFilter, state.magTimer.rate);
+        }
       }
 
       // ensure disarmed pulses

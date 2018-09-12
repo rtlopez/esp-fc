@@ -28,7 +28,7 @@ class AccelSensor: public BaseSensor
         case ACCEL_FS_2:  _model.state.accelScale = 1.0 / 16384.0; break;
       }
       _gyro->setFullScaleAccelRange(_model.config.accelFsr);
-      _model.logger.info().log(F("ACCEL INIT")).log(_model.config.accelDev).logln(_model.state.accelPresent);
+      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).logln(_model.state.accelPresent);
 
       for(size_t i = 0; i < 3; i++)
       {

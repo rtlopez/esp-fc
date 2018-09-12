@@ -315,11 +315,11 @@ struct ModelState
   Timer actuatorTimer;
 
   Timer magTimer;
-  float magScale;
+  int magRate;
 
   bool magCalibration;
-  float magCalibrationData[3][2];
   bool magCalibrationValid;
+  float magCalibrationData[3][2];
 
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;

@@ -22,38 +22,7 @@ class MagSensor: public BaseSensor
       _mag = Hardware::getMagDevice(_model);
       if(!_mag) return 0;
 
-      _mag->setSampleAveraging(_model.config.magAvr);
-      _mag->setMode(HMC5883L_MODE_CONTINUOUS);
-
-      int rate = -1;
-      switch(_model.config.magSampleRate)
-      {
-        case MAG_RATE_3:    rate = 3; break;
-        case MAG_RATE_7P5:  rate = 7; break;
-        case MAG_RATE_15:   rate = 15; break;
-        case MAG_RATE_30:   rate = 30; break;
-        case MAG_RATE_75:   rate = 75; break;
-        default: _model.config.magSampleRate = MAG_RATE_15; rate = 15;
-      }
-      _mag->setSampleRate(_model.config.magSampleRate + 0x02);
-      _model.state.magTimer.setRate(rate);
-
-      const float base = 1.0f; // 1000.0;
-      switch(_model.config.magFsr)
-      {
-        case MAG_GAIN_1370: _model.state.magScale = base / 1370; break;
-        case MAG_GAIN_1090: _model.state.magScale = base / 1090; break;
-        case MAG_GAIN_820:  _model.state.magScale = base / 820; break;
-        case MAG_GAIN_660:  _model.state.magScale = base / 660; break;
-        case MAG_GAIN_440:  _model.state.magScale = base / 440; break;
-        case MAG_GAIN_390:  _model.state.magScale = base / 390; break;
-        case MAG_GAIN_330:  _model.state.magScale = base / 330; break;
-        case MAG_GAIN_220:  _model.state.magScale = base / 220; break;
-      }
-      _mag->setGain(_model.config.magFsr);
-
-      _model.logger.info().log(F("MAG RATE")).log(_model.config.magSampleRate).log(_model.state.magTimer.rate).logln(_model.state.magTimer.interval);
-      _model.logger.info().log(F("MAG INIT")).logln(_model.state.magPresent);
+      _model.logger.info().log(F("MAG INIT")).log(FPSTR(Device::MagDevice::getName(_mag->getType()))).logln(_model.state.magTimer.rate);
 
       return 1;
     }
@@ -73,7 +42,7 @@ class MagSensor: public BaseSensor
         Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
 
         align(_model.state.magRaw, _model.config.magAlign);
-        _model.state.mag  = (VectorFloat)_model.state.magRaw  * _model.state.magScale;
+        _model.state.mag = _mag->convert(_model.state.magRaw);
         for(size_t i = 0; i < 3; i++)
         {
           _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));

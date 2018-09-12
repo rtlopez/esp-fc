@@ -35,7 +35,7 @@ class GyroSensor: public BaseSensor
       }
       _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
 
-      _model.logger.info().log(F("GYRO INIT")).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).log(_model.state.gyroTimer.interval).log(_model.config.gyroDev).logln(_model.state.gyroPresent);
+      _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).log(_model.state.gyroTimer.interval).logln(_model.state.gyroPresent);
 
       return 1;
     }

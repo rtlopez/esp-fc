@@ -88,19 +88,38 @@ class MagHMC5338L: public MagDevice
     int begin(BusDevice * bus, uint8_t addr, uint8_t masterAddr) override
     {
       setBus(bus, addr, masterAddr);
-      _mode = HMC5883L_MODE_CONTINUOUS;
+
       return testConnection();
+
+      setMode(HMC5883L_MODE_CONTINUOUS);
+      setSampleAveraging(HMC5883L_AVERAGING_1);
+      setSampleRate(HMC5883L_RATE_75);
+      setGain(HMC5883L_GAIN_1090);
     }
 
     int readMag(VectorInt16& v) override
     {
       uint8_t buffer[6];
       _bus->read(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
-      if (_mode == HMC5883L_MODE_SINGLE) _bus->writeByte(_addr, HMC5883L_RA_MODE, HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
+      if (_mode == HMC5883L_MODE_SINGLE)
+      {
+        _bus->writeByte(_addr, HMC5883L_RA_MODE, HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
+      }
       v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
       v.z = (((int16_t)buffer[2]) << 8) | buffer[3];
       v.y = (((int16_t)buffer[4]) << 8) | buffer[5];
       return 1;
+    }
+
+    const VectorFloat convert(const VectorInt16& v) const override
+    {
+      const float scale = 1.f / 1090.f;
+      return VectorFloat(v) * scale;
+    }
+
+    int getRate() const override
+    {
+      return 75;
     }
 
     virtual MagDeviceType getType() const override
@@ -108,23 +127,23 @@ class MagHMC5338L: public MagDevice
       return MAG_HMC5883;
     }
 
-    void setSampleAveraging(uint8_t averaging) override
+    void setSampleAveraging(uint8_t averaging)
     {
       _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_AVERAGE_BIT, HMC5883L_CRA_AVERAGE_LENGTH, averaging);
     }
 
-    void setSampleRate(uint8_t rate) override
+    void setSampleRate(uint8_t rate)
     {
       _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_RATE_BIT, HMC5883L_CRA_RATE_LENGTH, rate);
     }
 
-    void setMode(uint8_t mode) override
+    void setMode(uint8_t mode)
     {
       _bus->writeByte(_addr, HMC5883L_RA_MODE, mode << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
       _mode = mode; // track to tell if we have to clear bit 7 after a read
     }
 
-    void setGain(uint8_t gain) override
+    void setGain(uint8_t gain)
     {
       _bus->writeByte(_addr, HMC5883L_RA_CONFIG_B, gain << (HMC5883L_CRB_GAIN_BIT - HMC5883L_CRB_GAIN_LENGTH + 1));
     }
