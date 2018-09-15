@@ -827,7 +827,7 @@ class Msp
           }
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(_model.state.magRaw[i]));
+            r.writeU16(lrintf(_model.state.mag[i]));
           }
           break;
 

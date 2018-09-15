@@ -13,6 +13,13 @@ namespace Sensor {
 class MagSensor: public BaseSensor
 {
   public:
+    enum CalibrationState {
+      MAG_CALIBRATION_IDLE   = 0,
+      MAG_CALIBRATION_RESET  = 1,
+      MAG_CALIBRATION_UPDATE = 2,
+      MAG_CALIBRATION_APPLY  = 3,
+    };
+
     MagSensor(Model& model): _model(model) {}
 
     int begin()
@@ -23,6 +30,7 @@ class MagSensor: public BaseSensor
       if(!_mag) return 0;
 
       _model.logger.info().log(F("MAG INIT")).log(FPSTR(Device::MagDevice::getName(_mag->getType()))).logln(_model.state.magTimer.rate);
+      _model.state.magCalibrationValid = true;
 
       return 1;
     }
@@ -31,7 +39,6 @@ class MagSensor: public BaseSensor
     {
       if(!_model.magActive() || !_model.state.magTimer.check()) return 0;
       if(!_mag) return 0;
-      //return 1;
 
       {
         Stats::Measure measure(_model.state.stats, COUNTER_MAG_READ);
@@ -43,82 +50,92 @@ class MagSensor: public BaseSensor
 
         align(_model.state.magRaw, _model.config.magAlign);
         _model.state.mag = _mag->convert(_model.state.magRaw);
-        for(size_t i = 0; i < 3; i++)
-        {
-          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
-        }
-        if(_model.state.magCalibrationValid && _model.state.magCalibration == 0)
+        if(_model.state.magCalibrationValid && _model.state.magCalibrationState == MAG_CALIBRATION_IDLE)
         {
           _model.state.mag -= _model.state.magCalibrationOffset;
           _model.state.mag *= _model.state.magCalibrationScale;
         }
+        for(size_t i = 0; i < 3; i++)
+        {
+          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
+        }
       }
-      collectMagCalibration();
+      magCalibration();
 
       return 1;
     }
 
-    void collectMagCalibration()
+    void magCalibration()
     {
-      if(!_model.magActive()) return;
-      if(_model.state.magCalibration == 1)
+      switch(_model.state.magCalibrationState)
       {
-        resetMagCalibration();
-        _model.state.magCalibration = 2;
+        case MAG_CALIBRATION_RESET:
+          resetMagCalibration();
+          _model.state.magCalibrationSamples = 30 * _model.state.magTimer.rate;
+          _model.state.magCalibrationState = MAG_CALIBRATION_UPDATE;
+          break;
+        case MAG_CALIBRATION_UPDATE:
+          updateMagCalibration();
+          _model.state.magCalibrationSamples--;
+          if(_model.state.magCalibrationSamples <= 0) _model.state.magCalibrationState = MAG_CALIBRATION_APPLY;
+          break;
+        case MAG_CALIBRATION_APPLY:
+          applyMagCalibration();
+          _model.state.magCalibrationState = MAG_CALIBRATION_IDLE;
+          break;
+        case MAG_CALIBRATION_IDLE:
+        default:
+          return;
       }
-
-      if(_model.state.magCalibration == 0) return;
-      for(int i = 0; i < 3; i++)
-      {
-        _model.state.magCalibrationData[i][0] = _model.state.mag.get(i) < _model.state.magCalibrationData[i][0] ? _model.state.mag.get(i) : _model.state.magCalibrationData[i][0];
-        _model.state.magCalibrationData[i][1] = _model.state.mag.get(i) > _model.state.magCalibrationData[i][1] ? _model.state.mag.get(i) : _model.state.magCalibrationData[i][1];
-      }
-      updateMagCalibration();
     }
 
     void resetMagCalibration()
     {
-      if(!_model.magActive()) return;
-      for(int i = 0; i < 3; i++)
-      {
-        _model.state.magCalibrationData[i][0] = 0;
-        _model.state.magCalibrationData[i][1] = 0;
-      }
-      updateMagCalibration();
+      _model.state.magCalibrationMin = VectorFloat();
+      _model.state.magCalibrationMax = VectorFloat();
+      _model.state.magCalibrationOffset = VectorFloat();
+      _model.state.magCalibrationScale = VectorFloat(1.f, 1.f, 1.f);
+      _model.state.magCalibrationValid = false;
     }
 
     void updateMagCalibration()
     {
-      if(!_model.magActive()) return;
-      // just in case when the calibration data is not valid
-      _model.state.magCalibrationValid = false;
       for(int i = 0; i < 3; i++)
       {
-        _model.state.magCalibrationOffset.set(i, 0.f);
-        _model.state.magCalibrationScale.set(i, 1.f);
+        if(_model.state.mag[i] < _model.state.magCalibrationMin[i]) _model.state.magCalibrationMin.set(i, _model.state.mag[i]);
+        if(_model.state.mag[i] > _model.state.magCalibrationMax[i]) _model.state.magCalibrationMax.set(i, _model.state.mag[i]);
       }
+    }
 
-      // find biggest range
+    void applyMagCalibration()
+    {
+      // verify calibration data and find biggest range
       float maxDelta = -1;
       for(int i = 0; i < 3; i++)
       {
-        if((_model.state.magCalibrationData[i][1] - _model.state.magCalibrationData[i][0]) > maxDelta)
+        if(_model.state.magCalibrationMin[i] > -0.01f) return;
+        if(_model.state.magCalibrationMax[i] <  0.01f) return;
+        if((_model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i]) > maxDelta)
         {
-          maxDelta = _model.state.magCalibrationData[i][1] - _model.state.magCalibrationData[i][0];
+          maxDelta = _model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i];
         }
       }
 
+      // probably incomplete data, must be positive
       if(maxDelta <= 0) return;
+
       const float epsilon = 0.001f;
-      maxDelta /= 2;                                         // this is the max +/- range
+      maxDelta /= 2;                                                   // this is the max +/- range
       for (int i = 0; i < 3; i++)
       {
-        float delta = (_model.state.magCalibrationData[i][1] - _model.state.magCalibrationData[i][0]) / 2.f;
-        if(delta < epsilon && delta > -epsilon) return;
-        float offset = (_model.state.magCalibrationData[i][1] + _model.state.magCalibrationData[i][0]) / 2.f;
+        float delta = (_model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i]) * 0.5f;
+        if(abs(delta) < epsilon) return;
         _model.state.magCalibrationScale.set(i, maxDelta / delta);     // makes everything the same range
+
+        float offset = (_model.state.magCalibrationMax[i] + _model.state.magCalibrationMin[i]) * 0.5f;
         _model.state.magCalibrationOffset.set(i, offset);
       }
+
       _model.state.magCalibrationValid = true;
     }
 

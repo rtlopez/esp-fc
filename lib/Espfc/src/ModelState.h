@@ -317,13 +317,15 @@ struct ModelState
   Timer magTimer;
   int magRate;
 
-  bool magCalibration;
+  int magCalibrationSamples;
+  int magCalibrationState;
   bool magCalibrationValid;
-  float magCalibrationData[3][2];
 
+  VectorFloat magCalibrationMin;
+  VectorFloat magCalibrationMax;
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
-
+  
   bool telemetry;
   Timer telemetryTimer;
   bool telemetryUpdate;

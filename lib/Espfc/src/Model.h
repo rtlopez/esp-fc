@@ -302,7 +302,7 @@ class Model
       {
         state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
         state.accelBias.set(i, config.accelBias[i] / 1000.0f);
-        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
+        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 10.0f);
         state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
       }
 
@@ -403,7 +403,7 @@ class Model
       {
         config.gyroBias[i] = lrintf(state.gyroBias[i] * 1000.0f);
         config.accelBias[i] = lrintf(state.accelBias[i] * 1000.0f);
-        config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 1000.0f);
+        config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 10.0f);
         config.magCalibrationScale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
       }
     }

@@ -878,8 +878,7 @@ class Cli
           s.print(_model.state.accelBias[1]); s.print(' ');
           s.print(_model.state.accelBias[2]); s.println(F("]"));
 
-          /*
-          s.print(F("mag offset: "));
+          s.print(F(" mag offset: "));
           s.print(_model.config.magCalibrationOffset[0]); s.print(' ');
           s.print(_model.config.magCalibrationOffset[1]); s.print(' ');
           s.print(_model.config.magCalibrationOffset[2]); s.print(F(" ["));
@@ -887,14 +886,13 @@ class Cli
           s.print(_model.state.magCalibrationOffset[1]); s.print(' ');
           s.print(_model.state.magCalibrationOffset[2]); s.println(F("]"));
 
-          s.print(F(" mag scale: "));
+          s.print(F("  mag scale: "));
           s.print(_model.config.magCalibrationScale[0]); s.print(' ');
           s.print(_model.config.magCalibrationScale[1]); s.print(' ');
           s.print(_model.config.magCalibrationScale[2]); s.print(F(" ["));
           s.print(_model.state.magCalibrationScale[0]); s.print(' ');
           s.print(_model.state.magCalibrationScale[1]); s.print(' ');
           s.print(_model.state.magCalibrationScale[2]); s.println(F("]"));
-          */
         }
         else if(strcmp_P(cmd.args[1], PSTR("gyro")) == 0)
         {
@@ -903,20 +901,8 @@ class Cli
         }
         else if(strcmp_P(cmd.args[1], PSTR("mag")) == 0)
         {
-          if(!cmd.args[2]) {}
-          else if(cmd.args[2][0] == '1')
-          {
-            _model.state.magCalibration = 1;
-            //_model.config.telemetry = 1;
-            //_model.config.telemetryInterval = 200;
-            s.print(F("mag calibration on"));
-          }
-          else if(cmd.args[2][0] == '0')
-          {
-            _model.state.magCalibration = 0;
-            //_model.config.telemetry = 0;
-            s.print(F("mag calibration off"));
-          }
+          if(!_model.isActive(MODE_ARMED)) _model.state.magCalibrationState = 1;
+          s.println(F("OK"));
         }
       }
       else if(strcmp_P(cmd.args[0], PSTR("preset")) == 0)

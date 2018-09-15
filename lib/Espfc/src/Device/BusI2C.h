@@ -27,6 +27,11 @@ class BusI2C: public BusDevice
       return 1;
     }
 
+    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override
+    {
+      return read(devAddr, regAddr, length, data, timeout);
+    }
+
     int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override
     {
       int8_t count = 0;

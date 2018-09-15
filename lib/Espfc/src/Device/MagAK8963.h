@@ -26,7 +26,7 @@
 #define AK8963_RESET              0x01
 #define AK8963_ASA                0x10
 #define AK8963_WHO_AM_I           0x00
-#define AK8963_INIT_DELAY         100
+#define AK8963_INIT_DELAY         200
 
 namespace Espfc {
 
@@ -58,15 +58,7 @@ class MagAK8963: public MagDevice
 
       if(!testMasterConnection()) return 0;
 
-      // set AK8963 to Power Down
-      //writeSlave(AK8963_CNTL1, AK8963_PWR_DOWN);
-      //delay(AK8963_INIT_DELAY);
-
-      // reset the AK8963
-      //writeSlave(AK8963_CNTL2, AK8963_RESET);
-      //delay(AK8963_INIT_DELAY);
-
-      testConnection(); // wtf?
+      //testConnection(); // wtf?
       if(!testConnection()) return 0;
 
       init();
@@ -107,19 +99,17 @@ class MagAK8963: public MagDevice
 
     int readMag(VectorInt16& v) override
     {
-      readMaster(MPU9250_EXT_SENS_DATA_00, 6, buffer);
+      _bus->readFast(_masterAddr, MPU9250_EXT_SENS_DATA_00, 6, buffer);
       // align CW90_FLIP (swap X Y, invert Z)
       v.y =  ((((int16_t)buffer[1]) << 8) | buffer[0]);
       v.x =  ((((int16_t)buffer[3]) << 8) | buffer[2]);
       v.z = -((((int16_t)buffer[5]) << 8) | buffer[4]);
-      //D(v.x, v.y, v.z);
       return 1;
     }
 
     const VectorFloat convert(const VectorInt16& v) const override
     {
       return (VectorFloat)v * scale;
-      //D(v.x, v.y, v.z);
     }
 
     int getRate() const override
@@ -172,16 +162,11 @@ class MagAK8963: public MagDevice
         return -3;
       }
 
-      // bit optimized burst version
-      //uint8_t out[3] = { _addr | (uint8_t)0x80, regAddr, (uint8_t)MPU9250_I2C_SLV0_EN | length };
-      //if(!_bus->write(_masterAddr, MPU9250_I2C_SLV0_ADDR, 3, out)) return -4;
-
       // takes some time for these registers to fill
       delay(1);
 
       // read the bytes off the MPU9250 EXT_SENS_DATA registers
       int8_t res = readMaster(MPU9250_EXT_SENS_DATA_00, length, data);
-      //D("SR", regAddr, data[0]);
 
       return res;
     }
@@ -205,18 +190,7 @@ class MagAK8963: public MagDevice
         return -4;
       }
 
-      //D("SW", regAddr, data);
-      //delay(1);
-
       return true;
-
-      // read the register and confirm
-      //uint8_t buffer;
-      //if(readSlave(regAddr, 1, &buffer) < 0) {
-      //  return -5;
-      //}
-
-      //return buffer == data ? 1 : -6;
     }
 
     uint8_t _mode;

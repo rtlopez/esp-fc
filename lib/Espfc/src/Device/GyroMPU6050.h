@@ -116,7 +116,7 @@ class GyroMPU6050: public GyroDevice
     {
       uint8_t buffer[6];
 
-      _bus->read(_addr, MPU6050_RA_GYRO_XOUT_H, 6, buffer);
+      _bus->readFast(_addr, MPU6050_RA_GYRO_XOUT_H, 6, buffer);
 
       v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
       v.y = (((int16_t)buffer[2]) << 8) | buffer[3];
@@ -129,7 +129,7 @@ class GyroMPU6050: public GyroDevice
     {
       uint8_t buffer[6];
 
-      _bus->read(_addr, MPU6050_RA_ACCEL_XOUT_H, 6, buffer);
+      _bus->readFast(_addr, MPU6050_RA_ACCEL_XOUT_H, 6, buffer);
 
       v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
       v.y = (((int16_t)buffer[2]) << 8) | buffer[3];

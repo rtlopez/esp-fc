@@ -37,24 +37,26 @@ class GyroMPU9250: public GyroMPU6050
       setClockSource(MPU6050_CLOCK_PLL_XGYRO);
 
       setSleepEnabled(false);
-      
-
-      setDLPFMode(GYRO_DLPF_188);
-      setRate(9); // 1000 / (9+1) = 100hz for mag, will be overwritten in GyroSensor
+      delay(100);      
 
       // reset I2C master
       //_bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_RESET);
 
       // disable I2C master to reset slave registers allocation
       _bus->writeByte(_addr, MPU9250_USER_CTRL, 0);
+      //delay(100);
+
+      setDLPFMode(GYRO_DLPF_188);
+      setRate(9); // 1000 / (9+1) = 100hz for mag, will be overwritten in GyroSensor
       delay(100);
 
       // enable I2C master mode
       _bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_EN);
+      //delay(100);
 
       // set the I2C bus speed to 400 kHz
       _bus->writeByte(_addr, MPU9250_I2C_MST_CTRL, MPU9250_I2C_MST_400);
-      delay(100);
+      //delay(100);
 
       return 1;
     }
