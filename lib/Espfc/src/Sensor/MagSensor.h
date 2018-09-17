@@ -13,13 +13,6 @@ namespace Sensor {
 class MagSensor: public BaseSensor
 {
   public:
-    enum CalibrationState {
-      MAG_CALIBRATION_IDLE   = 0,
-      MAG_CALIBRATION_RESET  = 1,
-      MAG_CALIBRATION_UPDATE = 2,
-      MAG_CALIBRATION_APPLY  = 3,
-    };
-
     MagSensor(Model& model): _model(model) {}
 
     int begin()
@@ -29,9 +22,14 @@ class MagSensor: public BaseSensor
       _mag = Hardware::getMagDevice(_model);
       if(!_mag) return 0;
 
-      _model.logger.info().log(F("MAG INIT")).log(FPSTR(Device::MagDevice::getName(_mag->getType()))).logln(_model.state.magTimer.rate);
+      if(_model.state.magTimer.rate < 5) return 0;
+
+      // by default use eeprom calibration settings
+      _model.state.magCalibrationState = MAG_CALIBRATION_IDLE;
       _model.state.magCalibrationValid = true;
 
+      _model.logger.info().log(F("MAG INIT")).log(FPSTR(Device::MagDevice::getName(_mag->getType()))).logln(_model.state.magTimer.rate);
+      
       return 1;
     }
 
@@ -81,8 +79,9 @@ class MagSensor: public BaseSensor
           break;
         case MAG_CALIBRATION_APPLY:
           applyMagCalibration();
-          _model.state.magCalibrationState = MAG_CALIBRATION_IDLE;
+          _model.state.magCalibrationState = MAG_CALIBRATION_SAVE;
           break;
+        case MAG_CALIBRATION_SAVE: // @see Model::finishCallibration()
         case MAG_CALIBRATION_IDLE:
         default:
           return;
@@ -93,8 +92,6 @@ class MagSensor: public BaseSensor
     {
       _model.state.magCalibrationMin = VectorFloat();
       _model.state.magCalibrationMax = VectorFloat();
-      _model.state.magCalibrationOffset = VectorFloat();
-      _model.state.magCalibrationScale = VectorFloat(1.f, 1.f, 1.f);
       _model.state.magCalibrationValid = false;
     }
 
@@ -109,33 +106,39 @@ class MagSensor: public BaseSensor
 
     void applyMagCalibration()
     {
+      const float EPSILON = 0.001f;
+
       // verify calibration data and find biggest range
-      float maxDelta = -1;
+      float maxRange = -1;
       for(int i = 0; i < 3; i++)
       {
-        if(_model.state.magCalibrationMin[i] > -0.01f) return;
-        if(_model.state.magCalibrationMax[i] <  0.01f) return;
-        if((_model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i]) > maxDelta)
+        if(_model.state.magCalibrationMin[i] > -EPSILON) return;
+        if(_model.state.magCalibrationMax[i] <  EPSILON) return;
+        if((_model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i]) > maxRange)
         {
-          maxDelta = _model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i];
+          maxRange = _model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i];
         }
       }
 
       // probably incomplete data, must be positive
-      if(maxDelta <= 0) return;
+      if(maxRange <= 0) return;
 
-      const float epsilon = 0.001f;
-      maxDelta /= 2;                                                   // this is the max +/- range
+      VectorFloat scale(1.f, 1.f, 1.f);
+      VectorFloat offset(0.f, 0.f, 0.f);
+
       for (int i = 0; i < 3; i++)
       {
-        float delta = (_model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i]) * 0.5f;
-        if(abs(delta) < epsilon) return;
-        _model.state.magCalibrationScale.set(i, maxDelta / delta);     // makes everything the same range
+        const float range = (_model.state.magCalibrationMax[i] - _model.state.magCalibrationMin[i]);
+        const float bias  = (_model.state.magCalibrationMax[i] + _model.state.magCalibrationMin[i]) * 0.5f;
 
-        float offset = (_model.state.magCalibrationMax[i] + _model.state.magCalibrationMin[i]) * 0.5f;
-        _model.state.magCalibrationOffset.set(i, offset);
+        if(abs(range) < EPSILON) return;    // incomplete data
+        
+        scale.set(i, maxRange / range);     // makes everything the same range
+        offset.set(i, bias);                // level bias
       }
 
+      _model.state.magCalibrationScale = scale;
+      _model.state.magCalibrationOffset = offset;
       _model.state.magCalibrationValid = true;
     }
 

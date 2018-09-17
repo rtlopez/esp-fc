@@ -13,6 +13,8 @@
 #define MPU9250_I2C_MST_CTRL      0x24
 #define MPU9250_I2C_MST_RESET     0x02
 
+#define MPU9250_ACCEL_CONF2       0x1D
+
 namespace Espfc {
 
 namespace Device {
@@ -65,6 +67,13 @@ class GyroMPU9250: public GyroMPU6050
     {
       return GYRO_MPU9250;
     }
+
+    void setDLPFMode(uint8_t mode) override
+    {
+      GyroMPU6050::setDLPFMode(mode);
+      _bus->writeByte(_addr, MPU9250_ACCEL_CONF2, mode);
+    }
+
 
     bool testConnection() override
     {

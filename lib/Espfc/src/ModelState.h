@@ -225,6 +225,14 @@ class MixerConfig {
     MixerEntry * mixes;
 };
 
+enum MagCalibrationState {
+  MAG_CALIBRATION_IDLE   = 0,
+  MAG_CALIBRATION_RESET  = 1,
+  MAG_CALIBRATION_UPDATE = 2,
+  MAG_CALIBRATION_APPLY  = 3,
+  MAG_CALIBRATION_SAVE   = 4,
+};
+
 // working data
 struct ModelState
 {

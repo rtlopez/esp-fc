@@ -901,7 +901,23 @@ class Cli
         }
         else if(strcmp_P(cmd.args[1], PSTR("mag")) == 0)
         {
-          if(!_model.isActive(MODE_ARMED)) _model.state.magCalibrationState = 1;
+          if(!_model.isActive(MODE_ARMED)) _model.calibrateMag();
+          s.println(F("OK"));
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("reset_accel")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
+        {
+          _model.state.accelBias = VectorFloat();
+          s.println(F("OK"));
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("reset_gyro")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
+        {
+          _model.state.gyroBias = VectorFloat();
+          s.println(F("OK"));
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("reset_mag")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
+        {
+          _model.state.magCalibrationOffset = VectorFloat();
+          _model.state.magCalibrationScale = VectorFloat(1.f, 1.f, 1.f);
           s.println(F("OK"));
         }
       }

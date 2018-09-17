@@ -28,11 +28,11 @@ class AccelSensor: public BaseSensor
         case ACCEL_FS_2:  _model.state.accelScale = 1.0 / 16384.0; break;
       }
       _gyro->setFullScaleAccelRange(_model.config.accelFsr);
-      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).logln(_model.state.accelPresent);
+      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
 
       for(size_t i = 0; i < 3; i++)
       {
-        _filter[i].begin(FilterConfig(FILTER_PT1, 30), _model.state.accelTimer.rate);
+        _filter[i].begin(FilterConfig(FILTER_PT1, 0), _model.state.accelTimer.rate);
       }
 
       return 1;
@@ -63,7 +63,8 @@ class AccelSensor: public BaseSensor
 
         if(_model.state.accelBiasSamples > 0)
         {
-          _model.state.accelBias = (_model.state.accelBias * (1.0f - _model.state.accelBiasAlpha)) + (_model.state.accel * _model.state.accelBiasAlpha);
+          //_model.state.accelBias = (_model.state.accelBias * (1.0f - _model.state.accelBiasAlpha)) + (_model.state.accel * _model.state.accelBiasAlpha);
+          _model.state.accelBias += (_model.state.accel - _model.state.accelBias) * _model.state.accelBiasAlpha;
           _model.state.accelBiasSamples--;
           if(_model.state.accelBiasSamples == 0)
           {

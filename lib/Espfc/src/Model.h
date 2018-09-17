@@ -87,7 +87,7 @@ class Model
 
     bool calibrationActive() const
     {
-      return state.sensorCalibration || state.accelBiasSamples > 0 || state.gyroBiasSamples > 0;
+      return state.sensorCalibration || state.accelBiasSamples > 0 || state.gyroBiasSamples > 0 || state.magCalibrationState != MAG_CALIBRATION_IDLE;
     }
 
     void calibrate()
@@ -96,9 +96,14 @@ class Model
       state.gyroBiasSamples  = 2 * state.gyroTimer.rate;
       if(accelActive())
       {
-        state.accelBiasSamples = 2 * state.gyroTimer.rate;
-        state.accelBias.z += 1.f;
+        state.accelBiasSamples = 2 * state.accelTimer.rate;
+        state.accelBias = VectorFloat(0.f, 0.f, 1.f);
       }
+    }
+
+    void calibrateMag()
+    {
+      state.magCalibrationState = MAG_CALIBRATION_RESET;
     }
 
     void finishCalibration()
@@ -106,6 +111,11 @@ class Model
       if(state.sensorCalibration && state.accelBiasSamples == 0 && state.gyroBiasSamples <= 0)
       {
         state.sensorCalibration = false;
+        save();
+      }
+      if(state.magCalibrationState == MAG_CALIBRATION_SAVE)
+      {
+        state.magCalibrationState = MAG_CALIBRATION_IDLE;
         save();
       }
     }

@@ -907,6 +907,7 @@ class Msp
           break;
 
         case MSP_MAG_CALIBRATION:
+          if(!_model.isActive(MODE_ARMED)) _model.calibrateMag();
           break;
 
         case MSP_DEBUG:
