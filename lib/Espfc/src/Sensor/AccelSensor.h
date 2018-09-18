@@ -13,7 +13,7 @@ class AccelSensor: public BaseSensor
   public:
     AccelSensor(Model& model): _model(model) {}
     
-    static const float G = 9.80665f;
+    const float G = 9.80665f;
 
     int begin()
     {
