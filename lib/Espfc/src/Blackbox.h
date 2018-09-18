@@ -195,7 +195,7 @@ class Blackbox
       for(size_t i = 0; i < 3; i++)
       {
         gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
-        acc.accADC[i] = _model.state.accel[i] * 2048.f;
+        acc.accADC[i] = _model.state.accel[i] * _model.state.accelScale1G;
         pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
         pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
         pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;

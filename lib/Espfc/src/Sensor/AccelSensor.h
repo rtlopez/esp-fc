@@ -12,21 +12,24 @@ class AccelSensor: public BaseSensor
 {
   public:
     AccelSensor(Model& model): _model(model) {}
+    
+    static const float G = 9.80665f;
 
     int begin()
     {
-      _model.state.accel.z = 1.f;
+      _model.state.accel.z = G;
 
       _gyro = Hardware::getGyroDevice(_model);
       if(!_gyro) return 0;
 
       switch(_model.config.accelFsr)
       {
-        case ACCEL_FS_16: _model.state.accelScale = 1.0 /  2048.0; break;
-        case ACCEL_FS_8:  _model.state.accelScale = 1.0 /  4096.0; break;
-        case ACCEL_FS_4:  _model.state.accelScale = 1.0 /  8192.0; break;
-        case ACCEL_FS_2:  _model.state.accelScale = 1.0 / 16384.0; break;
+        case ACCEL_FS_16: _model.state.accelScale = 16.f * G / 32768.f; break;
+        case ACCEL_FS_8:  _model.state.accelScale =  8.f * G / 32768.f; break;
+        case ACCEL_FS_4:  _model.state.accelScale =  4.f * G / 32768.f; break;
+        case ACCEL_FS_2:  _model.state.accelScale =  2.f * G / 32768.f; break;
       }
+      _model.state.accelScale1G = _model.state.accelScale / G;
       _gyro->setFullScaleAccelRange(_model.config.accelFsr);
       _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
 
@@ -68,7 +71,7 @@ class AccelSensor: public BaseSensor
           _model.state.accelBiasSamples--;
           if(_model.state.accelBiasSamples == 0)
           {
-            _model.state.accelBias.z -= 1.0f;
+            _model.state.accelBias.z -= G;
             _model.logger.info().log(F("ACCEL CAL")).log(_model.state.accelBias.x).log(_model.state.accelBias.y).logln(_model.state.accelBias.z);
           }
         }

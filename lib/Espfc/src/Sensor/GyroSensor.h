@@ -4,10 +4,8 @@
 #include "BaseSensor.h"
 #include "Device/GyroDevice.h"
 
-#include <math.h>
-
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
-#define ESPFC_FUZZY_GYRO_ZERO 0.20
+#define ESPFC_FUZZY_GYRO_ZERO  0.20
 
 namespace Espfc {
 
@@ -28,10 +26,10 @@ class GyroSensor: public BaseSensor
 
       switch(_model.config.gyroFsr)
       {
-        case GYRO_FS_2000: _model.state.gyroScale = M_PI /  (16.384 * 180.0); break;
-        case GYRO_FS_1000: _model.state.gyroScale = M_PI /  (32.768 * 180.0); break;
-        case GYRO_FS_500:  _model.state.gyroScale = M_PI /  (65.535 * 180.0); break;
-        case GYRO_FS_250:  _model.state.gyroScale = M_PI / (131.072 * 180.0); break;
+        case GYRO_FS_2000: _model.state.gyroScale = radians(2000.f) / 32768.f; break;
+        case GYRO_FS_1000: _model.state.gyroScale = radians(1000.f) / 32768.f; break;
+        case GYRO_FS_500:  _model.state.gyroScale =  radians(500.f) / 32768.f; break;
+        case GYRO_FS_250:  _model.state.gyroScale =  radians(250.f) / 32768.f; break;
       }
       _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
 

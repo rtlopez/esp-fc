@@ -295,6 +295,7 @@ struct ModelState
   VectorFloat accelPrev;
 
   float accelScale;
+  float accelScale1G;
   VectorFloat accelBias;
   float accelBiasAlpha;
   int accelBiasSamples;
