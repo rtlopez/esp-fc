@@ -29,7 +29,7 @@ class AccelSensor: public BaseSensor
         case ACCEL_FS_4:  _model.state.accelScale =  4.f * G / 32768.f; break;
         case ACCEL_FS_2:  _model.state.accelScale =  2.f * G / 32768.f; break;
       }
-      _model.state.accelScale1G = _model.state.accelScale / G;
+      _model.state.accelScale1G = 1.f / G;
       _gyro->setFullScaleAccelRange(_model.config.accelFsr);
       _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
 

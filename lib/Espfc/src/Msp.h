@@ -819,7 +819,7 @@ class Msp
         case MSP_RAW_IMU:
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(_model.state.accel[i] * _model.state.accelScale1G));
+            r.writeU16(lrintf(_model.state.accel[i] * _model.state.accelScale1G * 512.f));
           }
           for (int i = 0; i < 3; i++)
           {
