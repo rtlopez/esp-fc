@@ -27,6 +27,7 @@
 *.exe
 *.out
 *.app
+*.elf
 .pioenvs
 .piolibdeps
 .clang_complete
