@@ -69,7 +69,6 @@ class SensorManager
         _voltage.update();
       }
 
-      _model.finishCalibration();
       return status;
     }
 

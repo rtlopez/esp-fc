@@ -28,12 +28,16 @@ class AccelSensor: public BaseSensor
         case ACCEL_FS_2:  _model.state.accelScale =  2.f * ACCEL_G / 32768.f; break;
       }
       _gyro->setFullScaleAccelRange(_model.config.accelFsr);
-      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
 
       for(size_t i = 0; i < 3; i++)
       {
         _filter[i].begin(FilterConfig(FILTER_PT1, 0), _model.state.accelTimer.rate);
       }
+
+      _model.state.accelBiasAlpha = _model.state.accelTimer.rate > 0 ? 5.0f / _model.state.accelTimer.rate : 0;
+      _model.state.accelCalibrationState = CALIBRATION_IDLE;
+
+      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
 
       return 1;
     }
@@ -61,27 +65,44 @@ class AccelSensor: public BaseSensor
           _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accel[i]));
         }
 
-        if(_model.state.accelBiasSamples > 0)
-        {
-          //_model.state.accelBias = (_model.state.accelBias * (1.0f - _model.state.accelBiasAlpha)) + (_model.state.accel * _model.state.accelBiasAlpha);
-          _model.state.accelBias += (_model.state.accel - _model.state.accelBias) * _model.state.accelBiasAlpha;
-          _model.state.accelBiasSamples--;
-          if(_model.state.accelBiasSamples == 0)
-          {
-            _model.state.accelBias.z -= ACCEL_G;
-            _model.logger.info().log(F("ACCEL CAL")).log(_model.state.accelBias.x).log(_model.state.accelBias.y).logln(_model.state.accelBias.z);
-          }
-        }
-        else
-        {
-          _model.state.accel -= _model.state.accelBias;
-        }
+        calibrate();
       }
 
       return 1;
     }
 
   private:
+    void calibrate()
+    {
+      switch(_model.state.accelCalibrationState)
+      {
+        case CALIBRATION_IDLE:
+          _model.state.accel -= _model.state.accelBias;
+          break;
+        case CALIBRATION_START:
+          _model.state.accelBias = VectorFloat(0, 0, ACCEL_G);
+          _model.state.accelBiasSamples = 2 * _model.state.accelTimer.rate;
+          _model.state.accelCalibrationState = CALIBRATION_UPDATE;
+          break;
+        case CALIBRATION_UPDATE:
+          _model.state.accelBias += (_model.state.accel - _model.state.accelBias) * _model.state.accelBiasAlpha;
+          _model.state.accelBiasSamples--;
+          if(_model.state.accelBiasSamples <= 0) _model.state.accelCalibrationState = CALIBRATION_APPLY;
+          break;
+        case CALIBRATION_APPLY:
+          _model.state.accelBias.z -= ACCEL_G;
+          _model.state.accelCalibrationState = CALIBRATION_SAVE;
+          break;
+        case CALIBRATION_SAVE:
+          _model.finishCalibration();
+          _model.state.accelCalibrationState = CALIBRATION_IDLE;
+          break;
+        default:
+          _model.state.accelCalibrationState = CALIBRATION_IDLE;
+          break;
+      }
+    }
+
     Model& _model;
     Device::GyroDevice * _gyro;
     Filter _filter[3];

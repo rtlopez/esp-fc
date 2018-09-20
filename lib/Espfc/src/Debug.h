@@ -11,15 +11,16 @@
 #define PIN_DEBUG_INIT()
 #endif
 
-#if 1
-#define LOG_SERIAL_INIT() Serial.begin(115200); Serial.flush(); Serial.println()
+#if ESPFC_SERIAL_DEBUG
+//#define LOG_SERIAL_INIT() Serial.begin(115200); Serial.flush(); Serial.println()
+#define LOG_SERIAL_INIT() Serial.begin(115200); Serial.println()
 #define LOG_SERIAL_DEBUG(v) Serial.print(' '); Serial.print(v)
 #else
 #define LOG_SERIAL_INIT()
 #define LOG_SERIAL_DEBUG(v)
 #endif
 
-#if 1
+#if ESPFC_SERIAL_DEBUG
 template <typename T>
 void D(T t)
 {

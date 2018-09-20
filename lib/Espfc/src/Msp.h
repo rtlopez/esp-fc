@@ -903,7 +903,7 @@ class Msp
           break;
 
         case MSP_ACC_CALIBRATION:
-          if(!_model.isActive(MODE_ARMED)) _model.calibrate();
+          if(!_model.isActive(MODE_ARMED)) _model.calibrateGyro();
           break;
 
         case MSP_MAG_CALIBRATION:

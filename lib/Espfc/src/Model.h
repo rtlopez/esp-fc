@@ -87,35 +87,41 @@ class Model
 
     bool calibrationActive() const
     {
-      return state.accelBiasSamples > 0 || state.gyroBiasSamples > 0 || state.magCalibrationState != MAG_CALIBRATION_IDLE;
+      return state.accelCalibrationState != CALIBRATION_IDLE || state.gyroCalibrationState != CALIBRATION_IDLE || state.magCalibrationState != CALIBRATION_IDLE;
     }
 
-    void calibrate()
+    void calibrateGyro()
     {
-      state.gyroBiasSamples = 2 * state.gyroTimer.rate;
+      state.gyroCalibrationState = CALIBRATION_START;
       if(accelActive())
       {
-        state.accelBiasSamples = 2 * state.accelTimer.rate;
-        state.accelBias = VectorFloat(0.f, 0.f, ACCEL_G);
+        state.accelCalibrationState = CALIBRATION_START;
       }
     }
 
     void calibrateMag()
     {
-      state.magCalibrationState = MAG_CALIBRATION_RESET;
+      state.magCalibrationState = CALIBRATION_START;
     }
 
     void finishCalibration()
     {
-      if(state.sensorCalibration && state.accelBiasSamples == 0 && state.gyroBiasSamples <= 0)
+      if(state.gyroCalibrationState == CALIBRATION_SAVE)
       {
-        state.sensorCalibration = false;
         save();
+        state.buzzer.push(BEEPER_GYRO_CALIBRATED);
+        logger.info().log(F("GYRO BIAS")).log(degrees(state.gyroBias.x)).log(degrees(state.gyroBias.y)).logln(degrees(state.gyroBias.z));
       }
-      if(state.magCalibrationState == MAG_CALIBRATION_SAVE)
+      if(state.accelCalibrationState == CALIBRATION_SAVE)
       {
-        state.magCalibrationState = MAG_CALIBRATION_IDLE;
         save();
+        logger.info().log(F("ACCEL BIAS")).log(state.accelBias.x).log(state.accelBias.y).logln(state.accelBias.z);
+      }
+      if(state.magCalibrationState == CALIBRATION_SAVE)
+      {
+        save();
+        logger.info().log(F("MAG BIAS")).log(state.magCalibrationOffset.x).log(state.magCalibrationOffset.y).logln(state.magCalibrationOffset.z);
+        logger.info().log(F("MAG SCALE")).log(state.magCalibrationScale.x).log(state.magCalibrationScale.y).logln(state.magCalibrationScale.z);
       }
     }
 
@@ -301,20 +307,6 @@ class Model
         state.magTimer.setRate(state.magRate);
       }
 
-      // configure calibration
-      state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
-      state.accelBiasAlpha = 5.0f / state.accelTimer.rate;
-      state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
-
-      // load sensor calibration data
-      for(size_t i = 0; i <= AXIS_YAW; i++)
-      {
-        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
-        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
-        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 10.0f);
-        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
-      }
-
       // configure filters
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
@@ -405,6 +397,18 @@ class Model
       //state.telemetryTimer.setRate(100);
     }
 
+    void postLoad()
+    {
+      // load current sensor calibration
+      for(size_t i = 0; i <= AXIS_YAW; i++)
+      {
+        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
+        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
+        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 10.0f);
+        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
+      }
+    }
+
     void preSave()
     {
       // store current sensor calibration
@@ -420,6 +424,7 @@ class Model
     int load()
     {
       _storage.load(config, logger);
+      postLoad();
       return 1;
     }
 

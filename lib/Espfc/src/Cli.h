@@ -896,7 +896,7 @@ class Cli
         }
         else if(strcmp_P(cmd.args[1], PSTR("gyro")) == 0)
         {
-          if(!_model.isActive(MODE_ARMED)) _model.calibrate();
+          if(!_model.isActive(MODE_ARMED)) _model.calibrateGyro();
           s.println(F("OK"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("mag")) == 0)
@@ -1060,8 +1060,9 @@ class Cli
         s.println();
         s.print(F("STATUS: "));
         s.println();
-        s.print(F(" cpu freq : "));
-        s.println(ESP.getCpuFreqMHz());
+        s.print(F(" cpu : "));
+        s.print(ESP.getCpuFreqMHz());
+        s.println(F(" MHz"));
 
         Device::GyroDevice * gyro = Hardware::getGyroDevice(_model);
         Device::BaroDevice * baro = Hardware::getBaroDevice(_model);
@@ -1070,7 +1071,7 @@ class Cli
         {
           s.print(F("gyro : "));
           s.print(FPSTR(Device::GyroDevice::getName(gyro->getType())));
-          s.print('@');
+          s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(gyro->getBus()->getType())));
         }
         else
@@ -1082,7 +1083,7 @@ class Cli
         {
           s.print(F("baro : "));
           s.print(FPSTR(Device::BaroDevice::getName(baro->getType())));
-          s.print('@');
+          s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
         }
         else
@@ -1094,7 +1095,7 @@ class Cli
         {
           s.print(F(" mag : "));
           s.print(FPSTR(Device::MagDevice::getName(mag->getType())));
-          s.print('@');
+          s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
         }
         else

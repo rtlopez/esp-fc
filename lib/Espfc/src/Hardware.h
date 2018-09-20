@@ -87,7 +87,7 @@ class Hardware
 
 #if defined(ESP32)
       int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MISO], _model.config.pin[PIN_SPI_0_MOSI]);
-      _model.logger.info().log(F("SPI SETUP")).logln(spiResult);
+      _model.logger.info().log(F("SPI SETUP")).log(_model.config.pin[PIN_SPI_0_SCK]).log(_model.config.pin[PIN_SPI_0_MISO]).log(_model.config.pin[PIN_SPI_0_MOSI]).logln(spiResult);
 #elif defined(ESP8266)
       //int spiResult = spiBus.begin();
       //_model.logger.info().log(F("SPI")).logln(spiResult);
@@ -163,7 +163,7 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus, cs);
-      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).logln(status);
+      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).log(cs).logln(status);
       return status;
     }
 

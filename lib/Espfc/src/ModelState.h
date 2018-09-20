@@ -225,12 +225,12 @@ class MixerConfig {
     MixerEntry * mixes;
 };
 
-enum MagCalibrationState {
-  MAG_CALIBRATION_IDLE   = 0,
-  MAG_CALIBRATION_RESET  = 1,
-  MAG_CALIBRATION_UPDATE = 2,
-  MAG_CALIBRATION_APPLY  = 3,
-  MAG_CALIBRATION_SAVE   = 4,
+enum CalibrationState {
+  CALIBRATION_IDLE   = 0,
+  CALIBRATION_START  = 1,
+  CALIBRATION_UPDATE = 2,
+  CALIBRATION_APPLY  = 3,
+  CALIBRATION_SAVE   = 4,
 };
 
 #define ACCEL_G (9.80665f)
@@ -301,11 +301,13 @@ struct ModelState
   VectorFloat accelBias;
   float accelBiasAlpha;
   int accelBiasSamples;
+  int accelCalibrationState;
 
   float gyroScale;
   VectorFloat gyroBias;
   float gyroBiasAlpha;
-  long gyroBiasSamples;
+  int gyroBiasSamples;
+  int gyroCalibrationState;
 
   int32_t gyroClock;
   int32_t gyroRate;

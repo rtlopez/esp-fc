@@ -33,6 +33,9 @@ class GyroSensor: public BaseSensor
       }
       _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
 
+      _model.state.gyroCalibrationState = CALIBRATION_START; // calibrate gyro on start
+      _model.state.gyroBiasAlpha = 5.0f / _model.state.gyroTimer.rate;
+
       _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).log(_model.state.gyroTimer.interval).logln(_model.state.gyroPresent);
 
       return 1;
@@ -57,22 +60,8 @@ class GyroSensor: public BaseSensor
         align(_model.state.gyroRaw, _model.config.gyroAlign);
 
         _model.state.gyro = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
-        if(_model.state.gyroBiasSamples > 0) // calibration
-        {
-          VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
-          _model.state.accelPrev = _model.state.accel;
-          if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO && _model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
-          {
-            _model.state.gyroBias += (_model.state.gyro - _model.state.gyroBias) * _model.state.gyroBiasAlpha;
-            _model.state.gyroBiasSamples--;
-            if(_model.state.gyroBiasSamples == 0)
-            {
-              _model.state.buzzer.push(BEEPER_GYRO_CALIBRATED);
-              _model.logger.info().log(F("GYRO CAL")).log(_model.state.gyroBias.x).log(_model.state.gyroBias.y).logln(_model.state.gyroBias.z);
-            }
-          }
-        }
-        _model.state.gyro -= _model.state.gyroBias;
+
+        calibrate();
 
         // filtering
         for(size_t i = 0; i < 3; ++i)
@@ -117,12 +106,49 @@ class GyroSensor: public BaseSensor
             _model.state.gyroImu.set(i, _model.state.gyroFilterImu[i].update(_model.state.gyro[i]));
           }
         }
-      }     
+      }
 
       return 1;
     }
 
   private:
+    void calibrate()
+    {
+      switch(_model.state.gyroCalibrationState)
+      {
+        case CALIBRATION_IDLE:
+          _model.state.gyro -= _model.state.gyroBias;
+          break;
+        case CALIBRATION_START:
+          //_model.state.gyroBias = VectorFloat();
+          _model.state.gyroBiasSamples = 2 * _model.state.gyroTimer.rate;
+          _model.state.gyroCalibrationState = CALIBRATION_UPDATE;
+          break;
+        case CALIBRATION_UPDATE:
+          {
+            VectorFloat deltaAccel = _model.state.accel - _model.state.accelPrev;
+            _model.state.accelPrev = _model.state.accel;
+            if(deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO && _model.state.gyro.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
+            {
+              _model.state.gyroBias += (_model.state.gyro - _model.state.gyroBias) * _model.state.gyroBiasAlpha;
+              _model.state.gyroBiasSamples--;
+            }
+            if(_model.state.gyroBiasSamples <= 0) _model.state.gyroCalibrationState = CALIBRATION_APPLY;
+          }
+          break;
+        case CALIBRATION_APPLY:
+          _model.state.gyroCalibrationState = CALIBRATION_SAVE;
+          break;
+        case CALIBRATION_SAVE:
+          _model.finishCalibration();
+          _model.state.gyroCalibrationState = CALIBRATION_IDLE;
+          break;
+        default:
+          _model.state.gyroCalibrationState = CALIBRATION_IDLE;
+          break;
+      }
+    }
+
     Model& _model;
     Device::GyroDevice * _gyro;
 };

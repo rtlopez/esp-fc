@@ -25,7 +25,7 @@ class MagSensor: public BaseSensor
       if(_model.state.magTimer.rate < 5) return 0;
 
       // by default use eeprom calibration settings
-      _model.state.magCalibrationState = MAG_CALIBRATION_IDLE;
+      _model.state.magCalibrationState = CALIBRATION_IDLE;
       _model.state.magCalibrationValid = true;
 
       _model.logger.info().log(F("MAG INIT")).log(FPSTR(Device::MagDevice::getName(_mag->getType()))).logln(_model.state.magTimer.rate);
@@ -48,54 +48,62 @@ class MagSensor: public BaseSensor
 
         align(_model.state.magRaw, _model.config.magAlign);
         _model.state.mag = _mag->convert(_model.state.magRaw);
-        if(_model.state.magCalibrationValid && _model.state.magCalibrationState == MAG_CALIBRATION_IDLE)
-        {
-          _model.state.mag -= _model.state.magCalibrationOffset;
-          _model.state.mag *= _model.state.magCalibrationScale;
-        }
+
         for(size_t i = 0; i < 3; i++)
         {
           _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
         }
+
+        calibrate();
       }
-      magCalibration();
 
       return 1;
     }
 
-    void magCalibration()
+  private:
+    void calibrate()
     {
       switch(_model.state.magCalibrationState)
       {
-        case MAG_CALIBRATION_RESET:
-          resetMagCalibration();
+        case CALIBRATION_IDLE:
+          if(_model.state.magCalibrationValid)
+          {
+            _model.state.mag -= _model.state.magCalibrationOffset;
+            _model.state.mag *= _model.state.magCalibrationScale;
+          }
+          break;
+        case CALIBRATION_START:
+          resetCalibration();
           _model.state.magCalibrationSamples = 30 * _model.state.magTimer.rate;
-          _model.state.magCalibrationState = MAG_CALIBRATION_UPDATE;
+          _model.state.magCalibrationState = CALIBRATION_UPDATE;
           break;
-        case MAG_CALIBRATION_UPDATE:
-          updateMagCalibration();
+        case CALIBRATION_UPDATE:
+          updateCalibration();
           _model.state.magCalibrationSamples--;
-          if(_model.state.magCalibrationSamples <= 0) _model.state.magCalibrationState = MAG_CALIBRATION_APPLY;
+          if(_model.state.magCalibrationSamples <= 0) _model.state.magCalibrationState = CALIBRATION_APPLY;
           break;
-        case MAG_CALIBRATION_APPLY:
-          applyMagCalibration();
-          _model.state.magCalibrationState = MAG_CALIBRATION_SAVE;
+        case CALIBRATION_APPLY:
+          applyCalibration();
+          _model.state.magCalibrationState = CALIBRATION_SAVE;
           break;
-        case MAG_CALIBRATION_SAVE: // @see Model::finishCallibration()
-        case MAG_CALIBRATION_IDLE:
+        case CALIBRATION_SAVE:
+          _model.finishCalibration();
+          _model.state.magCalibrationState = CALIBRATION_IDLE;
+          break;
         default:
-          return;
+          _model.state.magCalibrationState = CALIBRATION_IDLE;
+          break;
       }
     }
 
-    void resetMagCalibration()
+    void resetCalibration()
     {
       _model.state.magCalibrationMin = VectorFloat();
       _model.state.magCalibrationMax = VectorFloat();
       _model.state.magCalibrationValid = false;
     }
 
-    void updateMagCalibration()
+    void updateCalibration()
     {
       for(int i = 0; i < 3; i++)
       {
@@ -104,7 +112,7 @@ class MagSensor: public BaseSensor
       }
     }
 
-    void applyMagCalibration()
+    void applyCalibration()
     {
       const float EPSILON = 0.001f;
 
@@ -142,7 +150,6 @@ class MagSensor: public BaseSensor
       _model.state.magCalibrationValid = true;
     }
 
-  private:
     Model& _model;
     Device::MagDevice * _mag;
 };
