@@ -233,6 +233,9 @@ enum MagCalibrationState {
   MAG_CALIBRATION_SAVE   = 4,
 };
 
+#define ACCEL_G (9.80665f)
+#define ACCEL_G_INV (1.f / ACCEL_G)
+
 // working data
 struct ModelState
 {
@@ -295,7 +298,6 @@ struct ModelState
   VectorFloat accelPrev;
 
   float accelScale;
-  float accelScale1G;
   VectorFloat accelBias;
   float accelBiasAlpha;
   int accelBiasSamples;
@@ -337,7 +339,6 @@ struct ModelState
   
   bool telemetry;
   Timer telemetryTimer;
-  bool telemetryUpdate;
 
   Stats stats;
 
@@ -346,11 +347,6 @@ struct ModelState
   uint32_t modeMaskPrev;
 
   bool airmodeAllowed;
-
-  bool sensorCalibration;
-
-  bool actuatorUpdate;
-  uint32_t actuatorTimestamp;
 
   int16_t debug[4];
 
