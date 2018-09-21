@@ -62,11 +62,13 @@ class Quaternion {
         }
 
         void normalize() {
-            float m = getMagnitude();
+            /*float m = getMagnitude();
             w /= m;
             x /= m;
             y /= m;
-            z /= m;
+            z /= m;*/
+            float m = invSqrt(w * w + x * x + y * y + z * z);
+            (*this) *= m;
         }
 
         Quaternion getNormalized() const {
@@ -86,6 +88,14 @@ class Quaternion {
 
         Quaternion operator*(float v) const {
           return Quaternion(w * v, x * v, y * v, z * v);
+        }
+
+        Quaternion& operator*=(float v) {
+          w *= v;
+          x *= v;
+          y *= v;
+          z *= v;
+          return *this;
         }
 
         Quaternion operator/(float v) const {
@@ -175,11 +185,19 @@ class Quaternion {
         template<typename T>
         void fromAngleVector(float angle, const VectorBase<T>& v)
         {
-          float sinHalfTheta = sinf(angle * 0.5f);
-          w = cosf(angle / 2.0);
+          float halfAngle = angle * 0.5f;
+          float sinHalfTheta = sinf(halfAngle);
+          w = cosf(halfAngle);
           x = v.x * sinHalfTheta;
           y = v.y * sinHalfTheta;
           z = v.z * sinHalfTheta;
+        }
+
+        template<typename T>
+        void fromAngularVelocity(const VectorBase<T>& v, float dt)
+        {
+          float theta = v.getMagnitude() * dt;
+          fromAngleVector(theta, v.getNormalized());
         }
 
 };
@@ -216,11 +234,14 @@ public:
       return sqrtf(x * x + y * y + z * z);
     }
 
-    void normalize() {
-        float m = getMagnitude();
+    VectorBase<T>& normalize() {
+        /*float m = getMagnitude();
         x /= m;
         y /= m;
-        z /= m;
+        z /= m;*/
+        float m = invSqrt(x * x + y * y + z * z);
+        (*this) *= m;
+        return *this;
     }
 
     VectorBase<T> getNormalized() const {
@@ -276,6 +297,16 @@ public:
       return r;
     }
 
+    float dot(const VectorBase<T>& v) const
+    {
+      return dotProduct(*this, v);
+    }
+
+    VectorBase<T> cross(const VectorBase<T>& v) const
+    {
+      return crossProduct(*this, v);
+    }
+
     VectorBase<T> accelToEuler() const
     {
       VectorBase<T> rpy; // roll pitch yaw
@@ -288,12 +319,13 @@ public:
 
     Quaternion accelToQuaternion() const
     {
+       VectorBase<T> ref(0, 0, 1);
        VectorBase<T> na = getNormalized();
-       VectorBase<T> gravity(0.f, 0.f, 1.f);
-       float angle = acos(dotProduct(gravity, na));
-       VectorBase<T> v = crossProduct(na, gravity).getNormalized();
+       float angle = acosf(ref.dot(na));
+       VectorBase<T> v = na.cross(ref).getNormalized();
        Quaternion q;
        q.fromAngleVector(angle, v);
+       q.normalize();
        return q;
     }
 

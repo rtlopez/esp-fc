@@ -4,6 +4,7 @@
 #include "Model.h"
 #include "Madgwick.h"
 #include "Mahony.h"
+#include "SimpleAHRS.h"
 
 namespace Espfc {
 
@@ -20,6 +21,9 @@ class Fusion
 
       _mahony.begin(_model.state.accelTimer.rate);
       _mahony.setKp(_model.config.fusion.gain * 0.05f);
+
+      _simple.begin(_model.state.accelTimer.rate);
+      _simple.setKp(0.002f);
 
       _model.logger.info().log(F("FUSION")).log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))).logln(_model.config.fusion.gain);
 
@@ -100,9 +104,16 @@ class Fusion
     void experimentalFusion()
     {
       // Experiment: workaround for 90 deg limit on pitch[y] axis
-      Quaternion r = Quaternion::lerp(Quaternion(), _model.state.accel.accelToQuaternion(), 0.5);
-      _model.state.angle.eulerFromQuaternion(r);
-      _model.state.angle *= 2.f;
+      //Quaternion r = Quaternion::lerp(Quaternion(), _model.state.accel.accelToQuaternion(), 0.5);
+      //_model.state.angle.eulerFromQuaternion(r);
+      //_model.state.angle *= 2.f;
+      _simple.update(
+        _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
+        _model.state.accel.x, _model.state.accel.y, _model.state.accel.z,
+        _model.state.mag.x,   _model.state.mag.y,   _model.state.mag.z
+      );
+      _model.state.angleQ = _simple.getQuaternion();
+      _model.state.angle  = _simple.getEuler();
     }
 
     void simpleFusion()
@@ -400,6 +411,7 @@ class Fusion
     bool _first;
     Madgwick _madgwick;
     Mahony _mahony;
+    SimpleAHRS _simple;
 };
 
 }
