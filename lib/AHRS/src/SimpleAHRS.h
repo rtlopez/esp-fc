@@ -20,8 +20,16 @@ class SimpleAHRS
       VectorFloat m(mx, my, mz);
 
       // ***** Gyro rotation quaternion *******
+      //Quaternion gyro_xy_q;
+      //gyro_xy_q.fromAngularVelocity(VectorFloat(g.x, g.y, 0), _dt);
+      //gyro_xy_q.normalize();
+
+      //Quaternion gyro_z_q;
+      //gyro_z_q.fromAngularVelocity(VectorFloat(0, 0, g.z), _dt);
+      //gyro_z_q.normalize();
+
       Quaternion gyro_q;
-      gyro_q.fromAngularVelocity(g, _dt);
+      gyro_q.fromAngularVelocity(VectorFloat(g.x, g.z, g.z), _dt);
       gyro_q.normalize();
 
       // other version
@@ -34,8 +42,14 @@ class SimpleAHRS
 
       // ***** Orientation prediction from gyro *******
       // integrate gyro angular displacement 'gyro_q' to orientation 'q'
-      _q = _q * gyro_q;
-      _q.normalize(); //make sure q remains a unit quaternion
+      //_q_xy = _q_xy * gyro_xy_q;
+      //_q_xy.normalize(); //make sure q remains a unit quaternion
+
+      //_q_z = _q_z * gyro_z_q;
+      //_q_z.normalize(); //make sure q remains a unit quaternion
+
+      //_q = _q * gyro_q;
+      //_q.normalize(); //make sure q remains a unit quaternion
 
       // ***** Accel orientation quaternion *******
       // by rotation matrix version 
@@ -56,17 +70,27 @@ class SimpleAHRS
       //Quaternion acc_q = acc_e.eulerToQuaternion();
 
       // another version, no mag
-      Quaternion acc_q = a.accelToQuaternion();
-
-      // yet another version, no mag
-      //VectorFloat acc_e = a.accelToEuler();
-      //acc_e.z = _e.z;
-      //Quaternion acc_q = acc_e.eulerToQuaternion();
+      //Quaternion acc_xy_q = a.accelToQuaternion();
 
       // ***** Orientation drift correction *******
-      _q = Quaternion::slerp(_q, acc_q, _gain);
+      //_q = Quaternion::slerp(_q, acc_q, _gain);
       // simplified with lerp
-     // _q = Quaternion::lerp(_q, acc_q, _gain);
+      //_q_xy = Quaternion::lerp(_q_xy, acc_xy_q, _gain);
+      //_q_xy.normalize();
+
+      VectorFloat estimated(0.f, 0.f, 1.f);
+      estimated.rotate(_q);
+      Quaternion error_q = VectorFloat::diffVectors(estimated, a);
+      error_q = Quaternion::slerp(Quaternion(), error_q, _gain);
+      //Quaternion error_q = VectorFloat::diffVectors(a, estimated, _gain);
+
+      //_q_xy = _q_xy * error_q;
+      
+      _q = _q * error_q;
+      
+      //_q = _q_xy;
+      //_q = _q_xy * _q_z;
+      //_q = acc_xy_q;
       _q.normalize();
       _e.eulerFromQuaternion(_q);
     }
@@ -88,6 +112,8 @@ class SimpleAHRS
 	  }
 
   private:
+    Quaternion _q_xy;
+    Quaternion _q_z;
     Quaternion _q;
     VectorFloat _e;
     float _dt;
