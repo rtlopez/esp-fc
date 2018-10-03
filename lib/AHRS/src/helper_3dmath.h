@@ -8,18 +8,18 @@
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 inline float invSqrt(float x)
 {
-	//return 1.f / sqrt(x);
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-	float halfx = 0.5f * x;
-	float y = x;
-	long i = *(long*)&y;
-	i = 0x5f3759df - (i>>1);
-	y = *(float*)&i;
-	y = y * (1.5f - (halfx * y * y));
-	y = y * (1.5f - (halfx * y * y));
-	#pragma GCC diagnostic pop
-	return y;
+  //return 1.f / sqrt(x);
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+  float halfx = 0.5f * x;
+  float y = x;
+  long i = *(long*)&y;
+  i = 0x5f3759df - (i>>1);
+  y = *(float*)&i;
+  y = y * (1.5f - (halfx * y * y));
+  y = y * (1.5f - (halfx * y * y));
+  #pragma GCC diagnostic pop
+  return y;
 }
 
 template<typename T>
@@ -50,23 +50,25 @@ class Quaternion {
         }
 
         Quaternion operator*(const Quaternion& q) const {
-          return this->getProduct(q);
+          return getProduct(q);
+        }
+
+        Quaternion& operator*=(const Quaternion& q) {
+          *this = getProduct(q);
+          return *this;
         }
 
         Quaternion getConjugate() const {
-            return Quaternion(w, -x, -y, -z);
+          return Quaternion(w, -x, -y, -z);
         }
 
         float getMagnitude() const {
-            return sqrt(w * w + x * x + y * y + z * z);
+          return sqrt(w * w + x * x + y * y + z * z);
         }
 
         void normalize() {
-            float m = getMagnitude();
-            w /= m;
-            x /= m;
-            y /= m;
-            z /= m;
+          float m = invSqrt(w * w + x * x + y * y + z * z);
+          (*this) *= m;
         }
 
         Quaternion getNormalized() const {
@@ -86,6 +88,14 @@ class Quaternion {
 
         Quaternion operator*(float v) const {
           return Quaternion(w * v, x * v, y * v, z * v);
+        }
+
+        Quaternion& operator*=(float v) {
+          w *= v;
+          x *= v;
+          y *= v;
+          z *= v;
+          return *this;
         }
 
         Quaternion operator/(float v) const {
@@ -175,18 +185,25 @@ class Quaternion {
         template<typename T>
         void fromAngleVector(float angle, const VectorBase<T>& v)
         {
-          float sinHalfTheta = sinf(angle * 0.5f);
-          w = cosf(angle / 2.0);
+          float halfAngle = angle * 0.5f;
+          float sinHalfTheta = sinf(halfAngle);
+          w = cosf(halfAngle);
           x = v.x * sinHalfTheta;
           y = v.y * sinHalfTheta;
           z = v.z * sinHalfTheta;
         }
 
+        template<typename T>
+        void fromAngularVelocity(const VectorBase<T>& v, float dt)
+        {
+          float theta = v.getMagnitude() * dt;
+          fromAngleVector(theta, v.getNormalized());
+        }
 };
 
 template<typename T>
 class VectorBase {
-public:
+  public:
     T x;
     T y;
     T z;
@@ -216,17 +233,16 @@ public:
       return sqrtf(x * x + y * y + z * z);
     }
 
-    void normalize() {
-        float m = getMagnitude();
-        x /= m;
-        y /= m;
-        z /= m;
+    VectorBase<T>& normalize() {
+      float m = invSqrt(x * x + y * y + z * z);
+      (*this) *= m;
+      return *this;
     }
 
     VectorBase<T> getNormalized() const {
-        VectorBase<T> r(x, y, z);
-        r.normalize();
-        return r;
+      VectorBase<T> r(x, y, z);
+      r.normalize();
+      return r;
     }
 
     void rotate(const Quaternion& q) {
@@ -276,6 +292,16 @@ public:
       return r;
     }
 
+    float dot(const VectorBase<T>& v) const
+    {
+      return dotProduct(*this, v);
+    }
+
+    VectorBase<T> cross(const VectorBase<T>& v) const
+    {
+      return crossProduct(*this, v);
+    }
+
     VectorBase<T> accelToEuler() const
     {
       VectorBase<T> rpy; // roll pitch yaw
@@ -288,13 +314,27 @@ public:
 
     Quaternion accelToQuaternion() const
     {
+       /*VectorBase<T> ref(0, 0, 1);
        VectorBase<T> na = getNormalized();
-       VectorBase<T> gravity(0.f, 0.f, 1.f);
-       float angle = acos(dotProduct(gravity, na));
-       VectorBase<T> v = crossProduct(na, gravity).getNormalized();
+       float angle = acosf(ref.dot(na));
+       VectorBase<T> v = na.cross(ref).getNormalized();
        Quaternion q;
        q.fromAngleVector(angle, v);
-       return q;
+       q.normalize();
+       return q;*/
+       return diffVectors(VectorBase<T>(T(0), T(0), T(1)), *this, 1.0f);
+    }
+
+    static Quaternion diffVectors(const VectorBase<T>& src, const VectorBase<T>& dst, float gain = 1.f)
+    {
+       VectorBase<T> src_n = src.getNormalized();
+       VectorBase<T> dst_n = dst.getNormalized();
+       Quaternion q;
+
+       float angle = acosf(dst_n.dot(src_n));
+       VectorBase<T> v = dst_n.cross(src_n).getNormalized();
+       q.fromAngleVector(angle * gain, v);
+       return q.getNormalized();
     }
 
     Quaternion eulerToQuaternion() const
@@ -317,9 +357,12 @@ public:
 
     VectorBase<T> eulerFromQuaternion(const Quaternion& q)
     {
-      x = atan2f(2.0f * (q.y * q.z + q.w * q.x), 1.f - 2.0f * (q.x * q.x + q.y * q.y));
-      y =  asinf(2.0f * (q.w * q.y - q.x * q.z));
-      z = atan2f(2.0f * (q.x * q.y + q.w * q.z), 1.f - 2.0f * (q.y * q.y + q.z * q.z));
+      //x = atan2f(2.0f * (q.y * q.z + q.w * q.x), 1.f - 2.0f * (q.x * q.x + q.y * q.y));
+      //y =  asinf(2.0f * (q.w * q.y - q.x * q.z));
+      //z = atan2f(2.0f * (q.x * q.y + q.w * q.z), 1.f - 2.0f * (q.y * q.y + q.z * q.z));
+      x = atan2f(q.w * q.x + q.y * q.z, 0.5f - q.x * q.x - q.y * q.y);
+      y = asinf(-2.0f * (q.x * q.z - q.w * q.y));
+      z = atan2f(q.x * q.y + q.w * q.z, 0.5f - q.y * q.y - q.z * q.z);
       return *this;
     }
 
