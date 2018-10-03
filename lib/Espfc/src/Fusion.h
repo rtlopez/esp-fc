@@ -23,7 +23,7 @@ class Fusion
       _mahony.setKp(_model.config.fusion.gain * 0.05f);
 
       _simple.begin(_model.state.accelTimer.rate);
-      _simple.setKp(0.002f);
+      _simple.setKp(0.005f);
 
       _model.logger.info().log(F("FUSION")).log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))).logln(_model.config.fusion.gain);
 

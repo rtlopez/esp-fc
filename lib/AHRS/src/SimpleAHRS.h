@@ -6,14 +6,57 @@
 class SimpleAHRS
 {
   public:
-    SimpleAHRS(): _dt(1.f / 100.f), _gain(0.002f) {}
+    SimpleAHRS(): _dt(1.f / 100.f), _gain(0.002f), _gravity(0.f, 0.f, 1.f) {}
     
     void begin(float sampleFrequency)
     {
       _dt = 1.0f / sampleFrequency;
     }
 
-	  void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+    void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+    {
+      // http://philstech.blogspot.com/2014/09/fast-quaternion-integration-for.html
+      // http://philstech.blogspot.com/2015/06/quaternion-imu-drift-compensation.html
+      // http://philstech.blogspot.com/2015/06/complimentary-filter-example-quaternion.html
+
+      VectorFloat g(gx, gy, gz);
+      VectorFloat a(ax, ay, az);
+      VectorFloat m(mx, my, mz);
+
+      a.normalize();
+      a.rotate(_q);
+      a.normalize();
+
+      // simple correction
+      //VectorFloat err = a.cross(_gravity);
+      //err *= _gain * 100.f;
+      //err.rotate(_q.getConjugate());
+      //g += err;
+      
+      // more precise correction
+      VectorFloat axis = a.cross(_gravity);
+      float angle = a.dot(_gravity);
+      Quaternion err;
+      err.fromAngleVector(angle * _gain, axis);
+      err.normalize();
+      _q = err * _q;
+
+      // simple prediction
+      Quaternion q;
+      float halfDt = _dt * 0.5f;
+      q.x = g.x * halfDt;
+      q.y = g.y * halfDt;
+      q.z = g.z * halfDt;
+      q.w = 1.f - 0.5 * (q.x * q.x + q.y * q.y + q.z * q.z);
+      //q.fromAngularVelocity(g, _dt); // more precise prediction
+      q.normalize();
+      _q = q * _q;
+
+      _q.normalize();
+      _e.eulerFromQuaternion(_q);
+    }
+
+	  void updateOld(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
     {
       VectorFloat g(gx, gy, gz);
       VectorFloat a(ax, ay, az);
@@ -29,7 +72,7 @@ class SimpleAHRS
       //gyro_z_q.normalize();
 
       Quaternion gyro_q;
-      gyro_q.fromAngularVelocity(VectorFloat(g.x, g.z, g.z), _dt);
+      gyro_q.fromAngularVelocity(g, _dt);
       gyro_q.normalize();
 
       // other version
@@ -80,14 +123,18 @@ class SimpleAHRS
 
       VectorFloat estimated(0.f, 0.f, 1.f);
       estimated.rotate(_q);
-      Quaternion error_q = VectorFloat::diffVectors(estimated, a);
-      error_q = Quaternion::slerp(Quaternion(), error_q, _gain);
+      Quaternion error_q = VectorFloat::diffVectors(estimated, a, _gain);
+      //error_q = Quaternion::slerp(Quaternion(), error_q, _gain);
       //Quaternion error_q = VectorFloat::diffVectors(a, estimated, _gain);
 
       //_q_xy = _q_xy * error_q;
       
-      _q = _q * error_q;
-      
+      //_q = error_q * _q;
+      //_q = gyro_q * _q;
+
+      _q *= error_q;
+      _q *= gyro_q;
+
       //_q = _q_xy;
       //_q = _q_xy * _q_z;
       //_q = acc_xy_q;
@@ -118,6 +165,7 @@ class SimpleAHRS
     VectorFloat _e;
     float _dt;
     float _gain;
+    const VectorFloat _gravity;
 };
 
 #endif
