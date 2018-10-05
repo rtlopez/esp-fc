@@ -12,6 +12,7 @@
 #include <EspGpio.h>
 #include <EscDriver.h>
 #include <EspWire.h>
+#include <EspTimer.h>
 
 #if defined(ESP32)
 #include "freertos/FreeRTOS.h"

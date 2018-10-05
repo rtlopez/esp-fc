@@ -2,153 +2,51 @@
 
 #include "EscDriverEsp8266.h"
 #include <algorithm>
-#include <user_interface.h>
 
-void EscDriverEsp8266::_isr_init(EscDriverTimer timer, void * driver)
+#define DELTA_TICKS_MAX ((APB_CLK_FREQ / 1000000L) * 50000L)
+#define DELTA_TICKS_MIN 5
+
+static void ICACHE_RAM_ATTR handleIsr(void * arg)
 {
-  switch(timer)
-  {
-    case ESC_DRIVER_TIMER2:
-      ETS_INTR_LOCK();
-      ETS_INTR_DISABLE(ETS_FRC_TIMER2_INUM);
-      T2C = 0;
-      T2I = 0;
-      ets_isr_attach(ETS_FRC_TIMER2_INUM, EscDriverEsp8266::handle, driver);
-      ETS_INTR_ENABLE(ETS_FRC_TIMER2_INUM);
-      T2C = (1 << TCTE) | (TIM_DIV1 << TCPD) | (TIM_EDGE << TCIT) | (TIM_SINGLE << TCAR);
-      T2I = 0;
-      ETS_INTR_UNLOCK();
-      break;
-    case ESC_DRIVER_TIMER1:
-      ETS_INTR_LOCK();
-      ETS_INTR_DISABLE(ETS_FRC_TIMER1_INUM);
-      T1C = 0;
-      T1I = 0;
-      ets_isr_attach(ETS_FRC_TIMER1_INUM, EscDriverEsp8266::handle, driver);
-      ETS_INTR_ENABLE(ETS_FRC_TIMER1_INUM);
-      T1C = (1 << TCTE) | (TIM_DIV1 << TCPD) | (TIM_EDGE << TCIT) | (TIM_SINGLE << TCAR);
-      T1I = 0;
-      ETS_INTR_UNLOCK();
-      break;
-    case ESC_DRIVER_TIMER0:
-      ETS_INTR_LOCK();
-      ETS_INTR_DISABLE(ETS_CCOMPARE0_INUM);
-      ets_isr_attach(ETS_CCOMPARE0_INUM, EscDriverEsp8266::handle, driver);
-      ETS_INTR_ENABLE(ETS_CCOMPARE0_INUM);
-      ETS_INTR_UNLOCK();
-      break;
-  }
-}
+  // Time critical section
+  EscDriver * drv = (EscDriver *)arg;
 
-void EscDriverEsp8266::_isr_begin(EscDriverTimer timer)
-{
-  switch(timer)
+  if(!drv->it())
   {
-    case ESC_DRIVER_TIMER2:
-      T2I = 0;
-      break;
-    case ESC_DRIVER_TIMER1:
-      TEIE &= ~TEIE1; //14
-      T1I = 0; //9
-      break;
-    default:
-      break;
-  }
-}
-
-#define TIMER0_WAIT_SHORT_COMP 10UL
-#define TIMER0_WAIT_EDGE 240UL
-#define TIMER0_WAIT_COMP 200UL
-#define TIMER1_WAIT_EDGE 140UL
-#define TIMER1_WAIT_COMP 115UL
-
-bool EscDriverEsp8266::_isr_wait(EscDriverTimer timer, const uint32_t ticks)
-{
-  switch(timer)
-  {
-    case ESC_DRIVER_TIMER2:
-      //if(ticks > 128) { // yield
-      if(ticks > TIMER1_WAIT_EDGE) { // yield
-        T2A = ((uint32_t)T2V + ticks - TIMER1_WAIT_COMP);
-        //T2A = ((uint32_t)T2V + ticks) - 120UL;
-        //T2L = 0;
-        //T2A = (ticks - 100UL);
-        T2I = 0;
-        return true;
-      }
-      break;
-    case ESC_DRIVER_TIMER1:
-      if(ticks > TIMER1_WAIT_EDGE) { // yield
-        T1L = ((ticks - TIMER1_WAIT_COMP) & 0x7FFFFF); //23
-        TEIE |= TEIE1; //13
-        return true;
-      }
-      break;
-    case ESC_DRIVER_TIMER0:
-      if(ticks > TIMER0_WAIT_EDGE) { // yield
-        timer0_write((ESP.getCycleCount() + ticks - TIMER0_WAIT_COMP));
-        return true;
-      }
-      break;
+    drv->busy(true);
+    drv->commit();
+    drv->rewind();
   }
 
-  if(ticks > 20) { // or delay
-    const uint32_t end = ESP.getCycleCount() + ticks - TIMER0_WAIT_SHORT_COMP;
-    while(ESP.getCycleCount() < end) {
-      __asm__ __volatile__ ("nop");
-    };
-  }
-
-  return false;
-}
-
-// run as soon as possible
-void EscDriverEsp8266::_isr_start(EscDriverTimer timer)
-{
-  switch(timer)
+  while(drv->working())
   {
-    case ESC_DRIVER_TIMER2:
-      //T2L = 0;
-      T2A = (uint32_t)T2V + 120UL;
-      //T2I = 0;
-      break;
-    case ESC_DRIVER_TIMER1:
-      T1L = 120UL;
-      TEIE |= TEIE1;
-      break;
-    case ESC_DRIVER_TIMER0:
-      timer0_write(ESP.getCycleCount() + 200UL);
-      break;
-  }
-}
+    volatile EscDriverEsp8266::Item * it = drv->it();
+    uint32_t ticks = it->ticks;
+    if(it->clr_mask)
+    {
+      //if(it->clr_mask & 0xffff)   GPOC = (it->clr_mask & 0xffff);
+      //if(it->clr_mask & 0x10000) GP16O = 0;
+      GPOC = it->clr_mask;
+    }
+    if(it->set_mask)
+    {
+      //if(it->set_mask & 0xffff)   GPOS = (it->set_mask & 0xffff);
+      //if(it->set_mask & 0x10000) GP16O = 1;
+      GPOS = it->set_mask;
+    }
 
-void EscDriverEsp8266::_isr_reboot(void* p)
-{
-  EscDriver* d = (EscDriver*)p;
-  _isr_begin(d->_timer);
-}
-
-void EscDriverEsp8266::_isr_end(EscDriverTimer timer, void* p)
-{
-  switch(timer)
-  {
-    case ESC_DRIVER_TIMER2:
-      ETS_INTR_LOCK();
-      ETS_INTR_DISABLE(ETS_FRC_TIMER2_INUM);
-      //ets_isr_attach(ETS_FRC_TIMER2_INUM, _isr_reboot, p);
-      //ETS_INTR_ENABLE(ETS_FRC_TIMER2_INUM);
-      ETS_INTR_UNLOCK();
+    if(it->last)
+    {
+      drv->done();
+      drv->busy(false);
+      if(ticks) drv->wait(ticks);
       break;
-    case ESC_DRIVER_TIMER1:
-      ETS_INTR_LOCK();
-      ETS_INTR_DISABLE(ETS_FRC_TIMER1_INUM);
-      ETS_INTR_UNLOCK();
-      break;
-    case ESC_DRIVER_TIMER0:
-      ETS_INTR_LOCK();
-      ETS_INTR_DISABLE(ETS_CCOMPARE0_INUM);
-      ETS_INTR_UNLOCK();
-      break;
+    }
+    else
+    {
+      drv->next();
+      if(drv->wait(ticks)) break;
+    }
   }
 }
 
@@ -177,53 +75,7 @@ void EscDriverEsp8266::apply()
     return;
   }
   if(_async || _busy) return;
-  _isr_start(_timer);
-}
-
-void EscDriverEsp8266::handle(void * p)
-{
-  // Time critical section
-  EscDriver * instance = (EscDriver *)p;
-  _isr_begin(instance->_timer);
-
-  //instance->_it = NULL;
-
-  if(!instance->_it)
-  {
-    instance->_busy = true;
-    instance->commit();
-    instance->_it = instance->_items;
-  }
-
-  while(instance->_it && instance->_it != instance->_end)
-  {
-    uint32_t ticks = instance->_it->ticks;
-    if(instance->_it->clr_mask)
-    {
-      //if(it->clr_mask & 0xffff)   GPOC = (it->clr_mask & 0xffff);
-      //if(it->clr_mask & 0x10000) GP16O = 0;
-      GPOC = instance->_it->clr_mask;
-    }
-    if(instance->_it->set_mask)
-    {
-      //if(it->set_mask & 0xffff)   GPOS = (it->set_mask & 0xffff);
-      //if(it->set_mask & 0x10000) GP16O = 1;
-      GPOS = instance->_it->set_mask;
-    }
-
-    if(instance->_it->last)
-    {
-      instance->_it = NULL;
-      instance->_busy = false;
-      if(ticks) _isr_wait(instance->_timer, ticks);
-      break;
-    }
-    else
-    {
-      instance->_it++;
-      if(_isr_wait(instance->_timer, ticks)) break;
-    }
-  }
+  _timer.write(300);
 }
 
 void EscDriverEsp8266::commit()
@@ -281,32 +133,10 @@ void EscDriverEsp8266::commit()
     item->ticks = _interval;
     if(last)
     {
-      const int32_t mt = minTicks(_timer);
+      const int32_t mt = _timer.minTicks();
       if(item->ticks > last->pulse + mt) item->ticks -= last->pulse;
       else item->ticks = mt;
     }
-  }
-}
-
-uint32_t EscDriverEsp8266::usToTicksReal(EscDriverTimer timer, uint32_t us)
-{
-  switch(timer)
-  {
-    case ESC_DRIVER_TIMER0:
-      return (F_CPU / 1000000L) * us;
-    default:
-      return (APB_CLK_FREQ / 1000000L) * us;
-  }
-}
-
-int32_t EscDriverEsp8266::minTicks(EscDriverTimer timer)
-{
-  switch(timer)
-  {
-    case ESC_DRIVER_TIMER0:
-      return 250L;
-    default:
-      return 150L;
   }
 }
 
@@ -316,13 +146,13 @@ uint32_t EscDriverEsp8266::usToTicks(uint32_t us)
   switch(_protocol)
   {
     case ESC_PROTOCOL_ONESHOT125:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 125), usToTicksReal(_timer, 250));
+      ticks = map(us, 1000, 2000, _timer.usToTicks(125), _timer.usToTicks(250));
       break;
     case ESC_PROTOCOL_ONESHOT42:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 42), usToTicksReal(_timer, 84));
+      ticks = map(us, 1000, 2000, _timer.usToTicks(42), _timer.usToTicks(84));
       break;
     case ESC_PROTOCOL_MULTISHOT:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 5), usToTicksReal(_timer, 25));
+      ticks = map(us, 1000, 2000, _timer.usToTicks(5), _timer.usToTicks(25));
       break;
     case ESC_PROTOCOL_BRUSHED:
       ticks = map(constrain(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
@@ -334,13 +164,13 @@ uint32_t EscDriverEsp8266::usToTicks(uint32_t us)
       ticks = us;
       break;
     default:
-      ticks = usToTicksReal(_timer, us); // PWM
+      ticks = _timer.usToTicks(us); // PWM
       break;
   }
   return ticks;
 }
 
-EscDriverEsp8266::EscDriverEsp8266(): _busy(false), _async(true), _protocol(ESC_PROTOCOL_PWM), _rate(50), _timer(ESC_DRIVER_TIMER1), _interval(usToTicksReal(_timer, 1000000L / _rate)), _it(NULL), _end(_items + ESC_CHANNEL_COUNT * 2)
+EscDriverEsp8266::EscDriverEsp8266(): _busy(false), _async(true), _protocol(ESC_PROTOCOL_PWM), _rate(50), _timer(ESC_DRIVER_TIMER1), _interval(_timer.usToTicks(1000000L / _rate)), _it(NULL), _end(_items + ESC_CHANNEL_COUNT * 2)
 {
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i) _slots[i] = Slot();
   for(size_t i = 0; i < ESC_CHANNEL_COUNT * 2; ++i) _items[i] = Item();
@@ -351,10 +181,6 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate, EscD
   _protocol = ESC_PROTOCOL_SANITIZE(protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // force async for brushed
   _rate = constrain(rate, 50, 8000);
-  _timer = timer;
-  _interval = usToTicksReal(_timer, 1000000L / _rate)/* - 400*/; // small compensation to keep frequency
-  _intervalMin = _interval / 500; // do not generate brushed pulses if duty < ~0.2%  (1002)
-  _intervalMax = _interval - _intervalMin; // set brushed output hi if duty > ~99.8% (1998)
   switch(_protocol)
   {
     // pulse delays experimentally selected
@@ -382,8 +208,11 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate, EscD
       }
       break;
     default: // analog
-      _isr_init(_timer, this);
-      if(_async) _isr_start(_timer);
+      _timer.begin(timer, handleIsr, this);
+      _interval = _timer.usToTicks(1000000L / _rate)/* - 400*/; // small compensation to keep frequency
+      _intervalMin = _interval / 500; // do not generate brushed pulses if duty < ~0.2%  (1002)
+      _intervalMax = _interval - _intervalMin; // set brushed output hi if duty > ~99.8% (1998)
+      if(async) _timer.write(300);
   }
   return 1;
 }
@@ -392,7 +221,8 @@ void EscDriverEsp8266::end()
 {
   if(_protocol < ESC_PROTOCOL_DSHOT150) // analog
   {
-    _isr_end(_timer, this);
+    //_isr_end(_timer, this);
+    _timer.end();
   }
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
   {
