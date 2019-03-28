@@ -2,7 +2,7 @@
 
 #include "EspTimer8266.h"
 
-static ICACHE_RAM_ATTR void handleIsr(void * arg)
+static ICACHE_RAM_ATTR void __handleIsr(void * arg)
 {
   EspTimer8266 * t = (EspTimer8266 *)arg;
   switch(t->timer())
@@ -20,7 +20,7 @@ static ICACHE_RAM_ATTR void handleIsr(void * arg)
   t->execute();
 }
 
-void EspTimer8266::begin(int timer, callback_ptr cb, void * arg)
+void EspTimer8266::begin(EspTimerId timer, callback_ptr cb, void * arg)
 {
   _timer = timer;
   _fn = cb;
@@ -32,7 +32,7 @@ void EspTimer8266::begin(int timer, callback_ptr cb, void * arg)
       ETS_INTR_DISABLE(ETS_FRC_TIMER2_INUM);
       T2C = 0;
       T2I = 0;
-      ets_isr_attach(ETS_FRC_TIMER2_INUM, handleIsr, this);
+      ets_isr_attach(ETS_FRC_TIMER2_INUM, __handleIsr, this);
       ETS_INTR_ENABLE(ETS_FRC_TIMER2_INUM);
       T2C = (1 << TCTE) | (TIM_DIV1 << TCPD) | (TIM_EDGE << TCIT) | (TIM_SINGLE << TCAR);
       T2I = 0;
@@ -43,7 +43,7 @@ void EspTimer8266::begin(int timer, callback_ptr cb, void * arg)
       ETS_INTR_DISABLE(ETS_FRC_TIMER1_INUM);
       T1C = 0;
       T1I = 0;
-      ets_isr_attach(ETS_FRC_TIMER1_INUM, handleIsr, this);
+      ets_isr_attach(ETS_FRC_TIMER1_INUM, __handleIsr, this);
       ETS_INTR_ENABLE(ETS_FRC_TIMER1_INUM);
       T1C = (1 << TCTE) | (TIM_DIV1 << TCPD) | (TIM_EDGE << TCIT) | (TIM_SINGLE << TCAR);
       T1I = 0;
@@ -52,7 +52,7 @@ void EspTimer8266::begin(int timer, callback_ptr cb, void * arg)
     case ESP_TIMER0:
       ETS_INTR_LOCK();
       ETS_INTR_DISABLE(ETS_CCOMPARE0_INUM);
-      ets_isr_attach(ETS_CCOMPARE0_INUM, handleIsr, this);
+      ets_isr_attach(ETS_CCOMPARE0_INUM, __handleIsr, this);
       ETS_INTR_ENABLE(ETS_CCOMPARE0_INUM);
       ETS_INTR_UNLOCK();
       break;

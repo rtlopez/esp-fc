@@ -1,0 +1,12 @@
+Guru Meditation Error: Core  1 panic'ed (Cache disabled but cached memory region accessed)
+Core 1 register dump:
+PC      : 0x400d2a48  PS      : 0x00060034  A0      : 0x40081b6c  A1      : 0x3ffc0bf0
+A2      : 0x00000002  A3      : 0x00000004  A4      : 0x000000ff  A5      : 0x4008e918
+A6      : 0x3ff42000  A7      : 0x7000006b  A8      : 0x80081674  A9      : 0x3ff60000
+A10     : 0x3ffc13f4  A11     : 0x20000000  A12     : 0x00000400  A13     : 0x3ffc0bd0
+A14     : 0x3ffc0c18  A15     : 0x00000001  SAR     : 0x00000013  EXCCAUSE: 0x00000007
+EXCVADDR: 0x00000000  LBEG    : 0x400d7e54  LEND    : 0x400d7e5e  LCOUNT  : 0x00000000
+Core 1 was running in ISR context:
+EPC1    : 0x40062235  EPC2    : 0x00000000  EPC3    : 0x00000000  EPC4    : 0x400d2a48
+
+Backtrace: 0x400d2a48:0x3ffc0bf0 0x40081b69:0x3ffc0c10 0x40062232:0x00000000

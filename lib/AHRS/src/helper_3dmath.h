@@ -220,10 +220,10 @@ class VectorBase {
       return *this;
     }
 
-    T get(size_t i) const ICACHE_RAM_ATTR { return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T())); }
-    T operator[](size_t i) const ICACHE_RAM_ATTR { return get(i); }
+    T get(size_t i) const { return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T())); }
+    T operator[](size_t i) const { return get(i); }
 
-    void set(size_t i, T v) ICACHE_RAM_ATTR { i == 0 ? x = v : (i == 1 ? y = v : (i == 2 ? z = v : false)); }
+    void set(size_t i, T v) { i == 0 ? x = v : (i == 1 ? y = v : (i == 2 ? z = v : false)); }
 
     operator VectorBase<float>() const {
       return VectorBase<float>(x, y, z);

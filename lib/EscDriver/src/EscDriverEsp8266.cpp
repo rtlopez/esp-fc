@@ -6,7 +6,7 @@
 #define DELTA_TICKS_MAX ((APB_CLK_FREQ / 1000000L) * 50000L)
 #define DELTA_TICKS_MIN 5
 
-static void ICACHE_RAM_ATTR handleIsr(void * arg)
+static void ICACHE_RAM_ATTR __handleIsr(void * arg)
 {
   // Time critical section
   EscDriver * drv = (EscDriver *)arg;
@@ -170,7 +170,7 @@ uint32_t EscDriverEsp8266::usToTicks(uint32_t us)
   return ticks;
 }
 
-EscDriverEsp8266::EscDriverEsp8266(): _busy(false), _async(true), _protocol(ESC_PROTOCOL_PWM), _rate(50), _timer(ESC_DRIVER_TIMER1), _interval(_timer.usToTicks(1000000L / _rate)), _it(NULL), _end(_items + ESC_CHANNEL_COUNT * 2)
+EscDriverEsp8266::EscDriverEsp8266(): _busy(false), _async(true), _protocol(ESC_PROTOCOL_PWM), _rate(50), _it(NULL), _end(_items + ESC_CHANNEL_COUNT * 2)
 {
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i) _slots[i] = Slot();
   for(size_t i = 0; i < ESC_CHANNEL_COUNT * 2; ++i) _items[i] = Item();
@@ -208,7 +208,7 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate, EscD
       }
       break;
     default: // analog
-      _timer.begin(timer, handleIsr, this);
+      _timer.begin((EspTimerId)timer, __handleIsr, this);
       _interval = _timer.usToTicks(1000000L / _rate)/* - 400*/; // small compensation to keep frequency
       _intervalMin = _interval / 500; // do not generate brushed pulses if duty < ~0.2%  (1002)
       _intervalMax = _interval - _intervalMin; // set brushed output hi if duty > ~99.8% (1998)

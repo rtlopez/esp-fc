@@ -20,6 +20,7 @@
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
 #include "Device/BaroBMP280.h"
+#include "Stepper.h"
 
 namespace {
 #if defined(ESP32)
@@ -54,6 +55,7 @@ namespace {
   static Espfc::Device::MagDevice  * detectedMag  = nullptr;
   static EscDriver escMotor;
   static EscDriver escServo;
+  static Espfc::Stepper stepper;
 }
 
 namespace Espfc {
@@ -69,7 +71,8 @@ class Hardware
       detectGyro();
       detectMag();
       detectBaro();
-      initEscDrivers();
+      //initEscDrivers();
+      initStepper();
       return 1;
     }
 
@@ -277,6 +280,16 @@ class Hardware
           _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
         }
       }
+    }
+    
+    void initStepper()
+    {
+      stepper.begin();
+    }
+
+    void updateStepper()
+    {
+      stepper.update();
     }
 
     static EscDriver * getMotorDriver()

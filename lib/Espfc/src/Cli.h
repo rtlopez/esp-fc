@@ -555,6 +555,11 @@ class Cli
         Param(PSTR("pin_spi_cs_1"), &c.pin[PIN_SPI_CS1]),
         Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+        Param(PSTR("pin_stepper_en"), &c.pin[PIN_STEPPER_EN]),
+        Param(PSTR("pin_stepper_ctr_0"), &c.pin[PIN_STEPPER_CTR_0]),
+        Param(PSTR("pin_stepper_dir_0"), &c.pin[PIN_STEPPER_DIR_0]),
+        Param(PSTR("pin_stepper_ctr_1"), &c.pin[PIN_STEPPER_CTR_1]),
+        Param(PSTR("pin_stepper_dir_1"), &c.pin[PIN_STEPPER_DIR_1]),
 #endif
 
         Param(PSTR("i2c_speed"), &c.i2cSpeed),

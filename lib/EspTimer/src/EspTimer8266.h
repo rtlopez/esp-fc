@@ -16,7 +16,7 @@
 #define TIMER1_WAIT_EDGE 140UL
 #define TIMER1_WAIT_COMP 115UL
 
-enum TimerId {
+enum EspTimerId {
   ESP_TIMER0 = 0,
   ESP_TIMER1,
   ESP_TIMER2,
@@ -25,9 +25,7 @@ enum TimerId {
 class EspTimer8266: public EspTimer
 {
   public:
-    EspTimer8266(int timer): _timer(timer) {}
-
-    void begin(int timer, callback_ptr cb, void * arg);
+    void begin(EspTimerId timer, callback_ptr cb, void * arg);
     void end();
 
     bool write(uint32_t ticks) ICACHE_RAM_ATTR;

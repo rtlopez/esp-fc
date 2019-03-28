@@ -423,7 +423,7 @@ class Model
 
     int load()
     {
-      _storage.load(config, logger);
+      //_storage.load(config, logger);
       postLoad();
       return 1;
     }

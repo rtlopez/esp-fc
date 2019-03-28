@@ -302,6 +302,11 @@ enum PinFunction {
   PIN_SPI_CS0,
   PIN_SPI_CS1,
   PIN_SPI_CS2,
+  PIN_STEPPER_EN,
+  PIN_STEPPER_CTR_0,
+  PIN_STEPPER_DIR_0,
+  PIN_STEPPER_CTR_1,
+  PIN_STEPPER_DIR_1,
 #endif
   PIN_COUNT
 };
@@ -709,11 +714,11 @@ class ModelConfig
 
 #if defined(ESP32)
       pin[PIN_INPUT_RX] = 35;
-      pin[PIN_OUTPUT_0] = 0;
-      pin[PIN_OUTPUT_1] = 2;
-      pin[PIN_OUTPUT_2] = 25;
-      pin[PIN_OUTPUT_3] = 26;
-      pin[PIN_OUTPUT_4] = 27;
+      pin[PIN_OUTPUT_0] = -1;//0;
+      pin[PIN_OUTPUT_1] = -1;//2;
+      pin[PIN_OUTPUT_2] = -1;//25;
+      pin[PIN_OUTPUT_3] = -1;//26;
+      pin[PIN_OUTPUT_4] = -1;//27;
       pin[PIN_OUTPUT_5] = 12;
       pin[PIN_OUTPUT_6] = 13;
       pin[PIN_OUTPUT_7] = 14;
@@ -734,6 +739,12 @@ class ModelConfig
       pin[PIN_SPI_CS0] = 5;
       pin[PIN_SPI_CS1] = 15;
       pin[PIN_SPI_CS2] = -1;
+
+      pin[PIN_STEPPER_EN] = 0;
+      pin[PIN_STEPPER_CTR_0] = 2;
+      pin[PIN_STEPPER_DIR_0] = 25;
+      pin[PIN_STEPPER_CTR_1] = 26;
+      pin[PIN_STEPPER_DIR_1] = 27;
 #endif
       i2cSpeed = 1000;
 
@@ -744,6 +755,7 @@ class ModelConfig
       gyroFsr  = GYRO_FS_2000;
       //gyroSync = 16;
       gyroSync = 8;
+      //gyroSync = 1;
 
       accelBus = BUS_AUTO;
       accelDev = GYRO_AUTO;

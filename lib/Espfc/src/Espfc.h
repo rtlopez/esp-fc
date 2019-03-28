@@ -60,6 +60,7 @@ class Espfc
         }
         _sensor.updateDelayed();
       }
+      _hardware.updateStepper();
       return 1;
     }
 
