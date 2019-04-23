@@ -32,12 +32,12 @@ extern "C" {
 
 // Initialize Class Variables //////////////////////////////////////////////////
 
-uint8_t EspTwoWire::rxBuffer[BUFFER_LENGTH];
+uint8_t EspTwoWire::rxBuffer[ESPWIRE_BUFFER_LENGTH];
 uint8_t EspTwoWire::rxBufferIndex = 0;
 uint8_t EspTwoWire::rxBufferLength = 0;
 
 uint8_t EspTwoWire::txAddress = 0;
-uint8_t EspTwoWire::txBuffer[BUFFER_LENGTH];
+uint8_t EspTwoWire::txBuffer[ESPWIRE_BUFFER_LENGTH];
 uint8_t EspTwoWire::txBufferIndex = 0;
 uint8_t EspTwoWire::txBufferLength = 0;
 
@@ -95,8 +95,8 @@ void EspTwoWire::setClockStretchLimit(uint32_t limit){
 }
 
 size_t EspTwoWire::requestFrom(uint8_t address, size_t size, bool sendStop){
-  if(size > BUFFER_LENGTH){
-    size = BUFFER_LENGTH;
+  if(size > ESPWIRE_BUFFER_LENGTH){
+    size = ESPWIRE_BUFFER_LENGTH;
   }
   size_t read = (esp_twi_readFrom(address, rxBuffer, size, sendStop) == 0)?size:0;
   rxBufferIndex = 0;
@@ -145,7 +145,7 @@ uint8_t EspTwoWire::endTransmission(void){
 
 size_t EspTwoWire::write(uint8_t data){
   if(transmitting){
-    if(txBufferLength >= BUFFER_LENGTH){
+    if(txBufferLength >= ESPWIRE_BUFFER_LENGTH){
       setWriteError();
       return 0;
     }

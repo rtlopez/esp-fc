@@ -27,7 +27,7 @@
 #include <inttypes.h>
 #include "Stream.h"
 
-#define BUFFER_LENGTH 32
+#define ESPWIRE_BUFFER_LENGTH 32
 
 class EspTwoWire : public Stream
 {

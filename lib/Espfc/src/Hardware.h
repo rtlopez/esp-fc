@@ -120,14 +120,14 @@ class Hardware
       if(_model.config.magDev == MAG_NONE) return;
 
 #if defined(ESP32)
-      if(_model.config.pin[PIN_SPI_CS0] != -1 && detectedGyro->getType() == GYRO_MPU9250)
+      if(_model.config.pin[PIN_SPI_CS0] != -1 && detectedGyro && detectedGyro->getType() == GYRO_MPU9250)
       {
         if(!detectedMag && detectDevice(ak8963, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
       }
 #endif
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
-        if(detectedGyro->getType() == GYRO_MPU9250)
+        if(detectedGyro && detectedGyro->getType() == GYRO_MPU9250)
         {
           if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
         }
