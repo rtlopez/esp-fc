@@ -14,8 +14,8 @@ class Mixer
 
     int begin()
     {
-      _motor = Hardware::getMotorDriver();
-      _servo = Hardware::getServoDriver();
+      _motor = Hardware::getMotorDriver(_model);
+      _servo = Hardware::getServoDriver(_model);
 
       _model.state.minThrottle = _model.config.output.minThrottle;
       _model.state.maxThrottle = _model.config.output.maxThrottle;
@@ -232,15 +232,15 @@ class Mixer
         const OutputChannelConfig& och = _model.config.output.channel[i];
         if(och.servo)
         {
-          _servo->write(i, _model.state.outputUs[i]);
+          if(_servo) _servo->write(i, _model.state.outputUs[i]);
         }
         else
         {
-          _motor->write(i, _model.state.outputUs[i]);
+          if(_motor) _motor->write(i, _model.state.outputUs[i]);
         }
       }
-      _motor->apply();
-      _servo->apply();
+      if(_motor) _motor->apply();
+      if(_servo) _servo->apply();
     }
 
     bool _stop(void)

@@ -123,7 +123,7 @@ class EscDriverEsp32: public EscDriverBase
       {
         _channel[i].dev.gpio_num = gpio_num_t(-1);
       }
-      begin(_protocol, _async, _rate);
+      //begin(_protocol, _async, _rate);
     }
 
     void end()
@@ -135,8 +135,9 @@ class EscDriverEsp32: public EscDriverBase
       }
     }
 
-    int begin(EscProtocol protocol, bool async, int32_t rate)
+    int begin(EscProtocol protocol, bool async, int32_t rate, int timer = 0)
     {
+      (void)timer; // unused
       if(_async) rmt_register_tx_end_callback(NULL, NULL); // unregister old callback
 
       _protocol = protocol;

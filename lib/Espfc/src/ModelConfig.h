@@ -883,7 +883,7 @@ class ModelConfig
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
       //output.async = true;
       output.async = false;
-      output.servoRate = 50;
+      output.servoRate = 0; // 50
 
       // input config
       input.ppmMode = RISING;
