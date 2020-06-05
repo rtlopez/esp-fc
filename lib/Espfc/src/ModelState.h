@@ -2,7 +2,7 @@
 #define _ESPFC_MODEL_STATE_H_
 
 #include <Arduino.h>
-#include <IPAddress.h>
+//#include <IPAddress.h>
 
 #include "ModelConfig.h"
 #include "Stats.h"

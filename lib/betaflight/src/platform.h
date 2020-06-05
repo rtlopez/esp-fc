@@ -10,6 +10,8 @@
 #define ESPFC_TARGET "ESP8266"
 #elif defined(ESP32)
 #define ESPFC_TARGET "ESP32"
+#elif defined(UNIT_TEST)
+#define ESPFC_TARGET "UNIT"
 #else
   #error "Wrong platform"
 #endif
@@ -56,9 +58,9 @@ extern const char * const targetVersion;
 #define XYZ_AXIS_COUNT 3
 #define DEBUG16_VALUE_COUNT 4
 
-#define STATIC_UNIT_TESTED static
+//#define STATIC_UNIT_TESTED static
 //#define UNIT_TEST
-//#define STATIC_UNIT_TESTED
+#define STATIC_UNIT_TESTED
 
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
 #define UNUSED(v) ((void)v)

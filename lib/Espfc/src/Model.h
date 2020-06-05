@@ -10,8 +10,8 @@
 #include "Storage.h"
 #include "Logger.h"
 #include "Math.h"
-#include "EspGpio.h"
-#include "EscDriver.h"
+#include <EspGpio.h>
+#include <EscDriver.h>
 
 #if defined(ESP32)
 #define ESPFC_GUARD 0
@@ -147,7 +147,9 @@ class Model
     void begin()
     {
       logger.begin();
+      #ifndef UNIT_TEST
       _storage.begin();
+      #endif
       load();
       sanitize();
     }
@@ -423,7 +425,9 @@ class Model
 
     int load()
     {
+      #ifndef UNIT_TEST
       _storage.load(config, logger);
+      #endif
       postLoad();
       return 1;
     }
@@ -431,7 +435,9 @@ class Model
     void save()
     {
       preSave();
+      #ifndef UNIT_TEST
       _storage.write(config, logger);
+      #endif
     }
 
     void reload()
@@ -453,7 +459,9 @@ class Model
     Logger logger;
 
   private:
+    #ifndef UNIT_TEST
     Storage _storage;
+    #endif
 };
 
 }

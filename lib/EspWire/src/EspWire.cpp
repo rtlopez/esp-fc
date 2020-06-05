@@ -175,7 +175,9 @@ int EspTwoWire::available(void){
   if (!result) {
     // yielding here will not make more data "available",
     // but it will prevent the system from going into WDT reset
+    #ifndef UNIT_TEST
     optimistic_yield(1000);
+    #endif
   }
 
   return result;
