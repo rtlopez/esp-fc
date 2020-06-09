@@ -4,19 +4,21 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <EspGpio.h>
+#include <EscDriver.h>
+#include <Hal.h>
+
 #include "Debug.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Storage.h"
 #include "Logger.h"
 #include "Math.h"
-#include <EspGpio.h>
-#include <EscDriver.h>
 
-#if defined(ESP32)
-#define ESPFC_GUARD 0
-#elif defined(ESP8266)
+#if defined(ESP8266)
 #define ESPFC_GUARD 1
+#else
+#define ESPFC_GUARD 0
 #endif
 
 namespace Espfc {

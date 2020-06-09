@@ -1,9 +1,9 @@
 #ifndef _ESPFC_DEVICE_BUSDEVICE_H_
 #define _ESPFC_DEVICE_BUSDEVICE_H_
 
-#include "Arduino.h"
-#include "Debug.h"
 #include <functional>
+#include <Arduino.h>
+#include "Debug.h"
 
 #define ESPFC_BUS_TIMEOUT 100
 

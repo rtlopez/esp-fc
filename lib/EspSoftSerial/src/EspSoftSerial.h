@@ -3,7 +3,7 @@
 
 #if defined(ESP8266)
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Buffer.h"
 
 class EspSoftSerialConfig

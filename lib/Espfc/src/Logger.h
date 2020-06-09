@@ -224,7 +224,7 @@ class Logger
     }
 
     String _name;
-    File _file;
+    //File _file;
     bool _valid;
 };
 

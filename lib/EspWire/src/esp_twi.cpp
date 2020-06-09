@@ -135,9 +135,9 @@ void esp_twi_stop(void){
 
 #ifdef UNIT_TEST
   #define GET_CYCLE_COUNT(var)
-#elif
+#else
   #define GET_CYCLE_COUNT(var) __asm__ __volatile__("esync; rsr %0,ccount":"=a" (var));
-#endif 
+#endif
 
 static inline ICACHE_RAM_ATTR unsigned int _getCycleCount()
 {
