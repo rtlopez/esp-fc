@@ -21,11 +21,17 @@ jobs:
         run: platformio test -e native
 
   build:
+    needs: test
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         target: ['d1_mini', 'lolin32']
     steps:
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
+      - name: Check outputs
+        run: echo ${{ steps.vars.outputs.sha }}
       - uses: actions/checkout@v1
       - name: Set up Python
         uses: actions/setup-python@v1
@@ -36,9 +42,9 @@ jobs:
       - name: Run PlatformIO Build
         run: platformio run -e ${{ matrix.target }}
         env:
-          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${GITHUB_SHA::7}
-      - name: Artifact espfc_${{ matrix.target }}_${GITHUB_SHA::7}.bin
+          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ steps.vars.outputs.sha }}
+      - name: Artifact espfc_${{ matrix.target }}_${{ steps.vars.outputs.sha }}.bin
         uses: actions/upload-artifact@v1
         with:
-          name: espfc_${{ matrix.target }}_${GITHUB_SHA::7}.bin
+          name: espfc_${{ matrix.target }}_${{ steps.vars.outputs.sha }}.bin
           path: .pio/build/${{ matrix.target }}/firmware.bin
