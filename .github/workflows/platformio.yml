@@ -1,4 +1,4 @@
-name: pio test
+name: platformio
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Set outputs
         id: vars
-        run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
+        run: echo "::set-output name=sha::$(echo ${{ github.sha }} | cut -c1-7)"
       - name: Check outputs
         run: echo ${{ steps.vars.outputs.sha }}
       - uses: actions/checkout@v1
