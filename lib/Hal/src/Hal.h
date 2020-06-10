@@ -3,7 +3,9 @@
 
 #ifdef UNIT_TEST
 
+#ifndef PSTR
 #define PSTR(s) (s)
+#endif
 
 #ifndef F
 #define F(s) (s)

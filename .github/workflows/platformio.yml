@@ -7,10 +7,8 @@ on:
     branches: [ unittest, develop, master ]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  test:
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python
@@ -21,3 +19,16 @@ jobs:
           pip install platformio
       - name: Run PlatformIO Test
         run: platformio test -e native
+
+build:
+  runs-on: ubuntu-20.04
+  steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python
+      uses: actions/setup-python@v1
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+    - name: Run PlatformIO Build
+      run: platformio run -e d1_mini -e lolin32
