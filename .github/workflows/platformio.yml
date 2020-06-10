@@ -22,6 +22,9 @@ jobs:
 
   build:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        target: ['d1_mini', 'lolin32']
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python
@@ -31,16 +34,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install platformio
       - name: Run PlatformIO Build
-        run: platformio run -e d1_mini -e lolin32
+        run: platformio run -e ${{ matrix.target }}
         env:
-          PLATFORMIO_BUILD_FLAGS: -D ESPFC_REVISION=${GITHUB_SHA::8}
-      - name: Artifact espfc_d1_mini_${GITHUB_SHA::8}.bin
+          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${GITHUB_SHA::7}
+      - name: Artifact espfc_${{ matrix.target }}_${GITHUB_SHA::7}.bin
         uses: actions/upload-artifact@v1
         with:
-          name: espfc_d1_mini_${GITHUB_SHA::8}.bin
-          path: .pio/build/d1_mini/firmware.bin
-      - name: Artifact espfc_lolin32_${GITHUB_SHA::8}.bin
-        uses: actions/upload-artifact@v1
-        with:
-          name: espfc_lolin32_${GITHUB_SHA::8}.bin
-          path: .pio/build/lolin32/firmware.bin
+          name: espfc_${{ matrix.target }}_${GITHUB_SHA::7}.bin
+          path: .pio/build/${{ matrix.target }}/firmware.bin
