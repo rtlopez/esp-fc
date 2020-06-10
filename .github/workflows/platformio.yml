@@ -32,3 +32,15 @@ jobs:
           pip install platformio
       - name: Run PlatformIO Build
         run: platformio run -e d1_mini -e lolin32
+        env:
+          PLATFORMIO_BUILD_FLAGS: -D ESPFC_REVISION=${GITHUB_SHA::8}
+      - name: Artifact espfc_d1_mini_${GITHUB_SHA::8}.bin
+        uses: actions/upload-artifact@v1
+        with:
+          name: espfc_d1_mini_${GITHUB_SHA::8}.bin
+          path: .pio/build/d1_mini/firmware.bin
+      - name: Artifact espfc_lolin32_${GITHUB_SHA::8}.bin
+        uses: actions/upload-artifact@v1
+        with:
+          name: espfc_lolin32_${GITHUB_SHA::8}.bin
+          path: .pio/build/lolin32/firmware.bin
