@@ -89,7 +89,6 @@ void test_filter_biquad_off()
     const Espfc::FilterConfig config(Espfc::FILTER_BIQUAD, 0);
     filter.begin(config, 100);
     assert_filter_off(filter);
-    TEST_ASSERT_TRUE(false);
 }
 
 void test_filter_biquad_20_100()
