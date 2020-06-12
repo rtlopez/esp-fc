@@ -1,8 +1,7 @@
 #ifndef _ESPFC_FILTER_H_
 #define _ESPFC_FILTER_H_
 
-#include <Arduino.h>
-#include "ModelConfig.h"
+#include "Math.h"
 
 // Quick median filter implementation
 // (c) N. Devillard - 1998
@@ -14,6 +13,34 @@
 #define QMF_SWAPF(a,b) { float temp=(a);(a)=(b);(b)=temp; }
 
 namespace Espfc {
+
+enum FilterType {
+  FILTER_PT1,
+  FILTER_BIQUAD,
+  FILTER_PT1_FIR2,
+  FILTER_NOTCH,
+  FILTER_FIR2,
+  FILTER_MEDIAN3,
+  FILTER_BPF,
+  FILTER_NOTCH_DF1,
+  FILTER_NONE,
+};
+
+enum BiquadFilterType {
+  BIQUAD_FILTER_LPF,
+  BIQUAD_FILTER_NOTCH,
+  BIQUAD_FILTER_BPF
+};
+
+class FilterConfig
+{
+  public:
+    FilterConfig() {}
+    FilterConfig(FilterType t, int16_t f, int16_t c = 0): type(t), freq(f), cutoff(c) {}
+    int8_t type;
+    int16_t freq;
+    int16_t cutoff;
+};
 
 struct FilterStatePt1 {
   float k;
@@ -46,9 +73,9 @@ class Filter
     {
       _type = (FilterType)config.type;
       _rate = rate;
-      _freq = constrain((int)config.freq, 0, _rate / 2); // adj cut freq below nyquist rule
-      _cutoff = constrain((int)config.cutoff, 0, _rate / 2); // adj cut freq below nyquist rule
-      _cutoff = constrain(_cutoff, 0, _freq - 10); // sanitize cutoff to be slightly below filter freq
+      _freq = Math::clamp((int)config.freq, 0, _rate / 2); // adj cut freq below nyquist rule
+      _cutoff = Math::clamp((int)config.cutoff, 0, _rate / 2); // adj cut freq below nyquist rule
+      _cutoff = Math::clamp(_cutoff, 0, _freq - 10); // sanitize cutoff to be slightly below filter freq
       if(_freq == 0) _type = FILTER_NONE; // turn off if filter freq equals zero
       switch(_type)
       {
@@ -119,7 +146,7 @@ class Filter
   private:
     void initPt1()
     {
-      float rc = 1.f / (2.f * PI * _freq);
+      float rc = 1.f / (2.f * Math::pi() * _freq);
       float dt = 1.f / _rate;
       _state.pt1.k = dt / (dt + rc);
       _state.pt1.v = 0.f;
@@ -192,7 +219,7 @@ class Filter
 
     void initBiquadCoefficients(BiquadFilterType filterType, float q)
     {
-      const float omega = 2.0f * PI * _freq / _rate;
+      const float omega = 2.0f * Math::pi() * _freq / _rate;
       const float sn = sinf(omega);
       const float cs = cosf(omega);
       const float alpha = sn / (2.0f * q);

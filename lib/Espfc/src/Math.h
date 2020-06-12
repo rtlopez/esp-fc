@@ -26,6 +26,19 @@ namespace Math {
     return 0;
   }
 
+  // std::clamp() is available since c++17
+  template<typename T>
+  T clamp(const T value, const T min, const T max)
+  {
+    if(value > max) return max;
+    if(value < min) return min;
+    return value;
+  }
+
+  constexpr float pi()
+  {
+    return 3.14159265358979f;
+  }
 }
 
 }

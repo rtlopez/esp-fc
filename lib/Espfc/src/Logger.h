@@ -6,7 +6,7 @@
 
 #if defined(ESP32)
 #include "SPIFFS.h"
-#elif defined(ESP8266)
+#elif defined(ESP8266) && false
 #include "FS.h"
 #define USE_FS_LOGGER
 #endif

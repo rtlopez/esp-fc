@@ -1,8 +1,8 @@
 #ifndef _ESPFC_MODEL_CONFIG_H_
 #define _ESPFC_MODEL_CONFIG_H_
 
-#include <Arduino.h>
 #include "EscDriver.h"
+#include "Filter.h"
 #include "Device/BusDevice.h"
 #include "Device/GyroDevice.h"
 #include "Device/MagDevice.h"
@@ -363,34 +363,6 @@ class BuzzerConfig
     int8_t pin;
     int8_t inverted;
     int32_t beeperMask;
-};
-
-enum FilterType {
-  FILTER_PT1,
-  FILTER_BIQUAD,
-  FILTER_PT1_FIR2,
-  FILTER_NOTCH,
-  FILTER_FIR2,
-  FILTER_MEDIAN3,
-  FILTER_BPF,
-  FILTER_NOTCH_DF1,
-  FILTER_NONE,
-};
-
-enum BiquadFilterType {
-  BIQUAD_FILTER_LPF,
-  BIQUAD_FILTER_NOTCH,
-  BIQUAD_FILTER_BPF
-};
-
-class FilterConfig
-{
-  public:
-    FilterConfig() {}
-    FilterConfig(FilterType t, int16_t f, int16_t c = 0): type(t), freq(f), cutoff(c) {}
-    int8_t type;
-    int16_t freq;
-    int16_t cutoff;
 };
 
 enum PidIndex {
