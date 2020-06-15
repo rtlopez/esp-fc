@@ -1,5 +1,5 @@
-#ifndef _ESPFC_MATH_H_
-#define _ESPFC_MATH_H_
+#ifndef _ESPFC_MATH_UTIL_H_
+#define _ESPFC_MATH_UTIL_H_
 
 namespace Espfc {
 

@@ -1,7 +1,7 @@
 #ifndef _ESPFC_FILTER_H_
 #define _ESPFC_FILTER_H_
 
-#include "Math.h"
+#include "MathUtil.h"
 
 // Quick median filter implementation
 // (c) N. Devillard - 1998
