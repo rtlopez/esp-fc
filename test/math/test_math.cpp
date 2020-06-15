@@ -105,6 +105,57 @@ void test_filter_biquad_20_100()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.575f, filter.update(1.5f));
 }
 
+void test_filter_notch_df1_150_200_1000()
+{
+    Espfc::Filter filter;
+    const Espfc::FilterConfig config(Espfc::FILTER_NOTCH_DF1, 200, 150);
+    filter.begin(config, 1000);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.783f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.678f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.967f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.166f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.099f, filter.update(1.0f));
+}
+
+void test_filter_notch_df1_150_200_1000_reconf()
+{
+    Espfc::Filter filter;
+    const Espfc::FilterConfig config(Espfc::FILTER_NOTCH_DF1, 200, 150);
+    filter.begin(config, 1000);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.783f, filter.update(1.0f));
+    filter.reconfigureNotchDF1(200, 150);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.678f, filter.update(1.0f));
+    filter.reconfigureNotchDF1(200, 150);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.967f, filter.update(1.0f));
+    filter.reconfigureNotchDF1(200, 150);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.166f, filter.update(1.0f));
+    filter.reconfigureNotchDF1(200, 150);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.099f, filter.update(1.0f));
+}
+
+void test_filter_notch_q()
+{
+    Espfc::Filter filter;
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.667f, filter.getNotchQ(200, 100));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.667f, filter.getNotchQApprox(200, 100));
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.714f, filter.getNotchQ(200, 150));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.714f, filter.getNotchQApprox(200, 150));
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 9.744f, filter.getNotchQ(200, 190));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 9.744f, filter.getNotchQApprox(200, 190));
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 4.737f, filter.getNotchQ(100, 90));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 4.737f, filter.getNotchQApprox(100, 90));
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.733f, filter.getNotchQ(400, 350));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.733f, filter.getNotchQApprox(400, 350));
+}
+
+
 int main(int argc, char **argv)
 {
     UNITY_BEGIN();
@@ -117,6 +168,9 @@ int main(int argc, char **argv)
     RUN_TEST(test_filter_pt1_50_100);
     RUN_TEST(test_filter_biquad_off);
     RUN_TEST(test_filter_biquad_20_100);
+    RUN_TEST(test_filter_notch_df1_150_200_1000);
+    RUN_TEST(test_filter_notch_df1_150_200_1000_reconf);
+    RUN_TEST(test_filter_notch_q);
     UNITY_END();
 
     return 0;

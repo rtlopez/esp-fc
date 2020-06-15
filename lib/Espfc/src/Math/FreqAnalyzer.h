@@ -1,7 +1,7 @@
 #ifndef _ESPFC_MATH_FREQ_ANALYZER_H_
 #define _ESPFC_MATH_FREQ_ANALYZER_H_
 
-#include <Arduino.h>
+#include "MathUtil.h"
 #include "Filter.h"
 
 namespace Espfc {
@@ -28,7 +28,7 @@ class FreqAnalyzer
       _noise = _bpf.update(v);
       bool sign = _noise > 0.f;
       if(sign != _sign_prev) {
-        _pitch_freq = constrain((_rate * 0.5f) / (std::max(_pitch_count, 1)), 125, 425);
+        _pitch_freq = Math::clamp((_rate * 0.5f) / (std::max(_pitch_count, 1)), 125.0f, 425.0f);
         _pitch_count = 0;
       }
       _sign_prev = sign;

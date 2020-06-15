@@ -2,6 +2,7 @@
 #define _ESPFC_FILTER_H_
 
 #include "MathUtil.h"
+#include <cmath>
 
 // Quick median filter implementation
 // (c) N. Devillard - 1998
@@ -138,9 +139,20 @@ class Filter
       _freq = freq;
       _cutoff = cutoff;
       //float q = 1.7f; // or const Q factor
-      //float q = getNotchQApprox(freq, cutoff);
-      float q = getNotchQ(freq, cutoff);
+      float q = getNotchQApprox(freq, cutoff);
+      //float q = getNotchQ(freq, cutoff);
       initBiquadCoefficients(BIQUAD_FILTER_NOTCH, q);
+    }
+
+    float getNotchQApprox(float freq, float cutoff)
+    {
+      return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
+    }
+
+    float getNotchQ(int freq, int cutoff)
+    {
+      float octaves = log2f((float)freq  / (float)cutoff) * 2;
+      return sqrtf(powf(2, octaves)) / (powf(2, octaves) - 1);
     }
 
   private:
@@ -217,6 +229,15 @@ class Filter
       initBiquad(BIQUAD_FILTER_LPF, 1.0f / sqrtf(2.0f)); /* quality factor - butterworth for lpf */
     }
 
+    void initBiquad(BiquadFilterType filterType, float q)
+    {
+      initBiquadCoefficients(filterType, q);
+
+      // zero initial samples
+      _state.bq.x1 = _state.bq.x2 = 0;
+      _state.bq.y1 = _state.bq.y2 = 0;
+    }
+
     void initBiquadCoefficients(BiquadFilterType filterType, float q)
     {
       const float omega = 2.0f * Math::pi() * _freq / _rate;
@@ -262,15 +283,6 @@ class Filter
       _state.bq.a2 = a2 / a0;
     }
 
-    void initBiquad(BiquadFilterType filterType, float q)
-    {
-      initBiquadCoefficients(filterType, q);
-
-      // zero initial samples
-      _state.bq.x1 = _state.bq.x2 = 0;
-      _state.bq.y1 = _state.bq.y2 = 0;
-    }
-
     float updateBiquadDF1(float v) /* ICACHE_RAM_ATTR */
     {
       /* compute result */
@@ -298,17 +310,6 @@ class Filter
       _state.bq.x1 = _state.bq.b1 * v - _state.bq.a1 * result + _state.bq.x2;
       _state.bq.x2 = _state.bq.b2 * v - _state.bq.a2 * result;
       return result;
-    }
-
-    float getNotchQApprox(float freq, float cutoff)
-    {
-      return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
-    }
-
-    float getNotchQ(int freq, int cutoff)
-    {
-      float octaves = log2f((float)freq  / (float)cutoff) * 2;
-      return sqrtf(powf(2, octaves)) / (powf(2, octaves) - 1);
     }
 
     FilterType _type;
