@@ -24,8 +24,10 @@
 #ifndef EspTwoWire_h
 #define EspTwoWire_h
 
-#include <inttypes.h>
-#include "Stream.h"
+#include <cinttypes>
+#ifndef UNIT_TEST
+#include <Stream.h>
+#endif
 
 #define ESPWIRE_BUFFER_LENGTH 32
 

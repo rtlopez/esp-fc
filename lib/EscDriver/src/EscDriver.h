@@ -66,6 +66,17 @@ class EscDriverBase
   #define ESC_DRIVER_MOTOR_TIMER 0
   #define ESC_DRIVER_SERVO_TIMER 0
 
+
+#elif defined(UNIT_TEST)
+
+  #define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_DSHOT600 ? ESC_PROTOCOL_DSHOT600 : p)
+
+  #define ESC_CHANNEL_COUNT 4
+  #define EscDriver EscDriverBase
+
+  #define ESC_DRIVER_MOTOR_TIMER ESC_DRIVER_TIMER1
+  #define ESC_DRIVER_SERVO_TIMER ESC_DRIVER_TIMER2
+
 #else
 
   #error "Unsupported platform"

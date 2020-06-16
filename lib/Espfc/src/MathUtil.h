@@ -1,5 +1,5 @@
-#ifndef _ESPFC_MATH_H_
-#define _ESPFC_MATH_H_
+#ifndef _ESPFC_MATH_UTIL_H_
+#define _ESPFC_MATH_UTIL_H_
 
 namespace Espfc {
 
@@ -26,6 +26,19 @@ namespace Math {
     return 0;
   }
 
+  // std::clamp() is available since c++17
+  template<typename T>
+  T clamp(const T value, const T min, const T max)
+  {
+    if(value > max) return max;
+    if(value < min) return min;
+    return value;
+  }
+
+  constexpr float pi()
+  {
+    return 3.14159265358979f;
+  }
 }
 
 }

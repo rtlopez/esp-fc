@@ -2,7 +2,7 @@
 #define _ESPFC_INPUT_H_
 
 #include "Model.h"
-#include "Math.h"
+#include "MathUtil.h"
 #include "Hardware.h"
 #include "InputPPM.h"
 #include "InputSBUS.h"

@@ -1,7 +1,9 @@
 #ifndef _ESPFC_BUZZER_H_
 #define _ESPFC_BUZZER_H_
 
+#ifndef UNIT_TEST
 #include <Arduino.h>
+#endif
 #include "Model.h"
 
 namespace Espfc {
@@ -22,9 +24,10 @@ class Buzzer
     int begin()
     {
       if(_model.config.pin[PIN_BUZZER] == -1) return 0;
-
+#ifndef UNIT_TEST
       pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
       digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted);
+#endif
       _model.state.buzzer.timer.setRate(100);
 
       return 1;

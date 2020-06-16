@@ -2,7 +2,7 @@
 #define _ESPFC_ACTUATOR_H_
 
 #include "Model.h"
-#include "Math.h"
+#include "MathUtil.h"
 
 namespace Espfc {
 

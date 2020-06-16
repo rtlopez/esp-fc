@@ -19,8 +19,11 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "esp_twi.h"
-#include "pins_arduino.h"
-#include "wiring_private.h"
+#ifndef UNIT_TEST
+#include <pins_arduino.h>
+#include <wiring_private.h>
+#else
+#endif
 
 uint16_t esp_twi_dcount = 18;
 static unsigned char esp_twi_sda, esp_twi_scl;
@@ -40,6 +43,13 @@ static uint32_t esp_twi_clockStretchLimit;
   #define SCL_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_scl))
   #define SCL_HIGH()  (GPIO.enable_w1tc = (1 << esp_twi_scl))
   #define SCL_READ()  ((GPIO.in & (1 << esp_twi_scl)) != 0)
+#elif defined(UNIT_TEST)
+  #define SDA_LOW()   //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+  #define SDA_HIGH()  //Disable SDA (becomes input and since it has pullup it will go high)
+  #define SDA_READ()  (1)
+  #define SCL_LOW()   
+  #define SCL_HIGH()  
+  #define SCL_READ()  (1)
 #else
   #error "Unsupported platform"
 #endif
@@ -123,10 +133,16 @@ void esp_twi_stop(void){
   pinMode(esp_twi_scl, INPUT);
 }
 
+#ifdef UNIT_TEST
+  #define GET_CYCLE_COUNT(var)
+#else
+  #define GET_CYCLE_COUNT(var) __asm__ __volatile__("esync; rsr %0,ccount":"=a" (var));
+#endif
+
 static inline ICACHE_RAM_ATTR unsigned int _getCycleCount()
 {
-    unsigned int ccount;
-    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+    unsigned int ccount = 0;
+    GET_CYCLE_COUNT(ccount)
     return ccount;
 }
 

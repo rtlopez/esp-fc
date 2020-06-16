@@ -4,19 +4,21 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <EspGpio.h>
+#include <EscDriver.h>
+#include <Hal.h>
+
 #include "Debug.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Storage.h"
 #include "Logger.h"
-#include "Math.h"
-#include "EspGpio.h"
-#include "EscDriver.h"
+#include "MathUtil.h"
 
-#if defined(ESP32)
-#define ESPFC_GUARD 0
-#elif defined(ESP8266)
+#if defined(ESP8266)
 #define ESPFC_GUARD 1
+#else
+#define ESPFC_GUARD 0
 #endif
 
 namespace Espfc {
@@ -147,7 +149,9 @@ class Model
     void begin()
     {
       logger.begin();
+      #ifndef UNIT_TEST
       _storage.begin();
+      #endif
       load();
       sanitize();
     }
@@ -423,7 +427,9 @@ class Model
 
     int load()
     {
+      #ifndef UNIT_TEST
       _storage.load(config, logger);
+      #endif
       postLoad();
       return 1;
     }
@@ -431,7 +437,9 @@ class Model
     void save()
     {
       preSave();
+      #ifndef UNIT_TEST
       _storage.write(config, logger);
+      #endif
     }
 
     void reload()
@@ -453,7 +461,9 @@ class Model
     Logger logger;
 
   private:
+    #ifndef UNIT_TEST
     Storage _storage;
+    #endif
 };
 
 }

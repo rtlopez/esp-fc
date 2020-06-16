@@ -1,6 +1,8 @@
 #ifndef _ESPFC_STORAGE_H_
 #define _ESPFC_STORAGE_H_
 
+#ifndef UNIT_TEST
+
 #include <Arduino.h>
 #include "ModelConfig.h"
 #include "EEPROM.h"
@@ -82,5 +84,6 @@ class Storage
 };
 
 }
+#endif
 
 #endif

@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include <cstdint>
 
+namespace Espfc {
+
 class Timer
 {
   public:
@@ -86,5 +88,7 @@ class Timer
     uint32_t delta;
     float intervalf;
 };
+
+}
 
 #endif

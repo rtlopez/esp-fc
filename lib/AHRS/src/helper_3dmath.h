@@ -1,7 +1,6 @@
 #ifndef _HELPER_3DMATH_H_
 #define _HELPER_3DMATH_H_
 
-#include "Arduino.h"
 #include <math.h>
 
 // Fast inverse square-root
