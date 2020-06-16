@@ -520,6 +520,15 @@ class Msp
           r.writeU32(0); // rx spi id
           r.writeU8(0); // rx spi chan count
           r.writeU8(0); // fpv camera angle
+          r.writeU8(2); // rc iterpolation channels: RPYT
+          r.writeU8(0); // rc_smoothing_type
+          r.writeU8(0); // rc_smoothing_input_cutoff
+          r.writeU8(0); // rc_smoothing_derivative_cutoff
+          r.writeU8(0); // rc_smoothing_input_type
+          r.writeU8(0); // rc_smoothing_derivative_type
+          r.writeU8(0); // usb type
+          r.writeU8(0); // rc_smoothing_auto_factor
+
           break;
 
         case MSP_SET_RX_CONFIG:
@@ -537,6 +546,8 @@ class Msp
           m.readU32(); // rx spi id
           m.readU8(); // rx spi chan count
           m.readU8(); // fpv camera angle
+          m.readU8(); // rc iterpolation channels
+          while(m.remain()) m.readU8();
           _model.reload();
           break;
 
@@ -601,21 +612,35 @@ class Msp
           r.writeU16(_model.config.tpaBreakpoint); // tpa breakpoint
           r.writeU8(_model.config.input.expo[AXIS_YAW]); // yaw expo
           r.writeU8(_model.config.input.rate[AXIS_YAW]); // yaw rate
+          r.writeU8(_model.config.input.rate[AXIS_PITCH]); // pitch rate
+          r.writeU8(_model.config.input.expo[AXIS_PITCH]); // pitch expo
           break;
 
         case MSP_SET_RC_TUNING:
           if(m.remain() >= 10)
           {
-            _model.config.input.rate[AXIS_ROLL] = _model.config.input.rate[AXIS_PITCH] = m.readU8();
-            _model.config.input.expo[AXIS_ROLL] = _model.config.input.expo[AXIS_PITCH] = m.readU8();
+            const uint8_t rate = m.readU8();
+            if(_model.config.input.rate[AXIS_PITCH] == _model.config.input.rate[AXIS_ROLL])
+            {
+              _model.config.input.rate[AXIS_PITCH] = rate;
+            }
+            _model.config.input.rate[AXIS_ROLL] = rate;
+
+            const uint8_t expo = m.readU8();
+            if(_model.config.input.expo[AXIS_PITCH] == _model.config.input.expo[AXIS_ROLL])
+            {
+              _model.config.input.expo[AXIS_PITCH] = expo;
+            }
+            _model.config.input.expo[AXIS_ROLL] = expo;
+
             for(size_t i = 0; i < 3; i++)
             {
               _model.config.input.superRate[i] = m.readU8();
             }
-            _model.config.tpaScale = constrain(m.readU8(), 0, 90); // dyn thr pid
+            _model.config.tpaScale = Math::clamp(m.readU8(), (uint8_t)0, (uint8_t)90); // dyn thr pid
             m.readU8(); // thrMid8
             m.readU8();  // thr expo
-            _model.config.tpaBreakpoint = constrain(m.readU16(), 1000, 2000); // tpa breakpoint
+            _model.config.tpaBreakpoint = Math::clamp(m.readU16(), (uint16_t)1000, (uint16_t)2000); // tpa breakpoint
             if(m.remain() >= 1)
             {
               _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo
@@ -623,6 +648,14 @@ class Msp
             if(m.remain() >= 1)
             {
               _model.config.input.rate[AXIS_YAW]  = m.readU8(); // yaw rate
+            }
+            if(m.remain() >= 1)
+            {
+              _model.config.input.rate[AXIS_PITCH] = m.readU8(); // pitch rate
+            }
+            if(m.remain() >= 1)
+            {
+              _model.config.input.expo[AXIS_PITCH]  = m.readU8(); // pitch expo
             }
           }
           else
