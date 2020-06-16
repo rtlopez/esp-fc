@@ -3,6 +3,7 @@ name: platformio
 on:
   push:
     branches: [ unittest, develop, master ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ unittest, develop, master ]
 
@@ -27,24 +28,58 @@ jobs:
       matrix:
         target: ['d1_mini', 'lolin32']
     steps:
-      - name: Set outputs
-        id: vars
-        run: echo "::set-output name=sha::$(echo ${{ github.sha }} | cut -c1-7)"
-      - name: Check outputs
-        run: echo ${{ steps.vars.outputs.sha }}
       - uses: actions/checkout@v1
+
+      - name: Extract Version
+        id: vars
+        shell: bash
+        run: |
+          echo ::set-output name=name::${GITHUB_REF#refs/*/}
+          echo ::set-output name=branch::${GITHUB_REF#refs/heads/}
+          echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+          echo ::set-output name=sha::$(echo ${GITHUB_SHA} | cut -c1-7)
+      - name: Print Version
+        run: |
+          echo SHA:    ${{ steps.vars.outputs.sha }}
+          echo TAG:    ${{ steps.vars.outputs.tag }}
+          echo BRANCH: ${{ steps.vars.outputs.branch }}
+          echo NAME:   ${{ steps.vars.outputs.name }}
+
       - name: Set up Python
         uses: actions/setup-python@v1
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install platformio
-      - name: Run PlatformIO Build
-        run: platformio run -e ${{ matrix.target }}
+
+
+      - name: Run Development Build
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        run: |
+          platformio run -e ${{ matrix.target }}
+          cp .pio/build/${{ matrix.target }}/firmware.bin .pio/build/${{ matrix.target }}/espfc_${{ steps.vars.outputs.sha }}_${{ matrix.target }}.bin
         env:
           PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ steps.vars.outputs.sha }}
-      - name: Artifact espfc_${{ matrix.target }}_${{ steps.vars.outputs.sha }}.bin
-        uses: actions/upload-artifact@v1
+
+      - name: Create Development Artifact espfc_${{ steps.vars.outputs.sha }}_${{ matrix.target }}.bin
+        uses: actions/upload-artifact@v2
+        if: "!startsWith(github.ref, 'refs/tags/')"
         with:
-          name: espfc_${{ matrix.target }}_${{ steps.vars.outputs.sha }}.bin
-          path: .pio/build/${{ matrix.target }}/firmware.bin
+          name: espfc_${{ steps.vars.outputs.sha }}_${{ matrix.target }}.bin
+          path: .pio/build/${{ matrix.target }}/espfc_${{ steps.vars.outputs.sha }}_${{ matrix.target }}.bin
+
+
+      - name: Run Release Build
+        if: "startsWith(github.ref, 'refs/tags/')"
+        run: |
+          platformio run -e ${{ matrix.target }}
+          cp .pio/build/${{ matrix.target }}/firmware.bin .pio/build/${{ matrix.target }}/espfc_${{ steps.vars.outputs.tag }}_${{ matrix.target }}.bin
+        env:
+          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ steps.vars.outputs.tag }}
+
+      - name: Create Release Artifact espfc_${{ steps.vars.outputs.tag }}_${{ matrix.target }}.bin
+        uses: actions/upload-artifact@v2
+        if: "startsWith(github.ref, 'refs/tags/')"
+        with:
+          name: espfc_${{ steps.vars.outputs.tag }}_${{ matrix.target }}.bin
+          path: .pio/build/${{ matrix.target }}/espfc_${{ steps.vars.outputs.tag }}_${{ matrix.target }}.bin
