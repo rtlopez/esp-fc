@@ -7,9 +7,10 @@
 
 extern "C" {
 #include "blackbox/blackbox.h"
+}
 
-static Espfc::SerialDevice * blackboxSerial = NULL;
-static Espfc::Model * _model_ptr = NULL;
+static Espfc::SerialDevice * blackboxSerial = nullptr;
+static Espfc::Model * _model_ptr = nullptr;
 
 void serialWrite(serialPort_t *instance, uint8_t ch)
 {
@@ -56,17 +57,16 @@ bool rxIsReceivingSignal(void)
 static uint32_t activeFeaturesLatch = 0;
 static uint32_t enabledSensors = 0;
 
-bool feature(uint32_t mask)
+bool featureIsEnabled(uint32_t mask)
 {
-    return activeFeaturesLatch & mask;
+  return activeFeaturesLatch & mask;
 }
 
 bool sensors(uint32_t mask)
 {
-    return enabledSensors & mask;
+  return enabledSensors & mask;
 }
 
-}
 
 namespace Espfc {
 
@@ -81,26 +81,25 @@ class Blackbox
 
       if(!_model.blackboxEnabled()) return 0;
 
-      _serial = Hardware::getSerialPort(_model.config.serial, SERIAL_FUNCTION_BLACKBOX);
-      if(!_serial) return 0;
+      SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+      if(!serial) return 0;
 
-      serialWriteInit(_serial);
+      serialWriteInit(serial);
 
       systemConfigMutable()->activeRateProfile = 0;
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
 
       controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
-      rp->rcRate8 = _model.config.input.rate[ROLL];
-      rp->rcExpo8 = _model.config.input.expo[ROLL];
-      rp->rcYawRate8 = _model.config.input.rate[YAW];
-      rp->rcYawExpo8 = _model.config.input.expo[YAW];
+      for(int i = 0; i <= AXIS_YAW; i++)
+      {
+        rp->rcRates[i] = _model.config.input.rate[i];
+        rp->rcExpo[i] = _model.config.input.expo[i];
+        rp->rates[i] = _model.config.input.superRate[i];
+      }
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
       rp->dynThrPID = _model.config.tpaScale;
       rp->tpa_breakpoint = _model.config.tpaBreakpoint;
-      rp->rates[ROLL] = _model.config.input.superRate[ROLL];
-      rp->rates[PITCH] = _model.config.input.superRate[PITCH];
-      rp->rates[YAW] = _model.config.input.superRate[YAW];
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
       for(size_t i = 0; i < PID_ITEM_COUNT; i++)
@@ -111,19 +110,22 @@ class Blackbox
       }
       cp->pidAtMinThrottle = 1;
       cp->dterm_filter_type = _model.config.dtermFilter.type;
-      cp->dterm_lpf_hz = _model.config.dtermFilter.freq;
+      cp->dterm_lowpass_hz = _model.config.dtermFilter.freq;
+      cp->dterm_lowpass2_hz = _model.config.dtermFilter2.freq;
       cp->dterm_notch_hz = _model.config.dtermNotchFilter.freq;
       cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
-      cp->yaw_lpf_hz = _model.config.yawFilter.freq;
+      cp->yaw_lowpass_hz = _model.config.yawFilter.freq;
       cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
-      cp->dtermSetpointWeight = _model.config.dtermSetpointWeight;
+      cp->antiGravityMode = 0;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
 
-      gyroConfigMutable()->gyro_lpf = _model.config.gyroDlpf;
-      gyroConfigMutable()->gyro_soft_lpf_type = _model.config.gyroFilter.type;
-      gyroConfigMutable()->gyro_soft_lpf_hz = _model.config.gyroFilter.freq;
+      gyroConfigMutable()->gyro_hardware_lpf = _model.config.gyroDlpf;
+      gyroConfigMutable()->gyro_lowpass_type = _model.config.gyroFilter.type;
+      gyroConfigMutable()->gyro_lowpass_hz = _model.config.gyroFilter.freq;
+      gyroConfigMutable()->gyro_lowpass2_type = _model.config.gyroFilter2.type;
+      gyroConfigMutable()->gyro_lowpass2_hz = _model.config.gyroFilter2.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyroNotch1Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
@@ -131,7 +133,7 @@ class Blackbox
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
-      blackboxConfigMutable()->record_acc = _model.config.accelDev != ACCEL_NONE && _model.config.accelMode != ACCEL_OFF;
+      blackboxConfigMutable()->record_acc = _model.accelActive();
       if(blackboxConfig()->record_acc)
       {
           enabledSensors |= SENSOR_ACC;
@@ -152,7 +154,7 @@ class Blackbox
         motorOutputHigh = PWM_TO_DSHOT(_model.state.maxThrottle);
       }
 
-      blackboxConfigMutable()->p_denom = _model.config.blackboxPdenom;
+      blackboxConfigMutable()->p_ratio = _model.config.blackboxPdenom;
       blackboxConfigMutable()->device = _model.config.blackboxDev;
 
       gyroConfigMutable()->gyro_sync_denom = _model.config.gyroSync;
@@ -169,7 +171,7 @@ class Blackbox
       rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
       rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
       rxConfigMutable()->rssi_channel = 0;
-
+      rxConfigMutable()->airModeActivateThreshold = 40;
       blackboxInit();
 
       return 1;
@@ -177,13 +179,13 @@ class Blackbox
 
     int update()
     {
-      if(!_serial) return 0;
-      _model.state.stats.start(COUNTER_BLACKBOX);
+      if(!_model.blackboxEnabled()) return 0;
+      if(!blackboxSerial) return 0;
+      Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
       updateArmed();
       updateMode();
       updateData();
       blackboxUpdate(_model.state.loopTimer.last);
-      _model.state.stats.end(COUNTER_BLACKBOX);
       return 1;
     }
 
@@ -193,16 +195,17 @@ class Blackbox
       for(size_t i = 0; i < 3; i++)
       {
         gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
-        acc.accSmooth[i] = _model.state.accel[i] * 2048.f;
-        axisPID_P[i] = _model.state.innerPid[i].pTerm * 1000.f;
-        axisPID_I[i] = _model.state.innerPid[i].iTerm * 1000.f;
-        axisPID_D[i] = _model.state.innerPid[i].dTerm * 1000.f;
+        acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
+        pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
+        pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
+        pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
+        pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
         rcCommand[i] = _model.state.input[i] * (i == AXIS_YAW ? -500.f : 500.f);
       }
       rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
       for(size_t i = 0; i < 4; i++)
       {
-        motor[i] = Math::bound((int)_model.state.outputUs[i], 1000, 2000);
+        motor[i] = constrain(_model.state.outputUs[i], 1000, 2000);
         if(_model.state.digitalOutput) {
           motor[i] = PWM_TO_DSHOT(motor[i]);
         }
@@ -248,7 +251,6 @@ class Blackbox
 
     Model& _model;
     pidProfile_s _pidProfile;
-    SerialDevice * _serial;
 };
 
 }

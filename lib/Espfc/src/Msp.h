@@ -1,234 +1,115 @@
 #ifndef _ESPFC_MSP_H_
 #define _ESPFC_MSP_H_
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <cstring>
-#include "Arduino.h"
+#include <Arduino.h>
+#include "Model.h"
+#include "Hardware.h"
+
+extern "C" {
 #include "msp/msp_protocol.h"
 #include "platform.h"
+}
 
+// TODO: update to 1.37 https://github.com/betaflight/betaflight/compare/v3.2.0...v3.3.0
 static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
 static const char * boardIdentifier = "ESPF";
 
-#include "Model.h"
-#include "Hardware.h"
-#include "SerialDevice.h"
-
-#if defined(ESP32)
-#define MSP_DEBUG_PORT SERIAL_UART_2
-#else
-#define MSP_DEBUG_PORT SERIAL_UART_1
-#endif
-
 namespace Espfc {
-
-static const size_t MSP_BUF_SIZE = 192;
 
 class Msp
 {
   public:
-    enum MspState
-    {
-      STATE_IDLE,
-      STATE_HEADER_START,
-      STATE_HEADER_M,
-      STATE_HEADER_ARROW,
-      STATE_HEADER_SIZE,
-      STATE_HEADER_CMD,
-      STATE_RECEIVED
-    };
-
-    enum MspType
-    {
-      TYPE_CMD,
-      TYPE_REPLY
-    };
-
-    class MspMessage
-    {
-      public:
-        MspMessage(): expected(0), received(0), read(0) {}
-        MspState state;
-        MspType dir;
-        uint8_t cmd;
-        uint8_t expected;
-        uint8_t received;
-        uint8_t read;
-        uint8_t buffer[MSP_BUF_SIZE];
-        uint8_t checksum;
-
-        int remain()
-        {
-          return received - read;
-        }
-
-        void advance(size_t size)
-        {
-          read += size;
-        }
-
-        uint8_t readU8()
-        {
-          return buffer[read++];
-        }
-
-        uint16_t readU16()
-        {
-          uint16_t ret;
-          ret = readU8();
-          ret |= readU8() << 8;
-          return ret;
-        }
-
-        uint32_t readU32()
-        {
-          uint32_t ret;
-          ret = readU8();
-          ret |= readU8() <<  8;
-          ret |= readU8() << 16;
-          ret |= readU8() << 24;
-          return ret;
-        }
-    };
-
-    class MspResponse {
-      public:
-        MspResponse(): len(0) {}
-        uint8_t cmd;
-        int8_t  result;
-        uint8_t direction;
-        uint8_t len;
-        uint8_t data[MSP_BUF_SIZE];
-
-        void writeData(const char * v, int size)
-        {
-          while(size-- > 0) writeU8(*v++);
-        }
-
-        void writeString(const char * v)
-        {
-          while(*v) writeU8(*v++);
-        }
-
-        void writeString(const __FlashStringHelper *ifsh)
-        {
-          PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-          while(true)
-          {
-            uint8_t c = pgm_read_byte(p++);
-            if (c == 0) break;
-            writeU8(c);
-          }
-        }
-
-        void writeU8(uint8_t v)
-        {
-          data[len++] = v;
-        }
-
-        void writeU16(uint16_t v)
-        {
-          writeU8(v >> 0);
-          writeU8(v >> 8);
-        }
-
-        void writeU32(uint32_t v)
-        {
-          writeU8(v >> 0);
-          writeU8(v >> 8);
-          writeU8(v >> 16);
-          writeU8(v >> 24);
-        }
-    };
-
-
     Msp(Model& model): _model(model) {}
 
-    bool process(char c, Stream& s)
+    bool process(char c, MspMessage& msg, MspResponse& res, Stream& s)
     {
-      switch(_msg.state)
+      switch(msg.state)
       {
-        case STATE_IDLE:               // sync char 1 '$'
-          if(c == '$') _msg.state = STATE_HEADER_START;
+        case MSP_STATE_IDLE:               // sync char 1 '$'
+          if(c == '$')
+          {
+            msg.state = MSP_STATE_HEADER_START;
+          }
           break;
 
-        case STATE_HEADER_START:       // sync char 2 'M'
-            if(c == 'M') _msg.state = STATE_HEADER_M;
-            else _msg.state = STATE_IDLE;
+        case MSP_STATE_HEADER_START:       // sync char 2 'M'
+            if(c == 'M') msg.state = MSP_STATE_HEADER_M;
+            else msg.state = MSP_STATE_IDLE;
             break;
 
-        case STATE_HEADER_M:               // direction (should be >)
+        case MSP_STATE_HEADER_M:               // direction (should be >)
           switch(c)
           {
             case '>':
-              _msg.dir = TYPE_REPLY;
-              _msg.state = STATE_HEADER_ARROW;
+              msg.dir = MSP_TYPE_REPLY;
+              msg.state = MSP_STATE_HEADER_ARROW;
               break;
             case '<':
-              _msg.dir = TYPE_CMD;
-              _msg.state = STATE_HEADER_ARROW;
+              msg.dir = MSP_TYPE_CMD;
+              msg.state = MSP_STATE_HEADER_ARROW;
               break;
             default:
-              _msg.state = STATE_IDLE;
+              msg.state = MSP_STATE_IDLE;
           }
           break;
-        case STATE_HEADER_ARROW:
-          if (c > MSP_BUF_SIZE) _msg.state = STATE_IDLE;
+        case MSP_STATE_HEADER_ARROW:
+          if (c > MSP_BUF_SIZE) msg.state = MSP_STATE_IDLE;
           else
           {
-            _msg.expected = c;
-            _msg.received = 0;
-            _msg.read = 0;
-            _msg.checksum = 0;
-            _msg.checksum ^= c;
-            _msg.state = STATE_HEADER_SIZE;
+            msg.expected = c;
+            msg.received = 0;
+            msg.read = 0;
+            msg.checksum = 0;
+            msg.checksum ^= c;
+            msg.state = MSP_STATE_HEADER_SIZE;
           }
           break;
 
-        case STATE_HEADER_SIZE:
-          _msg.cmd = c;
-          _msg.checksum ^= c;
-          _msg.state = STATE_HEADER_CMD;
+        case MSP_STATE_HEADER_SIZE:
+          msg.cmd = c;
+          msg.checksum ^= c;
+          msg.state = MSP_STATE_HEADER_CMD;
           break;
 
-        case STATE_HEADER_CMD:
-          if(_msg.received < _msg.expected)
+        case MSP_STATE_HEADER_CMD:
+          if(msg.received < msg.expected)
           {
-            _msg.checksum ^= c;
-            _msg.buffer[_msg.received++] = c;
+            msg.checksum ^= c;
+            msg.buffer[msg.received++] = c;
           }
-          else if(_msg.received >= _msg.expected)
+          else if(msg.received >= msg.expected)
           {
-            _msg.state = _msg.checksum == c ? STATE_RECEIVED : STATE_IDLE;
+            msg.state = msg.checksum == c ? MSP_STATE_RECEIVED : MSP_STATE_IDLE;
           }
 
         default:
+          //msg.state = MSP_STATE_IDLE;
           break;
       }
 
-      if(_msg.state == STATE_RECEIVED)
+      if(msg.state == MSP_STATE_RECEIVED)
       {
-        _msg.state = STATE_IDLE;
-        debugMessage(_msg);
-        switch(_msg.dir)
+        debugMessage(msg);
+        switch(msg.dir)
         {
-          case TYPE_CMD:
-            processCommand(_msg, s);
+          case MSP_TYPE_CMD:
+            processCommand(msg, res);
+            sendResponse(res, s);
+            msg = MspMessage();
+            res = MspResponse();
             break;
-          case TYPE_REPLY:
-            //processCommand(_msg, s);
+          case MSP_TYPE_REPLY:
+            //processCommand(msg, s);
             break;
         }
         return true;
       }
 
-      return _msg.state != STATE_IDLE;
+      return msg.state != MSP_STATE_IDLE;
     }
 
-    void processCommand(MspMessage& m, Stream& s)
+    void processCommand(MspMessage& m, MspResponse& r)
     {
-      MspResponse r;
       r.cmd = m.cmd;
       r.result = 1;
       switch(m.cmd)
@@ -268,8 +149,9 @@ class Msp
             r.writeU32(ESP.getFlashChipId());
             r.writeU32(ESP.getFlashChipSize());
 #else
-            r.writeU32(0);
-            r.writeU32(0);
+            int64_t mac = ESP.getEfuseMac();
+            r.writeU32((uint32_t)mac);
+            r.writeU32((uint32_t)(mac >> 32));
             r.writeU32(0);
 #endif
           }
@@ -277,16 +159,16 @@ class Msp
 
         case MSP_STATUS_EX:
         case MSP_STATUS:
-          r.writeU16(_model.state.loopTimer.interval);
-          r.writeU16(0); // i2c error count
+          r.writeU16(lrintf(_model.state.loopTimer.getDeltaReal() * 1000000.f));
+          r.writeU16(_model.state.i2cErrorCount); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
-          r.writeU16(_model.accelActive() << 0 | 0 << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | 1 << 5);
+          r.writeU16(_model.accelActive() << 0 | _model.baroActive() << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | _model.gyroActive() << 5);
           r.writeU32(_model.state.modeMask); // flight mode flags
           r.writeU8(0); // pid profile
           r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
           if (m.cmd == MSP_STATUS_EX) {
-            r.writeU8(1);
-            r.writeU8(0);
+            r.writeU8(1); // max profile count
+            r.writeU8(0); // current rate profile index
           } else {  // MSP_STATUS
             r.writeU16(_model.state.gyroTimer.interval); // gyro cycle time
           }
@@ -295,8 +177,8 @@ class Msp
           r.writeU8(0); // count
 
           // Write arming disable flags
-          r.writeU8(16);  // 1 byte, flag count
-          r.writeU32(0);  // 4 bytes, flags
+          r.writeU8(ARMING_DISABLED_FLAGS_COUNT);  // 1 byte, flag count
+          r.writeU32(_model.state.armingDisabledFlags);  // 4 bytes, flags
           break;
 
         case MSP_NAME:
@@ -304,7 +186,7 @@ class Msp
           break;
 
         case MSP_SET_NAME:
-          std::memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
+          memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
           for(size_t i = 0; i < std::min((size_t)m.received, MODEL_NAME_LEN); i++)
           {
             _model.config.modelName[i] = m.readU8();
@@ -363,7 +245,7 @@ class Msp
 
         case MSP_SET_FEATURE_CONFIG:
           _model.config.featureMask = m.readU32();
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_BATTERY_CONFIG:
@@ -466,7 +348,7 @@ class Msp
           _model.config.accelDev = m.readU8(); // 3 acc mpu6050
           _model.config.baroDev = m.readU8();  // 2 baro bmp085
           _model.config.magDev = m.readU8();   // 3 mag hmc5883l
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_SENSOR_ALIGNMENT:
@@ -521,7 +403,7 @@ class Msp
               _model.config.serial[k].blackboxBaudIndex = m.readU8();
             }
           }
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_BLACKBOX_CONFIG:
@@ -549,9 +431,14 @@ class Msp
           break;
 
         case MSP_ATTITUDE:
-          r.writeU16(lrintf(degrees(_model.state.angle.x) * 10)); // roll
-          r.writeU16(lrintf(degrees(_model.state.angle.y) * 10)); // pitch
-          r.writeU16(lrintf(degrees(-_model.state.angle.z))); // yaw
+          r.writeU16(lrintf(degrees(_model.state.angle.x) * 10.f)); // roll  [decidegrees]
+          r.writeU16(lrintf(degrees(_model.state.angle.y) * 10.f)); // pitch [decidegrees]
+          r.writeU16(lrintf(degrees(-_model.state.angle.z)));       // yaw   [degrees]
+          break;
+
+        case MSP_ALTITUDE:
+          r.writeU32(lrintf(_model.state.baroAltitude * 100.f));    // [cm]
+          r.writeU32(0);
           break;
 
         case MSP_BEEPER_CONFIG:
@@ -589,7 +476,7 @@ class Msp
           _model.config.output.minThrottle = m.readU16(); // minthrottle
           _model.config.output.maxThrottle = m.readU16(); // maxthrottle
           _model.config.output.minCommand = m.readU16(); // mincommand
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_MOTOR_3D_CONFIG:
@@ -619,7 +506,7 @@ class Msp
           break;
 
         case MSP_RX_CONFIG:
-          r.writeU8(2); // serialrx_provider
+          r.writeU8(_model.config.input.serialRxProvider); // serialrx_provider
           r.writeU16(_model.config.input.maxCheck); //maxcheck
           r.writeU16(_model.config.input.midRc); //midrc
           r.writeU16(_model.config.input.minCheck); //mincheck
@@ -633,10 +520,19 @@ class Msp
           r.writeU32(0); // rx spi id
           r.writeU8(0); // rx spi chan count
           r.writeU8(0); // fpv camera angle
+          r.writeU8(2); // rc iterpolation channels: RPYT
+          r.writeU8(0); // rc_smoothing_type
+          r.writeU8(0); // rc_smoothing_input_cutoff
+          r.writeU8(0); // rc_smoothing_derivative_cutoff
+          r.writeU8(0); // rc_smoothing_input_type
+          r.writeU8(0); // rc_smoothing_derivative_type
+          r.writeU8(0); // usb type
+          r.writeU8(0); // rc_smoothing_auto_factor
+
           break;
 
         case MSP_SET_RX_CONFIG:
-          m.readU8(); // serialrx_provider
+          _model.config.input.serialRxProvider = m.readU8(); // serialrx_provider
           _model.config.input.maxCheck = m.readU16(); //maxcheck
           _model.config.input.midRc = m.readU16(); //midrc
           _model.config.input.minCheck = m.readU16(); //mincheck
@@ -650,7 +546,9 @@ class Msp
           m.readU32(); // rx spi id
           m.readU8(); // rx spi chan count
           m.readU8(); // fpv camera angle
-          _model.update();
+          m.readU8(); // rc iterpolation channels
+          while(m.remain()) m.readU8();
+          _model.reload();
           break;
 
         case MSP_FAILSAFE_CONFIG:
@@ -682,10 +580,13 @@ class Msp
         case MSP_SET_RXFAIL_CONFIG:
           {
             size_t i = m.readU8();
-            if (i < INPUT_CHANNELS) {
+            if(i < INPUT_CHANNELS)
+            {
               _model.config.input.channel[i].fsMode = m.readU8(); // mode
               _model.config.input.channel[i].fsValue = m.readU16(); // pulse
-            } else {
+            }
+            else
+            {
               r.result = -1;
             }
           }
@@ -711,21 +612,35 @@ class Msp
           r.writeU16(_model.config.tpaBreakpoint); // tpa breakpoint
           r.writeU8(_model.config.input.expo[AXIS_YAW]); // yaw expo
           r.writeU8(_model.config.input.rate[AXIS_YAW]); // yaw rate
+          r.writeU8(_model.config.input.rate[AXIS_PITCH]); // pitch rate
+          r.writeU8(_model.config.input.expo[AXIS_PITCH]); // pitch expo
           break;
 
         case MSP_SET_RC_TUNING:
           if(m.remain() >= 10)
           {
-            _model.config.input.rate[AXIS_ROLL] = _model.config.input.rate[AXIS_PITCH] = m.readU8();
-            _model.config.input.expo[AXIS_ROLL] = _model.config.input.expo[AXIS_PITCH] = m.readU8();
+            const uint8_t rate = m.readU8();
+            if(_model.config.input.rate[AXIS_PITCH] == _model.config.input.rate[AXIS_ROLL])
+            {
+              _model.config.input.rate[AXIS_PITCH] = rate;
+            }
+            _model.config.input.rate[AXIS_ROLL] = rate;
+
+            const uint8_t expo = m.readU8();
+            if(_model.config.input.expo[AXIS_PITCH] == _model.config.input.expo[AXIS_ROLL])
+            {
+              _model.config.input.expo[AXIS_PITCH] = expo;
+            }
+            _model.config.input.expo[AXIS_ROLL] = expo;
+
             for(size_t i = 0; i < 3; i++)
             {
               _model.config.input.superRate[i] = m.readU8();
             }
-            _model.config.tpaScale = Math::bound((int)m.readU8(), 0, 90); // dyn thr pid
+            _model.config.tpaScale = Math::clamp(m.readU8(), (uint8_t)0, (uint8_t)90); // dyn thr pid
             m.readU8(); // thrMid8
             m.readU8();  // thr expo
-            _model.config.tpaBreakpoint = Math::bound((int)m.readU16(), 1000, 2000); // tpa breakpoint
+            _model.config.tpaBreakpoint = Math::clamp(m.readU16(), (uint16_t)1000, (uint16_t)2000); // tpa breakpoint
             if(m.remain() >= 1)
             {
               _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo
@@ -733,6 +648,14 @@ class Msp
             if(m.remain() >= 1)
             {
               _model.config.input.rate[AXIS_YAW]  = m.readU8(); // yaw rate
+            }
+            if(m.remain() >= 1)
+            {
+              _model.config.input.rate[AXIS_PITCH] = m.readU8(); // pitch rate
+            }
+            if(m.remain() >= 1)
+            {
+              _model.config.input.expo[AXIS_PITCH]  = m.readU8(); // pitch expo
             }
           }
           else
@@ -762,7 +685,7 @@ class Msp
           _model.config.output.dshotIdle = m.readU16(); // dshot idle
           m.readU8();  // 32k gyro
           m.readU8();  // PWM inversion
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_GPS_CONFIG:
@@ -777,16 +700,25 @@ class Msp
           break;
 
         case MSP_FILTER_CONFIG:
-          r.writeU8(_model.config.gyroFilter.freq); // gyro lpf
-          r.writeU16(_model.config.dtermFilter.freq); // dterm lpf
-          r.writeU16(_model.config.yawFilter.freq);  // yaw lpf
-          r.writeU16(_model.config.gyroNotch1Filter.freq);  // gyro notch 1 hz
+          r.writeU8(_model.config.gyroFilter.freq);           // gyro lpf
+          r.writeU16(_model.config.dtermFilter.freq);         // dterm lpf
+          r.writeU16(_model.config.yawFilter.freq);           // yaw lpf
+          r.writeU16(_model.config.gyroNotch1Filter.freq);    // gyro notch 1 hz
           r.writeU16(_model.config.gyroNotch1Filter.cutoff);  // gyro notch 1 cutoff
-          r.writeU16(_model.config.dtermNotchFilter.freq);  // dterm notch hz
+          r.writeU16(_model.config.dtermNotchFilter.freq);    // dterm notch hz
           r.writeU16(_model.config.dtermNotchFilter.cutoff);  // dterm notch cutoff
-          r.writeU16(_model.config.gyroNotch2Filter.freq);  // gyro notch 2 hz
+          r.writeU16(_model.config.gyroNotch2Filter.freq);    // gyro notch 2 hz
           r.writeU16(_model.config.gyroNotch2Filter.cutoff);  // gyro notch 2 cutoff
-          r.writeU8(_model.config.dtermFilter.type);
+          r.writeU8(_model.config.dtermFilter.type);          // dterm type
+          r.writeU8(_model.config.gyroDlpf == GYRO_DLPF_256 ? 0 : (_model.config.gyroDlpf == GYRO_DLPF_EX ? 1 : 2)); // dlfp type
+          r.writeU8(0);                                       // dlfp 32khz type
+          r.writeU16(_model.config.gyroFilter.freq);          // lowpass1 freq
+          r.writeU16(_model.config.gyroFilter2.freq);         // lowpass2 freq
+          r.writeU8(_model.config.gyroFilter.type);           // lowpass1 type
+          r.writeU8(_model.config.gyroFilter2.type);          // lowpass2 type
+          r.writeU16(_model.config.dtermFilter2.freq);        // dterm lopwass2 freq
+
+
           break;
 
         case MSP_SET_FILTER_CONFIG:
@@ -806,7 +738,16 @@ class Msp
           if (m.remain() >= 1) {
               _model.config.dtermFilter.type = (FilterType)m.readU8();
           }
-          _model.update();
+          if (m.remain() >= 10) {
+            m.readU8(); // dlfp type
+            m.readU8(); // 32k dlfp type
+            _model.config.gyroFilter.freq = m.readU16();
+            _model.config.gyroFilter2.freq = m.readU16();
+            _model.config.gyroFilter.type = m.readU8();
+            _model.config.gyroFilter2.type = m.readU8();
+            _model.config.dtermFilter2.freq = m.readU16();
+          }
+          _model.reload();
           break;
 
         case MSP_PID_CONTROLLER:
@@ -833,7 +774,7 @@ class Msp
             _model.config.pid[i].I = m.readU8();
             _model.config.pid[i].D = m.readU8();
           }
-          _model.update();
+          _model.reload();
           break;
 
         case MSP_PID_ADVANCED:
@@ -843,7 +784,7 @@ class Msp
           r.writeU8(0); // reserved
           r.writeU8(0); //vbatPidCompensation;
           r.writeU8(0); //setpointRelaxRatio;
-          r.writeU8(_model.config.dtermSetpointWeight);
+          r.writeU8((uint8_t)std::min(_model.config.dtermSetpointWeight, (int16_t)255));
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
@@ -853,6 +794,18 @@ class Msp
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); //itermThrottleThreshold;
           r.writeU16(0); //itermAcceleratorGain;
+          r.writeU16(_model.config.dtermSetpointWeight);
+          r.writeU8(0); //iterm rotation
+          r.writeU8(0); //smart feed forward
+          r.writeU8(0); //iterm relax
+          r.writeU8(0); //iterm ralx type
+          r.writeU8(0); //abs control gain
+          r.writeU8(0); //throttle boost
+          r.writeU8(0); //acro trainer max angle
+          r.writeU16(_model.config.pid[PID_ROLL].F); //pid roll f
+          r.writeU16(_model.config.pid[PID_PITCH].F); //pid pitch f
+          r.writeU16(_model.config.pid[PID_YAW].F); //pid yaw f
+          r.writeU8(0); //antigravity mode
           break;
 
         case MSP_SET_PID_ADVANCED:
@@ -876,13 +829,30 @@ class Msp
               m.readU16();
               m.readU16();
           }
-          _model.update();
+          if (m.remain() >= 2) {
+            _model.config.dtermSetpointWeight = m.readU16();
+          }
+          if (m.remain() >= 14) {
+            m.readU8(); //iterm rotation
+            m.readU8(); //smart feed forward
+            m.readU8(); //iterm relax
+            m.readU8(); //iterm ralx type
+            m.readU8(); //abs control gain
+            m.readU8(); //throttle boost
+            m.readU8(); //acro trainer max angle
+            _model.config.pid[PID_ROLL].F = m.readU16(); // pid roll f
+            _model.config.pid[PID_PITCH].F = m.readU16(); // pid pitch f
+            _model.config.pid[PID_YAW].F = m.readU16(); // pid yaw f
+            m.readU8(); //antigravity mode
+          }
+
+          _model.reload();
           break;
 
         case MSP_RAW_IMU:
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(_model.state.accel[i] * 500));
+            r.writeU16(lrintf(_model.state.accel[i] * ACCEL_G_INV * 512.f));
           }
           for (int i = 0; i < 3; i++)
           {
@@ -890,7 +860,7 @@ class Msp
           }
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(_model.state.magRaw[i]));
+            r.writeU16(lrintf(_model.state.mag[i]));
           }
           break;
 
@@ -907,24 +877,70 @@ class Msp
           break;
 
         case MSP_SET_MOTOR:
-          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
             _model.state.outputDisarmed[i] = m.readU16();
           }
           break;
 
         case MSP_SERVO:
+          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            if (i >= OUTPUT_CHANNELS || _model.config.pin[i + PIN_OUTPUT_0] == -1)
+            {
+              r.writeU16(1500);
+              continue;
+            }
+            r.writeU16(_model.state.outputUs[i]);
+          }
+          break;
+
+        case MSP_SERVO_CONFIGURATIONS:
           for(size_t i = 0; i < 8; i++)
           {
-            r.writeU16(1500);
+            if(i < OUTPUT_CHANNELS)
+            {
+              r.writeU16(_model.config.output.channel[i].min);
+              r.writeU16(_model.config.output.channel[i].max);
+              r.writeU16(_model.config.output.channel[i].neutral);
+            }
+            else
+            {
+              r.writeU16(1000);
+              r.writeU16(2000);
+              r.writeU16(1500);
+            }
+            r.writeU8(100);
+            r.writeU8(-1);
+            r.writeU32(0);
+          }
+          break;
+
+        case MSP_SET_SERVO_CONFIGURATION:
+          {
+            uint8_t i = m.readU8();
+            if(i < OUTPUT_CHANNELS)
+            {
+              _model.config.output.channel[i].min = m.readU16();
+              _model.config.output.channel[i].max = m.readU16();
+              _model.config.output.channel[i].neutral = m.readU16();
+              m.readU8();
+              m.readU8();
+              m.readU32();
+            }
+            else
+            {
+              r.result = -1;
+            }
           }
           break;
 
         case MSP_ACC_CALIBRATION:
-          if(!_model.isActive(MODE_ARMED)) _model.calibrate();
+          if(!_model.isActive(MODE_ARMED)) _model.calibrateGyro();
           break;
 
         case MSP_MAG_CALIBRATION:
+          if(!_model.isActive(MODE_ARMED)) _model.calibrateMag();
           break;
 
         case MSP_DEBUG:
@@ -941,8 +957,6 @@ class Msp
           if(!_model.isActive(MODE_ARMED))
           {
             _model.reset();
-            _model.load();
-            _model.update();
           }
           break;
 
@@ -954,7 +968,6 @@ class Msp
           r.result = 0;
           break;
       }
-      sendResponse(r, s);
     }
 
     void sendResponse(MspResponse& r, Stream& s)
@@ -998,13 +1011,14 @@ class Msp
 
     bool debugSkip(uint8_t cmd)
     {
-      return true;
-      return false;
+      //return true;
+      //return false;
       if(cmd == MSP_STATUS) return true;
       if(cmd == MSP_STATUS_EX) return true;
       if(cmd == MSP_BOXNAMES) return true;
       if(cmd == MSP_ANALOG) return true;
       if(cmd == MSP_ATTITUDE) return true;
+      if(cmd == MSP_ALTITUDE) return true;
       if(cmd == MSP_RC) return true;
       if(cmd == MSP_RAW_IMU) return true;
       if(cmd == MSP_MOTOR) return true;
@@ -1018,10 +1032,10 @@ class Msp
     void debugMessage(const MspMessage& m)
     {
       if(debugSkip(m.cmd)) return;
-      SerialDevice * s = Hardware::getSerialPortById(MSP_DEBUG_PORT);
+      Stream * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
-      s->print(m.dir == TYPE_REPLY ? '>' : '<'); s->print(' ');
+      s->print(m.dir == MSP_TYPE_REPLY ? '>' : '<'); s->print(' ');
       s->print(m.cmd); s->print(' ');
       s->print(m.expected); s->print(' ');
       for(size_t i = 0; i < m.expected; i++)
@@ -1034,7 +1048,7 @@ class Msp
     void debugResponse(const MspResponse& r)
     {
       if(debugSkip(r.cmd)) return;
-      SerialDevice * s = Hardware::getSerialPortById(MSP_DEBUG_PORT);
+      Stream * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
       s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); s->print(' ');
@@ -1049,7 +1063,6 @@ class Msp
 
   private:
     Model& _model;
-    MspMessage _msg;
     bool _reboot;
 };
 

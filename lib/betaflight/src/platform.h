@@ -1,6 +1,6 @@
 #pragma once
 
-#define BLACKBOX
+#define USE_BLACKBOX
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,6 +10,8 @@
 #define ESPFC_TARGET "ESP8266"
 #elif defined(ESP32)
 #define ESPFC_TARGET "ESP32"
+#elif defined(UNIT_TEST)
+#define ESPFC_TARGET "UNIT"
 #else
   #error "Wrong platform"
 #endif
@@ -20,7 +22,7 @@
 
 #define FC_FIRMWARE_NAME            "Betaflight"
 #define FC_VERSION_MAJOR            3  // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR            2  // increment when a minor release is made (small new feature, change etc)
+#define FC_VERSION_MINOR            5  // increment when a minor release is made (small new feature, change etc)
 #define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
 
 #define STR_HELPER(x) #x
@@ -56,9 +58,9 @@ extern const char * const targetVersion;
 #define XYZ_AXIS_COUNT 3
 #define DEBUG16_VALUE_COUNT 4
 
-#define STATIC_UNIT_TESTED static
+//#define STATIC_UNIT_TESTED static
 //#define UNIT_TEST
-//#define STATIC_UNIT_TESTED
+#define STATIC_UNIT_TESTED
 
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
 #define UNUSED(v) ((void)v)
@@ -78,6 +80,14 @@ int gcd(int num, int denom);
 
 unsigned long millis(void);
 unsigned long micros(void);
+
+#if __GNUC__ > 6
+#define FALLTHROUGH __attribute__ ((fallthrough))
+#else
+#define FALLTHROUGH do {} while(0)
+#endif
+
+#define FORMATTED_DATE_TIME_BUFSIZE 30
 /* UTILS END */
 
 /* PARAMETER GROUP START */
@@ -287,7 +297,7 @@ extern const uint32_t baudRates[];
 serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction);
 void mspSerialReleasePortIfAllocated(struct serialPort_s *serialPort);
 serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function);
-serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, uint32_t baudRate, portMode_e mode, portOptions_e options);
+serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options);
 void closeSerialPort(serialPort_t *serialPort);
 void mspSerialAllocatePorts(void);
 uint32_t serialTxBytesFree(const serialPort_t *instance);
@@ -456,7 +466,7 @@ typedef enum {
     FEATURE_DYNAMIC_FILTER = 1 << 29,
 } features_e;
 
-bool feature(uint32_t mask);
+bool featureIsEnabled(uint32_t mask);
 
 typedef struct featureConfig_s {
     uint32_t enabledFeatures;
@@ -511,26 +521,21 @@ typedef struct systemConfig_s {
     uint8_t pidProfileIndex;
     uint8_t activeRateProfile;
     uint8_t debug_mode;
-    uint8_t task_statistics;
-#if defined(STM32F4) && !defined(DISABLE_OVERCLOCK)
-    uint8_t cpu_overclock;
-#endif
-    uint8_t powerOnArmingGraceTime; // in seconds
-    char boardIdentifier[sizeof(TARGET_BOARD_IDENTIFIER) + 1];
 } systemConfig_t;
 
 PG_DECLARE(systemConfig_t, systemConfig);
 
 typedef struct controlRateConfig_s {
-    uint8_t rcRate8;
-    uint8_t rcYawRate8;
-    uint8_t rcExpo8;
     uint8_t thrMid8;
     uint8_t thrExpo8;
+    uint8_t rates_type;
+    uint8_t rcRates[3];
+    uint8_t rcExpo[3];
     uint8_t rates[3];
     uint8_t dynThrPID;
-    uint8_t rcYawExpo8;
     uint16_t tpa_breakpoint;                // Breakpoint where TPA is activated
+    uint8_t throttle_limit_type;            // Sets the throttle limiting type - off, scale or clip
+    uint8_t throttle_limit_percent;         // Sets the maximum pilot commanded throttle limit
 } controlRateConfig_t;
 
 #define CONTROL_RATE_PROFILE_COUNT  1
@@ -555,17 +560,17 @@ typedef enum {
     PID_ITEM_COUNT
 } pidIndex_e;
 
-typedef struct pid8_s {
+typedef struct pidf_s {
     uint8_t P;
     uint8_t I;
     uint8_t D;
-} pid8_t;
+    uint16_t F;
+} pidf_t;
 
 typedef struct pidProfile_s {
-    pid8_t  pid[PID_ITEM_COUNT];
-
-    uint16_t yaw_lpf_hz;                    // Additional yaw filter when yaw axis too noisy
-    uint16_t dterm_lpf_hz;                  // Delta Filter in hz
+    pidf_t  pid[PID_ITEM_COUNT];
+    uint16_t yaw_lowpass_hz;                // Additional yaw filter when yaw axis too noisy
+    uint16_t dterm_lowpass_hz;              // Delta Filter in hz
     uint16_t dterm_notch_hz;                // Biquad dterm notch hz
     uint16_t dterm_notch_cutoff;            // Biquad dterm notch low cutoff
     uint8_t dterm_filter_type;              // Filter selection for dterm
@@ -576,27 +581,14 @@ typedef struct pidProfile_s {
     uint8_t pidAtMinThrottle;               // Disable/Enable pids on zero throttle. Normally even without airmode P and D would be active.
     uint8_t levelAngleLimit;                // Max angle in degrees in level mode
     uint8_t levelSensitivity;               // Angle mode sensitivity reflected in degrees assuming user using full stick
-
-    uint8_t horizon_tilt_effect;            // inclination factor for Horizon mode
-    uint8_t horizon_tilt_expert_mode;       // OFF or ON
-
-    // Betaflight PID controller parameters
     uint16_t itermThrottleThreshold;        // max allowed throttle delta before iterm accelerated in ms
     uint16_t itermAcceleratorGain;          // Iterm Accelerator Gain when itermThrottlethreshold is hit
-    uint8_t setpointRelaxRatio;             // Setpoint weight relaxation effect
-    uint8_t dtermSetpointWeight;            // Setpoint weight for Dterm (0= measurement, 1= full error, 1 > aggressive derivative)
+    uint8_t antiGravityMode;
+    int16_t feedForwardTransition;
     uint16_t yawRateAccelLimit;             // yaw accel limiter for deg/sec/ms
     uint16_t rateAccelLimit;                // accel limiter roll/pitch deg/sec/ms
-    uint16_t crash_dthreshold;              // dterm crash value
-    uint16_t crash_gthreshold;              // gyro crash value
-    uint16_t crash_setpoint_threshold;      // setpoint must be below this value to detect crash, so flips and rolls are not interpreted as crashes
-    uint16_t crash_time;                    // ms
-    uint16_t crash_delay;                   // ms
-    uint8_t crash_recovery_angle;           // degrees
-    uint8_t crash_recovery_rate;            // degree/second
-//    pidCrashRecovery_e crash_recovery;      // off, on, on and beeps when it is in crash recovery mode
-    uint16_t crash_limit_yaw;               // limits yaw errorRate, so crashes don't cause huge throttle increase
     uint16_t itermLimit;
+    uint16_t dterm_lowpass2_hz;             // Extra PT1 Filter on D in hz
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -607,7 +599,16 @@ typedef struct pidConfig_s {
 
 PG_DECLARE(pidConfig_t, pidConfig);
 
-extern float axisPID_P[3], axisPID_I[3], axisPID_D[3];
+typedef struct pidAxisData_s {
+    float P;
+    float I;
+    float D;
+    float F;
+    float Sum;
+} pidAxisData_t;
+
+extern pidAxisData_t pidData[3];
+
 extern struct pidProfile_s *currentPidProfile;
 extern uint32_t targetPidLooptime;
 /* PID END */
@@ -648,12 +649,12 @@ extern int16_t debug[DEBUG16_VALUE_COUNT];
 bool sensors(uint32_t mask);
 
 typedef enum {
-    SENSOR_GYRO = 1 << 0, // always present
-    SENSOR_ACC = 1 << 1,
-    SENSOR_BARO = 1 << 2,
-    SENSOR_MAG = 1 << 3,
-    SENSOR_SONAR = 1 << 4,
-    SENSOR_GPS = 1 << 5,
+    SENSOR_GYRO   = 1 << 0, // always present
+    SENSOR_ACC    = 1 << 1,
+    SENSOR_BARO   = 1 << 2,
+    SENSOR_MAG    = 1 << 3,
+    SENSOR_SONAR  = 1 << 4,
+    SENSOR_GPS    = 1 << 5,
     SENSOR_GPSMAG = 1 << 6
 } sensors_e;
 
@@ -666,23 +667,12 @@ typedef struct gyro_s {
 extern gyro_t gyro;
 
 typedef struct accDev_s {
-    //sensorAccInitFuncPtr initFn;                              // initialize function
-    //sensorAccReadFuncPtr readFn;                              // read 3 axis data function
-    //busDevice_t bus;
     uint16_t acc_1G;
-    int16_t ADCRaw[XYZ_AXIS_COUNT];
-    char revisionCode;                                      // a revision code for the sensor, if known
-    bool dataReady;
-    //sensor_align_e accAlign;
-    //mpuDetectionResult_t mpuDetectionResult;
-    //mpuConfiguration_t mpuConfiguration;
 } accDev_t;
 
 typedef struct acc_s {
     accDev_t dev;
-    uint32_t accSamplingInterval;
-    int32_t accSmooth[XYZ_AXIS_COUNT];
-    bool isAccelUpdatedAtLeastOnce;
+    int32_t accADC[XYZ_AXIS_COUNT];
 } acc_t;
 
 extern acc_t acc;
@@ -719,21 +709,8 @@ typedef struct batteryConfig_s {
     uint8_t vbatmincellvoltage;             // minimum voltage per cell, this triggers battery critical alarm, in 0.1V units, default is 33 (3.3V)
     uint8_t vbatwarningcellvoltage;         // warning voltage per cell, this triggers battery warning alarm, in 0.1V units, default is 35 (3.5V)
     uint8_t vbatnotpresentcellvoltage;      // Between vbatmaxcellvoltage and 2*this is considered to be USB powered. Below this it is notpresent
-    uint8_t lvcPercentage;                  // Percentage of throttle when lvc is triggered
     voltageMeterSource_e voltageMeterSource; // source of battery voltage meter used, either ADC or ESC
-
-    // current
     currentMeterSource_e currentMeterSource; // source of battery current meter used, either ADC, Virtual or ESC
-    uint16_t batteryCapacity;               // mAh
-
-    // warnings / alerts
-    bool useVBatAlerts;                     // Issue alerts based on VBat readings
-    bool useConsumptionAlerts;              // Issue alerts based on total power consumption
-    uint8_t consumptionWarningPercentage;   // Percentage of remaining capacity that should trigger a battery warning
-    uint8_t vbathysteresis;                 // hysteresis for alarm, default 1 = 0.1V
-
-    uint8_t vbatfullcellvoltage;            // Cell voltage at which the battery is deemed to be "full" 0.1V units, default is 41 (4.1V)
-
 } batteryConfig_t;
 
 PG_DECLARE(batteryConfig_t, batteryConfig);
@@ -751,47 +728,33 @@ PG_DECLARE_ARRAY(voltageSensorADCConfig_t, MAX_VOLTAGE_SENSOR_ADC, voltageSensor
 
 typedef struct compassConfig_s {
     int16_t mag_declination;                // Get your magnetic decliniation from here : http://magnetic-declination.com/
-                                            // For example, -6deg 37min, = -637 Japan, format is [sign]dddmm (degreesminutes) default is zero.
-    //sensor_align_e mag_align;               // mag alignment
     uint8_t mag_hardware;                   // Which mag hardware to use on boards with more than one device
-    //ioTag_t interruptTag;
-    //flightDynamicsTrims_t magZero;
 } compassConfig_t;
 
 PG_DECLARE(compassConfig_t, compassConfig);
 
 typedef struct accelerometerConfig_s {
     uint16_t acc_lpf_hz;                    // cutoff frequency for the low pass filter used on the acc z-axis for althold in Hz
-    //sensor_align_e acc_align;               // acc alignment
     uint8_t acc_hardware;                   // Which acc hardware to use on boards with more than one device
-    //flightDynamicsTrims_t accZero;
-    //rollAndPitchTrims_t accelerometerTrims;
 } accelerometerConfig_t;
 
 PG_DECLARE(accelerometerConfig_t, accelerometerConfig);
 
 typedef struct barometerConfig_s {
-    uint8_t baro_bustype;
-    uint8_t baro_spi_device;
-    //ioTag_t baro_spi_csn;                   // Also used as XCLR (positive logic) for BMP085
-    uint8_t baro_i2c_device;
-    uint8_t baro_i2c_address;
     uint8_t baro_hardware;                  // Barometer hardware to use
-    uint8_t baro_sample_count;              // size of baro filter array
-    uint16_t baro_noise_lpf;                // additional LPF to reduce baro noise
-    uint16_t baro_cf_vel;                   // apply Complimentary Filter to keep the calculated velocity based on baro velocity (i.e. near real velocity)
-    uint16_t baro_cf_alt;                   // apply CF to use ACC for height estimation
 } barometerConfig_t;
 
 PG_DECLARE(barometerConfig_t, barometerConfig);
 
 typedef struct gyroConfig_s {
     //sensor_align_e gyro_align;              // gyro alignment
-    uint8_t  gyroMovementCalibrationThreshold; // people keep forgetting that moving model while init results in wrong gyro offsets. and then they never reset gyro. so this is now on by default.
+    //uint8_t  gyroMovementCalibrationThreshold; // people keep forgetting that moving model while init results in wrong gyro offsets. and then they never reset gyro. so this is now on by default.
     uint8_t  gyro_sync_denom;                  // Gyro sample divider
-    uint8_t  gyro_lpf;                         // gyro LPF setting - values are driver specific, in case of invalid number, a reasonable default ~30-40HZ is chosen.
-    uint8_t  gyro_soft_lpf_type;
-    uint8_t  gyro_soft_lpf_hz;
+    uint8_t  gyro_hardware_lpf;                         // gyro LPF setting - values are driver specific, in case of invalid number, a reasonable default ~30-40HZ is chosen.
+    uint8_t  gyro_lowpass_type;
+    uint16_t  gyro_lowpass_hz;
+    uint8_t  gyro_lowpass2_type;
+    uint16_t  gyro_lowpass2_hz;
     bool     gyro_use_32khz;
     uint8_t  gyro_to_use;
     uint16_t gyro_soft_notch_hz_1;
@@ -817,38 +780,19 @@ int32_t getAmperageLatest(void);
 #define RX_MAPPABLE_CHANNEL_COUNT 8
 
 typedef struct rxConfig_s {
-    uint8_t rcmap[RX_MAPPABLE_CHANNEL_COUNT];  // mapping of radio channels to internal RPYTA+ order
     uint8_t serialrx_provider;              // type of UART-based receiver (0 = spek 10, 1 = spek 11, 2 = sbus). Must be enabled by FEATURE_RX_SERIAL first.
-    uint8_t sbus_inversion;                 // default sbus (Futaba, FrSKY) is inverted. Support for uninverted OpenLRS (and modified FrSKY) receivers.
-    uint8_t halfDuplex;                     // allow rx to operate in half duplex mode on F4, ignored for F1 and F3.
-    uint8_t rx_spi_protocol;                // type of SPI RX protocol
-                                            // nrf24: 0 = v202 250kbps. (Must be enabled by FEATURE_RX_NRF24 first.)
-    uint32_t rx_spi_id;
-    uint8_t rx_spi_rf_channel_count;
-//    ioTag_t spektrum_bind_pin_override_ioTag;
-//    ioTag_t spektrum_bind_plug_ioTag;
-    uint8_t spektrum_sat_bind;              // number of bind pulses for Spektrum satellite receivers
-    uint8_t spektrum_sat_bind_autoreset;    // whenever we will reset (exit) binding mode after hard reboot
     uint8_t rssi_channel;
-    uint8_t rssi_scale;
-    uint8_t rssi_invert;
-    uint16_t midrc;                         // Some radios have not a neutral point centered on 1500. can be changed here
-    uint16_t mincheck;                      // minimum rc end
-    uint16_t maxcheck;                      // maximum rc end
     uint8_t rcInterpolation;
     uint8_t rcInterpolationChannels;
     uint8_t rcInterpolationInterval;
-    uint8_t fpvCamAngleDegrees;             // Camera angle to be scaled into rc commands
     uint16_t airModeActivateThreshold;      // Throttle setpoint where airmode gets activated
-
-    uint16_t rx_min_usec;
-    uint16_t rx_max_usec;
-    uint8_t max_aux_channel;
 } rxConfig_t;
 
 PG_DECLARE(rxConfig_t, rxConfig);
 
 extern float rcCommand[4];
+uint16_t getRssi(void);
+
 /* RX START */
 
 /* FAILSAFE START */

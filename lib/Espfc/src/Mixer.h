@@ -10,12 +10,12 @@ namespace Espfc {
 class Mixer
 {
   public:
-    Mixer(Model& model): _model(model), _driver(NULL) {}
+    Mixer(Model& model): _model(model), _motor(NULL), _servo(NULL) {}
 
     int begin()
     {
-      _driver = Hardware::getEscDriver(_model);
-      if(!_driver) return 0;
+      _motor = Hardware::getMotorDriver(_model);
+      _servo = Hardware::getServoDriver(_model);
 
       _model.state.minThrottle = _model.config.output.minThrottle;
       _model.state.maxThrottle = _model.config.output.maxThrottle;
@@ -170,7 +170,7 @@ class Mixer
         }
         else
         {
-          thrust = Math::bound(thrust, -1.f + range, 1.f - range);
+          thrust = constrain(thrust, -1.f + range, 1.f - range);
         }
       }
 
@@ -210,13 +210,14 @@ class Mixer
         }
         else
         {
-          float v = Math::bound(out[i], -1.f, 1.f);
-          if(!_model.state.digitalOutput && och.servo)
+          if(och.servo)
           {
-            _model.state.outputUs[i] = lrintf(Math::map3(v, -1.f, 0.f, 1.f, och.reverse ? och.max : och.min, och.neutral, och.reverse ? och.min : och.max));
+            const int16_t tmp = lrintf(Math::map3(out[i], -1.f, 0.f, 1.f, och.reverse ? 2000 : 1000, och.neutral, och.reverse ? 1000 : 2000));
+            _model.state.outputUs[i] = constrain(tmp, och.min, och.max);
           }
           else
           {
+            float v = constrain(out[i], -1.f, 1.f);
             _model.state.outputUs[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
           }
         }
@@ -226,12 +227,20 @@ class Mixer
 
     void _write()
     {
-      if(!_driver) return;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        _driver->write(i, _model.state.outputUs[i]);
+        const OutputChannelConfig& och = _model.config.output.channel[i];
+        if(och.servo)
+        {
+          if(_servo) _servo->write(i, _model.state.outputUs[i]);
+        }
+        else
+        {
+          if(_motor) _motor->write(i, _model.state.outputUs[i]);
+        }
       }
-      _driver->apply();
+      if(_motor) _motor->apply();
+      if(_servo) _servo->apply();
     }
 
     bool _stop(void)
@@ -242,7 +251,8 @@ class Mixer
     }
 
     Model& _model;
-    EscDriver * _driver;
+    EscDriver * _motor;
+    EscDriver * _servo;
 };
 
 }

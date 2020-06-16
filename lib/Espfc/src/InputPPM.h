@@ -1,7 +1,9 @@
 #ifndef _INPUT_PPM_H_
 #define _INPUT_PPM_H_
 
-#include "Arduino.h"
+#ifndef UNIT_TEST
+#include <Arduino.h>
+#endif
 #include "InputDevice.h"
 
 namespace Espfc {

@@ -2,18 +2,18 @@
 #define _ESPFC_PID_H_
 
 #include "ModelConfig.h"
-#include "Math.h"
 #include "Filter.h"
 
 // bataflight scalers
-//#define PTERM_SCALE 0.032029f
-//#define ITERM_SCALE 0.244381f
-//#define DTERM_SCALE 0.000529f
+#define PTERM_SCALE_BETAFLIGHT 0.032029f
+#define ITERM_SCALE_BETAFLIGHT 0.244381f
+#define DTERM_SCALE_BETAFLIGHT 0.000529f
+#define FTERM_SCALE_BETAFLIGHT 0.013754f
 
-// espfc scalers
-#define PTERM_SCALE 0.0035f  // 0.005f // 1/200    // prev: 1/500
-#define ITERM_SCALE 0.001f   // 0.005f   // 1/200    // prev: 1/500
-#define DTERM_SCALE 0.00004f // 0.00005f // 1/20000  // prev: 1/25000
+#define PTERM_SCALE (PTERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.00183 = 0.032029f * 57.29 / 1000
+#define ITERM_SCALE (ITERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.014f
+#define DTERM_SCALE (DTERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.0000303f
+#define FTERM_SCALE (FTERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) //
 
 #define LEVEL_PTERM_SCALE 0.1f    // 1/10
 #define LEVEL_ITERM_SCALE 0.1f    // 1/10
@@ -24,55 +24,59 @@ namespace Espfc {
 class Pid
 {
   public:
-    Pid(): Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f), pScale(1.f), iScale(1.f), dScale(1.f), iTerm(0), dTerm(0) {}
+    Pid(): Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f), pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f), pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f) {}
 
-    void configure(float p, float i, float d, float il = 0.3, float dg = 0.f, float ol = 1.f)
+    void begin()
     {
-      Kp = p;
-      Ki = i;
-      Kd = d;
-      iLimit = il;
-      dGamma = dg;
-      oLimit = ol;
+      dt = 1.f / rate;
     }
 
-    float update(float setpoint, float measure, float dt)
+    float update(float setpoint, float measure)
     {
       error = setpoint - measure;
+      
       pTerm = Kp * error * pScale;
       pTerm = ptermFilter.update(pTerm);
 
-      if(iScale > 0.01)
+      if(Ki > 0.f && abs(iScale) > 0.f)
       {
-        if(std::abs(pTerm) < oLimit)
-        {
-          iTerm += Ki * error * dt * iScale;
-        }
-        iTerm = Math::bound(iTerm, -iLimit, iLimit);
+        iTerm += Ki * error * dt * iScale;
+        iTerm = constrain(iTerm, -iLimit, iLimit);
       }
       else
       {
         iTerm = 0; // zero integral
       }
 
-      if(Kd > 0 && dt > 0)
+      if(Kd > 0.f && dScale > 0.f)
       {
-        dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
+        //dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
+        dTerm = Kd * dScale * ((prevMeasure - measure) * rate);
+        dTerm = dtermNotchFilter.update(dTerm);
+        dTerm = dtermFilter.update(dTerm);
+        dTerm = dtermFilter2.update(dTerm);
       }
-      dTerm = dtermNotchFilter.update(dTerm);
-      dTerm = dtermFilter.update(dTerm);
 
-      float output = Math::bound(pTerm + iTerm + dTerm, -oLimit, oLimit);
+      if(Kf > 0.f && fScale > 0.f)
+      {
+        fTerm = Kf * fScale * ((prevSetpoint - setpoint) * rate);
+        fTerm = ftermFilter.update(fTerm);
+      }
 
       prevMeasure = measure;
       prevError = error;
+      prevSetpoint = setpoint;
 
-      return output;
+      return constrain(pTerm + iTerm + dTerm + fTerm, -oLimit, oLimit);
     }
 
     float Kp;
     float Ki;
     float Kd;
+    float Kf;
+
+    float rate;
+    float dt;
 
     float iLimit;
     float dGamma;
@@ -81,17 +85,23 @@ class Pid
     float pScale;
     float iScale;
     float dScale;
-
-    Filter dtermFilter;
-    Filter dtermNotchFilter;
-    Filter ptermFilter;
+    float fScale;
 
     float error;
     float pTerm;
     float iTerm;
     float dTerm;
+    float fTerm;
+
+    Filter dtermFilter;
+    Filter dtermFilter2;
+    Filter dtermNotchFilter;
+    Filter ptermFilter;
+    Filter ftermFilter;
+
     float prevMeasure;
     float prevError;
+    float prevSetpoint;
 };
 
 }

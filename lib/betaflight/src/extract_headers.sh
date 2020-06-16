@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILES=$(grep -R '#include "' *.c | sed -e 's/.*"\(.*\)"/\1/' | uniq)
+FILES=$(grep -R '#include "' blackbox | sed -e 's/.*"\(.*\)"/\1/' | uniq)
 
 for f in $FILES 
 do

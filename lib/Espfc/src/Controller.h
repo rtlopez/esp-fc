@@ -15,37 +15,36 @@ class Controller
 
     int begin()
     {
-      FilterConfig fc;
-      fc.freq = 10;
-      fc.type = FILTER_BIQUAD;
-      _speedFilter.begin(fc, _model.state.loopTimer.rate);
+      _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
       return 1;
     }
 
     int update()
     {
-      _model.state.stats.start(COUNTER_OUTER_PID);
-      resetIterm();
-      if(_model.config.mixerType == MIXER_GIMBAL)
       {
-        outerLoopRobot();
+        Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
+        resetIterm();
+        if(_model.config.mixerType == MIXER_GIMBAL)
+        {
+          outerLoopRobot();
+        }
+        else
+        {
+          outerLoop();
+        }
       }
-      else
-      {
-        outerLoop();
-      }
-      _model.state.stats.end(COUNTER_OUTER_PID);
 
-      _model.state.stats.start(COUNTER_INNER_PID);
-      if(_model.config.mixerType == MIXER_GIMBAL)
       {
-        innerLoopRobot();
+        Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
+        if(_model.config.mixerType == MIXER_GIMBAL)
+        {
+          innerLoopRobot();
+        }
+        else
+        {
+          innerLoop();
+        }
       }
-      else
-      {
-        innerLoop();
-      }
-      _model.state.stats.end(COUNTER_INNER_PID);
 
       return 1;
     }
@@ -63,7 +62,7 @@ class Controller
       }
       else
       {
-        angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input[AXIS_PITCH], speed, _model.state.loopTimer.getDelta()) * radians(_model.config.angleRateLimit);
+        angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input[AXIS_PITCH], speed) * radians(_model.config.angleRateLimit);
       }
       _model.state.desiredAngle.set(AXIS_PITCH, angle);
       _model.state.desiredRate[AXIS_YAW] = _model.state.input[AXIS_YAW] * radians(_model.config.angleRateLimit);
@@ -85,9 +84,8 @@ class Controller
       const bool stabilize = angle < radians(_model.config.angleLimit);
       if(stabilize)
       {
-        const float dt = _model.state.loopTimer.getDelta();
-        _model.state.output[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH], dt);
-        _model.state.output[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.rate[AXIS_YAW], dt);
+        _model.state.output[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
+        _model.state.output[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro[AXIS_YAW]);
       }
       else
       {
@@ -107,14 +105,13 @@ class Controller
     {
       if(_model.isActive(MODE_ANGLE))
       {
-        const float dt = _model.state.loopTimer.getDelta();
         _model.state.desiredAngle = VectorFloat(
           _model.state.input[AXIS_ROLL] * radians(_model.config.angleLimit),
           _model.state.input[AXIS_PITCH] * radians(_model.config.angleLimit),
           _model.state.angle[AXIS_YAW]
         );
-        _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL], dt);
-        _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH], dt);
+        _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL]);
+        _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
       }
       else
       {
@@ -135,11 +132,11 @@ class Controller
 
     void innerLoop()
     {
-      const float dt = _model.state.loopTimer.getDelta();
       const float tpaFactor = getTpaFactor();
       for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
-        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.rate[i], dt) * tpaFactor;
+        _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i]) * tpaFactor;
+        //_model.state.debug[i] = lrintf(_model.state.innerPid[i].iTerm * 1000);
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
     }
@@ -147,7 +144,7 @@ class Controller
     float getTpaFactor() const
     {
       if(_model.config.tpaScale == 0) return 1.f;
-      float t = Math::bound(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
+      float t = constrain(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
       return Math::map(t, (float)_model.config.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.tpaScale * 0.01f));
     }
 
@@ -177,7 +174,7 @@ class Controller
         rcRate += RC_RATE_INCREMENTAL * (rcRate - 2.0f);
       }
 
-      const float inputAbs = std::abs(input);
+      const float inputAbs = abs(input);
       if(rcExpo)
       {
         const float expof = rcExpo / 100.0f;
@@ -187,10 +184,10 @@ class Controller
       float angleRate = 200.0f * rcRate * input;
       if (_model.config.input.superRate[axis])
       {
-        const float rcSuperfactor = 1.0f / (Math::bound(1.0f - (inputAbs * (_model.config.input.superRate[axis] / 100.0f)), 0.01f, 1.00f));
+        const float rcSuperfactor = 1.0f / (constrain(1.0f - (inputAbs * (_model.config.input.superRate[axis] / 100.0f)), 0.01f, 1.00f));
         angleRate *= rcSuperfactor;
       }
-      return radians(Math::bound(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)
+      return radians(constrain(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)
     }
 
   private:

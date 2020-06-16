@@ -2,7 +2,7 @@
 #define _ESPFC_ACTUATOR_H_
 
 #include "Model.h"
-#include "Math.h"
+#include "MathUtil.h"
 
 namespace Espfc {
 
@@ -20,12 +20,14 @@ class Actuator
 
     int update()
     {
-      _model.state.stats.start(COUNTER_ACTUATOR);
+      if(!_model.state.actuatorTimer.check()) return 0;
+
+      Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
+      updateArming();
       updateModeMask();
       updateAirMode();
       updateScaler();
       updateBuzzer();
-      _model.state.stats.end(COUNTER_ACTUATOR);
       return 1;
     }
 
@@ -57,14 +59,40 @@ class Actuator
             if(mode & ACT_INNER_P) _model.state.innerPid[x].pScale = scale;
             if(mode & ACT_INNER_I) _model.state.innerPid[x].iScale = scale;
             if(mode & ACT_INNER_D) _model.state.innerPid[x].dScale = scale;
+            if(mode & ACT_INNER_F) _model.state.innerPid[x].fScale = scale;
 
             if(mode & ACT_OUTER_P) _model.state.outerPid[x].pScale = scale;
             if(mode & ACT_OUTER_I) _model.state.outerPid[x].iScale = scale;
             if(mode & ACT_OUTER_D) _model.state.outerPid[x].dScale = scale;
+            if(mode & ACT_OUTER_F) _model.state.outerPid[x].fScale = scale;
 
           }
         }
       }
+    }
+
+    void updateArming()
+    {
+      int errors = _model.state.i2cErrorDelta;
+      int flags = 0;
+      if(!_model.state.gyroPresent || errors)
+      {
+        flags |= ARMING_DISABLED_NO_GYRO;
+      }
+      if(!_model.isThrottleLow())
+      {
+        flags |= ARMING_DISABLED_THROTTLE;
+      }
+      if(_model.calibrationActive())
+      {
+        flags |= ARMING_DISABLED_CALIBRATING;
+      }
+      if(!_model.state.inputLinkValid)
+      {
+        flags |= ARMING_DISABLED_RX_FAILSAFE;
+      }
+      _model.state.armingDisabledFlags = (ArmingDisabledFlags)flags;
+      _model.state.i2cErrorDelta = 0;
     }
 
     void updateModeMask()
@@ -91,12 +119,12 @@ class Actuator
 
       for(size_t i = 0; i < MODE_COUNT; i++)
       {
-        bool curr = newMask & (1 << i);
+        bool next = newMask & (1 << i);
         bool prev = _model.state.modeMaskPrev & (1 << i);
-        if(curr != prev && !canChange((FlightMode)i, curr))
+        if(next != prev && !canChangeMode((FlightMode)i, next))
         {
-          if(curr) newMask &= ~(1 << i); // block activation
-          else newMask |= (1 << i); // keep previous
+          if(next) newMask &= ~(1 << i); // block activation, clear bit
+          else newMask |= (1 << i); // keep previous, set bit
         }
       }
 
@@ -104,23 +132,31 @@ class Actuator
       _model.state.modeMask = newMask;
     }
 
-    bool canChange(FlightMode mode, bool val)
+    bool canChangeMode(FlightMode mode, bool val)
     {
-      if(mode == MODE_ANGLE && !_model.accelActive()) return false;
-      if(mode == MODE_ARMED && (!_model.isThrottleLow() || _model.calibrationActive())) return false;
-      if(mode == MODE_AIRMODE && val && !_model.state.airmodeAllowed) return false;
-      return true;
+      switch(mode)
+      {
+        case MODE_ARMED:
+          return (val && !_model.armingDisabled()) || (!val && _model.isThrottleLow());
+        case MODE_ANGLE:
+          return _model.accelActive();
+        case MODE_AIRMODE:
+          return (val && _model.state.airmodeAllowed) || !val;
+        default:
+          return true;
+      }
     }
 
     void updateAirMode()
     {
-      if(!_model.state.airmodeAllowed && _model.isActive(MODE_ARMED) && _model.state.inputUs[AXIS_THRUST] > 1400) // activate airmode in the air
-      {
-        _model.state.airmodeAllowed = true;
-      }
-      if(!_model.isActive(MODE_ARMED))
+      bool armed = _model.isActive(MODE_ARMED);
+      if(!armed)
       {
         _model.state.airmodeAllowed = false;
+      }
+      if(armed && !_model.state.airmodeAllowed && _model.state.inputUs[AXIS_THRUST] > 1400) // activate airmode in the air
+      {
+        _model.state.airmodeAllowed = true;
       }
     }
 
@@ -140,14 +176,7 @@ class Actuator
       }
       if((_model.hasChanged(MODE_ARMED)))
       {
-        if(_model.isActive(MODE_ARMED))
-        {
-          _model.state.buzzer.push(BEEPER_ARMING);
-        }
-        else
-        {
-          _model.state.buzzer.push(BEEPER_DISARMING);
-        }
+        _model.state.buzzer.push(_model.isActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
       }
     }
 

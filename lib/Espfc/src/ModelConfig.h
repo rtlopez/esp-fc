@@ -1,10 +1,12 @@
 #ifndef _ESPFC_MODEL_CONFIG_H_
 #define _ESPFC_MODEL_CONFIG_H_
 
-#include <Arduino.h>
 #include "EscDriver.h"
-
-#define EEPROM_VERSION_NUM 0x05
+#include "Filter.h"
+#include "Device/BusDevice.h"
+#include "Device/GyroDevice.h"
+#include "Device/MagDevice.h"
+#include "Device/BaroDevice.h"
 
 #define USE_SOFT_SERIAL
 
@@ -17,7 +19,8 @@ enum GyroDlpf {
   GYRO_DLPF_42  = 0x03,
   GYRO_DLPF_20  = 0x04,
   GYRO_DLPF_10  = 0x05,
-  GYRO_DLPF_5   = 0x06
+  GYRO_DLPF_5   = 0x06,
+  GYRO_DLPF_EX  = 0x07,
 };
 
 enum GyroGain {
@@ -35,36 +38,8 @@ enum AccelGain {
 };
 
 enum AccelMode {
-  ACCEL_OFF       = 0x00,
-  ACCEL_DELAYED   = 0x01,
-  ACCEL_GYRO      = 0x02,
-  ACCEL_GYRO_FIFO = 0x03
-};
-
-enum MagGain {
-  MAG_GAIN_1370 = 0x00,
-  MAG_GAIN_1090 = 0x01,
-  MAG_GAIN_820  = 0x02,
-  MAG_GAIN_660  = 0x03,
-  MAG_GAIN_440  = 0x04,
-  MAG_GAIN_390  = 0x05,
-  MAG_GAIN_330  = 0x06,
-  MAG_GAIN_220  = 0x07,
-};
-
-enum MagRate {
-  MAG_RATE_3    = 0x00,
-  MAG_RATE_7P5  = 0x01,
-  MAG_RATE_15   = 0x02,
-  MAG_RATE_30   = 0x03,
-  MAG_RATE_75   = 0x04,
-};
-
-enum MagAvg {
-  MAG_AVERAGING_1 = 0x00,
-  MAG_AVERAGING_2 = 0x01,
-  MAG_AVERAGING_4 = 0x02,
-  MAG_AVERAGING_8 = 0x03
+  ACCEL_DELAYED   = 0x00,
+  ACCEL_GYRO      = 0x01,
 };
 
 enum SensorAlign {
@@ -82,12 +57,36 @@ enum SensorAlign {
 enum FusionMode {
   FUSION_NONE,
   FUSION_MADGWICK,
+  FUSION_MAHONY,
   FUSION_COMPLEMENTARY,
   FUSION_KALMAN,
   FUSION_RTQF,
   FUSION_LERP,
   FUSION_SIMPLE,
   FUSION_EXPERIMENTAL,
+  FUSION_MAX,
+};
+
+class FusionConfig
+{
+  public:
+    int8_t mode;
+    uint8_t gain;
+
+    static const char * getModeName(FusionMode mode)
+    {
+      if(mode >= FUSION_MAX) return PSTR("?");
+      return getModeNames()[mode];
+    }
+
+    static const char ** getModeNames()
+    {
+      static const char* modeChoices[] = {
+        PSTR("NONE"), PSTR("MADGWICK"), PSTR("MAHONY"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
+        PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"),
+        NULL };
+      return modeChoices;
+    }
 };
 
 enum FlightMode {
@@ -100,17 +99,19 @@ enum FlightMode {
 };
 
 enum ScalerDimension {
-  ACT_INNER_P     = 1 << 0,
-  ACT_INNER_I     = 1 << 1,
-  ACT_INNER_D     = 1 << 2,
-  ACT_OUTER_P     = 1 << 3,
-  ACT_OUTER_I     = 1 << 4,
-  ACT_OUTER_D     = 1 << 5,
-  ACT_AXIS_ROLL   = 1 << 6,
-  ACT_AXIS_PITCH  = 1 << 7,
-  ACT_AXIS_YAW    = 1 << 8,
-  ACT_AXIS_THRUST = 1 << 9,
-  ACT_GYRO_THRUST = 1 << 10
+  ACT_INNER_P     = 1 << 0,  // 1
+  ACT_INNER_I     = 1 << 1,  // 2
+  ACT_INNER_D     = 1 << 2,  // 4
+  ACT_INNER_F     = 1 << 3,  // 8
+  ACT_OUTER_P     = 1 << 4,  // 16
+  ACT_OUTER_I     = 1 << 5,  // 32
+  ACT_OUTER_D     = 1 << 6,  // 64
+  ACT_OUTER_F     = 1 << 7,  // 128
+  ACT_AXIS_ROLL   = 1 << 8,  // 256
+  ACT_AXIS_PITCH  = 1 << 9,  // 512
+  ACT_AXIS_YAW    = 1 << 10, // 1024
+  ACT_AXIS_THRUST = 1 << 11, // 2048
+  ACT_GYRO_THRUST = 1 << 12  // 4096
 };
 
 const size_t SCALER_COUNT = 3;
@@ -179,6 +180,7 @@ enum SerialPort {
   SERIAL_UART_1,
 #if defined(ESP32)
   SERIAL_UART_2,
+  SERIAL_WIFI_0,
 #endif
 #if defined(ESP8266)
   SERIAL_SOFT_0,
@@ -204,29 +206,20 @@ enum SerialFunction {
   SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
 };
 
-enum AccelDev {
-  ACCEL_DEFAULT = 0,
-  ACCEL_NONE    = 1,
-  ACCEL_MPU6050 = 3,
-  ACCEL_MPU6000 = 7,
-  ACCEL_MPU6500 = 8,
-  ACCEL_MPU9250 = 9
-};
-
-enum MagDev {
-  MAG_DEFAULT = 0,
-  MAG_NONE    = 1,
-  MAG_HMC5883 = 2,
-  MAG_AK8975  = 3,
-  MAG_AK8963  = 4
-};
-
-enum BaroDev {
-  BARO_DEFAULT = 0,
-  BARO_NONE    = 1,
-  BARO_BMP085  = 2,
-  BARO_MS5611  = 3,
-  BARO_BMP280  = 4
+enum SerialRXProvider {
+  SERIALRX_SPEKTRUM1024 = 0,
+  SERIALRX_SPEKTRUM2048 = 1,
+  SERIALRX_SBUS = 2,
+  SERIALRX_SUMD = 3,
+  SERIALRX_SUMH = 4,
+  SERIALRX_XBUS_MODE_B = 5,
+  SERIALRX_XBUS_MODE_B_RJ01 = 6,
+  SERIALRX_IBUS = 7,
+  SERIALRX_JETIEXBUS = 8,
+  SERIALRX_CRSF = 9,
+  SERIALRX_SRXL = 10,
+  SERIALRX_TARGET_CUSTOM = 11,
+  SERIALRX_FPORT = 12,
 };
 
 enum Axis {
@@ -238,21 +231,15 @@ enum Axis {
   AXIS_AUX_2,
   AXIS_AUX_3,
   AXIS_AUX_4,
+  AXIS_AUX_5,
+  AXIS_AUX_6,
+  AXIS_AUX_7,
+  AXIS_AUX_8,
+  AXIS_AUX_9,
+  AXIS_AUX_10,
+  AXIS_AUX_11,
+  AXIS_AUX_12,
   AXIS_COUNT
-};
-
-enum PidIndex {
-  PID_ROLL,
-  PID_PITCH,
-  PID_YAW,
-  PID_ALT,
-  PID_POS,
-  PID_POSR,
-  PID_NAVR,
-  PID_LEVEL,
-  PID_MAG,
-  PID_VEL,
-  PID_ITEM_COUNT
 };
 
 enum Feature {
@@ -261,6 +248,7 @@ enum Feature {
   FEATURE_MOTOR_STOP = 1 << 4,
   FEATURE_SOFTSERIAL = 1 << 6,
   FEATURE_TELEMETRY  = 1 << 10,
+  FEATURE_DYNAMIC_FILTER = 1 << 29,
 };
 
 enum InputInterpolation {
@@ -287,7 +275,7 @@ enum PinFunction {
   PIN_I2C_0_SDA,
   PIN_INPUT_ADC_0,
 #endif
-#if defined(ESP32)
+#if defined(ESP32) || defined(UNIT_TEST)
   PIN_INPUT_RX,
   PIN_OUTPUT_0,
   PIN_OUTPUT_1,
@@ -311,7 +299,9 @@ enum PinFunction {
   PIN_SPI_0_SCK,
   PIN_SPI_0_MOSI,
   PIN_SPI_0_MISO,
-  PIN_SPI_0_CS0,
+  PIN_SPI_CS0,
+  PIN_SPI_CS1,
+  PIN_SPI_CS2,
 #endif
   PIN_COUNT
 };
@@ -375,26 +365,18 @@ class BuzzerConfig
     int32_t beeperMask;
 };
 
-enum FilterType {
-  FILTER_PT1,
-  FILTER_BIQUAD,
-  FILTER_FIR,
-  FILTER_NOTCH,
-  FILTER_NONE,
-};
-
-enum BiquadFilterType {
-  BIQUAD_FILTER_LPF,
-  BIQUAD_FILTER_NOTCH,
-  BIQUAD_FILTER_BPF
-};
-
-class FilterConfig
-{
-  public:
-    int8_t type;
-    int16_t freq;
-    int16_t cutoff;
+enum PidIndex {
+  PID_ROLL,
+  PID_PITCH,
+  PID_YAW,
+  PID_ALT,
+  PID_POS,
+  PID_POSR,
+  PID_NAVR,
+  PID_LEVEL,
+  PID_MAG,
+  PID_VEL,
+  PID_ITEM_COUNT
 };
 
 class PidConfig
@@ -403,6 +385,7 @@ class PidConfig
     uint8_t P;
     uint8_t I;
     uint8_t D;
+    int16_t F;
 };
 
 class InputChannelConfig
@@ -420,6 +403,7 @@ class InputConfig
 {
   public:
     int8_t ppmMode;
+    uint8_t serialRxProvider;
 
     int16_t maxCheck;
     int16_t minCheck;
@@ -454,6 +438,7 @@ class OutputConfig
     int8_t protocol;
     int16_t async;
     int16_t rate;
+    int16_t servoRate;
 
     int16_t minCommand;
     int16_t minThrottle;
@@ -519,33 +504,91 @@ class MixerEntry {
     int16_t rate;
 };
 
+enum ArmingDisabledFlags {
+  ARMING_DISABLED_NO_GYRO         = (1 << 0),
+  ARMING_DISABLED_FAILSAFE        = (1 << 1),
+  ARMING_DISABLED_RX_FAILSAFE     = (1 << 2),
+  ARMING_DISABLED_BAD_RX_RECOVERY = (1 << 3),
+  ARMING_DISABLED_BOXFAILSAFE     = (1 << 4),
+  ARMING_DISABLED_RUNAWAY_TAKEOFF = (1 << 5),
+  ARMING_DISABLED_THROTTLE        = (1 << 6),
+  ARMING_DISABLED_ANGLE           = (1 << 7),
+  ARMING_DISABLED_BOOT_GRACE_TIME = (1 << 8),
+  ARMING_DISABLED_NOPREARM        = (1 << 9),
+  ARMING_DISABLED_LOAD            = (1 << 10),
+  ARMING_DISABLED_CALIBRATING     = (1 << 11),
+  ARMING_DISABLED_CLI             = (1 << 12),
+  ARMING_DISABLED_CMS_MENU        = (1 << 13),
+  ARMING_DISABLED_OSD_MENU        = (1 << 14),
+  ARMING_DISABLED_BST             = (1 << 15),
+  ARMING_DISABLED_MSP             = (1 << 16),
+  ARMING_DISABLED_ARM_SWITCH      = (1 << 17), // Needs to be the last element, since it's always activated if one of the others is active when arming
+};
+
+static const size_t ARMING_DISABLED_FLAGS_COUNT = 18;
+
+enum WirelessMode {
+    WIRELESS_MODE_NULL = 0,  /**< null mode */
+    WIRELESS_MODE_STA,       /**< WiFi station mode */
+    WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
+    WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
+    WIRELESS_MODE_MAX
+};
+
+class WirelessConfig
+{
+  public:
+    static const size_t MAX_LEN = 32;
+    int8_t mode;
+    int16_t port;
+    char ssid[MAX_LEN + 1];
+    char pass[MAX_LEN + 1];
+    char ssidAp[MAX_LEN + 1];
+    char passAp[MAX_LEN + 1];
+
+    static const char * getModeName(WirelessMode mode)
+    {
+      if(mode >= WIRELESS_MODE_MAX) return PSTR("?");
+      return getModeNames()[mode];
+    }
+
+    static const char ** getModeNames()
+    {
+      static const char* modeChoices[] = { PSTR("OFF"), PSTR("STA"), PSTR("AP"), PSTR("AP_STA"), NULL };
+      return modeChoices;
+    }
+};
+
 // persistent data
 class ModelConfig
 {
   public:
+    int8_t gyroBus;
     int8_t gyroDev;
     int8_t gyroDlpf;
     int8_t gyroFsr;
     int8_t gyroSync;
     int8_t gyroAlign;
     FilterConfig gyroFilter;
+    FilterConfig gyroFilter2;
+    FilterConfig gyroFilter3;
     FilterConfig gyroNotch1Filter;
     FilterConfig gyroNotch2Filter;
 
+    int8_t accelBus;
     int8_t accelDev;
     int8_t accelFsr;
-    int8_t accelMode;
     int8_t accelAlign;
     FilterConfig accelFilter;
 
+    int8_t magBus;
     int8_t magDev;
-    int8_t magSampleRate;
-    int8_t magFsr;
-    int8_t magAvr;
     int8_t magAlign;
     FilterConfig magFilter;
 
+    int8_t baroBus;
     int8_t baroDev;
+    FilterConfig baroFilter;
 
     InputConfig input;
 
@@ -563,10 +606,11 @@ class ModelConfig
     FilterConfig yawFilter;
 
     FilterConfig dtermFilter;
+    FilterConfig dtermFilter2;
     FilterConfig dtermNotchFilter;
     FilterConfig levelPtermFilter;
 
-    uint8_t dtermSetpointWeight;
+    int16_t dtermSetpointWeight;
     int8_t itermWindupPointPercent;
 
     int8_t angleLimit;
@@ -588,8 +632,7 @@ class ModelConfig
 
     SerialPortConfig serial[SERIAL_UART_COUNT];
 
-    int8_t fusionMode;
-    bool fusionDelay;
+    FusionConfig fusion;
 
     int16_t gyroBias[3];
     int16_t accelBias[3];
@@ -617,9 +660,10 @@ class ModelConfig
     int8_t customMixerCount;
     MixerEntry customMixes[MIXER_RULE_MAX];
 
+    WirelessConfig wireless;
+
     ModelConfig()
     {
-#if defined(ESP8266)
       pin[PIN_OUTPUT_0] = -1;
       pin[PIN_OUTPUT_1] = -1;
       pin[PIN_OUTPUT_2] = -1;
@@ -629,34 +673,29 @@ class ModelConfig
       pin[PIN_OUTPUT_1] = 14;    // D5
       pin[PIN_OUTPUT_2] = 12;    // D6
       pin[PIN_OUTPUT_3] = 15;    // D8
-
       pin[PIN_INPUT_RX] = 13;    // D7
       pin[PIN_I2C_0_SCL] = 5;    // D1
       pin[PIN_I2C_0_SDA] = 4;    // D2
       pin[PIN_INPUT_ADC_0] = 17; // A0
       pin[PIN_BUZZER] = 16;      // D0
-#endif
+
 #if defined(ESP32)
       pin[PIN_INPUT_RX] = 35;
-      pin[PIN_OUTPUT_0] = 32;
-      pin[PIN_OUTPUT_1] = 33;
+      pin[PIN_OUTPUT_0] = 0;
+      pin[PIN_OUTPUT_1] = 2;
       pin[PIN_OUTPUT_2] = 25;
       pin[PIN_OUTPUT_3] = 26;
       pin[PIN_OUTPUT_4] = 27;
-      pin[PIN_OUTPUT_5] = 14;
-      pin[PIN_OUTPUT_6] = 12;
-      pin[PIN_OUTPUT_7] = 13;
-      pin[PIN_BUZZER] = 15;
+      pin[PIN_OUTPUT_5] = 12;
+      pin[PIN_OUTPUT_6] = 13;
+      pin[PIN_OUTPUT_7] = 14;
+      pin[PIN_BUZZER] = 4;
       pin[PIN_SERIAL_0_TX] = 1;
       pin[PIN_SERIAL_0_RX] = 3;
-      //pin[PIN_SERIAL_0_TX] = 17;
-      //pin[PIN_SERIAL_0_RX] = 16;
-      pin[PIN_SERIAL_1_TX] = 2;
-      pin[PIN_SERIAL_1_RX] = 4;
+      pin[PIN_SERIAL_1_TX] = 33;
+      pin[PIN_SERIAL_1_RX] = 32;
       pin[PIN_SERIAL_2_TX] = 17;
       pin[PIN_SERIAL_2_RX] = 16;
-      //pin[PIN_SERIAL_2_TX] = 1;
-      //pin[PIN_SERIAL_2_RX] = 3;
       pin[PIN_I2C_0_SCL] = 22;
       pin[PIN_I2C_0_SDA] = 21;
       pin[PIN_INPUT_ADC_0] = 36;
@@ -664,37 +703,48 @@ class ModelConfig
       pin[PIN_SPI_0_SCK] = 18;
       pin[PIN_SPI_0_MOSI] = 23;
       pin[PIN_SPI_0_MISO] = 19;
-      pin[PIN_SPI_0_CS0] = 5;
+      pin[PIN_SPI_CS0] = 5;
+      pin[PIN_SPI_CS1] = 15;
+      pin[PIN_SPI_CS2] = -1;
 #endif
       i2cSpeed = 1000;
 
-      gyroDev = ACCEL_MPU6050;
-      accelDev = ACCEL_MPU6050;
+      gyroBus = BUS_AUTO;
+      gyroDev = GYRO_AUTO;
       gyroAlign = ALIGN_DEFAULT;
-      accelAlign = ALIGN_DEFAULT;
-      magAlign = ALIGN_DEFAULT;
-
-      accelMode = ACCEL_DELAYED;
       gyroDlpf = GYRO_DLPF_256;
       gyroFsr  = GYRO_FS_2000;
-      accelFsr = ACCEL_FS_8;
       //gyroSync = 16;
       gyroSync = 8;
 
-      magDev = MAG_NONE;
-      magSampleRate = MAG_RATE_75;
-      magAvr = MAG_AVERAGING_1;
+      accelBus = BUS_AUTO;
+      accelDev = GYRO_AUTO;
+      accelAlign = ALIGN_DEFAULT;
+      accelFsr = ACCEL_FS_16;
 
+      magBus = BUS_AUTO;
+      magDev = MAG_DEFAULT;
+      magAlign = ALIGN_DEFAULT;
+
+      baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
+
+      baroFilter.type = FILTER_BIQUAD;
+      baroFilter.freq = 25;
 
       loopSync = 1;
       mixerSync = 1;
 
-      fusionMode = FUSION_MADGWICK;
-      fusionDelay = 0;
+      fusion.mode = FUSION_MADGWICK;
+      fusion.gain = 50;
 
       gyroFilter.type = FILTER_PT1;
       gyroFilter.freq = 90;
+      gyroFilter2.type = FILTER_PT1;
+      gyroFilter2.freq = 200;
+      gyroFilter3.type = FILTER_FIR2;
+      gyroFilter3.freq = 100;
+
       gyroNotch1Filter.type = FILTER_NOTCH;
       gyroNotch1Filter.cutoff = 70;
       gyroNotch1Filter.freq = 150;
@@ -708,12 +758,14 @@ class ModelConfig
       magFilter.type = FILTER_BIQUAD;
       magFilter.freq = 15;
 
-      dtermFilter.type = FILTER_BIQUAD;
+      dtermFilter.type = FILTER_PT1;
       dtermFilter.freq = 100;
+      dtermFilter2.type = FILTER_PT1;
+      dtermFilter2.freq = 200;
 
       dtermNotchFilter.type = FILTER_BIQUAD;
-      dtermNotchFilter.cutoff = 70;
-      dtermNotchFilter.freq = 130;
+      dtermNotchFilter.cutoff = 90;
+      dtermNotchFilter.freq = 150;
 
       yawFilter.type = FILTER_PT1;
       yawFilter.freq = 90;
@@ -725,6 +777,7 @@ class ModelConfig
       telemetryInterval = 1000;
 
       debugMode = DEBUG_NONE;
+      //debugMode = DEBUG_FFT_FREQ;
       softSerialGuard = false;
       serialRxGuard = false;
 
@@ -734,20 +787,28 @@ class ModelConfig
 #if defined(ESP32)
       serial[SERIAL_UART_0].id = SERIAL_UART_0;
       serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
-      //serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
       serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
       serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_NONE;
+      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_RX_SERIAL;
       serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_UART_2].id = SERIAL_UART_2;
-      serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_MSP;
+      serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_MSP;
       serial[SERIAL_UART_2].baudIndex = SERIAL_SPEED_INDEX_115200;
       serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      
+      serial[SERIAL_WIFI_0].id = 30; // as soft serial
+      serial[SERIAL_WIFI_0].functionMask = SERIAL_FUNCTION_MSP;
+      serial[SERIAL_WIFI_0].baudIndex = SERIAL_SPEED_INDEX_115200;
+      serial[SERIAL_WIFI_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+
+      //serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
+      //serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
 #endif
 
 #if defined(ESP8266)
@@ -786,14 +847,15 @@ class ModelConfig
       mixerType = MIXER_QUADX;
       yawReverse = 0;
 
-      output.protocol = ESC_PROTOCOL_PWM;
-      //output.protocol = ESC_PROTOCOL_ONESHOT125;
+      //output.protocol = ESC_PROTOCOL_PWM;
+      output.protocol = ESC_PROTOCOL_ONESHOT125;
       //output.protocol = ESC_PROTOCOL_MULTISHOT;
       //output.protocol = ESC_PROTOCOL_BRUSHED;
       //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
-      output.async = true;
       //output.async = true;
+      output.async = false;
+      output.servoRate = 0; // 50
 
       // input config
       input.ppmMode = RISING;
@@ -833,10 +895,17 @@ class ModelConfig
       input.deadband = 3; // us
 
       // PID controller config
-      pid[PID_ROLL]  = { .P = 40,  .I = 40, .D = 30 };
-      pid[PID_PITCH] = { .P = 58,  .I = 50, .D = 35 };
-      pid[PID_YAW]   = { .P = 70,  .I = 45, .D = 10 };
-      pid[PID_LEVEL] = { .P = 55,  .I = 0,  .D = 0 };
+      pid[PID_ROLL]  = { .P = 46, .I = 45, .D = 25, .F = 0 };
+      pid[PID_PITCH] = { .P = 50, .I = 50, .D = 27, .F = 0 };
+      pid[PID_YAW]   = { .P = 65, .I = 45, .D = 10, .F = 0 };
+      pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
+
+      pid[PID_ALT]   = { .P = 50, .I =  0, .D =  0, .F = 0 };
+      pid[PID_POS]   = { .P = 15, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
+      pid[PID_POSR]  = { .P = 32, .I = 14, .D = 53, .F = 0 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
+      pid[PID_NAVR]  = { .P = 25, .I = 33, .D = 83, .F = 0 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
+      pid[PID_MAG]   = { .P = 40, .I =  0, .D =  0, .F = 0 };
+      pid[PID_VEL]   = { .P = 55, .I = 55, .D = 75, .F = 0 };
 
       itermWindupPointPercent = 30;
       dtermSetpointWeight = 30;
@@ -844,8 +913,13 @@ class ModelConfig
       angleLimit = 55;  // deg
       angleRateLimit = 300;  // deg
 
-      featureMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP;
-      //featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_MOTOR_STOP;
+    #if defined(ESP8266)
+      featureMask = FEATURE_RX_PPM;
+    #elif defined(ESP32)
+      featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_DYNAMIC_FILTER;
+    #endif
+
+      input.serialRxProvider = SERIALRX_SBUS;
 
       lowThrottleZeroIterm = true;
 
@@ -921,6 +995,13 @@ class ModelConfig
       vbatCellWarning = 35;
 
       buzzer.inverted = true;
+
+      wireless.mode = WIRELESS_MODE_NULL;
+      wireless.ssid[0] = 0;
+      wireless.pass[0] = 0;
+      wireless.ssidAp[0] = 0;
+      wireless.passAp[0] = 0;
+      wireless.port = 1111;
     }
 
     void brobot()

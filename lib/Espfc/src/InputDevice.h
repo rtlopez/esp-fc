@@ -1,7 +1,7 @@
 #ifndef _ESPFC_INPUT_DEVICE_H_
 #define _ESPFC_INPUT_DEVICE_H_
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 namespace Espfc {
 

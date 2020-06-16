@@ -4,6 +4,10 @@
 #define ESPFC_REVISION 0000000
 #endif
 
+#ifndef ESPFC_VERSION
+#define ESPFC_VERSION v0.0.0
+#endif
+
 const char * const targetName = ESPFC_TARGET;
 const char * const targetVersion = STR(ESPFC_VERSION);
 const char * const shortGitRevision = STR(ESPFC_REVISION);
@@ -51,7 +55,7 @@ acc_t acc = {
   }
 };
 uint16_t rssi;
-float axisPID_P[3], axisPID_I[3], axisPID_D[3];
+pidAxisData_t pidData[3];
 float motor[MAX_SUPPORTED_MOTORS];
 float motor_disarmed[MAX_SUPPORTED_MOTORS];
 uint32_t targetPidLooptime;
@@ -106,8 +110,7 @@ serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function)
 {
     return &_spc;
 }
-
-serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, uint32_t baudRate, portMode_e mode, portOptions_e options)
+serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options)
 {
     return &_sp;
 }
@@ -166,6 +169,11 @@ void setArmingBeepTimeMicros(uint32_t ts)
 uint32_t getArmingBeepTimeMicros(void)
 {
     return armingBeepTimeUs;
+}
+
+uint16_t getRssi(void)
+{
+  return 0;
 }
 
 void arraySubInt32(int32_t *dest, int32_t *array1, int32_t *array2, int count)

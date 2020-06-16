@@ -4,14 +4,22 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <EspGpio.h>
+#include <EscDriver.h>
+#include <Hal.h>
+
 #include "Debug.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
-#include "EEPROM.h"
+#include "Storage.h"
 #include "Logger.h"
-#include "Math.h"
-#include "EspGpio.h"
-#include "EscDriver.h"
+#include "MathUtil.h"
+
+#if defined(ESP8266)
+#define ESPFC_GUARD 1
+#else
+#define ESPFC_GUARD 0
+#endif
 
 namespace Espfc {
 
@@ -21,14 +29,6 @@ class Model
     Model()
     {
       initialize();
-    }
-
-    void begin()
-    {
-      logger.begin();
-      EEPROM.begin(1024);
-      load();
-      update();
     }
 
     void initialize()
@@ -67,94 +67,122 @@ class Model
       return config.blackboxDev == 3 && config.blackboxPdenom > 0;
     }
 
-    bool accelActive()
+    bool gyroActive() const ICACHE_RAM_ATTR
     {
-      return config.accelDev != ACCEL_NONE;
+      return state.gyroPresent && config.gyroDev != GYRO_NONE;
     }
 
-    bool magActive()
+    bool accelActive() const
     {
-      return config.magDev != MAG_NONE;
+      return state.accelPresent && config.accelDev != GYRO_NONE;
     }
 
-    bool calibrationActive()
+    bool magActive() const
     {
-      return state.sensorCalibration || state.accelBiasSamples || state.gyroBiasSamples;
+      return state.magPresent && config.magDev != MAG_NONE;
     }
 
-    void calibrate()
+    bool baroActive() const
     {
-      state.sensorCalibration = true;
-      state.gyroBiasSamples  = 2 * state.gyroTimer.rate;
+      return state.baroPresent && config.baroDev != BARO_NONE;
+    }
+
+    bool calibrationActive() const
+    {
+      return state.accelCalibrationState != CALIBRATION_IDLE || state.gyroCalibrationState != CALIBRATION_IDLE || state.magCalibrationState != CALIBRATION_IDLE;
+    }
+
+    void calibrateGyro()
+    {
+      state.gyroCalibrationState = CALIBRATION_START;
       if(accelActive())
       {
-        state.accelBiasSamples = 2 * state.gyroTimer.rate;
-        state.accelBias.z += 1.f;
+        state.accelCalibrationState = CALIBRATION_START;
       }
+    }
+
+    void calibrateMag()
+    {
+      state.magCalibrationState = CALIBRATION_START;
     }
 
     void finishCalibration()
     {
-      if(state.sensorCalibration && state.accelBiasSamples == 0 && state.gyroBiasSamples == 0)
+      if(state.gyroCalibrationState == CALIBRATION_SAVE)
       {
-        state.sensorCalibration = false;
         save();
+        state.buzzer.push(BEEPER_GYRO_CALIBRATED);
+        logger.info().log(F("GYRO BIAS")).log(degrees(state.gyroBias.x)).log(degrees(state.gyroBias.y)).logln(degrees(state.gyroBias.z));
+      }
+      if(state.accelCalibrationState == CALIBRATION_SAVE)
+      {
+        save();
+        logger.info().log(F("ACCEL BIAS")).log(state.accelBias.x).log(state.accelBias.y).logln(state.accelBias.z);
+      }
+      if(state.magCalibrationState == CALIBRATION_SAVE)
+      {
+        save();
+        logger.info().log(F("MAG BIAS")).log(state.magCalibrationOffset.x).log(state.magCalibrationOffset.y).logln(state.magCalibrationOffset.z);
+        logger.info().log(F("MAG SCALE")).log(state.magCalibrationScale.x).log(state.magCalibrationScale.y).logln(state.magCalibrationScale.z);
       }
     }
 
-    void update()
+    bool armingDisabled() const ICACHE_RAM_ATTR
     {
-      int gyroSyncMax = 4; // max 2khz
-      if(accelActive()) gyroSyncMax = 8; // max 1khz
-      if(config.magDev != MAG_NONE) gyroSyncMax = 16; // max 500hz
+      return state.armingDisabledFlags != 0;
+    }
 
-      config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax); // max 1khz
-      int gyroClock = 8000;
-      if(config.gyroDlpf != GYRO_DLPF_256)
+    SerialDevice * getSerialStream(SerialPort i)
+    {
+      return state.serial[i].stream;
+    }
+
+    SerialDevice * getSerialStream(SerialFunction sf)
+    {
+      for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
       {
-        gyroClock = 1000;
-        config.gyroSync = ((config.gyroSync + 7) / 8) * 8;
+        if(config.serial[i].functionMask & sf) return state.serial[i].stream;
       }
-      int gyroSampleRate = 8000 / config.gyroSync;
+      return nullptr;
+    }
 
-      // init timers
-      // sample rate = clock / ( divider + 1)
-      state.gyroDivider = (gyroClock / (gyroSampleRate + 1)) + 1;
-      state.gyroTimer.setRate(gyroClock / state.gyroDivider);
-      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
-      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
-      state.actuatorTimer.setRate(25); // 25 hz
-      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(10);
+    void begin()
+    {
+      logger.begin();
+      #ifndef UNIT_TEST
+      _storage.begin();
+      #endif
+      load();
+      sanitize();
+    }
 
-      // configure calibration
-      state.gyroBiasAlpha = 5.0f / state.gyroTimer.rate;
-      state.accelBiasAlpha = 5.0f / state.gyroTimer.rate;
-      state.gyroBiasSamples = 2 * state.gyroTimer.rate; // start gyro calibration
+    void sanitize()
+    {
+      int gyroSyncMax = 1; // max 8kHz
+      #if defined(ESP8266)
+        gyroSyncMax = 4; // max 2khz
+      #endif
+      //if(config.accelDev != GYRO_NONE) gyroSyncMax /= 2;
+      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 2;
+      config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax);
 
-      // load sensor calibration data
-      for(size_t i = 0; i <= AXIS_YAW; i++)
+      switch(config.gyroDlpf)
       {
-        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
-        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
-        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 1000.0f);
-        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
+        case GYRO_DLPF_256:
+        case GYRO_DLPF_EX:
+          state.gyroClock = 8000;
+          state.gyroRate = 8000 / config.gyroSync;
+          state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
+          break;
+        default:
+          config.gyroSync = ((config.gyroSync + 7) / 8) * 8; // multiply 8x and round (BF GUI uses this convention)
+          state.gyroClock = 1000;
+          state.gyroRate = 8000 / config.gyroSync;
+          state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
+          break;
       }
 
-      for(size_t i = 0; i <= AXIS_YAW; i++)
-      {
-        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
-        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
-        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
-        state.accelFilter[i].begin(config.accelFilter, state.gyroTimer.rate);
-        state.magFilter[i].begin(config.magFilter, state.gyroTimer.rate);
-      }
-
-      // ensure disarmed pulses
-      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
-      {
-        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
-      }
+      state.loopRate = state.gyroRate / config.loopSync;
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
@@ -198,35 +226,49 @@ class Model
       else
       {
         // for synced and standard PWM limit loop rate and pwm pulse width
-        if(config.output.protocol == ESC_PROTOCOL_PWM && gyroSampleRate > 500)
+        if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
         {
-          config.loopSync = std::max(config.loopSync, (int8_t)((gyroSampleRate + 499) / 500)); // align loop rate to lower than 500Hz
-          int loopRate = gyroSampleRate / config.loopSync;
-          if(loopRate > 480 && config.output.maxThrottle > 1950)
+          config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 499) / 500)); // align loop rate to lower than 500Hz
+          state.loopRate = state.gyroRate / config.loopSync;
+          if(state.loopRate > 480 && config.output.maxThrottle > 1940)
           {
             config.output.maxThrottle = 1940;
           }
         }
+        // for onshot125 limit loop rate to 2kHz
+        if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
+        {
+          config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
+          state.loopRate = state.gyroRate / config.loopSync;
+        }
       }
 
       // configure serial ports
-      uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
       uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
-      if(config.softSerialGuard)
+
+      // allow dynamic filter only above 1k sampling rate
+      if(false && state.gyroRate >= 1000)
+      {
+        featureAllowMask |= FEATURE_DYNAMIC_FILTER;
+      }
+
+      if(config.softSerialGuard || !ESPFC_GUARD)
       {
         featureAllowMask |= FEATURE_SOFTSERIAL;
       }
-      if(config.serialRxGuard)
+      if(config.serialRxGuard || !ESPFC_GUARD)
       {
         featureAllowMask |= FEATURE_RX_SERIAL;
         serialFunctionAllowedMask |= SERIAL_FUNCTION_RX_SERIAL;
       }
-      config.featureMask = config.featureMask & featureAllowMask;
+      config.featureMask &= featureAllowMask;
 
 #if defined(ESP32)
       config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_2].functionMask &= serialFunctionAllowedMask;
+      config.serial[SERIAL_WIFI_0].functionMask &= serialFunctionAllowedMask & ~FEATURE_RX_SERIAL;
 #elif defined(ESP8266)
       config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
@@ -248,6 +290,50 @@ class Model
         1 << (BEEPER_DISARMING - 1) |
         1 << (BEEPER_ARMING - 1) |
         1 << (BEEPER_BAT_LOW - 1);
+    }
+
+    void update()
+    {
+      // init timers
+      // sample rate = clock / ( divider + 1)
+      state.gyroTimer.setRate(state.gyroRate);
+      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
+      state.accelTimer.setInterval(state.accelTimer.interval - 10);
+      //state.accelTimer.setRate(state.gyroTimer.rate, 2);
+      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
+      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
+      state.actuatorTimer.setRate(25); // 25 hz
+      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
+      state.stats.timer.setRate(10);
+      state.serialTimer.setRate(1000);
+      if(magActive())
+      {
+        state.magTimer.setRate(state.magRate);
+      }
+
+      // configure filters
+      for(size_t i = 0; i <= AXIS_YAW; i++)
+      {
+        state.gyroAnalyzer[i].begin(state.gyroTimer.rate);
+        state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
+        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
+        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
+        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+        state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
+        state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
+        state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
+        state.gyroFilterImu[i].begin(FilterConfig(FILTER_PT1_FIR2, state.accelTimer.rate / 2), state.gyroTimer.rate);
+        if(magActive())
+        {
+          state.magFilter[i].begin(config.magFilter, state.magTimer.rate);
+        }
+      }
+
+      // ensure disarmed pulses
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
+      }
 
       state.buzzer.beeperMask = config.buzzer.beeperMask;
 
@@ -261,40 +347,41 @@ class Model
 
       for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
-        PidConfig * pc = &config.pid[i];
-        state.innerPid[i].configure(
-          pc->P * PTERM_SCALE * pidScale[i],
-          pc->I * ITERM_SCALE * pidScale[i],
-          pc->D * DTERM_SCALE * pidScale[i],
-          config.itermWindupPointPercent / 100.0f,
-          config.dtermSetpointWeight / 100.0f,
-          1.0f
-        );
-        state.innerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
-        state.innerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
-        if(i == AXIS_YAW) state.innerPid[i].ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
-        else state.innerPid[i].ptermFilter.begin(); // no filter
+        const PidConfig& pc = config.pid[i];
+        Pid& pid = state.innerPid[i];
+        pid.Kp = pc.P * PTERM_SCALE * pidScale[i];
+        pid.Ki = pc.I * ITERM_SCALE * pidScale[i];
+        pid.Kd = pc.D * DTERM_SCALE * pidScale[i];
+        pid.Kf = pc.F * FTERM_SCALE * pidScale[i];
+        pid.iLimit = 0.15f;
+        pid.oLimit = 0.5f;
+        pid.rate = state.loopTimer.rate;
+        pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        pid.dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
+        pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
+        pid.ftermFilter.begin(FilterConfig(FILTER_PT1, 15), state.loopTimer.rate);
+        if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
+        else pid.ptermFilter.begin(); // no filter
+        pid.begin();
       }
 
-      for(size_t i = 0; i <= AXIS_YAW; i++)
+      for(size_t i = 0; i < AXIS_YAW; i++)
       {
-        PidConfig * pc = &config.pid[PID_LEVEL];
-        state.outerPid[i].configure(
-          pc->P * LEVEL_PTERM_SCALE,
-          pc->I * LEVEL_ITERM_SCALE,
-          pc->D * LEVEL_DTERM_SCALE,
-          radians(config.angleRateLimit) * 0.05f,
-          0,
-          radians(config.angleRateLimit)
-        );
-
-        //state.outerPid[i].iLimit = 0.3f; // ROBOT
-        //state.outerPid[i].dGamma = config.dtermSetpointWeight / 100.0f;  // ROBOT
-        //state.outerPid[i].oLimit = 1.f;  // ROBOT
-
+        PidConfig& pc = config.pid[PID_LEVEL];
+        Pid& pid = state.innerPid[i];
+        pid.Kp = pc.P * LEVEL_PTERM_SCALE;
+        pid.Ki = pc.I * LEVEL_ITERM_SCALE;
+        pid.Kd = pc.D * LEVEL_DTERM_SCALE;
+        pid.Kf = pc.F * 0.f;
+        pid.iLimit = radians(config.angleRateLimit) * 0.1f;
+        pid.oLimit = radians(config.angleRateLimit);
+        pid.rate = state.loopTimer.rate;
         state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         state.outerPid[i].ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
+        //pid.iLimit = 0.3f; // ROBOT
+        //pid.oLimit = 1.f;  // ROBOT
+        pid.begin();
       }
       state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
 
@@ -304,6 +391,26 @@ class Model
       //config.scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
       //config.scaler[0].dimension = (ScalerDimension)(ACT_OUTER_P | ACT_AXIS_PITCH); // ROBOT
       //config.scaler[1].dimension = (ScalerDimension)(ACT_OUTER_I | ACT_AXIS_PITCH); // ROBOT
+      //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_YAW | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+
+      state.telemetry = config.telemetry;
+      state.baroAlititudeBiasSamples = 200;
+
+      // override temporary
+      //state.telemetry = true;
+      //state.telemetryTimer.setRate(100);
+    }
+
+    void postLoad()
+    {
+      // load current sensor calibration
+      for(size_t i = 0; i <= AXIS_YAW; i++)
+      {
+        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
+        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
+        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 10.0f);
+        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
+      }
     }
 
     void preSave()
@@ -313,85 +420,50 @@ class Model
       {
         config.gyroBias[i] = lrintf(state.gyroBias[i] * 1000.0f);
         config.accelBias[i] = lrintf(state.accelBias[i] * 1000.0f);
-        config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 1000.0f);
+        config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 10.0f);
         config.magCalibrationScale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
       }
     }
 
     int load()
     {
-      int addr = 0;
-      uint8_t magic = EEPROM.read(addr++);
-      if(EEPROM_MAGIC != magic)
-      {
-        logger.err().logln(F("EEPROM bad magic"));
-        return -1;
-      }
-
-      uint8_t version = EEPROM.read(addr++);
-      if(version != EEPROM_VERSION)
-      {
-        logger.err().logln(F("EEPROM wrong version"));
-        return -1;
-      }
-
-      uint16_t size = 0;
-      size = EEPROM.read(addr++);
-      size |= EEPROM.read(addr++) << 8;
-      if(size != sizeof(ModelConfig))
-      {
-        logger.info().logln(F("EEPROM size mismatch"));
-      }
-
-      size = std::min(size, (uint16_t)sizeof(ModelConfig));
-
-      uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
-      uint8_t * end = begin + size;
-      for(uint8_t * it = begin; it < end; ++it)
-      {
-        *it = EEPROM.read(addr++);
-      }
-      logger.info().logln(F("EEPROM loaded"));
+      #ifndef UNIT_TEST
+      _storage.load(config, logger);
+      #endif
+      postLoad();
       return 1;
     }
 
     void save()
     {
       preSave();
-      write(config);
-      logger.info().logln(F("EEPROM saved"));
+      #ifndef UNIT_TEST
+      _storage.write(config, logger);
+      #endif
     }
 
-    void write(const ModelConfig& config)
+    void reload()
     {
-      int addr = 0;
-      uint16_t size = sizeof(ModelConfig);
-      EEPROM.write(addr++, EEPROM_MAGIC);
-      EEPROM.write(addr++, EEPROM_VERSION);
-      EEPROM.write(addr++, size & 0xFF);
-      EEPROM.write(addr++, size >> 8);
-      const uint8_t * begin = reinterpret_cast<const uint8_t*>(&config);
-      const uint8_t * end = begin + sizeof(ModelConfig);
-      for(const uint8_t * it = begin; it < end; ++it)
-      {
-        EEPROM.write(addr++, *it);
-      }
-      EEPROM.commit();
+      sanitize();
+      update();
     }
 
     void reset()
     {
       initialize();
       save();
+      sanitize();
       update();
     }
-
-    static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = EEPROM_VERSION_NUM;
 
     ModelState state;
     ModelConfig config;
     Logger logger;
+
+  private:
+    #ifndef UNIT_TEST
+    Storage _storage;
+    #endif
 };
 
 }

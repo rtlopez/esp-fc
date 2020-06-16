@@ -1,12 +1,14 @@
 #ifndef _ESPFC_LOGGER_H_
 #define _ESPFC_LOGGER_H_
 
-#include "Arduino.h"
-#include "FS.h"
+#include <Arduino.h>
 #include "Debug.h"
 
 #if defined(ESP32)
 #include "SPIFFS.h"
+#elif defined(ESP8266) && false
+#include "FS.h"
+#define USE_FS_LOGGER
 #endif
 
 namespace Espfc {
@@ -16,10 +18,10 @@ class Logger
   public:
     int begin()
     {
-      return 0;
       LOG_SERIAL_INIT();
+      return 0;
       _valid = false;
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       SPIFFS.begin();
       int count = 0;
       int first = 0;
@@ -62,7 +64,7 @@ class Logger
     void list(Stream * s)
     {
       if(!s) return;
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       Dir dir = SPIFFS.openDir("");
       while(dir.next())
       {
@@ -89,7 +91,7 @@ class Logger
     void show(Stream * s, const String& name)
     {
       if(!s) return;
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       File f = SPIFFS.open(name, "r");
       if(!f)
       {
@@ -106,7 +108,7 @@ class Logger
 
     bool format()
     {
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       return SPIFFS.format();
 #else
       return false;
@@ -116,7 +118,7 @@ class Logger
     void info(Stream * s)
     {
       if(!s) return;
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       FSInfo i;
       SPIFFS.info(i);
       s->print(F("total: ")); s->print(i.totalBytes / 1024); s->println(F(" kB"));
@@ -131,14 +133,14 @@ class Logger
 
     Logger& info()
     {
-      LOG_SERIAL_DEBUG("INF");
-#if defined(ESP8266)
+      LOG_SERIAL_DEBUG("I");
+#if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
         f.print(millis());
-        f.print(F(" INF"));
+        f.print(F(" I"));
         f.close();
       }
 #endif
@@ -147,14 +149,14 @@ class Logger
 
     Logger& err()
     {
-      LOG_SERIAL_DEBUG("ERR");
-#if defined(ESP8266)
+      LOG_SERIAL_DEBUG("E");
+#if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
       {
         f.print(millis());
-        f.print(F(" ERR"));
+        f.print(F(" E"));
         f.close();
       }
 #endif
@@ -165,7 +167,7 @@ class Logger
     Logger& log(const T& v)
     {
       LOG_SERIAL_DEBUG(v);
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
@@ -184,7 +186,7 @@ class Logger
       LOG_SERIAL_DEBUG(v);
       LOG_SERIAL_DEBUG('\r');
       LOG_SERIAL_DEBUG('\n');
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
@@ -199,7 +201,7 @@ class Logger
 
     bool _available()
     {
-#if defined(ESP8266)
+#if defined(USE_FS_LOGGER)
       if(_valid)
       {
         FSInfo i;
@@ -222,7 +224,7 @@ class Logger
     }
 
     String _name;
-    File _file;
+    //File _file;
     bool _valid;
 };
 
