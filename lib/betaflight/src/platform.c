@@ -4,6 +4,10 @@
 #define ESPFC_REVISION 0000000
 #endif
 
+#ifndef ESPFC_VERSION
+#define ESPFC_VERSION v0.0.0
+#endif
+
 const char * const targetName = ESPFC_TARGET;
 const char * const targetVersion = STR(ESPFC_VERSION);
 const char * const shortGitRevision = STR(ESPFC_REVISION);

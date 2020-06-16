@@ -179,7 +179,7 @@ class Filter
       _state.median.i = 0;
     }
 
-    float updatePt1(float v) /* ICACHE_RAM_ATTR */
+    float updatePt1(float v) ICACHE_RAM_ATTR
     {
       _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
       return _state.pt1.v;
@@ -283,7 +283,7 @@ class Filter
       _state.bq.a2 = a2 / a0;
     }
 
-    float updateBiquadDF1(float v) /* ICACHE_RAM_ATTR */
+    float updateBiquadDF1(float v) ICACHE_RAM_ATTR
     {
       /* compute result */
       const float result =
@@ -304,7 +304,7 @@ class Filter
       return result;
     }
 
-    float updateBiquadDF2(float v) /* ICACHE_RAM_ATTR */
+    float updateBiquadDF2(float v) ICACHE_RAM_ATTR
     {
       const float result = _state.bq.b0 * v + _state.bq.x1;
       _state.bq.x1 = _state.bq.b1 * v - _state.bq.a1 * result + _state.bq.x2;

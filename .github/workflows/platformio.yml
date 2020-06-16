@@ -75,7 +75,7 @@ jobs:
           platformio run -e ${{ matrix.target }}
           cp .pio/build/${{ matrix.target }}/firmware.bin .pio/build/${{ matrix.target }}/espfc_${{ steps.vars.outputs.tag }}_${{ matrix.target }}.bin
         env:
-          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ steps.vars.outputs.tag }}
+          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ steps.vars.outputs.sha }} -DESPFC_VERSION=${{ steps.vars.outputs.tag }}
 
       - name: Create Release Artifact espfc_${{ steps.vars.outputs.tag }}_${{ matrix.target }}.bin
         uses: actions/upload-artifact@v2
