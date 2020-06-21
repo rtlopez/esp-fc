@@ -23,29 +23,31 @@ Hardware:
 * Wemos D1 Mini board (D1 Mini Lite too, ESP-12 for experienced users)
 * MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar)
 * PDB with 5V BEC
+* Buzzer and some electronic components (optionally).
 
 Software:
-* Atom IDE
-* PlatformIO Arduino Espressif8266 v2.4 SDK
-* CH340 usb-serial converter driver (for Windows)
-* Betaflight Configurator (v10.2)
-* Git client (optional)
+* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.7)
+* [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
+* [Espressif Flash Download Tools](https://www.espressif.com/en/support/download/other-tools)
 
-## Optional
-* Buzzer and some electronic components.
+## Flashing
+**Windows:** download and unzip [Espressif Flash Download Tools](https://www.espressif.com/en/support/download/other-tools)
 
-## Building and Flashing
-Read the [Installation instuction](https://github.com/rtlopez/esp-fc/blob/master/docs/installation.md)
+![ESP-FC Flashing](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_flashing.png?raw=true)
 
 ## Configuration
-The rule of thumb is if you cannot change specific option in Betaflight Configurator,
-that means it is not supported.
+The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported.
 
 ## Wiring diagram
 ![ESP-FC Wemos D1 mini wiring diagram](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_wemos_d1_mini_wiring.png?raw=true)
 
 ## Issues
-You can Report issues using Github tracker
+You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues)
+
+## Development
+* Visual Studio Code
+* [PlatformIO](https://platformio.org/install/ide?install=vscode)
+* Git
 
 ## Todo
 * Update documentation
