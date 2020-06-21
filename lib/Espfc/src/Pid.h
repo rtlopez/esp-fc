@@ -1,7 +1,7 @@
 #ifndef _ESPFC_PID_H_
 #define _ESPFC_PID_H_
 
-#include "ModelConfig.h"
+#include "MathUtil.h"
 #include "Filter.h"
 
 // bataflight scalers
@@ -24,7 +24,12 @@ namespace Espfc {
 class Pid
 {
   public:
-    Pid(): Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f), pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f), pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f) {}
+    Pid():
+      Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f),
+      pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f),
+      pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
+      prevMeasure(0.f), prevError(0.f), prevSetpoint(0.f)
+      {}
 
     void begin()
     {
@@ -38,10 +43,10 @@ class Pid
       pTerm = Kp * error * pScale;
       pTerm = ptermFilter.update(pTerm);
 
-      if(Ki > 0.f && abs(iScale) > 0.f)
+      if(Ki > 0.f && iScale > 0.f)
       {
         iTerm += Ki * error * dt * iScale;
-        iTerm = constrain(iTerm, -iLimit, iLimit);
+        iTerm = Math::clamp(iTerm, -iLimit, iLimit);
       }
       else
       {
@@ -56,18 +61,26 @@ class Pid
         dTerm = dtermFilter.update(dTerm);
         dTerm = dtermFilter2.update(dTerm);
       }
+      else
+      {
+        dTerm = 0;
+      }
 
       if(Kf > 0.f && fScale > 0.f)
       {
         fTerm = Kf * fScale * ((prevSetpoint - setpoint) * rate);
         fTerm = ftermFilter.update(fTerm);
       }
+      else
+      {
+        fTerm = 0;
+      }
 
       prevMeasure = measure;
       prevError = error;
       prevSetpoint = setpoint;
 
-      return constrain(pTerm + iTerm + dTerm + fTerm, -oLimit, oLimit);
+      return Math::clamp(pTerm + iTerm + dTerm + fTerm, -oLimit, oLimit);
     }
 
     float Kp;

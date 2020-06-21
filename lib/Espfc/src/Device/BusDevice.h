@@ -3,7 +3,6 @@
 
 #include <functional>
 #include <Arduino.h>
-#include "Debug.h"
 
 #define ESPFC_BUS_TIMEOUT 100
 

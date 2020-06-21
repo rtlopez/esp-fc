@@ -39,6 +39,26 @@ namespace Math {
   {
     return 3.14159265358979f;
   }
+
+  constexpr float invPi()
+  {
+    return 1.0f / pi();
+  }
+
+  constexpr float inv180()
+  {
+    return 1.0f / 180.0f;
+  }
+
+  inline float toRad(float deg)
+  {
+    return deg * (pi() * inv180());
+  }
+
+  inline float toDeg(float rad)
+  {
+    return rad * (180.0f * invPi());
+  }
 }
 
 }
