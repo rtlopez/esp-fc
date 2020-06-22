@@ -1,5 +1,6 @@
 #include <unity.h>
 #include "MathUtil.h"
+#include "helper_3dmath.h"
 #include "Filter.h"
 #include "Pid.h"
 
@@ -38,6 +39,106 @@ void test_math_deadband()
     TEST_ASSERT_EQUAL_INT32(-1, Espfc::Math::deadband(-11, 10));
     TEST_ASSERT_EQUAL_INT32( 0, Espfc::Math::deadband( -5, 10));
     TEST_ASSERT_EQUAL_INT32(10, Espfc::Math::deadband( 20, 10));
+}
+
+void test_vector_int16_access()
+{
+    VectorInt16 v;
+
+    TEST_ASSERT_EQUAL_INT16(0, v.x);
+    TEST_ASSERT_EQUAL_INT16(0, v.y);
+    TEST_ASSERT_EQUAL_INT16(0, v.z);
+
+    TEST_ASSERT_EQUAL_INT16(0, v[0]);
+    TEST_ASSERT_EQUAL_INT16(0, v[1]);
+    TEST_ASSERT_EQUAL_INT16(0, v[2]);
+
+    TEST_ASSERT_EQUAL_INT16(0, v.get(0));
+    TEST_ASSERT_EQUAL_INT16(0, v.get(1));
+    TEST_ASSERT_EQUAL_INT16(0, v.get(2));
+
+    v.set(0, 1);
+    v.set(1, 2);
+    v.set(2, 3);
+
+    TEST_ASSERT_EQUAL_INT16(1, v.x);
+    TEST_ASSERT_EQUAL_INT16(2, v.y);
+    TEST_ASSERT_EQUAL_INT16(3, v.z);
+
+    TEST_ASSERT_EQUAL_INT16(1, v[0]);
+    TEST_ASSERT_EQUAL_INT16(2, v[1]);
+    TEST_ASSERT_EQUAL_INT16(3, v[2]);
+
+    TEST_ASSERT_EQUAL_INT16(1, v.get(0));
+    TEST_ASSERT_EQUAL_INT16(2, v.get(1));
+    TEST_ASSERT_EQUAL_INT16(3, v.get(2));
+}
+
+void test_vector_int16_math()
+{
+    const VectorInt16 v0(0, -1, 2);
+
+    VectorInt16 v = v0;
+    TEST_ASSERT_EQUAL_INT16(0, v.x);
+    TEST_ASSERT_EQUAL_INT16(-1, v.y);
+    TEST_ASSERT_EQUAL_INT16(2, v.z);
+
+    v += v0;
+    TEST_ASSERT_EQUAL_INT16(0, v.x);
+    TEST_ASSERT_EQUAL_INT16(-2, v.y);
+    TEST_ASSERT_EQUAL_INT16(4, v.z);
+
+    v *= 2;
+    TEST_ASSERT_EQUAL_INT16(0, v.x);
+    TEST_ASSERT_EQUAL_INT16(-4, v.y);
+    TEST_ASSERT_EQUAL_INT16(8, v.z);
+
+    v /= 4;
+    TEST_ASSERT_EQUAL_INT16(0, v.x);
+    TEST_ASSERT_EQUAL_INT16(-1, v.y);
+    TEST_ASSERT_EQUAL_INT16(2, v.z);
+
+    v -= v0;
+    TEST_ASSERT_EQUAL_INT16(0, v.x);
+    TEST_ASSERT_EQUAL_INT16(0, v.y);
+    TEST_ASSERT_EQUAL_INT16(0, v.z);
+}
+
+void test_vector_float_math3d()
+{
+    const VectorFloat v0(0.0f, 1.0f, 0.0f);
+
+    const VectorFloat v1(0.0f, 0.0f, 1.0f);
+    const VectorFloat r1 = v0.cross(v1);
+    float d1 = v0.dot(v1);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, r1.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, r1.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, r1.z);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, d1);
+
+    const VectorFloat v2(0.0f, 2.0f, 0.0f);
+    const VectorFloat r2 = v0.cross(v2);
+    float d2 = v0.dot(v2);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, r2.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, r2.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, r2.z);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 2.0f, d2);
+
+    const VectorFloat v3(2.0f, 2.0f, 0.0f);
+    const VectorFloat r3 = v0.cross(v3);
+    float d3 = v0.dot(v3);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, r3.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, r3.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, -2.0f, r3.z);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f,  2.0f, d3);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, v0.getMagnitude());
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 2.0f, r3.getMagnitude());
+
+    const VectorFloat n = r3.getNormalized();
+    TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, n.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, n.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, n.z);
 }
 
 void assert_filter_off(Espfc::Filter& filter)
@@ -355,6 +456,9 @@ int main(int argc, char **argv)
     RUN_TEST(test_math_map);
     RUN_TEST(test_math_map3);
     RUN_TEST(test_math_deadband);
+    RUN_TEST(test_vector_int16_access);
+    RUN_TEST(test_vector_int16_math);
+    RUN_TEST(test_vector_float_math3d);
     RUN_TEST(test_filter_default);
     RUN_TEST(test_filter_none);
     RUN_TEST(test_filter_pt1_off);
