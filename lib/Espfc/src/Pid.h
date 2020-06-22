@@ -18,6 +18,7 @@
 #define LEVEL_PTERM_SCALE 0.1f    // 1/10
 #define LEVEL_ITERM_SCALE 0.1f    // 1/10
 #define LEVEL_DTERM_SCALE 0.001f  // 1/1000
+#define LEVEL_FTERM_SCALE 0.001f  // 1/1000
 
 namespace Espfc {
 

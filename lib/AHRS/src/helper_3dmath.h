@@ -1,7 +1,8 @@
 #ifndef _HELPER_3DMATH_H_
 #define _HELPER_3DMATH_H_
 
-#include <math.h>
+#include <cmath>
+#include <cstdint>
 
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
@@ -141,7 +142,7 @@ class Quaternion {
           }
 
           // if qa = qb or qa =- qb then theta = 0 and we can return qa
-          if(abs(cosHalfTheta) >= 0.995f)
+          if(std::fabs(cosHalfTheta) >= 0.995f)
           {
             return lerp(qa, qb, pc);
           }
@@ -152,7 +153,7 @@ class Quaternion {
 
           // if theta = 180 degrees then result is not fully defined
           // we could rotate around any axis normal to q1 or q2
-          if(abs(sinHalfTheta) < 0.001)
+          if(std::fabs(sinHalfTheta) < 0.001)
           {
             return (qa + qb) / 2.f;
           }
@@ -219,10 +220,10 @@ class VectorBase {
       return *this;
     }
 
-    T get(size_t i) const ICACHE_RAM_ATTR { return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T())); }
-    T operator[](size_t i) const ICACHE_RAM_ATTR { return get(i); }
+    T get(size_t i) const { return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T())); }
+    T operator[](size_t i) const { return get(i); }
 
-    void set(size_t i, T v) ICACHE_RAM_ATTR { i == 0 ? x = v : (i == 1 ? y = v : (i == 2 ? z = v : false)); }
+    void set(size_t i, T v) { i == 0 ? x = v : (i == 1 ? y = v : (i == 2 ? z = v : false)); }
 
     operator VectorBase<float>() const {
       return VectorBase<float>(x, y, z);

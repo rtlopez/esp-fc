@@ -1004,6 +1004,28 @@ class ModelConfig
       wireless.port = 1111;
     }
 
+    void quad()
+    {
+      conditions[0].id = MODE_ARMED;
+      conditions[0].ch = AXIS_AUX_1 + 0; // aux1
+      conditions[0].min = 1250;
+      conditions[0].max = 2100;
+
+      conditions[1].id = MODE_ANGLE;
+      conditions[1].ch = AXIS_AUX_1 + 0; // aux1
+      conditions[1].min = 1900;
+      conditions[1].max = 2100;
+
+      conditions[2].id = MODE_AIRMODE;
+      conditions[2].ch = AXIS_AUX_1 + 0; // aux1
+      conditions[2].min = 1250;
+      conditions[2].max = 2100;
+
+      scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[1].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+    }
+
     void brobot()
     {
       mixerType = MIXER_GIMBAL;

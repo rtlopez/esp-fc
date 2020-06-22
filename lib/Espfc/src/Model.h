@@ -34,6 +34,7 @@ class Model
     void initialize()
     {
       config = ModelConfig();
+      state = ModelState();
       //config.brobot();
     }
 
@@ -349,10 +350,10 @@ class Model
       {
         const PidConfig& pc = config.pid[i];
         Pid& pid = state.innerPid[i];
-        pid.Kp = pc.P * PTERM_SCALE * pidScale[i];
-        pid.Ki = pc.I * ITERM_SCALE * pidScale[i];
-        pid.Kd = pc.D * DTERM_SCALE * pidScale[i];
-        pid.Kf = pc.F * FTERM_SCALE * pidScale[i];
+        pid.Kp = (float)pc.P * PTERM_SCALE * pidScale[i];
+        pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
+        pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
+        pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[i];
         pid.iLimit = 0.15f;
         pid.oLimit = 0.5f;
         pid.rate = state.loopTimer.rate;
@@ -368,17 +369,17 @@ class Model
       for(size_t i = 0; i < AXIS_YAW; i++)
       {
         PidConfig& pc = config.pid[PID_LEVEL];
-        Pid& pid = state.innerPid[i];
-        pid.Kp = pc.P * LEVEL_PTERM_SCALE;
-        pid.Ki = pc.I * LEVEL_ITERM_SCALE;
-        pid.Kd = pc.D * LEVEL_DTERM_SCALE;
-        pid.Kf = pc.F * 0.f;
-        pid.iLimit = radians(config.angleRateLimit) * 0.1f;
-        pid.oLimit = radians(config.angleRateLimit);
+        Pid& pid = state.outerPid[i];
+        pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
+        pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
+        pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
+        pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
+        pid.iLimit = Math::toRad(config.angleRateLimit) * 0.1f;
+        pid.oLimit = Math::toRad(config.angleRateLimit);
         pid.rate = state.loopTimer.rate;
-        state.outerPid[i].dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
-        state.outerPid[i].dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
-        state.outerPid[i].ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
+        pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
+        pid.ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
         //pid.iLimit = 0.3f; // ROBOT
         //pid.oLimit = 1.f;  // ROBOT
         pid.begin();
