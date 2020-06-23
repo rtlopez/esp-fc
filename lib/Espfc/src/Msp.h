@@ -672,8 +672,16 @@ class Msp
           r.writeU8(_model.config.output.protocol);
           r.writeU16(_model.config.output.rate);
           r.writeU16(_model.config.output.dshotIdle);
-          r.writeU8(0); // 32k gyro
-          r.writeU8(0); // PWM inversion
+          r.writeU8(0);    // 32k gyro
+          r.writeU8(0);    // PWM inversion
+          r.writeU8(0);    // gyro to use: {1:0, 2:1. 2:both}
+          r.writeU8(0);    // gyro high fsr (flase)
+          r.writeU8(48);   // gyro cal threshold
+          r.writeU16(125); // gyro cal duration (1.25s)
+          r.writeU16(0);   // gyro offset yaw
+          r.writeU8(0);    // check overflow
+          r.writeU8(_model.config.debugMode);
+          r.writeU8(DEBUG_COUNT);
           break;
 
         case MSP_SET_ADVANCED_CONFIG:
@@ -682,9 +690,26 @@ class Msp
           _model.config.output.async = m.readU8();
           _model.config.output.protocol = m.readU8();
           _model.config.output.rate = m.readU16();
-          _model.config.output.dshotIdle = m.readU16(); // dshot idle
-          m.readU8();  // 32k gyro
-          m.readU8();  // PWM inversion
+          if(m.remain() >= 2) {
+            _model.config.output.dshotIdle = m.readU16(); // dshot idle
+          }
+          if(m.remain()) {
+            m.readU8();  // 32k gyro
+          }
+          if(m.remain()) {
+            m.readU8();  // PWM inversion
+          }
+          if(m.remain() >= 8) {
+            m.readU8();  // gyro to use
+            m.readU8();  // gyro high fsr
+            m.readU8();  // gyro cal threshold
+            m.readU16(); // gyro cal duration
+            m.readU16(); // gyro offset yaw
+            m.readU8();  // check overflow
+          }
+          if(m.remain()) {
+            _model.config.debugMode = m.readU8();
+          }
           _model.reload();
           break;
 

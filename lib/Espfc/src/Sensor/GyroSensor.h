@@ -66,11 +66,11 @@ class GyroSensor: public BaseSensor
         // filtering
         for(size_t i = 0; i < 3; ++i)
         {
-          if(_model.config.debugMode == DEBUG_GYRO)
+          if(_model.config.debugMode == DEBUG_GYRO_RAW)
           {
             _model.state.debug[i] = _model.state.gyroRaw[i];
           }
-          if(_model.config.debugMode == DEBUG_NOTCH)
+          if(_model.config.debugMode == DEBUG_GYRO_SCALED)
           {
             _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
           }

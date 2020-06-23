@@ -34,7 +34,9 @@ class Model
     void initialize()
     {
       config = ModelConfig();
-      state = ModelState();
+      #ifdef UNIT_TEST
+      state = ModelState(); // FIXME: cases board wdt reset
+      #endif
       //config.brobot();
     }
 

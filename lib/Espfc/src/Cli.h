@@ -322,9 +322,15 @@ class Cli
 
       const char ** fusionModeChoices        = FusionConfig::getModeNames();
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
-      static const char* debugModeChoices[]  = { PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO"), PSTR("ACCELEROMETER"), PSTR("MIXER"), PSTR("AIRMODE"), PSTR("PIDLOOP"),
-                                                 PSTR("NOTCH"), PSTR("RC_INTERPOLATION"), PSTR("VELOCITY"), PSTR("DTERM_FILTER"), PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), 
-                                                 PSTR("STACK"), PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"), PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("FRSKY_D_RX"), NULL };
+      static const char* debugModeChoices[]  = {  PSTR("NONE"),   PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO_FILTERED"), PSTR("ACCELEROMETER"), PSTR("PIDLOOP"), PSTR("GYRO_SCALED"), PSTR("RC_INTERPOLATION"), 
+                                                  PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"), PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"), 
+                                                  PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("RX_FRSKY_SPI"), PSTR("RX_SFHSS_SPI"), PSTR("GYRO_RAW"), PSTR("DUAL_GYRO_RAW"), PSTR("DUAL_GYRO_DIFF"), 
+                                                  PSTR("MAX7456_SIGNAL"), PSTR("MAX7456_SPICLOCK"), PSTR("SBUS"), PSTR("FPORT"), PSTR("RANGEFINDER"), PSTR("RANGEFINDER_QUALITY"), PSTR("LIDAR_TF"), 
+                                                  PSTR("ADC_INTERNAL"), PSTR("RUNAWAY_TAKEOFF"), PSTR("SDIO"), PSTR("CURRENT_SENSOR"), PSTR("USB"), PSTR("SMARTAUDIO"), PSTR("RTH"), PSTR("ITERM_RELAX"), 
+                                                  PSTR("ACRO_TRAINER"), PSTR("RC_SMOOTHING"), PSTR("RX_SIGNAL_LOSS"), PSTR("RC_SMOOTHING_RATE"), PSTR("ANTI_GRAVITY"), PSTR("DYN_LPF"), PSTR("RX_SPEKTRUM_SPI"), 
+                                                  PSTR("DSHOT_RPM_TELEMETRY"), PSTR("RPM_FILTER"), PSTR("D_MIN"), PSTR("AC_CORRECTION"), PSTR("AC_ERROR"), PSTR("DUAL_GYRO_SCALED"), PSTR("DSHOT_RPM_ERRORS"), 
+                                                  PSTR("CRSF_LINK_STATISTICS_UPLINK"), PSTR("CRSF_LINK_STATISTICS_PWR"), PSTR("CRSF_LINK_STATISTICS_DOWN"), PSTR("BARO"), PSTR("GPS_RESCUE_THROTTLE_PID"), 
+                                                  PSTR("DYN_IDLE"), PSTR("FF_LIMIT"), PSTR("FF_INTERPOLATED"), PSTR("BLACKBOX_OUTPUT"), PSTR("GYRO_SAMPLE"), PSTR("RX_TIMING"), NULL };
       static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT1_FIR2"), PSTR("NOTCH"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
@@ -1203,7 +1209,6 @@ class Cli
       s.print(' ');
       s.print(targetName);
       s.print(' ');
-      s.print('v');
       s.print(targetVersion);
       s.print(' ');
       s.print(shortGitRevision);
@@ -1211,6 +1216,10 @@ class Cli
       s.print(buildDate);
       s.print(' ');
       s.print(buildTime);
+      s.print(' ');
+      s.print(__VERSION__);
+      s.print(' ');
+      s.print(__cplusplus);
     }
 
     Model& _model;
