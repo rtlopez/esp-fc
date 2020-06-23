@@ -13,7 +13,7 @@
 #include "ModelState.h"
 #include "Storage.h"
 #include "Logger.h"
-#include "MathUtil.h"
+#include "Math/Utils.h"
 
 #if defined(ESP8266)
 #define ESPFC_GUARD 1

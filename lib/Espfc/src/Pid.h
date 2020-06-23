@@ -1,7 +1,7 @@
 #ifndef _ESPFC_PID_H_
 #define _ESPFC_PID_H_
 
-#include "MathUtil.h"
+#include "Math/Utils.h"
 #include "Filter.h"
 
 // bataflight scalers

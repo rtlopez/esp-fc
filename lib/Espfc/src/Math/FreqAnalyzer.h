@@ -1,7 +1,7 @@
 #ifndef _ESPFC_MATH_FREQ_ANALYZER_H_
 #define _ESPFC_MATH_FREQ_ANALYZER_H_
 
-#include "MathUtil.h"
+#include "Math/Utils.h"
 #include "Filter.h"
 
 namespace Espfc {
