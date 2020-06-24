@@ -1130,6 +1130,23 @@ class Msp
           if(!_model.isActive(MODE_ARMED)) _model.calibrateMag();
           break;
 
+        case MSP_VTX_CONFIG:
+          r.writeU8(0xff); // vtx type unknown
+          r.writeU8(0);    // band
+          r.writeU8(0);    // channel
+          r.writeU8(0);    // power
+          r.writeU8(0);    // status
+          r.writeU16(0);   // freq
+          r.writeU8(0);    // ready
+          r.writeU8(0);    // low power disarm
+          // 1.42
+          r.writeU16(0);   // pit mode freq
+          r.writeU8(0);    // vtx table available (no)
+          r.writeU8(0);    // vtx table bands
+          r.writeU8(0);    // vtx table channels
+          r.writeU8(0);    // vtx power levels
+          break;
+
         case MSP_DEBUG:
           for (int i = 0; i < 4; i++) {
             r.writeU16(_model.state.debug[i]);
