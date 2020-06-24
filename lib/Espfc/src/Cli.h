@@ -372,6 +372,8 @@ class Cli
         Param(PSTR("gyro_notch1_cutoff"), &c.gyroNotch1Filter.cutoff),
         Param(PSTR("gyro_notch2_freq"), &c.gyroNotch2Filter.freq),
         Param(PSTR("gyro_notch2_cutoff"), &c.gyroNotch2Filter.cutoff),
+        Param(PSTR("gyro_dyn_lpf_min"), &c.gyroDynLpfFilter.cutoff),
+        Param(PSTR("gyro_dyn_lpf_max"), &c.gyroDynLpfFilter.freq),
         Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
@@ -493,6 +495,8 @@ class Cli
         Param(PSTR("pid_dterm_lpf2_freq"), &c.dtermFilter2.freq),
         Param(PSTR("pid_dterm_notch_freq"), &c.dtermNotchFilter.freq),
         Param(PSTR("pid_dterm_notch_cutoff"), &c.dtermNotchFilter.cutoff),
+        Param(PSTR("pid_dterm_dyn_lpf_min"), &c.dtermDynLpfFilter.cutoff),
+        Param(PSTR("pid_dterm_dyn_lpf_max"), &c.dtermDynLpfFilter.freq),
 
         Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
         Param(PSTR("pid_iterm_limit"), &c.itermWindupPointPercent),

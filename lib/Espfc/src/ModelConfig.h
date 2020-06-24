@@ -783,13 +783,13 @@ class ModelConfig
       gyroFilter2 = FilterConfig(FILTER_PT1, 250, 0);
       gyroFilter3 = FilterConfig(FILTER_FIR2, 0, 0); // off
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 500, 200);
-      gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 400, 0); // off
-      gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 200, 0); // off
+      gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
+      gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
 
       dtermFilter = FilterConfig(FILTER_PT1, 90, 0);
       dtermFilter2 = FilterConfig(FILTER_PT1, 150, 0);
       dtermDynLpfFilter = FilterConfig(FILTER_PT1, 170, 70);
-      dtermNotchFilter = FilterConfig(FILTER_NOTCH, 150, 90);
+      dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
       accelFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
       magFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
