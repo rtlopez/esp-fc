@@ -197,7 +197,7 @@ class Model
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        case ESC_PROTOCOL_DSHOT1200:
+        //case ESC_PROTOCOL_DSHOT1200:
         case ESC_PROTOCOL_PROSHOT:
           config.output.async = false;
           break;

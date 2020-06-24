@@ -341,7 +341,7 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        case ESC_PROTOCOL_DSHOT1200:
+        //case ESC_PROTOCOL_DSHOT1200:
         default:
           return 0;
       }
@@ -359,7 +359,7 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        case ESC_PROTOCOL_DSHOT1200:
+        //case ESC_PROTOCOL_DSHOT1200:
         default:
           return 2048;
       }
@@ -384,7 +384,7 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_DSHOT150:  return (width / (div * DURATION_CLOCK / 2)) * 4;
         case ESC_PROTOCOL_DSHOT300:  return (width / (div * DURATION_CLOCK / 2)) * 2;
         case ESC_PROTOCOL_DSHOT600:  return (width / (div * DURATION_CLOCK / 2)) * 1;
-        case ESC_PROTOCOL_DSHOT1200: return (width / (div * DURATION_CLOCK / 2)) / 2;
+        //case ESC_PROTOCOL_DSHOT1200: return (width / (div * DURATION_CLOCK / 2)) / 2;
         case ESC_PROTOCOL_BRUSHED:
         case ESC_PROTOCOL_PWM:
         case ESC_PROTOCOL_ONESHOT125:
@@ -402,7 +402,7 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        case ESC_PROTOCOL_DSHOT1200:
+        //case ESC_PROTOCOL_DSHOT1200:
           return true;
         default:
           return false;

@@ -771,9 +771,6 @@ class ModelConfig
       baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
 
-      baroFilter.type = FILTER_BIQUAD;
-      baroFilter.freq = 25;
-
       loopSync = 1;
       mixerSync = 1;
 
@@ -796,13 +793,10 @@ class ModelConfig
       magFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
       yawFilter = FilterConfig(FILTER_PT1, 90, 0);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90, 0);
+      baroFilter = FilterConfig(FILTER_BIQUAD, 25);
 
       telemetry = 0;
       telemetryInterval = 1000;
-
-#if ESPFC_REVISION == 000000
-      debugMode = DEBUG_GYRO_SCALED;
-#endif
 
       softSerialGuard = false;
       serialRxGuard = false;
@@ -835,20 +829,16 @@ class ModelConfig
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
       //serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-#endif
-
-#if defined(ESP8266)
+#elif defined(ESP8266)
       serial[SERIAL_UART_0].id = SERIAL_UART_0;
       serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
       serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
       serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_250000;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
-      //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      //serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_NONE;
+      serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
+      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_SOFT_0].id = 30; // present as soft serial
       serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
@@ -873,15 +863,12 @@ class ModelConfig
       mixerType = MIXER_QUADX;
       yawReverse = 0;
 
-      //output.protocol = ESC_PROTOCOL_PWM;
-      output.protocol = ESC_PROTOCOL_ONESHOT125;
-      //output.protocol = ESC_PROTOCOL_MULTISHOT;
-      //output.protocol = ESC_PROTOCOL_BRUSHED;
+      output.protocol = ESC_PROTOCOL_DISABLED;
       //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
       //output.async = true;
       output.async = false;
-      output.servoRate = 0; // 50
+      output.servoRate = 0; // default 50, 0 to disable
 
       // input config
       input.ppmMode = RISING;
@@ -1028,10 +1015,26 @@ class ModelConfig
       wireless.ssidAp[0] = 0;
       wireless.passAp[0] = 0;
       wireless.port = 1111;
+
+// development settings
+#if !defined(ESPFC_REVISION)
+  #if defined(ESP8266)
+      debugMode = DEBUG_GYRO_SCALED;
+      serial[SERIAL_UART_1].id = SERIAL_UART_1;
+      serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_250000;
+      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
+      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      //serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+  #endif
+    quad();
+#endif
     }
 
     void quad()
     {
+      output.protocol = ESC_PROTOCOL_DSHOT150;
+
       conditions[0].id = MODE_ARMED;
       conditions[0].ch = AXIS_AUX_1 + 0; // aux1
       conditions[0].min = 1250;
