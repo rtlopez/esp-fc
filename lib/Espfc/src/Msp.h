@@ -162,7 +162,7 @@ class Msp
           r.writeU16(lrintf(_model.state.loopTimer.getDeltaReal() * 1000000.f));
           r.writeU16(_model.state.i2cErrorCount); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
-          r.writeU16(_model.accelActive() << 0 | _model.baroActive() << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | _model.gyroActive() << 5);
+          r.writeU16(_model.accelActive() | _model.baroActive() << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | _model.gyroActive() << 5);
           r.writeU32(_model.state.modeMask); // flight mode flags
           r.writeU8(0); // pid profile
           r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
@@ -170,7 +170,8 @@ class Msp
             r.writeU8(1); // max profile count
             r.writeU8(0); // current rate profile index
           } else {  // MSP_STATUS
-            r.writeU16(_model.state.gyroTimer.interval); // gyro cycle time
+            //r.writeU16(_model.state.gyroTimer.interval); // gyro cycle time
+            r.writeU16(0);
           }
 
           // flight mode flags (above 32 bits)
@@ -179,6 +180,7 @@ class Msp
           // Write arming disable flags
           r.writeU8(ARMING_DISABLED_FLAGS_COUNT);  // 1 byte, flag count
           r.writeU32(_model.state.armingDisabledFlags);  // 4 bytes, flags
+          r.writeU8(0); // rebbot required
           break;
 
         case MSP_NAME:
@@ -215,6 +217,10 @@ class Msp
           }
           break;
 
+        case MSP_MODE_RANGES_EXTRA:
+          r.writeU8(0);
+          break;
+
         case MSP_SET_MODE_RANGE:
           {
             size_t i = m.readU8();
@@ -237,6 +243,7 @@ class Msp
           r.writeU16(0); // mah drawn
           r.writeU16(0); // rssi
           r.writeU16(0); // amperage
+          r.writeU16(_model.state.battery.voltage * 10);  // voltage: TODO to volts
           break;
 
         case MSP_FEATURE_CONFIG:
@@ -251,19 +258,28 @@ class Msp
         case MSP_BATTERY_CONFIG:
           r.writeU8(34);  // vbatmincellvoltage
           r.writeU8(42);  // vbatmaxcellvoltage
-          r.writeU8(_model.config.vbatCellWarning);  // vbatwarningcellvoltage
+          r.writeU8(_model.config.vbatCellWarning);  // vbatwarningcellvoltage // TODO to volts
           r.writeU16(0); // batteryCapacity
           r.writeU8(1);  // voltageMeterSource
           r.writeU8(0);  // currentMeterSource
+          r.writeU16(340); // vbatmincellvoltage
+          r.writeU16(420); // vbatmaxcellvoltage
+          r.writeU16(_model.config.vbatCellWarning * 10); // vbatwarningcellvoltage // TODO to volts
           break;
 
         case MSP_SET_BATTERY_CONFIG:
           m.readU8();  // vbatmincellvoltage
           m.readU8();  // vbatmaxcellvoltage
-          _model.config.vbatCellWarning = m.readU8();  // vbatwarningcellvoltage
+          _model.config.vbatCellWarning = m.readU8();  // vbatwarningcellvoltage // TODO to volts
           m.readU16(); // batteryCapacity
           m.readU8();  // voltageMeterSource
           m.readU8();  // currentMeterSource
+          if(m.remain() >= 6)
+          {
+            m.readU16();
+            m.readU16();
+            _model.config.vbatCellWarning = (m.readU16() + 5) / 10;
+          }
           break;
 
         case MSP_BATTERY_STATE:
@@ -273,11 +289,12 @@ class Msp
 
           // battery state
           r.writeU8(_model.state.battery.voltage); // in 0.1V steps
-          r.writeU16(0);  // milliamp hours drawn from battery
+          r.writeU16(0); // milliamp hours drawn from battery
           r.writeU16(0); // send current in 0.01 A steps, range is -320A to 320A
 
           // battery alerts
           r.writeU8(0);
+          r.writeU16(_model.state.battery.voltage * 10); // FIXME: in volts
           break;
 
         case MSP_VOLTAGE_METERS:
@@ -295,7 +312,7 @@ class Msp
           r.writeU8(1); // num voltage sensors
           for(int i = 0; i < 1; i++)
           {
-            r.writeU8(5); // frame size
+            r.writeU8(5); // frame size (5)
             r.writeU8(i + 10); // id (10-19 vbat adc)
             r.writeU8(0); // type resistor divider
             r.writeU8(_model.config.vbatScale); // scale
@@ -353,14 +370,31 @@ class Msp
 
         case MSP_SENSOR_ALIGNMENT:
           r.writeU8(_model.config.gyroAlign); // gyro align
-          r.writeU8(_model.config.accelAlign); // acc align
-          r.writeU8(_model.config.magAlign); // mag align
+          r.writeU8(_model.config.gyroAlign); // acc align
+          r.writeU8(_model.config.magAlign);  // mag align
+          //1.41+
+          r.writeU8(1); // gyro detection mask GYRO_1_MASK
+          r.writeU8(_model.config.gyroAlign);
+          r.writeU8(0); // default align
           break;
 
         case MSP_SET_SENSOR_ALIGNMENT:
-          _model.config.gyroAlign = m.readU8(); // gyro align
-          _model.config.accelAlign = m.readU8(); // acc align
-          _model.config.magAlign = m.readU8(); // mag align
+          {
+            uint8_t gyroAlign = m.readU8(); // gyro align
+            m.readU8(); // discard deprecated acc align
+            _model.config.magAlign = m.readU8(); // mag align
+            if(m.remain() >= 3)
+            {
+              m.readU8(); // gyro to use
+              _model.config.gyroAlign = m.readU8(); // gyro 1 align
+              m.readU8(); // gyro 2 align
+            }
+            else
+            {
+              _model.config.gyroAlign = gyroAlign;
+            }
+            _model.config.accelAlign = _model.config.gyroAlign;
+          }
           break;
 
         case MSP_CF_SERIAL_CONFIG:
@@ -409,7 +443,7 @@ class Msp
         case MSP_BLACKBOX_CONFIG:
           r.writeU8(1); // Blackbox supported
           r.writeU8(_model.config.blackboxDev); // device serial or none
-          r.writeU8(1); // blackboxGetRateNum());
+          r.writeU8(1); // blackboxGetRateNum()); // unused
           r.writeU8(1); // blackboxGetRateDenom());
           r.writeU16(_model.config.blackboxPdenom); // p_denom
           break;
@@ -437,12 +471,14 @@ class Msp
           break;
 
         case MSP_ALTITUDE:
-          r.writeU32(lrintf(_model.state.baroAltitude * 100.f));    // [cm]
-          r.writeU32(0);
+          r.writeU32(lrintf(_model.state.baroAltitude * 100.f));    // alt [cm]
+          r.writeU16(0); // vario
           break;
 
         case MSP_BEEPER_CONFIG:
           r.writeU32(~_model.config.buzzer.beeperMask); // beeper mask
+          r.writeU8(0);  // dshot beacon tone
+          r.writeU32(0); // dshot beacon off flags
           break;
 
         case MSP_SET_BEEPER_CONFIG:
@@ -469,13 +505,23 @@ class Msp
         case MSP_MOTOR_CONFIG:
           r.writeU16(_model.config.output.minThrottle); // minthrottle
           r.writeU16(_model.config.output.maxThrottle); // maxthrottle
-          r.writeU16(_model.config.output.minCommand); // mincommand
+          r.writeU16(_model.config.output.minCommand);  // mincommand
+          r.writeU8(_model.state.currentMixer.count);   // motor count
+          // 1.42+
+          r.writeU8(14); // motor pole count
+          r.writeU8(0); // dshot telemtery
+          r.writeU8(0); // esc sensor
           break;
 
         case MSP_SET_MOTOR_CONFIG:
           _model.config.output.minThrottle = m.readU16(); // minthrottle
           _model.config.output.maxThrottle = m.readU16(); // maxthrottle
-          _model.config.output.minCommand = m.readU16(); // mincommand
+          _model.config.output.minCommand = m.readU16();  // mincommand
+          if(m.remain() >= 2)
+          {
+            m.readU8();
+            m.readU8();
+          }
           _model.reload();
           break;
 
@@ -494,7 +540,7 @@ class Msp
         case MSP_RC_DEADBAND:
           r.writeU8(_model.config.input.deadband);
           r.writeU8(0); // yaw deadband
-          r.writeU8(0); // alt hod deadband
+          r.writeU8(0); // alt hold deadband
           r.writeU16(0); // deadband 3d throttle
           break;
 
@@ -527,6 +573,7 @@ class Msp
           r.writeU8(0); // rc_smoothing_input_type
           r.writeU8(0); // rc_smoothing_derivative_type
           r.writeU8(0); // usb type
+          // 1.42+
           r.writeU8(0); // rc_smoothing_auto_factor
 
           break;
@@ -539,15 +586,36 @@ class Msp
           m.readU8(); // spectrum bind
           _model.config.input.minRc = m.readU16(); //min_us
           _model.config.input.maxRc = m.readU16(); //max_us
-          _model.config.input.interpolationMode = m.readU8(); // rc interpolation
-          _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
-          m.readU16(); // airmode activate threshold
-          m.readU8(); // rx spi prot
-          m.readU32(); // rx spi id
-          m.readU8(); // rx spi chan count
-          m.readU8(); // fpv camera angle
-          m.readU8(); // rc iterpolation channels
-          while(m.remain()) m.readU8();
+          if (m.remain() >= 4) {
+            _model.config.input.interpolationMode = m.readU8(); // rc interpolation
+             _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
+            m.readU16(); // airmode activate threshold
+          }
+          if (m.remain() >= 6) {
+            m.readU8(); // rx spi prot
+            m.readU32(); // rx spi id
+            m.readU8(); // rx spi chan count
+          }
+          if (m.remain() >= 1) {
+            m.readU8(); // fpv camera angle
+          }
+          // 1.40+
+          if (m.remain() >= 6) {
+            m.readU8(); // rc iterpolation channels
+            m.readU8(); // rc_smoothing_type
+            m.readU8(); // rc_smoothing_input_cutoff
+            m.readU8(); // rc_smoothing_derivative_cutoff
+            m.readU8(); // rc_smoothing_input_type
+            m.readU8(); // rc_smoothing_derivative_type
+          }
+          if (m.remain() >= 1) {
+            m.readU8(); // usb type
+          }
+          // 1.42+
+          if (m.remain() >= 1) {
+            m.readU8(); // rc_smoothing_auto_factor
+          }
+
           _model.reload();
           break;
 
@@ -614,6 +682,16 @@ class Msp
           r.writeU8(_model.config.input.rate[AXIS_YAW]); // yaw rate
           r.writeU8(_model.config.input.rate[AXIS_PITCH]); // pitch rate
           r.writeU8(_model.config.input.expo[AXIS_PITCH]); // pitch expo
+          // 1.41+
+          r.writeU8(0); // throtle limit type (off)
+          r.writeU8(100); // throtle limit percent (100%)
+          //1.42+
+          r.writeU16(1998); // rate limit roll
+          r.writeU16(1998); // rate limit pitch
+          r.writeU16(1998); // rate limit yaw
+          // 1.43+
+          //r.writeU8(0); // rates type // TODO: requires support
+
           break;
 
         case MSP_SET_RC_TUNING:
@@ -718,6 +796,9 @@ class Msp
           r.writeU8(0); // sbasMode
           r.writeU8(0); // autoConfig
           r.writeU8(0); // autoBaud
+          // 1.43+
+          //m.writeU8(0); // gps_set_home_point_once
+          //m.writeU8(0); // gps_ublox_use_galileo
           break;
 
         case MSP_COMPASS_CONFIG:
@@ -742,7 +823,22 @@ class Msp
           r.writeU8(_model.config.gyroFilter.type);           // lowpass1 type
           r.writeU8(_model.config.gyroFilter2.type);          // lowpass2 type
           r.writeU16(_model.config.dtermFilter2.freq);        // dterm lopwass2 freq
-
+          // 1.41+
+          r.writeU8(_model.config.dtermFilter2.type);         // dterm lopwass2 type
+          r.writeU16(_model.config.gyroDynLpfFilter.cutoff);  // dyn lpf gyro min
+          r.writeU16(_model.config.gyroDynLpfFilter.freq);    // dyn lpf gyro max
+          r.writeU16(_model.config.dtermDynLpfFilter.cutoff); // dyn lpf dterm min
+          r.writeU16(_model.config.dtermDynLpfFilter.freq);   // dyn lpf dterm max
+          // gyro analyse
+          r.writeU8(0);  // deprecated dyn notch range
+          r.writeU8(0);  // dyn_notch_width_percent
+          r.writeU16(0); // dyn_notch_q
+          r.writeU16(0); // dyn_notch_min_hz
+          // rpm filter
+          r.writeU8(0);  // gyro_rpm_notch_harmonics
+          r.writeU8(0);  // gyro_rpm_notch_min
+          // 1.43+
+          //r.writeU16(0); // dyn_notch_max_hz
 
           break;
 
@@ -771,6 +867,26 @@ class Msp
             _model.config.gyroFilter.type = m.readU8();
             _model.config.gyroFilter2.type = m.readU8();
             _model.config.dtermFilter2.freq = m.readU16();
+          }
+          // 1.41+
+          if (m.remain() >= 9) {
+            _model.config.dtermFilter2.type = m.readU8();
+            _model.config.gyroDynLpfFilter.cutoff = m.readU16();  // dyn gyro lpf min
+            _model.config.gyroDynLpfFilter.freq = m.readU16();    // dyn gyro lpf max
+            _model.config.dtermDynLpfFilter.cutoff = m.readU16(); // dyn dterm lpf min
+            _model.config.dtermDynLpfFilter.freq = m.readU16();   // dyn dterm lpf min
+          }
+          if (m.remain() >= 8) {
+            m.readU8();  // deprecated dyn_notch_range
+            m.readU8();  // dyn_notch_width_percent
+            m.readU16(); // dyn_notch_q
+            m.readU16(); // dyn_notch_min_hz
+            m.readU8();  // gyro_rpm_notch_harmonics
+            m.readU8();  // gyro_rpm_notch_min
+          }
+          // 1.43+
+          if (m.remain() >= 1) {
+            m.readU16(); // dyn_notch_max_hz
           }
           _model.reload();
           break;
@@ -802,35 +918,51 @@ class Msp
           _model.reload();
           break;
 
-        case MSP_PID_ADVANCED:
+        case MSP_PID_ADVANCED: /// !!!FINISHED HERE!!!
           r.writeU16(0);
           r.writeU16(0);
           r.writeU16(0); // was pidProfile.yaw_p_limit
           r.writeU8(0); // reserved
-          r.writeU8(0); //vbatPidCompensation;
-          r.writeU8(0); //setpointRelaxRatio;
-          r.writeU8((uint8_t)std::min(_model.config.dtermSetpointWeight, (int16_t)255));
+          r.writeU8(0); // vbatPidCompensation;
+          r.writeU8(0); // feedForwardTransition;
+          r.writeU8((uint8_t)std::min(_model.config.dtermSetpointWeight, (int16_t)255)); // was low byte of dtermSetpointWeight
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
-          r.writeU16(0); //rateAccelLimit;
-          r.writeU16(0); //yawRateAccelLimit;
+          r.writeU16(0); // rateAccelLimit;
+          r.writeU16(0); // yawRateAccelLimit;
           r.writeU8(_model.config.angleLimit); // levelAngleLimit;
           r.writeU8(0); // was pidProfile.levelSensitivity
-          r.writeU16(0); //itermThrottleThreshold;
-          r.writeU16(0); //itermAcceleratorGain;
+          r.writeU16(0); // itermThrottleThreshold;
+          r.writeU16(0); // itermAcceleratorGain;
           r.writeU16(_model.config.dtermSetpointWeight);
-          r.writeU8(0); //iterm rotation
-          r.writeU8(0); //smart feed forward
-          r.writeU8(0); //iterm relax
-          r.writeU8(0); //iterm ralx type
-          r.writeU8(0); //abs control gain
-          r.writeU8(0); //throttle boost
-          r.writeU8(0); //acro trainer max angle
+          r.writeU8(0); // iterm rotation
+          r.writeU8(0); // smart feed forward
+          r.writeU8(0); // iterm relax
+          r.writeU8(0); // iterm ralx type
+          r.writeU8(0); // abs control gain
+          r.writeU8(0); // throttle boost
+          r.writeU8(0); // acro trainer max angle
           r.writeU16(_model.config.pid[PID_ROLL].F); //pid roll f
           r.writeU16(_model.config.pid[PID_PITCH].F); //pid pitch f
           r.writeU16(_model.config.pid[PID_YAW].F); //pid yaw f
-          r.writeU8(0); //antigravity mode
+          r.writeU8(0); // antigravity mode
+          // 1.41+
+          r.writeU8(0); // d min roll
+          r.writeU8(0); // d min pitch
+          r.writeU8(0); // d min yaw
+          r.writeU8(0); // d min gain
+          r.writeU8(0); // d min advance
+
+          r.writeU8(0); // use_integrated_yaw
+          r.writeU8(0); // integrated_yaw_relax
+          // 1.42+
+          r.writeU8(0); // iterm_relax_cutoff
+          // 1.43+
+          //r.writeU8(0); // motor_output_limit
+          //r.writeU8(0); // auto_profile_cell_count
+          //r.writeU8(0); // idle_min_rpm
+
           break;
 
         case MSP_SET_PID_ADVANCED:
@@ -870,7 +1002,26 @@ class Msp
             _model.config.pid[PID_YAW].F = m.readU16(); // pid yaw f
             m.readU8(); //antigravity mode
           }
-
+          // 1.41+
+          if (m.remain() >= 7) {
+            m.readU8(); // d min roll
+            m.readU8(); // d min pitch
+            m.readU8(); // g min yaw
+            m.readU8(); // d min gain
+            m.readU8(); // d min advance
+            m.readU8(); // use_integrated_yaw
+            m.readU8(); // integrated_yaw_relax
+          }
+          // 1.42+
+          if (m.remain() >= 1) {
+            m.readU8(); // iterm_relax_cutoff
+          }
+          // 1.43+
+          //if (m.remain() >= 3) {
+          //  m.readU8(); // motor_output_limit
+          //  m.readU8(); // auto_profile_cell_count
+          //  m.readU8(); // idle_min_rpm
+          //}
           _model.reload();
           break;
 
@@ -881,7 +1032,7 @@ class Msp
           }
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(degrees(_model.state.gyro[i])));
+            r.writeU16(lrintf(Math::toDeg(_model.state.gyro[i])));
           }
           for (int i = 0; i < 3; i++)
           {

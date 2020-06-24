@@ -58,6 +58,7 @@ class Pid
       {
         //dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
         dTerm = Kd * dScale * ((prevMeasure - measure) * rate);
+        dTerm = dtermDynLpfFilter.update(dTerm);
         dTerm = dtermNotchFilter.update(dTerm);
         dTerm = dtermFilter.update(dTerm);
         dTerm = dtermFilter2.update(dTerm);
@@ -110,6 +111,7 @@ class Pid
     Filter dtermFilter;
     Filter dtermFilter2;
     Filter dtermNotchFilter;
+    Filter dtermDynLpfFilter;
     Filter ptermFilter;
     Filter ftermFilter;
 

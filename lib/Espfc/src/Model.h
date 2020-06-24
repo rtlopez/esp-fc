@@ -324,6 +324,7 @@ class Model
         state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
         state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
+        state.gyroDynLpfFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), state.gyroTimer.rate);
         state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
         state.gyroFilterImu[i].begin(FilterConfig(FILTER_PT1_FIR2, state.accelTimer.rate / 2), state.gyroTimer.rate);
         if(magActive())
@@ -380,6 +381,7 @@ class Model
         pid.oLimit = Math::toRad(config.angleRateLimit);
         pid.rate = state.loopTimer.rate;
         pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        pid.dtermDynLpfFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), state.loopTimer.rate);
         pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         pid.ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
         //pid.iLimit = 0.3f; // ROBOT

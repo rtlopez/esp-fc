@@ -96,6 +96,7 @@ class GyroSensor: public BaseSensor
           }
           // dynamic filter end
 
+          _model.state.gyro.set(i, _model.state.gyroDynLpfFilter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
