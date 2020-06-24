@@ -218,7 +218,14 @@ class Msp
           break;
 
         case MSP_MODE_RANGES_EXTRA:
-          r.writeU8(0);
+          r.writeU8(ACTUATOR_CONDITIONS);
+          for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+          {
+            r.writeU8(_model.config.conditions[i].id);
+            r.writeU8(_model.config.conditions[i].logicMode);
+            r.writeU8(_model.config.conditions[i].linkId);
+          }
+
           break;
 
         case MSP_SET_MODE_RANGE:
@@ -230,6 +237,10 @@ class Msp
               _model.config.conditions[i].ch = m.readU8() + AXIS_AUX_1;
               _model.config.conditions[i].min = m.readU8() * 25 + 900;
               _model.config.conditions[i].max = m.readU8() * 25 + 900;
+              if(m.remain() >= 2) {
+                _model.config.conditions[i].logicMode = m.readU8(); // mode logic
+                _model.config.conditions[i].linkId = m.readU8(); // link to
+              }
             }
             else
             {

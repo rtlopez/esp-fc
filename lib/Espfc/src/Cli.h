@@ -160,6 +160,10 @@ class Cli
           stream.print(ac.min);
           stream.print(' ');
           stream.print(ac.max);
+          stream.print(' ');
+          stream.print(ac.logicMode);
+          stream.print(' ');
+          stream.print(ac.linkId);
         }
 
         void print(Stream& stream, const MixerEntry& me) const
@@ -268,6 +272,8 @@ class Cli
           if(args[3]) ac.ch = String(args[3]).toInt();
           if(args[4]) ac.min = String(args[4]).toInt();
           if(args[5]) ac.max = String(args[5]).toInt();
+          if(args[6]) ac.max = String(args[6]).toInt();
+          if(args[7]) ac.max = String(args[7]).toInt();
         }
 
         void write(MixerEntry& ac, const char ** args) const
