@@ -10,7 +10,6 @@ extern "C" {
 #include "platform.h"
 }
 
-// TODO: update to 1.37 https://github.com/betaflight/betaflight/compare/v3.2.0...v3.3.0
 static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
 static const char * boardIdentifier = "ESPF";
 

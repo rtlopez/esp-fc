@@ -1048,19 +1048,19 @@ class ModelConfig
       conditions[1].ch = AXIS_AUX_1 + 0; // aux1
       conditions[1].min = 1700;
       conditions[1].max = 2100;
-      conditions[0].logicMode = 0;
-      conditions[0].linkId = 0;
+      conditions[1].logicMode = 0;
+      conditions[1].linkId = 0;
 
       conditions[2].id = MODE_AIRMODE;
       conditions[2].ch = AXIS_AUX_1 + 0; // aux1
       conditions[2].min = 1300;
       conditions[2].max = 2100;
-      conditions[0].logicMode = 0;
-      conditions[0].linkId = 0;
+      conditions[2].logicMode = 0;
+      conditions[2].linkId = 0;
 
       scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
-      scaler[1].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
     }
 
     void brobot()
