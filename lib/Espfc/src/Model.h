@@ -197,7 +197,7 @@ class Model
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        case ESC_PROTOCOL_DSHOT1200:
+        //case ESC_PROTOCOL_DSHOT1200:
         case ESC_PROTOCOL_PROSHOT:
           config.output.async = false;
           break;
@@ -251,7 +251,7 @@ class Model
       uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
 
       // allow dynamic filter only above 1k sampling rate
-      if(false && state.gyroRate >= 1000)
+      if(state.gyroRate >= 1000)
       {
         featureAllowMask |= FEATURE_DYNAMIC_FILTER;
       }
@@ -321,7 +321,11 @@ class Model
         state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
         state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
-        state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+        if(config.gyroDynLpfFilter.cutoff > 0) {
+          state.gyroDynLpfFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), state.gyroTimer.rate);
+        } else {
+          state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+        }
         state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
         state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
@@ -359,12 +363,15 @@ class Model
         pid.iLimit = 0.15f;
         pid.oLimit = 0.5f;
         pid.rate = state.loopTimer.rate;
-        pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
-        pid.dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
         pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
+        if(config.dtermDynLpfFilter.cutoff > 0) {
+          pid.dtermDynLpfFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), state.loopTimer.rate);
+        } else {
+          pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+        }
+        pid.dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
         pid.ftermFilter.begin(FilterConfig(FILTER_PT1, 15), state.loopTimer.rate);
         if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
-        else pid.ptermFilter.begin(); // no filter
         pid.begin();
       }
 
@@ -379,8 +386,6 @@ class Model
         pid.iLimit = Math::toRad(config.angleRateLimit) * 0.1f;
         pid.oLimit = Math::toRad(config.angleRateLimit);
         pid.rate = state.loopTimer.rate;
-        pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
-        pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         pid.ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
         //pid.iLimit = 0.3f; // ROBOT
         //pid.oLimit = 1.f;  // ROBOT

@@ -98,6 +98,11 @@ class GyroSensor: public BaseSensor
 
           _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
+          if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
+          {
+            _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+          }
+          _model.state.gyro.set(i, _model.state.gyroDynLpfFilter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));

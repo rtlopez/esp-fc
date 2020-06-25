@@ -21,8 +21,8 @@
 #define PID_PROCESS_DENOM_DEFAULT       1
 
 #define FC_FIRMWARE_NAME            "Betaflight"
-#define FC_VERSION_MAJOR            3  // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR            5  // increment when a minor release is made (small new feature, change etc)
+#define FC_VERSION_MAJOR            4  // increment when a major release is made (big new feature, etc)
+#define FC_VERSION_MINOR            2  // increment when a minor release is made (small new feature, change etc)
 #define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
 
 #define STR_HELPER(x) #x
@@ -58,9 +58,11 @@ extern const char * const targetVersion;
 #define XYZ_AXIS_COUNT 3
 #define DEBUG16_VALUE_COUNT 4
 
-//#define STATIC_UNIT_TESTED static
-//#define UNIT_TEST
+#ifdef UNIT_TEST
 #define STATIC_UNIT_TESTED
+#else
+#define STATIC_UNIT_TESTED static
+#endif
 
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
 #define UNUSED(v) ((void)v)

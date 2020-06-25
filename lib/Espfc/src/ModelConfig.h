@@ -355,6 +355,8 @@ class ActuatorCondition
     uint8_t ch;
     int16_t min;
     int16_t max;
+    uint8_t logicMode;
+    uint8_t linkId;
 };
 
 class SerialPortConfig
@@ -614,6 +616,7 @@ class ModelConfig
     FilterConfig gyroFilter3;
     FilterConfig gyroNotch1Filter;
     FilterConfig gyroNotch2Filter;
+    FilterConfig gyroDynLpfFilter;
 
     int8_t accelBus;
     int8_t accelDev;
@@ -648,6 +651,7 @@ class ModelConfig
     FilterConfig dtermFilter;
     FilterConfig dtermFilter2;
     FilterConfig dtermNotchFilter;
+    FilterConfig dtermDynLpfFilter;
     FilterConfig levelPtermFilter;
 
     int16_t dtermSetpointWeight;
@@ -769,55 +773,33 @@ class ModelConfig
       baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
 
-      baroFilter.type = FILTER_BIQUAD;
-      baroFilter.freq = 25;
-
       loopSync = 1;
       mixerSync = 1;
 
       fusion.mode = FUSION_MADGWICK;
       fusion.gain = 50;
 
-      gyroFilter.type = FILTER_PT1;
-      gyroFilter.freq = 90;
-      gyroFilter2.type = FILTER_PT1;
-      gyroFilter2.freq = 200;
-      gyroFilter3.type = FILTER_FIR2;
-      gyroFilter3.freq = 100;
+      gyroFilter = FilterConfig(FILTER_PT1, 100, 0);
+      gyroFilter2 = FilterConfig(FILTER_PT1, 250, 0);
+      gyroFilter3 = FilterConfig(FILTER_FIR2, 0, 0); // off
+      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 500, 200);
+      gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
+      gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
 
-      gyroNotch1Filter.type = FILTER_NOTCH;
-      gyroNotch1Filter.cutoff = 70;
-      gyroNotch1Filter.freq = 150;
-      gyroNotch2Filter.type = FILTER_NOTCH;
-      gyroNotch2Filter.cutoff = 150;
-      gyroNotch2Filter.freq = 300;
+      dtermFilter = FilterConfig(FILTER_PT1, 90, 0);
+      dtermFilter2 = FilterConfig(FILTER_PT1, 150, 0);
+      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 170, 70);
+      dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter.type = FILTER_BIQUAD;
-      accelFilter.freq = 15;
-
-      magFilter.type = FILTER_BIQUAD;
-      magFilter.freq = 15;
-
-      dtermFilter.type = FILTER_PT1;
-      dtermFilter.freq = 100;
-      dtermFilter2.type = FILTER_PT1;
-      dtermFilter2.freq = 200;
-
-      dtermNotchFilter.type = FILTER_BIQUAD;
-      dtermNotchFilter.cutoff = 90;
-      dtermNotchFilter.freq = 150;
-
-      yawFilter.type = FILTER_PT1;
-      yawFilter.freq = 90;
-
-      levelPtermFilter.type = FILTER_PT1;
-      levelPtermFilter.freq = 70;
+      accelFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
+      magFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
+      yawFilter = FilterConfig(FILTER_PT1, 90, 0);
+      levelPtermFilter = FilterConfig(FILTER_PT1, 90, 0);
+      baroFilter = FilterConfig(FILTER_BIQUAD, 25);
 
       telemetry = 0;
       telemetryInterval = 1000;
 
-      debugMode = DEBUG_NONE;
-      //debugMode = DEBUG_FFT_FREQ;
       softSerialGuard = false;
       serialRxGuard = false;
 
@@ -849,20 +831,16 @@ class ModelConfig
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
       //serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-#endif
-
-#if defined(ESP8266)
+#elif defined(ESP8266)
       serial[SERIAL_UART_0].id = SERIAL_UART_0;
       serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
       serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
       serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
+      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_NONE;
       serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
-      //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      //serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
 
       serial[SERIAL_SOFT_0].id = 30; // present as soft serial
       serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
@@ -887,15 +865,12 @@ class ModelConfig
       mixerType = MIXER_QUADX;
       yawReverse = 0;
 
-      //output.protocol = ESC_PROTOCOL_PWM;
-      output.protocol = ESC_PROTOCOL_ONESHOT125;
-      //output.protocol = ESC_PROTOCOL_MULTISHOT;
-      //output.protocol = ESC_PROTOCOL_BRUSHED;
+      output.protocol = ESC_PROTOCOL_DISABLED;
       //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
       //output.async = true;
       output.async = false;
-      output.servoRate = 0; // 50
+      output.servoRate = 0; // default 50, 0 to disable
 
       // input config
       input.ppmMode = RISING;
@@ -935,17 +910,17 @@ class ModelConfig
       input.deadband = 3; // us
 
       // PID controller config
-      pid[PID_ROLL]  = { .P = 46, .I = 45, .D = 25, .F = 0 };
-      pid[PID_PITCH] = { .P = 50, .I = 50, .D = 27, .F = 0 };
-      pid[PID_YAW]   = { .P = 65, .I = 45, .D = 10, .F = 0 };
+      pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
+      pid[PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
+      pid[PID_YAW]   = { .P = 30, .I = 90, .D =  0, .F = 90 };
       pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
 
-      pid[PID_ALT]   = { .P = 50, .I =  0, .D =  0, .F = 0 };
-      pid[PID_POS]   = { .P = 15, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
-      pid[PID_POSR]  = { .P = 32, .I = 14, .D = 53, .F = 0 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
-      pid[PID_NAVR]  = { .P = 25, .I = 33, .D = 83, .F = 0 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
-      pid[PID_MAG]   = { .P = 40, .I =  0, .D =  0, .F = 0 };
-      pid[PID_VEL]   = { .P = 55, .I = 55, .D = 75, .F = 0 };
+      pid[PID_ALT]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
+      pid[PID_POS]   = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
+      pid[PID_POSR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
+      pid[PID_NAVR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
+      pid[PID_MAG]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
+      pid[PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
       itermWindupPointPercent = 30;
       dtermSetpointWeight = 30;
@@ -1042,28 +1017,50 @@ class ModelConfig
       wireless.ssidAp[0] = 0;
       wireless.passAp[0] = 0;
       wireless.port = 1111;
+
+// development settings
+#if !defined(ESPFC_REVISION)
+  #if defined(ESP8266)
+      debugMode = DEBUG_GYRO_SCALED;
+      serial[SERIAL_UART_1].id = SERIAL_UART_1;
+      serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_250000;
+      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
+      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
+      //serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+  #endif
+    quad();
+#endif
     }
 
     void quad()
     {
+      output.protocol = ESC_PROTOCOL_DSHOT150;
+
       conditions[0].id = MODE_ARMED;
       conditions[0].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[0].min = 1250;
+      conditions[0].min = 1300;
       conditions[0].max = 2100;
+      conditions[0].logicMode = 0;
+      conditions[0].linkId = 0;
 
       conditions[1].id = MODE_ANGLE;
       conditions[1].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[1].min = 1900;
+      conditions[1].min = 1700;
       conditions[1].max = 2100;
+      conditions[1].logicMode = 0;
+      conditions[1].linkId = 0;
 
       conditions[2].id = MODE_AIRMODE;
       conditions[2].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[2].min = 1250;
+      conditions[2].min = 1300;
       conditions[2].max = 2100;
+      conditions[2].logicMode = 0;
+      conditions[2].linkId = 0;
 
       scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
-      scaler[1].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
     }
 
     void brobot()

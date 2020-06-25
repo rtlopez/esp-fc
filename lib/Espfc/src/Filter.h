@@ -74,9 +74,11 @@ class Filter
     {
       _type = (FilterType)config.type;
       _rate = rate;
-      _freq = Math::clamp((int)config.freq, 0, _rate / 2); // adj cut freq below nyquist rule
+      _freq   = Math::clamp((int)config.freq, 0, _rate / 2);   // adj cut freq below nyquist rule
       _cutoff = Math::clamp((int)config.cutoff, 0, _rate / 2); // adj cut freq below nyquist rule
       _cutoff = Math::clamp(_cutoff, 0, _freq - 10); // sanitize cutoff to be slightly below filter freq
+      bool biquad = _type == FILTER_NOTCH || _type == FILTER_NOTCH_DF1 || _type == FILTER_BPF;
+      if(biquad && (_cutoff == 0 || _cutoff > _freq)) _type = FILTER_NONE; // invalid biquad config, turn off
       if(_freq == 0) _type = FILTER_NONE; // turn off if filter freq equals zero
       switch(_type)
       {
@@ -155,7 +157,9 @@ class Filter
       return sqrtf(powf(2, octaves)) / (powf(2, octaves) - 1);
     }
 
+#if !defined(UNIT_TEST)
   private:
+#endif
     void initPt1()
     {
       float rc = 1.f / (2.f * Math::pi() * _freq);
@@ -283,7 +287,7 @@ class Filter
       _state.bq.a2 = a2 / a0;
     }
 
-    float updateBiquadDF1(float v) ICACHE_RAM_ATTR
+    float updateBiquadDF1(float v) /* ICACHE_RAM_ATTR */
     {
       /* compute result */
       const float result =
@@ -304,7 +308,7 @@ class Filter
       return result;
     }
 
-    float updateBiquadDF2(float v) ICACHE_RAM_ATTR
+    float updateBiquadDF2(float v) /* ICACHE_RAM_ATTR */
     {
       const float result = _state.bq.b0 * v + _state.bq.x1;
       _state.bq.x1 = _state.bq.b1 * v - _state.bq.a1 * result + _state.bq.x2;
