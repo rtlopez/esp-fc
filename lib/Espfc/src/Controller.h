@@ -2,6 +2,7 @@
 #define _ESPFC_CONTROLLER_H_
 
 #include "Model.h"
+#include "Math/Utils.h"
 
 #define SETPOINT_RATE_LIMIT 1998.0f
 #define RC_RATE_INCREMENTAL 14.54f
@@ -112,6 +113,9 @@ class Controller
         );
         _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL]);
         _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
+        // disable fterm in angle mode
+        _model.state.innerPid[AXIS_ROLL].fScale = 0.f;
+        _model.state.innerPid[AXIS_PITCH].fScale = 0.f;
       }
       else
       {
@@ -136,7 +140,7 @@ class Controller
       for(size_t i = 0; i <= AXIS_YAW; ++i)
       {
         _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i]) * tpaFactor;
-        //_model.state.debug[i] = lrintf(_model.state.innerPid[i].iTerm * 1000);
+        //_model.state.debug[i] = lrintf(_model.state.innerPid[i].fTerm * 1000);
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
     }
@@ -144,7 +148,7 @@ class Controller
     float getTpaFactor() const
     {
       if(_model.config.tpaScale == 0) return 1.f;
-      float t = constrain(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
+      float t = Math::clamp(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
       return Math::map(t, (float)_model.config.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.tpaScale * 0.01f));
     }
 
@@ -164,6 +168,8 @@ class Controller
 
     float calculateSetpointRate(int axis, float input)
     {
+      input = Math::clamp(input, -0.995f, 0.995f); // limit input
+
       if(axis == AXIS_YAW) input *= -1.f;
 
       float rcRate = _model.config.input.rate[axis] / 100.0f;
@@ -174,20 +180,20 @@ class Controller
         rcRate += RC_RATE_INCREMENTAL * (rcRate - 2.0f);
       }
 
-      const float inputAbs = abs(input);
+      const float inputAbs = fabsf(input);
       if(rcExpo)
       {
-        const float expof = rcExpo / 100.0f;
+        const float expof = rcExpo * 0.01f;
         input = input * power3(inputAbs) * expof + input * (1.f - expof);
       }
 
       float angleRate = 200.0f * rcRate * input;
       if (_model.config.input.superRate[axis])
       {
-        const float rcSuperfactor = 1.0f / (constrain(1.0f - (inputAbs * (_model.config.input.superRate[axis] / 100.0f)), 0.01f, 1.00f));
+        const float rcSuperfactor = 1.0f / (Math::clamp(1.0f - (inputAbs * (_model.config.input.superRate[axis] * 0.01f)), 0.01f, 1.00f));
         angleRate *= rcSuperfactor;
       }
-      return radians(constrain(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)
+      return radians(Math::clamp(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)
     }
 
   private:

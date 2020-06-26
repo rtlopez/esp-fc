@@ -432,8 +432,8 @@ void test_pid_update_f()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.fTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, result1);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.5f, pid.fTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.5f, result1);
 
     float result2 = pid.update(0.0f, 0.0f);
 
@@ -442,15 +442,15 @@ void test_pid_update_f()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.5f, pid.fTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.5f, result2);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.fTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, result2);
 }
 
 void test_pid_update_sum()
 {
     Pid pid;
     ensure(pid);
-    gain(pid, 1, 100, 0.1f, 0.1f);
+    gain(pid, 1, 100, 0.1f, 0.01f);
     pid.begin();
 
     float result = pid.update(0.1f, 0.f);
@@ -460,25 +460,25 @@ void test_pid_update_sum()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.1f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.1f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, pid.fTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.8f, result);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.1f, pid.fTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.3f, result);
 }
 
 void test_pid_update_sum_limit()
 {
     Pid pid;
     ensure(pid);
-    gain(pid, 3, 100, 0.01f, 0.01f);
+    gain(pid, 1, 100, 0.01f, 0.01f);
     pid.begin();
 
     float result = pid.update(0.5f, 0.f);
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.error);
 
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.5f, pid.pTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.5f, pid.fTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.fTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, result);
 }
 

@@ -370,7 +370,7 @@ class Model
           pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         }
         pid.dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
-        pid.ftermFilter.begin(FilterConfig(FILTER_PT1, 15), state.loopTimer.rate);
+        pid.ftermFilter.begin(FilterConfig(FILTER_PT1, 20), state.loopTimer.rate);
         if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
         pid.begin();
       }

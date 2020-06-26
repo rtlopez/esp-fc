@@ -23,6 +23,10 @@ class Input
     {
       _device = Hardware::getInputDevice(_model);
       setFailsafe();
+      for(size_t i = 0; i < INTERPOLETE_COUNT; i++)
+      {
+        _filter[i].begin(FilterConfig(FILTER_PT1, 30), _model.state.loopTimer.rate);
+      }
       return 1;
     }
 
@@ -104,6 +108,7 @@ class Input
               {
                 float prev = (float)_get(i, 1);
                 val =_interpolate(prev, val, step);
+                val = _filter[i].update(val);
               }
               _model.state.inputUs[i] = val;
             }
@@ -181,6 +186,7 @@ class Input
     int16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];
     InputDevice * _device;
     static const size_t INTERPOLETE_COUNT = 4;
+    Filter _filter[INTERPOLETE_COUNT];
 };
 
 }

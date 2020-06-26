@@ -8,7 +8,7 @@
 #define PTERM_SCALE_BETAFLIGHT 0.032029f
 #define ITERM_SCALE_BETAFLIGHT 0.244381f
 #define DTERM_SCALE_BETAFLIGHT 0.000529f
-#define FTERM_SCALE_BETAFLIGHT 0.013754f
+#define FTERM_SCALE_BETAFLIGHT 0.00013754f
 
 #define PTERM_SCALE (PTERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.00183 = 0.032029f * 57.29 / 1000
 #define ITERM_SCALE (ITERM_SCALE_BETAFLIGHT * RAD_TO_DEG * 0.001f) // ~ 0.014f
@@ -70,7 +70,7 @@ class Pid
 
       if(Kf > 0.f && fScale > 0.f)
       {
-        fTerm = Kf * fScale * ((prevSetpoint - setpoint) * rate);
+        fTerm = Kf * fScale * ((setpoint - prevSetpoint) * rate);
         fTerm = ftermFilter.update(fTerm);
       }
       else
