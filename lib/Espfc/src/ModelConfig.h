@@ -1023,7 +1023,7 @@ class ModelConfig
   #if defined(ESP8266)
       debugMode = DEBUG_GYRO_SCALED;
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_250000;
+      //serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_250000;
       serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
       //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;

@@ -16,7 +16,8 @@ class Timer
       this->interval = interval;
       this->rate = 1000000UL / interval;
       this->denom = 1;
-      this->intervalf = this->delta = this->interval * 0.000001f;
+      this->delta = this->interval;
+      this->intervalf = this->interval * 0.000001f;
       iteration = 0;
       return 1;
     }
@@ -26,7 +27,8 @@ class Timer
       this->rate = rate / denom;
       this->interval = 1000000UL / this->rate;
       this->denom = denom;
-      this->intervalf = this->delta = this->interval * 0.000001f;
+      this->delta = this->interval;
+      this->intervalf = this->interval * 0.000001f;
       iteration = 0;
       return 1;
     }
@@ -67,16 +69,6 @@ class Timer
     {
       if(t.iteration % denom != 0) return false;
       return update();
-    }
-
-    float getDelta() const
-    {
-      return intervalf;
-    }
-
-    float getDeltaReal() const
-    {
-      return delta * 0.000001f;
     }
 
     uint32_t interval;

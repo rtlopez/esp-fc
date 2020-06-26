@@ -23,6 +23,10 @@ class Input
     {
       _device = Hardware::getInputDevice(_model);
       setFailsafe();
+      for(size_t i = 0; i < INTERPOLETE_COUNT; i++)
+      {
+        _filter[i].begin(FilterConfig(FILTER_PT1, 30), _model.state.loopTimer.rate);
+      }
       return 1;
     }
 
@@ -42,7 +46,7 @@ class Input
       if(!_device) return 0;
 
       static float step = 0;
-      static float inputDt = 0.02f;
+      static float inputDt = 0.02f; // default interpolation interval 20ms
       static uint32_t prevTm = 0;
 
       {
@@ -64,24 +68,24 @@ class Input
           step = 0.f;
           switch(_model.config.input.interpolationMode)
           {
-            case INPUT_INTERPOLATION_AUTO:
-              {
-                uint32_t now = micros();
-                inputDt = constrain(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f;
-                prevTm = now;
-              }
-              break;
-            case INPUT_INTERPOLATION_MANUAL:
-              inputDt = _model.config.input.interpolationInterval * 0.001f;
-              break;
             case INPUT_INTERPOLATION_OFF:
               for(size_t i = 0; i < INPUT_CHANNELS; ++i)
               {
                 _model.state.inputUs[i] = (float)_get(i, 0);
               }
               break;
-            default:
-              inputDt = 0.02f;
+            case INPUT_INTERPOLATION_DEFAULT:
+              inputDt = 0.02f; // default interpolation interval 20ms
+              break;
+            case INPUT_INTERPOLATION_AUTO:
+              {
+                uint32_t now = micros();
+                inputDt = Math::clamp(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+                prevTm = now;
+              }
+              break;
+            case INPUT_INTERPOLATION_MANUAL:
+              inputDt = _model.config.input.interpolationInterval * 0.001f; // manual interval
               break;
           }
         }
@@ -89,31 +93,33 @@ class Input
 
       {
         Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
-        if(_model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF)
+        switch(_model.config.input.interpolationMode)
         {
-          const float loopDt = _model.state.loopTimer.getDelta();
-          const float interpolationStep = loopDt / inputDt;
-          if(step < 1.f)
-          {
-            step += interpolationStep;
-          }
-          for(size_t i = 0; i < INPUT_CHANNELS; ++i)
-          {
-            float val = (float)_get(i, 0);
-            if(i < INTERPOLETE_COUNT)
+          case INPUT_INTERPOLATION_OFF:
+            break;
+          default:
+            const float loopDt = _model.state.loopTimer.intervalf;
+            const float interpolationStep = loopDt / inputDt;
+            if(step < 1.f) step += interpolationStep;
+            for(size_t i = 0; i < INPUT_CHANNELS; ++i)
             {
-              float prev = (float)_get(i, 1);
-              val =_interpolate(prev, val, step);
+              float val = (float)_get(i, 0);
+              if(i < INTERPOLETE_COUNT)
+              {
+                float prev = (float)_get(i, 1);
+                val =_interpolate(prev, val, step);
+                val = _filter[i].update(val);
+              }
+              _model.state.inputUs[i] = val;
             }
-            _model.state.inputUs[i] = val;
-          }
-          if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
-          {
-            _model.state.debug[0] = 1000 * inputDt;
-            _model.state.debug[1] = 10000 * loopDt;
-            _model.state.debug[2] = 1000 * interpolationStep;
-            _model.state.debug[3] = 1000 * step;
-          }
+            if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
+            {
+              _model.state.debug[0] = 1000 * inputDt;
+              _model.state.debug[1] = 10000 * loopDt;
+              _model.state.debug[2] = 1000 * interpolationStep;
+              _model.state.debug[3] = 1000 * step;
+            }
+            break;
         }
 
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
@@ -164,7 +170,7 @@ class Input
       const InputChannelConfig& ich = _model.config.input.channel[c];
       v -= _model.config.input.midRc - 1500;
       float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, 1000.f, 1500.f, 2000.f);
-      t = constrain(t, 800.f, 2200.f);
+      t = Math::clamp(t, 800.f, 2200.f);
       _buff[0][c] = _deadband(c, lrintf(t));
     }
 
@@ -180,6 +186,7 @@ class Input
     int16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];
     InputDevice * _device;
     static const size_t INTERPOLETE_COUNT = 4;
+    Filter _filter[INTERPOLETE_COUNT];
 };
 
 }

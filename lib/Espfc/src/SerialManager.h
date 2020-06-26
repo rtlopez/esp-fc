@@ -49,10 +49,14 @@ class SerialManager
               break;
           }
         }
+        else if(spc.functionMask & SERIAL_FUNCTION_BLACKBOX)
+        {
+          sdc.baud = Hardware::fromIndex((SerialSpeedIndex)spc.blackboxBaudIndex, SERIAL_SPEED_115200);
+        }
 
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
         port->flush();
-        delay(20);
+        delay(10);
         port->begin(sdc);
         _model.state.serial[i].stream = port;
       }
