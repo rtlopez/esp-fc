@@ -1,6 +1,10 @@
 #pragma once
 
 #define USE_BLACKBOX
+#define USE_ACC
+#define USE_MAG
+#define USE_BARO
+#define USE_DYN_LPF
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -57,6 +61,7 @@ extern const char * const targetVersion;
 #define CONCAT4(_1,_2,_3,_4)  CONCAT(CONCAT3(_1, _2, _3), _4)
 #define XYZ_AXIS_COUNT 3
 #define DEBUG16_VALUE_COUNT 4
+#define DEBUG_SET(mode, index, value) {if (debugMode == (mode)) {debug[(index)] = (value);}}
 
 #ifdef UNIT_TEST
 #define STATIC_UNIT_TESTED
@@ -375,43 +380,50 @@ bool areMotorsRunning(void);
 
 /* RCMODES START */
 typedef enum {
+    // ARM flag
     BOXARM = 0,
+    // FLIGHT_MODE
     BOXANGLE,
     BOXHORIZON,
-    BOXBARO,
-    BOXANTIGRAVITY,
     BOXMAG,
     BOXHEADFREE,
+    BOXPASSTHRU,
+    BOXFAILSAFE,
+    BOXGPSRESCUE,
+    BOXID_FLIGHTMODE_LAST = BOXGPSRESCUE,
+    // RCMODE flags
+    BOXANTIGRAVITY,
     BOXHEADADJ,
     BOXCAMSTAB,
-    BOXCAMTRIG,
-    BOXGPSHOME,
-    BOXGPSHOLD,
-    BOXPASSTHRU,
     BOXBEEPERON,
-    BOXLEDMAX,
     BOXLEDLOW,
-    BOXLLIGHTS,
     BOXCALIB,
-    BOXGOV,
     BOXOSD,
     BOXTELEMETRY,
-    BOXGTUNE,
-    BOXSONAR,
     BOXSERVO1,
     BOXSERVO2,
     BOXSERVO3,
     BOXBLACKBOX,
-    BOXFAILSAFE,
     BOXAIRMODE,
-    BOX3DDISABLE,
+    BOX3D,
     BOXFPVANGLEMIX,
     BOXBLACKBOXERASE,
     BOXCAMERA1,
     BOXCAMERA2,
     BOXCAMERA3,
-    BOXDSHOTREVERSE,
+    BOXFLIPOVERAFTERCRASH,
     BOXPREARM,
+    BOXBEEPGPSCOUNT,
+    BOXVTXPITMODE,
+    BOXPARALYZE,
+    BOXUSER1,
+    BOXUSER2,
+    BOXUSER3,
+    BOXUSER4,
+    BOXPIDAUDIO,
+    BOXACROTRAINER,
+    BOXVTXCONTROLDISABLE,
+    BOXLAUNCHCONTROL,
     CHECKBOX_ITEM_COUNT
 } boxId_e;
 
@@ -534,6 +546,7 @@ typedef struct controlRateConfig_s {
     uint8_t rcRates[3];
     uint8_t rcExpo[3];
     uint8_t rates[3];
+    uint16_t rate_limit[3];
     uint8_t dynThrPID;
     uint16_t tpa_breakpoint;                // Breakpoint where TPA is activated
     uint8_t throttle_limit_type;            // Sets the throttle limiting type - off, scale or clip
@@ -590,7 +603,11 @@ typedef struct pidProfile_s {
     uint16_t yawRateAccelLimit;             // yaw accel limiter for deg/sec/ms
     uint16_t rateAccelLimit;                // accel limiter roll/pitch deg/sec/ms
     uint16_t itermLimit;
-    uint16_t dterm_lowpass2_hz;             // Extra PT1 Filter on D in hz
+    uint16_t dterm_lowpass2_hz;             // Extra Filter on D in hz
+    uint8_t dterm_filter2_type;            // Extra Filter on D type
+    uint8_t ff_boost;
+    uint16_t dyn_lpf_dterm_min_hz;
+    uint16_t dyn_lpf_dterm_max_hz;
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -683,8 +700,10 @@ typedef enum {
     DEBUG_COUNT
 } debugType_e;
 
+extern float rcCommand[4];
 extern uint8_t debugMode;
 extern int16_t debug[DEBUG16_VALUE_COUNT];
+extern uint8_t activePidLoopDenom;
 /* DEBUG END */
 
 /* SENSOR START */
@@ -702,10 +721,10 @@ typedef enum {
 
 
 typedef struct gyro_s {
-    uint32_t targetLooptime;
+    //uint32_t targetLooptime;
+    uint32_t sampleLooptime;
     float gyroADCf[XYZ_AXIS_COUNT];
 } gyro_t;
-
 extern gyro_t gyro;
 
 typedef struct accDev_s {
@@ -716,8 +735,17 @@ typedef struct acc_s {
     accDev_t dev;
     int32_t accADC[XYZ_AXIS_COUNT];
 } acc_t;
-
 extern acc_t acc;
+
+typedef struct mag_s {
+    float magADC[XYZ_AXIS_COUNT];
+} mag_t;
+extern mag_t mag;
+
+typedef struct baro_s {
+   int32_t BaroAlt;
+} baro_t;
+extern baro_t baro;
 
 typedef enum {
     VOLTAGE_METER_NONE = 0,
@@ -797,12 +825,13 @@ typedef struct gyroConfig_s {
     uint16_t  gyro_lowpass_hz;
     uint8_t  gyro_lowpass2_type;
     uint16_t  gyro_lowpass2_hz;
-    bool     gyro_use_32khz;
     uint8_t  gyro_to_use;
     uint16_t gyro_soft_notch_hz_1;
     uint16_t gyro_soft_notch_cutoff_1;
     uint16_t gyro_soft_notch_hz_2;
     uint16_t gyro_soft_notch_cutoff_2;
+    uint16_t dyn_lpf_gyro_min_hz;
+    uint16_t dyn_lpf_gyro_max_hz;
 } gyroConfig_t;
 
 PG_DECLARE(gyroConfig_t, gyroConfig);
@@ -832,10 +861,7 @@ typedef struct rxConfig_s {
 
 PG_DECLARE(rxConfig_t, rxConfig);
 
-extern float rcCommand[4];
 uint16_t getRssi(void);
-
-/* RX START */
 
 /* FAILSAFE START */
 typedef enum {
@@ -850,4 +876,7 @@ typedef enum {
 failsafePhase_e failsafePhase();
 bool rxIsReceivingSignal(void);
 bool rxAreFlightChannelsValid(void);
+float pidGetPreviousSetpoint(int axis);
+float mixerGetThrottle(void);
+bool isRssiConfigured(void);
 /* FAILSAFE END */

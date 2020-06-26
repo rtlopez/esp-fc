@@ -48,12 +48,15 @@ uint8_t stateFlags;
 uint8_t armingFlags;
 uint8_t debugMode;
 int16_t debug[DEBUG16_VALUE_COUNT];
+uint8_t activePidLoopDenom = 1;
 gyro_t gyro;
 acc_t acc = {
   .dev = {
     .acc_1G = 2048
   }
 };
+mag_t mag;
+baro_t baro;
 uint16_t rssi;
 pidAxisData_t pidData[3];
 float motor[MAX_SUPPORTED_MOTORS];

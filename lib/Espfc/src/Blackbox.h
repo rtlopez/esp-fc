@@ -4,6 +4,7 @@
 #include "Model.h"
 #include "Hardware.h"
 #include "EscDriver.h"
+#include "Math/Utils.h"
 
 extern "C" {
 #include "blackbox/blackbox.h"
@@ -54,6 +55,11 @@ bool rxIsReceivingSignal(void)
   return ((*_model_ptr).state.inputLinkValid);
 }
 
+bool isRssiConfigured(void)
+{
+  return false;
+}
+
 static uint32_t activeFeaturesLatch = 0;
 static uint32_t enabledSensors = 0;
 
@@ -67,6 +73,15 @@ bool sensors(uint32_t mask)
   return enabledSensors & mask;
 }
 
+float pidGetPreviousSetpoint(int axis)
+{
+  return Espfc::Math::toDeg(_model_ptr->state.desiredRate[axis]);
+}
+
+float mixerGetThrottle(void)
+{
+  return (_model_ptr->state.output[Espfc::AXIS_THRUST] + 1.0f) * 0.5f;
+}
 
 namespace Espfc {
 
@@ -95,11 +110,13 @@ class Blackbox
         rp->rcRates[i] = _model.config.input.rate[i];
         rp->rcExpo[i] = _model.config.input.expo[i];
         rp->rates[i] = _model.config.input.superRate[i];
+        rp->rate_limit[i] = 1998;
       }
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
       rp->dynThrPID = _model.config.tpaScale;
       rp->tpa_breakpoint = _model.config.tpaBreakpoint;
+      rp->rates_type = 0; // betaflight
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
       for(size_t i = 0; i < PID_ITEM_COUNT; i++)
@@ -112,11 +129,17 @@ class Blackbox
       cp->dterm_filter_type = _model.config.dtermFilter.type;
       cp->dterm_lowpass_hz = _model.config.dtermFilter.freq;
       cp->dterm_lowpass2_hz = _model.config.dtermFilter2.freq;
+      cp->dterm_filter2_type = _model.config.dtermFilter2.type;
       cp->dterm_notch_hz = _model.config.dtermNotchFilter.freq;
       cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
       cp->yaw_lowpass_hz = _model.config.yawFilter.freq;
       cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
       cp->antiGravityMode = 0;
+      cp->pidSumLimit = 500;
+      cp->pidSumLimitYaw = 500;
+      cp->ff_boost = 0;
+      cp->dyn_lpf_dterm_min_hz = _model.config.dtermDynLpfFilter.cutoff;
+      cp->dyn_lpf_dterm_max_hz = _model.config.dtermDynLpfFilter.freq;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
@@ -130,6 +153,8 @@ class Blackbox
       gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyroNotch2Filter.freq;
+      gyroConfigMutable()->dyn_lpf_gyro_min_hz = _model.config.gyroDynLpfFilter.cutoff;
+      gyroConfigMutable()->dyn_lpf_gyro_max_hz = _model.config.gyroDynLpfFilter.freq;
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
@@ -161,7 +186,9 @@ class Blackbox
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       targetPidLooptime = _model.state.loopTimer.interval;
-      gyro.targetLooptime = _model.state.gyroTimer.interval;
+      //gyro.targetLooptime = _model.state.gyroTimer.interval;
+      gyro.sampleLooptime = _model.state.gyroTimer.interval;
+      activePidLoopDenom = _model.config.loopSync;
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
@@ -195,21 +222,31 @@ class Blackbox
       for(size_t i = 0; i < 3; i++)
       {
         gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
-        acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
         pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
         pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
         pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
         pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
         rcCommand[i] = _model.state.input[i] * (i == AXIS_YAW ? -500.f : 500.f);
+        if(_model.accelActive()) {
+          acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
+        }
+        if(_model.magActive()) {
+          mag.magADC[i] = _model.state.mag[i];
+        }
+        if(_model.baroActive()) {
+          baro.BaroAlt = lrintf(_model.state.baroAltitude * 100.f); // cm
+        }
       }
       rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
       for(size_t i = 0; i < 4; i++)
       {
-        motor[i] = constrain(_model.state.outputUs[i], 1000, 2000);
+        motor[i] = Math::clamp(_model.state.outputUs[i], (int16_t)1000, (int16_t)2000);
         if(_model.state.digitalOutput) {
           motor[i] = PWM_TO_DSHOT(motor[i]);
         }
-        debug[i] = _model.state.debug[i];
+        if(_model.config.debugMode != DEBUG_NONE && _model.config.debugMode != DEBUG_BLACKBOX_OUTPUT) {
+          debug[i] = _model.state.debug[i];
+        }
       }
     }
 
