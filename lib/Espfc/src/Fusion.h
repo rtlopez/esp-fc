@@ -110,7 +110,7 @@ class Fusion
       _model.state.pose = _model.state.accel.accelToEuler();
       _model.state.angle.x = _model.state.pose.x;
       _model.state.angle.y = _model.state.pose.y;
-      _model.state.angle.z += _model.state.gyroTimer.getDelta() * _model.state.gyro.z;
+      _model.state.angle.z += _model.state.gyroTimer.intervalf * _model.state.gyro.z;
       if(_model.state.angle.z > PI) _model.state.angle.z -= TWO_PI;
       if(_model.state.angle.z < -PI) _model.state.angle.z += TWO_PI;
     }
@@ -119,7 +119,7 @@ class Fusion
     {
       _model.state.pose = _model.state.accel.accelToEuler();
       _model.state.pose.z = _model.state.angle.z;
-      const float dt = _model.state.gyroTimer.getDelta();
+      const float dt = _model.state.gyroTimer.intervalf;
       for(size_t i = 0; i < 3; i++)
       {
         float angle = _model.state.kalman[i].getAngle(_model.state.pose.get(i), _model.state.gyro.get(i), dt);
@@ -133,7 +133,7 @@ class Fusion
     {
       _model.state.pose = _model.state.accel.accelToEuler();
       _model.state.pose.z = _model.state.angle.z;
-      const float dt = _model.state.gyroTimer.getDelta();
+      const float dt = _model.state.gyroTimer.intervalf;
       const float alpha = 0.002f;
       for(size_t i = 0; i < 3; i++)
       {
@@ -149,7 +149,7 @@ class Fusion
     void complementaryFusionOld()
     {
       const float alpha = 0.01f;
-      const float dt = _model.state.gyroTimer.getDelta();
+      const float dt = _model.state.gyroTimer.intervalf;
       _model.state.pose = _model.state.accel.accelToEuler();
       _model.state.pose.z = _model.state.angle.z;
       _model.state.angle = (_model.state.angle + _model.state.gyro * dt) * (1.f - alpha) + _model.state.pose * alpha;
@@ -167,7 +167,7 @@ class Fusion
         return;
       }
 
-      float timeDelta = _model.state.gyroTimer.getDelta();
+      float timeDelta = _model.state.gyroTimer.intervalf;
       Quaternion measuredQPose = _model.state.poseQ;
       Quaternion fusionQPose = _model.state.angleQ;
       VectorFloat fusionGyro = _model.state.gyro;
@@ -295,7 +295,7 @@ class Fusion
       //_model.state.accelPose.eulerFromQuaternion(_model.state.accelPoseQ);
 
       // predict new state
-      Quaternion rotation = (_model.state.gyro * _model.state.gyroTimer.getDelta()).eulerToQuaternion();
+      Quaternion rotation = (_model.state.gyro * _model.state.gyroTimer.intervalf).eulerToQuaternion();
       _model.state.gyroPoseQ = (_model.state.gyroPoseQ * rotation).getNormalized();
 
       // drift compensation

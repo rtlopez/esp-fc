@@ -42,7 +42,7 @@ class Input
       if(!_device) return 0;
 
       static float step = 0;
-      static float inputDt = 0.02f;
+      static float inputDt = 0.02f; // default interpolation interval 20ms
       static uint32_t prevTm = 0;
 
       {
@@ -64,24 +64,24 @@ class Input
           step = 0.f;
           switch(_model.config.input.interpolationMode)
           {
-            case INPUT_INTERPOLATION_AUTO:
-              {
-                uint32_t now = micros();
-                inputDt = Math::clamp(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f;
-                prevTm = now;
-              }
-              break;
-            case INPUT_INTERPOLATION_MANUAL:
-              inputDt = _model.config.input.interpolationInterval * 0.001f;
-              break;
             case INPUT_INTERPOLATION_OFF:
               for(size_t i = 0; i < INPUT_CHANNELS; ++i)
               {
                 _model.state.inputUs[i] = (float)_get(i, 0);
               }
               break;
-            default:
-              inputDt = 0.02f;
+            case INPUT_INTERPOLATION_DEFAULT:
+              inputDt = 0.02f; // default interpolation interval 20ms
+              break;
+            case INPUT_INTERPOLATION_AUTO:
+              {
+                uint32_t now = micros();
+                inputDt = Math::clamp(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+                prevTm = now;
+              }
+              break;
+            case INPUT_INTERPOLATION_MANUAL:
+              inputDt = _model.config.input.interpolationInterval * 0.001f; // manual interval
               break;
           }
         }
@@ -89,31 +89,32 @@ class Input
 
       {
         Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
-        if(_model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF)
+        switch(_model.config.input.interpolationMode)
         {
-          const float loopDt = _model.state.loopTimer.getDelta();
-          const float interpolationStep = loopDt / inputDt;
-          if(step < 1.f)
-          {
-            step += interpolationStep;
-          }
-          for(size_t i = 0; i < INPUT_CHANNELS; ++i)
-          {
-            float val = (float)_get(i, 0);
-            if(i < INTERPOLETE_COUNT)
+          case INPUT_INTERPOLATION_OFF:
+            break;
+          default:
+            const float loopDt = _model.state.loopTimer.intervalf;
+            const float interpolationStep = loopDt / inputDt;
+            if(step < 1.f) step += interpolationStep;
+            for(size_t i = 0; i < INPUT_CHANNELS; ++i)
             {
-              float prev = (float)_get(i, 1);
-              val =_interpolate(prev, val, step);
+              float val = (float)_get(i, 0);
+              if(i < INTERPOLETE_COUNT)
+              {
+                float prev = (float)_get(i, 1);
+                val =_interpolate(prev, val, step);
+              }
+              _model.state.inputUs[i] = val;
             }
-            _model.state.inputUs[i] = val;
-          }
-          if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
-          {
-            _model.state.debug[0] = 1000 * inputDt;
-            _model.state.debug[1] = 10000 * loopDt;
-            _model.state.debug[2] = 1000 * interpolationStep;
-            _model.state.debug[3] = 1000 * step;
-          }
+            if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
+            {
+              _model.state.debug[0] = 1000 * inputDt;
+              _model.state.debug[1] = 10000 * loopDt;
+              _model.state.debug[2] = 1000 * interpolationStep;
+              _model.state.debug[3] = 1000 * step;
+            }
+            break;
         }
 
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)

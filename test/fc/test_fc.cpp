@@ -22,6 +22,8 @@ void test_timer_rate_100hz()
   timer.setRate(100);
   TEST_ASSERT_EQUAL_UINT32(100, timer.rate);
   TEST_ASSERT_EQUAL_UINT32(10000, timer.interval);
+  TEST_ASSERT_EQUAL_UINT32(10000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 1.f / 100.f, timer.intervalf);
 }
 
 void test_timer_rate_100hz_div2()
@@ -30,6 +32,8 @@ void test_timer_rate_100hz_div2()
   timer.setRate(100, 2);
   TEST_ASSERT_EQUAL_UINT32(50, timer.rate);
   TEST_ASSERT_EQUAL_UINT32(20000, timer.interval);
+  TEST_ASSERT_EQUAL_UINT32(20000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 1.f / 50.f, timer.intervalf);
 }
 
 void test_timer_interval_10ms()
@@ -38,6 +42,8 @@ void test_timer_interval_10ms()
   timer.setInterval(10000);
   TEST_ASSERT_EQUAL_UINT32(100, timer.rate);
   TEST_ASSERT_EQUAL_UINT32(10000, timer.interval);
+  TEST_ASSERT_EQUAL_UINT32(10000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 1.f / 100.f, timer.intervalf);
 }
 
 void test_timer_check()
@@ -50,21 +56,27 @@ void test_timer_check()
 
   TEST_ASSERT_TRUE( timer.check(1000));
   TEST_ASSERT_EQUAL_UINT32(1, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
 
   TEST_ASSERT_FALSE(timer.check(1500));
   TEST_ASSERT_EQUAL_UINT32(1, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
   
   TEST_ASSERT_TRUE( timer.check(2000));
   TEST_ASSERT_EQUAL_UINT32(2, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
   
   TEST_ASSERT_TRUE( timer.check(3000));
   TEST_ASSERT_EQUAL_UINT32(3, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
   
   TEST_ASSERT_FALSE(timer.check(3999));
   TEST_ASSERT_EQUAL_UINT32(3, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
   
   TEST_ASSERT_TRUE( timer.check(4050));
   TEST_ASSERT_EQUAL_UINT32(4, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1050, timer.delta);
 }
 
 void test_timer_check_micros()
