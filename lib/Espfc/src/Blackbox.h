@@ -124,6 +124,7 @@ class Blackbox
         cp->pid[i].P = _model.config.pid[i].P;
         cp->pid[i].I = _model.config.pid[i].I;
         cp->pid[i].D = _model.config.pid[i].D;
+        cp->pid[i].F = _model.config.pid[i].F;
       }
       cp->pidAtMinThrottle = 1;
       cp->dterm_filter_type = _model.config.dtermFilter.type;
@@ -140,6 +141,7 @@ class Blackbox
       cp->ff_boost = 0;
       cp->dyn_lpf_dterm_min_hz = _model.config.dtermDynLpfFilter.cutoff;
       cp->dyn_lpf_dterm_max_hz = _model.config.dtermDynLpfFilter.freq;
+      cp->feedForwardTransition = 0;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
