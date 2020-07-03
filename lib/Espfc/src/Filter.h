@@ -18,12 +18,11 @@ namespace Espfc {
 enum FilterType {
   FILTER_PT1,
   FILTER_BIQUAD,
-  FILTER_PT1_FIR2,
   FILTER_NOTCH,
+  FILTER_NOTCH_DF1,
+  FILTER_BPF,
   FILTER_FIR2,
   FILTER_MEDIAN3,
-  FILTER_BPF,
-  FILTER_NOTCH_DF1,
   FILTER_NONE,
 };
 
@@ -36,221 +35,86 @@ enum BiquadFilterType {
 class FilterConfig
 {
   public:
-    FilterConfig() {}
+    FilterConfig(): type(FILTER_NONE), freq(0), cutoff(0) {}
     FilterConfig(FilterType t, int16_t f, int16_t c = 0): type(t), freq(f), cutoff(c) {}
+
+    FilterConfig sanitize(int rate) const
+    {
+      const int halfRate = rate / 2;
+      FilterType t = (FilterType)type;
+      int16_t f = Math::clamp((int)freq, 0, halfRate);   // adj cut freq below nyquist rule
+      int16_t c = Math::clamp((int)cutoff, 0, (int)(f * 0.98f));      // sanitize cutoff to be slightly below filter freq
+
+      bool biquad = type == FILTER_NOTCH || type == FILTER_NOTCH_DF1 || type == FILTER_BPF;
+      if(f == 0 || (biquad && c == 0)) t = FILTER_NONE; // if freq is zero or cutoff for biquad, turn off
+
+      return FilterConfig(t, f, c);
+    }
+
     int8_t type;
     int16_t freq;
     int16_t cutoff;
 };
 
-struct FilterStatePt1 {
-  float k;
-  float v;
-  float v0;
-};
-
-struct FilterStateBiquad {
-  float b0, b1, b2, a1, a2;
-  float x1, x2, y1, y2;
-};
-
-struct FilterStateMedian {
-  float v[3];
-  int i;
-};
-
-
-class Filter
-{
+class FilterStatePt1 {
   public:
-    Filter(): _type(FILTER_NONE) {}
-
-    void begin()
+    void reset()
     {
-      _type = FILTER_NONE;
+      v = 0.f;
     }
 
-    void begin(const FilterConfig& config, int rate)
+    void init(float rate, float freq)
     {
-      _type = (FilterType)config.type;
-      _rate = rate;
-      _freq   = Math::clamp((int)config.freq, 0, _rate / 2);   // adj cut freq below nyquist rule
-      _cutoff = Math::clamp((int)config.cutoff, 0, _rate / 2); // adj cut freq below nyquist rule
-      _cutoff = Math::clamp(_cutoff, 0, _freq - 10); // sanitize cutoff to be slightly below filter freq
-      bool biquad = _type == FILTER_NOTCH || _type == FILTER_NOTCH_DF1 || _type == FILTER_BPF;
-      if(biquad && (_cutoff == 0 || _cutoff > _freq)) _type = FILTER_NONE; // invalid biquad config, turn off
-      if(_freq == 0) _type = FILTER_NONE; // turn off if filter freq equals zero
-      switch(_type)
-      {
-        case FILTER_PT1:
-          initPt1();
-          break;
-        case FILTER_BIQUAD:
-          initBiquadLpf();
-          break;
-        case FILTER_PT1_FIR2:
-          initPt1();
-          break;
-        case FILTER_NOTCH:
-        case FILTER_NOTCH_DF1:
-          initBiquadNotch();
-          break;
-        case FILTER_FIR2:
-          initFir2();
-          break;
-        case FILTER_MEDIAN3:
-          initMedian3();
-          break;
-        case FILTER_BPF:
-          initBiquadBpf();
-          break;
-        case FILTER_NONE:
-        default:
-          ;
-      }
+      float rc = 1.f / (2.f * Math::pi() * freq);
+      float dt = 1.f / rate;
+      k = dt / (dt + rc);
     }
 
-    float update(float v)
+    float update(float n)
     {
-      switch(_type)
-      {
-        case FILTER_PT1:
-          return updatePt1(v);
-        case FILTER_BIQUAD:
-          return updateBiquadDF2(v);
-        case FILTER_PT1_FIR2:
-          return updatePt1Fir2(v);
-        case FILTER_NOTCH:
-          return updateBiquadDF2(v);
-        case FILTER_FIR2:
-          return updateFir2(v);
-        case FILTER_MEDIAN3:
-          return updateMedian3(v);
-        case FILTER_BPF:
-          return updateBiquadDF2(v);
-        case FILTER_NOTCH_DF1:
-          return updateBiquadDF1(v);
-        case FILTER_NONE:
-        default:
-          return v;
-      }
+      v += k * (n - v);
+      return v;
     }
 
-    void reconfigureNotchDF1(float freq, float cutoff)
+    float k;
+    float v;
+};
+
+class FilterStateFir2 {
+  public:
+    void reset()
     {
-      _freq = freq;
-      _cutoff = cutoff;
-      //float q = 1.7f; // or const Q factor
-      float q = getNotchQApprox(freq, cutoff);
-      //float q = getNotchQ(freq, cutoff);
-      initBiquadCoefficients(BIQUAD_FILTER_NOTCH, q);
+      v[0] = v[1] = 0.0f;
     }
 
-    float getNotchQApprox(float freq, float cutoff)
+    void init()
     {
-      return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
     }
 
-    float getNotchQ(int freq, int cutoff)
+    float update(float n)
     {
-      float octaves = log2f((float)freq  / (float)cutoff) * 2;
-      return sqrtf(powf(2, octaves)) / (powf(2, octaves) - 1);
+      v[0] = (n + v[1]) * 0.5f;
+      v[1] = n;
+      return v[0];
     }
 
-#if !defined(UNIT_TEST)
-  private:
-#endif
-    void initPt1()
+    float v[2];
+};
+
+class FilterStateBiquad {
+  public:
+    void reset()
     {
-      float rc = 1.f / (2.f * Math::pi() * _freq);
-      float dt = 1.f / _rate;
-      _state.pt1.k = dt / (dt + rc);
-      _state.pt1.v = 0.f;
-      _state.pt1.v0 = 0.f;
+      x1 = x2 = y1 = y2 = 0;
     }
 
-    void initFir2()
+    void init(BiquadFilterType filterType, float rate, float freq, float q)
     {
-      _state.pt1.v = 0.f;
-      _state.pt1.v0 = 0.f;
-    }
-
-    void initMedian3()
-    {
-      _state.median.v[0] = 0.f;
-      _state.median.v[1] = 0.f;
-      _state.median.v[2] = 0.f;
-      _state.median.i = 0;
-    }
-
-    float updatePt1(float v) ICACHE_RAM_ATTR
-    {
-      _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
-      return _state.pt1.v;
-    }
-
-    float updatePt1Fir2(float v) /* ICACHE_RAM_ATTR */
-    {
-      _state.pt1.v += _state.pt1.k * (v - _state.pt1.v);
-      const float t = _state.pt1.v;
-      _state.pt1.v = (_state.pt1.v + _state.pt1.v0) * 0.5f;
-      _state.pt1.v0 = t;
-      return _state.pt1.v;
-    }
-
-    float updateFir2(float v) /* ICACHE_RAM_ATTR */
-    {
-      _state.pt1.v = (v + _state.pt1.v0) * 0.5f;
-      _state.pt1.v0 = v;
-      return _state.pt1.v;
-    }
-
-    float updateMedian3(float v)
-    {
-      _state.median.v[0] = _state.median.v[1];
-      _state.median.v[1] = _state.median.v[2];
-      _state.median.v[2] = v;
-      float p[3];
-      QMF_COPY(p, _state.median.v, 3);
-      QMF_SORTF(p[0], p[1]); QMF_SORTF(p[1], p[2]); QMF_SORTF(p[0], p[1]);
-      return p[1];
-    }
-
-    void initBiquadNotch()
-    {
-      float q = getNotchQ(_freq, _cutoff);
-      initBiquad(BIQUAD_FILTER_NOTCH, q);
-    }
-
-    void initBiquadBpf()
-    {
-      float q = getNotchQ(_freq, _cutoff);
-      initBiquad(BIQUAD_FILTER_BPF, q);
-    }
-
-    void initBiquadLpf()
-    {
-      initBiquad(BIQUAD_FILTER_LPF, 1.0f / sqrtf(2.0f)); /* quality factor - butterworth for lpf */
-    }
-
-    void initBiquad(BiquadFilterType filterType, float q)
-    {
-      initBiquadCoefficients(filterType, q);
-
-      // zero initial samples
-      _state.bq.x1 = _state.bq.x2 = 0;
-      _state.bq.y1 = _state.bq.y2 = 0;
-    }
-
-    void initBiquadCoefficients(BiquadFilterType filterType, float q)
-    {
-      const float omega = 2.0f * Math::pi() * _freq / _rate;
+      const float omega = (2.0f * Math::pi() * freq) / rate;
       const float sn = sinf(omega);
       const float cs = cosf(omega);
       const float alpha = sn / (2.0f * q);
-
-      float b0 = 0, b1 = 0, b2 = 0, a0 = 0, a1 = 0, a2 = 0;
-
+      float b0 = 0.0f, b1 = 0.0f, b2 = 0.0f, a0 = 0.0f, a1 = 0.0f, a2 = 0.0f;
       switch (filterType)
       {
         case BIQUAD_FILTER_LPF:
@@ -280,49 +144,184 @@ class Filter
       }
 
       // precompute the coefficients
-      _state.bq.b0 = b0 / a0;
-      _state.bq.b1 = b1 / a0;
-      _state.bq.b2 = b2 / a0;
-      _state.bq.a1 = a1 / a0;
-      _state.bq.a2 = a2 / a0;
+      this->b0 = b0 / a0;
+      this->b1 = b1 / a0;
+      this->b2 = b2 / a0;
+      this->a1 = a1 / a0;
+      this->a2 = a2 / a0;
     }
 
-    float updateBiquadDF1(float v) /* ICACHE_RAM_ATTR */
+    float update(float n)
+    {
+      // DF2
+      const float result = b0 * n + x1;
+      x1 = b1 * n - a1 * result + x2;
+      x2 = b2 * n - a2 * result;
+      return result;
+    }
+
+    float updateDF1(float n)
     {
       /* compute result */
-      const float result =
-        _state.bq.b0 * v +
-        _state.bq.b1 * _state.bq.x1 +
-        _state.bq.b2 * _state.bq.x2 -
-        _state.bq.a1 * _state.bq.y1 -
-        _state.bq.a2 * _state.bq.y2;
+      const float result = b0 * n + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
 
       /* shift x1 to x2, input to x1 */
-      _state.bq.x2 = _state.bq.x1;
-      _state.bq.x1 = v;
+      x2 = x1; x1 = n;
 
       /* shift y1 to y2, result to y1 */
-      _state.bq.y2 = _state.bq.y1;
-      _state.bq.y1 = result;
+      y2 = y1; y1 = result;
 
       return result;
     }
 
-    float updateBiquadDF2(float v) /* ICACHE_RAM_ATTR */
+    float b0, b1, b2, a1, a2;
+    float x1, x2, y1, y2;
+};
+
+class FilterStateMedian {
+  public:
+    void reset()
     {
-      const float result = _state.bq.b0 * v + _state.bq.x1;
-      _state.bq.x1 = _state.bq.b1 * v - _state.bq.a1 * result + _state.bq.x2;
-      _state.bq.x2 = _state.bq.b2 * v - _state.bq.a2 * result;
-      return result;
+      v[0] = v[1] = v[2] = 0.f;
     }
 
-    FilterType _type;
-    int _freq;
+    void init()
+    {
+
+    }
+
+    float update(float n)
+    {
+      v[0] = v[1];
+      v[1] = v[2];
+      v[2] = n;
+      float p[3];
+      QMF_COPY(p, v, 3);
+      QMF_SORTF(p[0], p[1]);
+      QMF_SORTF(p[1], p[2]);
+      QMF_SORTF(p[0], p[1]);
+      return p[1];
+    }
+
+    float v[3];
+};
+
+
+class Filter
+{
+  public:
+    Filter(): _conf(FilterConfig(FILTER_NONE, 0)) {}
+
+    void begin()
+    {
+      _conf = FilterConfig(FILTER_NONE, 0);
+    }
+
+    void begin(const FilterConfig& config, int rate)
+    {
+      _rate = rate;
+      _conf = config.sanitize(rate);
+      switch(_conf.type)
+      {
+        case FILTER_PT1:
+          _state.pt1.reset();
+          _state.pt1.init(_rate, _conf.freq);
+          break;
+        case FILTER_BIQUAD:
+          _state.bq.reset();
+          initBiquadLpf(_rate, _conf.freq);
+          break;
+        case FILTER_NOTCH:
+        case FILTER_NOTCH_DF1:
+          _state.bq.reset();
+          initBiquadNotch(_rate, _conf.freq, _conf.cutoff);
+          break;
+        case FILTER_FIR2:
+          _state.fir2.reset();
+          _state.fir2.init();
+          break;
+        case FILTER_MEDIAN3:
+          _state.median.reset();
+          _state.median.init();
+          break;
+        case FILTER_BPF:
+          _state.bq.reset();
+          initBiquadBpf(_rate, _conf.freq, _conf.cutoff);
+          break;
+        case FILTER_NONE:
+        default:
+          ;
+      }
+    }
+
+    float update(float v)
+    {
+      switch(_conf.type)
+      {
+        case FILTER_PT1:
+          return _state.pt1.update(v);
+        case FILTER_BIQUAD:
+        case FILTER_NOTCH:
+        case FILTER_BPF:
+          return _state.bq.update(v);
+        case FILTER_NOTCH_DF1:
+          return _state.bq.updateDF1(v);
+        case FILTER_FIR2:
+          return _state.fir2.update(v);
+        case FILTER_MEDIAN3:
+          return _state.median.update(v);
+        case FILTER_NONE:
+        default:
+          return v;
+      }
+    }
+
+    void reconfigureNotchDF1(float freq, float cutoff)
+    {
+      float q = getNotchQApprox(freq, cutoff);
+      _state.bq.init(BIQUAD_FILTER_NOTCH, _rate, _conf.freq, q);
+    }
+
+    float getNotchQApprox(float freq, float cutoff)
+    {
+      return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
+    }
+
+    float getNotchQ(int freq, int cutoff)
+    {
+      float octaves = log2f((float)freq  / (float)cutoff) * 2;
+      return sqrtf(powf(2, octaves)) / (powf(2, octaves) - 1);
+    }
+
+#if !defined(UNIT_TEST)
+  private:
+#endif
+    // BIQUAD
+    void initBiquadLpf(float rate, float freq)
+    {
+      //const float q = 0.70710678118f;
+      const float q = 1.0f / sqrtf(2.0f); /* quality factor: butterworth for lpf */
+      _state.bq.init(BIQUAD_FILTER_LPF, rate, freq, q);
+    }
+
+    void initBiquadNotch(float rate, float freq, float cutoff)
+    {
+      const float q = getNotchQApprox(freq, cutoff);
+      _state.bq.init(BIQUAD_FILTER_NOTCH, rate, freq, q);
+    }
+
+    void initBiquadBpf(float rate, float freq, float cutoff)
+    {
+      const float q = getNotchQApprox(freq, cutoff);
+      _state.bq.init(BIQUAD_FILTER_BPF, rate, freq, q);
+    }
+
     int _rate;
-    int _cutoff;
+    FilterConfig _conf;
     union {
       FilterStatePt1 pt1;
       FilterStateBiquad bq;
+      FilterStateFir2 fir2;
       FilterStateMedian median;
     } _state;
 };
