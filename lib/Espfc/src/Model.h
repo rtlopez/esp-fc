@@ -336,6 +336,11 @@ class Model
         }
       }
 
+      for(size_t i = 0; i < 4; i++)
+      {
+        state.inputFilter[i].begin(FilterConfig(FILTER_PT1, 30), state.gyroTimer.rate);
+      }
+
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {

@@ -88,10 +88,6 @@ class GyroSensor: public BaseSensor
           }
           if(dynamicFilter)
           {
-            if((_model.state.gyroTimer.iteration & 0x1f) == 0) // every 8th (0x07) sample
-            {
-              _model.state.gyroDynamicFilter[i].reconfigureNotchDF1(_model.state.gyroAnalyzer[i].freq, _model.state.gyroAnalyzer[i].cutoff);
-            }
             _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
           }
           // dynamic filter end

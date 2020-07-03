@@ -28,6 +28,8 @@ class Actuator
       updateAirMode();
       updateScaler();
       updateBuzzer();
+      updateDynNotch();
+      updateDynLpf();
       return 1;
     }
 
@@ -177,6 +179,31 @@ class Actuator
       if((_model.hasChanged(MODE_ARMED)))
       {
         _model.state.buzzer.push(_model.isActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
+      }
+    }
+
+    void updateDynNotch()
+    {
+      if(!_model.isActive(FEATURE_DYNAMIC_FILTER)) return;
+      for(size_t i = 0; i <= AXIS_YAW; i++) {
+        _model.state.gyroDynamicFilter[i].reconfigure(_model.state.gyroAnalyzer[i].freq, _model.state.gyroAnalyzer[i].cutoff);
+      }
+    }
+
+    void updateDynLpf()
+    {
+      int scale = Math::clamp((int)_model.state.inputUs[AXIS_THRUST], 1000, 2000);
+      if(_model.config.gyroDynLpfFilter.cutoff > 0) {
+        int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyroDynLpfFilter.cutoff, _model.config.gyroDynLpfFilter.freq);
+        for(size_t i = 0; i <= AXIS_YAW; i++) {
+          _model.state.gyroDynLpfFilter[i].reconfigure(gyroFreq);
+        }
+      }
+      if(_model.config.dtermDynLpfFilter.cutoff > 0) {
+        int dtermFreq = Math::map(scale, 1000, 2000, _model.config.dtermDynLpfFilter.cutoff, _model.config.dtermDynLpfFilter.freq);
+        for(size_t i = 0; i <= AXIS_YAW; i++) {
+          _model.state.innerPid[i].dtermDynLpfFilter.reconfigure(dtermFreq);
+        }
       }
     }
 

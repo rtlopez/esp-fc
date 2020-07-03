@@ -51,6 +51,11 @@ class FilterConfig
       return FilterConfig(t, f, c);
     }
 
+    FilterConfig reconfigure(int16_t freq, int16_t cutoff = 0) const
+    {
+      return FilterConfig((FilterType)type, freq, cutoff);
+    }
+
     int8_t type;
     int16_t freq;
     int16_t cutoff;
@@ -219,39 +224,8 @@ class Filter
 
     void begin(const FilterConfig& config, int rate)
     {
-      _rate = rate;
-      _conf = config.sanitize(rate);
-      switch(_conf.type)
-      {
-        case FILTER_PT1:
-          _state.pt1.reset();
-          _state.pt1.init(_rate, _conf.freq);
-          break;
-        case FILTER_BIQUAD:
-          _state.bq.reset();
-          initBiquadLpf(_rate, _conf.freq);
-          break;
-        case FILTER_NOTCH:
-        case FILTER_NOTCH_DF1:
-          _state.bq.reset();
-          initBiquadNotch(_rate, _conf.freq, _conf.cutoff);
-          break;
-        case FILTER_FIR2:
-          _state.fir2.reset();
-          _state.fir2.init();
-          break;
-        case FILTER_MEDIAN3:
-          _state.median.reset();
-          _state.median.init();
-          break;
-        case FILTER_BPF:
-          _state.bq.reset();
-          initBiquadBpf(_rate, _conf.freq, _conf.cutoff);
-          break;
-        case FILTER_NONE:
-        default:
-          ;
-      }
+      reconfigure(config, rate);
+      reset();
     }
 
     float update(float v)
@@ -276,10 +250,65 @@ class Filter
       }
     }
 
-    void reconfigureNotchDF1(float freq, float cutoff)
+    void reset()
     {
-      float q = getNotchQApprox(freq, cutoff);
-      _state.bq.init(BIQUAD_FILTER_NOTCH, _rate, _conf.freq, q);
+      switch(_conf.type)
+      {
+        case FILTER_PT1:
+          _state.pt1.reset();
+          break;
+        case FILTER_BIQUAD:
+        case FILTER_NOTCH:
+        case FILTER_NOTCH_DF1:
+        case FILTER_BPF:
+          _state.bq.reset();
+          break;
+        case FILTER_FIR2:
+          _state.fir2.reset();
+          break;
+        case FILTER_MEDIAN3:
+          _state.median.reset();
+          break;
+        case FILTER_NONE:
+        default:
+          ;
+      }
+    }
+
+    void reconfigure(int16_t freq, int16_t cutoff = 0)
+    {
+      reconfigure(_conf.reconfigure(freq, cutoff), _rate);
+    }
+
+    void reconfigure(const FilterConfig& config, int rate)
+    {
+      _rate = rate;
+      _conf = config.sanitize(_rate);
+      switch(_conf.type)
+      {
+        case FILTER_PT1:
+          _state.pt1.init(_rate, _conf.freq);
+          break;
+        case FILTER_BIQUAD:
+          initBiquadLpf(_rate, _conf.freq);
+          break;
+        case FILTER_NOTCH:
+        case FILTER_NOTCH_DF1:
+          initBiquadNotch(_rate, _conf.freq, _conf.cutoff);
+          break;
+        case FILTER_BPF:
+          initBiquadBpf(_rate, _conf.freq, _conf.cutoff);
+          break;
+        case FILTER_FIR2:
+          _state.fir2.init();
+          break;
+        case FILTER_MEDIAN3:
+          _state.median.init();
+          break;
+        case FILTER_NONE:
+        default:
+          ;
+      }
     }
 
     float getNotchQApprox(float freq, float cutoff)

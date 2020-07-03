@@ -424,13 +424,13 @@ void test_filter_notch_df1_150_200_1000_reconf()
     filter.begin(config, 1000);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.783f, filter.update(1.0f));
-    filter.reconfigureNotchDF1(200, 150);
+    filter.reconfigure(200, 150);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.678f, filter.update(1.0f));
-    filter.reconfigureNotchDF1(200, 150);
+    filter.reconfigure(200, 150);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.967f, filter.update(1.0f));
-    filter.reconfigureNotchDF1(200, 150);
+    filter.reconfigure(200, 150);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.166f, filter.update(1.0f));
-    filter.reconfigureNotchDF1(200, 150);
+    filter.reconfigure(200, 150);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.099f, filter.update(1.0f));
 }
 

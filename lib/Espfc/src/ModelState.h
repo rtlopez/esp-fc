@@ -277,6 +277,7 @@ struct ModelState
   
   Filter accelFilter[3];
   Filter magFilter[3];
+  Filter inputFilter[4];
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;
