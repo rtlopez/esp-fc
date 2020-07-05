@@ -291,8 +291,12 @@ struct ModelState
   Pid outerPid[AXES];
 
   bool inputLinkValid;
+  int16_t inputRaw[INPUT_CHANNELS];
   float inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
+  float inputPrevious[INPUT_CHANNELS];
+  float inputDelta[INPUT_CHANNELS];
+  float inputFrameTime;
 
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];

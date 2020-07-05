@@ -23,6 +23,7 @@ class Input
     {
       _device = Hardware::getInputDevice(_model);
       setFailsafe();
+      _model.state.inputFrameTime = 0.02f;
       return 1;
     }
 
@@ -42,12 +43,12 @@ class Input
       if(!_device) return 0;
 
       static float step = 0;
-      static float inputDt = 0.02f; // default interpolation interval 20ms
       static uint32_t prevTm = 0;
+      InputStatus status;
 
       {
         Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
-        InputStatus status = _device->update();
+        status = _device->update();
 
         if(status == INPUT_FAILED)
         {
@@ -62,26 +63,30 @@ class Input
           _model.state.inputLinkValid = true;
           _read();
           step = 0.f;
+          for(size_t i = 0; i < INPUT_CHANNELS; ++i)
+          {
+            _model.state.inputRaw[i] = _get(i, 0);
+          }
           switch(_model.config.input.interpolationMode)
           {
             case INPUT_INTERPOLATION_OFF:
               for(size_t i = 0; i < INPUT_CHANNELS; ++i)
               {
-                _model.state.inputUs[i] = (float)_get(i, 0);
+                _model.state.inputUs[i] = (float)_model.state.inputRaw[i];
               }
               break;
             case INPUT_INTERPOLATION_DEFAULT:
-              inputDt = 0.02f; // default interpolation interval 20ms
+              _model.state.inputFrameTime = 0.02f; // default interpolation interval 20ms
               break;
             case INPUT_INTERPOLATION_AUTO:
               {
                 uint32_t now = micros();
-                inputDt = Math::clamp(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+                _model.state.inputFrameTime = Math::clamp(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
                 prevTm = now;
               }
               break;
             case INPUT_INTERPOLATION_MANUAL:
-              inputDt = _model.config.input.interpolationInterval * 0.001f; // manual interval
+              _model.state.inputFrameTime = _model.config.input.interpolationInterval * 0.001f; // manual interval
               break;
           }
         }
@@ -94,24 +99,24 @@ class Input
           case INPUT_INTERPOLATION_OFF:
             break;
           default:
-            const float loopDt = _model.state.loopTimer.intervalf;
-            const float interpolationStep = loopDt / inputDt;
+            const float interpolationStep = _model.state.loopTimer.intervalf / _model.state.inputFrameTime;
             if(step < 1.f) step += interpolationStep;
             for(size_t i = 0; i < INPUT_CHANNELS; ++i)
             {
-              float val = (float)_get(i, 0);
-              if(i < INTERPOLETE_COUNT)
-              {
+              if(i < INTERPOLETE_COUNT) {
+                float val  = (float)_get(i, 0);
                 float prev = (float)_get(i, 1);
                 val =_interpolate(prev, val, step);
                 val = _model.state.inputFilter[i].update(val);
+                _model.state.inputUs[i] = val;
+              } else if(status == INPUT_RECEIVED) {
+                _model.state.inputUs[i] = (float)_get(i, 0);
               }
-              _model.state.inputUs[i] = val;
             }
             if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
             {
-              _model.state.debug[0] = 1000 * inputDt;
-              _model.state.debug[1] = 10000 * loopDt;
+              _model.state.debug[0] = _model.state.inputRaw[0];
+              _model.state.debug[1] = 1000 * _model.state.inputFrameTime;
               _model.state.debug[2] = 1000 * interpolationStep;
               _model.state.debug[3] = 1000 * step;
             }
@@ -121,7 +126,15 @@ class Input
         for(size_t i = 0; i < INPUT_CHANNELS; ++i)
         {
           const InputChannelConfig& ich = _model.config.input.channel[i];
-          _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
+          if(i < INTERPOLETE_COUNT) {
+            _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
+            _model.state.inputDelta[i] = (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
+            _model.state.inputPrevious[i] = _model.state.input[i];
+          } else if(status == INPUT_RECEIVED) {
+            _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
+            _model.state.inputDelta[i] = (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
+            _model.state.inputPrevious[i] = _model.state.input[i];
+          }
         }
       }
       return 1;
