@@ -297,6 +297,7 @@ struct ModelState
   float inputPrevious[INPUT_CHANNELS];
   float inputDelta[INPUT_CHANNELS];
   float inputFrameTime;
+  float inputFrameRate;
 
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];

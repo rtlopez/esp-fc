@@ -23,7 +23,8 @@ class Input
     {
       _device = Hardware::getInputDevice(_model);
       setFailsafe();
-      _model.state.inputFrameTime = 0.02f;
+      _model.state.inputFrameTime = FRAME_TIME_DEFAULT;
+      _model.state.inputFrameRate = 1.0f / _model.state.inputFrameTime;
       return 1;
     }
 
@@ -76,7 +77,7 @@ class Input
               }
               break;
             case INPUT_INTERPOLATION_DEFAULT:
-              _model.state.inputFrameTime = 0.02f; // default interpolation interval 20ms
+              _model.state.inputFrameTime = FRAME_TIME_DEFAULT;
               break;
             case INPUT_INTERPOLATION_AUTO:
               {
@@ -90,6 +91,7 @@ class Input
               break;
           }
         }
+        _model.state.inputFrameRate = 1.0f / _model.state.inputFrameTime;
       }
 
       {
@@ -99,7 +101,8 @@ class Input
           case INPUT_INTERPOLATION_OFF:
             break;
           default:
-            const float interpolationStep = _model.state.loopTimer.intervalf / _model.state.inputFrameTime;
+            //const float interpolationStep = _model.state.loopTimer.intervalf / _model.state.inputFrameTime;
+            const float interpolationStep = _model.state.loopTimer.intervalf * _model.state.inputFrameRate;
             if(step < 1.f) step += interpolationStep;
             for(size_t i = 0; i < INPUT_CHANNELS; ++i)
             {
@@ -132,7 +135,7 @@ class Input
             _model.state.inputPrevious[i] = _model.state.input[i];
           } else if(status == INPUT_RECEIVED) {
             _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
-            _model.state.inputDelta[i] = (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
+            _model.state.inputDelta[i] = (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.inputFrameRate;
             _model.state.inputPrevious[i] = _model.state.input[i];
           }
         }
@@ -195,6 +198,7 @@ class Input
     int16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];
     InputDevice * _device;
     static const size_t INTERPOLETE_COUNT = 4;
+    static constexpr float FRAME_TIME_DEFAULT = 0.023f;
 };
 
 }
