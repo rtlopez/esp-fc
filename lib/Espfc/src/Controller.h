@@ -154,8 +154,8 @@ class Controller
 
     void resetIterm()
     {
-      if(!_model.isActive(MODE_ARMED)   // when disarmed
-        || (!_model.isActive(MODE_AIRMODE) && _model.config.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
+      if(!_model.isActive(MODE_ARMED)   // when not armed
+        || (!_model.isAirModeActive() && _model.config.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
       )
       {
         for(size_t i = 0; i < AXES; i++)

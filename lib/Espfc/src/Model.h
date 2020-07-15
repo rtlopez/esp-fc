@@ -60,6 +60,11 @@ class Model
       return config.featureMask & feature;
     }
 
+    bool isAirModeActive() const
+    {
+      return isActive(MODE_AIRMODE);// || isActive(FEATURE_AIRMODE);
+    }
+
     bool isThrottleLow() const
     {
       return state.inputUs[AXIS_THRUST] < config.input.minCheck;
@@ -248,7 +253,7 @@ class Model
 
       // configure serial ports
       uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
-      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
+      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;// | FEATURE_AIRMODE;
 
       // allow dynamic filter only above 1k sampling rate
       if(state.gyroRate >= 1000)
