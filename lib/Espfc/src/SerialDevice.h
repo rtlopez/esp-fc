@@ -5,11 +5,13 @@
 
 #if defined(ESP32)
 #include "soc/uart_struct.h"
+#define SERIAL_TX_FIFO_SIZE 0x7f
 #endif
 
 #if defined(ESP8266)
   #define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
   #define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
+  #define SERIAL_TX_FIFO_SIZE 0x80
 #endif
 
 #define SERIAL_UART_PARITY_NONE      0B00000000
@@ -65,6 +67,7 @@ class SerialDevice: public Stream
     virtual void flush() = 0;
     virtual size_t write(uint8_t c) = 0;
     virtual size_t availableForWrite() = 0;
+    virtual bool isTxFifoEmpty() = 0;
     virtual bool isSoft() const = 0;
     using Print::write;
 };

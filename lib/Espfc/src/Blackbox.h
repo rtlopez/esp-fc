@@ -13,7 +13,7 @@ extern "C" {
 static Espfc::SerialDevice * blackboxSerial = nullptr;
 static Espfc::Model * _model_ptr = nullptr;
 
-void serialWrite(serialPort_t *instance, uint8_t ch)
+void serialWrite(serialPort_t * instance, uint8_t ch)
 {
   UNUSED(instance);
   if(blackboxSerial) blackboxSerial->write(ch);
@@ -24,18 +24,18 @@ void serialWriteInit(Espfc::SerialDevice * serial)
   blackboxSerial = serial;
 }
 
-uint32_t serialTxBytesFree(const serialPort_t *instance)
+uint32_t serialTxBytesFree(const serialPort_t * instance)
 {
   UNUSED(instance);
   if(!blackboxSerial) return 0;
   return blackboxSerial->availableForWrite();
 }
 
-bool isSerialTransmitBufferEmpty(const serialPort_t *instance)
+bool isSerialTransmitBufferEmpty(const serialPort_t * instance)
 {
   UNUSED(instance);
   if(!blackboxSerial) return false;
-  return blackboxSerial->availableForWrite() > 127;
+  return blackboxSerial->isTxFifoEmpty();
 }
 
 void initBlackboxModel(Espfc::Model * m)

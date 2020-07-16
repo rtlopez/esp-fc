@@ -151,7 +151,7 @@ class Mixer
 
       // airmode logic
       float thrust = sources[MIXER_SOURCE_THRUST];
-      if(_model.isActive(MODE_AIRMODE))
+      if(_model.isAirModeActive())
       {
         float min = 0.f, max = 0.f;
         for(size_t i = 0; i < OUTPUT_CHANNELS; i++)

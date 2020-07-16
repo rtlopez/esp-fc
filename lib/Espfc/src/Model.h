@@ -60,6 +60,11 @@ class Model
       return config.featureMask & feature;
     }
 
+    bool isAirModeActive() const
+    {
+      return isActive(MODE_AIRMODE);// || isActive(FEATURE_AIRMODE);
+    }
+
     bool isThrottleLow() const
     {
       return state.inputUs[AXIS_THRUST] < config.input.minCheck;
@@ -248,7 +253,7 @@ class Model
 
       // configure serial ports
       uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
-      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;
+      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;// | FEATURE_AIRMODE;
 
       // allow dynamic filter only above 1k sampling rate
       if(state.gyroRate >= 1000)
@@ -322,7 +327,7 @@ class Model
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
         state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
         if(config.gyroDynLpfFilter.cutoff > 0) {
-          state.gyroDynLpfFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), state.gyroTimer.rate);
+          state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), state.gyroTimer.rate);
         } else {
           state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
         }
@@ -334,6 +339,11 @@ class Model
         {
           state.magFilter[i].begin(config.magFilter, state.magTimer.rate);
         }
+      }
+
+      for(size_t i = 0; i < 4; i++)
+      {
+        state.inputFilter[i].begin(FilterConfig(FILTER_PT1, 30), state.gyroTimer.rate);
       }
 
       // ensure disarmed pulses
@@ -365,7 +375,7 @@ class Model
         pid.rate = state.loopTimer.rate;
         pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         if(config.dtermDynLpfFilter.cutoff > 0) {
-          pid.dtermDynLpfFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), state.loopTimer.rate);
+          pid.dtermFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), state.loopTimer.rate);
         } else {
           pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         }

@@ -165,7 +165,7 @@ class InputSBUS: public InputDevice
 
     inline uint16_t convert(int v)
     {
-      return constrain(((v * 5) / 8) + 880 - 18, 800, 2200);
+      return constrain(((v * 5) / 8) + 880, 800, 2200);
       //return ((v * 5 + 4) / 8) + 880;
       //return map(v, 220, 1820, 1000, 2000);
     }

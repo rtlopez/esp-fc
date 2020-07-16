@@ -271,12 +271,12 @@ struct ModelState
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
   Filter gyroDynamicFilter[3];
-  Filter gyroDynLpfFilter[3];
   Filter gyroFilterImu[3];
   Math::FreqAnalyzer gyroAnalyzer[3];
   
   Filter accelFilter[3];
   Filter magFilter[3];
+  Filter inputFilter[4];
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;
@@ -290,8 +290,13 @@ struct ModelState
   Pid outerPid[AXES];
 
   bool inputLinkValid;
+  int16_t inputRaw[INPUT_CHANNELS];
   float inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
+  float inputPrevious[INPUT_CHANNELS];
+  float inputDelta[INPUT_CHANNELS];
+  float inputFrameTime;
+  float inputFrameRate;
 
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];

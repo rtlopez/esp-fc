@@ -28,6 +28,8 @@ class Actuator
       updateAirMode();
       updateScaler();
       updateBuzzer();
+      updateDynNotch();
+      updateDynLpf();
       return 1;
     }
 
@@ -91,6 +93,10 @@ class Actuator
       {
         flags |= ARMING_DISABLED_RX_FAILSAFE;
       }
+      if(flags && _model.isSwitchActive(MODE_ARMED))
+      {
+        flags |= ARMING_DISABLED_ARM_SWITCH;
+      }
       _model.state.armingDisabledFlags = (ArmingDisabledFlags)flags;
       _model.state.i2cErrorDelta = 0;
     }
@@ -137,7 +143,8 @@ class Actuator
       switch(mode)
       {
         case MODE_ARMED:
-          return (val && !_model.armingDisabled()) || (!val && _model.isThrottleLow());
+          return (val && !_model.armingDisabled() && _model.isThrottleLow()) || !val; // disarm immediately
+          //return (val && !_model.armingDisabled()) || (!val && _model.isThrottleLow()); // disarm on low throttle
         case MODE_ANGLE:
           return _model.accelActive();
         case MODE_AIRMODE:
@@ -177,6 +184,32 @@ class Actuator
       if((_model.hasChanged(MODE_ARMED)))
       {
         _model.state.buzzer.push(_model.isActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
+      }
+    }
+
+    void updateDynNotch()
+    {
+      if(!_model.isActive(FEATURE_DYNAMIC_FILTER)) return;
+      for(size_t i = 0; i <= AXIS_YAW; i++) {
+        _model.state.gyroDynamicFilter[i].reconfigure(_model.state.gyroAnalyzer[i].freq, _model.state.gyroAnalyzer[i].cutoff);
+      }
+    }
+
+    void updateDynLpf()
+    {
+      return; // temporary disable
+      int scale = Math::clamp((int)_model.state.inputUs[AXIS_THRUST], 1000, 2000);
+      if(_model.config.gyroDynLpfFilter.cutoff > 0) {
+        int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyroDynLpfFilter.cutoff, _model.config.gyroDynLpfFilter.freq);
+        for(size_t i = 0; i <= AXIS_YAW; i++) {
+          _model.state.gyroFilter[i].reconfigure(gyroFreq);
+        }
+      }
+      if(_model.config.dtermDynLpfFilter.cutoff > 0) {
+        int dtermFreq = Math::map(scale, 1000, 2000, _model.config.dtermDynLpfFilter.cutoff, _model.config.dtermDynLpfFilter.freq);
+        for(size_t i = 0; i <= AXIS_YAW; i++) {
+          _model.state.innerPid[i].dtermFilter.reconfigure(dtermFreq);
+        }
       }
     }
 

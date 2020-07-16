@@ -288,6 +288,7 @@ enum Feature {
   FEATURE_MOTOR_STOP = 1 << 4,
   FEATURE_SOFTSERIAL = 1 << 6,
   FEATURE_TELEMETRY  = 1 << 10,
+  FEATURE_AIRMODE    = 1 << 22,
   FEATURE_DYNAMIC_FILTER = 1 << 29,
 };
 
@@ -553,21 +554,29 @@ enum ArmingDisabledFlags {
   ARMING_DISABLED_BAD_RX_RECOVERY = (1 << 3),
   ARMING_DISABLED_BOXFAILSAFE     = (1 << 4),
   ARMING_DISABLED_RUNAWAY_TAKEOFF = (1 << 5),
-  ARMING_DISABLED_THROTTLE        = (1 << 6),
-  ARMING_DISABLED_ANGLE           = (1 << 7),
-  ARMING_DISABLED_BOOT_GRACE_TIME = (1 << 8),
-  ARMING_DISABLED_NOPREARM        = (1 << 9),
-  ARMING_DISABLED_LOAD            = (1 << 10),
-  ARMING_DISABLED_CALIBRATING     = (1 << 11),
-  ARMING_DISABLED_CLI             = (1 << 12),
-  ARMING_DISABLED_CMS_MENU        = (1 << 13),
-  ARMING_DISABLED_OSD_MENU        = (1 << 14),
+  ARMING_DISABLED_CRASH_DETECTED  = (1 << 6),
+  ARMING_DISABLED_THROTTLE        = (1 << 7),
+  ARMING_DISABLED_ANGLE           = (1 << 8),
+  ARMING_DISABLED_BOOT_GRACE_TIME = (1 << 9),
+  ARMING_DISABLED_NOPREARM        = (1 << 10),
+  ARMING_DISABLED_LOAD            = (1 << 11),
+  ARMING_DISABLED_CALIBRATING     = (1 << 12),
+  ARMING_DISABLED_CLI             = (1 << 13),
+  ARMING_DISABLED_CMS_MENU        = (1 << 14),
   ARMING_DISABLED_BST             = (1 << 15),
   ARMING_DISABLED_MSP             = (1 << 16),
-  ARMING_DISABLED_ARM_SWITCH      = (1 << 17), // Needs to be the last element, since it's always activated if one of the others is active when arming
+  ARMING_DISABLED_PARALYZE        = (1 << 17),
+  ARMING_DISABLED_GPS             = (1 << 18),
+  ARMING_DISABLED_RESC            = (1 << 19),
+  ARMING_DISABLED_RPMFILTER       = (1 << 20),
+  ARMING_DISABLED_REBOOT_REQUIRED = (1 << 21),
+  ARMING_DISABLED_DSHOT_BITBANG   = (1 << 22),
+  ARMING_DISABLED_ACC_CALIBRATION = (1 << 23),
+  ARMING_DISABLED_MOTOR_PROTOCOL  = (1 << 24),
+  ARMING_DISABLED_ARM_SWITCH      = (1 << 25), // Needs to be the last element, since it's always activated if one of the others is active when arming
 };
 
-static const size_t ARMING_DISABLED_FLAGS_COUNT = 18;
+static const size_t ARMING_DISABLED_FLAGS_COUNT = 25;
 
 enum WirelessMode {
     WIRELESS_MODE_NULL = 0,  /**< null mode */
@@ -779,22 +788,22 @@ class ModelConfig
       fusion.mode = FUSION_MADGWICK;
       fusion.gain = 50;
 
-      gyroFilter = FilterConfig(FILTER_PT1, 100, 0);
-      gyroFilter2 = FilterConfig(FILTER_PT1, 250, 0);
-      gyroFilter3 = FilterConfig(FILTER_FIR2, 0, 0); // off
-      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 500, 200);
+      gyroFilter = FilterConfig(FILTER_PT1, 100);
+      gyroFilter2 = FilterConfig(FILTER_PT1, 200);
+      gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
+      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 400, 160);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
 
-      dtermFilter = FilterConfig(FILTER_PT1, 90, 0);
-      dtermFilter2 = FilterConfig(FILTER_PT1, 150, 0);
-      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 170, 70);
+      dtermFilter = FilterConfig(FILTER_PT1, 90);
+      dtermFilter2 = FilterConfig(FILTER_PT1, 120);
+      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 136, 56);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
-      magFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
-      yawFilter = FilterConfig(FILTER_PT1, 90, 0);
-      levelPtermFilter = FilterConfig(FILTER_PT1, 90, 0);
+      accelFilter = FilterConfig(FILTER_BIQUAD, 15);
+      magFilter = FilterConfig(FILTER_BIQUAD, 15);
+      yawFilter = FilterConfig(FILTER_PT1, 90);
+      levelPtermFilter = FilterConfig(FILTER_PT1, 90);
       baroFilter = FilterConfig(FILTER_BIQUAD, 25);
 
       telemetry = 0;
@@ -802,9 +811,6 @@ class ModelConfig
 
       softSerialGuard = false;
       serialRxGuard = false;
-
-      blackboxDev = 3;
-      blackboxPdenom = 32;
 
 #if defined(ESP32)
       serial[SERIAL_UART_0].id = SERIAL_UART_0;
@@ -1023,13 +1029,18 @@ class ModelConfig
   #if defined(ESP8266)
       debugMode = DEBUG_GYRO_SCALED;
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
-      //serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_250000;
       serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
-      //serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      //serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+  #elif defined(ESP32)
+      serial[SERIAL_UART_2].id = SERIAL_UART_2;
+      serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
+      serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
   #endif
-    quad();
+
+      blackboxDev = 3; // serial
+      blackboxPdenom = 32; // 1kHz
+
+      quad();
 #endif
     }
 
