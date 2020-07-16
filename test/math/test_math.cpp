@@ -472,6 +472,34 @@ void test_filter_notch_above_nyquist()
     TEST_ASSERT_LESS_THAN(filter._conf.freq, filter._conf.cutoff);
 }
 
+void test_filter_fir2_off()
+{
+    Filter filter;
+    const FilterConfig config(FILTER_FIR2, 0);
+    filter.begin(config, 100);
+    TEST_ASSERT_EQUAL_INT(100, filter._rate);
+    TEST_ASSERT_LESS_OR_EQUAL_INT(0, filter._conf.freq);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, filter.update(1.0f));
+}
+
+void test_filter_fir2_on()
+{
+    Filter filter;
+    const FilterConfig config(FILTER_FIR2, 1);
+    filter.begin(config, 100);
+    TEST_ASSERT_EQUAL_INT(100, filter._rate);
+    TEST_ASSERT_LESS_OR_EQUAL_INT(1, filter._conf.freq);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.500f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, filter.update(1.0f));
+}
+
 void test_pid_init()
 {
     Pid pid;
@@ -703,6 +731,8 @@ int main(int argc, char **argv)
     RUN_TEST(test_filter_notch_q);
     RUN_TEST(test_filter_notch_no_cutoff);
     RUN_TEST(test_filter_notch_above_nyquist);
+    RUN_TEST(test_filter_fir2_off);
+    RUN_TEST(test_filter_fir2_on);
 
     RUN_TEST(test_pid_init);
     RUN_TEST(test_pid_update_p);
