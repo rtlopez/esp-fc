@@ -202,13 +202,13 @@ class Actuator
       if(_model.config.gyroDynLpfFilter.cutoff > 0) {
         int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyroDynLpfFilter.cutoff, _model.config.gyroDynLpfFilter.freq);
         for(size_t i = 0; i <= AXIS_YAW; i++) {
-          _model.state.gyroDynLpfFilter[i].reconfigure(gyroFreq);
+          _model.state.gyroFilter[i].reconfigure(gyroFreq);
         }
       }
       if(_model.config.dtermDynLpfFilter.cutoff > 0) {
         int dtermFreq = Math::map(scale, 1000, 2000, _model.config.dtermDynLpfFilter.cutoff, _model.config.dtermDynLpfFilter.freq);
         for(size_t i = 0; i <= AXIS_YAW; i++) {
-          _model.state.innerPid[i].dtermDynLpfFilter.reconfigure(dtermFreq);
+          _model.state.innerPid[i].dtermFilter.reconfigure(dtermFreq);
         }
       }
     }

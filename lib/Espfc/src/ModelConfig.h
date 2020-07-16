@@ -788,22 +788,22 @@ class ModelConfig
       fusion.mode = FUSION_MADGWICK;
       fusion.gain = 50;
 
-      gyroFilter = FilterConfig(FILTER_PT1, 100, 0);
-      gyroFilter2 = FilterConfig(FILTER_PT1, 200, 0);
-      gyroFilter3 = FilterConfig(FILTER_FIR2, 0, 0); // off
+      gyroFilter = FilterConfig(FILTER_PT1, 100);
+      gyroFilter2 = FilterConfig(FILTER_PT1, 200);
+      gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 400, 160);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
 
-      dtermFilter = FilterConfig(FILTER_PT1, 90, 0);
-      dtermFilter2 = FilterConfig(FILTER_PT1, 150, 0);
-      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 170, 70);
+      dtermFilter = FilterConfig(FILTER_PT1, 90);
+      dtermFilter2 = FilterConfig(FILTER_PT1, 120);
+      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 136, 56);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
-      magFilter = FilterConfig(FILTER_BIQUAD, 15, 0);
-      yawFilter = FilterConfig(FILTER_PT1, 90, 0);
-      levelPtermFilter = FilterConfig(FILTER_PT1, 90, 0);
+      accelFilter = FilterConfig(FILTER_BIQUAD, 15);
+      magFilter = FilterConfig(FILTER_BIQUAD, 15);
+      yawFilter = FilterConfig(FILTER_PT1, 90);
+      levelPtermFilter = FilterConfig(FILTER_PT1, 90);
       baroFilter = FilterConfig(FILTER_BIQUAD, 25);
 
       telemetry = 0;

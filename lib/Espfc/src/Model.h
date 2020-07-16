@@ -327,7 +327,7 @@ class Model
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
         state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
         if(config.gyroDynLpfFilter.cutoff > 0) {
-          state.gyroDynLpfFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), state.gyroTimer.rate);
+          state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), state.gyroTimer.rate);
         } else {
           state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
         }
@@ -375,7 +375,7 @@ class Model
         pid.rate = state.loopTimer.rate;
         pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
         if(config.dtermDynLpfFilter.cutoff > 0) {
-          pid.dtermDynLpfFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), state.loopTimer.rate);
+          pid.dtermFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), state.loopTimer.rate);
         } else {
           pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         }

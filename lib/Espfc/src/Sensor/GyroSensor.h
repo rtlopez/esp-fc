@@ -75,30 +75,17 @@ class GyroSensor: public BaseSensor
             _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
           }
 
-          // dynamic filter start
-          bool dynamicFilter = _model.isActive(FEATURE_DYNAMIC_FILTER);
-          if(dynamicFilter || _model.config.debugMode == DEBUG_FFT_FREQ)
-          {
-            _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
-            if(_model.config.debugMode == DEBUG_FFT_FREQ)
-            {
-              _model.state.debug[i] = _model.state.gyroAnalyzer[i].freq;
-              if(i == 0) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
-            }
-          }
+          bool dynamicFilter = dynamicFilterAnalyze((Axis)i);
           if(dynamicFilter)
           {
             _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
           }
-          // dynamic filter end
-
           _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
           if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
           {
             _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
           }
-          _model.state.gyro.set(i, _model.state.gyroDynLpfFilter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
@@ -113,6 +100,22 @@ class GyroSensor: public BaseSensor
     }
 
   private:
+    bool dynamicFilterAnalyze(Axis i)
+    {
+      // dynamic filter start
+      bool dynamicFilter = _model.isActive(FEATURE_DYNAMIC_FILTER);
+      if(dynamicFilter || _model.config.debugMode == DEBUG_FFT_FREQ)
+      {
+        _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
+        if(_model.config.debugMode == DEBUG_FFT_FREQ)
+        {
+          _model.state.debug[i] = _model.state.gyroAnalyzer[i].freq;
+          if(i == 0) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
+        }
+      }
+      return dynamicFilter;
+    }
+
     void calibrate()
     {
       switch(_model.state.gyroCalibrationState)
