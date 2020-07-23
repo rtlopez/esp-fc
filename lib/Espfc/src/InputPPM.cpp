@@ -1,4 +1,5 @@
 #include "InputPPM.h"
+#include <Arduino.h>
 
 namespace Espfc {
 

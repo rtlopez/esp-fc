@@ -132,11 +132,6 @@ portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialP
     return PORTSHARING_UNUSED;
 }
 
-failsafePhase_e failsafePhase()
-{
-    return FAILSAFE_IDLE;
-}
-
 bool rxAreFlightChannelsValid(void)
 {
     return true;
@@ -172,11 +167,6 @@ void setArmingBeepTimeMicros(uint32_t ts)
 uint32_t getArmingBeepTimeMicros(void)
 {
     return armingBeepTimeUs;
-}
-
-uint16_t getRssi(void)
-{
-  return 0;
 }
 
 void arraySubInt32(int32_t *dest, int32_t *array1, int32_t *array2, int count)

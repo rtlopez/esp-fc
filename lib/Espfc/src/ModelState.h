@@ -236,6 +236,22 @@ enum CalibrationState {
   CALIBRATION_SAVE   = 4,
 };
 
+enum FailsafePhase {
+  FAILSAFE_IDLE = 0,
+  FAILSAFE_RX_LOSS_DETECTED,
+  FAILSAFE_LANDING,
+  FAILSAFE_LANDED,
+  FAILSAFE_RX_LOSS_MONITORING,
+  FAILSAFE_RX_LOSS_RECOVERED
+};
+
+class FailsafeState
+{
+  public:
+    FailsafePhase phase;
+    uint32_t timeout;
+};
+
 #define ACCEL_G (9.80665f)
 #define ACCEL_G_INV (1.f / ACCEL_G)
 
@@ -289,14 +305,27 @@ struct ModelState
   Pid innerPid[AXES];
   Pid outerPid[AXES];
 
-  bool inputLinkValid;
+  size_t inputChannelCount;
+  bool inputChannelsValid;
+  bool inputRxLoss;
+  bool inputRxFailSafe;
+
+  uint32_t inputFrameTime;
+  uint32_t inputFrameDelta;
+  uint32_t inputFrameRate;
+  uint32_t inputFrameCount;
+  float inputInterpolationDelta;
+  float inputInterpolationRate;
+
   int16_t inputRaw[INPUT_CHANNELS];
+  int16_t inputBuffer[INPUT_CHANNELS];
+  int16_t inputBufferPrevious[INPUT_CHANNELS];
+
   float inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
   float inputPrevious[INPUT_CHANNELS];
   float inputDelta[INPUT_CHANNELS];
-  float inputFrameTime;
-  float inputFrameRate;
+  FailsafeState failsafe;
 
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];
@@ -354,8 +383,8 @@ struct ModelState
   Stats stats;
 
   uint32_t modeMask;
-  uint32_t modeMaskNew;
   uint32_t modeMaskPrev;
+  uint32_t modeMaskSwitch;
 
   bool airmodeAllowed;
 

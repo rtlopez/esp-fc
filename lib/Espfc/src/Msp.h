@@ -251,7 +251,7 @@ class Msp
         case MSP_ANALOG:
           r.writeU8(_model.state.battery.voltage);  // voltage
           r.writeU16(0); // mah drawn
-          r.writeU16(0); // rssi
+          r.writeU16(_model.getRssi()); // rssi
           r.writeU16(0); // amperage
           r.writeU16(_model.state.battery.voltage * 10);  // voltage: TODO to volts
           break;
@@ -509,7 +509,11 @@ class Msp
           break;
 
         case MSP_RSSI_CONFIG:
-          r.writeU8(0);
+          r.writeU8(_model.config.input.rssiChannel);
+          break;
+
+        case MSP_SET_RSSI_CONFIG:
+          _model.config.input.rssiChannel = m.readU8();
           break;
 
         case MSP_MOTOR_CONFIG:
@@ -630,25 +634,25 @@ class Msp
           break;
 
         case MSP_FAILSAFE_CONFIG:
-          r.writeU8(0); // failsafe_delay
+          r.writeU8(_model.config.failsafe.delay); // failsafe_delay
           r.writeU8(0); // failsafe_off_delay
           r.writeU16(1000); //failsafe_throttle
-          r.writeU8(0); // failsafe_kill_switch
+          r.writeU8(_model.config.failsafe.killSwitch); // failsafe_kill_switch
           r.writeU16(0); // failsafe_throttle_low_delay
           r.writeU8(1); //failsafe_procedure; default drop
           break;
 
         case MSP_SET_FAILSAFE_CONFIG:
-          m.readU8(); //failsafe_delay
+          _model.config.failsafe.delay = m.readU8(); //failsafe_delay
           m.readU8(); //failsafe_off_delay
           m.readU16(); //failsafe_throttle
-          m.readU8(); //failsafe_kill_switch
+          _model.config.failsafe.killSwitch = m.readU8(); //failsafe_kill_switch
           m.readU16(); //failsafe_throttle_low_delay
           m.readU8(); //failsafe_procedure
           break;
 
         case MSP_RXFAIL_CONFIG:
-          for (size_t i = 0; i < INPUT_CHANNELS; i++)
+          for (size_t i = 0; i < _model.state.inputChannelCount; i++)
           {
             r.writeU8(_model.config.input.channel[i].fsMode);
             r.writeU16(_model.config.input.channel[i].fsValue);
@@ -671,7 +675,7 @@ class Msp
           break;
 
         case MSP_RC:
-          for(size_t i = 0; i < INPUT_CHANNELS; i++)
+          for(size_t i = 0; i < _model.state.inputChannelCount; i++)
           {
             r.writeU16(lrintf(_model.state.inputUs[i]));
           }
