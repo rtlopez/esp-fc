@@ -787,7 +787,7 @@ class ModelConfig
       accelFsr = ACCEL_FS_16;
 
       magBus = BUS_AUTO;
-      magDev = MAG_DEFAULT;
+      magDev = MAG_NONE;
       magAlign = ALIGN_DEFAULT;
 
       baroBus = BUS_AUTO;
@@ -1039,6 +1039,8 @@ class ModelConfig
       wireless.passAp[0] = 0;
       wireless.port = 1111;
 
+      modelName[0] = 0;
+
 // development settings
 #if !defined(ESPFC_REVISION)
   #if defined(ESP8266)
@@ -1060,7 +1062,7 @@ class ModelConfig
 
     void quad()
     {
-      output.protocol = ESC_PROTOCOL_DSHOT150;
+      output.protocol = ESC_PROTOCOL_DSHOT300;
 
       conditions[0].id = MODE_ARMED;
       conditions[0].ch = AXIS_AUX_1 + 0; // aux1

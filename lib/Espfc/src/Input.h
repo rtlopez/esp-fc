@@ -209,6 +209,7 @@ class Input
 
     void failsafeStage2()
     {
+      _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
       if(_model.isActive(MODE_ARMED))
       {
         _model.state.failsafe.phase = FAILSAFE_LANDED;
