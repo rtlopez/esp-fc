@@ -52,7 +52,7 @@ uint16_t getBatteryVoltageLatest(void)
 bool rxIsReceivingSignal(void)
 {
   if(!_model_ptr) return false;
-  return !(*_model_ptr).state.inputRxLoss && !(*_model_ptr).state.inputRxFailSafe;
+  return !((*_model_ptr).state.inputRxLoss || (*_model_ptr).state.inputRxFailSafe);
 }
 
 bool isRssiConfigured(void)

@@ -196,8 +196,8 @@ class Model
     uint16_t getRssi() const
     {
       size_t channel = config.input.rssiChannel;
-      if(!channel) return 0;
-      size_t value = state.input[channel];
+      if(channel < 4 || channel > state.inputChannelCount) return 0;
+      float value = state.input[channel - 1];
       return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0, 1023)), 0l, 1023l);
     }
 
