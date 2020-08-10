@@ -998,18 +998,18 @@ class ModelConfig
       // actuator config - pid scaling
       scaler[0].dimension = (ScalerDimension)(0);
       scaler[0].channel = 0;
-      scaler[0].minScale = 25; //%
+      scaler[0].minScale = 20; //%
       scaler[0].maxScale = 400;
 
       scaler[1].dimension = (ScalerDimension)(0);
       scaler[1].channel = 0;
-      scaler[1].minScale = 25; //%
+      scaler[1].minScale = 20; //%
       scaler[1].maxScale = 400;
 
       scaler[2].dimension = (ScalerDimension)(0);
       scaler[2].channel = 0;
-      scaler[2].minScale = 25; //%
-      scaler[2].maxScale = 400;
+      scaler[2].minScale = 20; //%
+      scaler[2].maxScale = 200;
 
       // default callibration values
       gyroBias[0] = 0;
@@ -1086,8 +1086,11 @@ class ModelConfig
       conditions[2].linkId = 0;
 
       scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[0].channel = AXIS_AUX_1 + 1;
       scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[1].channel = AXIS_AUX_1 + 2;
       scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[2].channel = AXIS_AUX_1 + 3;
     }
 
     void brobot()

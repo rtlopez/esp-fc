@@ -109,8 +109,16 @@ class GyroSensor: public BaseSensor
         _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
         if(_model.config.debugMode == DEBUG_FFT_FREQ)
         {
-          _model.state.debug[i] = _model.state.gyroAnalyzer[i].freq;
-          if(i == 0) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
+          if(i == 0)
+          {
+            _model.state.debug[0] = _model.state.gyroAnalyzer[0].freq;
+            _model.state.debug[2] = lrintf(degrees(_model.state.gyroAnalyzer[0]._noise));
+            _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
+          }
+          else if(i == 1)
+          {
+            _model.state.debug[1] = _model.state.gyroAnalyzer[1].freq;
+          }
         }
       }
       return dynamicFilter;
