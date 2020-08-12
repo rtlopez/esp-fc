@@ -13,42 +13,59 @@ class FreqAnalyzer
   public:
     FreqAnalyzer() {}
 
-    int begin(int rate)
+    int begin(int rate, DynamicFilterConfig config)
     {
       _rate = rate;
-      _bpf.begin(FilterConfig(FILTER_BPF, 200, 100), _rate); // 100 - 200 - 300 [Hz]
-      //_bpf.begin(FilterConfig(FILTER_BPF, 250, 125), _rate); // 125 - 250 - 375 [Hz]
-      _lpf.begin(FilterConfig(FILTER_BIQUAD, 3), _rate);
+      _freq_min = config.min_freq;
+      _freq_max = config.max_freq;
+      _bpf.begin(FilterConfig(FILTER_BPF, 150, 50), _rate); // 50 - 150 - 250 [Hz]
+      _lpf.begin(FilterConfig(FILTER_BIQUAD, 5), _rate); // 5 Hz
       return 1;
     }
 
-    // return noise pitch freq
+    // calculate noise pitch freq
     void update(float v)
     {
       // pitch detection
-      _noise = _bpf.update(v);
-      bool sign = _noise > 0.f;
-      if(sign != _sign_prev) {
-        _pitch_freq = Math::clamp((_rate * 0.5f) / (std::max(_pitch_count, 1)), 100.0f, 400.0f);
-        _pitch_count = 0;
-      }
-      _sign_prev = sign;
-      _pitch_count++;
+      noise = _bpf.update(v);
+      bool sign = noise > 0.f;
 
-      freq = lrintf(_lpf.update(_pitch_freq));
-      cutoff = (freq * 8) / 10;
+      // detect rising edge
+      if(sign && !_sign_prev) {
+        _pitch_freq_raise = Math::clamp((float)_rate / std::max(_pitch_count_raise, 1), _freq_min, _freq_max);
+        _pitch_count_raise = 0;
+      }
+
+      // detect falling edge
+      if(!sign && _sign_prev) {
+        _pitch_freq_fall = Math::clamp((float)_rate / std::max(_pitch_count_fall, 1), _freq_min, _freq_max);
+        _pitch_count_fall = 0;
+      }
+
+      _sign_prev = sign;
+      _pitch_count_raise++;
+      _pitch_count_fall++;
+
+      freq = lrintf(_lpf.update(std::min(_pitch_freq_raise, _pitch_freq_fall))); // use lower value
     }
 
     int freq;
-    int cutoff;
-    float _noise;
+    float noise;
 
   private:
     Filter _bpf;
     Filter _lpf;
     int _rate;
-    int _pitch_count;
-    float _pitch_freq;
+
+    float _freq_min;
+    float _freq_max;
+
+    int _pitch_count_raise;
+    int _pitch_count_fall;
+
+    float _pitch_freq_raise;
+    float _pitch_freq_fall;
+
     bool _sign_prev;
 };
 

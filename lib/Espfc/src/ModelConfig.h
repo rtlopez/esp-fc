@@ -726,6 +726,8 @@ class ModelConfig
 
     WirelessConfig wireless;
 
+    DynamicFilterConfig dynamicFilter;
+
     ModelConfig()
     {
       pin[PIN_OUTPUT_0] = -1;
@@ -805,6 +807,7 @@ class ModelConfig
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 400, 160);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
+      dynamicFilter = DynamicFilterConfig(0, 120, 100, 400);
 
       dtermFilter = FilterConfig(FILTER_PT1, 90);
       dtermFilter2 = FilterConfig(FILTER_PT1, 120);

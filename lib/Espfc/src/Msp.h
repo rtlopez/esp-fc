@@ -844,15 +844,15 @@ class Msp
           r.writeU16(_model.config.dtermDynLpfFilter.cutoff); // dyn lpf dterm min
           r.writeU16(_model.config.dtermDynLpfFilter.freq);   // dyn lpf dterm max
           // gyro analyse
-          r.writeU8(0);  // deprecated dyn notch range
-          r.writeU8(0);  // dyn_notch_width_percent
-          r.writeU16(0); // dyn_notch_q
-          r.writeU16(0); // dyn_notch_min_hz
+          r.writeU8(3);  // deprecated dyn notch range
+          r.writeU8(_model.config.dynamicFilter.width);  // dyn_notch_width_percent
+          r.writeU16(_model.config.dynamicFilter.q); // dyn_notch_q
+          r.writeU16(_model.config.dynamicFilter.min_freq); // dyn_notch_min_hz
           // rpm filter
           r.writeU8(0);  // gyro_rpm_notch_harmonics
           r.writeU8(0);  // gyro_rpm_notch_min
           // 1.43+
-          //r.writeU16(0); // dyn_notch_max_hz
+          r.writeU16(_model.config.dynamicFilter.max_freq); // dyn_notch_max_hz
 
           break;
 
@@ -893,14 +893,14 @@ class Msp
           if (m.remain() >= 8) {
             m.readU8();  // deprecated dyn_notch_range
             m.readU8();  // dyn_notch_width_percent
-            m.readU16(); // dyn_notch_q
-            m.readU16(); // dyn_notch_min_hz
+            _model.config.dynamicFilter.q = m.readU16(); // dyn_notch_q
+            _model.config.dynamicFilter.min_freq = m.readU16(); // dyn_notch_min_hz
             m.readU8();  // gyro_rpm_notch_harmonics
             m.readU8();  // gyro_rpm_notch_min
           }
           // 1.43+
           if (m.remain() >= 1) {
-            m.readU16(); // dyn_notch_max_hz
+            _model.config.dynamicFilter.max_freq = m.readU16(); // dyn_notch_max_hz
           }
           _model.reload();
           break;

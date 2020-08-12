@@ -61,6 +61,16 @@ class FilterConfig
     int16_t cutoff;
 };
 
+class DynamicFilterConfig {
+  public:
+    DynamicFilterConfig() {}
+    DynamicFilterConfig(int8_t w, int16_t qf, int16_t lf, int16_t hf): width(w), q(qf), min_freq(lf), max_freq(hf) {}
+    int8_t width;
+    int16_t q;
+    int16_t min_freq;
+    int16_t max_freq;
+};
+
 class FilterStatePt1 {
   public:
     void reset()
