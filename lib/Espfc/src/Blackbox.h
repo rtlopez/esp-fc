@@ -52,12 +52,25 @@ uint16_t getBatteryVoltageLatest(void)
 bool rxIsReceivingSignal(void)
 {
   if(!_model_ptr) return false;
-  return ((*_model_ptr).state.inputLinkValid);
+  return !((*_model_ptr).state.inputRxLoss || (*_model_ptr).state.inputRxFailSafe);
 }
 
 bool isRssiConfigured(void)
 {
-  return false;
+  if(!_model_ptr) return false;
+  return (*_model_ptr).config.input.rssiChannel > 0;
+}
+
+uint16_t getRssi(void)
+{
+  if(!_model_ptr) return 0;
+  return (*_model_ptr).getRssi();
+}
+
+failsafePhase_e failsafePhase()
+{
+  if(!_model_ptr) return FAILSAFE_IDLE;
+  return (failsafePhase_e)(*_model_ptr).state.failsafe.phase;
 }
 
 static uint32_t activeFeaturesLatch = 0;
@@ -173,13 +186,10 @@ class Blackbox
       motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
       motorConfigMutable()->mincommand = _model.config.output.minCommand;
       motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
-      motorConfigMutable()->minthrottle = motorOutputLow = _model.state.minThrottle;
-      motorConfigMutable()->maxthrottle = motorOutputHigh = _model.state.maxThrottle;
-      if(_model.state.digitalOutput)
-      {
-        motorOutputLow = PWM_TO_DSHOT(_model.state.minThrottle);
-        motorOutputHigh = PWM_TO_DSHOT(_model.state.maxThrottle);
-      }
+      motorConfigMutable()->minthrottle = _model.state.minThrottle;
+      motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
+      motorOutputLow  = _model.state.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
+      motorOutputHigh = _model.state.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
 
       blackboxConfigMutable()->p_ratio = _model.config.blackboxPdenom;
       blackboxConfigMutable()->device = _model.config.blackboxDev;
@@ -188,7 +198,6 @@ class Blackbox
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       targetPidLooptime = _model.state.loopTimer.interval;
-      //gyro.targetLooptime = _model.state.gyroTimer.interval;
       gyro.sampleLooptime = _model.state.gyroTimer.interval;
       activePidLoopDenom = _model.config.loopSync;
 
@@ -199,7 +208,7 @@ class Blackbox
 
       rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
       rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
-      rxConfigMutable()->rssi_channel = 0;
+      rxConfigMutable()->rssi_channel = _model.config.input.rssiChannel;
       rxConfigMutable()->airModeActivateThreshold = 40;
       blackboxInit();
 
@@ -286,6 +295,9 @@ class Blackbox
 
       if(_model.isSwitchActive(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
       else bitArrayClr(&rcModeActivationMask, BOXAIRMODE);
+
+      if(_model.isSwitchActive(MODE_FAILSAFE)) bitArraySet(&rcModeActivationMask, BOXFAILSAFE);
+      else bitArrayClr(&rcModeActivationMask, BOXFAILSAFE);
     }
 
     Model& _model;

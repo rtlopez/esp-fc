@@ -56,7 +56,7 @@ class InputSBUS: public InputDevice
       for(size_t i = 0; i < SBUS_FRAME_SIZE; i++)
       {
         _data[i] = 0;
-        if(i < CHANNELS) _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
+        if(i < CHANNELS) _channels[i] = 0;
       }
       return 1;
     }
@@ -76,10 +76,11 @@ class InputSBUS: public InputDevice
       if(_new_data)
       {
         _new_data = false;
-        if(_flags & SBUS_FLAG_FAILSAFE_ACTIVE) return INPUT_FAILED;
-        if(_flags & SBUS_FLAG_SIGNAL_LOSS) return INPUT_FAILED;
+        if(_flags & SBUS_FLAG_FAILSAFE_ACTIVE) return INPUT_FAILSAFE;
+        if(_flags & SBUS_FLAG_SIGNAL_LOSS) return INPUT_LOST;
         return INPUT_RECEIVED;
       }
+
       return INPUT_IDLE;
     }
 
@@ -87,6 +88,11 @@ class InputSBUS: public InputDevice
     {
       return _channels[i];
     }
+
+
+    size_t getChannelCount() const override { return CHANNELS; }
+
+    bool needAverage() const override { return false; }
 
     void print(char c) const
     {
@@ -109,23 +115,17 @@ class InputSBUS: public InputDevice
           }
           break;
         case SBUS_DATA:
-          if(!_serial->isSoft() || checkParityEven(d))
-          {
-            _data[_idx] = c;
-          }
+          _data[_idx] = c;
           if(++_idx >= SBUS_FRAME_SIZE - 1)
           {
             _state = SBUS_END;
           }
           break;
         case SBUS_END:
-          if(c == 0x00)
-          {
-            _data[_idx++] = c;
-            _state = SBUS_START;
-            _idx = 0;
-            apply();
-          }
+          _data[_idx++] = c;
+          _state = SBUS_START;
+          _idx = 0;
+          apply();
           break;
        }
     }
@@ -166,11 +166,10 @@ class InputSBUS: public InputDevice
     inline uint16_t convert(int v)
     {
       return constrain(((v * 5) / 8) + 880, 800, 2200);
-      //return ((v * 5 + 4) / 8) + 880;
-      //return map(v, 220, 1820, 1000, 2000);
     }
 
     const static size_t SBUS_FRAME_SIZE = sizeof(SbusData);
+    //const static size_t SBUS_FRAME_SIZE = 25;
 
     SerialDevice * _serial;
     SbusState _state;

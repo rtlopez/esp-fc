@@ -81,6 +81,18 @@ class Actuator
       {
         flags |= ARMING_DISABLED_NO_GYRO;
       }
+      if(_model.isActive(MODE_FAILSAFE) || _model.state.failsafe.phase != FAILSAFE_IDLE)
+      {
+        flags |= ARMING_DISABLED_FAILSAFE;
+      }
+      if(_model.state.inputRxLoss || _model.state.inputRxFailSafe)
+      {
+        flags |= ARMING_DISABLED_RX_FAILSAFE;
+      }
+      if(_model.isSwitchActive(MODE_FAILSAFE))
+      {
+        flags |= ARMING_DISABLED_BOXFAILSAFE;
+      }
       if(!_model.isThrottleLow())
       {
         flags |= ARMING_DISABLED_THROTTLE;
@@ -88,10 +100,6 @@ class Actuator
       if(_model.calibrationActive())
       {
         flags |= ARMING_DISABLED_CALIBRATING;
-      }
-      if(!_model.state.inputLinkValid)
-      {
-        flags |= ARMING_DISABLED_RX_FAILSAFE;
       }
       if(flags && _model.isSwitchActive(MODE_ARMED))
       {
@@ -121,7 +129,12 @@ class Actuator
         }
       }
 
-      _model.state.modeMaskNew = newMask;
+      _model.updateSwitchActive(newMask);
+
+      if(_model.state.failsafe.phase != FAILSAFE_IDLE)
+      {
+        newMask |= (1 << MODE_FAILSAFE);
+      }
 
       for(size_t i = 0; i < MODE_COUNT; i++)
       {
@@ -134,8 +147,7 @@ class Actuator
         }
       }
 
-      _model.state.modeMaskPrev = _model.state.modeMask;
-      _model.state.modeMask = newMask;
+      _model.updateModes(newMask);
     }
 
     bool canChangeMode(FlightMode mode, bool val)

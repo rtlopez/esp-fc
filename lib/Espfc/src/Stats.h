@@ -18,6 +18,7 @@ enum StatCounter {
   COUNTER_IMU_FUSION2,
   COUNTER_INPUT_READ,
   COUNTER_INPUT_FILTER,
+  COUNTER_FAILSAFE,
   COUNTER_ACTUATOR,
   COUNTER_OUTER_PID,
   COUNTER_INNER_PID,
@@ -118,6 +119,7 @@ class Stats
         case COUNTER_IMU_FUSION2:  return PSTR("  imu_c");
         case COUNTER_INPUT_READ:   return PSTR("   rx_r");
         case COUNTER_INPUT_FILTER: return PSTR("   rx_f");
+        case COUNTER_FAILSAFE:     return PSTR("     fs");
         case COUNTER_ACTUATOR:     return PSTR("   rx_a");
         case COUNTER_OUTER_PID:    return PSTR("  pid_o");
         case COUNTER_INNER_PID:    return PSTR("  pid_i");

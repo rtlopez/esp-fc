@@ -430,6 +430,8 @@ class Cli
         Param(PSTR("input_interpolation"), &c.input.interpolationMode, interpolChoices),
         Param(PSTR("input_interpolation_interval"), &c.input.interpolationInterval),
 
+        Param(PSTR("input_rssi_channel"), &c.input.rssiChannel),
+
         Param(PSTR("input_0"), &c.input.channel[0]),
         Param(PSTR("input_1"), &c.input.channel[1]),
         Param(PSTR("input_2"), &c.input.channel[2]),

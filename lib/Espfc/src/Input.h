@@ -12,30 +12,69 @@ namespace Espfc {
 enum FailsafeChannelMode {
   FAILSAFE_MODE_AUTO,
   FAILSAFE_MODE_HOLD,
-  FAILSAFE_MODE_SET
+  FAILSAFE_MODE_SET,
+  FAILSAFE_MODE_INVALID
+};
+
+enum InputPwmRange {
+  PWM_RANGE_MIN = 1000,
+  PWM_RANGE_MID = 1500,
+  PWM_RANGE_MAX = 2000
 };
 
 class Input
 {
   public:
     Input(Model& model): _model(model) {}
+
     int begin()
     {
       _device = Hardware::getInputDevice(_model);
-      setFailsafe();
-      _model.state.inputFrameTime = FRAME_TIME_DEFAULT;
-      _model.state.inputFrameRate = 1.0f / _model.state.inputFrameTime;
+      _model.state.inputChannelCount = _device ? _device->getChannelCount() : INPUT_CHANNELS;
+      _model.state.inputFrameDelta = FRAME_TIME_DEFAULT_US;
+      _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
+      _model.state.inputFrameCount = 0;
+      _step = 0.0f;
+      for(size_t c = 0; c < INPUT_CHANNELS; ++c)
+      {
+        if(_device) _filter[c].begin(FilterConfig(_device->needAverage() ? FILTER_FIR2 : FILTER_NONE, 1), _model.state.loopTimer.rate);
+        int16_t v = c == AXIS_THRUST ? PWM_RANGE_MIN : PWM_RANGE_MID;
+        _model.state.inputRaw[c] = v;
+        _model.state.inputBuffer[c] = v;
+        _model.state.inputBufferPrevious[c] = v;
+        setInput((Axis)c, v, true, true);
+      }
       return 1;
     }
 
-    void setFailsafe()
+    int16_t getFailsafeValue(uint8_t c)
     {
-      for(size_t i = 0; i < INPUT_CHANNELS; ++i)
+      const InputChannelConfig& ich = _model.config.input.channel[c];
+      switch(ich.fsMode)
       {
-        const InputChannelConfig& ich = _model.config.input.channel[i];
-        if(ich.fsMode == FAILSAFE_MODE_HOLD) continue;
-        _model.state.inputUs[i] = ich.fsValue;
-        _model.state.input[i] = Math::map((float)ich.fsValue, 1000.f, 2000.f, -1.f, 1.f);
+        case FAILSAFE_MODE_AUTO:
+          return c != AXIS_THRUST ? _model.config.input.midRc : _model.config.input.minRc;
+        case FAILSAFE_MODE_SET:
+          return ich.fsValue;
+        case FAILSAFE_MODE_INVALID:
+        case FAILSAFE_MODE_HOLD:
+        default:
+          return _model.state.inputBuffer[c];
+      }
+    }
+
+    void setInput(Axis i, float v, bool newFrame, bool noDelta = false)
+    {
+      _model.state.inputUs[i] = v;
+      const InputChannelConfig& ich = _model.config.input.channel[i];
+      if(i <= AXIS_THRUST) {
+        _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
+        _model.state.inputDelta[i] = noDelta ? 0 : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
+        _model.state.inputPrevious[i] = _model.state.input[i];
+      } else if(newFrame) {
+        _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
+        _model.state.inputDelta[i] = noDelta ? 0 : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.inputFrameRate;
+        _model.state.inputPrevious[i] = _model.state.input[i];
       }
     }
 
@@ -43,104 +82,188 @@ class Input
     {
       if(!_device) return 0;
 
-      static float step = 0;
-      static uint32_t prevTm = 0;
-      InputStatus status;
+      InputStatus status = readInput();
 
-      {
-        Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
-        status = _device->update();
+      failsafe(status);
 
-        if(status == INPUT_FAILED)
-        {
-          setFailsafe();
-          _model.state.buzzer.play(BEEPER_RX_LOST);
-          _model.state.inputLinkValid = false;
-          return 0;
-        }
+      filterInput(status);
 
-        if(status == INPUT_RECEIVED)
-        {
-          _model.state.inputLinkValid = true;
-          _read();
-          step = 0.f;
-          for(size_t i = 0; i < INPUT_CHANNELS; ++i)
-          {
-            _model.state.inputRaw[i] = _get(i, 0);
-          }
-          switch(_model.config.input.interpolationMode)
-          {
-            case INPUT_INTERPOLATION_OFF:
-              for(size_t i = 0; i < INPUT_CHANNELS; ++i)
-              {
-                _model.state.inputUs[i] = (float)_model.state.inputRaw[i];
-              }
-              break;
-            case INPUT_INTERPOLATION_DEFAULT:
-              _model.state.inputFrameTime = FRAME_TIME_DEFAULT;
-              break;
-            case INPUT_INTERPOLATION_AUTO:
-              {
-                uint32_t now = micros();
-                _model.state.inputFrameTime = Math::clamp(now - prevTm, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
-                prevTm = now;
-              }
-              break;
-            case INPUT_INTERPOLATION_MANUAL:
-              _model.state.inputFrameTime = _model.config.input.interpolationInterval * 0.001f; // manual interval
-              break;
-          }
-        }
-        _model.state.inputFrameRate = 1.0f / _model.state.inputFrameTime;
-      }
-
-      {
-        Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
-        switch(_model.config.input.interpolationMode)
-        {
-          case INPUT_INTERPOLATION_OFF:
-            break;
-          default:
-            //const float interpolationStep = _model.state.loopTimer.intervalf / _model.state.inputFrameTime;
-            const float interpolationStep = _model.state.loopTimer.intervalf * _model.state.inputFrameRate;
-            if(step < 1.f) step += interpolationStep;
-            for(size_t i = 0; i < INPUT_CHANNELS; ++i)
-            {
-              if(i < INTERPOLETE_COUNT) {
-                float val  = (float)_get(i, 0);
-                float prev = (float)_get(i, 1);
-                val =_interpolate(prev, val, step);
-                val = _model.state.inputFilter[i].update(val);
-                _model.state.inputUs[i] = val;
-              } else if(status == INPUT_RECEIVED) {
-                _model.state.inputUs[i] = (float)_get(i, 0);
-              }
-            }
-            if(_model.config.debugMode == DEBUG_RC_INTERPOLATION)
-            {
-              _model.state.debug[0] = _model.state.inputRaw[0];
-              _model.state.debug[1] = 1000 * _model.state.inputFrameTime;
-              _model.state.debug[2] = 1000 * interpolationStep;
-              _model.state.debug[3] = 1000 * step;
-            }
-            break;
-        }
-
-        for(size_t i = 0; i < INPUT_CHANNELS; ++i)
-        {
-          const InputChannelConfig& ich = _model.config.input.channel[i];
-          if(i < INTERPOLETE_COUNT) {
-            _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
-            _model.state.inputDelta[i] = (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
-            _model.state.inputPrevious[i] = _model.state.input[i];
-          } else if(status == INPUT_RECEIVED) {
-            _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
-            _model.state.inputDelta[i] = (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.inputFrameRate;
-            _model.state.inputPrevious[i] = _model.state.input[i];
-          }
-        }
-      }
       return 1;
+    }
+
+    InputStatus readInput()
+    {
+      Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
+      InputStatus status = _device->update();
+
+      if(status == INPUT_IDLE) return status;
+
+      _model.state.inputRxLoss = (status == INPUT_LOST || status == INPUT_FAILSAFE);
+      _model.state.inputRxFailSafe = (status == INPUT_FAILSAFE);
+      _model.state.inputFrameCount++;
+
+      updateFrameRate(micros());
+
+      processInput();
+
+      if(_model.config.debugMode == DEBUG_RX_SIGNAL_LOSS)
+      {
+        _model.state.debug[0] = !_model.state.inputRxLoss;
+        _model.state.debug[1] = _model.state.inputRxFailSafe;
+        _model.state.debug[2] = _model.state.inputChannelsValid;
+        _model.state.debug[3] = _model.state.inputRaw[AXIS_THRUST];
+      }
+
+      return status;
+    }
+
+    void processInput()
+    {
+      if(_model.state.inputFrameCount < 5) return; // ignore few first frames that might be garbage
+
+      _model.state.inputChannelsValid = true;
+      for(size_t c = 0; c < _model.state.inputChannelCount; c++)
+      {
+        const InputChannelConfig& ich = _model.config.input.channel[c];
+
+        // remap channels
+        int16_t v = _model.state.inputRaw[c] = _device->get(ich.map);
+
+        // adj midrc
+        v -= _model.config.input.midRc - PWM_RANGE_MID;
+
+        // adj range
+        float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, (float)PWM_RANGE_MIN, (float)PWM_RANGE_MID, (float)PWM_RANGE_MAX);
+
+        // filter if required
+        t = _filter[c].update(t);
+        v = lrintf(t);
+
+        // apply deadband
+        if(c < AXIS_THRUST)
+        {
+          v = Math::deadband(v - PWM_RANGE_MID, (int)_model.config.input.deadband) + PWM_RANGE_MID;
+        }
+
+        // check if inputs are valid then apply failsafe value
+        if(v < _model.config.input.minRc || v > _model.config.input.maxRc)
+        {
+          v = getFailsafeValue(c);
+          if(c <= AXIS_THRUST) _model.state.inputChannelsValid = false;
+        }
+
+        // update input buffer
+        _model.state.inputBufferPrevious[c] = _model.state.inputBuffer[c];
+        _model.state.inputBuffer[c] = v;
+      }
+    }
+
+    void failsafe(InputStatus status)
+    {
+      Stats::Measure readMeasure(_model.state.stats, COUNTER_FAILSAFE);
+
+      if(_model.isSwitchActive(MODE_FAILSAFE))
+      {
+        failsafeStage2();
+        return;
+      }
+
+      if(status == INPUT_RECEIVED)
+      {
+        failsafeIdle();
+        return;
+      }
+
+      if(status == INPUT_FAILSAFE)
+      {
+        failsafeStage2();
+        return;
+      }
+
+      uint32_t lossTime = micros() - _model.state.inputFrameTime;
+      if(lossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, 1u, 200u) * TENTH_TO_US)
+      {
+        failsafeStage2();
+        return;
+      }
+      else if(lossTime >= 1 * TENTH_TO_US)
+      {
+        failsafeStage1();
+        return;
+      }
+    }
+
+    void failsafeIdle()
+    {
+      _model.state.failsafe.phase = FAILSAFE_IDLE;
+    }
+
+    void failsafeStage1()
+    {
+      _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+      for(size_t i = 0; i < _model.state.inputChannelCount; i++)
+      {
+        setInput((Axis)i, getFailsafeValue(i), true, true);
+      }
+    }
+
+    void failsafeStage2()
+    {
+      _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+      if(_model.isActive(MODE_ARMED))
+      {
+        _model.state.failsafe.phase = FAILSAFE_LANDED;
+        _model.disarm();
+      }
+    }
+
+    void filterInput(InputStatus status)
+    {
+      Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
+
+      bool newFrame = status != INPUT_IDLE;
+      if(newFrame)
+      {
+        _step = 0.0f;
+      }
+
+      const float interpolationStep = _model.state.loopTimer.intervalf * _model.state.inputInterpolationRate;
+      if(_step < 1.f) _step += interpolationStep;
+
+      for(size_t c = 0; c < _model.state.inputChannelCount; c++)
+      {
+        float v = _model.state.inputBuffer[c];
+        if(c <= AXIS_THRUST && _model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF)
+        {
+          float p = _model.state.inputBufferPrevious[c];
+          v =_interpolate(p, v, _step);
+          v = _model.state.inputFilter[c].update(v);
+        }
+        setInput((Axis)c, v, newFrame);
+      }
+    }
+
+    void updateFrameRate(uint32_t now)
+    {
+      _model.state.inputFrameDelta = (now - _model.state.inputFrameTime);
+      _model.state.inputFrameTime = now;
+      _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
+
+      switch(_model.config.input.interpolationMode)
+      {
+        case INPUT_INTERPOLATION_AUTO:
+          _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+          break;
+        case INPUT_INTERPOLATION_MANUAL:
+          _model.state.inputInterpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
+          break;
+        case INPUT_INTERPOLATION_DEFAULT:
+        case INPUT_INTERPOLATION_OFF:
+        default:
+          _model.state.inputInterpolationDelta = FRAME_TIME_DEFAULT_US * 0.000001f;
+          break;
+      }
+      _model.state.inputInterpolationRate = 1.0f / _model.state.inputInterpolationDelta;
     }
 
   private:
@@ -149,56 +272,13 @@ class Input
       return (left * (1.f - step) + right * step);
     }
 
-    void _read()
-    {
-      _shift();
-      for(size_t c = 0; c < INPUT_CHANNELS; ++c)
-      {
-        int pulse = _device->get(_model.config.input.channel[c].map);
-        _set(c, pulse);
-      }
-    }
-
-    void _shift()
-    {
-      for(size_t b = INPUT_BUFF_SIZE - 1; b > 0; b--)
-      {
-        for(size_t c = 0; c < INPUT_CHANNELS; c++)
-        {
-          _buff[b][c] = _buff[b - 1][c];
-        }
-      }
-    }
-
-    int16_t _get(size_t c, size_t b)
-    {
-      int16_t v = (_buff[b][c] + _buff[b + 1][c] + 1) >> 1; // avg last two samples
-      //int v = _buff[b][c];
-      return v;
-    }
-
-    void _set(size_t c, int16_t v)
-    {
-      const InputChannelConfig& ich = _model.config.input.channel[c];
-      v -= _model.config.input.midRc - 1500;
-      float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, 1000.f, 1500.f, 2000.f);
-      t = Math::clamp(t, 800.f, 2200.f);
-      _buff[0][c] = _deadband(c, lrintf(t));
-    }
-
-    int16_t _deadband(size_t c, int16_t v)
-    {
-      if(c >= 3) return v;
-      return Math::deadband(v - 1500, (int)_model.config.input.deadband) + 1500;
-    }
-
-    static const size_t INPUT_BUFF_SIZE = 3;
-
     Model& _model;
-    int16_t _buff[INPUT_BUFF_SIZE][INPUT_CHANNELS];
     InputDevice * _device;
-    static const size_t INTERPOLETE_COUNT = 4;
-    static constexpr float FRAME_TIME_DEFAULT = 0.023f;
+    Filter _filter[INPUT_CHANNELS];
+    float _step;
+
+    static const uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
+    static const uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms
 };
 
 }

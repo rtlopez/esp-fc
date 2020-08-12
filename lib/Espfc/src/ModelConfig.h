@@ -7,6 +7,7 @@
 #include "Device/GyroDevice.h"
 #include "Device/MagDevice.h"
 #include "Device/BaroDevice.h"
+#include "InputPPM.h"
 
 #define USE_SOFT_SERIAL
 
@@ -462,6 +463,8 @@ class InputConfig
     uint8_t rate[3];
     uint8_t superRate[3];
 
+    uint8_t rssiChannel;
+
     InputChannelConfig channel[INPUT_CHANNELS];
 };
 
@@ -610,6 +613,13 @@ class WirelessConfig
     }
 };
 
+class FailsafeConfig
+{
+  public:
+    uint8_t delay;
+    uint8_t killSwitch;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -643,6 +653,7 @@ class ModelConfig
     FilterConfig baroFilter;
 
     InputConfig input;
+    FailsafeConfig failsafe;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
 
@@ -776,7 +787,7 @@ class ModelConfig
       accelFsr = ACCEL_FS_16;
 
       magBus = BUS_AUTO;
-      magDev = MAG_DEFAULT;
+      magDev = MAG_NONE;
       magAlign = ALIGN_DEFAULT;
 
       baroBus = BUS_AUTO;
@@ -879,20 +890,21 @@ class ModelConfig
       output.servoRate = 0; // default 50, 0 to disable
 
       // input config
-      input.ppmMode = RISING;
+      input.ppmMode = PPM_MODE_NORMAL;
       input.minCheck = 1050;
       input.maxCheck = 1900;
-      input.minRc = 850;
+      input.minRc = 885;
       input.midRc = 1500;
-      input.maxRc = 2150;
+      input.maxRc = 2115;
+      input.rssiChannel = 0;
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
         input.channel[i].map = i;
         input.channel[i].min = 1000;
         input.channel[i].neutral = input.midRc;
         input.channel[i].max = 2000;
-        input.channel[i].fsMode = i <= AXIS_THRUST ? 0 : 2;
-        input.channel[i].fsValue = i >= AXIS_THRUST ? 1000 : 1500;
+        input.channel[i].fsMode = i <= AXIS_THRUST ? 0 : 1; // auto, hold, set
+        input.channel[i].fsValue = i != AXIS_THRUST ? input.midRc : 1000;
       }
       // swap yaw and throttle for AETR
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
@@ -914,6 +926,9 @@ class ModelConfig
       //input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode
       input.interpolationInterval = 26;
       input.deadband = 3; // us
+
+      failsafe.delay = 4;
+      failsafe.killSwitch = 0;
 
       // PID controller config
       pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
@@ -983,18 +998,18 @@ class ModelConfig
       // actuator config - pid scaling
       scaler[0].dimension = (ScalerDimension)(0);
       scaler[0].channel = 0;
-      scaler[0].minScale = 25; //%
+      scaler[0].minScale = 20; //%
       scaler[0].maxScale = 400;
 
       scaler[1].dimension = (ScalerDimension)(0);
       scaler[1].channel = 0;
-      scaler[1].minScale = 25; //%
+      scaler[1].minScale = 20; //%
       scaler[1].maxScale = 400;
 
       scaler[2].dimension = (ScalerDimension)(0);
       scaler[2].channel = 0;
-      scaler[2].minScale = 25; //%
-      scaler[2].maxScale = 400;
+      scaler[2].minScale = 20; //%
+      scaler[2].maxScale = 200;
 
       // default callibration values
       gyroBias[0] = 0;
@@ -1024,10 +1039,11 @@ class ModelConfig
       wireless.passAp[0] = 0;
       wireless.port = 1111;
 
+      modelName[0] = 0;
+
 // development settings
 #if !defined(ESPFC_REVISION)
   #if defined(ESP8266)
-      debugMode = DEBUG_GYRO_SCALED;
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
       serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
@@ -1036,7 +1052,7 @@ class ModelConfig
       serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
   #endif
-
+      debugMode = DEBUG_GYRO_SCALED;
       blackboxDev = 3; // serial
       blackboxPdenom = 32; // 1kHz
 
@@ -1046,7 +1062,7 @@ class ModelConfig
 
     void quad()
     {
-      output.protocol = ESC_PROTOCOL_DSHOT150;
+      output.protocol = ESC_PROTOCOL_DSHOT300;
 
       conditions[0].id = MODE_ARMED;
       conditions[0].ch = AXIS_AUX_1 + 0; // aux1
@@ -1070,8 +1086,11 @@ class ModelConfig
       conditions[2].linkId = 0;
 
       scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[0].channel = AXIS_AUX_1 + 1;
       scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[1].channel = AXIS_AUX_1 + 2;
       scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[2].channel = AXIS_AUX_1 + 3;
     }
 
     void brobot()

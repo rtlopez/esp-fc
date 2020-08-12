@@ -40,14 +40,17 @@ class Model
       //config.brobot();
     }
 
+    /**
+     * @deprecated use isModeActive
+     */
     bool isActive(FlightMode mode) const
     {
-      return state.modeMask & (1 << mode);
+      return isModeActive(mode);
     }
 
-    bool isSwitchActive(FlightMode mode) const
+    bool isModeActive(FlightMode mode) const
     {
-      return state.modeMaskNew & (1 << mode);
+      return state.modeMask & (1 << mode);
     }
 
     bool hasChanged(FlightMode mode) const
@@ -55,7 +58,43 @@ class Model
       return (state.modeMask & (1 << mode)) != (state.modeMaskPrev & (1 << mode));
     }
 
+    void clearMode(FlightMode mode)
+    {
+      state.modeMaskPrev |= state.modeMask & (1 << mode);
+      state.modeMask &= ~(1 << mode);
+    }
+
+    void updateModes(uint32_t mask)
+    {
+      state.modeMaskPrev = state.modeMask;
+      state.modeMask = mask;
+    }
+
+    bool isSwitchActive(FlightMode mode) const
+    {
+      return state.modeMaskSwitch & (1 << mode);
+    }
+
+    void updateSwitchActive(uint32_t mask)
+    {
+      state.modeMaskSwitch = mask;
+    }
+
+    void disarm()
+    {
+      clearMode(MODE_ARMED);
+      clearMode(MODE_AIRMODE);
+    }
+
+    /**
+     * @deprecated use isFeatureActive
+     */
     bool isActive(Feature feature) const
+    {
+      return isFeatureActive(feature);
+    }
+
+    bool isFeatureActive(Feature feature) const
     {
       return config.featureMask & feature;
     }
@@ -152,6 +191,14 @@ class Model
         if(config.serial[i].functionMask & sf) return state.serial[i].stream;
       }
       return nullptr;
+    }
+
+    uint16_t getRssi() const
+    {
+      size_t channel = config.input.rssiChannel;
+      if(channel < 4 || channel > state.inputChannelCount) return 0;
+      float value = state.input[channel - 1];
+      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0, 1023)), 0l, 1023l);
     }
 
     void begin()
