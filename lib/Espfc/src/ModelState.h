@@ -287,6 +287,7 @@ struct ModelState
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
   Filter gyroDynamicFilter[3];
+  Filter gyroDynamicFilter2[3];
   Filter gyroFilterImu[3];
   Math::FreqAnalyzer gyroAnalyzer[3];
   

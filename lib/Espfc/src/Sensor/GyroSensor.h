@@ -84,7 +84,10 @@ class GyroSensor: public BaseSensor
           {
             dynamicFilterAnalyze((Axis)i, dynamicFilterDebug);
             if(dynamicFilterUpdate) dynamicFilterApply((Axis)i);
-            if(dynamicFilterEnabled) _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
+            if(dynamicFilterEnabled) {
+              _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
+              _model.state.gyro.set(i, _model.state.gyroDynamicFilter2[i].update(_model.state.gyro[i]));
+            }
           }
           _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
@@ -126,9 +129,16 @@ class GyroSensor: public BaseSensor
     void dynamicFilterApply(Axis i)
     {
       float freq = _model.state.gyroAnalyzer[i].freq;
-      float bw = freq / _model.config.dynamicFilter.q;
-      float cutoff = freq - bw * 0.5f;
-      _model.state.gyroDynamicFilter[i].reconfigure(freq, cutoff);
+      float bw = 0.5f * (freq / _model.config.dynamicFilter.q);
+      if(_model.config.dynamicFilter.width > 0 && _model.config.dynamicFilter.width < 30) {
+        float bw =  freq / _model.config.dynamicFilter.q;
+        float freq1 = freq * (1.0f - 0.005f * _model.config.dynamicFilter.width);
+        float freq2 = freq * (1.0f + 0.005f * _model.config.dynamicFilter.width);
+        _model.state.gyroDynamicFilter[i].reconfigure(freq1, freq1 - bw);
+        _model.state.gyroDynamicFilter2[i].reconfigure(freq2, freq2 - bw);
+      } else {
+        _model.state.gyroDynamicFilter[i].reconfigure(freq, freq - bw);
+      }
     }
 
     void calibrate()

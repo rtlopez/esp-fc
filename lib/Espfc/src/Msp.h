@@ -892,7 +892,7 @@ class Msp
           }
           if (m.remain() >= 8) {
             m.readU8();  // deprecated dyn_notch_range
-            m.readU8();  // dyn_notch_width_percent
+            _model.config.dynamicFilter.width = m.readU8();  // dyn_notch_width_percent
             _model.config.dynamicFilter.q = m.readU16(); // dyn_notch_q
             _model.config.dynamicFilter.min_freq = m.readU16(); // dyn_notch_min_hz
             m.readU8();  // gyro_rpm_notch_harmonics

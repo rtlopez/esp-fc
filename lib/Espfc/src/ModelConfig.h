@@ -802,16 +802,16 @@ class ModelConfig
       fusion.gain = 50;
 
       gyroFilter = FilterConfig(FILTER_PT1, 100);
-      gyroFilter2 = FilterConfig(FILTER_PT1, 200);
+      gyroFilter2 = FilterConfig(FILTER_PT1, 188);
       gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
-      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 400, 160);
+      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 375, 150);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
-      dynamicFilter = DynamicFilterConfig(0, 120, 100, 400);
+      dynamicFilter = DynamicFilterConfig(8, 120, 80, 400); // 8%. q:1.2, 80-400 Hz
 
       dtermFilter = FilterConfig(FILTER_PT1, 90);
-      dtermFilter2 = FilterConfig(FILTER_PT1, 120);
-      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 136, 56);
+      dtermFilter2 = FilterConfig(FILTER_PT1, 113);
+      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
       accelFilter = FilterConfig(FILTER_BIQUAD, 15);
@@ -953,7 +953,7 @@ class ModelConfig
       angleRateLimit = 300;  // deg
 
     #if defined(ESP8266)
-      featureMask = FEATURE_RX_PPM;
+      featureMask = FEATURE_RX_PPM | FEATURE_DYNAMIC_FILTER;
     #elif defined(ESP32)
       featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_DYNAMIC_FILTER;
     #endif
@@ -1047,17 +1047,16 @@ class ModelConfig
 // development settings
 #if !defined(ESPFC_REVISION)
   #if defined(ESP8266)
+      output.protocol = ESC_PROTOCOL_DSHOT150;
       serial[SERIAL_UART_1].id = SERIAL_UART_1;
       serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
   #elif defined(ESP32)
+      output.protocol = ESC_PROTOCOL_DSHOT300;
       serial[SERIAL_UART_2].id = SERIAL_UART_2;
       serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
       serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
   #endif
-      debugMode = DEBUG_GYRO_SCALED;
-      blackboxDev = 3; // serial
-      blackboxPdenom = 32; // 1kHz
 
       quad();
 #endif
@@ -1065,7 +1064,9 @@ class ModelConfig
 
     void quad()
     {
-      output.protocol = ESC_PROTOCOL_DSHOT300;
+      debugMode = DEBUG_GYRO_SCALED;
+      blackboxDev = 3; // serial
+      blackboxPdenom = 32; // 1kHz
 
       conditions[0].id = MODE_ARMED;
       conditions[0].ch = AXIS_AUX_1 + 0; // aux1
