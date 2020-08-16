@@ -462,6 +462,8 @@ class InputConfig
     uint8_t expo[3];
     uint8_t rate[3];
     uint8_t superRate[3];
+    int16_t rateLimit[3];
+    uint8_t rateType;
 
     uint8_t rssiChannel;
 
@@ -910,17 +912,22 @@ class ModelConfig
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
       input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
 
+      input.rateType = 0; // betaflight
+
       input.rate[AXIS_ROLL] = 70;
       input.expo[AXIS_ROLL] = 0;
       input.superRate[AXIS_ROLL] = 80;
+      input.rateLimit[AXIS_ROLL] = 1998;
 
       input.rate[AXIS_PITCH] = 70;
       input.expo[AXIS_PITCH] = 0;
       input.superRate[AXIS_PITCH] = 80;
+      input.rateLimit[AXIS_PITCH] = 1998;
 
       input.rate[AXIS_YAW] = 120;
       input.expo[AXIS_YAW] = 0;
       input.superRate[AXIS_YAW] = 50;
+      input.rateLimit[AXIS_YAW] = 1998;
 
       input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
       //input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode

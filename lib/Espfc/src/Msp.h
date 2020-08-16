@@ -700,11 +700,11 @@ class Msp
           r.writeU8(0); // throtle limit type (off)
           r.writeU8(100); // throtle limit percent (100%)
           //1.42+
-          r.writeU16(1998); // rate limit roll
-          r.writeU16(1998); // rate limit pitch
-          r.writeU16(1998); // rate limit yaw
+          r.writeU16(_model.config.input.rateLimit[0]); // rate limit roll
+          r.writeU16(_model.config.input.rateLimit[1]); // rate limit pitch
+          r.writeU16(_model.config.input.rateLimit[2]); // rate limit yaw
           // 1.43+
-          //r.writeU8(0); // rates type // TODO: requires support
+          r.writeU8(_model.config.input.rateType); // rates type
 
           break;
 
@@ -748,6 +748,24 @@ class Msp
             if(m.remain() >= 1)
             {
               _model.config.input.expo[AXIS_PITCH]  = m.readU8(); // pitch expo
+            }
+            // 1.41
+            if(m.remain() >= 2)
+            {
+              m.readU8(); // throttle_limit_type
+              m.readU8(); // throttle_limit_percent
+            }
+            // 1.42
+            if(m.remain() >= 6)
+            {
+              _model.config.input.rateLimit[0] = m.readU16(); // roll
+              _model.config.input.rateLimit[1] = m.readU16(); // pitch
+              _model.config.input.rateLimit[2] = m.readU16(); // yaw
+            }
+            // 1.43
+            if (m.remain() >= 1)
+            {
+              _model.config.input.rateType = m.readU8();
             }
           }
           else
@@ -811,8 +829,8 @@ class Msp
           r.writeU8(0); // autoConfig
           r.writeU8(0); // autoBaud
           // 1.43+
-          //m.writeU8(0); // gps_set_home_point_once
-          //m.writeU8(0); // gps_ublox_use_galileo
+          r.writeU8(0); // gps_set_home_point_once
+          r.writeU8(0); // gps_ublox_use_galileo
           break;
 
         case MSP_COMPASS_CONFIG:
@@ -967,15 +985,14 @@ class Msp
           r.writeU8(0); // d min yaw
           r.writeU8(0); // d min gain
           r.writeU8(0); // d min advance
-
           r.writeU8(0); // use_integrated_yaw
           r.writeU8(0); // integrated_yaw_relax
           // 1.42+
           r.writeU8(0); // iterm_relax_cutoff
           // 1.43+
-          //r.writeU8(0); // motor_output_limit
-          //r.writeU8(0); // auto_profile_cell_count
-          //r.writeU8(0); // idle_min_rpm
+          r.writeU8(100); // motor_output_limit
+          r.writeU8(0); // auto_profile_cell_count
+          r.writeU8(0); // idle_min_rpm
 
           break;
 
@@ -1031,11 +1048,11 @@ class Msp
             m.readU8(); // iterm_relax_cutoff
           }
           // 1.43+
-          //if (m.remain() >= 3) {
-          //  m.readU8(); // motor_output_limit
-          //  m.readU8(); // auto_profile_cell_count
-          //  m.readU8(); // idle_min_rpm
-          //}
+          if (m.remain() >= 3) {
+            m.readU8(); // motor_output_limit
+            m.readU8(); // auto_profile_cell_count
+            m.readU8(); // idle_min_rpm
+          }
           _model.reload();
           break;
 
