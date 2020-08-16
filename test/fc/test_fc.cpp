@@ -209,10 +209,12 @@ void test_controller_rates()
   model.config.input.expo[AXIS_ROLL] = 0;
   model.config.input.superRate[AXIS_ROLL] = 80;
   model.config.input.rateLimit[AXIS_ROLL] = 1998;
+
   model.config.input.rate[AXIS_PITCH] = 70;
   model.config.input.expo[AXIS_PITCH] = 0;
   model.config.input.superRate[AXIS_PITCH] = 80;
   model.config.input.rateLimit[AXIS_PITCH] = 1998;
+  
   model.config.input.rate[AXIS_YAW] = 120;
   model.config.input.expo[AXIS_YAW] = 0;
   model.config.input.superRate[AXIS_YAW] = 50;
@@ -244,6 +246,52 @@ void test_controller_rates()
   TEST_ASSERT_FLOAT_WITHIN(0.01f,  -8.64f, controller.calculateSetpointRate(AXIS_YAW, 1.0f));
 }
 
+void test_controller_rates_limit()
+{
+  Model model;
+  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.config.gyroSync = 8; // 1khz
+  model.config.loopSync = 1;
+  model.config.mixerSync = 1;
+  model.config.mixerType = MIXER_QUADX;
+
+  model.config.input.rateType = 0; // betaflight
+  model.config.input.rate[AXIS_ROLL] = 70;
+  model.config.input.expo[AXIS_ROLL] = 0;
+  model.config.input.superRate[AXIS_ROLL] = 80;
+  model.config.input.rateLimit[AXIS_ROLL] = 500;
+
+  model.config.input.rate[AXIS_PITCH] = 70;
+  model.config.input.expo[AXIS_PITCH] = 0;
+  model.config.input.superRate[AXIS_PITCH] = 80;
+  model.config.input.rateLimit[AXIS_PITCH] = 500;
+
+  model.config.input.rate[AXIS_YAW] = 120;
+  model.config.input.expo[AXIS_YAW] = 0;
+  model.config.input.superRate[AXIS_YAW] = 50;
+  model.config.input.rateLimit[AXIS_YAW] = 400;
+
+  model.begin();
+  model.update();
+
+  Controller controller(model);
+  controller.begin();
+
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_ROLL, 0.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, controller.calculateSetpointRate(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   8.73f, controller.calculateSetpointRate(AXIS_ROLL, 1.0f));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_PITCH,  0.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, controller.calculateSetpointRate(AXIS_PITCH,  0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.08f, controller.calculateSetpointRate(AXIS_PITCH, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   8.73f, controller.calculateSetpointRate(AXIS_PITCH,  1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -8.73f, controller.calculateSetpointRate(AXIS_PITCH, -1.0f));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_YAW, 0.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.83f, controller.calculateSetpointRate(AXIS_YAW, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -6.98f, controller.calculateSetpointRate(AXIS_YAW, 1.0f));
+}
+
 int main(int argc, char **argv)
 {
   UNITY_BEGIN();
@@ -257,6 +305,7 @@ int main(int argc, char **argv)
   RUN_TEST(test_model_inner_pid_init);
   RUN_TEST(test_model_outer_pid_init);
   RUN_TEST(test_controller_rates);
+  RUN_TEST(test_controller_rates_limit);
   UNITY_END();
 
   return 0;
