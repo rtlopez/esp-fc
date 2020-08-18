@@ -463,7 +463,7 @@ class InputConfig
     uint8_t rate[3];
     uint8_t superRate[3];
     int16_t rateLimit[3];
-    uint8_t rateType;
+    int8_t rateType;
 
     uint8_t rssiChannel;
 

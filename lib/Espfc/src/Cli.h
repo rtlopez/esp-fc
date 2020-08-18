@@ -348,6 +348,7 @@ class Cli
       static const char* interpolChoices[]   = { PSTR("NONE"), PSTR("DEFAULT"), PSTR("AUTO"), PSTR("MANUAL"), NULL };
       static const char* protocolChoices[]   = { PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
                                                  PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("DSHOT1200"), PSTR("PROSHOT1000"), NULL };
+      static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
 
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
 
@@ -409,17 +410,22 @@ class Cli
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
         Param(PSTR("fusion_gain"), &c.fusion.gain),
 
+        Param(PSTR("input_rate_type"), &c.input.rateType, inputRateTypeChoices),
+
         Param(PSTR("input_roll_rate"), &c.input.rate[0]),
         Param(PSTR("input_roll_srate"), &c.input.superRate[0]),
         Param(PSTR("input_roll_expo"), &c.input.expo[0]),
+        Param(PSTR("input_roll_limit"), &c.input.rateLimit[0]),
 
         Param(PSTR("input_pitch_rate"), &c.input.rate[1]),
         Param(PSTR("input_pitch_srate"), &c.input.superRate[1]),
         Param(PSTR("input_pitch_expo"), &c.input.expo[1]),
+        Param(PSTR("input_pitch_limit"), &c.input.rateLimit[1]),
 
         Param(PSTR("input_yaw_rate"), &c.input.rate[2]),
         Param(PSTR("input_yaw_srate"), &c.input.superRate[2]),
         Param(PSTR("input_yaw_expo"), &c.input.expo[2]),
+        Param(PSTR("input_yaw_limit"), &c.input.rateLimit[2]),
 
         Param(PSTR("input_deadband"), &c.input.deadband),
 

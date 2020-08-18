@@ -133,6 +133,20 @@ class Msp
           r.writeData(boardIdentifier, BOARD_IDENTIFIER_LENGTH);
           r.writeU16(0); // No other build targets currently have hardware revision detection.
           r.writeU8(0);  // 0 == FC
+          r.writeU8(0);  // target capabilities
+          r.writeU8(0);  // target name
+          r.writeU8(0);  // board name
+          r.writeU8(0);  // manufacturer name
+          for(size_t i = 0; i < 32; i++) r.writeU8(0); // signature
+          r.writeU8(255); // mcu id: unknown
+          // 1.42
+          r.writeU8(2);  // configuration state: configured
+          // 1.43
+          r.writeU16(_model.state.gyroTimer.rate); // sample rate
+          r.writeU32(0); // configuration problems
+          // 1.44
+          r.writeU8(0);  // spi dev count
+          r.writeU8(0);  // i2c dev count
           break;
 
         case MSP_BUILD_INFO:
