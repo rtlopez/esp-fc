@@ -201,7 +201,8 @@ enum SerialSpeed {
   SERIAL_SPEED_115200 = 115200,
   SERIAL_SPEED_230400 = 230400,
   SERIAL_SPEED_250000 = 250000,
-  SERIAL_SPEED_500000 = 500000
+  SERIAL_SPEED_500000 = 500000,
+  SERIAL_SPEED_1000000 = 1000000,
 };
 
 enum SerialSpeedIndex {
@@ -213,7 +214,14 @@ enum SerialSpeedIndex {
   SERIAL_SPEED_INDEX_115200,
   SERIAL_SPEED_INDEX_230400,
   SERIAL_SPEED_INDEX_250000,
-  SERIAL_SPEED_INDEX_500000 = 10
+  SERIAL_SPEED_INDEX_400000,
+  SERIAL_SPEED_INDEX_460800,
+  SERIAL_SPEED_INDEX_500000,
+  SERIAL_SPEED_INDEX_921600,
+  SERIAL_SPEED_INDEX_1000000,
+  SERIAL_SPEED_INDEX_1500000,
+  SERIAL_SPEED_INDEX_2000000,
+  SERIAL_SPEED_INDEX_2470000,
 };
 
 enum SerialPort {
@@ -245,6 +253,8 @@ enum SerialFunction {
   SERIAL_FUNCTION_TELEMETRY_IBUS      = (1 << 12), // 4096
   SERIAL_FUNCTION_VTX_TRAMP           = (1 << 13), // 8192
   SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
+  SERIAL_FUNCTION_LIDAR_TF            = (1 << 15), // 32768
+  SERIAL_FUNCTION_FRSKY_OSD           = (1 << 16), // 65536
 };
 
 enum SerialRXProvider {
@@ -365,7 +375,7 @@ class SerialPortConfig
 {
   public:
     int8_t id;
-    int16_t functionMask;
+    int32_t functionMask;
     int8_t baudIndex;
     int8_t blackboxBaudIndex;
 };
@@ -940,7 +950,7 @@ class ModelConfig
       // PID controller config
       pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
       pid[PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
-      pid[PID_YAW]   = { .P = 30, .I = 90, .D =  0, .F = 90 };
+      pid[PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
       pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
 
       pid[PID_ALT]   = { .P = 0, .I =  0, .D =  0, .F = 0 };

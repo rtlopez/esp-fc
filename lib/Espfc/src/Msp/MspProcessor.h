@@ -1,90 +1,24 @@
-#ifndef _ESPFC_MSP_H_
-#define _ESPFC_MSP_H_
+#ifndef _ESPFC_MSP_PROCESSOR_H_
+#define _ESPFC_MSP_PROCESSOR_H_
 
-#include <Arduino.h>
+#include "Msp/Msp.h"
 #include "Model.h"
 #include "Hardware.h"
-
-extern "C" {
-#include "msp/msp_protocol.h"
+#include "Msp/MspParser.h"
 #include "platform.h"
-}
-
-static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
-static const char * boardIdentifier = "ESPF";
 
 namespace Espfc {
 
-class Msp
+namespace Msp {
+
+class MspProcessor
 {
   public:
-    Msp(Model& model): _model(model) {}
+    MspProcessor(Model& model): _model(model) {}
 
     bool process(char c, MspMessage& msg, MspResponse& res, Stream& s)
     {
-      switch(msg.state)
-      {
-        case MSP_STATE_IDLE:               // sync char 1 '$'
-          if(c == '$')
-          {
-            msg.state = MSP_STATE_HEADER_START;
-          }
-          break;
-
-        case MSP_STATE_HEADER_START:       // sync char 2 'M'
-            if(c == 'M') msg.state = MSP_STATE_HEADER_M;
-            else msg.state = MSP_STATE_IDLE;
-            break;
-
-        case MSP_STATE_HEADER_M:               // direction (should be >)
-          switch(c)
-          {
-            case '>':
-              msg.dir = MSP_TYPE_REPLY;
-              msg.state = MSP_STATE_HEADER_ARROW;
-              break;
-            case '<':
-              msg.dir = MSP_TYPE_CMD;
-              msg.state = MSP_STATE_HEADER_ARROW;
-              break;
-            default:
-              msg.state = MSP_STATE_IDLE;
-          }
-          break;
-        case MSP_STATE_HEADER_ARROW:
-          if (c > MSP_BUF_SIZE) msg.state = MSP_STATE_IDLE;
-          else
-          {
-            msg.expected = c;
-            msg.received = 0;
-            msg.read = 0;
-            msg.checksum = 0;
-            msg.checksum ^= c;
-            msg.state = MSP_STATE_HEADER_SIZE;
-          }
-          break;
-
-        case MSP_STATE_HEADER_SIZE:
-          msg.cmd = c;
-          msg.checksum ^= c;
-          msg.state = MSP_STATE_HEADER_CMD;
-          break;
-
-        case MSP_STATE_HEADER_CMD:
-          if(msg.received < msg.expected)
-          {
-            msg.checksum ^= c;
-            msg.buffer[msg.received++] = c;
-          }
-          else if(msg.received >= msg.expected)
-          {
-            msg.state = msg.checksum == c ? MSP_STATE_RECEIVED : MSP_STATE_IDLE;
-          }
-
-        default:
-          //msg.state = MSP_STATE_IDLE;
-          break;
-      }
+      _parser.parse(c, msg);
 
       if(msg.state == MSP_STATE_RECEIVED)
       {
@@ -110,6 +44,7 @@ class Msp
     void processCommand(MspMessage& m, MspResponse& r)
     {
       r.cmd = m.cmd;
+      r.version = m.version;
       r.result = 1;
       switch(m.cmd)
       {
@@ -134,7 +69,8 @@ class Msp
           r.writeU16(0); // No other build targets currently have hardware revision detection.
           r.writeU8(0);  // 0 == FC
           r.writeU8(0);  // target capabilities
-          r.writeU8(0);  // target name
+          r.writeU8(strlen(targetName));  // target name
+          r.writeData(targetName, strlen(targetName));
           r.writeU8(0);  // board name
           r.writeU8(0);  // manufacturer name
           for(size_t i = 0; i < 32; i++) r.writeU8(0); // signature
@@ -434,6 +370,28 @@ class Msp
           }
           break;
 
+        case MSP2_COMMON_SERIAL_CONFIG:
+          {
+            uint8_t count = 0;
+            for (int i = 0; i < SERIAL_PORT_COUNT; i++)
+            {
+              if(_model.config.serial[i].id >= 30 && !_model.isActive(FEATURE_SOFTSERIAL)) break;
+              count++;
+            }
+            r.writeU8(count);
+            for (int i = 0; i < SERIAL_PORT_COUNT; i++)
+            {
+              if(_model.config.serial[i].id >= 30 && !_model.isActive(FEATURE_SOFTSERIAL)) break;
+              r.writeU8(_model.config.serial[i].id); // identifier
+              r.writeU32(_model.config.serial[i].functionMask); // functionMask
+              r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
+              r.writeU8(0); // gps_baudrateIndex
+              r.writeU8(0); // telemetry_baudrateIndex
+              r.writeU8(_model.config.serial[i].blackboxBaudIndex); // blackbox_baudrateIndex
+            }
+          }
+          break;
+
         case MSP_SET_CF_SERIAL_CONFIG:
           {
             const int packetSize = 1 + 2 + 4;
@@ -455,6 +413,36 @@ class Msp
 #endif
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU16();
+              _model.config.serial[k].baudIndex = m.readU8();
+              m.readU8();
+              m.readU8();
+              _model.config.serial[k].blackboxBaudIndex = m.readU8();
+            }
+          }
+          _model.reload();
+          break;
+
+        case MSP2_COMMON_SET_SERIAL_CONFIG:
+          {
+            const int packetSize = 1 + 4 + 4;
+            while(m.remain() >= packetSize)
+            {
+              int id = m.readU8();
+#if defined(ESP32)
+              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != SERIAL_UART_2)
+#elif defined(ESP8266)
+              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != 30)
+#endif
+              {
+                m.advance(packetSize - 1);
+                continue;
+              }
+              size_t k = id;
+#if defined(ESP8266)
+               if(id == 30) k = SERIAL_SOFT_0;
+#endif
+              _model.config.serial[k].id = id;
+              _model.config.serial[k].functionMask = m.readU32();
               _model.config.serial[k].baudIndex = m.readU8();
               m.readU8();
               m.readU8();
@@ -847,9 +835,9 @@ class Msp
           r.writeU8(0); // gps_ublox_use_galileo
           break;
 
-        case MSP_COMPASS_CONFIG:
-          r.writeU16(0); // mag_declination * 10
-          break;
+        //case MSP_COMPASS_CONFIG:
+        //  r.writeU16(0); // mag_declination * 10
+        //  break;
 
         case MSP_FILTER_CONFIG:
           r.writeU8(_model.config.gyroFilter.freq);           // gyro lpf
@@ -1211,7 +1199,20 @@ class Msp
     void sendResponse(MspResponse& r, Stream& s)
     {
       debugResponse(r);
+      switch(r.version)
+      {
+        case MSP_V1:
+          sendResponseV1(r, s);
+          break;
+        case MSP_V2:
+          sendResponseV2(r, s);
+          break;
+      }
+      postCommand();
+    }
 
+    void sendResponseV1(MspResponse& r, Stream& s)
+    {
       uint8_t hdr[5] = { '$', 'M', '>' };
       if(r.result == -1)
       {
@@ -1219,15 +1220,35 @@ class Msp
       }
       hdr[3] = r.len;
       hdr[4] = r.cmd;
-      uint8_t checksum = crc(0, &hdr[3], 2);
+      uint8_t checksum = _parser.crc8_xor(0, &hdr[3], 2);
       s.write(hdr, 5);
       if(r.len > 0)
       {
         s.write(r.data, r.len);
-        checksum = crc(checksum, r.data, r.len);
+        checksum = _parser.crc8_xor(checksum, r.data, r.len);
       }
       s.write(checksum);
-      postCommand();
+    }
+
+    void sendResponseV2(MspResponse& r, Stream& s)
+    {
+      uint8_t hdr[8] = { '$', 'X', '>', 0 };
+      if(r.result == -1)
+      {
+        hdr[2] = '!'; // error ??
+      }
+      hdr[4] = r.cmd & 0xff;
+      hdr[5] = (r.cmd >> 8) & 0xff;
+      hdr[6] = r.len & 0xff;
+      hdr[7] = (r.len >> 8) & 0xff;
+      uint8_t checksum = _parser.crc8_dvb_s2(0, &hdr[3], 5);
+      s.write(hdr, 8);
+      if(r.len > 0)
+      {
+        s.write(r.data, r.len);
+        checksum = _parser.crc8_dvb_s2(checksum, r.data, r.len);
+      }
+      s.write(checksum);
     }
 
     void postCommand()
@@ -1236,15 +1257,6 @@ class Msp
       {
         Hardware::restart(_model);
       }
-    }
-
-    uint8_t crc(uint8_t checksum, const uint8_t *data, int len)
-    {
-      while (len-- > 0)
-      {
-        checksum ^= *data++;
-      }
-      return checksum;
     }
 
     bool debugSkip(uint8_t cmd)
@@ -1301,8 +1313,11 @@ class Msp
 
   private:
     Model& _model;
+    MspParser _parser;
     bool _reboot;
 };
+
+}
 
 }
 

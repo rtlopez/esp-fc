@@ -8,11 +8,10 @@
 #include "Hardware.h"
 #include "Logger.h"
 #include "Device/GyroDevice.h"
+#include "platform.h"
 
 #if defined(ESP8266)
-extern "C" {
 #include "user_interface.h"
-}
 #endif //ESP8266
 
 #if defined(ESP32)
@@ -1223,7 +1222,7 @@ class Cli
 
     void printVersion(Stream& s)
     {
-      s.print(TARGET_BOARD_IDENTIFIER);
+      s.print(boardIdentifier);
       s.print(' ');
       s.print(targetName);
       s.print(' ');

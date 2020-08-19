@@ -203,6 +203,7 @@ class Hardware
         case SERIAL_SPEED_INDEX_230400: return SERIAL_SPEED_230400;
         case SERIAL_SPEED_INDEX_250000: return SERIAL_SPEED_250000;
         case SERIAL_SPEED_INDEX_500000: return SERIAL_SPEED_500000;
+        case SERIAL_SPEED_INDEX_1000000: return SERIAL_SPEED_1000000;
         case SERIAL_SPEED_INDEX_AUTO:
         default:
           return defaultSpeed;
