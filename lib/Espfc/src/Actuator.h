@@ -28,7 +28,6 @@ class Actuator
       updateAirMode();
       updateScaler();
       updateBuzzer();
-      updateDynNotch();
       updateDynLpf();
       return 1;
     }
@@ -196,14 +195,6 @@ class Actuator
       if((_model.hasChanged(MODE_ARMED)))
       {
         _model.state.buzzer.push(_model.isActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
-      }
-    }
-
-    void updateDynNotch()
-    {
-      if(!_model.isActive(FEATURE_DYNAMIC_FILTER)) return;
-      for(size_t i = 0; i <= AXIS_YAW; i++) {
-        _model.state.gyroDynamicFilter[i].reconfigure(_model.state.gyroAnalyzer[i].freq, _model.state.gyroAnalyzer[i].cutoff);
       }
     }
 

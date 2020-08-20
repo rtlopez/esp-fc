@@ -358,6 +358,7 @@ class Model
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
       state.actuatorTimer.setRate(25); // 25 hz
+      state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(10);
       state.serialTimer.setRate(1000);
@@ -369,8 +370,13 @@ class Model
       // configure filters
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
-        state.gyroAnalyzer[i].begin(state.gyroTimer.rate);
-        state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
+        state.gyroAnalyzer[i].begin(state.gyroTimer.rate, config.dynamicFilter);
+        if(isActive(FEATURE_DYNAMIC_FILTER)) {
+          state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
+          if(config.dynamicFilter.width > 0) {
+            state.gyroDynamicFilter2[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
+          }
+        }
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
         state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
         if(config.gyroDynLpfFilter.cutoff > 0) {
