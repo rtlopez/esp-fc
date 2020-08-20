@@ -360,7 +360,7 @@ class MspProcessor
         case MSP_CF_SERIAL_CONFIG:
           for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
           {
-            if(_model.config.serial[i].id >= 30 && !_model.isActive(FEATURE_SOFTSERIAL)) break;
+            if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
             r.writeU8(_model.config.serial[i].id); // identifier
             r.writeU16(_model.config.serial[i].functionMask); // functionMask
             r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
@@ -373,15 +373,15 @@ class MspProcessor
         case MSP2_COMMON_SERIAL_CONFIG:
           {
             uint8_t count = 0;
-            for (int i = 0; i < SERIAL_PORT_COUNT; i++)
+            for (int i = 0; i < SERIAL_UART_COUNT; i++)
             {
-              if(_model.config.serial[i].id >= 30 && !_model.isActive(FEATURE_SOFTSERIAL)) break;
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
               count++;
             }
             r.writeU8(count);
-            for (int i = 0; i < SERIAL_PORT_COUNT; i++)
+            for (int i = 0; i < SERIAL_UART_COUNT; i++)
             {
-              if(_model.config.serial[i].id >= 30 && !_model.isActive(FEATURE_SOFTSERIAL)) break;
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
               r.writeU8(_model.config.serial[i].id); // identifier
               r.writeU32(_model.config.serial[i].functionMask); // functionMask
               r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
@@ -398,19 +398,11 @@ class MspProcessor
             while(m.remain() >= packetSize)
             {
               int id = m.readU8();
-#if defined(ESP32)
-              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != SERIAL_UART_2)
-#elif defined(ESP8266)
-              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != 30)
-#endif
+              int k = _model.getSerialIndex((SerialPortId)id);
               {
                 m.advance(packetSize - 1);
                 continue;
               }
-              size_t k = id;
-#if defined(ESP8266)
-               if(id == 30) k = SERIAL_SOFT_0;
-#endif
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU16();
               _model.config.serial[k].baudIndex = m.readU8();
@@ -424,23 +416,18 @@ class MspProcessor
 
         case MSP2_COMMON_SET_SERIAL_CONFIG:
           {
+            size_t count = m.readU8();
+            (void)count; // ignore
             const int packetSize = 1 + 4 + 4;
             while(m.remain() >= packetSize)
             {
               int id = m.readU8();
-#if defined(ESP32)
-              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != SERIAL_UART_2)
-#elif defined(ESP8266)
-              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != 30)
-#endif
+              int k = _model.getSerialIndex((SerialPortId)id);
+              if(k == -1)
               {
                 m.advance(packetSize - 1);
                 continue;
               }
-              size_t k = id;
-#if defined(ESP8266)
-               if(id == 30) k = SERIAL_SOFT_0;
-#endif
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU32();
               _model.config.serial[k].baudIndex = m.readU8();
