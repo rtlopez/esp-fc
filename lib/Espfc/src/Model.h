@@ -201,7 +201,7 @@ class Model
         case SERIAL_ID_UART_2: return SERIAL_UART_1;
       #if defined(ESP32)
         case SERIAL_ID_UART_3: return SERIAL_UART_2;
-        case SERIAL_ID_SOFTSERIAL_1: return _model.isActive(FEATURE_SOFTSERIAL) SERIAL_WIFI_0;
+        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_WIFI_0;
       #elif defined(ESP8266)
         case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
       #endif
