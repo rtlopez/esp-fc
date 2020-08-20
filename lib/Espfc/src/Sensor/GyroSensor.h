@@ -63,6 +63,10 @@ class GyroSensor: public BaseSensor
 
         calibrate();
 
+        bool dynamicFilterEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
+        bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ;
+        bool dynamicFilterUpdate = dynamicFilterEnabled && _model.state.dynamicFilterTimer.check();
+
         // filtering
         for(size_t i = 0; i < 3; ++i)
         {
@@ -74,11 +78,16 @@ class GyroSensor: public BaseSensor
           {
             _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
           }
+          _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
 
-          bool dynamicFilter = dynamicFilterAnalyze((Axis)i);
-          if(dynamicFilter)
+          if(dynamicFilterEnabled || dynamicFilterDebug)
           {
-            _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
+            dynamicFilterAnalyze((Axis)i, dynamicFilterDebug);
+            if(dynamicFilterUpdate) dynamicFilterApply((Axis)i);
+            if(dynamicFilterEnabled) {
+              _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
+              _model.state.gyro.set(i, _model.state.gyroDynamicFilter2[i].update(_model.state.gyro[i]));
+            }
           }
           _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
@@ -88,7 +97,6 @@ class GyroSensor: public BaseSensor
           }
           _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
           _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
-          _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
           if(_model.accelActive())
           {
             _model.state.gyroImu.set(i, _model.state.gyroFilterImu[i].update(_model.state.gyro[i]));
@@ -100,28 +108,37 @@ class GyroSensor: public BaseSensor
     }
 
   private:
-    bool dynamicFilterAnalyze(Axis i)
+    void dynamicFilterAnalyze(Axis i, bool debug)
     {
-      // dynamic filter start
-      bool dynamicFilter = _model.isActive(FEATURE_DYNAMIC_FILTER);
-      if(dynamicFilter || _model.config.debugMode == DEBUG_FFT_FREQ)
+      _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
+      if(debug)
       {
-        _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
-        if(_model.config.debugMode == DEBUG_FFT_FREQ)
+        if(i == 0)
         {
-          if(i == 0)
-          {
-            _model.state.debug[0] = _model.state.gyroAnalyzer[0].freq;
-            _model.state.debug[2] = lrintf(degrees(_model.state.gyroAnalyzer[0]._noise));
-            _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
-          }
-          else if(i == 1)
-          {
-            _model.state.debug[1] = _model.state.gyroAnalyzer[1].freq;
-          }
+          _model.state.debug[0] = _model.state.gyroAnalyzer[0].freq;
+          _model.state.debug[2] = lrintf(degrees(_model.state.gyroAnalyzer[0].noise));
+          _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
+        }
+        else if(i == 1)
+        {
+          _model.state.debug[1] = _model.state.gyroAnalyzer[1].freq;
         }
       }
-      return dynamicFilter;
+    }
+
+    void dynamicFilterApply(Axis i)
+    {
+      float freq = _model.state.gyroAnalyzer[i].freq;
+      float bw = 0.5f * (freq / _model.config.dynamicFilter.q);
+      if(_model.config.dynamicFilter.width > 0 && _model.config.dynamicFilter.width < 30) {
+        float bw =  freq / _model.config.dynamicFilter.q;
+        float freq1 = freq * (1.0f - 0.005f * _model.config.dynamicFilter.width);
+        float freq2 = freq * (1.0f + 0.005f * _model.config.dynamicFilter.width);
+        _model.state.gyroDynamicFilter[i].reconfigure(freq1, freq1 - bw);
+        _model.state.gyroDynamicFilter2[i].reconfigure(freq2, freq2 - bw);
+      } else {
+        _model.state.gyroDynamicFilter[i].reconfigure(freq, freq - bw);
+      }
     }
 
     void calibrate()
