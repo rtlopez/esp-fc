@@ -299,7 +299,7 @@ struct ModelState
   float baroAltitudeBias;
   int32_t baroAlititudeBiasSamples;
 
-  ArmingDisabledFlags armingDisabledFlags;
+  uint32_t armingDisabledFlags;
 
   IPAddress localIp;
 

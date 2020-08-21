@@ -75,37 +75,17 @@ class Actuator
     void updateArming()
     {
       int errors = _model.state.i2cErrorDelta;
-      int flags = 0;
-      if(!_model.state.gyroPresent || errors)
-      {
-        flags |= ARMING_DISABLED_NO_GYRO;
-      }
-      if(_model.isActive(MODE_FAILSAFE) || _model.state.failsafe.phase != FAILSAFE_IDLE)
-      {
-        flags |= ARMING_DISABLED_FAILSAFE;
-      }
-      if(_model.state.inputRxLoss || _model.state.inputRxFailSafe)
-      {
-        flags |= ARMING_DISABLED_RX_FAILSAFE;
-      }
-      if(_model.isSwitchActive(MODE_FAILSAFE))
-      {
-        flags |= ARMING_DISABLED_BOXFAILSAFE;
-      }
-      if(!_model.isThrottleLow())
-      {
-        flags |= ARMING_DISABLED_THROTTLE;
-      }
-      if(_model.calibrationActive())
-      {
-        flags |= ARMING_DISABLED_CALIBRATING;
-      }
-      if(flags && _model.isSwitchActive(MODE_ARMED))
-      {
-        flags |= ARMING_DISABLED_ARM_SWITCH;
-      }
-      _model.state.armingDisabledFlags = (ArmingDisabledFlags)flags;
       _model.state.i2cErrorDelta = 0;
+
+      _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,       !_model.state.gyroPresent || errors);
+      _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,       _model.isActive(MODE_FAILSAFE) || _model.state.failsafe.phase != FAILSAFE_IDLE);
+      _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,    _model.state.inputRxLoss || _model.state.inputRxFailSafe);
+      _model.setArmingDisabled(ARMING_DISABLED_BOXFAILSAFE,    _model.isSwitchActive(MODE_FAILSAFE));
+      _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
+      _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
+      _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
+
+      _model.setArmingDisabled(ARMING_DISABLED_ARM_SWITCH,     _model.armingDisabled() && _model.isSwitchActive(MODE_ARMED));
     }
 
     void updateModeMask()

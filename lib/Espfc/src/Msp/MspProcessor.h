@@ -497,6 +497,13 @@ class MspProcessor
           }
           break;
 
+        case MSP_SET_RX_MAP:
+          for(size_t i = 0; i < 8; i++)
+          {
+            _model.config.input.channel[i].map = m.readU8();
+          }
+          break;
+
         case MSP_RSSI_CONFIG:
           r.writeU8(_model.config.input.rssiChannel);
           break;
@@ -1154,6 +1161,18 @@ class MspProcessor
           r.writeU8(0);    // vtx table bands
           r.writeU8(0);    // vtx table channels
           r.writeU8(0);    // vtx power levels
+          break;
+
+        case MSP_SET_ARMING_DISABLED:
+          {
+            const uint8_t cmd = m.readU8();
+            uint8_t disableRunawayTakeoff = 0;
+            if(m.remain()) {
+              disableRunawayTakeoff = m.readU8();
+            }
+            (void)disableRunawayTakeoff;
+            _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+          }
           break;
 
         case MSP_DEBUG:

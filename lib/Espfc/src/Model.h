@@ -179,6 +179,12 @@ class Model
       return state.armingDisabledFlags != 0;
     }
 
+    void setArmingDisabled(ArmingDisabledFlags flag, bool value)
+    {
+      if(value) state.armingDisabledFlags |= flag;
+      else state.armingDisabledFlags &= ~flag;
+    }
+
     SerialDevice * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
