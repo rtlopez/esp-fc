@@ -3,6 +3,7 @@
 #include "Timer.h"
 #include "Model.h"
 #include "Controller.h"
+#include "Actuator.h"
 
 using namespace fakeit;
 using namespace Espfc;
@@ -451,6 +452,66 @@ void test_rates_kiss_expo()
   TEST_ASSERT_FLOAT_WITHIN(0.01f, -13.45f, rates.getSetpoint(AXIS_ROLL, -1.0f));
 }
 
+void test_actuator_arming_gyro_motor_calbration()
+{
+  Model model;
+  model.begin();
+  model.update();
+
+  Actuator actuator(model);
+  actuator.begin();
+
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+
+  actuator.updateArming();
+
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_NO_GYRO | ARMING_DISABLED_MOTOR_PROTOCOL, model.state.armingDisabledFlags);
+}
+
+void test_actuator_arming_failsafe()
+{
+  Model model;
+  model.state.gyroPresent = true;
+  model.config.output.protocol = ESC_PROTOCOL_DSHOT150;
+  model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+  model.state.gyroCalibrationState = CALIBRATION_UPDATE;
+  model.state.inputRxFailSafe = true;
+  model.state.inputRxLoss = true;
+
+  model.begin();
+  model.update();
+
+  Actuator actuator(model);
+  actuator.begin();
+
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+
+  actuator.updateArming();
+
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_RX_FAILSAFE | ARMING_DISABLED_FAILSAFE | ARMING_DISABLED_CALIBRATING, model.state.armingDisabledFlags);
+}
+
+void test_actuator_arming_throttle()
+{
+  Model model;
+  model.config.output.protocol = ESC_PROTOCOL_DSHOT150;
+  model.config.input.minCheck = 1050;
+  model.state.inputUs[AXIS_THRUST] = 1100;
+  model.state.gyroPresent = true;
+
+  model.begin();
+  model.update();
+
+  Actuator actuator(model);
+  actuator.begin();
+
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+
+  actuator.updateArming();
+
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.armingDisabledFlags);
+}
+
 int main(int argc, char **argv)
 {
   UNITY_BEGIN();
@@ -471,6 +532,9 @@ int main(int argc, char **argv)
   RUN_TEST(test_rates_raceflight_expo);
   RUN_TEST(test_rates_kiss);
   RUN_TEST(test_rates_kiss_expo);
+  RUN_TEST(test_actuator_arming_gyro_motor_calbration);
+  RUN_TEST(test_actuator_arming_failsafe);
+  RUN_TEST(test_actuator_arming_throttle);
   UNITY_END();
 
   return 0;

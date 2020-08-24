@@ -35,7 +35,7 @@ class Model
     {
       config = ModelConfig();
       #ifdef UNIT_TEST
-      state = ModelState(); // FIXME: cases board wdt reset
+      state = ModelState(); // FIXME: causes board wdt reset
       #endif
       //config.brobot();
     }
