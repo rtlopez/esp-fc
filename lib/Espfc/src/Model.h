@@ -35,7 +35,7 @@ class Model
     {
       config = ModelConfig();
       #ifdef UNIT_TEST
-      state = ModelState(); // FIXME: cases board wdt reset
+      state = ModelState(); // FIXME: causes board wdt reset
       #endif
       //config.brobot();
     }
@@ -179,6 +179,12 @@ class Model
       return state.armingDisabledFlags != 0;
     }
 
+    void setArmingDisabled(ArmingDisabledFlags flag, bool value)
+    {
+      if(value) state.armingDisabledFlags |= flag;
+      else state.armingDisabledFlags &= ~flag;
+    }
+
     SerialDevice * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
@@ -191,6 +197,23 @@ class Model
         if(config.serial[i].functionMask & sf) return state.serial[i].stream;
       }
       return nullptr;
+    }
+
+    int getSerialIndex(SerialPortId id)
+    {
+      switch(id)
+      {
+        case SERIAL_ID_UART_1: return SERIAL_UART_0;
+        case SERIAL_ID_UART_2: return SERIAL_UART_1;
+      #if defined(ESP32)
+        case SERIAL_ID_UART_3: return SERIAL_UART_2;
+        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_WIFI_0;
+      #elif defined(ESP8266)
+        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
+      #endif
+        default: break;
+      }
+      return -1;
     }
 
     uint16_t getRssi() const

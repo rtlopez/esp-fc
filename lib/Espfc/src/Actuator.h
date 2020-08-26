@@ -20,8 +20,6 @@ class Actuator
 
     int update()
     {
-      if(!_model.state.actuatorTimer.check()) return 0;
-
       Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
       updateArming();
       updateModeMask();
@@ -32,7 +30,10 @@ class Actuator
       return 1;
     }
 
+  #ifndef UNIT_TEST
   private:
+  #endif
+
     void updateScaler()
     {
       for(size_t i = 0; i < SCALER_COUNT; i++)
@@ -75,37 +76,14 @@ class Actuator
     void updateArming()
     {
       int errors = _model.state.i2cErrorDelta;
-      int flags = 0;
-      if(!_model.state.gyroPresent || errors)
-      {
-        flags |= ARMING_DISABLED_NO_GYRO;
-      }
-      if(_model.isActive(MODE_FAILSAFE) || _model.state.failsafe.phase != FAILSAFE_IDLE)
-      {
-        flags |= ARMING_DISABLED_FAILSAFE;
-      }
-      if(_model.state.inputRxLoss || _model.state.inputRxFailSafe)
-      {
-        flags |= ARMING_DISABLED_RX_FAILSAFE;
-      }
-      if(_model.isSwitchActive(MODE_FAILSAFE))
-      {
-        flags |= ARMING_DISABLED_BOXFAILSAFE;
-      }
-      if(!_model.isThrottleLow())
-      {
-        flags |= ARMING_DISABLED_THROTTLE;
-      }
-      if(_model.calibrationActive())
-      {
-        flags |= ARMING_DISABLED_CALIBRATING;
-      }
-      if(flags && _model.isSwitchActive(MODE_ARMED))
-      {
-        flags |= ARMING_DISABLED_ARM_SWITCH;
-      }
-      _model.state.armingDisabledFlags = (ArmingDisabledFlags)flags;
       _model.state.i2cErrorDelta = 0;
+
+      _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,       !_model.state.gyroPresent || errors);
+      _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,       _model.state.failsafe.phase != FAILSAFE_IDLE);
+      _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,    _model.state.inputRxLoss || _model.state.inputRxFailSafe);
+      _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
+      _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
+      _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
     }
 
     void updateModeMask()
@@ -130,6 +108,10 @@ class Actuator
 
       _model.updateSwitchActive(newMask);
 
+      _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,    _model.state.failsafe.phase != FAILSAFE_IDLE);
+      _model.setArmingDisabled(ARMING_DISABLED_BOXFAILSAFE, _model.isSwitchActive(MODE_FAILSAFE));
+      _model.setArmingDisabled(ARMING_DISABLED_ARM_SWITCH,  _model.armingDisabled() && _model.isSwitchActive(MODE_ARMED));
+
       if(_model.state.failsafe.phase != FAILSAFE_IDLE)
       {
         newMask |= (1 << MODE_FAILSAFE);
@@ -139,27 +121,24 @@ class Actuator
       {
         bool next = newMask & (1 << i);
         bool prev = _model.state.modeMaskPrev & (1 << i);
-        if(next != prev && !canChangeMode((FlightMode)i, next))
-        {
-          if(next) newMask &= ~(1 << i); // block activation, clear bit
-          else newMask |= (1 << i); // keep previous, set bit
-        }
+        if(next == prev) continue; // mode unchanged
+        if(next && canActivateMode((FlightMode)i)) continue; // mode can be set
+        newMask &= ~(1 << i); // block activation, clear bit
       }
 
       _model.updateModes(newMask);
     }
 
-    bool canChangeMode(FlightMode mode, bool val)
+    bool canActivateMode(FlightMode mode)
     {
       switch(mode)
       {
         case MODE_ARMED:
-          return (val && !_model.armingDisabled() && _model.isThrottleLow()) || !val; // disarm immediately
-          //return (val && !_model.armingDisabled()) || (!val && _model.isThrottleLow()); // disarm on low throttle
+          return !_model.armingDisabled() && _model.isThrottleLow();
         case MODE_ANGLE:
           return _model.accelActive();
         case MODE_AIRMODE:
-          return (val && _model.state.airmodeAllowed) || !val;
+          return _model.state.airmodeAllowed;
         default:
           return true;
       }

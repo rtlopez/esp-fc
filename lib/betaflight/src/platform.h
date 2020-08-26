@@ -35,6 +35,10 @@
 
 #define MW_VERSION                1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern const char * const targetName;
 
 #define GIT_SHORT_REVISION_LENGTH   7 // lower case hexadecimal digits.
@@ -47,10 +51,9 @@ extern const char * const buildDate;  // "MMM DD YYYY" MMM = Jan/Feb/...
 extern const char * const buildTime;  // "HH:MM:SS"
 
 extern const char * pidnames;
-
 extern const char * const targetVersion;
-
-#define TARGET_BOARD_IDENTIFIER "ESPFC"
+extern const char * flightControllerIdentifier;
+extern const char * boardIdentifier;
 
 /* UTILS START */
 #define MIN(a,b) ((a > b) ? (b) : (a))
@@ -880,3 +883,7 @@ float pidGetPreviousSetpoint(int axis);
 float mixerGetThrottle(void);
 bool isRssiConfigured(void);
 /* FAILSAFE END */
+
+#ifdef __cplusplus
+}
+#endif

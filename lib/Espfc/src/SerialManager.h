@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "Model.h"
 #include "Hardware.h"
-#include "Msp.h"
+#include "Msp/MspProcessor.h"
 #include "Cli.h"
 #include "Wireless.h"
 #include "Telemetry.h"
@@ -121,7 +121,7 @@ class SerialManager
     }
 
     Model& _model;
-    Msp _msp;
+    Msp::MspProcessor _msp;
     Cli _cli;
     Wireless _wireless;
     Telemetry _telemetry;

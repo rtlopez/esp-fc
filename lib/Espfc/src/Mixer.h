@@ -115,7 +115,7 @@ class Mixer
 
       sources[MIXER_SOURCE_ROLL]   = _model.state.output[AXIS_ROLL];
       sources[MIXER_SOURCE_PITCH]  = _model.state.output[AXIS_PITCH];
-      sources[MIXER_SOURCE_YAW]    = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? -1.f : 1.f);
+      sources[MIXER_SOURCE_YAW]    = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? 1.f : -1.f);
       sources[MIXER_SOURCE_THRUST] = _model.state.output[AXIS_THRUST];
 
       sources[MIXER_SOURCE_RC_ROLL]   = _model.state.input[AXIS_ROLL];

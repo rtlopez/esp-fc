@@ -123,13 +123,13 @@ class Blackbox
         rp->rcRates[i] = _model.config.input.rate[i];
         rp->rcExpo[i] = _model.config.input.expo[i];
         rp->rates[i] = _model.config.input.superRate[i];
-        rp->rate_limit[i] = 1998;
+        rp->rate_limit[i] = _model.config.input.rateLimit[i];
       }
       rp->thrMid8 = 50;
       rp->thrExpo8 = 0;
       rp->dynThrPID = _model.config.tpaScale;
       rp->tpa_breakpoint = _model.config.tpaBreakpoint;
-      rp->rates_type = 0; // betaflight
+      rp->rates_type = _model.config.input.rateType;
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
       for(size_t i = 0; i < PID_ITEM_COUNT; i++)

@@ -1,90 +1,24 @@
-#ifndef _ESPFC_MSP_H_
-#define _ESPFC_MSP_H_
+#ifndef _ESPFC_MSP_PROCESSOR_H_
+#define _ESPFC_MSP_PROCESSOR_H_
 
-#include <Arduino.h>
+#include "Msp/Msp.h"
 #include "Model.h"
 #include "Hardware.h"
-
-extern "C" {
-#include "msp/msp_protocol.h"
+#include "Msp/MspParser.h"
 #include "platform.h"
-}
-
-static const char * flightControllerIdentifier = BETAFLIGHT_IDENTIFIER;
-static const char * boardIdentifier = "ESPF";
 
 namespace Espfc {
 
-class Msp
+namespace Msp {
+
+class MspProcessor
 {
   public:
-    Msp(Model& model): _model(model) {}
+    MspProcessor(Model& model): _model(model) {}
 
     bool process(char c, MspMessage& msg, MspResponse& res, Stream& s)
     {
-      switch(msg.state)
-      {
-        case MSP_STATE_IDLE:               // sync char 1 '$'
-          if(c == '$')
-          {
-            msg.state = MSP_STATE_HEADER_START;
-          }
-          break;
-
-        case MSP_STATE_HEADER_START:       // sync char 2 'M'
-            if(c == 'M') msg.state = MSP_STATE_HEADER_M;
-            else msg.state = MSP_STATE_IDLE;
-            break;
-
-        case MSP_STATE_HEADER_M:               // direction (should be >)
-          switch(c)
-          {
-            case '>':
-              msg.dir = MSP_TYPE_REPLY;
-              msg.state = MSP_STATE_HEADER_ARROW;
-              break;
-            case '<':
-              msg.dir = MSP_TYPE_CMD;
-              msg.state = MSP_STATE_HEADER_ARROW;
-              break;
-            default:
-              msg.state = MSP_STATE_IDLE;
-          }
-          break;
-        case MSP_STATE_HEADER_ARROW:
-          if (c > MSP_BUF_SIZE) msg.state = MSP_STATE_IDLE;
-          else
-          {
-            msg.expected = c;
-            msg.received = 0;
-            msg.read = 0;
-            msg.checksum = 0;
-            msg.checksum ^= c;
-            msg.state = MSP_STATE_HEADER_SIZE;
-          }
-          break;
-
-        case MSP_STATE_HEADER_SIZE:
-          msg.cmd = c;
-          msg.checksum ^= c;
-          msg.state = MSP_STATE_HEADER_CMD;
-          break;
-
-        case MSP_STATE_HEADER_CMD:
-          if(msg.received < msg.expected)
-          {
-            msg.checksum ^= c;
-            msg.buffer[msg.received++] = c;
-          }
-          else if(msg.received >= msg.expected)
-          {
-            msg.state = msg.checksum == c ? MSP_STATE_RECEIVED : MSP_STATE_IDLE;
-          }
-
-        default:
-          //msg.state = MSP_STATE_IDLE;
-          break;
-      }
+      _parser.parse(c, msg);
 
       if(msg.state == MSP_STATE_RECEIVED)
       {
@@ -110,6 +44,7 @@ class Msp
     void processCommand(MspMessage& m, MspResponse& r)
     {
       r.cmd = m.cmd;
+      r.version = m.version;
       r.result = 1;
       switch(m.cmd)
       {
@@ -133,6 +68,21 @@ class Msp
           r.writeData(boardIdentifier, BOARD_IDENTIFIER_LENGTH);
           r.writeU16(0); // No other build targets currently have hardware revision detection.
           r.writeU8(0);  // 0 == FC
+          r.writeU8(0);  // target capabilities
+          r.writeU8(strlen(targetName));  // target name
+          r.writeData(targetName, strlen(targetName));
+          r.writeU8(0);  // board name
+          r.writeU8(0);  // manufacturer name
+          for(size_t i = 0; i < 32; i++) r.writeU8(0); // signature
+          r.writeU8(255); // mcu id: unknown
+          // 1.42
+          r.writeU8(2);  // configuration state: configured
+          // 1.43
+          r.writeU16(_model.state.gyroTimer.rate); // sample rate
+          r.writeU32(0); // configuration problems
+          // 1.44
+          r.writeU8(0);  // spi dev count
+          r.writeU8(0);  // i2c dev count
           break;
 
         case MSP_BUILD_INFO:
@@ -410,7 +360,7 @@ class Msp
         case MSP_CF_SERIAL_CONFIG:
           for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
           {
-            if(_model.config.serial[i].id >= 30 && !_model.isActive(FEATURE_SOFTSERIAL)) break;
+            if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
             r.writeU8(_model.config.serial[i].id); // identifier
             r.writeU16(_model.config.serial[i].functionMask); // functionMask
             r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
@@ -420,27 +370,66 @@ class Msp
           }
           break;
 
+        case MSP2_COMMON_SERIAL_CONFIG:
+          {
+            uint8_t count = 0;
+            for (int i = 0; i < SERIAL_UART_COUNT; i++)
+            {
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+              count++;
+            }
+            r.writeU8(count);
+            for (int i = 0; i < SERIAL_UART_COUNT; i++)
+            {
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+              r.writeU8(_model.config.serial[i].id); // identifier
+              r.writeU32(_model.config.serial[i].functionMask); // functionMask
+              r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
+              r.writeU8(0); // gps_baudrateIndex
+              r.writeU8(0); // telemetry_baudrateIndex
+              r.writeU8(_model.config.serial[i].blackboxBaudIndex); // blackbox_baudrateIndex
+            }
+          }
+          break;
+
         case MSP_SET_CF_SERIAL_CONFIG:
           {
             const int packetSize = 1 + 2 + 4;
             while(m.remain() >= packetSize)
             {
               int id = m.readU8();
-#if defined(ESP32)
-              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != SERIAL_UART_2)
-#elif defined(ESP8266)
-              if(id != SERIAL_UART_0 && id != SERIAL_UART_1 && id != 30)
-#endif
+              int k = _model.getSerialIndex((SerialPortId)id);
               {
                 m.advance(packetSize - 1);
                 continue;
               }
-              size_t k = id;
-#if defined(ESP8266)
-               if(id == 30) k = SERIAL_SOFT_0;
-#endif
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU16();
+              _model.config.serial[k].baudIndex = m.readU8();
+              m.readU8();
+              m.readU8();
+              _model.config.serial[k].blackboxBaudIndex = m.readU8();
+            }
+          }
+          _model.reload();
+          break;
+
+        case MSP2_COMMON_SET_SERIAL_CONFIG:
+          {
+            size_t count = m.readU8();
+            (void)count; // ignore
+            const int packetSize = 1 + 4 + 4;
+            while(m.remain() >= packetSize)
+            {
+              int id = m.readU8();
+              int k = _model.getSerialIndex((SerialPortId)id);
+              if(k == -1)
+              {
+                m.advance(packetSize - 1);
+                continue;
+              }
+              _model.config.serial[k].id = id;
+              _model.config.serial[k].functionMask = m.readU32();
               _model.config.serial[k].baudIndex = m.readU8();
               m.readU8();
               m.readU8();
@@ -505,6 +494,13 @@ class Msp
           for(size_t i = 0; i < INPUT_CHANNELS; i++)
           {
             r.writeU8(_model.config.input.channel[i].map);
+          }
+          break;
+
+        case MSP_SET_RX_MAP:
+          for(size_t i = 0; i < 8; i++)
+          {
+            _model.config.input.channel[i].map = m.readU8();
           }
           break;
 
@@ -700,11 +696,11 @@ class Msp
           r.writeU8(0); // throtle limit type (off)
           r.writeU8(100); // throtle limit percent (100%)
           //1.42+
-          r.writeU16(1998); // rate limit roll
-          r.writeU16(1998); // rate limit pitch
-          r.writeU16(1998); // rate limit yaw
+          r.writeU16(_model.config.input.rateLimit[0]); // rate limit roll
+          r.writeU16(_model.config.input.rateLimit[1]); // rate limit pitch
+          r.writeU16(_model.config.input.rateLimit[2]); // rate limit yaw
           // 1.43+
-          //r.writeU8(0); // rates type // TODO: requires support
+          r.writeU8(_model.config.input.rateType); // rates type
 
           break;
 
@@ -748,6 +744,24 @@ class Msp
             if(m.remain() >= 1)
             {
               _model.config.input.expo[AXIS_PITCH]  = m.readU8(); // pitch expo
+            }
+            // 1.41
+            if(m.remain() >= 2)
+            {
+              m.readU8(); // throttle_limit_type
+              m.readU8(); // throttle_limit_percent
+            }
+            // 1.42
+            if(m.remain() >= 6)
+            {
+              _model.config.input.rateLimit[0] = m.readU16(); // roll
+              _model.config.input.rateLimit[1] = m.readU16(); // pitch
+              _model.config.input.rateLimit[2] = m.readU16(); // yaw
+            }
+            // 1.43
+            if (m.remain() >= 1)
+            {
+              _model.config.input.rateType = m.readU8();
             }
           }
           else
@@ -811,13 +825,13 @@ class Msp
           r.writeU8(0); // autoConfig
           r.writeU8(0); // autoBaud
           // 1.43+
-          //m.writeU8(0); // gps_set_home_point_once
-          //m.writeU8(0); // gps_ublox_use_galileo
+          r.writeU8(0); // gps_set_home_point_once
+          r.writeU8(0); // gps_ublox_use_galileo
           break;
 
-        case MSP_COMPASS_CONFIG:
-          r.writeU16(0); // mag_declination * 10
-          break;
+        //case MSP_COMPASS_CONFIG:
+        //  r.writeU16(0); // mag_declination * 10
+        //  break;
 
         case MSP_FILTER_CONFIG:
           r.writeU8(_model.config.gyroFilter.freq);           // gyro lpf
@@ -967,15 +981,14 @@ class Msp
           r.writeU8(0); // d min yaw
           r.writeU8(0); // d min gain
           r.writeU8(0); // d min advance
-
           r.writeU8(0); // use_integrated_yaw
           r.writeU8(0); // integrated_yaw_relax
           // 1.42+
           r.writeU8(0); // iterm_relax_cutoff
           // 1.43+
-          //r.writeU8(0); // motor_output_limit
-          //r.writeU8(0); // auto_profile_cell_count
-          //r.writeU8(0); // idle_min_rpm
+          r.writeU8(100); // motor_output_limit
+          r.writeU8(0); // auto_profile_cell_count
+          r.writeU8(0); // idle_min_rpm
 
           break;
 
@@ -1031,11 +1044,11 @@ class Msp
             m.readU8(); // iterm_relax_cutoff
           }
           // 1.43+
-          //if (m.remain() >= 3) {
-          //  m.readU8(); // motor_output_limit
-          //  m.readU8(); // auto_profile_cell_count
-          //  m.readU8(); // idle_min_rpm
-          //}
+          if (m.remain() >= 3) {
+            m.readU8(); // motor_output_limit
+            m.readU8(); // auto_profile_cell_count
+            m.readU8(); // idle_min_rpm
+          }
           _model.reload();
           break;
 
@@ -1150,6 +1163,18 @@ class Msp
           r.writeU8(0);    // vtx power levels
           break;
 
+        case MSP_SET_ARMING_DISABLED:
+          {
+            const uint8_t cmd = m.readU8();
+            uint8_t disableRunawayTakeoff = 0;
+            if(m.remain()) {
+              disableRunawayTakeoff = m.readU8();
+            }
+            (void)disableRunawayTakeoff;
+            _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+          }
+          break;
+
         case MSP_DEBUG:
           for (int i = 0; i < 4; i++) {
             r.writeU16(_model.state.debug[i]);
@@ -1180,7 +1205,20 @@ class Msp
     void sendResponse(MspResponse& r, Stream& s)
     {
       debugResponse(r);
+      switch(r.version)
+      {
+        case MSP_V1:
+          sendResponseV1(r, s);
+          break;
+        case MSP_V2:
+          sendResponseV2(r, s);
+          break;
+      }
+      postCommand();
+    }
 
+    void sendResponseV1(MspResponse& r, Stream& s)
+    {
       uint8_t hdr[5] = { '$', 'M', '>' };
       if(r.result == -1)
       {
@@ -1188,15 +1226,35 @@ class Msp
       }
       hdr[3] = r.len;
       hdr[4] = r.cmd;
-      uint8_t checksum = crc(0, &hdr[3], 2);
+      uint8_t checksum = _parser.crc8_xor(0, &hdr[3], 2);
       s.write(hdr, 5);
       if(r.len > 0)
       {
         s.write(r.data, r.len);
-        checksum = crc(checksum, r.data, r.len);
+        checksum = _parser.crc8_xor(checksum, r.data, r.len);
       }
       s.write(checksum);
-      postCommand();
+    }
+
+    void sendResponseV2(MspResponse& r, Stream& s)
+    {
+      uint8_t hdr[8] = { '$', 'X', '>', 0 };
+      if(r.result == -1)
+      {
+        hdr[2] = '!'; // error ??
+      }
+      hdr[4] = r.cmd & 0xff;
+      hdr[5] = (r.cmd >> 8) & 0xff;
+      hdr[6] = r.len & 0xff;
+      hdr[7] = (r.len >> 8) & 0xff;
+      uint8_t checksum = _parser.crc8_dvb_s2(0, &hdr[3], 5);
+      s.write(hdr, 8);
+      if(r.len > 0)
+      {
+        s.write(r.data, r.len);
+        checksum = _parser.crc8_dvb_s2(checksum, r.data, r.len);
+      }
+      s.write(checksum);
     }
 
     void postCommand()
@@ -1205,15 +1263,6 @@ class Msp
       {
         Hardware::restart(_model);
       }
-    }
-
-    uint8_t crc(uint8_t checksum, const uint8_t *data, int len)
-    {
-      while (len-- > 0)
-      {
-        checksum ^= *data++;
-      }
-      return checksum;
     }
 
     bool debugSkip(uint8_t cmd)
@@ -1270,8 +1319,11 @@ class Msp
 
   private:
     Model& _model;
+    MspParser _parser;
     bool _reboot;
 };
+
+}
 
 }
 

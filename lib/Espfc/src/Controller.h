@@ -3,9 +3,7 @@
 
 #include "Model.h"
 #include "Math/Utils.h"
-
-#define SETPOINT_RATE_LIMIT 1998.0f
-#define RC_RATE_INCREMENTAL 14.54f
+#include "Control/Rates.h"
 
 namespace Espfc {
 
@@ -16,6 +14,7 @@ class Controller
 
     int begin()
     {
+      _rates.begin(_model.config.input);
       _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
       return 1;
     }
@@ -168,32 +167,8 @@ class Controller
 
     float calculateSetpointRate(int axis, float input)
     {
-      input = Math::clamp(input, -0.995f, 0.995f); // limit input
-
       if(axis == AXIS_YAW) input *= -1.f;
-
-      float rcRate = _model.config.input.rate[axis] / 100.0f;
-      const uint8_t rcExpo = _model.config.input.expo[axis];
-
-      if (rcRate > 2.0f)
-      {
-        rcRate += RC_RATE_INCREMENTAL * (rcRate - 2.0f);
-      }
-
-      const float inputAbs = fabsf(input);
-      if(rcExpo)
-      {
-        const float expof = rcExpo * 0.01f;
-        input = input * power3(inputAbs) * expof + input * (1.f - expof);
-      }
-
-      float angleRate = 200.0f * rcRate * input;
-      if (_model.config.input.superRate[axis])
-      {
-        const float rcSuperfactor = 1.0f / (Math::clamp(1.0f - (inputAbs * (_model.config.input.superRate[axis] * 0.01f)), 0.01f, 1.00f));
-        angleRate *= rcSuperfactor;
-      }
-      return radians(Math::clamp(angleRate, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT)); // Rate limit protection (deg/sec)
+      return _rates.getSetpoint(axis, input);
     }
 
   private:
@@ -203,7 +178,9 @@ class Controller
     }
 
     Model& _model;
+    Rates _rates;
     Filter _speedFilter;
+
 };
 
 }

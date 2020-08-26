@@ -50,7 +50,10 @@ class Espfc
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
           _input.update();
-          _actuator.update();
+          if(_model.state.actuatorTimer.check())
+          {
+            _actuator.update();
+          }
           _controller.update();
           if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
           {
