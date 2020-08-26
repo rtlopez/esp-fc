@@ -791,7 +791,7 @@ class MspProcessor
           break;
 
         case MSP_SET_ADVANCED_CONFIG:
-          _model.config.gyroSync = m.readU8();
+          /*_model.config.gyroSync = */m.readU8(); // ignore, removed in 1.43
           _model.config.loopSync = m.readU8();
           _model.config.output.async = m.readU8();
           _model.config.output.protocol = m.readU8();
