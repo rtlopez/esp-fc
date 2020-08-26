@@ -31,7 +31,7 @@ class AccelSensor: public BaseSensor
 
       for(size_t i = 0; i < 3; i++)
       {
-        _filter[i].begin(FilterConfig(FILTER_PT1, 0), _model.state.accelTimer.rate);
+        _filter[i].begin(FilterConfig(FILTER_FIR2, 1), _model.state.accelTimer.rate);
       }
 
       _model.state.accelBiasAlpha = _model.state.accelTimer.rate > 0 ? 5.0f / _model.state.accelTimer.rate : 0;
@@ -61,6 +61,10 @@ class AccelSensor: public BaseSensor
         _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
         for(size_t i = 0; i < 3; i++)
         {
+          if(_model.config.debugMode == DEBUG_ACCELEROMETER)
+          {
+            _model.state.debug[i] = _model.state.accelRaw[i];
+          }
           _model.state.accel.set(i, _filter[i].update(_model.state.accel[i]));
           _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accel[i]));
         }
