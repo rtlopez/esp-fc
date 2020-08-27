@@ -26,14 +26,16 @@ class SerialManager
         if(!port) continue;
 
         const SerialPortConfig& spc = _model.config.serial[i];
+        if(!spc.functionMask) continue;
+
         SerialDeviceConfig sdc;
 
 #if defined(ESP32)
         sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
         sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
+        if(sdc.tx_pin == -1 && sdc.rx_pin == -1) continue;
 #endif
-
-        sdc.baud = Hardware::fromIndex((SerialSpeedIndex)spc.baudIndex, SERIAL_SPEED_115200);
+        sdc.baud = spc.baud;
 
         if(spc.functionMask & SERIAL_FUNCTION_RX_SERIAL)
         {
@@ -51,8 +53,10 @@ class SerialManager
         }
         else if(spc.functionMask & SERIAL_FUNCTION_BLACKBOX)
         {
-          sdc.baud = Hardware::fromIndex((SerialSpeedIndex)spc.blackboxBaudIndex, SERIAL_SPEED_115200);
+          sdc.baud = spc.blackboxBaud;
         }
+
+        if(!sdc.baud) continue;
 
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
         port->flush();

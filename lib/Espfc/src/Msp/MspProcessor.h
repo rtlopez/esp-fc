@@ -363,10 +363,10 @@ class MspProcessor
             if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
             r.writeU8(_model.config.serial[i].id); // identifier
             r.writeU16(_model.config.serial[i].functionMask); // functionMask
-            r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
+            r.writeU8(Hardware::toIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
             r.writeU8(0); // gps_baudrateIndex
             r.writeU8(0); // telemetry_baudrateIndex
-            r.writeU8(_model.config.serial[i].blackboxBaudIndex); // blackbox_baudrateIndex
+            r.writeU8(Hardware::toIndex(_model.config.serial[i].blackboxBaud)); // blackbox_baudrateIndex
           }
           break;
 
@@ -384,10 +384,10 @@ class MspProcessor
               if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
               r.writeU8(_model.config.serial[i].id); // identifier
               r.writeU32(_model.config.serial[i].functionMask); // functionMask
-              r.writeU8(_model.config.serial[i].baudIndex); // msp_baudrateIndex
+              r.writeU8(Hardware::toIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
               r.writeU8(0); // gps_baudrateIndex
               r.writeU8(0); // telemetry_baudrateIndex
-              r.writeU8(_model.config.serial[i].blackboxBaudIndex); // blackbox_baudrateIndex
+              r.writeU8(Hardware::toIndex(_model.config.serial[i].blackboxBaud)); // blackbox_baudrateIndex
             }
           }
           break;
@@ -405,10 +405,10 @@ class MspProcessor
               }
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU16();
-              _model.config.serial[k].baudIndex = m.readU8();
+              _model.config.serial[k].baud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
               m.readU8();
               m.readU8();
-              _model.config.serial[k].blackboxBaudIndex = m.readU8();
+              _model.config.serial[k].blackboxBaud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
             }
           }
           _model.reload();
@@ -430,10 +430,10 @@ class MspProcessor
               }
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU32();
-              _model.config.serial[k].baudIndex = m.readU8();
+              _model.config.serial[k].baud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
               m.readU8();
               m.readU8();
-              _model.config.serial[k].blackboxBaudIndex = m.readU8();
+              _model.config.serial[k].blackboxBaud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
             }
           }
           _model.reload();

@@ -191,22 +191,48 @@ class Hardware
       }
     }
 
-    static SerialSpeed fromIndex(SerialSpeedIndex index, SerialSpeed defaultSpeed)
+    static SerialSpeedIndex toIndex(int32_t speed)
+    {
+      if(speed >= SERIAL_SPEED_2470000) return SERIAL_SPEED_INDEX_2470000;
+      if(speed >= SERIAL_SPEED_2000000) return SERIAL_SPEED_INDEX_2000000;
+      if(speed >= SERIAL_SPEED_1500000) return SERIAL_SPEED_INDEX_1500000;
+      if(speed >= SERIAL_SPEED_1000000) return SERIAL_SPEED_INDEX_1000000;
+      if(speed >= SERIAL_SPEED_921600)  return SERIAL_SPEED_INDEX_921600;
+      if(speed >= SERIAL_SPEED_500000)  return SERIAL_SPEED_INDEX_500000;
+      if(speed >= SERIAL_SPEED_460800)  return SERIAL_SPEED_INDEX_460800;
+      if(speed >= SERIAL_SPEED_400000)  return SERIAL_SPEED_INDEX_400000;
+      if(speed >= SERIAL_SPEED_250000)  return SERIAL_SPEED_INDEX_250000;
+      if(speed >= SERIAL_SPEED_230400)  return SERIAL_SPEED_INDEX_230400;
+      if(speed >= SERIAL_SPEED_115200)  return SERIAL_SPEED_INDEX_115200;
+      if(speed >= SERIAL_SPEED_57600)   return SERIAL_SPEED_INDEX_57600;
+      if(speed >= SERIAL_SPEED_38400)   return SERIAL_SPEED_INDEX_38400;
+      if(speed >= SERIAL_SPEED_19200)   return SERIAL_SPEED_INDEX_19200;
+      if(speed >= SERIAL_SPEED_9600)    return SERIAL_SPEED_INDEX_9600;
+      return SERIAL_SPEED_INDEX_AUTO;
+    }
+
+    static SerialSpeed fromIndex(SerialSpeedIndex index)
     {
       switch(index)
       {
-        case SERIAL_SPEED_INDEX_9600:   return SERIAL_SPEED_9600;
-        case SERIAL_SPEED_INDEX_19200:  return SERIAL_SPEED_19200;
-        case SERIAL_SPEED_INDEX_38400:  return SERIAL_SPEED_38400;
-        case SERIAL_SPEED_INDEX_57600:  return SERIAL_SPEED_57600;
-        case SERIAL_SPEED_INDEX_115200: return SERIAL_SPEED_115200;
-        case SERIAL_SPEED_INDEX_230400: return SERIAL_SPEED_230400;
-        case SERIAL_SPEED_INDEX_250000: return SERIAL_SPEED_250000;
-        case SERIAL_SPEED_INDEX_500000: return SERIAL_SPEED_500000;
+        case SERIAL_SPEED_INDEX_9600:    return SERIAL_SPEED_9600;
+        case SERIAL_SPEED_INDEX_19200:   return SERIAL_SPEED_19200;
+        case SERIAL_SPEED_INDEX_38400:   return SERIAL_SPEED_38400;
+        case SERIAL_SPEED_INDEX_57600:   return SERIAL_SPEED_57600;
+        case SERIAL_SPEED_INDEX_115200:  return SERIAL_SPEED_115200;
+        case SERIAL_SPEED_INDEX_230400:  return SERIAL_SPEED_230400;
+        case SERIAL_SPEED_INDEX_250000:  return SERIAL_SPEED_250000;
+        case SERIAL_SPEED_INDEX_400000:  return SERIAL_SPEED_400000;
+        case SERIAL_SPEED_INDEX_460800:  return SERIAL_SPEED_460800;
+        case SERIAL_SPEED_INDEX_500000:  return SERIAL_SPEED_500000;
+        case SERIAL_SPEED_INDEX_921600:  return SERIAL_SPEED_921600;
         case SERIAL_SPEED_INDEX_1000000: return SERIAL_SPEED_1000000;
+        case SERIAL_SPEED_INDEX_1500000: return SERIAL_SPEED_1500000;
+        case SERIAL_SPEED_INDEX_2000000: return SERIAL_SPEED_2000000;
+        case SERIAL_SPEED_INDEX_2470000: return SERIAL_SPEED_2470000;
         case SERIAL_SPEED_INDEX_AUTO:
         default:
-          return defaultSpeed;
+          return SERIAL_SPEED_NONE;
       }
     }
 
