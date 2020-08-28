@@ -1,11 +1,13 @@
 #ifndef _ESPFC_SERIAL_DEVICE_ADAPTER_H_
 #define _ESPFC_SERIAL_DEVICE_ADAPTER_H_
 
-#include "SerialDevice.h"
+#include "Device/SerialDevice.h"
 #include "EspSoftSerial.h"
 #include <WiFiClient.h>
 
 namespace Espfc {
+
+namespace Device {
 
 template<typename T>
 class SerialDeviceAdapter: public SerialDevice
@@ -90,7 +92,9 @@ bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 }
 
 // EspSofSerial specialization
-#if defined(ESP8266) && defined(USE_SOFT_SERIAL)
+#if defined(ESP32)
+// not applicable
+#elif defined(USE_SOFT_SERIAL)
 
 template<>
 void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
@@ -109,6 +113,8 @@ template<>
 bool SerialDeviceAdapter<EspSoftSerial>::isSoft() const { return true; }
 
 #endif
+
+}
 
 }
 

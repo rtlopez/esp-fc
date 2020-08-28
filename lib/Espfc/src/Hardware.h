@@ -4,7 +4,6 @@
 #include <Arduino.h>
 #include "Model.h"
 #include "EspSoftSerial.h"
-#include "SerialDeviceAdapter.h"
 #include "InputDevice.h"
 #include "InputPPM.h"
 #include "InputSBUS.h"
@@ -20,22 +19,24 @@
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
 #include "Device/BaroBMP280.h"
+#include "Device/SerialDevice.h"
+#include "Device/SerialDeviceAdapter.h"
 
 namespace {
 #if defined(ESP32)
   static HardwareSerial Serial1(1);
   static HardwareSerial Serial2(2);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
 #endif
 
 #if defined(ESP8266)
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
 #if defined(USE_SOFT_SERIAL)
   static EspSoftSerial softSerial;
-  static Espfc::SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
+  static Espfc::Device::SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
 #endif
 
 #endif
@@ -176,7 +177,7 @@ class Hardware
       return status;
     }
 
-    static SerialDevice * getSerialPortById(SerialPort portId)
+    static Device::SerialDevice * getSerialPortById(SerialPort portId)
     {
       switch(portId)
       {
@@ -184,55 +185,10 @@ class Hardware
         case SERIAL_UART_1: return &uart1;
 #if defined(ESP32)
         case SERIAL_UART_2: return &uart2;
-#elif defined(ESP8266) && defined(USE_SOFT_SERIAL)
+#elif defined(USE_SOFT_SERIAL)
         case SERIAL_SOFT_0: return &soft0;
 #endif
         default: return nullptr;
-      }
-    }
-
-    static SerialSpeedIndex toIndex(int32_t speed)
-    {
-      if(speed >= SERIAL_SPEED_2470000) return SERIAL_SPEED_INDEX_2470000;
-      if(speed >= SERIAL_SPEED_2000000) return SERIAL_SPEED_INDEX_2000000;
-      if(speed >= SERIAL_SPEED_1500000) return SERIAL_SPEED_INDEX_1500000;
-      if(speed >= SERIAL_SPEED_1000000) return SERIAL_SPEED_INDEX_1000000;
-      if(speed >= SERIAL_SPEED_921600)  return SERIAL_SPEED_INDEX_921600;
-      if(speed >= SERIAL_SPEED_500000)  return SERIAL_SPEED_INDEX_500000;
-      if(speed >= SERIAL_SPEED_460800)  return SERIAL_SPEED_INDEX_460800;
-      if(speed >= SERIAL_SPEED_400000)  return SERIAL_SPEED_INDEX_400000;
-      if(speed >= SERIAL_SPEED_250000)  return SERIAL_SPEED_INDEX_250000;
-      if(speed >= SERIAL_SPEED_230400)  return SERIAL_SPEED_INDEX_230400;
-      if(speed >= SERIAL_SPEED_115200)  return SERIAL_SPEED_INDEX_115200;
-      if(speed >= SERIAL_SPEED_57600)   return SERIAL_SPEED_INDEX_57600;
-      if(speed >= SERIAL_SPEED_38400)   return SERIAL_SPEED_INDEX_38400;
-      if(speed >= SERIAL_SPEED_19200)   return SERIAL_SPEED_INDEX_19200;
-      if(speed >= SERIAL_SPEED_9600)    return SERIAL_SPEED_INDEX_9600;
-      return SERIAL_SPEED_INDEX_AUTO;
-    }
-
-    static SerialSpeed fromIndex(SerialSpeedIndex index)
-    {
-      switch(index)
-      {
-        case SERIAL_SPEED_INDEX_9600:    return SERIAL_SPEED_9600;
-        case SERIAL_SPEED_INDEX_19200:   return SERIAL_SPEED_19200;
-        case SERIAL_SPEED_INDEX_38400:   return SERIAL_SPEED_38400;
-        case SERIAL_SPEED_INDEX_57600:   return SERIAL_SPEED_57600;
-        case SERIAL_SPEED_INDEX_115200:  return SERIAL_SPEED_115200;
-        case SERIAL_SPEED_INDEX_230400:  return SERIAL_SPEED_230400;
-        case SERIAL_SPEED_INDEX_250000:  return SERIAL_SPEED_250000;
-        case SERIAL_SPEED_INDEX_400000:  return SERIAL_SPEED_400000;
-        case SERIAL_SPEED_INDEX_460800:  return SERIAL_SPEED_460800;
-        case SERIAL_SPEED_INDEX_500000:  return SERIAL_SPEED_500000;
-        case SERIAL_SPEED_INDEX_921600:  return SERIAL_SPEED_921600;
-        case SERIAL_SPEED_INDEX_1000000: return SERIAL_SPEED_1000000;
-        case SERIAL_SPEED_INDEX_1500000: return SERIAL_SPEED_1500000;
-        case SERIAL_SPEED_INDEX_2000000: return SERIAL_SPEED_2000000;
-        case SERIAL_SPEED_INDEX_2470000: return SERIAL_SPEED_2470000;
-        case SERIAL_SPEED_INDEX_AUTO:
-        default:
-          return SERIAL_SPEED_NONE;
       }
     }
 
@@ -260,7 +216,7 @@ class Hardware
 
     static InputDevice * getInputDevice(Model& model)
     {
-      SerialDevice * serial = model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
+      Device::SerialDevice * serial = model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
       if(serial && model.isActive(FEATURE_RX_SERIAL) && model.config.input.serialRxProvider == SERIALRX_SBUS)
       {
         sbus.begin(serial);

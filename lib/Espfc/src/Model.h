@@ -185,12 +185,12 @@ class Model
       else state.armingDisabledFlags &= ~flag;
     }
 
-    SerialDevice * getSerialStream(SerialPort i)
+    Device::SerialDevice * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
     }
 
-    SerialDevice * getSerialStream(SerialFunction sf)
+    Device::SerialDevice * getSerialStream(SerialFunction sf)
     {
       for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
       {

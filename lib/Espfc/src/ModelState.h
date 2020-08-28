@@ -15,7 +15,7 @@
 #include "Filter.h"
 #include "Stats.h"
 #include "Timer.h"
-#include "SerialDevice.h"
+#include "Device/SerialDevice.h"
 #include "Math/FreqAnalyzer.h"
 #include "Msp/Msp.h"
 
@@ -39,7 +39,7 @@ class SerialPortState
     Msp::MspMessage mspRequest;
     Msp::MspResponse mspResponse;
     CliCmd cliCmd;
-    SerialDevice * stream;
+    Device::SerialDevice * stream;
     uint32_t availableFrom;
 };
 

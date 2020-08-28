@@ -1,7 +1,6 @@
 #ifndef _ESPFC_SERIAL_MANAGER_H_
 #define _ESPFC_SERIAL_MANAGER_H_
 
-#include <Arduino.h>
 #include "Model.h"
 #include "Hardware.h"
 #include "Msp/MspProcessor.h"
@@ -22,7 +21,7 @@ class SerialManager
 
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
-        SerialDevice * port = Hardware::getSerialPortById((SerialPort)i);
+        Device::SerialDevice * port = Hardware::getSerialPortById((SerialPort)i);
         if(!port) continue;
 
         const SerialPortConfig& spc = _model.config.serial[i];
@@ -54,6 +53,9 @@ class SerialManager
         else if(spc.functionMask & SERIAL_FUNCTION_BLACKBOX)
         {
           sdc.baud = spc.blackboxBaud;
+          if(sdc.baud == 230400 || sdc.baud == 460800) {
+            sdc.stop_bits = SERIAL_STOP_BITS_2;
+          }
         }
 
         if(!sdc.baud) continue;

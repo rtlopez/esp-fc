@@ -483,7 +483,7 @@ class Cli
 #if defined(ESP32)
         Param(PSTR("serial_2"), &c.serial[SERIAL_UART_2]),
         Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
-#elif defined(ESP8266) && defined(USE_SOFT_SERIAL)
+#elif defined(USE_SOFT_SERIAL)
         Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
 #endif
 

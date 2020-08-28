@@ -2,7 +2,7 @@
 #define _ESPFC_WIRELESS_H_
 
 #include "Model.h"
-#include "SerialDeviceAdapter.h"
+#include "Device/SerialDeviceAdapter.h"
 #if defined(ESP32)
 #include <WiFi.h>
 #elif defined(ESP8266)
@@ -119,7 +119,7 @@ class Wireless
     Model& _model;
     WiFiServer _server;
     WiFiClient _client;
-    SerialDeviceAdapter<WiFiClient> _adapter;
+    Device::SerialDeviceAdapter<WiFiClient> _adapter;
 
     bool _initialized;
 };

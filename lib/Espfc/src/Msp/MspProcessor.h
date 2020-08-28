@@ -7,6 +7,76 @@
 #include "Msp/MspParser.h"
 #include "platform.h"
 
+namespace {
+
+enum SerialSpeedIndex {
+  SERIAL_SPEED_INDEX_AUTO = 0,
+  SERIAL_SPEED_INDEX_9600,
+  SERIAL_SPEED_INDEX_19200,
+  SERIAL_SPEED_INDEX_38400,
+  SERIAL_SPEED_INDEX_57600,
+  SERIAL_SPEED_INDEX_115200,
+  SERIAL_SPEED_INDEX_230400,
+  SERIAL_SPEED_INDEX_250000,
+  SERIAL_SPEED_INDEX_400000,
+  SERIAL_SPEED_INDEX_460800,
+  SERIAL_SPEED_INDEX_500000,
+  SERIAL_SPEED_INDEX_921600,
+  SERIAL_SPEED_INDEX_1000000,
+  SERIAL_SPEED_INDEX_1500000,
+  SERIAL_SPEED_INDEX_2000000,
+  SERIAL_SPEED_INDEX_2470000,
+};
+
+static SerialSpeedIndex toBaudIndex(int32_t speed)
+{
+  using namespace Espfc;
+  if(speed >= SERIAL_SPEED_2470000) return SERIAL_SPEED_INDEX_2470000;
+  if(speed >= SERIAL_SPEED_2000000) return SERIAL_SPEED_INDEX_2000000;
+  if(speed >= SERIAL_SPEED_1500000) return SERIAL_SPEED_INDEX_1500000;
+  if(speed >= SERIAL_SPEED_1000000) return SERIAL_SPEED_INDEX_1000000;
+  if(speed >= SERIAL_SPEED_921600)  return SERIAL_SPEED_INDEX_921600;
+  if(speed >= SERIAL_SPEED_500000)  return SERIAL_SPEED_INDEX_500000;
+  if(speed >= SERIAL_SPEED_460800)  return SERIAL_SPEED_INDEX_460800;
+  if(speed >= SERIAL_SPEED_400000)  return SERIAL_SPEED_INDEX_400000;
+  if(speed >= SERIAL_SPEED_250000)  return SERIAL_SPEED_INDEX_250000;
+  if(speed >= SERIAL_SPEED_230400)  return SERIAL_SPEED_INDEX_230400;
+  if(speed >= SERIAL_SPEED_115200)  return SERIAL_SPEED_INDEX_115200;
+  if(speed >= SERIAL_SPEED_57600)   return SERIAL_SPEED_INDEX_57600;
+  if(speed >= SERIAL_SPEED_38400)   return SERIAL_SPEED_INDEX_38400;
+  if(speed >= SERIAL_SPEED_19200)   return SERIAL_SPEED_INDEX_19200;
+  if(speed >= SERIAL_SPEED_9600)    return SERIAL_SPEED_INDEX_9600;
+  return SERIAL_SPEED_INDEX_AUTO;
+}
+
+static Espfc::SerialSpeed fromBaudIndex(SerialSpeedIndex index)
+{
+  using namespace Espfc;
+  switch(index)
+  {
+    case SERIAL_SPEED_INDEX_9600:    return SERIAL_SPEED_9600;
+    case SERIAL_SPEED_INDEX_19200:   return SERIAL_SPEED_19200;
+    case SERIAL_SPEED_INDEX_38400:   return SERIAL_SPEED_38400;
+    case SERIAL_SPEED_INDEX_57600:   return SERIAL_SPEED_57600;
+    case SERIAL_SPEED_INDEX_115200:  return SERIAL_SPEED_115200;
+    case SERIAL_SPEED_INDEX_230400:  return SERIAL_SPEED_230400;
+    case SERIAL_SPEED_INDEX_250000:  return SERIAL_SPEED_250000;
+    case SERIAL_SPEED_INDEX_400000:  return SERIAL_SPEED_400000;
+    case SERIAL_SPEED_INDEX_460800:  return SERIAL_SPEED_460800;
+    case SERIAL_SPEED_INDEX_500000:  return SERIAL_SPEED_500000;
+    case SERIAL_SPEED_INDEX_921600:  return SERIAL_SPEED_921600;
+    case SERIAL_SPEED_INDEX_1000000: return SERIAL_SPEED_1000000;
+    case SERIAL_SPEED_INDEX_1500000: return SERIAL_SPEED_1500000;
+    case SERIAL_SPEED_INDEX_2000000: return SERIAL_SPEED_2000000;
+    case SERIAL_SPEED_INDEX_2470000: return SERIAL_SPEED_2470000;
+    case SERIAL_SPEED_INDEX_AUTO:
+    default:
+      return SERIAL_SPEED_NONE;
+  }
+}
+
+}
+
 namespace Espfc {
 
 namespace Msp {
@@ -363,10 +433,10 @@ class MspProcessor
             if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
             r.writeU8(_model.config.serial[i].id); // identifier
             r.writeU16(_model.config.serial[i].functionMask); // functionMask
-            r.writeU8(Hardware::toIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
+            r.writeU8(toBaudIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
             r.writeU8(0); // gps_baudrateIndex
             r.writeU8(0); // telemetry_baudrateIndex
-            r.writeU8(Hardware::toIndex(_model.config.serial[i].blackboxBaud)); // blackbox_baudrateIndex
+            r.writeU8(toBaudIndex(_model.config.serial[i].blackboxBaud)); // blackbox_baudrateIndex
           }
           break;
 
@@ -384,10 +454,10 @@ class MspProcessor
               if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
               r.writeU8(_model.config.serial[i].id); // identifier
               r.writeU32(_model.config.serial[i].functionMask); // functionMask
-              r.writeU8(Hardware::toIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
+              r.writeU8(toBaudIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
               r.writeU8(0); // gps_baudrateIndex
               r.writeU8(0); // telemetry_baudrateIndex
-              r.writeU8(Hardware::toIndex(_model.config.serial[i].blackboxBaud)); // blackbox_baudrateIndex
+              r.writeU8(toBaudIndex(_model.config.serial[i].blackboxBaud)); // blackbox_baudrateIndex
             }
           }
           break;
@@ -405,10 +475,10 @@ class MspProcessor
               }
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU16();
-              _model.config.serial[k].baud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
+              _model.config.serial[k].baud = fromBaudIndex((SerialSpeedIndex)m.readU8());
               m.readU8();
               m.readU8();
-              _model.config.serial[k].blackboxBaud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
+              _model.config.serial[k].blackboxBaud = fromBaudIndex((SerialSpeedIndex)m.readU8());
             }
           }
           _model.reload();
@@ -430,10 +500,10 @@ class MspProcessor
               }
               _model.config.serial[k].id = id;
               _model.config.serial[k].functionMask = m.readU32();
-              _model.config.serial[k].baud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
+              _model.config.serial[k].baud = fromBaudIndex((SerialSpeedIndex)m.readU8());
               m.readU8();
               m.readU8();
-              _model.config.serial[k].blackboxBaud = Hardware::fromIndex((SerialSpeedIndex)m.readU8());
+              _model.config.serial[k].blackboxBaud = fromBaudIndex((SerialSpeedIndex)m.readU8());
             }
           }
           _model.reload();
