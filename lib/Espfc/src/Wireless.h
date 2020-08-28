@@ -79,13 +79,13 @@ class Wireless
       {
         case SYSTEM_EVENT_STA_GOT_IP:
           _server.begin(_model.config.wireless.port);
-          _model.state.serial[SERIAL_WIFI_0].stream = &_adapter;
+          _model.state.serial[SERIAL_SOFT_0].stream = &_adapter;
           _model.state.localIp = WiFi.localIP();
           _initialized = true;
           _model.logger.info().log(F("WIFI EV")).log(F("IP")).logln(WiFi.localIP());
           break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
-          _model.state.serial[SERIAL_WIFI_0].stream = nullptr;
+          _model.state.serial[SERIAL_SOFT_0].stream = nullptr;
           _model.state.localIp = IPAddress(0,0,0,0);
           _initialized = false;
           _model.logger.info().log(F("WIFI EV")).logln(F("DISCONNECTED"));

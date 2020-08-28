@@ -236,9 +236,9 @@ enum SerialPort {
   SERIAL_UART_1,
 #if defined(ESP32)
   SERIAL_UART_2,
-  SERIAL_WIFI_0,
+  SERIAL_SOFT_0, // wifi
 #endif
-#if defined(ESP8266)
+#if defined(ESP8266) && defined(USE_SOFT_SERIAL)
   SERIAL_SOFT_0,
 #endif
   SERIAL_UART_COUNT
@@ -850,11 +850,11 @@ class ModelConfig
       dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter = FilterConfig(FILTER_BIQUAD, 15);
-      magFilter = FilterConfig(FILTER_BIQUAD, 15);
+      accelFilter = FilterConfig(FILTER_BIQUAD, 10);
+      magFilter = FilterConfig(FILTER_BIQUAD, 10);
       yawFilter = FilterConfig(FILTER_PT1, 90);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
-      baroFilter = FilterConfig(FILTER_BIQUAD, 25);
+      baroFilter = FilterConfig(FILTER_BIQUAD, 15);
 
       telemetry = 0;
       telemetryInterval = 1000;
@@ -878,10 +878,10 @@ class ModelConfig
       serial[SERIAL_UART_2].baud = SERIAL_SPEED_115200;
       serial[SERIAL_UART_2].blackboxBaud = SERIAL_SPEED_NONE;
       
-      serial[SERIAL_WIFI_0].id = SERIAL_ID_SOFTSERIAL_1; // as soft serial
-      serial[SERIAL_WIFI_0].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_WIFI_0].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_WIFI_0].blackboxBaud = SERIAL_SPEED_NONE;
+      serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1; // as soft serial
+      serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_MSP;
+      serial[SERIAL_SOFT_0].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_SOFT_0].blackboxBaud = SERIAL_SPEED_NONE;
 
       //serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;

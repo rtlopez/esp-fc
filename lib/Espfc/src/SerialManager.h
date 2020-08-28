@@ -110,7 +110,10 @@ class SerialManager
         _telemetry.process(*stream);
       }
 
-      _wireless.update();
+      if(_current == SERIAL_SOFT_0)
+      {
+        _wireless.update();
+      }
 
       next();
 

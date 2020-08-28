@@ -482,8 +482,9 @@ class Cli
         Param(PSTR("serial_1"), &c.serial[SERIAL_UART_1]),
 #if defined(ESP32)
         Param(PSTR("serial_2"), &c.serial[SERIAL_UART_2]),
+        Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
 #elif defined(ESP8266) && defined(USE_SOFT_SERIAL)
-        Param(PSTR("serial_2"), &c.serial[SERIAL_SOFT_0]),
+        Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
 #endif
 
         Param(PSTR("scaler_0"), &c.scaler[0]),

@@ -207,7 +207,7 @@ class Model
         case SERIAL_ID_UART_2: return SERIAL_UART_1;
       #if defined(ESP32)
         case SERIAL_ID_UART_3: return SERIAL_UART_2;
-        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_WIFI_0;
+        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
       #elif defined(ESP8266)
         case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
       #endif
@@ -346,7 +346,7 @@ class Model
       config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_2].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_WIFI_0].functionMask &= serialFunctionAllowedMask & ~FEATURE_RX_SERIAL;
+      config.serial[SERIAL_SOFT_0].functionMask &= serialFunctionAllowedMask & ~FEATURE_RX_SERIAL;
 #elif defined(ESP8266)
       config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
       config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
