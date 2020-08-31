@@ -1048,6 +1048,7 @@ class Cli
       }
       else if(strcmp_P(cmd.args[0], PSTR("eeprom")) == 0)
       {
+        /*
         int start = 0;
         if(cmd.args[1])
         {
@@ -1069,6 +1070,7 @@ class Cli
           s.print(' ');
         }
         s.println();
+        */
       }
       else if(strcmp_P(cmd.args[0], PSTR("scaler")) == 0)
       {

@@ -2,11 +2,45 @@
 #define _ESPFC_SERIAL_MANAGER_H_
 
 #include "Model.h"
-#include "Hardware.h"
+#include "Device/SerialDevice.h"
+#include "Device/SerialDeviceAdapter.h"
+#include "EspSoftSerial.h"
 #include "Msp/MspProcessor.h"
 #include "Cli.h"
 #include "Wireless.h"
 #include "Telemetry.h"
+
+namespace {
+#if defined(ESP32)
+
+  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
+    static HardwareSerial Serial(0);
+    static HardwareSerial Serial1(1);
+    static HardwareSerial Serial2(2);
+  #endif
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
+
+#elif defined(ESP8266)
+
+  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
+    static HardwareSerial Serial(0);
+  #endif
+  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL1)
+    static HardwareSerial Serial1(1);
+  #endif
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+  #if defined(USE_SOFT_SERIAL)
+    static EspSoftSerial softSerial;
+    static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> soft0(softSerial);
+  #endif
+
+#else
+  #error "unsupported platform"
+#endif
+}
 
 namespace Espfc {
 
@@ -21,7 +55,7 @@ class SerialManager
 
       for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
       {
-        Device::SerialDevice * port = Hardware::getSerialPortById((SerialPort)i);
+        Device::SerialDevice * port = getSerialPortById((SerialPort)i);
         if(!port) continue;
 
         const SerialPortConfig& spc = _model.config.serial[i];
@@ -60,11 +94,17 @@ class SerialManager
 
         if(!sdc.baud) continue;
 
-        _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
         port->flush();
         delay(10);
         port->begin(sdc);
         _model.state.serial[i].stream = port;
+
+        if(i == SERIAL_UART_0)
+        {
+          LOG_SERIAL_INIT(port)
+          //port->setDebugOutput(true);
+        }
+        _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
       }
       return 1;
     }
@@ -120,6 +160,21 @@ class SerialManager
       next();
 
       return 1;
+    }
+
+    static Device::SerialDevice * getSerialPortById(SerialPort portId)
+    {
+      switch(portId)
+      {
+        case SERIAL_UART_0: return &uart0;
+        case SERIAL_UART_1: return &uart1;
+#if defined(ESP32)
+        case SERIAL_UART_2: return &uart2;
+#elif defined(USE_SOFT_SERIAL)
+        case SERIAL_SOFT_0: return &soft0;
+#endif
+        default: return nullptr;
+      }
     }
 
   private:

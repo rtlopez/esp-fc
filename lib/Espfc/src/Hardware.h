@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include "Model.h"
-#include "EspSoftSerial.h"
 #include "InputDevice.h"
 #include "InputPPM.h"
 #include "InputSBUS.h"
@@ -19,27 +18,8 @@
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
 #include "Device/BaroBMP280.h"
-#include "Device/SerialDevice.h"
-#include "Device/SerialDeviceAdapter.h"
 
 namespace {
-#if defined(ESP32)
-  static HardwareSerial Serial1(1);
-  static HardwareSerial Serial2(2);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
-#endif
-
-#if defined(ESP8266)
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-#if defined(USE_SOFT_SERIAL)
-  static EspSoftSerial softSerial;
-  static Espfc::Device::SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
-#endif
-
-#endif
   static Espfc::InputPPM ppm;
   static Espfc::InputSBUS sbus;
   static Espfc::Device::BusSPI spiBus;
@@ -175,21 +155,6 @@ class Hardware
       bool status = dev.begin(&bus);
       _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status);
       return status;
-    }
-
-    static Device::SerialDevice * getSerialPortById(SerialPort portId)
-    {
-      switch(portId)
-      {
-        case SERIAL_UART_0: return &uart0;
-        case SERIAL_UART_1: return &uart1;
-#if defined(ESP32)
-        case SERIAL_UART_2: return &uart2;
-#elif defined(USE_SOFT_SERIAL)
-        case SERIAL_SOFT_0: return &soft0;
-#endif
-        default: return nullptr;
-      }
     }
 
     int update()

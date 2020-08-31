@@ -13,6 +13,16 @@
 
 namespace Espfc {
 
+enum StorageResult
+{
+  STORAGE_NONE,
+  STORAGE_LOAD_SUCCESS,
+  STORAGE_SAVE_SUCCESS,
+  STORAGE_ERR_BAD_MAGIC,
+  STORAGE_ERR_BAD_VERSION,
+  STORAGE_ERR_BAD_SIZE,
+};
+
 class Storage
 {
   public:
@@ -23,21 +33,19 @@ class Storage
       return 1;
     }
 
-    int load(ModelConfig& config, Logger& logger)
+    StorageResult load(ModelConfig& config)
     {
       int addr = 0;
       uint8_t magic = EEPROM.read(addr++);
       if(EEPROM_MAGIC != magic)
       {
-        logger.err().logln(F("EEPROM bad magic"));
-        return -1;
+        return STORAGE_ERR_BAD_MAGIC;
       }
 
       uint8_t version = EEPROM.read(addr++);
       if(EEPROM_VERSION != version)
       {
-        logger.err().log(F("EEPROM bad version")).logln(version);
-        return -1;
+        return STORAGE_ERR_BAD_VERSION;
       }
 
       uint16_t size = 0;
@@ -45,8 +53,7 @@ class Storage
       size |= EEPROM.read(addr++) << 8;
       if(size != sizeof(ModelConfig))
       {
-        logger.err().log(F("EEPROM bad size")).log(size).logln(sizeof(ModelConfig));
-        return -1;
+        return STORAGE_ERR_BAD_SIZE;
       }
 
       uint8_t * begin = reinterpret_cast<uint8_t*>(&config);
@@ -55,11 +62,10 @@ class Storage
       {
         *it = EEPROM.read(addr++);
       }
-      logger.info().log(F("EEPROM loaded")).logln(size);
-      return 1;
+      return STORAGE_LOAD_SUCCESS;
     }
 
-    void write(const ModelConfig& config, Logger& logger)
+    StorageResult write(const ModelConfig& config)
     {
       int addr = 0;
       uint16_t size = sizeof(ModelConfig);
@@ -74,13 +80,16 @@ class Storage
         EEPROM.write(addr++, *it);
       }
       EEPROM.commit();
-      logger.info().logln(F("EEPROM saved"));
+      return STORAGE_SAVE_SUCCESS;
     }
 
   private:
     static const uint8_t EEPROM_MAGIC   = 0xA5;
     static const uint8_t EEPROM_VERSION = 0x01;
     static const size_t  EEPROM_SIZE    = 2048;
+#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_EEPROM)
+    EEPROMClass EEPROM;
+#endif
 };
 
 }

@@ -69,7 +69,7 @@ uint16_t getRssi(void)
 
 failsafePhase_e failsafePhase()
 {
-  if(!_model_ptr) return FAILSAFE_IDLE;
+  if(!_model_ptr) return ::FAILSAFE_IDLE;
   return (failsafePhase_e)(*_model_ptr).state.failsafe.phase;
 }
 

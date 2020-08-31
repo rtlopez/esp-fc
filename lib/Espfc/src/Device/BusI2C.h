@@ -2,12 +2,16 @@
 #define _ESPFC_DEVICE_BUSI2C_H_
 
 #include "BusDevice.h"
-#include "EspWire.h"
-#include "Wire.h"
 
-#if 1
+#define USE_ESP_WIRE
+
+#if defined(USE_ESP_WIRE)
+#include "EspWire.h"
+#define WireClass EspTwoWire
 #define WireImpl EspWire
 #else
+#include "Wire.h"
+#define WireClass TwoWire
 #define WireImpl Wire
 #endif
 
@@ -75,6 +79,12 @@ class BusI2C: public BusDevice
 
       return status == 0;
     }
+
+  private:
+#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_TWOWIRE)
+    WireClass WireImpl;
+#endif
+
 };
 
 }

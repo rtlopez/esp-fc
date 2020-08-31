@@ -372,6 +372,8 @@ class Model
 
     void update()
     {
+      logStorageResult();
+
       // init timers
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
@@ -522,7 +524,7 @@ class Model
     int load()
     {
       #ifndef UNIT_TEST
-      _storage.load(config, logger);
+      _storageResult = _storage.load(config);
       #endif
       postLoad();
       return 1;
@@ -532,7 +534,7 @@ class Model
     {
       preSave();
       #ifndef UNIT_TEST
-      _storage.write(config, logger);
+      _storageResult = _storage.write(config);
       #endif
     }
 
@@ -554,9 +556,27 @@ class Model
     ModelConfig config;
     Logger logger;
 
+    void logStorageResult()
+    {
+#ifndef UNIT_TEST
+      switch(_storageResult)
+      {
+        case STORAGE_LOAD_SUCCESS:    logger.info().logln("EEPROM loaded"); break;
+        case STORAGE_SAVE_SUCCESS:    logger.info().logln("EEPROM saved"); break;
+        case STORAGE_ERR_BAD_MAGIC:   logger.err().logln("EEPROM wrong magic"); break;
+        case STORAGE_ERR_BAD_VERSION: logger.err().logln("EEPROM wrong version"); break;
+        case STORAGE_ERR_BAD_SIZE:    logger.err().logln("EEPROM wrong size"); break;
+        case STORAGE_NONE:
+        default:
+          logger.err().logln("EEPROM unknown"); break;
+      }
+#endif
+    }
+
   private:
     #ifndef UNIT_TEST
     Storage _storage;
+    StorageResult _storageResult;
     #endif
 };
 
