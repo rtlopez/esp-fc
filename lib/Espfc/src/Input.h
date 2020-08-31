@@ -29,7 +29,7 @@ class Input
 
     int begin()
     {
-      _device = Hardware::getInputDevice(_model);
+      _device = getInputDevice();
       _model.state.inputChannelCount = _device ? _device->getChannelCount() : INPUT_CHANNELS;
       _model.state.inputFrameDelta = FRAME_TIME_DEFAULT_US;
       _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
@@ -266,6 +266,24 @@ class Input
       _model.state.inputInterpolationRate = 1.0f / _model.state.inputInterpolationDelta;
     }
 
+    InputDevice * getInputDevice()
+    {
+      Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
+      if(serial && _model.isActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_SBUS)
+      {
+        _sbus.begin(serial);
+        _model.logger.info().logln(F("RX SBUS"));
+        return &_sbus;
+      }
+      else if(_model.isActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
+      {
+        _ppm.begin(_model.config.pin[PIN_INPUT_RX], _model.config.input.ppmMode);
+        _model.logger.info().log(F("RX PPM")).log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
+        return &_ppm;
+      }
+      return nullptr;
+    }
+
   private:
     float _interpolate(float left, float right, float step)
     {
@@ -276,6 +294,8 @@ class Input
     InputDevice * _device;
     Filter _filter[INPUT_CHANNELS];
     float _step;
+    InputPPM _ppm;
+    InputSBUS _sbus;
 
     static const uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
     static const uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms

@@ -20,8 +20,6 @@
 #include "Device/BaroBMP280.h"
 
 namespace {
-  static Espfc::InputPPM ppm;
-  static Espfc::InputSBUS sbus;
   static Espfc::Device::BusSPI spiBus;
   static Espfc::Device::BusI2C i2cBus;
   static Espfc::Device::GyroMPU6050 mpu6050;
@@ -177,24 +175,6 @@ class Hardware
     {
       if(model.config.baroDev == BARO_NONE) return nullptr;
       return detectedBaro;
-    }
-
-    static InputDevice * getInputDevice(Model& model)
-    {
-      Device::SerialDevice * serial = model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
-      if(serial && model.isActive(FEATURE_RX_SERIAL) && model.config.input.serialRxProvider == SERIALRX_SBUS)
-      {
-        sbus.begin(serial);
-        model.logger.info().logln(F("RX SBUS"));
-        return &sbus;
-      }
-      else if(model.isActive(FEATURE_RX_PPM) && model.config.pin[PIN_INPUT_RX] != -1)
-      {
-        ppm.begin(model.config.pin[PIN_INPUT_RX], model.config.input.ppmMode);
-        model.logger.info().log(F("RX PPM")).log(model.config.pin[PIN_INPUT_RX]).logln(model.config.input.ppmMode);
-        return &ppm;
-      }
-      return nullptr;
     }
 
     void initEscDrivers()
