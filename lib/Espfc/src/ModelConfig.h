@@ -7,9 +7,8 @@
 #include "Device/GyroDevice.h"
 #include "Device/MagDevice.h"
 #include "Device/BaroDevice.h"
+#include "Device/SerialDevice.h"
 #include "InputPPM.h"
-
-#define USE_SOFT_SERIAL
 
 namespace Espfc {
 
@@ -192,104 +191,6 @@ enum DebugMode {
   DEBUG_COUNT
 };
 
-enum SerialSpeed {
-  SERIAL_SPEED_NONE   =      0,
-  SERIAL_SPEED_9600   =   9600,
-  SERIAL_SPEED_19200  =  19200,
-  SERIAL_SPEED_38400  =  38400,
-  SERIAL_SPEED_57600  =  57600,
-  SERIAL_SPEED_115200 = 115200,
-  SERIAL_SPEED_230400 = 230400,
-  SERIAL_SPEED_250000 = 250000,
-  SERIAL_SPEED_500000 = 500000,
-  SERIAL_SPEED_1000000 = 1000000,
-};
-
-enum SerialSpeedIndex {
-  SERIAL_SPEED_INDEX_AUTO = 0,
-  SERIAL_SPEED_INDEX_9600,
-  SERIAL_SPEED_INDEX_19200,
-  SERIAL_SPEED_INDEX_38400,
-  SERIAL_SPEED_INDEX_57600,
-  SERIAL_SPEED_INDEX_115200,
-  SERIAL_SPEED_INDEX_230400,
-  SERIAL_SPEED_INDEX_250000,
-  SERIAL_SPEED_INDEX_400000,
-  SERIAL_SPEED_INDEX_460800,
-  SERIAL_SPEED_INDEX_500000,
-  SERIAL_SPEED_INDEX_921600,
-  SERIAL_SPEED_INDEX_1000000,
-  SERIAL_SPEED_INDEX_1500000,
-  SERIAL_SPEED_INDEX_2000000,
-  SERIAL_SPEED_INDEX_2470000,
-};
-
-enum SerialPort {
-  SERIAL_UART_0,
-  SERIAL_UART_1,
-#if defined(ESP32)
-  SERIAL_UART_2,
-  SERIAL_WIFI_0,
-#endif
-#if defined(ESP8266)
-  SERIAL_SOFT_0,
-#endif
-  SERIAL_UART_COUNT
-};
-
-enum SerialPortId {
-  SERIAL_ID_NONE = -1,
-  SERIAL_ID_UART_1 = 0,
-  SERIAL_ID_UART_2,
-  SERIAL_ID_UART_3,
-  SERIAL_ID_UART_4,
-  SERIAL_ID_UART_5,
-  SERIAL_ID_UART_6,
-  SERIAL_ID_UART_7,
-  SERIAL_ID_UART_8,
-  SERIAL_ID_LPUART_1,
-  SERIAL_ID_USB_VCP = 20,
-  SERIAL_ID_SOFTSERIAL_1 = 30,
-  SERIAL_ID_SOFTSERIAL_2,
-  SERIAL_ID_MAX = SERIAL_ID_SOFTSERIAL_2,
-};
-
-enum SerialFunction {
-  SERIAL_FUNCTION_NONE                = 0,
-  SERIAL_FUNCTION_MSP                 = (1 << 0),  // 1
-  SERIAL_FUNCTION_GPS                 = (1 << 1),  // 2
-  SERIAL_FUNCTION_TELEMETRY_FRSKY     = (1 << 2),  // 4
-  SERIAL_FUNCTION_TELEMETRY_HOTT      = (1 << 3),  // 8
-  SERIAL_FUNCTION_TELEMETRY_LTM       = (1 << 4),  // 16
-  SERIAL_FUNCTION_TELEMETRY_SMARTPORT = (1 << 5),  // 32
-  SERIAL_FUNCTION_RX_SERIAL           = (1 << 6),  // 64
-  SERIAL_FUNCTION_BLACKBOX            = (1 << 7),  // 128
-  SERIAL_FUNCTION_TELEMETRY_MAVLINK   = (1 << 9),  // 512
-  SERIAL_FUNCTION_ESC_SENSOR          = (1 << 10), // 1024
-  SERIAL_FUNCTION_VTX_SMARTAUDIO      = (1 << 11), // 2048
-  SERIAL_FUNCTION_TELEMETRY_IBUS      = (1 << 12), // 4096
-  SERIAL_FUNCTION_VTX_TRAMP           = (1 << 13), // 8192
-  SERIAL_FUNCTION_RCDEVICE            = (1 << 14), // 16384
-  SERIAL_FUNCTION_LIDAR_TF            = (1 << 15), // 32768
-  SERIAL_FUNCTION_FRSKY_OSD           = (1 << 16), // 65536
-};
-
-enum SerialRXProvider {
-  SERIALRX_SPEKTRUM1024 = 0,
-  SERIALRX_SPEKTRUM2048 = 1,
-  SERIALRX_SBUS = 2,
-  SERIALRX_SUMD = 3,
-  SERIALRX_SUMH = 4,
-  SERIALRX_XBUS_MODE_B = 5,
-  SERIALRX_XBUS_MODE_B_RJ01 = 6,
-  SERIALRX_IBUS = 7,
-  SERIALRX_JETIEXBUS = 8,
-  SERIALRX_CRSF = 9,
-  SERIALRX_SRXL = 10,
-  SERIALRX_TARGET_CUSTOM = 11,
-  SERIALRX_FPORT = 12,
-};
-
 enum Axis {
   AXIS_ROLL,    // x
   AXIS_PITCH,   // y
@@ -393,8 +294,8 @@ class SerialPortConfig
   public:
     int8_t id;
     int32_t functionMask;
-    int8_t baudIndex;
-    int8_t blackboxBaudIndex;
+    int32_t baud;
+    int32_t blackboxBaud;
 };
 
 #define BUZZER_MAX_EVENTS 8
@@ -843,11 +744,11 @@ class ModelConfig
       dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter = FilterConfig(FILTER_BIQUAD, 15);
-      magFilter = FilterConfig(FILTER_BIQUAD, 15);
+      accelFilter = FilterConfig(FILTER_BIQUAD, 10);
+      magFilter = FilterConfig(FILTER_BIQUAD, 10);
       yawFilter = FilterConfig(FILTER_PT1, 90);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
-      baroFilter = FilterConfig(FILTER_BIQUAD, 25);
+      baroFilter = FilterConfig(FILTER_BIQUAD, 15);
 
       telemetry = 0;
       telemetryInterval = 1000;
@@ -858,43 +759,43 @@ class ModelConfig
 #if defined(ESP32)
       serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
       serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_0].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_UART_0].blackboxBaud = SERIAL_SPEED_NONE;
 
       serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
       serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_RX_SERIAL;
-      serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_1].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_UART_1].blackboxBaud = SERIAL_SPEED_NONE;
 
       serial[SERIAL_UART_2].id = SERIAL_ID_UART_3;
       serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_UART_2].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_2].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_UART_2].blackboxBaud = SERIAL_SPEED_NONE;
       
-      serial[SERIAL_WIFI_0].id = SERIAL_ID_SOFTSERIAL_1; // as soft serial
-      serial[SERIAL_WIFI_0].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_WIFI_0].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_WIFI_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1; // as soft serial
+      serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_MSP;
+      serial[SERIAL_SOFT_0].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_SOFT_0].blackboxBaud = SERIAL_SPEED_NONE;
 
       //serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      //serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      //serial[SERIAL_UART_2].blackboxBaud = SERIAL_SPEED_250000;
       //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
 #elif defined(ESP8266)
       serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
       serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_UART_0].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_UART_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_0].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_UART_0].blackboxBaud = SERIAL_SPEED_NONE;
 
       serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
       serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_NONE;
-      serial[SERIAL_UART_1].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_UART_1].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_UART_1].blackboxBaud = SERIAL_SPEED_NONE;
 
       serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1; // present as soft serial
       serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
-      serial[SERIAL_SOFT_0].baudIndex = SERIAL_SPEED_INDEX_115200;
-      serial[SERIAL_SOFT_0].blackboxBaudIndex = SERIAL_SPEED_INDEX_AUTO;
+      serial[SERIAL_SOFT_0].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_SOFT_0].blackboxBaud = SERIAL_SPEED_NONE;
 #endif
 
       // output config
@@ -1084,12 +985,12 @@ class ModelConfig
       output.protocol = ESC_PROTOCOL_DSHOT150;
       serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
       serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      serial[SERIAL_UART_1].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      serial[SERIAL_UART_1].blackboxBaud = SERIAL_SPEED_250000;
   #elif defined(ESP32)
       output.protocol = ESC_PROTOCOL_DSHOT300;
       serial[SERIAL_UART_2].id = SERIAL_ID_UART_3;
       serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      serial[SERIAL_UART_2].blackboxBaudIndex = SERIAL_SPEED_INDEX_250000;
+      serial[SERIAL_UART_2].blackboxBaud = SERIAL_SPEED_250000;
   #endif
 
       quad();

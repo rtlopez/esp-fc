@@ -1,9 +1,10 @@
 #ifndef _INPUT_SBUS_H_
 #define _INPUT_SBUS_H_
 
-#include <Arduino.h>
-#include "SerialDevice.h"
+//#include <Arduino.h>
+#include "Device/SerialDevice.h"
 #include "InputDevice.h"
+#include "Math/Utils.h"
 
 namespace Espfc {
 
@@ -50,7 +51,7 @@ class InputSBUS: public InputDevice
 
     InputSBUS(): _serial(NULL), _state(SBUS_START), _idx(0), _new_data(false) {}
 
-    int begin(SerialDevice * serial)
+    int begin(Device::SerialDevice * serial)
     {
       _serial = serial;
       for(size_t i = 0; i < SBUS_FRAME_SIZE; i++)
@@ -165,13 +166,12 @@ class InputSBUS: public InputDevice
 
     inline uint16_t convert(int v)
     {
-      return constrain(((v * 5) / 8) + 880, 800, 2200);
+      return Math::clamp(((v * 5) / 8) + 880, 800, 2200);
     }
 
     const static size_t SBUS_FRAME_SIZE = sizeof(SbusData);
-    //const static size_t SBUS_FRAME_SIZE = 25;
 
-    SerialDevice * _serial;
+    Device::SerialDevice * _serial;
     SbusState _state;
     uint8_t _idx = 0;
     bool _new_data;

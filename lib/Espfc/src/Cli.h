@@ -36,6 +36,7 @@ class Cli
       PARAM_SCALER,  // scaler config
       PARAM_MODE,    // scaler config
       PARAM_MIXER,   // mixer config
+      PARAM_SERIAL,  // mixer config
       PARAM_STRING,  // string
     };
 
@@ -59,6 +60,7 @@ class Cli
         Param(const char * n, ScalerConfig * a):        Param(n, PARAM_SCALER, reinterpret_cast<char*>(a), NULL) {}
         Param(const char * n, ActuatorCondition * a):   Param(n, PARAM_MODE,   reinterpret_cast<char*>(a), NULL) {}
         Param(const char * n, MixerEntry * a):          Param(n, PARAM_MIXER,  reinterpret_cast<char*>(a), NULL) {}
+        Param(const char * n, SerialPortConfig * a):    Param(n, PARAM_SERIAL, reinterpret_cast<char*>(a), NULL) {}
 
         void print(Stream& stream) const
         {
@@ -107,6 +109,9 @@ class Cli
               break;
             case PARAM_MIXER:
               print(stream, *reinterpret_cast<MixerEntry*>(addr));
+              break;
+            case PARAM_SERIAL:
+              print(stream, *reinterpret_cast<SerialPortConfig*>(addr));
               break;
           }
         }
@@ -174,6 +179,15 @@ class Cli
           stream.print(me.rate);
         }
 
+        void print(Stream& stream, const SerialPortConfig& sc) const
+        {
+          stream.print(sc.functionMask);
+          stream.print(' ');
+          stream.print(sc.baud);
+          stream.print(' ');
+          stream.print(sc.blackboxBaud);
+        }
+
         void print(Stream& stream, int32_t v) const
         {
           if(choices)
@@ -233,6 +247,9 @@ class Cli
             case PARAM_MIXER:
               write(*reinterpret_cast<MixerEntry*>(addr), args);
               break;
+            case PARAM_SERIAL:
+              write(*reinterpret_cast<SerialPortConfig*>(addr), args);
+              break;
             case PARAM_NONE:
               break;
           }
@@ -280,6 +297,13 @@ class Cli
           if(args[2]) ac.src = constrain(String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
           if(args[3]) ac.dst = constrain(String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
           if(args[4]) ac.rate = constrain(String(args[4]).toInt(), -1000, 1000);
+        }
+
+        void write(SerialPortConfig& sc, const char ** args) const
+        {
+          if(args[2]) sc.functionMask = String(args[2]).toInt();
+          if(args[3]) sc.baud = String(args[3]).toInt();
+          if(args[4]) sc.blackboxBaud = String(args[4]).toInt();
         }
 
         template<typename T>
@@ -453,6 +477,15 @@ class Cli
         Param(PSTR("input_13"), &c.input.channel[13]),
         Param(PSTR("input_14"), &c.input.channel[14]),
         Param(PSTR("input_15"), &c.input.channel[15]),
+
+        Param(PSTR("serial_0"), &c.serial[SERIAL_UART_0]),
+        Param(PSTR("serial_1"), &c.serial[SERIAL_UART_1]),
+#if defined(ESP32)
+        Param(PSTR("serial_2"), &c.serial[SERIAL_UART_2]),
+        Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
+#elif defined(USE_SOFT_SERIAL)
+        Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
+#endif
 
         Param(PSTR("scaler_0"), &c.scaler[0]),
         Param(PSTR("scaler_1"), &c.scaler[1]),
@@ -776,21 +809,23 @@ class Cli
       {
         printVersion(s);
         s.println();
-        s.print(F("  bool: ")); s.println(sizeof(bool));
+        /*s.print(F("  bool: ")); s.println(sizeof(bool));
         s.print(F("  char: ")); s.println(sizeof(char));
         s.print(F(" short: ")); s.println(sizeof(short));
         s.print(F("   int: ")); s.println(sizeof(int));
         s.print(F("  long: ")); s.println(sizeof(long));
         s.print(F(" float: ")); s.println(sizeof(float));
-        s.print(F("double: ")); s.println(sizeof(double));
-        s.print(F(" model: ")); s.println(sizeof(ModelConfig));
-        s.println();
+        s.print(F("double: ")); s.println(sizeof(double));*/
 
-        s.print(F("free heap: "));
+        s.print(F("config size: "));
+        s.println(sizeof(ModelConfig));
+
+        s.print(F("  free heap: "));
         s.println(ESP.getFreeHeap());
 
-        s.print(F(" cpu freq: "));
-        s.println(ESP.getCpuFreqMHz());
+        s.print(F("   cpu freq: "));
+        s.print(ESP.getCpuFreqMHz());
+        s.println(F(" MHz"));
 
 #if defined(ESP32)
 
@@ -1013,6 +1048,7 @@ class Cli
       }
       else if(strcmp_P(cmd.args[0], PSTR("eeprom")) == 0)
       {
+        /*
         int start = 0;
         if(cmd.args[1])
         {
@@ -1034,6 +1070,7 @@ class Cli
           s.print(' ');
         }
         s.println();
+        */
       }
       else if(strcmp_P(cmd.args[0], PSTR("scaler")) == 0)
       {
@@ -1125,6 +1162,12 @@ class Cli
         {
           s.println(F(" mag : NONE"));
         }
+
+        s.print(F(" rx rate : "));
+        s.println(_model.state.inputFrameRate);
+
+        s.print(F("arming disabled : "));
+        s.println(_model.state.armingDisabledFlags);
       }
       else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
       {

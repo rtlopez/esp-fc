@@ -24,14 +24,17 @@ class Espfc
       _mixer(_model), _blackbox(_model), _telemetry(_model), _buzzer(_model), _serial(_model)
       {}
 
+    int load()
+    {
+      _model.begin();
+
+      return 1;
+    }
+
     int begin()
     {
-      //Serial.setDebugOutput(true);
-      _model.begin();
-      _serial.begin();
       _hardware.begin();
       _model.update();
-      _buzzer.begin();
       _sensor.begin();
       _input.begin();
       _actuator.begin();
@@ -39,6 +42,14 @@ class Espfc
       _mixer.begin();
       _blackbox.begin();
       _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
+
+      return 1;
+    }
+
+    int beginOther()
+    {
+      _serial.begin();
+      _buzzer.begin();
 
       return 1;
     }
@@ -70,8 +81,8 @@ class Espfc
     int updateOther()
     {
       _model.state.stats.update();
-      _buzzer.update();
       _serial.update();
+      _buzzer.update();
       return 1;
     }
 

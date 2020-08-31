@@ -10,7 +10,7 @@ extern "C" {
 #include "blackbox/blackbox.h"
 }
 
-static Espfc::SerialDevice * blackboxSerial = nullptr;
+static Espfc::Device::SerialDevice * blackboxSerial = nullptr;
 static Espfc::Model * _model_ptr = nullptr;
 
 void serialWrite(serialPort_t * instance, uint8_t ch)
@@ -19,7 +19,7 @@ void serialWrite(serialPort_t * instance, uint8_t ch)
   if(blackboxSerial) blackboxSerial->write(ch);
 }
 
-void serialWriteInit(Espfc::SerialDevice * serial)
+void serialWriteInit(Espfc::Device::SerialDevice * serial)
 {
   blackboxSerial = serial;
 }
@@ -69,7 +69,7 @@ uint16_t getRssi(void)
 
 failsafePhase_e failsafePhase()
 {
-  if(!_model_ptr) return FAILSAFE_IDLE;
+  if(!_model_ptr) return ::FAILSAFE_IDLE;
   return (failsafePhase_e)(*_model_ptr).state.failsafe.phase;
 }
 
@@ -109,7 +109,7 @@ class Blackbox
 
       if(!_model.blackboxEnabled()) return 0;
 
-      SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+      Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
       if(!serial) return 0;
 
       serialWriteInit(serial);

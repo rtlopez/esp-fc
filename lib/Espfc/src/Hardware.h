@@ -3,8 +3,6 @@
 
 #include <Arduino.h>
 #include "Model.h"
-#include "EspSoftSerial.h"
-#include "SerialDeviceAdapter.h"
 #include "InputDevice.h"
 #include "InputPPM.h"
 #include "InputSBUS.h"
@@ -22,23 +20,6 @@
 #include "Device/BaroBMP280.h"
 
 namespace {
-#if defined(ESP32)
-  static HardwareSerial Serial1(1);
-  static HardwareSerial Serial2(2);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
-#endif
-
-#if defined(ESP8266)
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-#if defined(USE_SOFT_SERIAL)
-  static EspSoftSerial softSerial;
-  static Espfc::SerialDeviceAdapter<EspSoftSerial>  soft0(softSerial);
-#endif
-
-#endif
   static Espfc::InputPPM ppm;
   static Espfc::InputSBUS sbus;
   static Espfc::Device::BusSPI spiBus;
@@ -176,40 +157,6 @@ class Hardware
       return status;
     }
 
-    static SerialDevice * getSerialPortById(SerialPort portId)
-    {
-      switch(portId)
-      {
-        case SERIAL_UART_0: return &uart0;
-        case SERIAL_UART_1: return &uart1;
-#if defined(ESP32)
-        case SERIAL_UART_2: return &uart2;
-#elif defined(ESP8266) && defined(USE_SOFT_SERIAL)
-        case SERIAL_SOFT_0: return &soft0;
-#endif
-        default: return nullptr;
-      }
-    }
-
-    static SerialSpeed fromIndex(SerialSpeedIndex index, SerialSpeed defaultSpeed)
-    {
-      switch(index)
-      {
-        case SERIAL_SPEED_INDEX_9600:   return SERIAL_SPEED_9600;
-        case SERIAL_SPEED_INDEX_19200:  return SERIAL_SPEED_19200;
-        case SERIAL_SPEED_INDEX_38400:  return SERIAL_SPEED_38400;
-        case SERIAL_SPEED_INDEX_57600:  return SERIAL_SPEED_57600;
-        case SERIAL_SPEED_INDEX_115200: return SERIAL_SPEED_115200;
-        case SERIAL_SPEED_INDEX_230400: return SERIAL_SPEED_230400;
-        case SERIAL_SPEED_INDEX_250000: return SERIAL_SPEED_250000;
-        case SERIAL_SPEED_INDEX_500000: return SERIAL_SPEED_500000;
-        case SERIAL_SPEED_INDEX_1000000: return SERIAL_SPEED_1000000;
-        case SERIAL_SPEED_INDEX_AUTO:
-        default:
-          return defaultSpeed;
-      }
-    }
-
     int update()
     {
       return 1;
@@ -234,7 +181,7 @@ class Hardware
 
     static InputDevice * getInputDevice(Model& model)
     {
-      SerialDevice * serial = model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
+      Device::SerialDevice * serial = model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
       if(serial && model.isActive(FEATURE_RX_SERIAL) && model.config.input.serialRxProvider == SERIALRX_SBUS)
       {
         sbus.begin(serial);

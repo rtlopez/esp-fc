@@ -21,6 +21,7 @@
   #if !CONFIG_FREERTOS_UNICORE
     #define ESPFC_DUAL_CORE 1
     TaskHandle_t otherTaskHandle = NULL;
+    extern TaskHandle_t loopTaskHandle;
   #endif
 #elif defined(ESP8266)
   #include <ESP8266WiFi.h>
@@ -31,10 +32,10 @@ Espfc::Espfc espfc;
 #if defined(ESPFC_DUAL_CORE)
 void otherTask(void *pvParameters)
 {
-  //esp_task_wdt_add(otherTaskHandle);
+  espfc.beginOther();
+  xTaskNotifyGive(loopTaskHandle);
   while(true)
   {
-    //esp_task_wdt_reset();
     espfc.updateOther();
   }
 }
@@ -42,11 +43,16 @@ void otherTask(void *pvParameters)
 
 void setup()
 {
-  espfc.begin();
-  #if defined(ESPFC_DUAL_CORE)
+  espfc.load();
+#if defined(ESPFC_DUAL_CORE)
   disableCore0WDT();
   xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
-  #endif
+  ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
+  espfc.begin();
+#else
+  espfc.beginOther();
+  espfc.begin();
+#endif
 }
 
 void loop()

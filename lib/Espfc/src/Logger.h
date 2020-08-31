@@ -18,7 +18,6 @@ class Logger
   public:
     int begin()
     {
-      LOG_SERIAL_INIT();
       return 0;
       _valid = false;
 #if defined(USE_FS_LOGGER)
@@ -133,7 +132,7 @@ class Logger
 
     Logger& info()
     {
-      LOG_SERIAL_DEBUG("I");
+      LOG_SERIAL_DEBUG("I")
 #if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
@@ -149,7 +148,7 @@ class Logger
 
     Logger& err()
     {
-      LOG_SERIAL_DEBUG("E");
+      LOG_SERIAL_DEBUG("E")
 #if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
@@ -166,7 +165,7 @@ class Logger
     template<typename T>
     Logger& log(const T& v)
     {
-      LOG_SERIAL_DEBUG(v);
+      LOG_SERIAL_DEBUG(v)
 #if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
@@ -183,9 +182,9 @@ class Logger
     template<typename T>
     Logger& logln(const T& v)
     {
-      LOG_SERIAL_DEBUG(v);
-      LOG_SERIAL_DEBUG('\r');
-      LOG_SERIAL_DEBUG('\n');
+      LOG_SERIAL_DEBUG(v)
+      LOG_SERIAL_DEBUG('\r')
+      LOG_SERIAL_DEBUG('\n')
 #if defined(USE_FS_LOGGER)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");

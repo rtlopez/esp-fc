@@ -68,6 +68,9 @@ class BusSPI: public BusDevice
       digitalWrite(devAddr, HIGH);
       SPI.endTransaction();
     }
+#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SPI)
+    SPIClass SPI;
+#endif
 };
 
 }

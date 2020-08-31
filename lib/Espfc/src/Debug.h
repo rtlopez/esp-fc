@@ -2,6 +2,10 @@
 #define _ESPFC_DEBUG_H_
 
 #include <EspGpio.h>
+#include <Arduino.h>
+
+namespace Espfc
+{
 
 #if 0
 #define PIN_DEBUG(v) EspGpio::digitalWrite(D0, v)
@@ -11,31 +15,41 @@
 #define PIN_DEBUG_INIT()
 #endif
 
-#if ESPFC_SERIAL_DEBUG
-//#define LOG_SERIAL_INIT() Serial.begin(115200); Serial.flush(); Serial.println()
-#define LOG_SERIAL_INIT() Serial.begin(115200); Serial.println()
-#define LOG_SERIAL_DEBUG(v) Serial.print(' '); Serial.print(v)
-#else
-#define LOG_SERIAL_INIT()
-#define LOG_SERIAL_DEBUG(v)
-#endif
+#if defined(ESPFC_SERIAL_DEBUG)
+static Stream * _debugStream = nullptr;
 
-#if ESPFC_SERIAL_DEBUG
+#define LOG_SERIAL_INIT(p) _debugStream = p;
+#define LOG_SERIAL_DEBUG(v) if(_debugStream) { _debugStream->print(' '); _debugStream->print(v); }
+
 template <typename T>
 void D(T t)
 {
-  Serial.println(t);
+  if(_debugStream)
+  {
+    _debugStream->print(t);
+    _debugStream->print('\n');
+  }
 }
 
 template<typename T, typename... Args>
 void D(T t, Args... args) // recursive variadic function
 {
-  Serial.print(t);
-  Serial.print(' ');
-  D(args...);
+  if(_debugStream)
+  {
+    _debugStream->print(t);
+    _debugStream->print(' ');
+    D(args...);
+  }
 }
+
 #else
+
+#define LOG_SERIAL_INIT(p)
+#define LOG_SERIAL_DEBUG(v)
 #define D(...)
+
 #endif
+
+}
 
 #endif
