@@ -2,7 +2,6 @@
 #define _ESPFC_OUTPUT_MIXER_H_
 
 #include "Model.h"
-#include "Hardware.h"
 #include "Output/Mixers.h"
 #include "EscDriver.h"
 
@@ -64,12 +63,11 @@ class Mixer
       const MixerConfig& mixer = _model.state.currentMixer;
 
       updateMixer(mixer, outputs);
-      writeOutput(outputs, mixer.count);
+      writeOutput(mixer, outputs);
 
       return 1;
     }
 
-  private:
     void updateMixer(const MixerConfig& mixer, float * outputs)
     {
       Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER);
@@ -87,9 +85,10 @@ class Mixer
       sources[MIXER_SOURCE_RC_YAW]    = _model.state.input[AXIS_YAW];
       sources[MIXER_SOURCE_RC_THRUST] = _model.state.input[AXIS_THRUST];
 
-      sources[MIXER_SOURCE_RC_AUX1] = _model.state.input[AXIS_AUX_1];
-      sources[MIXER_SOURCE_RC_AUX2] = _model.state.input[AXIS_AUX_2];
-      sources[MIXER_SOURCE_RC_AUX3] = _model.state.input[AXIS_AUX_3];
+      for(size_t i = 0; i < 3; i++)
+      {
+        sources[MIXER_SOURCE_RC_AUX1 + i] = _model.state.input[AXIS_AUX_1 + i];
+      }
       
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -110,11 +109,11 @@ class Mixer
       }
 
       // airmode logic
-      float thrust = sources[MIXER_SOURCE_THRUST];
+      float thrust = limitThrust(sources[MIXER_SOURCE_THRUST], (ThrottleLimitType)_model.config.output.throttleLimitType, _model.config.output.throttleLimitPercent);
       if(_model.isAirModeActive())
       {
         float min = 0.f, max = 0.f;
-        for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+        for(size_t i = 0; i < mixer.count; i++)
         {
           max = std::max(max, outputs[i]);
           min = std::min(min, outputs[i]);
@@ -122,15 +121,15 @@ class Mixer
         float range = (max - min) * 0.5f;
         if(range > 1.f)
         {
-          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          for(size_t i = 0; i < mixer.count; i++)
           {
             outputs[i] /= range;
           }
-          thrust = 0.f;
+          thrust = 0.f; //limitThrust(0.f);
         }
         else
         {
-          thrust = constrain(thrust, -1.f + range, 1.f - range);
+          thrust = Math::clamp(thrust, -1.f + range, 1.f - range);
         }
       }
 
@@ -151,10 +150,49 @@ class Mixer
           }
         }
         entry++;
-      }     
+      }
+
+      for(size_t i = 0; i < mixer.count; i++)
+      {
+        outputs[i] = limitOutput(outputs[i], _model.config.output.channel[i], _model.config.output.motorLimit);
+      }
     }
 
-    void writeOutput(float * out, size_t axes)
+    float limitThrust(float thrust, ThrottleLimitType type, int8_t limit)
+    {
+      if(type == THROTTLE_LIMIT_TYPE_NONE || limit >= 100 || limit < 1) return thrust;
+
+      // thrust range is [-1, 1]
+      switch(type)
+      {
+        case THROTTLE_LIMIT_TYPE_SCALE:
+          return (thrust + 1.0f) * limit * 0.01f - 1.0f;
+        case THROTTLE_LIMIT_TYPE_CLIP:
+          return Math::clamp(thrust, -1.f, (limit * 0.02f) - 1.0f);
+        default:
+          break;
+      }
+
+      return thrust;
+    }
+
+    float limitOutput(float output, const OutputChannelConfig& occ, int limit)
+    {
+      if(limit >= 100 || limit < 1) return output;
+
+      if(occ.servo)
+      {
+        const float factor = limit * 0.01f;
+        return Math::clamp(output, -factor, factor);
+      }
+      else
+      {
+        const float factor = limit * 0.02f; // *2
+        return Math::clamp(output + 1.f, 0.f, factor) - 1.0f;
+      }
+    }
+
+    void writeOutput(const MixerConfig& mixer, float * out)
     {
       Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
 
@@ -162,7 +200,7 @@ class Mixer
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         const OutputChannelConfig& och = _model.config.output.channel[i];
-        if(i >= axes || stop)
+        if(i >= mixer.count || stop)
         {
           _model.state.outputUs[i] = och.servo && _model.state.outputDisarmed[i] == 1000 ? och.neutral : _model.state.outputDisarmed[i];
         }
@@ -171,19 +209,19 @@ class Mixer
           if(och.servo)
           {
             const int16_t tmp = lrintf(Math::map3(out[i], -1.f, 0.f, 1.f, och.reverse ? 2000 : 1000, och.neutral, och.reverse ? 1000 : 2000));
-            _model.state.outputUs[i] = constrain(tmp, och.min, och.max);
+            _model.state.outputUs[i] = Math::clamp(tmp, och.min, och.max);
           }
           else
           {
-            float v = constrain(out[i], -1.f, 1.f);
+            float v = Math::clamp(out[i], -1.f, 1.f);
             _model.state.outputUs[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
           }
         }
       }
-      _write();
+      applyOutput();
     }
 
-    void _write()
+    void applyOutput()
     {
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {

@@ -48,6 +48,13 @@ enum MixerSource {
   MIXER_SOURCE_MAX,
 };
 
+enum ThrottleLimitType {
+  THROTTLE_LIMIT_TYPE_NONE,
+  THROTTLE_LIMIT_TYPE_SCALE,
+  THROTTLE_LIMIT_TYPE_CLIP,
+  THROTTLE_LIMIT_TYPE_MAX,
+};
+
 static const size_t MIXER_RULE_MAX = 64;
 
 class MixerEntry {
@@ -63,9 +70,9 @@ class MixerConfig {
   public:
     MixerConfig(): count(0), mixes(NULL) {}
     MixerConfig(const MixerConfig& c): count(c.count), mixes(c.mixes) {}
-    MixerConfig(int8_t c, MixerEntry * m): count(c), mixes(m) {}
+    MixerConfig(uint8_t c, MixerEntry * m): count(c), mixes(m) {}
 
-    int8_t count;
+    uint8_t count;
     MixerEntry * mixes;
 };
 

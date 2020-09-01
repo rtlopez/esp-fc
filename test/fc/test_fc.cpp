@@ -4,6 +4,7 @@
 #include "Model.h"
 #include "Controller.h"
 #include "Actuator.h"
+#include "Output/Mixer.h"
 
 using namespace fakeit;
 using namespace Espfc;
@@ -512,6 +513,123 @@ void test_actuator_arming_throttle()
   TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.armingDisabledFlags);
 }
 
+void test_mixer_throttle_limit_none()
+{
+  Model model;
+  Output::Mixer mixer(model);
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_NONE, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_NONE, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_NONE, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_NONE, 100));
+}
+
+void test_mixer_throttle_limit_scale()
+{
+  Model model;
+  Output::Mixer mixer(model);
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_SCALE, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_SCALE, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_SCALE, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_SCALE, 100));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_SCALE, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_SCALE, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_SCALE, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_SCALE, 0));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_SCALE, 110));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_SCALE, 110));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_SCALE, 110));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_SCALE, 110));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.00f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_SCALE, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.20f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_SCALE, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.20f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_SCALE, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.60f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_SCALE, 80));
+}
+
+void test_mixer_throttle_limit_clip()
+{
+  Model model;
+  Output::Mixer mixer(model);
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_CLIP, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_CLIP, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_CLIP, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_CLIP, 100));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_CLIP, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_CLIP, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_CLIP, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_CLIP, 0));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_CLIP, 110));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_CLIP, 110));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_CLIP, 110));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_CLIP, 110));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.00f, mixer.limitThrust(-1.0f, THROTTLE_LIMIT_TYPE_CLIP, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.00f, mixer.limitThrust( 0.0f, THROTTLE_LIMIT_TYPE_CLIP, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.50f, mixer.limitThrust( 0.5f, THROTTLE_LIMIT_TYPE_CLIP, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.60f, mixer.limitThrust( 1.0f, THROTTLE_LIMIT_TYPE_CLIP, 80));
+}
+
+void test_mixer_output_limit_motor()
+{
+  Model model;
+  Output::Mixer mixer(model);
+  OutputChannelConfig motor = { .servo = false };
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitOutput(-1.0f, motor, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, motor, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, motor, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitOutput( 1.0f, motor, 100));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitOutput(-1.0f, motor, 120));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, motor, 120));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, motor, 120));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitOutput( 1.0f, motor, 120));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitOutput(-1.0f, motor, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, motor, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, motor, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitOutput( 1.0f, motor, 0));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitOutput(-1.0f, motor, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, motor, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, motor, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.6f, mixer.limitOutput( 1.0f, motor, 80));
+}
+
+void test_mixer_output_limit_servo()
+{
+  Model model;
+  Output::Mixer mixer(model);
+  OutputChannelConfig servo = { .servo = true  };
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitOutput(-1.0f, servo, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, servo, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, servo, 100));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitOutput( 1.0f, servo, 100));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitOutput(-1.0f, servo, 120));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, servo, 120));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, servo, 120));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitOutput( 1.0f, servo, 120));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, mixer.limitOutput(-1.0f, servo, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, servo, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, servo, 0));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  1.0f, mixer.limitOutput( 1.0f, servo, 0));
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.8f, mixer.limitOutput(-1.0f, servo, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, mixer.limitOutput( 0.0f, servo, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.5f, mixer.limitOutput( 0.5f, servo, 80));
+  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.8f, mixer.limitOutput( 1.0f, servo, 80));
+}
+
 int main(int argc, char **argv)
 {
   UNITY_BEGIN();
@@ -535,6 +653,11 @@ int main(int argc, char **argv)
   RUN_TEST(test_actuator_arming_gyro_motor_calbration);
   RUN_TEST(test_actuator_arming_failsafe);
   RUN_TEST(test_actuator_arming_throttle);
+  RUN_TEST(test_mixer_throttle_limit_none);
+  RUN_TEST(test_mixer_throttle_limit_scale);
+  RUN_TEST(test_mixer_throttle_limit_clip);
+  RUN_TEST(test_mixer_output_limit_motor);
+  RUN_TEST(test_mixer_output_limit_servo);
   UNITY_END();
 
   return 0;

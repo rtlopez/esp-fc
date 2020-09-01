@@ -763,8 +763,8 @@ class MspProcessor
           r.writeU8(_model.config.input.rate[AXIS_PITCH]); // pitch rate
           r.writeU8(_model.config.input.expo[AXIS_PITCH]); // pitch expo
           // 1.41+
-          r.writeU8(0); // throtle limit type (off)
-          r.writeU8(100); // throtle limit percent (100%)
+          r.writeU8(_model.config.output.throttleLimitType); // throttle_limit_type (off)
+          r.writeU8(_model.config.output.throttleLimitPercent); // throtle_limit_percent (100%)
           //1.42+
           r.writeU16(_model.config.input.rateLimit[0]); // rate limit roll
           r.writeU16(_model.config.input.rateLimit[1]); // rate limit pitch
@@ -818,8 +818,8 @@ class MspProcessor
             // 1.41
             if(m.remain() >= 2)
             {
-              m.readU8(); // throttle_limit_type
-              m.readU8(); // throttle_limit_percent
+              _model.config.output.throttleLimitType = m.readU8(); // throttle_limit_type
+              _model.config.output.throttleLimitPercent = m.readU8(); // throttle_limit_percent
             }
             // 1.42
             if(m.remain() >= 6)
@@ -1056,7 +1056,7 @@ class MspProcessor
           // 1.42+
           r.writeU8(0); // iterm_relax_cutoff
           // 1.43+
-          r.writeU8(100); // motor_output_limit
+          r.writeU8(_model.config.output.motorLimit); // motor_output_limit
           r.writeU8(0); // auto_profile_cell_count
           r.writeU8(0); // idle_min_rpm
 
@@ -1115,7 +1115,7 @@ class MspProcessor
           }
           // 1.43+
           if (m.remain() >= 3) {
-            m.readU8(); // motor_output_limit
+            _model.config.output.motorLimit = m.readU8(); // motor_output_limit
             m.readU8(); // auto_profile_cell_count
             m.readU8(); // idle_min_rpm
           }

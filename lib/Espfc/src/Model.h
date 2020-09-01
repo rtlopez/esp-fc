@@ -321,6 +321,19 @@ class Model
         }
       }
 
+      // sanitize throttle and motor limits
+      if(config.output.throttleLimitType < 0 || config.output.throttleLimitType >= THROTTLE_LIMIT_TYPE_MAX) {
+        config.output.throttleLimitType = THROTTLE_LIMIT_TYPE_NONE;
+      }
+
+      if(config.output.throttleLimitPercent < 1 || config.output.throttleLimitPercent > 100) {
+        config.output.throttleLimitPercent = 100;
+      }
+
+      if(config.output.motorLimit < 1 || config.output.motorLimit > 100) {
+        config.output.motorLimit = 100;
+      }
+
       // configure serial ports
       uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
       uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;// | FEATURE_AIRMODE;

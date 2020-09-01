@@ -24,6 +24,14 @@ enum EscProtocol {
 class EscDriverBase
 {
   public:
+#if defined(UNIT_TEST)
+    int begin(EscProtocol protocol, bool async, int16_t rate, int timer = 0) { return 1; }
+    void end() {}
+    int attach(size_t channel, int pin, int pulse) { return 1; }
+    int write(size_t channel, int pulse) { return 1; }
+    void apply() {}
+#endif
+
     uint16_t dshotEncode(uint16_t value)
     {
       value <<= 1;
@@ -67,8 +75,8 @@ class EscDriverBase
   #define ESC_CHANNEL_COUNT 4
   #define EscDriver EscDriverBase
 
-  #define ESC_DRIVER_MOTOR_TIMER ESC_DRIVER_TIMER1
-  #define ESC_DRIVER_SERVO_TIMER ESC_DRIVER_TIMER2
+  #define ESC_DRIVER_MOTOR_TIMER 0
+  #define ESC_DRIVER_SERVO_TIMER 0
 
 #else
 

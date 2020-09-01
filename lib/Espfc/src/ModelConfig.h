@@ -422,6 +422,10 @@ class OutputConfig
     int16_t maxThrottle;
     int16_t dshotIdle;
 
+    int8_t throttleLimitType = 0;
+    int8_t throttleLimitPercent = 100;
+    int8_t motorLimit = 100;
+
     OutputChannelConfig channel[OUTPUT_CHANNELS];
 };
 
