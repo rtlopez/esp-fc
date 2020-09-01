@@ -17,8 +17,34 @@ class Mixer
 
     int begin()
     {
-      _motor = Hardware::getMotorDriver(_model);
-      _servo = Hardware::getServoDriver(_model);
+      escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_MOTOR_TIMER);
+      _motor = &escMotor;
+      _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).logln(ESC_DRIVER_MOTOR_TIMER);
+
+      if(_model.config.output.servoRate)
+      {
+        escServo.begin(ESC_PROTOCOL_PWM, true, _model.config.output.servoRate, ESC_DRIVER_SERVO_TIMER);
+        _servo = &escServo;
+        _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
+      }
+
+      for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
+      {
+        const OutputChannelConfig& occ = _model.config.output.channel[i];
+        if(occ.servo)
+        {
+          if(_servo)
+          {
+            _servo->attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1500);
+            _model.logger.info().log(F("SERVO PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
+          }
+        }
+        else
+        {
+          _motor->attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1000);
+          _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
+        }
+      }
 
       _model.state.minThrottle = _model.config.output.minThrottle;
       _model.state.maxThrottle = _model.config.output.maxThrottle;
@@ -185,6 +211,9 @@ class Mixer
     Model& _model;
     EscDriver * _motor;
     EscDriver * _servo;
+
+    EscDriver escMotor;
+    EscDriver escServo;
 };
 
 }

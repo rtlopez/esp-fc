@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include "Model.h"
-#include "EscDriver.h"
 #include "Device/BusDevice.h"
 #include "Device/BusI2C.h"
 #include "Device/BusSPI.h"
@@ -28,8 +27,6 @@ namespace {
   static Espfc::Device::GyroDevice * detectedGyro = nullptr;
   static Espfc::Device::BaroDevice * detectedBaro = nullptr;
   static Espfc::Device::MagDevice  * detectedMag  = nullptr;
-  static EscDriver escMotor;
-  static EscDriver escServo;
 }
 
 namespace Espfc {
@@ -45,7 +42,6 @@ class Hardware
       detectGyro();
       detectMag();
       detectBaro();
-      initEscDrivers();
       return 1;
     }
 
@@ -174,50 +170,10 @@ class Hardware
       return detectedBaro;
     }
 
-    void initEscDrivers()
-    {
-      escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_MOTOR_TIMER);
-      _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).logln(ESC_DRIVER_MOTOR_TIMER);
-      if(_model.config.output.servoRate)
-      {
-        escServo.begin(ESC_PROTOCOL_PWM, true, _model.config.output.servoRate, ESC_DRIVER_SERVO_TIMER);
-        _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
-      }
-
-      for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
-      {
-        const OutputChannelConfig& occ = _model.config.output.channel[i];
-        if(occ.servo)
-        {
-          if(_model.config.output.servoRate)
-          {
-            escServo.attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1500);
-            _model.logger.info().log(F("SERVO PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
-          }
-        }
-        else
-        {
-          escMotor.attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1000);
-          _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
-        }
-      }
-    }
-
-    static EscDriver * getMotorDriver(const Model& model)
-    {
-      return &escMotor;
-    }
-
-    static EscDriver * getServoDriver(const Model& model)
-    {
-      if(model.config.output.servoRate) return &escServo;
-      return nullptr;
-    }
-
     static void restart(const Model& model)
     {
-      escMotor.end();
-      if(model.config.output.servoRate) escServo.end();
+      //escMotor.end();
+      //if(model.config.output.servoRate) escServo.end();
 
 #if defined(ESP8266)
       // pin setup to ensure boot from flash
