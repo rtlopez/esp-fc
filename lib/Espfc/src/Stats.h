@@ -23,6 +23,7 @@ enum StatCounter {
   COUNTER_OUTER_PID,
   COUNTER_INNER_PID,
   COUNTER_MIXER,
+  COUNTER_MIXER_WRITE,
   COUNTER_BLACKBOX,
   COUNTER_TELEMETRY,
   COUNTER_SERIAL,
@@ -124,6 +125,7 @@ class Stats
         case COUNTER_OUTER_PID:    return PSTR("  pid_o");
         case COUNTER_INNER_PID:    return PSTR("  pid_i");
         case COUNTER_MIXER:        return PSTR("  mixer");
+        case COUNTER_MIXER_WRITE:  return PSTR("mixer_w");
         case COUNTER_BLACKBOX:     return PSTR("  bblog");
         case COUNTER_TELEMETRY:    return PSTR("    tlm");
         case COUNTER_SERIAL:       return PSTR(" serial");

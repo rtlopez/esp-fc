@@ -1,11 +1,14 @@
-#ifndef _ESPFC_MIXER_H_
-#define _ESPFC_MIXER_H_
+#ifndef _ESPFC_OUTPUT_MIXER_H_
+#define _ESPFC_OUTPUT_MIXER_H_
 
 #include "Model.h"
 #include "Hardware.h"
+#include "Output/Mixers.h"
 #include "EscDriver.h"
 
 namespace Espfc {
+
+namespace Output {
 
 class Mixer
 {
@@ -25,91 +28,26 @@ class Mixer
         _model.state.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
         _model.state.maxThrottle = 2000.f;
       }
-      _model.state.currentMixer = getMixer((MixerType)_model.config.mixerType);
+      _model.state.currentMixer = Mixers::getMixer((MixerType)_model.config.mixerType, _model.state.customMixer);
       return 1;
     }
 
     int update()
     {
-      _model.state.stats.start(COUNTER_MIXER);
-      updateMixer();
-      _model.state.stats.end(COUNTER_MIXER);
+      float outputs[OUTPUT_CHANNELS];
+      const MixerConfig& mixer = _model.state.currentMixer;
+
+      updateMixer(mixer, outputs);
+      writeOutput(outputs, mixer.count);
+
       return 1;
     }
 
   private:
-    MixerConfig getMixer(MixerType mixer)
+    void updateMixer(const MixerConfig& mixer, float * outputs)
     {
-      // default empty mixer
-      static MixerEntry mixesEmpty[] = {
-        MixerEntry() // terminator
-      };
+      Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER);
 
-      // quadX mixer
-      static MixerEntry mixesQuadX[] = {
-        // RR                                     FR                                        RL                                        FL
-        MixerEntry(MIXER_SOURCE_ROLL,   0, -100), MixerEntry(MIXER_SOURCE_ROLL,   1, -100), MixerEntry(MIXER_SOURCE_ROLL,   2,  100), MixerEntry(MIXER_SOURCE_ROLL,   3,  100),
-        MixerEntry(MIXER_SOURCE_PITCH,  0,  100), MixerEntry(MIXER_SOURCE_PITCH,  1, -100), MixerEntry(MIXER_SOURCE_PITCH,  2,  100), MixerEntry(MIXER_SOURCE_PITCH,  3, -100),
-        MixerEntry(MIXER_SOURCE_YAW,    0, -100), MixerEntry(MIXER_SOURCE_YAW,    1,  100), MixerEntry(MIXER_SOURCE_YAW,    2,  100), MixerEntry(MIXER_SOURCE_YAW,    3, -100),
-        MixerEntry(MIXER_SOURCE_THRUST, 0,  100), MixerEntry(MIXER_SOURCE_THRUST, 1,  100), MixerEntry(MIXER_SOURCE_THRUST, 2,  100), MixerEntry(MIXER_SOURCE_THRUST, 3,  100),
-        MixerEntry() // terminator
-      };
-
-      // quadX mixer
-      static MixerEntry mixesQuadX1234[] = {
-        // FL                                     FR                                        RR                                        RL
-        MixerEntry(MIXER_SOURCE_ROLL,   0,  100), MixerEntry(MIXER_SOURCE_ROLL,   1, -100), MixerEntry(MIXER_SOURCE_ROLL,   2, -100), MixerEntry(MIXER_SOURCE_ROLL,   3,  100),
-        MixerEntry(MIXER_SOURCE_PITCH,  0, -100), MixerEntry(MIXER_SOURCE_PITCH,  1, -100), MixerEntry(MIXER_SOURCE_PITCH,  2,  100), MixerEntry(MIXER_SOURCE_PITCH,  3,  100),
-        MixerEntry(MIXER_SOURCE_YAW,    0, -100), MixerEntry(MIXER_SOURCE_YAW,    1,  100), MixerEntry(MIXER_SOURCE_YAW,    2, -100), MixerEntry(MIXER_SOURCE_YAW,    3,  100),
-        MixerEntry(MIXER_SOURCE_THRUST, 0,  100), MixerEntry(MIXER_SOURCE_THRUST, 1,  100), MixerEntry(MIXER_SOURCE_THRUST, 2,  100), MixerEntry(MIXER_SOURCE_THRUST, 3,  100),
-        MixerEntry() // terminator
-      };
-
-      // tricopter mixer
-      static MixerEntry mixesTricopter[] = {
-        // FL                                     FR                                        RMotor                                    RServo
-        MixerEntry(MIXER_SOURCE_ROLL,   0,    0), MixerEntry(MIXER_SOURCE_ROLL,   1, -100), MixerEntry(MIXER_SOURCE_ROLL,   2,  100), MixerEntry(MIXER_SOURCE_ROLL,   3,    0),
-        MixerEntry(MIXER_SOURCE_PITCH,  0,  133), MixerEntry(MIXER_SOURCE_PITCH,  1,  -67), MixerEntry(MIXER_SOURCE_PITCH,  2,  -67), MixerEntry(MIXER_SOURCE_PITCH,  3,    0),
-        MixerEntry(MIXER_SOURCE_YAW,    0,    0), MixerEntry(MIXER_SOURCE_YAW,    1,    0), MixerEntry(MIXER_SOURCE_YAW,    2,    0), MixerEntry(MIXER_SOURCE_YAW,    3,  100),
-        MixerEntry(MIXER_SOURCE_THRUST, 0,  100), MixerEntry(MIXER_SOURCE_THRUST, 1,  100), MixerEntry(MIXER_SOURCE_THRUST, 2,  100), MixerEntry(MIXER_SOURCE_THRUST, 3,    0),
-        MixerEntry() // terminator
-      };
-
-      // tricopter mixer
-      static MixerEntry mixesGimbal[] = {
-        // L                                      R
-        MixerEntry(MIXER_SOURCE_PITCH,  0,  100), MixerEntry(MIXER_SOURCE_PITCH,  1,   100),
-        MixerEntry(MIXER_SOURCE_YAW,    0,  100), MixerEntry(MIXER_SOURCE_YAW,    1,  -100),
-        MixerEntry() // terminator
-      };
-
-      switch(mixer)
-      {
-        case MIXER_QUADX:
-          return MixerConfig(4, mixesQuadX);
-
-        case MIXER_QUADX_1234:
-          return MixerConfig(4, mixesQuadX1234);
-
-        case MIXER_TRI:
-          return MixerConfig(4, mixesTricopter);
-
-        case MIXER_GIMBAL:
-          return MixerConfig(2, mixesGimbal);
-
-        case MIXER_CUSTOM:
-        case MIXER_CUSTOM_TRI:
-        case MIXER_CUSTOM_AIRPLANE:
-          return _model.state.customMixer;
-
-        default:
-          return MixerConfig(0, mixesEmpty);
-      }
-      return MixerConfig(0, mixesEmpty);
-    }
-
-    void updateMixer()
-    {
       float sources[MIXER_SOURCE_MAX];
       sources[MIXER_SOURCE_NULL]   = 0;
 
@@ -126,21 +64,17 @@ class Mixer
       sources[MIXER_SOURCE_RC_AUX1] = _model.state.input[AXIS_AUX_1];
       sources[MIXER_SOURCE_RC_AUX2] = _model.state.input[AXIS_AUX_2];
       sources[MIXER_SOURCE_RC_AUX3] = _model.state.input[AXIS_AUX_3];
-
-      float outputs[OUTPUT_CHANNELS];
+      
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         outputs[i] = 0.f;
       }
 
-      const MixerConfig& mixer = _model.state.currentMixer;
-
       // mix stabilized sources first
       const MixerEntry * entry = mixer.mixes;
-      size_t counter = 0;
-      while(true)
+      const MixerEntry * end = mixer.mixes + MIXER_RULE_MAX;
+      while(entry != end)
       {
-        if(++counter >= MIXER_RULE_MAX) break;
         if(entry->src == MIXER_SOURCE_NULL) break; // break on terminator
         if(entry->src <= MIXER_SOURCE_YAW && entry->dst < mixer.count && entry->rate != 0)
         {
@@ -176,10 +110,8 @@ class Mixer
 
       // apply other channels
       entry = mixer.mixes;
-      counter = 0;
-      while(true)
+      while(entry != end)
       {
-        if(++counter >= MIXER_RULE_MAX) break;
         if(entry->src == MIXER_SOURCE_NULL) break; // break on terminator
         if(entry->dst < mixer.count)
         {
@@ -193,13 +125,13 @@ class Mixer
           }
         }
         entry++;
-      }
-
-      writeOutput(outputs, mixer.count);
+      }     
     }
 
     void writeOutput(float * out, size_t axes)
     {
+      Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
+
       bool stop = _stop();
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -254,6 +186,8 @@ class Mixer
     EscDriver * _motor;
     EscDriver * _servo;
 };
+
+}
 
 }
 

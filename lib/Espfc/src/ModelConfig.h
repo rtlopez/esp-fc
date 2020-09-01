@@ -9,6 +9,7 @@
 #include "Device/BaroDevice.h"
 #include "Device/SerialDevice.h"
 #include "Device/InputPPM.h"
+#include "Output/Mixers.h"
 
 namespace Espfc {
 
@@ -422,62 +423,6 @@ class OutputConfig
     int16_t dshotIdle;
 
     OutputChannelConfig channel[OUTPUT_CHANNELS];
-};
-
-enum MixerType {
-  MIXER_TRI = 1,
-  MIXER_QUADP = 2,
-  MIXER_QUADX = 3,
-  MIXER_BICOPTER = 4,
-  MIXER_GIMBAL = 5,
-  MIXER_Y6 = 6,
-  MIXER_HEX6 = 7,
-  MIXER_FLYING_WING = 8,
-  MIXER_Y4 = 9,
-  MIXER_HEX6X = 10,
-  MIXER_OCTOX8 = 11,
-  MIXER_OCTOFLATP = 12,
-  MIXER_OCTOFLATX = 13,
-  MIXER_AIRPLANE = 14,        // airplane / singlecopter / dualcopter (not yet properly supported)
-  MIXER_HELI_120_CCPM = 15,
-  MIXER_HELI_90_DEG = 16,
-  MIXER_VTAIL4 = 17,
-  MIXER_HEX6H = 18,
-  MIXER_PPM_TO_SERVO = 19,    // PPM -> servo relay
-  MIXER_DUALCOPTER = 20,
-  MIXER_SINGLECOPTER = 21,
-  MIXER_ATAIL4 = 22,
-  MIXER_CUSTOM = 23,
-  MIXER_CUSTOM_AIRPLANE = 24,
-  MIXER_CUSTOM_TRI = 25,
-  MIXER_QUADX_1234 = 26,
-};
-
-enum MixerSource {
-  MIXER_SOURCE_NULL,
-  MIXER_SOURCE_ROLL,
-  MIXER_SOURCE_PITCH,
-  MIXER_SOURCE_YAW,
-  MIXER_SOURCE_THRUST,
-  MIXER_SOURCE_RC_ROLL,
-  MIXER_SOURCE_RC_PITCH,
-  MIXER_SOURCE_RC_YAW,
-  MIXER_SOURCE_RC_THRUST,
-  MIXER_SOURCE_RC_AUX1,
-  MIXER_SOURCE_RC_AUX2,
-  MIXER_SOURCE_RC_AUX3,
-  MIXER_SOURCE_MAX,
-};
-
-static const size_t MIXER_RULE_MAX = 64;
-
-class MixerEntry {
-  public:
-    MixerEntry(): src(MIXER_SOURCE_NULL), dst(0), rate(0) {}
-    MixerEntry(int8_t s, int8_t d, int16_t r): src(s), dst(d), rate(r) {}
-    int8_t src;
-    int8_t dst;
-    int16_t rate;
 };
 
 enum ArmingDisabledFlags {

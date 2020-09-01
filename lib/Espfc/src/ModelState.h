@@ -102,16 +102,6 @@ class BatteryState
     Timer timer;
 };
 
-class MixerConfig {
-  public:
-    MixerConfig(): count(0), mixes(NULL) {}
-    MixerConfig(const MixerConfig& c): count(c.count), mixes(c.mixes) {}
-    MixerConfig(int8_t c, MixerEntry * m): count(c), mixes(m) {}
-
-    int8_t count;
-    MixerEntry * mixes;
-};
-
 enum CalibrationState {
   CALIBRATION_IDLE   = 0,
   CALIBRATION_START  = 1,

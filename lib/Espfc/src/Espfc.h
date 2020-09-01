@@ -8,7 +8,7 @@
 #include "SensorManager.h"
 #include "SerialManager.h"
 #include "Fusion.h"
-#include "Mixer.h"
+#include "Output/Mixer.h"
 #include "Blackbox.h"
 #include "Cli.h"
 #include "Hardware.h"
@@ -93,7 +93,7 @@ class Espfc
     Input _input;
     Actuator _actuator;
     SensorManager _sensor;
-    Mixer _mixer;
+    Output::Mixer _mixer;
     Blackbox _blackbox;
     Telemetry _telemetry;
     Buzzer _buzzer;
