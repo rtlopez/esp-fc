@@ -35,11 +35,11 @@ class Espfc
     {
       _hardware.begin();
       _model.update();
+      _mixer.begin();
       _sensor.begin();
       _input.begin();
       _actuator.begin();
       _controller.begin();
-      _mixer.begin();
       _blackbox.begin();
       _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
 
@@ -49,6 +49,7 @@ class Espfc
     int beginOther()
     {
       _serial.begin();
+      _model.logStorageResult();
       _buzzer.begin();
 
       return 1;
