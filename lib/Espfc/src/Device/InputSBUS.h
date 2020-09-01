@@ -1,12 +1,13 @@
-#ifndef _INPUT_SBUS_H_
-#define _INPUT_SBUS_H_
+#ifndef _INPUT_DEVICE_INPUT_SBUS_H_
+#define _INPUT_DEVICE_INPUT_SBUS_H_
 
-//#include <Arduino.h>
 #include "Device/SerialDevice.h"
-#include "InputDevice.h"
+#include "Device/InputDevice.h"
 #include "Math/Utils.h"
 
 namespace Espfc {
+
+namespace Device {
 
 struct SbusData
 {
@@ -182,6 +183,8 @@ class InputSBUS: public InputDevice
     uint16_t _channels[CHANNELS];
     uint8_t _flags;
 };
+
+}
 
 }
 

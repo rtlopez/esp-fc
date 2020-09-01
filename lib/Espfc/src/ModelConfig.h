@@ -8,7 +8,7 @@
 #include "Device/MagDevice.h"
 #include "Device/BaroDevice.h"
 #include "Device/SerialDevice.h"
-#include "InputPPM.h"
+#include "Device/InputPPM.h"
 
 namespace Espfc {
 

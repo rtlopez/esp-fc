@@ -1,5 +1,5 @@
-#ifndef _INPUT_PPM_H_
-#define _INPUT_PPM_H_
+#ifndef _INPUT_DEVICE_INPUT_PPM_H_
+#define _INPUT_DEVICE_INPUT_PPM_H_
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
@@ -12,6 +12,8 @@ enum PPMMode {
   PPM_MODE_NORMAL   = 0x01, // RISING edge
   PPM_MODE_INVERTED = 0x02  // FALLING edge
 };
+
+namespace Device {
 
 class InputPPM: public InputDevice
 {
@@ -61,6 +63,8 @@ class InputPPM: public InputDevice
     uint8_t _pin;
     static InputPPM * _instance;
 };
+
+}
 
 }
 

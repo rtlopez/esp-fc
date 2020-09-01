@@ -3,9 +3,9 @@
 
 #include "Model.h"
 #include "Math/Utils.h"
-#include "Hardware.h"
-#include "InputPPM.h"
-#include "InputSBUS.h"
+#include "Device/InputDevice.h"
+#include "Device/InputPPM.h"
+#include "Device/InputSBUS.h"
 
 namespace Espfc {
 
@@ -266,7 +266,7 @@ class Input
       _model.state.inputInterpolationRate = 1.0f / _model.state.inputInterpolationDelta;
     }
 
-    InputDevice * getInputDevice()
+    Device::InputDevice * getInputDevice()
     {
       Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
       if(serial && _model.isActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_SBUS)
@@ -291,11 +291,11 @@ class Input
     }
 
     Model& _model;
-    InputDevice * _device;
+    Device::InputDevice * _device;
     Filter _filter[INPUT_CHANNELS];
     float _step;
-    InputPPM _ppm;
-    InputSBUS _sbus;
+    Device::InputPPM _ppm;
+    Device::InputSBUS _sbus;
 
     static const uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
     static const uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms

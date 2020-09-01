@@ -1,7 +1,9 @@
-#include "InputPPM.h"
+#include "Device/InputPPM.h"
 #include <Arduino.h>
 
 namespace Espfc {
+
+namespace Device {
 
 InputPPM * InputPPM::_instance = NULL;
 
@@ -54,6 +56,8 @@ void InputPPM::handle()
 void InputPPM::handle_isr()
 {
   if(_instance) _instance->handle();
+}
+
 }
 
 }

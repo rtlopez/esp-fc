@@ -1,5 +1,5 @@
-#ifndef _ESPFC_INPUT_DEVICE_H_
-#define _ESPFC_INPUT_DEVICE_H_
+#ifndef _ESPFC_DEVICE_INPUT_DEVICE_H_
+#define _ESPFC_DEVICE_INPUT_DEVICE_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -13,6 +13,8 @@ enum InputStatus {
   INPUT_FAILSAFE
 };
 
+namespace Device {
+
 class InputDevice
 {
   public:
@@ -24,4 +26,6 @@ class InputDevice
 
 }
 
-#endif // _ESPFC_INPUT_DEVICE_H_
+}
+
+#endif
