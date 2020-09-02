@@ -372,6 +372,7 @@ class Cli
       static const char* protocolChoices[]   = { PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
                                                  PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("DSHOT1200"), PSTR("PROSHOT1000"), NULL };
       static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
+      static const char* throtleLimitTypeChoices[] = { PSTR("NONE"), PSTR("SCALE"), PSTR("CLIP"), NULL };
 
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
 
@@ -547,6 +548,9 @@ class Cli
         Param(PSTR("mixer_sync"), &c.mixerSync),
         Param(PSTR("mixer_type"), &c.mixerType, mixerTypeChoices),
         Param(PSTR("mixer_yaw_reverse"), &c.yawReverse),
+        Param(PSTR("mixer_throttle_limit_type"), &c.output.throttleLimitType, throtleLimitTypeChoices),
+        Param(PSTR("mixer_throttle_limit_percent"), &c.output.throttleLimitPercent),
+        Param(PSTR("mixer_output_limit"), &c.output.motorLimit),
 
         Param(PSTR("output_motor_protocol"), &c.output.protocol, protocolChoices),
         Param(PSTR("output_motor_async"), &c.output.async),
