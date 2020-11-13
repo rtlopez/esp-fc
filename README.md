@@ -38,8 +38,9 @@ Software:
 ## Configuration
 After flashing you need to configure few things first:
  1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](https://github.com/rtlopez/esp-fc/blob/master/docs/cli.md)
- 2. Connect to [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases)
+ 2. Connect to [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) and setup to your preferences,
  3. Test motors without propellers
+ 4. Have fun ;)
 
 The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported.
 
@@ -54,6 +55,7 @@ The rule of thumb is if you cannot change specific option in Betaflight Configur
 | I2C             | Yes     |   Yes |
 | SPI             | -       |   Yes |
 | MSP             | Yes     |   Yes |
+| CLI             | Yes     |   Yes |
 | PPM (IN)        | Yes     |   Yes |
 | SBUS            | -       |   Yes |
 | IBUS            | -       |     - |
@@ -96,12 +98,10 @@ You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/i
 * Update documentation
 * Mixers: Quad+, Bicopter, Tricopter, Helicopter, Custom and more
 * Balancing robot
-* Serial Rx (SBUS, IBUS)
-* Baro (MS5611, BMP280)
-* Magnetometer (HMC5883, AK8963)
+* Serial Rx (IBUS)
+* Baro (MS5611)
 * GPS navigation
 * ESP32 board
-* ESP32 SPI Gyro (MPU9250)
 
 ## Licence
 This project is distributed under MIT Licence. Bear in mind that:
