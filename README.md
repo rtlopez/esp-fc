@@ -36,10 +36,53 @@ Software:
 ![ESP-FC Flashing](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_flashing.png?raw=true)
 
 ## Configuration
+After flashing you need to configure few things first:
+ 1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](https://github.com/rtlopez/esp-fc/blob/master/docs/cli.md)
+ 2. Connect to [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases)
+ 3. Test motors without propellers
+
 The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported.
 
 ## Wiring diagram
 ![ESP-FC Wemos D1 mini wiring diagram](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_wemos_d1_mini_wiring.png?raw=true)
+
+## Supported protocols
+
+| Protocol        | ESP8266 | ESP32 |
+|----------------:|--------:|------:|
+| UART            | Yes     |   Yes |
+| I2C             | Yes     |   Yes |
+| SPI             | -       |   Yes |
+| MSP             | Yes     |   Yes |
+| PPM (IN)        | Yes     |   Yes |
+| SBUS            | -       |   Yes |
+| IBUS            | -       |     - |
+| BLACKBOX        | Yes     |   Yes |
+| PWM (OUT)       | Yes     |   Yes |
+| ONESHOT125      | Yes     |   Yes |
+| ONESHOT42       | -       |   Yes |
+| MULTISHOT       | -       |   Yes |
+| DSHOT150        | Yes     |   Yes |
+| DSHOT300        | Yes     |   Yes |
+| DSHOT600        | -       |   Yes |
+
+## Supported devices
+
+| Device          | ESP8266 | ESP32 |
+|----------------:|--------:|------:|
+| MPU6050/I2C     | Yes     |   Yes |
+| MPU6000/SPI     | -       |     ? |
+| MPU6500/I2C     | ?       |     ? |
+| MPU6500/SPI     | -       |     ? |
+| MPU9250/I2C     | ?       |     ? |
+| MPU9250/SPI     | -       |   Yes |
+| BMP280/I2C      | Yes     |   Yes |
+| BMP280/SPI      | -       |   Yes |
+| HMC5883/I2C     | Yes     |   Yes |
+| HMC5883/SPI     | -       |     ? |
+| AK8963/I2C      | -       |   Yes |
+
+? - not tested
 
 ## Issues
 You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues)
