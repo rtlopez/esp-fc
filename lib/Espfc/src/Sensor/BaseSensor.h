@@ -16,7 +16,7 @@ namespace Sensor {
 class BaseSensor
 {
   public:
-    void align(VectorInt16& dest, uint8_t rotation) /* ICACHE_RAM_ATTR */
+    void align(VectorInt16& dest, uint8_t rotation) /* IRAM_ATTR */
     {
       const int16_t x = dest.x;
       const int16_t y = dest.y;

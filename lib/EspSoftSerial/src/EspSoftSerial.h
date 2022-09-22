@@ -69,12 +69,12 @@ class EspSoftSerial: public Stream
       return 0;
     }
 
-    static void rx_read_bit_isr() ICACHE_RAM_ATTR;
-    static void rx_start_isr() ICACHE_RAM_ATTR;
+    static void rx_read_bit_isr() IRAM_ATTR;
+    static void rx_start_isr() IRAM_ATTR;
 
   private:
-    void rxReadBit() ICACHE_RAM_ATTR;
-    void rxStart() ICACHE_RAM_ATTR;
+    void rxReadBit() IRAM_ATTR;
+    void rxStart() IRAM_ATTR;
 
     uint32_t nsToTicks(uint32_t ns);
     void timerInit();

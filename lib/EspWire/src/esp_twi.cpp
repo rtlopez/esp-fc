@@ -139,14 +139,14 @@ void esp_twi_stop(void){
   #define GET_CYCLE_COUNT(var) __asm__ __volatile__("esync; rsr %0,ccount":"=a" (var));
 #endif
 
-static inline ICACHE_RAM_ATTR unsigned int _getCycleCount()
+static inline IRAM_ATTR unsigned int _getCycleCount()
 {
     unsigned int ccount = 0;
     GET_CYCLE_COUNT(ccount)
     return ccount;
 }
 
-static inline ICACHE_RAM_ATTR void esp_twi_delay(unsigned int v)
+static inline IRAM_ATTR void esp_twi_delay(unsigned int v)
 {
   unsigned int end;
   int maxCount = 200;
@@ -181,7 +181,7 @@ static inline ICACHE_RAM_ATTR void esp_twi_delay(unsigned int v)
   */
 }
 
-static ICACHE_RAM_ATTR bool esp_twi_write_start(void) {
+static IRAM_ATTR bool esp_twi_write_start(void) {
   SCL_HIGH();
   SDA_HIGH();
   if (SDA_READ() == 0) return false;
@@ -191,7 +191,7 @@ static ICACHE_RAM_ATTR bool esp_twi_write_start(void) {
   return true;
 }
 
-static ICACHE_RAM_ATTR bool esp_twi_write_stop(void){
+static IRAM_ATTR bool esp_twi_write_stop(void){
   uint32_t i = 0;
   SCL_LOW();
   SDA_LOW();
@@ -204,7 +204,7 @@ static ICACHE_RAM_ATTR bool esp_twi_write_stop(void){
   return true;
 }
 
-static ICACHE_RAM_ATTR bool esp_twi_write_bit(bool bit) {
+static IRAM_ATTR bool esp_twi_write_bit(bool bit) {
   uint32_t i = 0;
   SCL_LOW();
   if (bit) SDA_HIGH();
@@ -216,7 +216,7 @@ static ICACHE_RAM_ATTR bool esp_twi_write_bit(bool bit) {
   return true;
 }
 
-static ICACHE_RAM_ATTR bool esp_twi_read_bit(void) {
+static IRAM_ATTR bool esp_twi_read_bit(void) {
   uint32_t i = 0;
   SCL_LOW();
   SDA_HIGH();
@@ -228,7 +228,7 @@ static ICACHE_RAM_ATTR bool esp_twi_read_bit(void) {
   return bit;
 }
 
-static ICACHE_RAM_ATTR bool esp_twi_write_byte(unsigned char byte) {
+static IRAM_ATTR bool esp_twi_write_byte(unsigned char byte) {
   unsigned char bit;
   for (bit = 0; bit < 8; bit++) {
     esp_twi_write_bit(byte & 0x80);
@@ -237,7 +237,7 @@ static ICACHE_RAM_ATTR bool esp_twi_write_byte(unsigned char byte) {
   return !esp_twi_read_bit();//NACK/ACK
 }
 
-static ICACHE_RAM_ATTR unsigned char esp_twi_read_byte(bool nack) {
+static IRAM_ATTR unsigned char esp_twi_read_byte(bool nack) {
   unsigned char byte = 0;
   unsigned char bit;
   for (bit = 0; bit < 8; bit++) byte = (byte << 1) | esp_twi_read_bit();
