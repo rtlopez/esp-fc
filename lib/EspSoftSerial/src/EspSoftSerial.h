@@ -64,7 +64,7 @@ class EspSoftSerial: public Stream
 
     }
 
-    size_t availableForWrite()
+    int availableForWrite()
     {
       return 0;
     }
