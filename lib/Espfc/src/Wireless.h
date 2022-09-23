@@ -14,7 +14,11 @@ namespace Espfc {
 class Wireless
 {
   public:
-    Wireless(Model& model): _model(model), _server(1111), _adapter(_client), _initialized(false) {}
+    Wireless(Model& model): _model(model), 
+#if defined(ESP32) || defined(ESP8266)
+      _server(1111), _adapter(_client), 
+#endif
+      _initialized(false) {}
 
     int begin()
     {
@@ -99,10 +103,7 @@ class Wireless
 
     int update()
     {
-#if defined(ESP8266)
-      return 0;
-#endif
-
+#if defined(ESP32)
       if(_model.config.wireless.mode == WIRELESS_MODE_NULL) return 0;
       if(!_initialized) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_WIFI);
@@ -113,14 +114,17 @@ class Wireless
       }
 
       return 1;
+#endif
+      return 0;
     }
 
   private:
     Model& _model;
+#if defined(ESP32) || defined(ESP8266)
     WiFiServer _server;
     WiFiClient _client;
     Device::SerialDeviceAdapter<WiFiClient> _adapter;
-
+#endif
     bool _initialized;
 };
 

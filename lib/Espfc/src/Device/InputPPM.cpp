@@ -25,7 +25,11 @@ void InputPPM::begin(uint8_t pin, int mode)
       _channels[i] = (i == 0 || i == 1 || i == 3) ? 1500 : 1000; // ail, elev, rud
     }
     pinMode(_pin, INPUT);
+#if defined(ARCH_RP2040)
+    attachInterrupt(_pin, InputPPM::handle_isr, (PinStatus)mode);
+#else
     attachInterrupt(_pin, InputPPM::handle_isr, mode);
+#endif
   }
 }
 

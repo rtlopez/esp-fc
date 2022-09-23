@@ -824,12 +824,14 @@ class Cli
         s.print(F("config size: "));
         s.println(sizeof(ModelConfig));
 
+#if defined(ESP32) || defined(ESP8266)
         s.print(F("  free heap: "));
         s.println(ESP.getFreeHeap());
 
         s.print(F("   cpu freq: "));
         s.print(ESP.getCpuFreqMHz());
         s.println(F(" MHz"));
+#endif
 
 #if defined(ESP32)
 
@@ -837,7 +839,6 @@ class Cli
         const rst_info * resetInfo = system_get_rst_info();
         s.print(F("reset reason: "));
         s.println(resetInfo->reason);
-
 
         s.print(F("os s.print: "));
         s.println(system_get_os_print());
@@ -1124,9 +1125,11 @@ class Cli
         s.println();
         s.print(F("STATUS: "));
         s.println();
+#if defined(ESP32) || defined(ESP8266)
         s.print(F(" cpu : "));
         s.print(ESP.getCpuFreqMHz());
         s.println(F(" MHz"));
+#endif
 
         Device::GyroDevice * gyro = Hardware::getGyroDevice(_model);
         Device::BaroDevice * baro = Hardware::getBaroDevice(_model);
@@ -1177,9 +1180,11 @@ class Cli
       {
         printVersion(s);
         s.println();
+#if defined(ESP32) || defined(ESP8266)
         s.print(F("    cpu freq: "));
         s.print(ESP.getCpuFreqMHz());
         s.println(F(" MHz"));
+#endif
         s.print(F("   gyro rate: "));
         s.print(_model.state.gyroTimer.rate);
         s.println(F(" Hz"));

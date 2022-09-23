@@ -9,6 +9,10 @@
 #define SERIAL_TX_FIFO_SIZE 0x7f
 #endif
 
+#if defined(ARCH_RP2040)
+#define SERIAL_TX_FIFO_SIZE 32
+#endif
+
 #if defined(ESP8266)
   #define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
   #define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
@@ -53,7 +57,7 @@ enum SerialSpeed {
 enum SerialPort {
   SERIAL_UART_0,
   SERIAL_UART_1,
-#if defined(ESP32)
+#if defined(ESP32) || defined(ARCH_RP2040)
   SERIAL_UART_2,
   SERIAL_SOFT_0, // wifi
 #elif defined(USE_SOFT_SERIAL)
@@ -114,6 +118,10 @@ enum SerialRXProvider {
   SERIALRX_TARGET_CUSTOM = 11,
   SERIALRX_FPORT = 12,
 };
+
+#undef SERIAL_PARITY_NONE
+#undef SERIAL_PARITY_EVEN
+#undef SERIAL_PARITY_ODD
 
 enum SerialDeviceConfigParity {
   SERIAL_PARITY_NONE,

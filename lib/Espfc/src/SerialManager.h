@@ -18,9 +18,20 @@ namespace {
     static HardwareSerial Serial1(1);
     static HardwareSerial Serial2(2);
   #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(Serial2);
+
+#elif defined(ARCH_RP2040)
+
+  //#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
+  //  static HardwareSerial Serial(0);
+  //  static HardwareSerial Serial1(1);
+  //  static HardwareSerial Serial2(2);
+  //#endif
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(Serial2);
 
 #elif defined(ESP8266)
 
@@ -30,8 +41,8 @@ namespace {
   #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL1)
     static HardwareSerial Serial1(1);
   #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
   #if defined(USE_SOFT_SERIAL)
     static EspSoftSerial softSerial;
     static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> soft0(softSerial);
@@ -166,10 +177,10 @@ class SerialManager
     {
       switch(portId)
       {
-        case SERIAL_UART_0: return &uart0;
-        case SERIAL_UART_1: return &uart1;
-#if defined(ESP32)
-        case SERIAL_UART_2: return &uart2;
+        case SERIAL_UART_0: return &_uart0;
+        case SERIAL_UART_1: return &_uart1;
+#if defined(ESP32) || defined(ARCH_RP2040)
+        case SERIAL_UART_2: return &_uart2;
 #elif defined(USE_SOFT_SERIAL)
         case SERIAL_SOFT_0: return &soft0;
 #endif

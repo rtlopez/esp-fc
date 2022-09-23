@@ -14,10 +14,12 @@
 #define ESPFC_TARGET "ESP8266"
 #elif defined(ESP32)
 #define ESPFC_TARGET "ESP32"
+#elif defined(ARCH_RP2040)
+#define ESPFC_TARGET "RP2040"
 #elif defined(UNIT_TEST)
 #define ESPFC_TARGET "UNIT"
 #else
-  #error "Wrong platform"
+  #error "Unsupported platform"
 #endif
 
 #define MAX_SUPPORTED_MOTORS 4
@@ -56,7 +58,9 @@ extern const char * flightControllerIdentifier;
 extern const char * boardIdentifier;
 
 /* UTILS START */
+#ifndef MIN
 #define MIN(a,b) ((a > b) ? (b) : (a))
+#endif
 #define CONCAT_HELPER(x,y) x ## y
 #define CONCAT(x,y) CONCAT_HELPER(x, y)
 #define CONCAT2(_1,_2) CONCAT(_1, _2)

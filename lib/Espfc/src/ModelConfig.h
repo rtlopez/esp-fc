@@ -246,7 +246,7 @@ enum PinFunction {
   PIN_I2C_0_SDA,
   PIN_INPUT_ADC_0,
 #endif
-#if defined(ESP32) || defined(UNIT_TEST)
+#if defined(ESP32) || defined(UNIT_TEST) || defined(ARCH_RP2040)
   PIN_INPUT_RX,
   PIN_OUTPUT_0,
   PIN_OUTPUT_1,

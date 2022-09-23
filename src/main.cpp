@@ -16,13 +16,13 @@
 #if defined(ESP32)
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-//#include "esp_task_wdt.h"
 #include <WiFi.h>
   #if !CONFIG_FREERTOS_UNICORE
     #define ESPFC_DUAL_CORE 1
     TaskHandle_t otherTaskHandle = NULL;
     extern TaskHandle_t loopTaskHandle;
   #endif
+#elif defined(RP2040)
 #elif defined(ESP8266)
   #include <ESP8266WiFi.h>
 #endif

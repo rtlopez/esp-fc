@@ -3,10 +3,16 @@
 
 #include <Arduino.h>
 
+#if defined(ARCH_RP2040)
+typedef PinStatus pin_status_t;
+#else
+typedef uint8_t pin_status_t;
+#endif
+
 class EspGpio
 {
   public:
-    static inline void digitalWrite(uint8_t pin, uint8_t val)
+    static inline void digitalWrite(uint8_t pin, pin_status_t val)
     {
 #if defined(ESP8266)
       if(pin < 16)
@@ -26,7 +32,7 @@ class EspGpio
 #endif
     }
 
-    static inline int digitalRead(uint8_t pin) 
+    static inline pin_status_t digitalRead(uint8_t pin) 
     {
 #if defined(ESP8266)
       if(pin < 16)

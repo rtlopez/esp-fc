@@ -181,7 +181,7 @@ class Input
       }
 
       uint32_t lossTime = micros() - _model.state.inputFrameTime;
-      if(lossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, 1u, 200u) * TENTH_TO_US)
+      if(lossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
       {
         failsafeStage2();
         return;

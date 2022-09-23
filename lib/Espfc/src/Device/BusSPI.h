@@ -69,7 +69,9 @@ class BusSPI: public BusDevice
       SPI.endTransaction();
     }
 #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SPI)
+  #if !defined(ARCH_RP2040)
     SPIClass SPI;
+  #endif
 #endif
 };
 

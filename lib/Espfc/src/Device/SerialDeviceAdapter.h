@@ -3,7 +3,9 @@
 
 #include "Device/SerialDevice.h"
 #include "EspSoftSerial.h"
+#if defined(ESP32) || defined(ESP8266)
 #include <WiFiClient.h>
+#endif
 
 namespace Espfc {
 
@@ -66,6 +68,8 @@ void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
   sc |= 0x8000000;
   _dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
 
+#elif defined(ARCH_RP2040)
+  // TODO: RP2040
 #else
 
   #error "Unsupported platform"
@@ -74,6 +78,7 @@ void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
 }
 
 // WiFiClient specializations
+#if defined(ESP32) || defined(ESP8266)
 template<>
 void SerialDeviceAdapter<WiFiClient>::begin(const SerialDeviceConfig& conf)
 {
@@ -90,6 +95,7 @@ bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 {
   return true;
 }
+#endif
 
 // EspSofSerial specialization
 #if defined(ESP32)

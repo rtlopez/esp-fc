@@ -167,10 +167,19 @@ class MspProcessor
             r.writeU32(ESP.getChipId());
             r.writeU32(ESP.getFlashChipId());
             r.writeU32(ESP.getFlashChipSize());
-#else
+#elif defined(ESP32)
             int64_t mac = ESP.getEfuseMac();
             r.writeU32((uint32_t)mac);
             r.writeU32((uint32_t)(mac >> 32));
+            r.writeU32(0);
+#elif defined(ARCH_RP2040)
+            // TODO: RP2040
+            r.writeU32(0);
+            r.writeU32(0);
+            r.writeU32(0);
+#else
+            r.writeU32(0);
+            r.writeU32(0);
             r.writeU32(0);
 #endif
           }
