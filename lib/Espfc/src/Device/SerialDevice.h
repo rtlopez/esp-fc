@@ -1,24 +1,6 @@
 #ifndef _ESPFC_DEVICE_SERIAL_DEVICE_H_
 #define _ESPFC_DEVICE_SERIAL_DEVICE_H_
 
-#if defined(ESP8266)
-#define USE_SOFT_SERIAL
-#endif
-
-#if defined(ESP32)
-#define SERIAL_TX_FIFO_SIZE 0x7f
-#endif
-
-#if defined(ARCH_RP2040)
-#define SERIAL_TX_FIFO_SIZE 32
-#endif
-
-#if defined(ESP8266)
-  #define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
-  #define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
-  #define SERIAL_TX_FIFO_SIZE 0x80
-#endif
-
 #define SERIAL_UART_PARITY_NONE      0B00000000
 #define SERIAL_UART_PARITY_EVEN      0B00000010
 #define SERIAL_UART_PARITY_ODD       0B00000011
@@ -55,12 +37,16 @@ enum SerialSpeed {
 };
 
 enum SerialPort {
+#ifdef ESPFC_SERIAL_0
   SERIAL_UART_0,
+#endif
+#ifdef ESPFC_SERIAL_1
   SERIAL_UART_1,
-#if defined(ESP32) || defined(ARCH_RP2040)
+#endif
+#ifdef ESPFC_SERIAL_2
   SERIAL_UART_2,
-  SERIAL_SOFT_0, // wifi
-#elif defined(USE_SOFT_SERIAL)
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
   SERIAL_SOFT_0,
 #endif
   SERIAL_UART_COUNT

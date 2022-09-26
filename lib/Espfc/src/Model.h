@@ -15,12 +15,6 @@
 #include "Logger.h"
 #include "Math/Utils.h"
 
-#if defined(ESP8266)
-#define ESPFC_GUARD 1
-#else
-#define ESPFC_GUARD 0
-#endif
-
 namespace Espfc {
 
 class Model
@@ -203,14 +197,18 @@ class Model
     {
       switch(id)
       {
+#ifdef ESPFC_SERIAL_0
         case SERIAL_ID_UART_1: return SERIAL_UART_0;
+#endif
+#ifdef ESPFC_SERIAL_1
         case SERIAL_ID_UART_2: return SERIAL_UART_1;
-      #if defined(ESP32)
+#endif
+#ifdef ESPFC_SERIAL_2
         case SERIAL_ID_UART_3: return SERIAL_UART_2;
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
         case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
-      #elif defined(ESP8266)
-        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
-      #endif
+#endif
         default: break;
       }
       return -1;
@@ -236,10 +234,7 @@ class Model
 
     void sanitize()
     {
-      int gyroSyncMax = 1; // max 8kHz
-      #if defined(ESP8266)
-        gyroSyncMax = 4; // max 2khz
-      #endif
+      int gyroSyncMax = ESPFC_GYRO_DENOM_MAX; // max 8kHz
       //if(config.accelDev != GYRO_NONE) gyroSyncMax /= 2;
       //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 2;
       config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax);
@@ -355,18 +350,9 @@ class Model
       }
       config.featureMask &= featureAllowMask;
 
-#if defined(ESP32)
-      config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_UART_2].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_SOFT_0].functionMask &= serialFunctionAllowedMask & ~FEATURE_RX_SERIAL;
-#elif defined(ESP8266)
-      config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_SOFT_0].functionMask &= serialFunctionAllowedMask;
-      //config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
-      //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
-#endif
+      for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++) {
+        config.serial[i].functionMask &= serialFunctionAllowedMask;
+      }
       //config.featureMask |= FEATURE_RX_PPM; // force ppm
       //config.featureMask &= ~FEATURE_RX_PPM; // disallow ppm
 

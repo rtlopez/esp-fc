@@ -2,8 +2,10 @@
 #define _ESPFC_SERIAL_DEVICE_ADAPTER_H_
 
 #include "Device/SerialDevice.h"
+#ifdef ESPFC_SERIAL_SOFT_0_RX
 #include "EspSoftSerial.h"
-#if defined(ESP32) || defined(ESP8266)
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include <WiFiClient.h>
 #endif
 
@@ -55,30 +57,11 @@ void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
     default: break;
   }
 
-#if defined(ESP8266)
-
-  if(conf.inverted)
-  {
-    sc |= (SERIAL_RXD_INV | SERIAL_TXD_INV);
-  }
-  _dev.begin(conf.baud, (SerialConfig)sc);
-
-#elif defined(ESP32)
-
-  sc |= 0x8000000;
-  _dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
-
-#elif defined(ARCH_RP2040)
-  // TODO: RP2040
-#else
-
-  #error "Unsupported platform"
-
-#endif
+  ESPFC_SERIAL_INIT(_dev, sc, conf)
 }
 
 // WiFiClient specializations
-#if defined(ESP32) || defined(ESP8266)
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
 template<>
 void SerialDeviceAdapter<WiFiClient>::begin(const SerialDeviceConfig& conf)
 {
@@ -97,11 +80,7 @@ bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 }
 #endif
 
-// EspSofSerial specialization
-#if defined(ESP32)
-// not applicable
-#elif defined(USE_SOFT_SERIAL)
-
+#ifdef ESPFC_SERIAL_SOFT_0_RX
 template<>
 void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
 {
@@ -116,8 +95,10 @@ void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
 }
 
 template<>
-bool SerialDeviceAdapter<EspSoftSerial>::isSoft() const { return true; }
-
+bool SerialDeviceAdapter<EspSoftSerial>::isSoft() const
+{
+  return true;
+}
 #endif
 
 }

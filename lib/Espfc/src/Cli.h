@@ -479,12 +479,16 @@ class Cli
         Param(PSTR("input_14"), &c.input.channel[14]),
         Param(PSTR("input_15"), &c.input.channel[15]),
 
+#ifdef ESPFC_SERIAL_0
         Param(PSTR("serial_0"), &c.serial[SERIAL_UART_0]),
+#endif
+#ifdef ESPFC_SERIAL_1
         Param(PSTR("serial_1"), &c.serial[SERIAL_UART_1]),
-#if defined(ESP32)
+#endif
+#ifdef ESPFC_SERIAL_2
         Param(PSTR("serial_2"), &c.serial[SERIAL_UART_2]),
-        Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
-#elif defined(USE_SOFT_SERIAL)
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
         Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
 #endif
 

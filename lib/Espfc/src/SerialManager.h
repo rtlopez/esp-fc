@@ -11,46 +11,43 @@
 #include "Telemetry.h"
 
 namespace {
-#if defined(ESP32)
 
+#ifdef ESPFC_SERIAL_0
   #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
     static HardwareSerial Serial(0);
+  #endif
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
+#endif
+
+#ifdef ESPFC_SERIAL_1
+  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
     static HardwareSerial Serial1(1);
+  #endif
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
+#endif
+
+#ifdef ESPFC_SERIAL_2
+  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
     static HardwareSerial Serial2(2);
   #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
   static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(Serial2);
-
-#elif defined(ARCH_RP2040)
-
-  //#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-  //  static HardwareSerial Serial(0);
-  //  static HardwareSerial Serial1(1);
-  //  static HardwareSerial Serial2(2);
-  //#endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(Serial2);
-
-#elif defined(ESP8266)
-
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-    static HardwareSerial Serial(0);
-  #endif
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL1)
-    static HardwareSerial Serial1(1);
-  #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
-  #if defined(USE_SOFT_SERIAL)
-    static EspSoftSerial softSerial;
-    static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> soft0(softSerial);
-  #endif
-
-#else
-  #error "unsupported platform"
 #endif
+
+#ifdef ESPFC_SERIAL_SOFT_0_RX
+  static EspSoftSerial softSerial;
+  static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> _soft0(softSerial);
+#endif
+
+//RP2040)
+//#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
+//  static HardwareSerial Serial(0);
+//  static HardwareSerial Serial1(1);
+//  static HardwareSerial Serial2(2);
+//#endif
+//static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
+//static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
+//static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(Serial2);
+
 }
 
 namespace Espfc {
@@ -74,7 +71,7 @@ class SerialManager
 
         SerialDeviceConfig sdc;
 
-#if defined(ESP32)
+#ifdef ESPFC_SERIAL_REMAP_PINS
         sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
         sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
         if(sdc.tx_pin == -1 && sdc.rx_pin == -1) continue;
@@ -177,12 +174,17 @@ class SerialManager
     {
       switch(portId)
       {
+#ifdef ESPFC_SERIAL_0
         case SERIAL_UART_0: return &_uart0;
+#endif
+#ifdef ESPFC_SERIAL_1
         case SERIAL_UART_1: return &_uart1;
-#if defined(ESP32) || defined(ARCH_RP2040)
+#endif
+#ifdef ESPFC_SERIAL_2
         case SERIAL_UART_2: return &_uart2;
-#elif defined(USE_SOFT_SERIAL)
-        case SERIAL_SOFT_0: return &soft0;
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0_RX
+        case SERIAL_SOFT_0: return &_soft0;
 #endif
         default: return nullptr;
       }

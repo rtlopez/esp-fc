@@ -1,6 +1,7 @@
 #ifndef _ESPFC_ESPFC_H_
 #define _ESPFC_ESPFC_H_
 
+#include "Target/Target.h"
 #include "Model.h"
 #include "Controller.h"
 #include "Input.h"
