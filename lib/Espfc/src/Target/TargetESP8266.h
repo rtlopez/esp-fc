@@ -45,6 +45,12 @@
 
 #define ESPFC_GUARD 1
 #define ESPFC_GYRO_DENOM_MAX 4
+#define ESPFC_WIFI_ALT
+
+//#define ESPFC_LOGGER_FS // deprecated
+#define ESPFC_LOGGER_FS_ALT
+
+#define ESPFC_DEBUG_PIN D0
 
 #define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
 #define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
@@ -66,3 +72,22 @@
   #undef ESPFC_SERIAL_1_BBAUD
   #define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_250000)
 #endif
+
+namespace Espfc {
+
+inline uint32_t getBoardId0()
+{
+  return ESP.getChipId();
+}
+
+inline uint32_t getBoardId1()
+{
+  return ESP.getFlashChipId();
+}
+
+inline uint32_t getBoardId2()
+{
+  return ESP.getFlashChipSize();
+}
+
+};

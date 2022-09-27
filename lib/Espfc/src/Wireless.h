@@ -3,7 +3,7 @@
 
 #include "Model.h"
 #include "Device/SerialDeviceAdapter.h"
-#if defined(ESP8266)
+#ifdef ESPFC_WIFI_ALT
 #include <ESP8266WiFi.h>
 #else
 #include <WiFi.h>
@@ -41,10 +41,10 @@ class Wireless
       const char * modeName = WirelessConfig::getModeName((WirelessMode)_model.config.wireless.mode);
       _model.logger.info().log(F("WIFI")).log(FPSTR(modeName)).log(_model.config.wireless.ssid).log(_model.config.wireless.pass).logln(status);
       return 1;
-//#elif defined(ESP8266)
-//      WiFi.disconnect();
-//      WiFi.mode(WIFI_OFF);
-//      _model.logger.info().logln(F("WIFI OFF"));
+#elif defined(ESPFC_WIFI_ALT)
+      WiFi.disconnect();
+      WiFi.mode(WIFI_OFF);
+      _model.logger.info().logln(F("WIFI OFF"));
 #endif
 
       return 0;

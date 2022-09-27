@@ -13,23 +13,24 @@
 #include <EscDriver.h>
 #include <EspWire.h>
 
-#if defined(ESP32)
+#ifdef ESPFC_FREE_RTOS
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <WiFi.h>
-  #if !CONFIG_FREERTOS_UNICORE
-    #define ESPFC_DUAL_CORE 1
+  #ifdef ESPFC_MULTI_CORE
     TaskHandle_t otherTaskHandle = NULL;
     extern TaskHandle_t loopTaskHandle;
   #endif
-#elif defined(RP2040)
-#elif defined(ESP8266)
+#endif
+
+#ifdef ESPFC_WIFI_ALT
   #include <ESP8266WiFi.h>
+#else
+  #include <WiFi.h>
 #endif
 
 Espfc::Espfc espfc;
 
-#if defined(ESPFC_DUAL_CORE)
+#ifdef ESPFC_MULTI_CORE
 void otherTask(void *pvParameters)
 {
   espfc.beginOther();
@@ -44,7 +45,7 @@ void otherTask(void *pvParameters)
 void setup()
 {
   espfc.load();
-#if defined(ESPFC_DUAL_CORE)
+#ifdef ESPFC_MULTI_CORE
   disableCore0WDT();
   xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
   ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
@@ -58,7 +59,7 @@ void setup()
 void loop()
 {
   espfc.update();
-  #if !defined(ESPFC_DUAL_CORE)
+#ifndef ESPFC_MULTI_CORE
   espfc.updateOther();
-  #endif
+#endif
 }

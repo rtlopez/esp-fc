@@ -4,11 +4,12 @@
 #include <Arduino.h>
 #include "Debug.h"
 
-#if defined(ESP32)
-#include "SPIFFS.h"
-#elif defined(ESP8266) && false
-#include "FS.h"
-#define USE_FS_LOGGER
+#if defined(ESPFC_LOGGER_FS)
+  #if defined(ESPFC_LOGGER_FS_ALT)
+    #include "FS.h"
+  #else
+    #include "SPIFFS.h"
+  #endif
 #endif
 
 namespace Espfc {
@@ -18,9 +19,8 @@ class Logger
   public:
     int begin()
     {
-      return 0;
+#if defined(ESPFC_LOGGER_FS)
       _valid = false;
-#if defined(USE_FS_LOGGER)
       SPIFFS.begin();
       int count = 0;
       int first = 0;
@@ -62,8 +62,8 @@ class Logger
 
     void list(Stream * s)
     {
+#if defined(ESPFC_LOGGER_FS)
       if(!s) return;
-#if defined(USE_FS_LOGGER)
       Dir dir = SPIFFS.openDir("");
       while(dir.next())
       {
@@ -90,7 +90,7 @@ class Logger
     void show(Stream * s, const String& name)
     {
       if(!s) return;
-#if defined(USE_FS_LOGGER)
+#if defined(ESPFC_LOGGER_FS)
       File f = SPIFFS.open(name, "r");
       if(!f)
       {
@@ -107,7 +107,7 @@ class Logger
 
     bool format()
     {
-#if defined(USE_FS_LOGGER)
+#if defined(ESPFC_LOGGER_FS)
       return SPIFFS.format();
 #else
       return false;
@@ -116,8 +116,8 @@ class Logger
 
     void info(Stream * s)
     {
+#if defined(ESPFC_LOGGER_FS)
       if(!s) return;
-#if defined(USE_FS_LOGGER)
       FSInfo i;
       SPIFFS.info(i);
       s->print(F("total: ")); s->print(i.totalBytes / 1024); s->println(F(" kB"));
@@ -133,7 +133,7 @@ class Logger
     Logger& info()
     {
       LOG_SERIAL_DEBUG("I")
-#if defined(USE_FS_LOGGER)
+#if defined(ESPFC_LOGGER_FS)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
@@ -149,7 +149,7 @@ class Logger
     Logger& err()
     {
       LOG_SERIAL_DEBUG("E")
-#if defined(USE_FS_LOGGER)
+#if defined(ESPFC_LOGGER_FS)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
@@ -166,7 +166,7 @@ class Logger
     Logger& log(const T& v)
     {
       LOG_SERIAL_DEBUG(v)
-#if defined(USE_FS_LOGGER)
+#if defined(ESPFC_LOGGER_FS)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
@@ -185,7 +185,7 @@ class Logger
       LOG_SERIAL_DEBUG(v)
       LOG_SERIAL_DEBUG('\r')
       LOG_SERIAL_DEBUG('\n')
-#if defined(USE_FS_LOGGER)
+#if defined(ESPFC_LOGGER_FS)
       if(!_available()) return *this;
       File f = SPIFFS.open(_name, "a");
       if(f)
@@ -200,7 +200,7 @@ class Logger
 
     bool _available()
     {
-#if defined(USE_FS_LOGGER)
+#if defined(ESPFC_LOGGER_FS)
       if(_valid)
       {
         FSInfo i;
@@ -223,7 +223,6 @@ class Logger
     }
 
     String _name;
-    //File _file;
     bool _valid;
 };
 

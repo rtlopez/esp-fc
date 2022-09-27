@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Esp.h"
+
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_SCK 18
 #define ESPFC_SPI_0_MOSI 23
@@ -68,6 +70,12 @@
 
 #define ESPFC_GUARD 0
 #define ESPFC_GYRO_DENOM_MAX 1
+//#define ESPFC_LOGGER_FS // doesn't compile on ESP32
+
+#define ESPFC_FREE_RTOS
+#ifndef CONFIG_FREERTOS_UNICORE
+  #define ESPFC_MULTI_CORE
+#endif
 
 #define SERIAL_TX_FIFO_SIZE 0x7f
 
@@ -85,3 +93,24 @@
   #undef ESPFC_SERIAL_2_BBAUD
   #define ESPFC_SERIAL_2_BBAUD (SERIAL_SPEED_250000)
 #endif
+
+namespace Espfc {
+
+inline uint32_t getBoardId0()
+{
+  const int64_t mac = ESP.getEfuseMac();
+  return (uint32_t)mac;
+}
+
+inline uint32_t getBoardId1()
+{
+  const int64_t mac = ESP.getEfuseMac();
+  return (uint32_t)(mac >> 32);
+}
+
+inline uint32_t getBoardId2()
+{
+  return 0;
+}
+
+};
