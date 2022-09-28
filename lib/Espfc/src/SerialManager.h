@@ -160,10 +160,12 @@ class SerialManager
         _telemetry.process(*stream);
       }
 
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
       if(_current == SERIAL_SOFT_0)
       {
         _wireless.update();
       }
+#endif
 
       next();
 
