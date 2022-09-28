@@ -61,7 +61,7 @@ class SerialManager
     {
       _wireless.begin();
 
-      for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
+      for(int i = SERIAL_UART_START; i < SERIAL_UART_COUNT; i++)
       {
         Device::SerialDevice * port = getSerialPortById((SerialPort)i);
         if(!port) continue;

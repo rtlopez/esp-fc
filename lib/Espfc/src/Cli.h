@@ -10,11 +10,7 @@
 #include "Device/GyroDevice.h"
 #include "platform.h"
 
-#if defined(ESP8266)
-#include "user_interface.h"
-#endif //ESP8266
-
-#if defined(ESP32)
+#ifdef ESPFC_FREE_RTOS
 #include <freertos/task.h>
 #endif
 
@@ -374,7 +370,9 @@ class Cli
       static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
       static const char* throtleLimitTypeChoices[] = { PSTR("NONE"), PSTR("SCALE"), PSTR("CLIP"), NULL };
 
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
+#endif
 
       size_t i = 0;
       static const Param params[] = {
@@ -412,7 +410,6 @@ class Cli
         Param(PSTR("accel_offset_y"), &c.accelBias[1]),
         Param(PSTR("accel_offset_z"), &c.accelBias[2]),
 
-        
         Param(PSTR("mag_bus"), &c.magBus, busDevChoices),
         Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
         Param(PSTR("mag_align"), &c.magAlign, alignChoices),
@@ -424,7 +421,6 @@ class Cli
         Param(PSTR("mag_scale_x"), &c.magCalibrationScale[0]),
         Param(PSTR("mag_scale_y"), &c.magCalibrationScale[1]),
         Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
-        
 
         Param(PSTR("baro_bus"), &c.baroBus, busDevChoices),
         Param(PSTR("baro_dev"), &c.baroDev, baroDevChoices),
@@ -566,73 +562,94 @@ class Cli
         Param(PSTR("output_max_throttle"), &c.output.maxThrottle),
         Param(PSTR("output_dshot_idle"), &c.output.dshotIdle),
 
-#if defined(ESP8266)
         Param(PSTR("output_0"), &c.output.channel[0]),
         Param(PSTR("output_1"), &c.output.channel[1]),
         Param(PSTR("output_2"), &c.output.channel[2]),
         Param(PSTR("output_3"), &c.output.channel[3]),
-
-        Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
-        Param(PSTR("pin_output_0"), &c.pin[PIN_OUTPUT_0]),
-        Param(PSTR("pin_output_1"), &c.pin[PIN_OUTPUT_1]),
-        Param(PSTR("pin_output_2"), &c.pin[PIN_OUTPUT_2]),
-        Param(PSTR("pin_output_3"), &c.pin[PIN_OUTPUT_3]),
-        Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
-        Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
-        Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
-        Param(PSTR("pin_input_adc"), &c.pin[PIN_INPUT_ADC_0]),
-        Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
-#elif defined(ESP32)
-        Param(PSTR("output_0"), &c.output.channel[0]),
-        Param(PSTR("output_1"), &c.output.channel[1]),
-        Param(PSTR("output_2"), &c.output.channel[2]),
-        Param(PSTR("output_3"), &c.output.channel[3]),
+#if ESPFC_OUTPUT_COUNT > 4
         Param(PSTR("output_4"), &c.output.channel[4]),
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
         Param(PSTR("output_5"), &c.output.channel[5]),
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
         Param(PSTR("output_6"), &c.output.channel[6]),
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
         Param(PSTR("output_7"), &c.output.channel[7]),
-
+#endif
+#ifdef ESPFC_INPUT
         Param(PSTR("pin_input_rx"), &c.pin[PIN_INPUT_RX]),
+#endif
         Param(PSTR("pin_output_0"), &c.pin[PIN_OUTPUT_0]),
         Param(PSTR("pin_output_1"), &c.pin[PIN_OUTPUT_1]),
         Param(PSTR("pin_output_2"), &c.pin[PIN_OUTPUT_2]),
         Param(PSTR("pin_output_3"), &c.pin[PIN_OUTPUT_3]),
+#if ESPFC_OUTPUT_COUNT > 4
         Param(PSTR("pin_output_4"), &c.pin[PIN_OUTPUT_4]),
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
         Param(PSTR("pin_output_5"), &c.pin[PIN_OUTPUT_5]),
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
         Param(PSTR("pin_output_6"), &c.pin[PIN_OUTPUT_6]),
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
         Param(PSTR("pin_output_7"), &c.pin[PIN_OUTPUT_7]),
+#endif
+#ifdef ESPFC_BUZZER
         Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
+#endif
+#if defined(ESPFC_SERIAL_0) && defined(ESPFC_SERIAL_REMAP_PINS)
         Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
         Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
+#endif
+#if defined(ESPFC_SERIAL_1) && defined(ESPFC_SERIAL_REMAP_PINS)
         Param(PSTR("pin_serial_1_tx"), &c.pin[PIN_SERIAL_1_TX]),
         Param(PSTR("pin_serial_1_rx"), &c.pin[PIN_SERIAL_1_RX]),
+#endif
+#if defined(ESPFC_SERIAL_2) && defined(ESPFC_SERIAL_REMAP_PINS)
         Param(PSTR("pin_serial_2_tx"), &c.pin[PIN_SERIAL_2_TX]),
         Param(PSTR("pin_serial_2_rx"), &c.pin[PIN_SERIAL_2_RX]),
+#endif
+#ifdef ESPFC_I2C_0
         Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
         Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
+#endif
+#ifdef ESPFC_ADC_0
         Param(PSTR("pin_input_adc_0"), &c.pin[PIN_INPUT_ADC_0]),
+#endif
+#ifdef ESPFC_ADC_1
         Param(PSTR("pin_input_adc_1"), &c.pin[PIN_INPUT_ADC_1]),
+#endif
+#ifdef ESPFC_SPI_0
         Param(PSTR("pin_spi_0_sck"), &c.pin[PIN_SPI_0_SCK]),
         Param(PSTR("pin_spi_0_mosi"), &c.pin[PIN_SPI_0_MOSI]),
         Param(PSTR("pin_spi_0_miso"), &c.pin[PIN_SPI_0_MISO]),
         Param(PSTR("pin_spi_cs_0"), &c.pin[PIN_SPI_CS0]),
         Param(PSTR("pin_spi_cs_1"), &c.pin[PIN_SPI_CS1]),
         Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
+#endif
+#ifdef ESPFC_BUZZER
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
 #endif
 
+#ifdef ESPFC_I2C_0
         Param(PSTR("i2c_speed"), &c.i2cSpeed),
+#endif
         //Param(PSTR("telemetry"), &c.telemetry),
         //Param(PSTR("telemetry_interval"), &c.telemetryInterval),
         //Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
         //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
         Param(PSTR("wifi_mode"), &c.wireless.mode, wifiModeChoices),
         Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL),
         Param(PSTR("wifi_pass"), PARAM_STRING, &c.wireless.pass[0], NULL),
         Param(PSTR("wifi_ssid_ap"), PARAM_STRING, &c.wireless.ssidAp[0], NULL),
         Param(PSTR("wifi_pass_ap"), PARAM_STRING, &c.wireless.passAp[0], NULL),
         Param(PSTR("wifi_tcp_port"), &c.wireless.port),
+#endif
 
         Param(PSTR("mix_outputs"), &c.customMixerCount),
         Param(PSTR("mix_0"), &c.customMixes[i++]),
@@ -700,7 +717,7 @@ class Cli
         Param(PSTR("mix_62"), &c.customMixes[i++]),
         Param(PSTR("mix_63"), &c.customMixes[i++]),
 
-        Param()
+        Param() // terminate
       };
       return params;
     }
@@ -800,7 +817,7 @@ class Cli
         s.print(F(":"));
         s.println(_model.config.wireless.port);
       }
-      #if defined(ESP32)
+      #if defined(ESPFC_FREE_RTOS)
       else if(strcmp_P(cmd.args[0], PSTR("tasks")) == 0)
       {
         printVersion(s);
@@ -817,59 +834,16 @@ class Cli
       {
         printVersion(s);
         s.println();
-        /*s.print(F("  bool: ")); s.println(sizeof(bool));
-        s.print(F("  char: ")); s.println(sizeof(char));
-        s.print(F(" short: ")); s.println(sizeof(short));
-        s.print(F("   int: ")); s.println(sizeof(int));
-        s.print(F("  long: ")); s.println(sizeof(long));
-        s.print(F(" float: ")); s.println(sizeof(float));
-        s.print(F("double: ")); s.println(sizeof(double));*/
 
         s.print(F("config size: "));
         s.println(sizeof(ModelConfig));
 
-#if defined(ESP32) || defined(ESP8266)
         s.print(F("  free heap: "));
-        s.println(ESP.getFreeHeap());
+        s.println(targetFreeHeap());
 
         s.print(F("   cpu freq: "));
-        s.print(ESP.getCpuFreqMHz());
+        s.print(targetCpuFreq());
         s.println(F(" MHz"));
-#endif
-
-#if defined(ESP32)
-
-#elif defined(ESP8266)
-        const rst_info * resetInfo = system_get_rst_info();
-        s.print(F("reset reason: "));
-        s.println(resetInfo->reason);
-
-        s.print(F("os s.print: "));
-        s.println(system_get_os_print());
-
-        //system_print_meminfo();
-
-        s.print(F("chip id: 0x"));
-        s.println(system_get_chip_id(), HEX);
-
-        s.print(F("sdk version: "));
-        s.println(system_get_sdk_version());
-
-        s.print(F("boot version: "));
-        s.println(system_get_boot_version());
-
-        s.print(F("userbin addr: 0x"));
-        s.println(system_get_userbin_addr(), HEX);
-
-        s.print(F("boot mode: "));
-        s.println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
-
-        s.print(F("flash size map: "));
-        s.println(system_get_flash_size_map());
-
-        s.print(F("time: "));
-        s.println(system_get_time() / 1000000);
-#endif
       }
       else if(strcmp_P(cmd.args[0], PSTR("get")) == 0)
       {
@@ -1129,11 +1103,9 @@ class Cli
         s.println();
         s.print(F("STATUS: "));
         s.println();
-#if defined(ESP32) || defined(ESP8266)
         s.print(F(" cpu : "));
-        s.print(ESP.getCpuFreqMHz());
+        s.print(targetCpuFreq());
         s.println(F(" MHz"));
-#endif
 
         Device::GyroDevice * gyro = Hardware::getGyroDevice(_model);
         Device::BaroDevice * baro = Hardware::getBaroDevice(_model);
@@ -1184,11 +1156,9 @@ class Cli
       {
         printVersion(s);
         s.println();
-#if defined(ESP32) || defined(ESP8266)
         s.print(F("    cpu freq: "));
-        s.print(ESP.getCpuFreqMHz());
+        s.print(targetCpuFreq());
         s.println(F(" MHz"));
-#endif
         s.print(F("   gyro rate: "));
         s.print(_model.state.gyroTimer.rate);
         s.println(F(" Hz"));

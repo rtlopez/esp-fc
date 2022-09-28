@@ -1,19 +1,15 @@
 #pragma once
 
-#define ESPFC_I2C_0
-#define ESPFC_I2C_0_SCL 5  // D1
-#define ESPFC_I2C_0_SDA 4  // D2
+#include "Esp.h"
 
-#define ESPFC_OUTPUT_COUNT 4
+#define ESPFC_INPUT
+#define ESPFC_INPUT_PIN 13  // D7 - ppm
+
+#define ESPFC_OUTPUT_COUNT 4 // 4 is minimum
 #define ESPFC_OUTPUT_0 0   // D3
 #define ESPFC_OUTPUT_1 14  // D5
 #define ESPFC_OUTPUT_2 12  // D6
 #define ESPFC_OUTPUT_3 15  // D8
-
-#define ESPFC_INPUT
-#define ESPFC_INPUT_PIN 13  // D7
-
-#define ESPFC_SERIAL_COUNT 2
 
 #define ESPFC_SERIAL_0
 #define ESPFC_SERIAL_0_TX 1
@@ -32,6 +28,10 @@
 #define ESPFC_SERIAL_SOFT_0
 #define ESPFC_SERIAL_SOFT_0_FN (SERIAL_FUNCTION_NONE)
 #define ESPFC_SERIAL_SOFT_0_RX
+
+#define ESPFC_I2C_0
+#define ESPFC_I2C_0_SCL 5  // D1
+#define ESPFC_I2C_0_SDA 4  // D2
 
 #define ESPFC_BUZZER
 #define ESPFC_BUZZER_PIN 16  // D0
@@ -106,5 +106,48 @@ inline void targetReset()
   ESP.reset();
   while(1) {}
 }
+
+inline uint32_t targetCpuFreq()
+{
+  return ESP.getCpuFreqMHz();
+}
+
+inline uint32_t targetFreeHeap()
+{
+  return ESP.getFreeHeap();
+}
+
+/*
+//#include "user_interface.h"
+const rst_info * resetInfo = system_get_rst_info();
+s.print(F("reset reason: "));
+s.println(resetInfo->reason);
+
+s.print(F("os s.print: "));
+s.println(system_get_os_print());
+
+//system_print_meminfo();
+
+s.print(F("chip id: 0x"));
+s.println(system_get_chip_id(), HEX);
+
+s.print(F("sdk version: "));
+s.println(system_get_sdk_version());
+
+s.print(F("boot version: "));
+s.println(system_get_boot_version());
+
+s.print(F("userbin addr: 0x"));
+s.println(system_get_userbin_addr(), HEX);
+
+s.print(F("boot mode: "));
+s.println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
+
+s.print(F("flash size map: "));
+s.println(system_get_flash_size_map());
+
+s.print(F("time: "));
+s.println(system_get_time() / 1000000);
+*/
 
 };

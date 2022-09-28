@@ -1,6 +1,7 @@
 #ifndef _ESPFC_MODEL_CONFIG_H_
 #define _ESPFC_MODEL_CONFIG_H_
 
+#include "Target/Target.h"
 #include "EscDriver.h"
 #include "Filter.h"
 #include "Device/BusDevice.h"
@@ -238,18 +239,10 @@ enum PinFunction {
 #ifdef ESPFC_INPUT
   PIN_INPUT_RX,
 #endif
-#if ESPFC_OUTPUT_COUNT > 0
   PIN_OUTPUT_0,
-#endif
-#if ESPFC_OUTPUT_COUNT > 1
   PIN_OUTPUT_1,
-#endif
-#if ESPFC_OUTPUT_COUNT > 2
   PIN_OUTPUT_2,
-#endif
-#if ESPFC_OUTPUT_COUNT > 3
   PIN_OUTPUT_3,
-#endif
 #if ESPFC_OUTPUT_COUNT > 4
   PIN_OUTPUT_4,
 #endif
@@ -449,7 +442,7 @@ class OutputConfig
     int8_t throttleLimitPercent = 100;
     int8_t motorLimit = 100;
 
-    OutputChannelConfig channel[OUTPUT_CHANNELS];
+    OutputChannelConfig channel[ESPFC_OUTPUT_COUNT];
 };
 
 enum ArmingDisabledFlags {

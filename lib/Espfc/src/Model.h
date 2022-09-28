@@ -350,13 +350,14 @@ class Model
       }
       config.featureMask &= featureAllowMask;
 
-      for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++) {
+      for(int i = SERIAL_UART_START; i < SERIAL_UART_COUNT; i++) {
         config.serial[i].functionMask &= serialFunctionAllowedMask;
       }
       //config.featureMask |= FEATURE_RX_PPM; // force ppm
       //config.featureMask &= ~FEATURE_RX_PPM; // disallow ppm
-
+#ifdef ESPFC_SERIAL_0
       config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
+#endif
 
       // only few beeper modes allowed
       config.buzzer.beeperMask &=

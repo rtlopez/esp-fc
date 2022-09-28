@@ -2,17 +2,8 @@
 
 #include "Esp.h"
 
-#define ESPFC_SPI_0
-#define ESPFC_SPI_0_SCK 18
-#define ESPFC_SPI_0_MOSI 23
-#define ESPFC_SPI_0_MISO 19
-
-#define ESPFC_SPI_CS_GYRO 5
-#define ESPFC_SPI_CS_BARO 15
-
-#define ESPFC_I2C_0
-#define ESPFC_I2C_0_SCL 22
-#define ESPFC_I2C_0_SDA 21
+#define ESPFC_INPUT
+#define ESPFC_INPUT_PIN 35 // ppm
 
 #define ESPFC_OUTPUT_COUNT 8
 #define ESPFC_OUTPUT_0 0
@@ -23,12 +14,6 @@
 #define ESPFC_OUTPUT_5 12
 #define ESPFC_OUTPUT_6 13
 #define ESPFC_OUTPUT_7 14
-
-#define ESPFC_INPUT
-#define ESPFC_INPUT_PIN 35
-
-#define ESPFC_SERIAL_COUNT 3
-#define ESPFC_SERIAL_REMAP_PINS
 
 #define ESPFC_SERIAL_0
 #define ESPFC_SERIAL_0_TX 1
@@ -54,6 +39,20 @@
 #define ESPFC_SERIAL_SOFT_0
 #define ESPFC_SERIAL_SOFT_0_FN (SERIAL_FUNCTION_MSP)
 #define ESPFC_SERIAL_SOFT_0_WIFI
+
+#define ESPFC_SERIAL_REMAP_PINS
+
+#define ESPFC_SPI_0
+#define ESPFC_SPI_0_SCK 18
+#define ESPFC_SPI_0_MOSI 23
+#define ESPFC_SPI_0_MISO 19
+
+#define ESPFC_SPI_CS_GYRO 5
+#define ESPFC_SPI_CS_BARO 15
+
+#define ESPFC_I2C_0
+#define ESPFC_I2C_0_SCL 22
+#define ESPFC_I2C_0_SDA 21
 
 #define ESPFC_BUZZER
 #define ESPFC_BUZZER_PIN 4
@@ -120,6 +119,16 @@ inline void targetReset()
 {
   ESP.restart();
   while(1) {}
+}
+
+inline uint32_t targetCpuFreq()
+{
+  return ESP.getCpuFreqMHz();
+}
+
+inline uint32_t targetFreeHeap()
+{
+  return ESP.getFreeHeap();
 }
 
 };

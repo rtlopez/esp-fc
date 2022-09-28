@@ -37,8 +37,9 @@ enum SerialSpeed {
 };
 
 enum SerialPort {
+  SERIAL_UART_START,
 #ifdef ESPFC_SERIAL_0
-  SERIAL_UART_0,
+  SERIAL_UART_0 = SERIAL_UART_START,
 #endif
 #ifdef ESPFC_SERIAL_1
   SERIAL_UART_1,
