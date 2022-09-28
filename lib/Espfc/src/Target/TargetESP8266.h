@@ -62,6 +62,10 @@
   }\
   dev.begin(conf.baud, (SerialConfig)sc);\
 
+#define ESPFC_SPI_INIT(dev, sck, mosi, miso, ss) \
+  dev.pins(sck, mosi, miso, ss); \
+  dev.begin(); \
+
 #if !defined(ESPFC_REVISION) // development build
   #undef ESPFC_OUTPUT_PROTOCOL
   #define ESPFC_OUTPUT_PROTOCOL ESC_PROTOCOL_DSHOT150
@@ -88,6 +92,19 @@ inline uint32_t getBoardId1()
 inline uint32_t getBoardId2()
 {
   return ESP.getFlashChipSize();
+}
+
+inline void targetReset()
+{
+  // pin setup to ensure boot from flash
+  pinMode(0, OUTPUT); digitalWrite(0, HIGH); // GPIO0 to HI
+  pinMode(2, OUTPUT); digitalWrite(2, HIGH); // GPIO2 to HI
+  pinMode(15, OUTPUT); digitalWrite(15, LOW); // GPIO15 to LO
+  pinMode(0, INPUT);
+  pinMode(2, INPUT);
+  pinMode(15, INPUT);
+  ESP.reset();
+  while(1) {}
 }
 
 };

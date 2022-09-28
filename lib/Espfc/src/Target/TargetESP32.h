@@ -83,6 +83,9 @@
   sc |= 0x8000000;\
   dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);\
 
+#define ESPFC_SPI_INIT(dev, sck, mosi, miso, ss) \
+  dev.begin(sck, mosi, miso, ss); \
+
 #if !defined(ESPFC_REVISION) // development build
   #undef ESPFC_OUTPUT_PROTOCOL
   #define ESPFC_OUTPUT_PROTOCOL ESC_PROTOCOL_DSHOT300
@@ -111,6 +114,12 @@ inline uint32_t getBoardId1()
 inline uint32_t getBoardId2()
 {
   return 0;
+}
+
+inline void targetReset()
+{
+  ESP.restart();
+  while(1) {}
 }
 
 };

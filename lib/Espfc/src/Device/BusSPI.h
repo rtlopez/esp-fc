@@ -22,13 +22,8 @@ class BusSPI: public BusDevice
     int begin(int8_t sck = -1, int8_t miso = -1, int8_t mosi = -1, int8_t ss = -1)
     {
       if(sck == -1 || miso == -1 || mosi == -1) return 0;
-      
-#if defined(ESP32)
-      SPI.begin(sck, miso, mosi, ss);
-#elif defined(ESP8266)
-      SPI.pins(sck, miso, mosi, ss);
-      SPI.begin();
-#endif
+
+      ESPFC_SPI_INIT(SPI, sck, miso, mosi, ss)
 
       return 1;
     }
