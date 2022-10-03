@@ -27,13 +27,18 @@ class Espfc
 
     int load()
     {
+      D("espfc:load:start");
+
       _model.begin();
+
+      D("espfc:load:done");
 
       return 1;
     }
 
     int begin()
     {
+      D("espfc:begin:start");
       _hardware.begin();
       _model.update();
       _mixer.begin();
@@ -42,17 +47,20 @@ class Espfc
       _actuator.begin();
       _controller.begin();
       _blackbox.begin();
-      _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
+      //_model.state.buzzer.push(BEEPER_SYSTEM_INIT);
+      D("espfc:begin:done");
 
       return 1;
     }
 
     int beginOther()
     {
+      D("espfc:beginOther:start");
       _serial.begin();
       _model.logStorageResult();
-      _buzzer.begin();
+      //_buzzer.begin();
 
+      D("espfc:beginOther:done");
       return 1;
     }
 
@@ -84,7 +92,7 @@ class Espfc
     {
       _model.state.stats.update();
       _serial.update();
-      _buzzer.update();
+      //_buzzer.update();
       return 1;
     }
 

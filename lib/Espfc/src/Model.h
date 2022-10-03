@@ -186,7 +186,7 @@ class Model
 
     Device::SerialDevice * getSerialStream(SerialFunction sf)
     {
-      for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
+      for(size_t i = SERIAL_UART_START; i < SERIAL_UART_COUNT; i++)
       {
         if(config.serial[i].functionMask & sf) return state.serial[i].stream;
       }
@@ -205,6 +205,9 @@ class Model
 #endif
 #ifdef ESPFC_SERIAL_2
         case SERIAL_ID_UART_3: return SERIAL_UART_2;
+#endif
+#ifdef ESPFC_SERIAL_USB
+        case SERIAL_ID_USB_VCP: return SERIAL_USB;
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0
         case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
@@ -522,7 +525,7 @@ class Model
     int load()
     {
       #ifndef UNIT_TEST
-      _storageResult = _storage.load(config);
+      //_storageResult = _storage.load(config);
       #endif
       postLoad();
       return 1;

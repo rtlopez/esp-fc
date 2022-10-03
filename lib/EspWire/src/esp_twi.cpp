@@ -44,12 +44,12 @@ static uint32_t esp_twi_clockStretchLimit;
   #define SCL_HIGH()  (GPIO.enable_w1tc = (1 << esp_twi_scl))
   #define SCL_READ()  ((GPIO.in & (1 << esp_twi_scl)) != 0)
 #elif defined(ARCH_RP2040)
-  #define SDA_LOW()   //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
-  #define SDA_HIGH()  //Disable SDA (becomes input and since it has pullup it will go high)
-  #define SDA_READ()  (1)
-  #define SCL_LOW()   
-  #define SCL_HIGH()  
-  #define SCL_READ()  (1)
+  #define SDA_LOW()   (pinMode(esp_twi_sda, OUTPUT)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+  #define SDA_HIGH()  (pinMode(esp_twi_sda, INPUT_PULLUP))  //Disable SDA (becomes input and since it has pullup it will go high)
+  #define SDA_READ()  (digitalRead(esp_twi_sda))
+  #define SCL_LOW()   (pinMode(esp_twi_scl, OUTPUT))
+  #define SCL_HIGH()  (pinMode(esp_twi_scl, INPUT_PULLUP))
+  #define SCL_READ()  (digitalRead(esp_twi_scl))
 #elif defined(UNIT_TEST)
   #define SDA_LOW()   //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
   #define SDA_HIGH()  //Disable SDA (becomes input and since it has pullup it will go high)
@@ -69,15 +69,21 @@ static uint32_t esp_twi_clockStretchLimit;
 #define FCPU240 240000000L
 #endif
 
+#ifndef FCPU133
+#define FCPU133 133000000L
+#endif
+
 #if F_CPU == FCPU80
 #define TWI_CLOCK_STRETCH_MULTIPLIER 3
 #elif F_CPU == FCPU240
 #define TWI_CLOCK_STRETCH_MULTIPLIER 9
+#elif F_CPU == FCPU133
+#define TWI_CLOCK_STRETCH_MULTIPLIER 5
 #else
 #define TWI_CLOCK_STRETCH_MULTIPLIER 6
 #endif
 
-#if defined(ESP32)
+#if defined(ESP32) || defined(ARCH_RP2040)
 #define TWI_PIN_MAX 32
 #else
 #define TWI_PIN_MAX 15
@@ -108,6 +114,14 @@ void esp_twi_setClock(unsigned int freq){
   else if(freq < 1100000) esp_twi_dcount = 3;  //about 1.1MHz
   else if(freq < 1200000) esp_twi_dcount = 2;  //about 1.2MHz
   else esp_twi_dcount = 1;                     //above 1.2MHz
+#elif F_CPU == FCPU133 // 133 mhz
+  if(freq < 50000) esp_twi_dcount = 32;//about 50KHz
+  else if(freq < 100000) esp_twi_dcount = 16;//about 100KHz
+  else if(freq < 200000) esp_twi_dcount = 8;
+  else if(freq < 400000) esp_twi_dcount = 4;
+  else if(freq < 600000) esp_twi_dcount = 2;
+  else if(freq < 800000) esp_twi_dcount = 1;
+  else esp_twi_dcount = 0; //about 700KHz
 #else // 160 mhz
   if(freq < 50000) esp_twi_dcount = 64;//about 50KHz
   else if(freq < 100000) esp_twi_dcount = 32;//about 100KHz
@@ -147,7 +161,7 @@ static inline IRAM_ATTR unsigned int _getCycleCount()
     __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
     return ccount;
 #elif defined(ARCH_RP2040)
-  return micros();
+  return rp2040.getCycleCount();
 #elif defined(UNIT_TEST)
   return 0;
 #endif
@@ -159,33 +173,13 @@ static inline IRAM_ATTR void esp_twi_delay(unsigned int v)
   int maxCount = 200;
   switch(v)
   {
-    //case 2:
-    //  end = _getCycleCount();
-    //case 1:
-    //  end = _getCycleCount();
-    case 0:
-      //end = _getCycleCount();
-      break;
+    case 0: break;
     default:
       end = _getCycleCount() + (v << 3); // * 8
-      while(_getCycleCount() <= end)
-      {
-        if(--maxCount == 0) break; // counter override protection
+      while(_getCycleCount() <= end) {
+        if(--maxCount == 0) break; // counter wrap protection
       }
   }
-  /*unsigned int reg;
-  for(unsigned int i = 0; i < v; i++)
-  {
-#if defined(ESP8266)
-    reg = GPI;
-#elif defined(ESP32)
-    reg = GPIO.in;
-#else
-  #error "Unsupported platform"
-#endif
-  }
-  (void)reg;
-  */
 }
 
 static IRAM_ATTR bool esp_twi_write_start(void) {

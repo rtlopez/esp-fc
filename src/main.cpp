@@ -12,6 +12,7 @@
 #include <EspGpio.h>
 #include <EscDriver.h>
 #include <EspWire.h>
+#include "Debug.h"
 
 #ifdef ESPFC_FREE_RTOS
 #include "freertos/FreeRTOS.h"
@@ -34,7 +35,9 @@ Espfc::Espfc espfc;
 void otherTask(void *pvParameters)
 {
   espfc.beginOther();
+#ifdef ESPFC_FREE_RTOS
   xTaskNotifyGive(loopTaskHandle);
+#endif
   while(true)
   {
     espfc.updateOther();
@@ -44,11 +47,20 @@ void otherTask(void *pvParameters)
 
 void setup()
 {
+  Serial.begin(115200);
+  const uint32_t timeout = millis() + 2000;
+  while (!Serial) {
+    if(millis() > timeout) break;
+  };
+  Espfc::initDebugStream(&Serial);
+
   espfc.load();
 #ifdef ESPFC_MULTI_CORE
+#ifdef ESPFC_FREE_RTOS
   disableCore0WDT();
   xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
   ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
+#endif
   espfc.begin();
 #else
   espfc.beginOther();

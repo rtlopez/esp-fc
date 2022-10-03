@@ -8,9 +8,6 @@
 #include "EEPROM.h"
 #include "Logger.h"
 
-#define ESP_STATIC_ASSERT(condition, name) \
-    typedef char assert_failed_ ## name [(condition) ? 1 : -1 ] __attribute__((unused))
-
 namespace Espfc {
 
 enum StorageResult
@@ -29,7 +26,7 @@ class Storage
     int begin()
     {
       EEPROM.begin(EEPROM_SIZE);
-      ESP_STATIC_ASSERT(sizeof(ModelConfig) <= EEPROM_SIZE, eeprom_size);
+      static_assert(sizeof(ModelConfig) <= EEPROM_SIZE, "ModelConfig Size too big");
       return 1;
     }
 

@@ -434,13 +434,13 @@ class MspProcessor
         case MSP2_COMMON_SERIAL_CONFIG:
           {
             uint8_t count = 0;
-            for (int i = 0; i < SERIAL_UART_COUNT; i++)
+            for (int i = SERIAL_UART_START; i < SERIAL_UART_COUNT; i++)
             {
               if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
               count++;
             }
             r.writeU8(count);
-            for (int i = 0; i < SERIAL_UART_COUNT; i++)
+            for (int i = SERIAL_UART_START; i < SERIAL_UART_COUNT; i++)
             {
               if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
               r.writeU8(_model.config.serial[i].id); // identifier

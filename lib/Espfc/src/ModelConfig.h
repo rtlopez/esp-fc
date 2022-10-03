@@ -234,6 +234,7 @@ const size_t MODEL_NAME_LEN  = 16;
 const size_t AXES            = 4;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
 const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
+static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
 
 enum PinFunction {
 #ifdef ESPFC_INPUT
@@ -628,18 +629,10 @@ class ModelConfig
 #ifdef ESPFC_INPUT
       pin[PIN_INPUT_RX] = ESPFC_INPUT_PIN;
 #endif
-#if ESPFC_OUTPUT_COUNT > 0
       pin[PIN_OUTPUT_0] = ESPFC_OUTPUT_0;
-#endif
-#if ESPFC_OUTPUT_COUNT > 1
       pin[PIN_OUTPUT_1] = ESPFC_OUTPUT_1;
-#endif
-#if ESPFC_OUTPUT_COUNT > 2
       pin[PIN_OUTPUT_2] = ESPFC_OUTPUT_2;
-#endif
-#if ESPFC_OUTPUT_COUNT > 3
       pin[PIN_OUTPUT_3] = ESPFC_OUTPUT_3;
-#endif
 #if ESPFC_OUTPUT_COUNT > 4
       pin[PIN_OUTPUT_4] = ESPFC_OUTPUT_4;
 #endif
@@ -757,6 +750,12 @@ class ModelConfig
       serial[SERIAL_UART_2].functionMask = ESPFC_SERIAL_2_FN;
       serial[SERIAL_UART_2].baud = ESPFC_SERIAL_2_BAUD;
       serial[SERIAL_UART_2].blackboxBaud = ESPFC_SERIAL_2_BBAUD;
+#endif
+#ifdef ESPFC_SERIAL_USB
+      serial[SERIAL_USB].id = SERIAL_ID_USB_VCP;
+      serial[SERIAL_USB].functionMask = ESPFC_SERIAL_USB_FN;
+      serial[SERIAL_USB].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_USB].blackboxBaud = SERIAL_SPEED_NONE;
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0
       serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1;

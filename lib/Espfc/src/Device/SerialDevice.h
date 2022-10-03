@@ -47,6 +47,9 @@ enum SerialPort {
 #ifdef ESPFC_SERIAL_2
   SERIAL_UART_2,
 #endif
+#ifdef ESPFC_SERIAL_USB
+  SERIAL_USB,
+#endif
 #ifdef ESPFC_SERIAL_SOFT_0
   SERIAL_SOFT_0,
 #endif

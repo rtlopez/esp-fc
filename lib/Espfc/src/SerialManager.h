@@ -13,40 +13,25 @@
 namespace {
 
 #ifdef ESPFC_SERIAL_0
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-    static HardwareSerial Serial(0);
-  #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(ESPFC_SERIAL_0_DEV);
 #endif
 
 #ifdef ESPFC_SERIAL_1
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-    static HardwareSerial Serial1(1);
-  #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(ESPFC_SERIAL_1_DEV);
 #endif
 
 #ifdef ESPFC_SERIAL_2
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-    static HardwareSerial Serial2(2);
-  #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(Serial2);
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(ESPFC_SERIAL_2_DEV);
+#endif
+
+#ifdef ESPFC_SERIAL_USB
+  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _usb(ESPFC_SERIAL_USB_DEV);
 #endif
 
 #ifdef ESPFC_SERIAL_SOFT_0_RX
   static EspSoftSerial softSerial;
   static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> _soft0(softSerial);
 #endif
-
-//RP2040)
-//#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-//  static HardwareSerial Serial(0);
-//  static HardwareSerial Serial1(1);
-//  static HardwareSerial Serial2(2);
-//#endif
-//static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(Serial);
-//static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(Serial1);
-//static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(Serial2);
 
 }
 
@@ -59,7 +44,9 @@ class SerialManager
 
     int begin()
     {
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
       _wireless.begin();
+#endif
 
       for(int i = SERIAL_UART_START; i < SERIAL_UART_COUNT; i++)
       {
@@ -72,9 +59,15 @@ class SerialManager
         SerialDeviceConfig sdc;
 
 #ifdef ESPFC_SERIAL_REMAP_PINS
-        sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
-        sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
-        if(sdc.tx_pin == -1 && sdc.rx_pin == -1) continue;
+#ifdef ESPFC_SERIAL_USB
+        if(i != SERIAL_USB) {
+#endif
+          sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
+          sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
+          if(sdc.tx_pin == -1 && sdc.rx_pin == -1) continue;
+#ifdef ESPFC_SERIAL_USB
+        }
+#endif
 #endif
         sdc.baud = spc.baud;
 
@@ -107,11 +100,11 @@ class SerialManager
         port->begin(sdc);
         _model.state.serial[i].stream = port;
 
-        if(i == SERIAL_UART_0)
-        {
-          LOG_SERIAL_INIT(port)
+        //if(i == ESPFC_SERIAL_DEBUG_PORT)
+        //{
+        //  LOG_SERIAL_INIT(port)
           //port->setDebugOutput(true);
-        }
+        //}
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
       }
       return 1;
@@ -121,6 +114,7 @@ class SerialManager
     {
       if(!_model.state.serialTimer.check()) return 0;
 
+      //D("serial", _current);
       SerialPortState& ss = _model.state.serial[_current];
       const SerialPortConfig& sc = _model.config.serial[_current];
       Stream * stream = ss.stream;
@@ -184,6 +178,9 @@ class SerialManager
 #endif
 #ifdef ESPFC_SERIAL_2
         case SERIAL_UART_2: return &_uart2;
+#endif
+#ifdef ESPFC_SERIAL_USB
+        case SERIAL_USB: return &_usb;
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0_RX
         case SERIAL_SOFT_0: return &_soft0;

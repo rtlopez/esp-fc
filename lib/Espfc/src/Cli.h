@@ -366,7 +366,7 @@ class Cli
                                                  PSTR("CUSTOMTRI"), PSTR("QUADX1234"), NULL };
       static const char* interpolChoices[]   = { PSTR("NONE"), PSTR("DEFAULT"), PSTR("AUTO"), PSTR("MANUAL"), NULL };
       static const char* protocolChoices[]   = { PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
-                                                 PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("DSHOT1200"), PSTR("PROSHOT1000"), NULL };
+                                                 PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("PROSHOT1000"), PSTR("DISABLED"), NULL };
       static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
       static const char* throtleLimitTypeChoices[] = { PSTR("NONE"), PSTR("SCALE"), PSTR("CLIP"), NULL };
 

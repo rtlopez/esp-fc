@@ -18,6 +18,8 @@ namespace Espfc
 #ifdef ESPFC_DEBUG_SERIAL
 static Stream * _debugStream = nullptr;
 
+static inline void initDebugStream(Stream * p) { _debugStream = p; }
+
 #define LOG_SERIAL_INIT(p) _debugStream = p;
 #define LOG_SERIAL_DEBUG(v) if(_debugStream) { _debugStream->print(' '); _debugStream->print(v); }
 
@@ -40,6 +42,8 @@ void D(T t, Args... args) // recursive variadic function
 }
 
 #else
+
+static inline void initDebugStream(Stream * p) {}
 
 #define LOG_SERIAL_INIT(p)
 #define LOG_SERIAL_DEBUG(v)

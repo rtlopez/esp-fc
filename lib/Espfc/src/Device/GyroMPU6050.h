@@ -162,9 +162,7 @@ class GyroMPU6050: public GyroDevice
     {
       uint8_t whoami = 0;
       _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
-      //Serial.print("MPU6050 "); Serial.print(_addr, HEX); Serial.print(' '); Serial.println(whoami, HEX);
-      //_bus->readBits(_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, &whoami);
-      //D("mpu6050_whoami", _addr, whoami);
+      //D("mpu6050:whoami", _addr, whoami);
       return whoami == 0x68 || whoami == 0x72;
     }
 
