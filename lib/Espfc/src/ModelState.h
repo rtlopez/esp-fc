@@ -128,10 +128,16 @@ class FailsafeState
 
 #define ACCEL_G (9.80665f)
 #define ACCEL_G_INV (1.f / ACCEL_G)
+//#define ACCEL_G (1.f)
+//#define ACCEL_G_INV (1.f)
 
 // working data
 struct ModelState
 {
+  Device::GyroDevice* gyroDev;
+  Device::MagDevice* magDev;
+  Device::BaroDevice* baroDev;
+
   VectorInt16 gyroRaw;
   VectorInt16 accelRaw;
   VectorInt16 magRaw;

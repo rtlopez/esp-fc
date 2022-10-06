@@ -79,8 +79,7 @@ class GyroMPU9250: public GyroMPU6050
     {
       uint8_t whoami = 0;
       _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
-      //Serial.print("MPU9250 "); Serial.print(_addr, HEX); Serial.print(' '); Serial.println(whoami, HEX);
-      //D("mpu9250_whoami", _addr, whoami);
+      //D("mpu9250:whoami", _addr, whoami);
       return whoami == 0x71 || whoami == 0x73;
     }
 };

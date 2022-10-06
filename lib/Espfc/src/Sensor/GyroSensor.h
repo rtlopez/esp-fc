@@ -18,7 +18,7 @@ class GyroSensor: public BaseSensor
 
     int begin()
     {
-      _gyro = Hardware::getGyroDevice(_model);
+      _gyro = _model.state.gyroDev;
       if(!_gyro) return 0;
 
       _gyro->setDLPFMode(_model.config.gyroDlpf);

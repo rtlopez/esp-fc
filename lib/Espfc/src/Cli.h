@@ -1101,73 +1101,60 @@ class Cli
 
         printVersion(s);
         s.println();
-        s.print(F("STATUS: "));
+        s.println(F("STATUS: "));
+        printStats(s);
         s.println();
-        s.print(F(" cpu : "));
-        s.print(targetCpuFreq());
-        s.println(F(" MHz"));
 
-        Device::GyroDevice * gyro = Hardware::getGyroDevice(_model);
-        Device::BaroDevice * baro = Hardware::getBaroDevice(_model);
-        Device::MagDevice  * mag  = Hardware::getMagDevice(_model);
+        Device::GyroDevice * gyro = _model.state.gyroDev;
+        Device::BaroDevice * baro = _model.state.baroDev;
+        Device::MagDevice  * mag  = _model.state.magDev;
         if(gyro)
         {
-          s.print(F("gyro : "));
+          s.print(F("gyro device: "));
           s.print(FPSTR(Device::GyroDevice::getName(gyro->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(gyro->getBus()->getType())));
         }
         else
         {
-          s.println(F("gyro : NONE"));
+          s.println(F("gyro device: NONE"));
         }
 
         if(baro)
         {
-          s.print(F("baro : "));
+          s.print(F("baro device: "));
           s.print(FPSTR(Device::BaroDevice::getName(baro->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
         }
         else
         {
-          s.println(F("baro : NONE"));
+          s.println(F("baro device: NONE"));
         }
 
         if(mag)
         {
-          s.print(F(" mag : "));
+          s.print(F("  mag device: "));
           s.print(FPSTR(Device::MagDevice::getName(mag->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
         }
         else
         {
-          s.println(F(" mag : NONE"));
+          s.println(F(" mag device: NONE"));
         }
 
-        s.print(F(" rx rate : "));
+        s.print(F("     rx rate: "));
         s.println(_model.state.inputFrameRate);
 
-        s.print(F("arming disabled : "));
+        s.print(F(" arming disabled: "));
         s.println(_model.state.armingDisabledFlags);
       }
       else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
       {
         printVersion(s);
         s.println();
-        s.print(F("    cpu freq: "));
-        s.print(targetCpuFreq());
-        s.println(F(" MHz"));
-        s.print(F("   gyro rate: "));
-        s.print(_model.state.gyroTimer.rate);
-        s.println(F(" Hz"));
-        s.print(F("   loop rate: "));
-        s.print(_model.state.loopTimer.rate);
-        s.println(F(" Hz"));
-        s.print(F("  mixer rate: "));
-        s.print(_model.state.mixerTimer.rate);
-        s.println(F(" Hz"));
+        printStats(s);
         s.println();
         for(size_t i = 0; i < COUNTER_COUNT; ++i)
         {
@@ -1263,6 +1250,29 @@ class Cli
       s.print(__VERSION__);
       s.print(' ');
       s.print(__cplusplus);
+    }
+
+    void printStats(Stream& s)
+    {
+      s.print(F("    cpu freq: "));
+      s.print(targetCpuFreq());
+      s.println(F(" MHz"));
+
+      s.print(F("  gyro clock: "));
+      s.print(_model.state.gyroClock);
+      s.println(F(" Hz"));
+
+      s.print(F("   gyro rate: "));
+      s.print(_model.state.gyroTimer.rate);
+      s.println(F(" Hz"));
+
+      s.print(F("   loop rate: "));
+      s.print(_model.state.loopTimer.rate);
+      s.println(F(" Hz"));
+
+      s.print(F("  mixer rate: "));
+      s.print(_model.state.mixerTimer.rate);
+      s.println(F(" Hz"));
     }
 
     Model& _model;

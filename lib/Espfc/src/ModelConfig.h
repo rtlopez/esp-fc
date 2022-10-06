@@ -687,8 +687,11 @@ class ModelConfig
       gyroAlign = ALIGN_DEFAULT;
       gyroDlpf = GYRO_DLPF_256;
       gyroFsr  = GYRO_FS_2000;
-      //gyroSync = 16;
-      gyroSync = 8;
+      gyroSync = 1; // unused, force 1
+
+      loopSync = 8; // MPU 1000Hz
+      loopSync = 4; // LSM 833Hz
+      mixerSync = 1;
 
       accelBus = BUS_AUTO;
       accelDev = GYRO_AUTO;
@@ -701,9 +704,6 @@ class ModelConfig
 
       baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
-
-      loopSync = 1;
-      mixerSync = 1;
 
       fusion.mode = FUSION_MADGWICK;
       fusion.gain = 50;

@@ -14,6 +14,7 @@ enum GyroDeviceType {
   GYRO_MPU6050 = 3,
   GYRO_MPU6500 = 4,
   GYRO_MPU9250 = 5,
+  GYRO_LSM6DSO = 6,
   GYRO_MAX
 };
 
@@ -41,7 +42,7 @@ class GyroDevice: public BusAwareDevice
 
     static const char ** getNames()
     {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), NULL };
+      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), PSTR("LSM6DSO"), NULL };
       return devChoices;
     }
 

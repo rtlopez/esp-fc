@@ -84,6 +84,14 @@
 
 namespace Espfc {
 
+template<typename T>
+inline int targetI2CInit(T& dev, int sda, int scl, int speed)
+{
+  dev.setClock(speed);
+  dev.begin(sda, scl);
+  return 1;
+}
+
 inline uint32_t getBoardId0()
 {
   return ESP.getChipId();

@@ -53,6 +53,7 @@ void setup()
     if(millis() > timeout) break;
   };
   Espfc::initDebugStream(&Serial);
+  delay(1000);
 
   espfc.load();
 #ifdef ESPFC_MULTI_CORE

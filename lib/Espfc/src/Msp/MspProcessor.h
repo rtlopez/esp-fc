@@ -148,7 +148,7 @@ class MspProcessor
           // 1.42
           r.writeU8(2);  // configuration state: configured
           // 1.43
-          r.writeU16(_model.state.gyroTimer.rate); // sample rate
+          r.writeU16(_model.state.gyroClock); // sample rate
           r.writeU32(0); // configuration problems
           // 1.44
           r.writeU8(0);  // spi dev count

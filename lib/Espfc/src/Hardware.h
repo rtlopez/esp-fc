@@ -9,6 +9,7 @@
 #include "Device/GyroDevice.h"
 #include "Device/GyroMPU6050.h"
 #include "Device/GyroMPU9250.h"
+#include "Device/GyroLSM6DSO.h"
 #include "Device/MagHMC5338L.h"
 #include "Device/MagAK8963.h"
 #include "Device/BaroDevice.h"
@@ -24,13 +25,11 @@ namespace {
 #endif
   static Espfc::Device::GyroMPU6050 mpu6050;
   static Espfc::Device::GyroMPU9250 mpu9250;
+  static Espfc::Device::GyroLSM6DSO lsm6dso;
   static Espfc::Device::MagHMC5338L hmc5883l;
   static Espfc::Device::MagAK8963 ak8963;
   static Espfc::Device::BaroBMP085 bmp085;
   static Espfc::Device::BaroBMP280 bmp280;
-  static Espfc::Device::GyroDevice * detectedGyro = nullptr;
-  static Espfc::Device::BaroDevice * detectedBaro = nullptr;
-  static Espfc::Device::MagDevice  * detectedMag  = nullptr;
 }
 
 namespace Espfc {
@@ -72,12 +71,14 @@ class Hardware
     {
       if(_model.config.gyroDev == GYRO_NONE) return;
 
+      Espfc::Device::GyroDevice * detectedGyro = nullptr;
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS0] != -1)
       {
         pinMode(_model.config.pin[PIN_SPI_CS0], OUTPUT);
         digitalWrite(_model.config.pin[PIN_SPI_CS0], HIGH);
         if(!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
+        if(!detectedGyro && detectDevice(lsm6dso, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
       }
 #endif
 #if defined(ESPFC_I2C_0)
@@ -85,8 +86,10 @@ class Hardware
       {
         if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
         if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
+        if(!detectedGyro && detectDevice(lsm6dso, i2cBus)) detectedGyro = &lsm6dso;
       }
 #endif
+      _model.state.gyroDev = detectedGyro;
       _model.state.gyroPresent = (bool)detectedGyro;
       _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != GYRO_NONE;
     }
@@ -95,8 +98,9 @@ class Hardware
     {
       if(_model.config.magDev == MAG_NONE) return;
 
+      Espfc::Device::MagDevice * detectedMag  = nullptr;
 #if defined(ESPFC_SPI_0)
-      if(_model.config.pin[PIN_SPI_CS0] != -1 && detectedGyro && detectedGyro->getType() == GYRO_MPU9250)
+      if(_model.config.pin[PIN_SPI_CS0] != -1 && _model.state.gyroDev && _model.state.gyroDev->getType() == GYRO_MPU9250)
       {
         if(!detectedMag && detectDevice(ak8963, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
       }
@@ -104,13 +108,14 @@ class Hardware
 #if defined(ESPFC_I2C_0)
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
-        if(detectedGyro && detectedGyro->getType() == GYRO_MPU9250)
+        if(_model.state.gyroDev && _model.state.gyroDev->getType() == GYRO_MPU9250)
         {
           if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
         }
         if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
       }
 #endif
+      _model.state.magDev = detectedMag;
       _model.state.magPresent = (bool)detectedMag;
       _model.state.magRate = detectedMag ? detectedMag->getRate() : 0;
     }
@@ -119,6 +124,7 @@ class Hardware
     {
       if(_model.config.baroDev == BARO_NONE) return;
 
+      Espfc::Device::BaroDevice * detectedBaro = nullptr;
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS1] != -1)
       {
@@ -135,6 +141,7 @@ class Hardware
         if(!detectedBaro && detectDevice(bmp085, i2cBus)) detectedBaro = &bmp085;
       }
 #endif
+      _model.state.baroDev = detectedBaro;
       _model.state.baroPresent = (bool)detectedBaro;
     }
 
@@ -159,23 +166,6 @@ class Hardware
     int update()
     {
       return 1;
-    }
-
-    static Device::GyroDevice * getGyroDevice(const Model& model)
-    {
-      return detectedGyro;
-    }
-
-    static Device::MagDevice * getMagDevice(const Model& model)
-    {
-      if(model.config.magDev == MAG_NONE) return nullptr;
-      return detectedMag;
-    }
-
-    static Device::BaroDevice * getBaroDevice(const Model& model)
-    {
-      if(model.config.baroDev == BARO_NONE) return nullptr;
-      return detectedBaro;
     }
 
     static void restart(const Model& model)

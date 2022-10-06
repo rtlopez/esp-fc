@@ -24,7 +24,7 @@ class BaroSensor: public BaseSensor
     int begin()
     {
       if(!_model.baroActive()) return 0;
-      _baro = Hardware::getBaroDevice(_model);
+      _baro = _model.state.baroDev;
       if(!_baro) return 0;
 
       _baro->setMode(BARO_MODE_TEMP);

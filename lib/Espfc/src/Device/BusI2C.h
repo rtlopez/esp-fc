@@ -24,14 +24,7 @@ class BusI2C: public BusDevice
 
     int begin(int sda, int scl, int speed)
     {
-      #if defined(ESPFC_I2C_0_SOFT)
-        WireImpl.begin(sda, scl);
-      #else
-        if(!WireImpl.setSCL(scl)) return -1;
-        if(!WireImpl.setSDA(sda)) return -2;
-      #endif
-      WireImpl.setClock(speed);
-      WireImpl.begin();
+      targetI2CInit(WireImpl, sda, scl, speed);
       return 1;
     }
 

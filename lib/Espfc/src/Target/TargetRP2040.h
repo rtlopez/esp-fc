@@ -42,8 +42,8 @@
 //#define ESPFC_SPI_CS_BARO 6
 
 #define ESPFC_I2C_0
-#define ESPFC_I2C_0_SDA 8
-#define ESPFC_I2C_0_SCL 9
+#define ESPFC_I2C_0_SDA 12 //8
+#define ESPFC_I2C_0_SCL 13 //9
 
 #define ESPFC_BUZZER
 #define ESPFC_BUZZER_PIN 4
@@ -74,6 +74,16 @@
   dev.begin();
 
 namespace Espfc {
+
+template<typename T>
+inline int targetI2CInit(T& dev, int sda, int scl, int speed)
+{
+  if(!dev.setSCL(scl)) return -1;
+  if(!dev.setSDA(sda)) return -2;
+  dev.setClock(speed);
+  dev.begin();
+  return 1;
+}
 
 inline uint32_t getBoardId0()
 {
