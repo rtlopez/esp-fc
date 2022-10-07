@@ -347,7 +347,7 @@ class Cli
 
       const char ** fusionModeChoices        = FusionConfig::getModeNames();
       static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
-      static const char* debugModeChoices[]  = {  PSTR("NONE"),   PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO_FILTERED"), PSTR("ACCELEROMETER"), PSTR("PIDLOOP"), PSTR("GYRO_SCALED"), PSTR("RC_INTERPOLATION"), 
+      static const char* debugModeChoices[]  = {  PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO_FILTERED"), PSTR("ACCELEROMETER"), PSTR("PIDLOOP"), PSTR("GYRO_SCALED"), PSTR("RC_INTERPOLATION"),
                                                   PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"), PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"), 
                                                   PSTR("FFT_TIME"), PSTR("FFT_FREQ"), PSTR("RX_FRSKY_SPI"), PSTR("RX_SFHSS_SPI"), PSTR("GYRO_RAW"), PSTR("DUAL_GYRO_RAW"), PSTR("DUAL_GYRO_DIFF"), 
                                                   PSTR("MAX7456_SIGNAL"), PSTR("MAX7456_SPICLOCK"), PSTR("SBUS"), PSTR("FPORT"), PSTR("RANGEFINDER"), PSTR("RANGEFINDER_QUALITY"), PSTR("LIDAR_TF"), 

@@ -22,7 +22,7 @@ class GyroSensor: public BaseSensor
       if(!_gyro) return 0;
 
       _gyro->setDLPFMode(_model.config.gyroDlpf);
-      _gyro->setRate(_model.state.gyroDivider - 1);
+      _gyro->setRate(_gyro->getRate());
 
       switch(_model.config.gyroFsr)
       {
@@ -36,7 +36,7 @@ class GyroSensor: public BaseSensor
       _model.state.gyroCalibrationState = CALIBRATION_START; // calibrate gyro on start
       _model.state.gyroBiasAlpha = 5.0f / _model.state.gyroTimer.rate;
 
-      _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_model.state.gyroDivider).log(_model.state.gyroTimer.rate).log(_model.state.gyroTimer.interval).logln(_model.state.gyroPresent);
+      _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
 
       return 1;
     }
@@ -59,7 +59,7 @@ class GyroSensor: public BaseSensor
 
         align(_model.state.gyroRaw, _model.config.gyroAlign);
 
-        _model.state.gyro = (VectorFloat)_model.state.gyroRaw  * _model.state.gyroScale;
+        _model.state.gyro = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
 
         calibrate();
 

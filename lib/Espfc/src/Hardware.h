@@ -89,9 +89,13 @@ class Hardware
         if(!detectedGyro && detectDevice(lsm6dso, i2cBus)) detectedGyro = &lsm6dso;
       }
 #endif
+      if(!detectedGyro) return;
+
+      detectedGyro->setDLPFMode(_model.config.gyroDlpf);
       _model.state.gyroDev = detectedGyro;
       _model.state.gyroPresent = (bool)detectedGyro;
       _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != GYRO_NONE;
+      _model.state.gyroClock = detectedGyro->getRate();
     }
 
     void detectMag()

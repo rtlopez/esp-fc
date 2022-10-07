@@ -48,8 +48,9 @@ class GyroMPU9250: public GyroMPU6050
       _bus->writeByte(_addr, MPU9250_USER_CTRL, 0);
       //delay(100);
 
+      // temporary force 1k sample rate for mag initiation, will be overwritten in GyroSensor
       setDLPFMode(GYRO_DLPF_188);
-      setRate(9); // 1000 / (9+1) = 100hz for mag, will be overwritten in GyroSensor
+      setRate(9); // 1000 / (9+1) = 100hz
       delay(100);
 
       // enable I2C master mode

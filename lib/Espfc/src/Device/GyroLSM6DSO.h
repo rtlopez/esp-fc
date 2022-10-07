@@ -87,7 +87,7 @@ class GyroLSM6DSO: public GyroDevice
       delay(1);
 
       // Gyro, 6664hz ODR, 2000dps scale
-      _bus->writeByte(_addr, LSM6DSO_REG_CTRL2_G, (LSM6DSO_VAL_CTRL2_G_ODR3332 << 4) | (LSM6DSO_VAL_CTRL2_G_2000DPS << 2));
+      _bus->writeByte(_addr, LSM6DSO_REG_CTRL2_G, (LSM6DSO_VAL_CTRL2_G_ODR6664 << 4) | (LSM6DSO_VAL_CTRL2_G_2000DPS << 2));
       delay(1);
 
       // latch LSB/MSB during reads; set interrupt pins active high; set interrupt pins push/pull; set 4-wire SPI; enable auto-increment burst reads
@@ -116,9 +116,6 @@ class GyroLSM6DSO: public GyroDevice
 
       _bus->readFast(_addr, LSM6DSO_REG_OUTX_L_G, 6, (uint8_t*)buffer);
 
-      //v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
-      //v.y = (((int16_t)buffer[2]) << 8) | buffer[3];
-      //v.z = (((int16_t)buffer[4]) << 8) | buffer[5];
       v.x = buffer[0];
       v.y = buffer[1];
       v.z = buffer[2];
@@ -132,9 +129,6 @@ class GyroLSM6DSO: public GyroDevice
 
       _bus->readFast(_addr, LSM6DSO_REG_OUTX_L_XL, 6, (uint8_t*)buffer);
 
-      //v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
-      //v.y = (((int16_t)buffer[2]) << 8) | buffer[3];
-      //v.z = (((int16_t)buffer[4]) << 8) | buffer[5];
       v.x = buffer[0];
       v.y = buffer[1];
       v.z = buffer[2];
@@ -146,7 +140,12 @@ class GyroLSM6DSO: public GyroDevice
     {
     }
 
-    void setRate(uint8_t rate) override
+    int getRate() const override
+    {
+      return 6664;
+    }
+
+    void setRate(int rate) override
     {
     }
 

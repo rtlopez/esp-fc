@@ -258,33 +258,11 @@ class Model
 
     void sanitize()
     {
-      int gyroSyncMax = ESPFC_GYRO_DENOM_MAX; // max 8kHz
-      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 2;
-      config.loopSync = std::max((int)config.loopSync, gyroSyncMax);
+      int loopSyncMax = ESPFC_GYRO_DENOM_MAX; // max 8kHz
+      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) loopSyncMax /= 2;
+      config.loopSync = std::max((int)config.loopSync, loopSyncMax);
 
-      // TODO: move logic to GyroDevice
-      if(state.gyroDev && state.gyroDev->getType() == GYRO_LSM6DSO) {
-        state.gyroClock = 3332;
-        state.gyroRate = state.gyroClock / config.loopSync;
-        state.gyroDivider = 0;
-      } else if(state.gyroDev) { // MPU's
-        switch(config.gyroDlpf)
-        {
-          case GYRO_DLPF_256:
-          case GYRO_DLPF_EX:
-            state.gyroClock = 8000;
-            state.gyroRate = 8000 / config.loopSync;
-            state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
-            break;
-          default:
-            config.loopSync = ((config.loopSync + 7) / 8) * 8; // multiply 8x and round (BF GUI uses this convention)
-            state.gyroClock = 1000;
-            state.gyroRate = 8000 / config.loopSync;
-            state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
-            break;
-        }
-      }
-
+      state.gyroRate = state.gyroClock / config.loopSync;
       state.loopRate = state.gyroClock / config.loopSync;
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
@@ -332,7 +310,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 499) / 500)); // align loop rate to lower than 500Hz
-          state.loopRate = state.gyroRate / config.loopSync;
+          state.loopRate = state.gyroClock / config.loopSync;
           if(state.loopRate > 480 && config.output.maxThrottle > 1940)
           {
             config.output.maxThrottle = 1940;
@@ -342,7 +320,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
-          state.loopRate = state.gyroRate / config.loopSync;
+          state.loopRate = state.gyroClock / config.loopSync;
         }
       }
 

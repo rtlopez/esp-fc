@@ -230,7 +230,6 @@ struct ModelState
 
   int32_t gyroClock;
   int32_t gyroRate;
-  int32_t gyroDivider;
 
   Timer gyroTimer;
   Timer dynamicFilterTimer;
