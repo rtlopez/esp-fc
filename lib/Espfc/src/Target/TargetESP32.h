@@ -86,9 +86,6 @@
 
 #define SERIAL_TX_FIFO_SIZE 0x7f
 
-#define ESPFC_SPI_INIT(dev, sck, mosi, miso, ss) \
-  dev.begin(sck, mosi, miso, ss); \
-
 #if !defined(ESPFC_REVISION) // development build
   #undef ESPFC_OUTPUT_PROTOCOL
   #define ESPFC_OUTPUT_PROTOCOL ESC_PROTOCOL_DSHOT300
@@ -107,7 +104,7 @@ namespace Espfc {
 template<typename T>
 inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
 {
-  uint32_t sc = 0;
+  uint32_t sc = 0x8000000;
   switch(conf.data_bits)
   {
     case 8: sc |= SERIAL_UART_NB_BIT_8; break;
@@ -129,14 +126,19 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
     case SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
     default: break;
   }
-  sc |= 0x8000000;
   dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
-
   return 1;
 }
 
 template<typename T>
-inline int targetI2CInit(T& dev, int sda, int scl, int speed)
+inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
+{
+  dev.begin(sck, mosi, miso, ss);
+  return 1;
+}
+
+template<typename T>
+inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, int speed)
 {
   dev.setClock(speed);
   dev.begin(sda, scl);

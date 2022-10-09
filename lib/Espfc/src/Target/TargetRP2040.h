@@ -64,12 +64,6 @@
 #define ESPFC_GUARD 0
 #define ESPFC_GYRO_DENOM_MAX 1
 
-#define ESPFC_SPI_INIT(dev, sck, mosi, miso, ss) \
-  /*dev.setSCK(sck);*/ \
-  /*dev.setRX(miso);*/ \
-  /*dev.setTX(mosi);*/ \
-  dev.begin();
-
 #include "Device/SerialDevice.h"
 
 namespace Espfc {
@@ -102,7 +96,6 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
 
   dev.setPinout(conf.tx_pin, conf.rx_pin);
   dev.begin(conf.baud, sc);
-
   return 1;
 }
 
@@ -115,7 +108,17 @@ inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
 }
 
 template<typename T>
-inline int targetI2CInit(T& dev, int sda, int scl, int speed)
+inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
+{
+  dev.setSCK(sck);
+  dev.setRX(miso);
+  dev.setTX(mosi);
+  dev.begin();
+  return 1;
+}
+
+template<typename T>
+inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, int speed)
 {
   if(!dev.setSCL(scl)) return -1;
   if(!dev.setSDA(sda)) return -2;

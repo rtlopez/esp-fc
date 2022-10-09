@@ -23,7 +23,7 @@ class BusSPI: public BusDevice
     {
       if(sck == -1 || miso == -1 || mosi == -1) return 0;
 
-      ESPFC_SPI_INIT(SPI, sck, miso, mosi, ss)
+      targetSPIInit(SPI, sck, miso, mosi, ss);
 
       return 1;
     }

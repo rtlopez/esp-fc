@@ -59,13 +59,9 @@
 
 #define ESPFC_DEBUG_PIN D0
 
-#define SERIAL_RXD_INV (1  <<  UCRXI) // bit 19 - invert rx
-#define SERIAL_TXD_INV (1  <<  UCTXI) // bit 22 - invert tx
+#define SERIAL_RXD_INV (1 << UCRXI) // bit 19 - invert rx
+#define SERIAL_TXD_INV (1 << UCTXI) // bit 22 - invert tx
 #define SERIAL_TX_FIFO_SIZE 0x80
-
-#define ESPFC_SPI_INIT(dev, sck, mosi, miso, ss) \
-  dev.pins(sck, mosi, miso, ss); \
-  dev.begin(); \
 
 #if !defined(ESPFC_REVISION) // development build
   #undef ESPFC_OUTPUT_PROTOCOL
@@ -114,7 +110,15 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
 }
 
 template<typename T>
-inline int targetI2CInit(T& dev, int sda, int scl, int speed)
+inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
+{
+  dev.pins(sck, mosi, miso, ss);
+  dev.begin();
+  return 1;
+}
+
+template<typename T>
+inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, int8_t speed)
 {
   dev.setClock(speed);
   dev.begin(sda, scl);
