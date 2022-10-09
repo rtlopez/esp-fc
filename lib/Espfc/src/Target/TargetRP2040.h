@@ -11,6 +11,7 @@
 
 #define ESPFC_SERIAL_0
 #define ESPFC_SERIAL_0_DEV Serial1
+#define ESPFC_SERIAL_0_DEV_T SerialUART
 #define ESPFC_SERIAL_0_TX 0
 #define ESPFC_SERIAL_0_RX 1
 #define ESPFC_SERIAL_0_FN (SERIAL_FUNCTION_MSP)
@@ -19,6 +20,7 @@
 
 #define ESPFC_SERIAL_1
 #define ESPFC_SERIAL_1_DEV Serial2
+#define ESPFC_SERIAL_1_DEV_T SerialUART
 #define ESPFC_SERIAL_1_TX 20
 #define ESPFC_SERIAL_1_RX 21
 #define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_RX_SERIAL)
@@ -27,6 +29,7 @@
 
 #define ESPFC_SERIAL_USB
 #define ESPFC_SERIAL_USB_DEV Serial
+#define ESPFC_SERIAL_USB_DEV_T SerialUSB
 #define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
 
 #define ESPFC_SERIAL_REMAP_PINS
@@ -61,19 +64,55 @@
 #define ESPFC_GUARD 0
 #define ESPFC_GYRO_DENOM_MAX 1
 
-#define ESPFC_SERIAL_INIT(dev, sc, conf) \
-  /*dev.setPinout(conf.tx_pin, conf.rx_pin);*/ \
-  dev.begin(conf.baud); \
-  /*while(!dev) delay(10);*/ \
-  //TODO: inverted
-
 #define ESPFC_SPI_INIT(dev, sck, mosi, miso, ss) \
   /*dev.setSCK(sck);*/ \
   /*dev.setRX(miso);*/ \
   /*dev.setTX(mosi);*/ \
   dev.begin();
 
+#include "Device/SerialDevice.h"
+
 namespace Espfc {
+
+template<typename T>
+inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
+{
+  uint16_t sc = 0;
+  switch(conf.data_bits)
+  {
+    case 8:  sc |= SERIAL_DATA_8; break;
+    case 7:  sc |= SERIAL_DATA_7; break;
+    case 6:  sc |= SERIAL_DATA_6; break;
+    case 5:  sc |= SERIAL_DATA_5; break;
+    default: sc |= SERIAL_DATA_8; break;
+  }
+  switch(conf.parity)
+  {
+    case SERIAL_PARITY_EVEN: sc |= SERIAL_PARITY_EVEN; break;
+    case SERIAL_PARITY_ODD:  sc |= SERIAL_PARITY_ODD;  break;
+    default: break;
+  }
+  switch(conf.stop_bits)
+  {
+    case SERIAL_STOP_BITS_2:  sc |= SERIAL_STOP_BIT_2;  break;
+    case SERIAL_STOP_BITS_15: sc |= SERIAL_STOP_BIT_1_5; break;
+    case SERIAL_STOP_BITS_1:  sc |= SERIAL_STOP_BIT_1;  break;
+    default: break;
+  }
+
+  dev.setPinout(conf.tx_pin, conf.rx_pin);
+  dev.begin(conf.baud, sc);
+
+  return 1;
+}
+
+template<>
+inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
+{
+  dev.begin(conf.baud);
+  while(!dev) delay(10);
+  return 1;
+}
 
 template<typename T>
 inline int targetI2CInit(T& dev, int sda, int scl, int speed)

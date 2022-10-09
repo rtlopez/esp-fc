@@ -34,30 +34,7 @@ class SerialDeviceAdapter: public SerialDevice
 template<typename T>
 void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
 {
-  uint32_t sc = 0;
-  switch(conf.data_bits)
-  {
-    case 8: sc |= SERIAL_UART_NB_BIT_8; break;
-    case 7: sc |= SERIAL_UART_NB_BIT_7; break;
-    case 6: sc |= SERIAL_UART_NB_BIT_6; break;
-    case 5: sc |= SERIAL_UART_NB_BIT_5; break;
-    default: sc |= SERIAL_UART_NB_BIT_8; break;
-  }
-  switch(conf.parity)
-  {
-    case SERIAL_PARITY_EVEN: sc |= SERIAL_UART_PARITY_EVEN; break;
-    case SERIAL_PARITY_ODD:  sc |= SERIAL_UART_PARITY_ODD;  break;
-    default: break;
-  }
-  switch(conf.stop_bits)
-  {
-    case SERIAL_STOP_BITS_2:  sc |= SERIAL_UART_NB_STOP_BIT_2;  break;
-    case SERIAL_STOP_BITS_15: sc |= SERIAL_UART_NB_STOP_BIT_15; break;
-    case SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
-    default: break;
-  }
-
-  ESPFC_SERIAL_INIT(_dev, sc, conf)
+  targetSerialInit(_dev, conf);
 }
 
 // WiFiClient specializations

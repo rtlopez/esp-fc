@@ -13,19 +13,19 @@
 namespace {
 
 #ifdef ESPFC_SERIAL_0
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart0(ESPFC_SERIAL_0_DEV);
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_0_DEV_T> _uart0(ESPFC_SERIAL_0_DEV);
 #endif
 
 #ifdef ESPFC_SERIAL_1
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart1(ESPFC_SERIAL_1_DEV);
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_1_DEV_T> _uart1(ESPFC_SERIAL_1_DEV);
 #endif
 
 #ifdef ESPFC_SERIAL_2
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _uart2(ESPFC_SERIAL_2_DEV);
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_2_DEV_T> _uart2(ESPFC_SERIAL_2_DEV);
 #endif
 
 #ifdef ESPFC_SERIAL_USB
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> _usb(ESPFC_SERIAL_USB_DEV);
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_USB_DEV_T> _usb(ESPFC_SERIAL_USB_DEV);
 #endif
 
 #ifdef ESPFC_SERIAL_SOFT_0_RX

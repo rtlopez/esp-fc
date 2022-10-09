@@ -17,6 +17,7 @@
 
 #define ESPFC_SERIAL_0
 #define ESPFC_SERIAL_0_DEV Serial
+#define ESPFC_SERIAL_0_DEV_T HardwareSerial
 #define ESPFC_SERIAL_0_TX 1
 #define ESPFC_SERIAL_0_RX 3
 #define ESPFC_SERIAL_0_FN (SERIAL_FUNCTION_MSP)
@@ -25,6 +26,7 @@
 
 #define ESPFC_SERIAL_1
 #define ESPFC_SERIAL_1_DEV Serial1
+#define ESPFC_SERIAL_1_DEV_T HardwareSerial
 #define ESPFC_SERIAL_1_TX 33
 #define ESPFC_SERIAL_1_RX 32
 #define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_RX_SERIAL)
@@ -33,6 +35,7 @@
 
 #define ESPFC_SERIAL_2
 #define ESPFC_SERIAL_2_DEV Serial2
+#define ESPFC_SERIAL_2_DEV_T HardwareSerial
 #define ESPFC_SERIAL_2_TX 17
 #define ESPFC_SERIAL_2_RX 16
 #define ESPFC_SERIAL_2_FN (SERIAL_FUNCTION_MSP)
@@ -83,10 +86,6 @@
 
 #define SERIAL_TX_FIFO_SIZE 0x7f
 
-#define ESPFC_SERIAL_INIT(dev, sc, conf) \
-  sc |= 0x8000000;\
-  dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);\
-
 #define ESPFC_SPI_INIT(dev, sck, mosi, miso, ss) \
   dev.begin(sck, mosi, miso, ss); \
 
@@ -101,7 +100,40 @@
   #define ESPFC_SERIAL_2_BBAUD (SERIAL_SPEED_250000)
 #endif
 
+#include "Device/SerialDevice.h"
+
 namespace Espfc {
+
+template<typename T>
+inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
+{
+  uint32_t sc = 0;
+  switch(conf.data_bits)
+  {
+    case 8: sc |= SERIAL_UART_NB_BIT_8; break;
+    case 7: sc |= SERIAL_UART_NB_BIT_7; break;
+    case 6: sc |= SERIAL_UART_NB_BIT_6; break;
+    case 5: sc |= SERIAL_UART_NB_BIT_5; break;
+    default: sc |= SERIAL_UART_NB_BIT_8; break;
+  }
+  switch(conf.parity)
+  {
+    case SERIAL_PARITY_EVEN: sc |= SERIAL_UART_PARITY_EVEN; break;
+    case SERIAL_PARITY_ODD:  sc |= SERIAL_UART_PARITY_ODD;  break;
+    default: break;
+  }
+  switch(conf.stop_bits)
+  {
+    case SERIAL_STOP_BITS_2:  sc |= SERIAL_UART_NB_STOP_BIT_2;  break;
+    case SERIAL_STOP_BITS_15: sc |= SERIAL_UART_NB_STOP_BIT_15; break;
+    case SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
+    default: break;
+  }
+  sc |= 0x8000000;
+  dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
+
+  return 1;
+}
 
 template<typename T>
 inline int targetI2CInit(T& dev, int sda, int scl, int speed)
