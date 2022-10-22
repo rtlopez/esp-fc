@@ -24,7 +24,7 @@ enum EscProtocol {
 class EscDriverBase
 {
   public:
-#if defined(UNIT_TEST) || defined(ARCH_RP2040) // TODO: RP2040
+#if defined(UNIT_TEST)
     int begin(EscProtocol protocol, bool async, int16_t rate, int timer = 0) { return 1; }
     void end() {}
     int attach(size_t channel, int pin, int pulse) { return 1; }
@@ -73,10 +73,11 @@ class EscDriverBase
 #elif defined(ARCH_RP2040)
 
   #define ESC_CHANNEL_COUNT 4
-  #define EscDriver EscDriverBase
+  #include "EscDriverRP2040.h"
+  #define EscDriver EscDriverRP2040
 
-  #define ESC_DRIVER_MOTOR_TIMER 0
-  #define ESC_DRIVER_SERVO_TIMER 0
+  #define ESC_DRIVER_MOTOR_TIMER ESC_DRIVER_TIMER0
+  #define ESC_DRIVER_SERVO_TIMER ESC_DRIVER_TIMER1
 
 #elif defined(UNIT_TEST)
 

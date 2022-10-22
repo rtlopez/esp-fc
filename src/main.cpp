@@ -48,12 +48,12 @@ void otherTask(void *pvParameters)
 void setup()
 {
   Serial.begin(115200);
-  const uint32_t timeout = millis() + 2000;
+  const uint32_t timeout = millis() + 500;
   while (!Serial) {
     if(millis() > timeout) break;
   };
   Espfc::initDebugStream(&Serial);
-  delay(1000);
+  delay(500);
 
   espfc.load();
 #ifdef ESPFC_MULTI_CORE
