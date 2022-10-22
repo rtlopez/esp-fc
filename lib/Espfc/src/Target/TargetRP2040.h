@@ -33,7 +33,7 @@
 #define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
 
 #define ESPFC_SERIAL_REMAP_PINS
-#define SERIAL_TX_FIFO_SIZE 32
+#define SERIAL_TX_FIFO_SIZE 64
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_USB
 
 //#define ESPFC_SPI_0
@@ -65,6 +65,7 @@
 #define ESPFC_GYRO_DENOM_MAX 1
 
 #include "Device/SerialDevice.h"
+#include <hardware/gpio.h>
 
 namespace Espfc {
 
@@ -82,20 +83,27 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
   }
   switch(conf.parity)
   {
-    case SERIAL_PARITY_EVEN: sc |= SERIAL_PARITY_EVEN; break;
-    case SERIAL_PARITY_ODD:  sc |= SERIAL_PARITY_ODD;  break;
-    default: break;
+    case SDC_SERIAL_PARITY_EVEN: sc |= SERIAL_PARITY_EVEN; break;
+    case SDC_SERIAL_PARITY_ODD:  sc |= SERIAL_PARITY_ODD;  break;
+    default: sc |= SERIAL_PARITY_NONE;
   }
   switch(conf.stop_bits)
   {
-    case SERIAL_STOP_BITS_2:  sc |= SERIAL_STOP_BIT_2;  break;
-    case SERIAL_STOP_BITS_15: sc |= SERIAL_STOP_BIT_1_5; break;
-    case SERIAL_STOP_BITS_1:  sc |= SERIAL_STOP_BIT_1;  break;
+    case SDC_SERIAL_STOP_BITS_2:  sc |= SERIAL_STOP_BIT_2;  break;
+    case SDC_SERIAL_STOP_BITS_15: sc |= SERIAL_STOP_BIT_1_5; break;
+    case SDC_SERIAL_STOP_BITS_1:  sc |= SERIAL_STOP_BIT_1;  break;
     default: break;
   }
 
+  dev.setFIFOSize(SERIAL_TX_FIFO_SIZE);
   dev.setPinout(conf.tx_pin, conf.rx_pin);
   dev.begin(conf.baud, sc);
+
+  if(conf.inverted) {
+    gpio_set_inover(conf.rx_pin, GPIO_OVERRIDE_INVERT);
+    gpio_set_outover(conf.tx_pin, GPIO_OVERRIDE_INVERT);
+  }
+
   return 1;
 }
 

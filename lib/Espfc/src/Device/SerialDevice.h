@@ -109,28 +109,24 @@ enum SerialRXProvider {
   SERIALRX_FPORT = 12,
 };
 
-#undef SERIAL_PARITY_NONE
-#undef SERIAL_PARITY_EVEN
-#undef SERIAL_PARITY_ODD
-
 enum SerialDeviceConfigParity {
-  SERIAL_PARITY_NONE,
-  SERIAL_PARITY_EVEN,
-  SERIAL_PARITY_ODD
+  SDC_SERIAL_PARITY_NONE,
+  SDC_SERIAL_PARITY_EVEN,
+  SDC_SERIAL_PARITY_ODD
 };
 
 enum SerialDeviceConfigStopBits {
-  SERIAL_STOP_BITS_0,
-  SERIAL_STOP_BITS_1,
-  SERIAL_STOP_BITS_15,
-  SERIAL_STOP_BITS_2
+  SDC_SERIAL_STOP_BITS_0,
+  SDC_SERIAL_STOP_BITS_1,
+  SDC_SERIAL_STOP_BITS_15,
+  SDC_SERIAL_STOP_BITS_2
 };
 
 class SerialDeviceConfig
 {
   public:
     SerialDeviceConfig():
-      baud(115200), rx_pin(-1), tx_pin(-1), inverted(false), data_bits(8), parity(SERIAL_PARITY_NONE), stop_bits(1)  {}
+      baud(SERIAL_SPEED_115200), rx_pin(-1), tx_pin(-1), inverted(false), data_bits(8), parity(SDC_SERIAL_PARITY_NONE), stop_bits(SDC_SERIAL_STOP_BITS_1)  {}
     uint32_t baud;
     int8_t rx_pin;
     int8_t tx_pin;

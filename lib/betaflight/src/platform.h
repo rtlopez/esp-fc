@@ -187,14 +187,14 @@ typedef enum {
 } portMode_e;
 
 typedef enum {
-    SERIAL_NOT_INVERTED  = 0 << 0,
-    SERIAL_INVERTED      = 1 << 0,
-    SERIAL_STOPBITS_1    = 0 << 1,
-    SERIAL_STOPBITS_2    = 1 << 1,
-    SERIAL_PARITY_NO     = 0 << 2,
-    SERIAL_PARITY_EVEN   = 1 << 2,
-    SERIAL_UNIDIR        = 0 << 3,
-    SERIAL_BIDIR         = 1 << 3,
+    BF_SERIAL_NOT_INVERTED  = 0 << 0,
+    BF_SERIAL_INVERTED      = 1 << 0,
+    BF_SERIAL_STOPBITS_1    = 0 << 1,
+    BF_SERIAL_STOPBITS_2    = 1 << 1,
+    BF_SERIAL_PARITY_NO     = 0 << 2,
+    BF_SERIAL_PARITY_EVEN   = 1 << 2,
+    BF_SERIAL_UNIDIR        = 0 << 3,
+    BF_SERIAL_BIDIR         = 1 << 3,
 
     /*
      * Note on SERIAL_BIDIR_PP
@@ -203,8 +203,8 @@ typedef enum {
      * To ensure the first start bit to be sent, prepend a zero byte (0x00)
      * to actual data bytes.
      */
-    SERIAL_BIDIR_OD      = 0 << 4,
-    SERIAL_BIDIR_PP      = 1 << 4
+    BF_SERIAL_BIDIR_OD      = 0 << 4,
+    BF_SERIAL_BIDIR_PP      = 1 << 4
 } portOptions_e;
 
 typedef void (*serialReceiveCallbackPtr)(uint16_t data);   // used by serial drivers to return frames to app

@@ -76,9 +76,9 @@ class SerialManager
           switch(_model.config.input.serialRxProvider)
           {
             case SERIALRX_SBUS:
-              sdc.baud = 100000;
-              sdc.parity = SERIAL_PARITY_EVEN;
-              sdc.stop_bits = SERIAL_STOP_BITS_2;
+              sdc.baud = 100000ul;
+              sdc.parity = SDC_SERIAL_PARITY_EVEN;
+              sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
               sdc.inverted = true;
               break;
             default:
@@ -89,7 +89,7 @@ class SerialManager
         {
           sdc.baud = spc.blackboxBaud;
           if(sdc.baud == 230400 || sdc.baud == 460800) {
-            sdc.stop_bits = SERIAL_STOP_BITS_2;
+            sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
           }
         }
 
