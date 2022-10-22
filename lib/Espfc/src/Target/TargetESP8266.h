@@ -84,23 +84,23 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
   uint32_t sc = 0;
   switch(conf.data_bits)
   {
-    case 8: sc |= SERIAL_UART_NB_BIT_8; break;
-    case 7: sc |= SERIAL_UART_NB_BIT_7; break;
-    case 6: sc |= SERIAL_UART_NB_BIT_6; break;
-    case 5: sc |= SERIAL_UART_NB_BIT_5; break;
-    default: sc |= SERIAL_UART_NB_BIT_8; break;
+    case 8: sc |= UART_NB_BIT_8; break;
+    case 7: sc |= UART_NB_BIT_7; break;
+    case 6: sc |= UART_NB_BIT_6; break;
+    case 5: sc |= UART_NB_BIT_5; break;
+    default: sc |= UART_NB_BIT_8; break;
   }
   switch(conf.parity)
   {
-    case SERIAL_PARITY_EVEN: sc |= SERIAL_UART_PARITY_EVEN; break;
-    case SERIAL_PARITY_ODD:  sc |= SERIAL_UART_PARITY_ODD;  break;
-    default: break;
+    case SDC_SERIAL_PARITY_EVEN: sc |= UART_PARITY_EVEN; break;
+    case SDC_SERIAL_PARITY_ODD:  sc |= UART_PARITY_ODD;  break;
+    default: sc |= UART_PARITY_NONE;  break;
   }
   switch(conf.stop_bits)
   {
-    case SERIAL_STOP_BITS_2:  sc |= SERIAL_UART_NB_STOP_BIT_2;  break;
-    case SERIAL_STOP_BITS_15: sc |= SERIAL_UART_NB_STOP_BIT_15; break;
-    case SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
+    case SDC_SERIAL_STOP_BITS_2:  sc |= UART_NB_STOP_BIT_1;  break;
+    case SDC_SERIAL_STOP_BITS_15: sc |= UART_NB_STOP_BIT_15; break;
+    case SDC_SERIAL_STOP_BITS_1:  sc |= UART_NB_STOP_BIT_2;  break;
     default: break;
   }
   if(conf.inverted) sc |= (SERIAL_RXD_INV | SERIAL_TXD_INV);

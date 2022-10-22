@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        target: ['d1_mini', 'lolin32']
+        target: ['d1_mini', 'lolin32', 'pico']
     steps:
       - uses: actions/checkout@v1
 

@@ -99,6 +99,20 @@
 
 #include "Device/SerialDevice.h"
 
+#define SERIAL_UART_PARITY_NONE      0B00000000
+#define SERIAL_UART_PARITY_EVEN      0B00000010
+#define SERIAL_UART_PARITY_ODD       0B00000011
+
+#define SERIAL_UART_NB_BIT_5         0B00000000
+#define SERIAL_UART_NB_BIT_6         0B00000100
+#define SERIAL_UART_NB_BIT_7         0B00001000
+#define SERIAL_UART_NB_BIT_8         0B00001100
+
+#define SERIAL_UART_NB_STOP_BIT_0    0B00000000
+#define SERIAL_UART_NB_STOP_BIT_1    0B00010000
+#define SERIAL_UART_NB_STOP_BIT_15   0B00100000
+#define SERIAL_UART_NB_STOP_BIT_2    0B00110000
+
 namespace Espfc {
 
 template<typename T>
@@ -115,15 +129,15 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
   }
   switch(conf.parity)
   {
-    case SERIAL_PARITY_EVEN: sc |= SERIAL_UART_PARITY_EVEN; break;
-    case SERIAL_PARITY_ODD:  sc |= SERIAL_UART_PARITY_ODD;  break;
-    default: break;
+    case SDC_SERIAL_PARITY_EVEN: sc |= SERIAL_UART_PARITY_EVEN; break;
+    case SDC_SERIAL_PARITY_ODD:  sc |= SERIAL_UART_PARITY_ODD;  break;
+    default: sc |= SERIAL_UART_PARITY_NONE; break;
   }
   switch(conf.stop_bits)
   {
-    case SERIAL_STOP_BITS_2:  sc |= SERIAL_UART_NB_STOP_BIT_2;  break;
-    case SERIAL_STOP_BITS_15: sc |= SERIAL_UART_NB_STOP_BIT_15; break;
-    case SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
+    case SDC_SERIAL_STOP_BITS_2:  sc |= SERIAL_UART_NB_STOP_BIT_2;  break;
+    case SDC_SERIAL_STOP_BITS_15: sc |= SERIAL_UART_NB_STOP_BIT_15; break;
+    case SDC_SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
     default: break;
   }
   dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
