@@ -7,6 +7,7 @@
 int EscDriverRP2040::attach(size_t channel, int pin, int pulse)
 {
   if(channel >= ESC_CHANNEL_COUNT) return 0;
+  if(pin > 28) return 0;
   _slots[channel].pin = pin;
   _slots[channel].pulse = usToTicks(pulse);
   pinMode(pin, OUTPUT);
@@ -145,23 +146,22 @@ static inline void dshotDelay(int delay)
   while(delay--) __asm__ __volatile__ ("nop");
 }
 
-void EscDriverRP2040::dshotWrite()
+uint32_t EscDriverRP2040::dshotWrite()
 {
+  mask_t pinMask[DSHOT_BIT_COUNT];
+  mask_t clrMask[DSHOT_BIT_COUNT];
+
   // zero mask arrays
-  mask_t * sm = dshotSetMask;
-  mask_t * cm = dshotClrMask;
   for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
   {
-    *sm = 0; sm++;
-    *cm = 0; cm++;
-    *cm = 0; cm++;
+    pinMask[i] = 0;
+    clrMask[i] = 0;
   }
 
-  // compute bits
+  // compute bit masks
   for(size_t c = 0; c < ESC_CHANNEL_COUNT; c++)
   {
-    if(_slots[c].pin > 28 || _slots[c].pin < 0) continue;
-    mask_t mask = (1U << _slots[c].pin);
+    if(!_slots[c].active()) continue;
     int pulse = constrain(_slots[c].pulse, 0, 2000);
     int value = 0; // disarmed
     // scale to dshot commands (0 or 48-2047)
@@ -170,23 +170,33 @@ void EscDriverRP2040::dshotWrite()
       value =  PWM_TO_DSHOT(pulse);
     }
     uint16_t frame = dshotEncode(value);
+    mask_t mask = (1U << _slots[c].pin);
     for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
     {
       int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
-      dshotSetMask[i] |= mask;
-      dshotClrMask[(i << 1) + val] |= mask;
+      pinMask[i] |= mask; // set leading bit and clear trailing bit on pin
+      clrMask[i] |= (val ? 0ul : mask); // middle data bit on pin
     }
   }
 
+  // worm-up io registers to avoid timing jitter
+  sio_hw->gpio_set = 0ul;
+  sio_hw->gpio_clr = 0ul;
+
+  mask_t * pm = pinMask;
+  mask_t * cm = clrMask;
+
   // write output
-  sm = dshotSetMask;
-  cm = dshotClrMask;
   for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
   {
-    gpio_set_mask(*sm); sm++; dshotDelay(_dh);
-    gpio_clr_mask(*cm); cm++; dshotDelay(_dh);
-    gpio_clr_mask(*cm); cm++; dshotDelay(_dl);
+    gpio_set_mask(*pm); dshotDelay(_dh);
+    gpio_clr_mask(*cm); dshotDelay(_dh);
+    gpio_clr_mask(*pm); dshotDelay(_dl);
+    pm++;
+    cm++;
   }
+
+  return 0;
 }
 
 #endif // ARCH_RP2040

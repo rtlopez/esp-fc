@@ -5,16 +5,16 @@
 
 #include "EscDriver.h"
 
-// TODO: https://cocode.se/linux/raspberry/pwm.html
+// TODO: 
+// https://cocode.se/linux/raspberry/pwm.html
+// https://forums.raspberrypi.com/viewtopic.php?t=305969 (irq)
+// https://github.com/raspberrypi/pico-examples/blob/master/pwm/led_fade/pwm_led_fade.c (irq)
 
 enum EscDriverTimer
 {
   ESC_DRIVER_TIMER0,
   ESC_DRIVER_TIMER1
 };
-
-#define DELTA_TICKS_MAX ((F_CPU / 1000000L) * 50000L)
-#define DELTA_TICKS_MIN 5
 
 class EscDriverRP2040: public EscDriverBase
 {
@@ -39,12 +39,11 @@ class EscDriverRP2040: public EscDriverBase
     int attach(size_t channel, int pin, int pulse) IRAM_ATTR;
     int write(size_t channel, int pulse) IRAM_ATTR;
     void apply() IRAM_ATTR;
-    static void handle(void * p, void * x) IRAM_ATTR;
 
   private:
     uint32_t usToTicks(uint32_t us) IRAM_ATTR;
     uint32_t usToTicksReal(uint32_t us) IRAM_ATTR;
-    void dshotWrite() IRAM_ATTR;
+    uint32_t dshotWrite() IRAM_ATTR;
 
     EscProtocol _protocol;
     bool _async;
@@ -57,8 +56,6 @@ class EscDriverRP2040: public EscDriverBase
 
     int _dh;
     int _dl;
-    mask_t dshotSetMask[DSHOT_BIT_COUNT];
-    mask_t dshotClrMask[DSHOT_BIT_COUNT * 2];
 };
 
 #endif // ARCH_RP2040
