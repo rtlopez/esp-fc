@@ -58,7 +58,7 @@ class Espfc
     {
       if(_model.state.gyroTimer.check())
       {
-        _sensor.update()
+        _sensor.update();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
           _input.update();
