@@ -27,6 +27,7 @@ class SerialDeviceAdapter: public SerialDevice
     virtual bool isSoft() const { return false; };
     virtual int availableForWrite() { return _dev.availableForWrite(); }
     virtual bool isTxFifoEmpty() { return _dev.availableForWrite() >= SERIAL_TX_FIFO_SIZE; }
+    virtual operator bool() const { return (bool)_dev; }
   private:
     T& _dev;
 };

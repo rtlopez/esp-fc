@@ -9,6 +9,7 @@
 #include "Cli.h"
 #include "Wireless.h"
 #include "Telemetry.h"
+#include "Debug.h"
 
 namespace {
 
@@ -48,28 +49,48 @@ class SerialManager
       _wireless.begin();
 #endif
 
-      for(int i = SERIAL_UART_START; i < SERIAL_UART_COUNT; i++)
+      for(int i = 0; i < SERIAL_UART_COUNT; i++)
       {
         Device::SerialDevice * port = getSerialPortById((SerialPort)i);
-        if(!port) continue;
+        if(!port)
+        {
+          //D("uart-no-port", i, (bool)port);
+          continue;
+        }
 
         const SerialPortConfig& spc = _model.config.serial[i];
-        if(!spc.functionMask) continue;
+        if(!spc.functionMask)
+        {
+          //D("uart-no-func", i, spc.id, spc.functionMask, spc.baud);
+          continue;
+        }
 
         SerialDeviceConfig sdc;
+        sdc.baud = spc.baud;
+
+#ifdef ESPFC_SERIAL_USB
+        const bool hasUsbPort = true;
+        const bool isUsbPort = i == SERIAL_USB;
+#else
+        const bool hasUsbPort = false;
+        const bool isUsbPort = false;
+#endif
 
 #ifdef ESPFC_SERIAL_REMAP_PINS
-#ifdef ESPFC_SERIAL_USB
-        if(i != SERIAL_USB) {
-#endif
-          sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
-          sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
-          if(sdc.tx_pin == -1 && sdc.rx_pin == -1) continue;
-#ifdef ESPFC_SERIAL_USB
+        if(!isUsbPort)
+        {
+          const size_t pin_idx = 2 * (hasUsbPort ? i - 1 : i);
+          sdc.tx_pin = _model.config.pin[pin_idx + PIN_SERIAL_0_TX];
+          sdc.rx_pin = _model.config.pin[pin_idx + PIN_SERIAL_0_RX];
+          if(sdc.tx_pin == -1 && sdc.rx_pin == -1)
+          {
+            //D("uart-no-pins", i, spc.id, spc.functionMask, spc.baud);
+            continue;
+          }
         }
+#else
+      (void)(isUsbPort && hasUsbPort);
 #endif
-#endif
-        sdc.baud = spc.baud;
 
         if(spc.functionMask & SERIAL_FUNCTION_RX_SERIAL)
         {
@@ -88,23 +109,32 @@ class SerialManager
         else if(spc.functionMask & SERIAL_FUNCTION_BLACKBOX)
         {
           sdc.baud = spc.blackboxBaud;
-          if(sdc.baud == 230400 || sdc.baud == 460800) {
+          if(sdc.baud == 230400 || sdc.baud == 460800)
+          {
             sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
           }
         }
 
-        if(!sdc.baud) continue;
+        if(!sdc.baud)
+        {
+          //D("uart-no-baud", i, spc.id, spc.functionMask, spc.baud);
+          continue;
+        }
 
+        //D("uart-flash", i, spc.id, spc.functionMask, spc.baud);
         port->flush();
         delay(10);
+
+        //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
         port->begin(sdc);
         _model.state.serial[i].stream = port;
+        delay(10);
 
-        //if(i == ESPFC_SERIAL_DEBUG_PORT)
-        //{
-        //  LOG_SERIAL_INIT(port)
-          //port->setDebugOutput(true);
-        //}
+        if(i == ESPFC_SERIAL_DEBUG_PORT)
+        {
+          initDebugStream(port);
+        }
+
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
       }
       return 1;

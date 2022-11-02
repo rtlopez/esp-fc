@@ -267,7 +267,7 @@ enum PinFunction {
   PIN_SERIAL_1_TX,
   PIN_SERIAL_1_RX,
 #endif
-#ifdef ESPFC_SERIAL_1
+#ifdef ESPFC_SERIAL_2
   PIN_SERIAL_2_TX,
   PIN_SERIAL_2_RX,
 #endif

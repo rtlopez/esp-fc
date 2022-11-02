@@ -23,18 +23,17 @@ enum SerialSpeed {
 };
 
 enum SerialPort {
-  SERIAL_UART_START,
+#ifdef ESPFC_SERIAL_USB
+  SERIAL_USB,
+#endif
 #ifdef ESPFC_SERIAL_0
-  SERIAL_UART_0 = SERIAL_UART_START,
+  SERIAL_UART_0,
 #endif
 #ifdef ESPFC_SERIAL_1
   SERIAL_UART_1,
 #endif
 #ifdef ESPFC_SERIAL_2
   SERIAL_UART_2,
-#endif
-#ifdef ESPFC_SERIAL_USB
-  SERIAL_USB,
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0
   SERIAL_SOFT_0,
@@ -136,6 +135,7 @@ class SerialDevice: public Stream
     virtual int availableForWrite() = 0;
     virtual bool isTxFifoEmpty() = 0;
     virtual bool isSoft() const = 0;
+    virtual operator bool() const = 0;
     using Print::write;
 };
 
