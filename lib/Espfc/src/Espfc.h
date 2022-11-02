@@ -41,7 +41,7 @@ class Espfc
       _actuator.begin();
       _controller.begin();
       _blackbox.begin();
-      //_model.state.buzzer.push(BEEPER_SYSTEM_INIT);
+      _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
 
       return 1;
     }
@@ -50,14 +50,15 @@ class Espfc
     {
       _serial.begin();
       _model.logStorageResult();
-      //_buzzer.begin();
+      _buzzer.begin();
       return 1;
     }
 
     int update()
     {
-      if(_sensor.update())
+      if(_model.state.gyroTimer.check())
       {
+        _sensor.update()
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
           _input.update();
@@ -81,8 +82,11 @@ class Espfc
     int updateOther()
     {
       _model.state.stats.update();
-      _serial.update();
-      //_buzzer.update();
+      if(_model.state.serialTimer.check())
+      {
+        _serial.update();
+      }
+      _buzzer.update();
       return 1;
     }
 

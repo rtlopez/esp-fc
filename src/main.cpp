@@ -14,15 +14,6 @@
 #include <EspWire.h>
 #include "Debug.h"
 
-#ifdef ESPFC_FREE_RTOS
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-  #ifdef ESPFC_MULTI_CORE
-    TaskHandle_t otherTaskHandle = NULL;
-    extern TaskHandle_t loopTaskHandle;
-  #endif
-#endif
-
 #ifdef ESPFC_WIFI_ALT
   #include <ESP8266WiFi.h>
 #else
@@ -32,39 +23,77 @@
 Espfc::Espfc espfc;
 
 #ifdef ESPFC_MULTI_CORE
-void otherTask(void *pvParameters)
-{
-  espfc.beginOther();
-#ifdef ESPFC_FREE_RTOS
-  xTaskNotifyGive(loopTaskHandle);
-#endif
-  while(true)
+  #if defined(ESPFC_FREE_RTOS)
+
+    // ESP32 multicore
+    #include "freertos/FreeRTOS.h"
+    #include "freertos/task.h"
+    TaskHandle_t otherTaskHandle = NULL;
+    extern TaskHandle_t loopTaskHandle;
+
+    void otherTask(void *pvParameters)
+    {
+      espfc.load();
+      espfc.beginOther();
+      xTaskNotifyGive(loopTaskHandle);
+      while(true)
+      {
+        espfc.updateOther();
+      }
+    }
+    void setup()
+    {
+      disableCore0WDT();
+      xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
+      espfc.begin();
+    }
+    void loop()
+    {
+      espfc.update();
+    }
+
+  #elif defined(ESPFC_MULTI_CORE_RP2040)
+
+    // RP2040 multicore
+    volatile static bool setup1Done = false;
+    void setup1()
+    {
+      espfc.load();
+      espfc.beginOther();
+      setup1Done = true;
+    }
+    void setup()
+    {
+      while(!setup1Done); //wait for setup1()
+      espfc.begin();
+    }
+    void loop()
+    {
+      espfc.update();
+    }
+    void loop1()
+    {
+      espfc.updateOther();
+    }
+
+  #else
+    #error "No RTOS defined for multicore board"
+  #endif
+
+#else
+
+  // single core
+  void setup()
   {
+    espfc.load();
+    espfc.beginOther();
+    espfc.begin();
+  }
+  void loop()
+  {
+    espfc.update();
     espfc.updateOther();
   }
-}
-#endif
 
-void setup()
-{
-  espfc.load();
-#ifdef ESPFC_MULTI_CORE
-#ifdef ESPFC_FREE_RTOS
-  disableCore0WDT();
-  xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
-  ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
 #endif
-  espfc.begin();
-#else
-  espfc.beginOther();
-  espfc.begin();
-#endif
-}
-
-void loop()
-{
-  espfc.update();
-#ifndef ESPFC_MULTI_CORE
-  espfc.updateOther();
-#endif
-}

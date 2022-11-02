@@ -228,7 +228,7 @@ struct ModelState
   int gyroBiasSamples;
   int gyroCalibrationState;
 
-  int32_t gyroClock;
+  int32_t gyroClock = 2000;
   int32_t gyroRate;
 
   Timer gyroTimer;

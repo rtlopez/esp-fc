@@ -64,6 +64,9 @@
 #define ESPFC_GUARD 0
 #define ESPFC_GYRO_DENOM_MAX 1
 
+#define ESPFC_MULTI_CORE
+#define ESPFC_MULTI_CORE_RP2040
+
 #include "Device/SerialDevice.h"
 #include <hardware/gpio.h>
 

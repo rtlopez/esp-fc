@@ -142,8 +142,6 @@ class SerialManager
 
     int update()
     {
-      if(!_model.state.serialTimer.check()) return 0;
-
       //D("serial", _current);
       SerialPortState& ss = _model.state.serial[_current];
       const SerialPortConfig& sc = _model.config.serial[_current];
