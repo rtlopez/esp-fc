@@ -19,11 +19,11 @@ class BusSPI: public BusDevice
 
     BusType getType() const override { return BUS_SPI; }
 
-    int begin(int8_t sck = -1, int8_t miso = -1, int8_t mosi = -1, int8_t ss = -1)
+    int begin(int8_t sck = -1, int8_t mosi = -1, int8_t miso = -1, int8_t ss = -1)
     {
       if(sck == -1 || miso == -1 || mosi == -1) return 0;
 
-      targetSPIInit(SPI, sck, miso, mosi, ss);
+      targetSPIInit(SPI, sck, mosi, miso, ss);
 
       return 1;
     }
@@ -52,8 +52,8 @@ class BusSPI: public BusDevice
   private:
     void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *in, uint8_t *out, uint32_t speed)
     {
-      SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE3));
       digitalWrite(devAddr, LOW);
+      SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE3));
       SPI.transfer(regAddr); // specify the starting register address
       for(uint8_t i = 0; i < length; i++)
       {

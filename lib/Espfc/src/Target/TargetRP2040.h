@@ -36,20 +36,20 @@
 #define SERIAL_TX_FIFO_SIZE 64
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_USB
 
-//#define ESPFC_SPI_0
-//#define ESPFC_SPI_0_SCK 2
-//#define ESPFC_SPI_0_MOSI 3
-//#define ESPFC_SPI_0_MISO 4
+#define ESPFC_SPI_0
+#define ESPFC_SPI_0_SCK 2
+#define ESPFC_SPI_0_MOSI 3
+#define ESPFC_SPI_0_MISO 4
 
-//#define ESPFC_SPI_CS_GYRO 5
-//#define ESPFC_SPI_CS_BARO 6
+#define ESPFC_SPI_CS_GYRO 5
+#define ESPFC_SPI_CS_BARO 6
 
 #define ESPFC_I2C_0
 #define ESPFC_I2C_0_SDA 12 //8
 #define ESPFC_I2C_0_SCL 13 //9
 
 #define ESPFC_BUZZER
-#define ESPFC_BUZZER_PIN 4
+#define ESPFC_BUZZER_PIN 22
 
 #define ESPFC_ADC_0
 #define ESPFC_ADC_0_PIN 26
@@ -68,6 +68,7 @@
 #define ESPFC_MULTI_CORE_RP2040
 
 #include "Device/SerialDevice.h"
+#include "Debug.h"
 #include <hardware/gpio.h>
 
 namespace Espfc {
@@ -121,6 +122,7 @@ inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
 template<typename T>
 inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
 {
+  //D("spi:i", sck, mosi, miso);
   dev.setSCK(sck);
   dev.setRX(miso);
   dev.setTX(mosi);

@@ -57,8 +57,8 @@ class Hardware
     void initBus()
     {
 #if defined(ESPFC_SPI_0)
-      int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MISO], _model.config.pin[PIN_SPI_0_MOSI]);
-      _model.logger.info().log(F("SPI SETUP")).log(_model.config.pin[PIN_SPI_0_SCK]).log(_model.config.pin[PIN_SPI_0_MISO]).log(_model.config.pin[PIN_SPI_0_MOSI]).logln(spiResult);
+      int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MOSI], _model.config.pin[PIN_SPI_0_MISO]);
+      _model.logger.info().log(F("SPI SETUP")).log(_model.config.pin[PIN_SPI_0_SCK]).log(_model.config.pin[PIN_SPI_0_MOSI]).log(_model.config.pin[PIN_SPI_0_MISO]).logln(spiResult);
 #endif
 #if defined(ESPFC_I2C_0)
       int i2cResult = i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000);
