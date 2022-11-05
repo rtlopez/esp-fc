@@ -60,8 +60,8 @@ class BusSPI: public BusDevice
         uint8_t v = SPI.transfer(in ? in[i] : 0);
         if(out) out[i] = v; // write received data
       }
-      digitalWrite(devAddr, HIGH);
       SPI.endTransaction();
+      digitalWrite(devAddr, HIGH);
     }
 #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SPI)
   #if !defined(ARCH_RP2040)

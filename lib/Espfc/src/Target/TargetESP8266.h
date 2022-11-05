@@ -112,7 +112,7 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
 template<typename T>
 inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
 {
-  dev.pins(sck, mosi, miso, ss);
+  dev.pins(sck, miso, mosi, ss);
   dev.begin();
   return 1;
 }
