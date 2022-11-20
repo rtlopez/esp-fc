@@ -1,0 +1,11 @@
+version: '3.5'
+
+services:
+  pio:
+    image: pio
+    build:
+      context: docker
+    hostname: pio
+    network_mode: "host"
+    volumes:
+      - ./:/app
