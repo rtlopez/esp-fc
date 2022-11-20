@@ -2,8 +2,12 @@
 #define _ESPFC_SERIAL_DEVICE_ADAPTER_H_
 
 #include "Device/SerialDevice.h"
+#ifdef ESPFC_SERIAL_SOFT_0_RX
 #include "EspSoftSerial.h"
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include <WiFiClient.h>
+#endif
 
 namespace Espfc {
 
@@ -21,8 +25,9 @@ class SerialDeviceAdapter: public SerialDevice
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
     virtual bool isSoft() const { return false; };
-    virtual size_t availableForWrite() { return _dev.availableForWrite(); }
+    virtual int availableForWrite() { return _dev.availableForWrite(); }
     virtual bool isTxFifoEmpty() { return _dev.availableForWrite() >= SERIAL_TX_FIFO_SIZE; }
+    virtual operator bool() const { return (bool)_dev; }
   private:
     T& _dev;
 };
@@ -30,57 +35,18 @@ class SerialDeviceAdapter: public SerialDevice
 template<typename T>
 void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
 {
-  uint32_t sc = 0;
-  switch(conf.data_bits)
-  {
-    case 8: sc |= SERIAL_UART_NB_BIT_8; break;
-    case 7: sc |= SERIAL_UART_NB_BIT_7; break;
-    case 6: sc |= SERIAL_UART_NB_BIT_6; break;
-    case 5: sc |= SERIAL_UART_NB_BIT_5; break;
-    default: sc |= SERIAL_UART_NB_BIT_8; break;
-  }
-  switch(conf.parity)
-  {
-    case SERIAL_PARITY_EVEN: sc |= SERIAL_UART_PARITY_EVEN; break;
-    case SERIAL_PARITY_ODD:  sc |= SERIAL_UART_PARITY_ODD;  break;
-    default: break;
-  }
-  switch(conf.stop_bits)
-  {
-    case SERIAL_STOP_BITS_2:  sc |= SERIAL_UART_NB_STOP_BIT_2;  break;
-    case SERIAL_STOP_BITS_15: sc |= SERIAL_UART_NB_STOP_BIT_15; break;
-    case SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
-    default: break;
-  }
-
-#if defined(ESP8266)
-
-  if(conf.inverted)
-  {
-    sc |= (SERIAL_RXD_INV | SERIAL_TXD_INV);
-  }
-  _dev.begin(conf.baud, (SerialConfig)sc);
-
-#elif defined(ESP32)
-
-  sc |= 0x8000000;
-  _dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
-
-#else
-
-  #error "Unsupported platform"
-
-#endif
+  targetSerialInit(_dev, conf);
 }
 
 // WiFiClient specializations
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
 template<>
 void SerialDeviceAdapter<WiFiClient>::begin(const SerialDeviceConfig& conf)
 {
 }
 
 template<>
-size_t SerialDeviceAdapter<WiFiClient>::availableForWrite()
+int SerialDeviceAdapter<WiFiClient>::availableForWrite()
 {
   return SERIAL_TX_FIFO_SIZE;
 }
@@ -90,12 +56,9 @@ bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 {
   return true;
 }
+#endif
 
-// EspSofSerial specialization
-#if defined(ESP32)
-// not applicable
-#elif defined(USE_SOFT_SERIAL)
-
+#ifdef ESPFC_SERIAL_SOFT_0_RX
 template<>
 void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
 {
@@ -110,8 +73,10 @@ void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
 }
 
 template<>
-bool SerialDeviceAdapter<EspSoftSerial>::isSoft() const { return true; }
-
+bool SerialDeviceAdapter<EspSoftSerial>::isSoft() const
+{
+  return true;
+}
 #endif
 
 }

@@ -263,7 +263,7 @@ bool blackboxDeviceOpen(void)
         {
             const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_BLACKBOX);
             baudRate_e baudRateIndex;
-            portOptions_e portOptions = SERIAL_PARITY_NO | SERIAL_NOT_INVERTED;
+            portOptions_e portOptions = BF_SERIAL_PARITY_NO | BF_SERIAL_NOT_INVERTED;
 
             if (!portConfig) {
                 return false;
@@ -277,9 +277,9 @@ bool blackboxDeviceOpen(void)
                  * OpenLog's 230400 baud rate is very inaccurate, so it requires a larger inter-character gap in
                  * order to maintain synchronization.
                  */
-                portOptions |= SERIAL_STOPBITS_2;
+                portOptions |= BF_SERIAL_STOPBITS_2;
             } else {
-                portOptions |= SERIAL_STOPBITS_1;
+                portOptions |= BF_SERIAL_STOPBITS_1;
             }
 
             blackboxPort = openSerialPort(portConfig->identifier, FUNCTION_BLACKBOX, NULL, NULL, baudRates[baudRateIndex],

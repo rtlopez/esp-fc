@@ -84,6 +84,20 @@ class BusDevice
       }
     }
 
+    bool writeMask(uint8_t devAddr, uint8_t regAddr, uint8_t mask, uint8_t data)
+    {
+      uint8_t b = 0;
+      if (readByte(devAddr, regAddr, &b) != 0)
+      {
+        data &= mask; // zero all non-important bits in data
+        b &= ~(mask); // zero all important bits in existing byte
+        b |= data; // combine data with existing byte
+        return writeByte(devAddr, regAddr, b);
+      } else {
+        return false;
+      }
+    }
+
     static const char ** getNames()
     {
       static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), NULL };

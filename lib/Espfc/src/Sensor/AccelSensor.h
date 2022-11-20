@@ -17,7 +17,7 @@ class AccelSensor: public BaseSensor
     {
       _model.state.accel.z = ACCEL_G;
 
-      _gyro = Hardware::getGyroDevice(_model);
+      _gyro = _model.state.gyroDev;
       if(!_gyro) return 0;
 
       switch(_model.config.accelFsr)

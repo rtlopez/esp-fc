@@ -180,7 +180,7 @@ void EscDriverEsp8266::apply()
   _isr_start(_timer);
 }
 
-void EscDriverEsp8266::handle(void * p)
+void EscDriverEsp8266::handle(void * p, void * x)
 {
   // Time critical section
   EscDriver * instance = (EscDriver *)p;

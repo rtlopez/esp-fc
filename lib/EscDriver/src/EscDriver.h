@@ -19,7 +19,7 @@ enum EscProtocol {
 };
 
 #define PWM_TO_DSHOT(v) (((v - 1000) * 2) + 47)
-#define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_DSHOT600 && !ESC_PROTOCOL_DISABLED ? ESC_PROTOCOL_DSHOT600 : p)
+#define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_DSHOT600 && p != ESC_PROTOCOL_DISABLED ? ESC_PROTOCOL_DSHOT600 : p)
 
 class EscDriverBase
 {
@@ -69,6 +69,15 @@ class EscDriverBase
 
   #define ESC_DRIVER_MOTOR_TIMER 0
   #define ESC_DRIVER_SERVO_TIMER 0
+
+#elif defined(ARCH_RP2040)
+
+  #define ESC_CHANNEL_COUNT 4
+  #include "EscDriverRP2040.h"
+  #define EscDriver EscDriverRP2040
+
+  #define ESC_DRIVER_MOTOR_TIMER ESC_DRIVER_TIMER0
+  #define ESC_DRIVER_SERVO_TIMER ESC_DRIVER_TIMER1
 
 #elif defined(UNIT_TEST)
 
