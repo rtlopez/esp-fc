@@ -21,7 +21,7 @@ class SerialDeviceAdapter: public SerialDevice
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
     virtual bool isSoft() const { return false; };
-    virtual size_t availableForWrite() { return _dev.availableForWrite(); }
+    virtual int availableForWrite() { return _dev.availableForWrite(); }
     virtual bool isTxFifoEmpty() { return _dev.availableForWrite() >= SERIAL_TX_FIFO_SIZE; }
   private:
     T& _dev;
@@ -80,7 +80,7 @@ void SerialDeviceAdapter<WiFiClient>::begin(const SerialDeviceConfig& conf)
 }
 
 template<>
-size_t SerialDeviceAdapter<WiFiClient>::availableForWrite()
+int SerialDeviceAdapter<WiFiClient>::availableForWrite()
 {
   return SERIAL_TX_FIFO_SIZE;
 }

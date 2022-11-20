@@ -52,23 +52,23 @@ class EscDriverEsp8266: public EscDriverBase
 
     int begin(EscProtocol protocol, bool async, int16_t rate, EscDriverTimer timer);
     void end();
-    int attach(size_t channel, int pin, int pulse) ICACHE_RAM_ATTR;
-    int write(size_t channel, int pulse) ICACHE_RAM_ATTR;
-    void apply() ICACHE_RAM_ATTR;
-    static void handle(void * p) ICACHE_RAM_ATTR;
+    int attach(size_t channel, int pin, int pulse) IRAM_ATTR;
+    int write(size_t channel, int pulse) IRAM_ATTR;
+    void apply() IRAM_ATTR;
+    static void handle(void * p, void * x) IRAM_ATTR;
 
   private:
-    void commit() ICACHE_RAM_ATTR;
-    uint32_t usToTicks(uint32_t us) ICACHE_RAM_ATTR;
-    uint32_t usToTicksReal(EscDriverTimer timer, uint32_t us) ICACHE_RAM_ATTR;
-    int32_t minTicks(EscDriverTimer timer) ICACHE_RAM_ATTR;
-    void dshotWrite() ICACHE_RAM_ATTR;
+    void commit() IRAM_ATTR;
+    uint32_t usToTicks(uint32_t us) IRAM_ATTR;
+    uint32_t usToTicksReal(EscDriverTimer timer, uint32_t us) IRAM_ATTR;
+    int32_t minTicks(EscDriverTimer timer) IRAM_ATTR;
+    void dshotWrite() IRAM_ATTR;
 
     static void _isr_init(EscDriverTimer timer, void * driver);
-    static void _isr_begin(EscDriverTimer timer) ICACHE_RAM_ATTR;
-    static bool _isr_wait(EscDriverTimer timer, const uint32_t ticks) ICACHE_RAM_ATTR;
-    static void _isr_start(EscDriverTimer timer) ICACHE_RAM_ATTR;
-    static void _isr_reboot(void* p) ICACHE_RAM_ATTR;
+    static void _isr_begin(EscDriverTimer timer) IRAM_ATTR;
+    static bool _isr_wait(EscDriverTimer timer, const uint32_t ticks) IRAM_ATTR;
+    static void _isr_start(EscDriverTimer timer) IRAM_ATTR;
+    static void _isr_reboot(void* p) IRAM_ATTR;
     static void _isr_end(EscDriverTimer timer, void* p);
 
     volatile bool _busy;

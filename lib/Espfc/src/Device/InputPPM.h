@@ -19,8 +19,8 @@ class InputPPM: public InputDevice
 {
   public:
     void begin(uint8_t pin, int mode = PPM_MODE_NORMAL);
-    void handle() ICACHE_RAM_ATTR;
-    static void handle_isr() ICACHE_RAM_ATTR;
+    void handle() IRAM_ATTR;
+    static void handle_isr() IRAM_ATTR;
 
     /*bool fail()
     {

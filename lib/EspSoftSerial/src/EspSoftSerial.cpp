@@ -29,7 +29,7 @@ uint32_t EspSoftSerial::nsToTicks(uint32_t ns)
 }
 
 #if defined(USE_TIMER1) && !defined(USE_TIMER1_NMI)
-static void ICACHE_RAM_ATTR _rx_read_bit_isr(void * p)
+static void IRAM_ATTR _rx_read_bit_isr(void * p)
 {
   EspSoftSerial::rx_read_bit_isr();
 }
@@ -77,7 +77,7 @@ void EspSoftSerial::timerStop()
 #endif
 }
 
-static void ICACHE_RAM_ATTR timerWrite(uint32_t ticks)
+static void IRAM_ATTR timerWrite(uint32_t ticks)
 {
 #if defined(USE_TIMER0)
   timer0_write(ESP.getCycleCount() + ticks);
@@ -90,7 +90,7 @@ static void ICACHE_RAM_ATTR timerWrite(uint32_t ticks)
 #endif
 }
 
-static inline bool ICACHE_RAM_ATTR _readPin(int pin, bool invert)
+static inline bool IRAM_ATTR _readPin(int pin, bool invert)
 {
   return (bool)(GPI & (1 << pin)) ^ invert;
   /*int c = 3;
