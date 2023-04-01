@@ -3,7 +3,7 @@
 
 #include "BusDevice.h"
 #include "BaroDevice.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 #define BMP085_DEFAULT_ADDRESS 0x77
 

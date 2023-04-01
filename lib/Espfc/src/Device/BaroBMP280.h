@@ -3,7 +3,7 @@
 
 #include "BusDevice.h"
 #include "BaroDevice.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 #define BMP280_DEFAULT_ADDRESS        0x77
 #define BMP280_WHOAMI_ID              0x58

@@ -1,8 +1,8 @@
 #ifndef _ESPFC_DEBUG_H_
 #define _ESPFC_DEBUG_H_
 
-#include <EspGpio.h>
 #include <Arduino.h>
+#include <EspGpio.h>
 
 namespace Espfc
 {
