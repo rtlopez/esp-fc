@@ -4,7 +4,7 @@
 #include "BusDevice.h"
 #include "GyroMPU6050.h"
 #include "helper_3dmath.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 #define MPU9250_USER_CTRL         0x6A
 #define MPU9250_I2C_MST_EN        0x20

@@ -2,7 +2,7 @@
 #define _ESPFC_LOGGER_H_
 
 #include <Arduino.h>
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 #if defined(ESPFC_LOGGER_FS)
   #if defined(ESPFC_LOGGER_FS_ALT)

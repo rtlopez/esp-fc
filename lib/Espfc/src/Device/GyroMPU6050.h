@@ -4,7 +4,7 @@
 #include "BusDevice.h"
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 #define MPU6050_ADDRESS_AD0_LOW     0x68 // address pin low (GND), default for InvenSense evaluation board
 #define MPU6050_ADDRESS_AD0_HIGH    0x69 // address pin high (VCC)

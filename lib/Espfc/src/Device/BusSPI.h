@@ -2,7 +2,7 @@
 #define _ESPFC_DEVICE_BUSSPI_H_
 
 #include "BusDevice.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 #include <SPI.h>
 
 namespace Espfc {
