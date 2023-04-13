@@ -12,7 +12,7 @@
 #include <EspGpio.h>
 #include <EscDriver.h>
 #include <EspWire.h>
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 #ifdef ESPFC_WIFI_ALT
   #include <ESP8266WiFi.h>

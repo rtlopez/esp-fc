@@ -4,7 +4,7 @@
 #include "BusDevice.h"
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp
 #define LSM6DSOX_DEFAULT_ADDRESS    0x6A

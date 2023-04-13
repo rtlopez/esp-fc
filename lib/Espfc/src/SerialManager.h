@@ -9,7 +9,7 @@
 #include "Cli.h"
 #include "Wireless.h"
 #include "Telemetry.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 
 namespace {
 

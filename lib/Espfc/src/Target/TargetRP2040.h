@@ -68,7 +68,7 @@
 #define ESPFC_MULTI_CORE_RP2040
 
 #include "Device/SerialDevice.h"
-#include "Debug.h"
+#include "Debug_Espfc.h"
 #include <hardware/gpio.h>
 
 namespace Espfc {
