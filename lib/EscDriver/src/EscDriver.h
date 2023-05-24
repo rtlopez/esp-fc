@@ -70,6 +70,15 @@ class EscDriverBase
   #define ESC_DRIVER_MOTOR_TIMER 0
   #define ESC_DRIVER_SERVO_TIMER 0
 
+#elif defined(ARCH_RP2040)
+
+  #define ESC_CHANNEL_COUNT 4
+  #include "EscDriverRP2040.h"
+  #define EscDriver EscDriverRP2040
+
+  #define ESC_DRIVER_MOTOR_TIMER ESC_DRIVER_TIMER0
+  #define ESC_DRIVER_SERVO_TIMER ESC_DRIVER_TIMER1
+
 #elif defined(UNIT_TEST)
 
   #define ESC_CHANNEL_COUNT 4

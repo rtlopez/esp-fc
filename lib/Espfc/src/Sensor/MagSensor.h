@@ -19,7 +19,7 @@ class MagSensor: public BaseSensor
     {
       if(!_model.magActive()) return 0;
 
-      _mag = Hardware::getMagDevice(_model);
+      _mag = _model.state.magDev;
       if(!_mag) return 0;
 
       if(_model.state.magTimer.rate < 5) return 0;

@@ -1,6 +1,7 @@
 #ifndef _ESPFC_ESPFC_H_
 #define _ESPFC_ESPFC_H_
 
+#include "Target/Target.h"
 #include "Model.h"
 #include "Controller.h"
 #include "Input.h"
@@ -26,15 +27,14 @@ class Espfc
 
     int load()
     {
-      _model.begin();
-
+      _model.load();
       return 1;
     }
 
     int begin()
     {
       _hardware.begin();
-      _model.update();
+      _model.begin();
       _mixer.begin();
       _sensor.begin();
       _input.begin();
@@ -51,14 +51,14 @@ class Espfc
       _serial.begin();
       _model.logStorageResult();
       _buzzer.begin();
-
       return 1;
     }
 
     int update()
     {
-      if(_sensor.update())
+      if(_model.state.gyroTimer.check())
       {
+        _sensor.update();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
           _input.update();
@@ -82,7 +82,10 @@ class Espfc
     int updateOther()
     {
       _model.state.stats.update();
-      _serial.update();
+      if(_model.state.serialTimer.check())
+      {
+        _serial.update();
+      }
       _buzzer.update();
       return 1;
     }

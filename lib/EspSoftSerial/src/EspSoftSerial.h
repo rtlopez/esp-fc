@@ -69,6 +69,11 @@ class EspSoftSerial: public Stream
       return 0;
     }
 
+    operator bool() const
+    {
+      return (bool)_instance;
+    }
+
     static void rx_read_bit_isr() IRAM_ATTR;
     static void rx_start_isr() IRAM_ATTR;
 

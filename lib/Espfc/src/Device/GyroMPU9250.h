@@ -48,8 +48,9 @@ class GyroMPU9250: public GyroMPU6050
       _bus->writeByte(_addr, MPU9250_USER_CTRL, 0);
       //delay(100);
 
+      // temporary force 1k sample rate for mag initiation, will be overwritten in GyroSensor
       setDLPFMode(GYRO_DLPF_188);
-      setRate(9); // 1000 / (9+1) = 100hz for mag, will be overwritten in GyroSensor
+      setRate(9); // 1000 / (9+1) = 100hz
       delay(100);
 
       // enable I2C master mode
@@ -79,8 +80,7 @@ class GyroMPU9250: public GyroMPU6050
     {
       uint8_t whoami = 0;
       _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
-      //Serial.print("MPU9250 "); Serial.print(_addr, HEX); Serial.print(' '); Serial.println(whoami, HEX);
-      //D("mpu9250_whoami", _addr, whoami);
+      //D("mpu9250:whoami", _addr, whoami);
       return whoami == 0x71 || whoami == 0x73;
     }
 };

@@ -9,37 +9,31 @@
 #include "Cli.h"
 #include "Wireless.h"
 #include "Telemetry.h"
+#include "Debug_Espfc.h"
 
 namespace {
-#if defined(ESP32)
 
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-    static HardwareSerial Serial(0);
-    static HardwareSerial Serial1(1);
-    static HardwareSerial Serial2(2);
-  #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart2(Serial2);
-
-#elif defined(ESP8266)
-
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL)
-    static HardwareSerial Serial(0);
-  #endif
-  #if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_SERIAL1)
-    static HardwareSerial Serial1(1);
-  #endif
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart0(Serial);
-  static Espfc::Device::SerialDeviceAdapter<HardwareSerial> uart1(Serial1);
-  #if defined(USE_SOFT_SERIAL)
-    static EspSoftSerial softSerial;
-    static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> soft0(softSerial);
-  #endif
-
-#else
-  #error "unsupported platform"
+#ifdef ESPFC_SERIAL_0
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_0_DEV_T> _uart0(ESPFC_SERIAL_0_DEV);
 #endif
+
+#ifdef ESPFC_SERIAL_1
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_1_DEV_T> _uart1(ESPFC_SERIAL_1_DEV);
+#endif
+
+#ifdef ESPFC_SERIAL_2
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_2_DEV_T> _uart2(ESPFC_SERIAL_2_DEV);
+#endif
+
+#ifdef ESPFC_SERIAL_USB
+  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_USB_DEV_T> _usb(ESPFC_SERIAL_USB_DEV);
+#endif
+
+#ifdef ESPFC_SERIAL_SOFT_0_RX
+  static EspSoftSerial softSerial;
+  static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> _soft0(softSerial);
+#endif
+
 }
 
 namespace Espfc {
@@ -51,33 +45,61 @@ class SerialManager
 
     int begin()
     {
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
       _wireless.begin();
+#endif
 
-      for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
+      for(int i = 0; i < SERIAL_UART_COUNT; i++)
       {
         Device::SerialDevice * port = getSerialPortById((SerialPort)i);
-        if(!port) continue;
+        if(!port)
+        {
+          //D("uart-no-port", i, (bool)port);
+          continue;
+        }
 
         const SerialPortConfig& spc = _model.config.serial[i];
-        if(!spc.functionMask) continue;
+        if(!spc.functionMask)
+        {
+          //D("uart-no-func", i, spc.id, spc.functionMask, spc.baud);
+          continue;
+        }
 
         SerialDeviceConfig sdc;
-
-#if defined(ESP32)
-        sdc.tx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_TX];
-        sdc.rx_pin = _model.config.pin[i * 2 + PIN_SERIAL_0_RX];
-        if(sdc.tx_pin == -1 && sdc.rx_pin == -1) continue;
-#endif
         sdc.baud = spc.baud;
+
+#ifdef ESPFC_SERIAL_USB
+        const bool hasUsbPort = true;
+        const bool isUsbPort = i == SERIAL_USB;
+#else
+        const bool hasUsbPort = false;
+        const bool isUsbPort = false;
+#endif
+
+#ifdef ESPFC_SERIAL_REMAP_PINS
+        if(!isUsbPort)
+        {
+          const size_t pin_idx = 2 * (hasUsbPort ? i - 1 : i);
+          sdc.tx_pin = _model.config.pin[pin_idx + PIN_SERIAL_0_TX];
+          sdc.rx_pin = _model.config.pin[pin_idx + PIN_SERIAL_0_RX];
+          if(sdc.tx_pin == -1 && sdc.rx_pin == -1)
+          {
+            //D("uart-no-pins", i, spc.id, spc.functionMask, spc.baud);
+            continue;
+          }
+        }
+#else
+      (void)(isUsbPort && hasUsbPort);
+#endif
 
         if(spc.functionMask & SERIAL_FUNCTION_RX_SERIAL)
         {
           switch(_model.config.input.serialRxProvider)
           {
             case SERIALRX_SBUS:
-              sdc.baud = 100000;
-              sdc.parity = SERIAL_PARITY_EVEN;
-              sdc.stop_bits = SERIAL_STOP_BITS_2;
+              sdc.baud = 100000ul;
+              sdc.parity = SDC_SERIAL_PARITY_EVEN;
+              sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
               sdc.inverted = true;
               break;
             default:
@@ -87,23 +109,32 @@ class SerialManager
         else if(spc.functionMask & SERIAL_FUNCTION_BLACKBOX)
         {
           sdc.baud = spc.blackboxBaud;
-          if(sdc.baud == 230400 || sdc.baud == 460800) {
-            sdc.stop_bits = SERIAL_STOP_BITS_2;
+          if(sdc.baud == 230400 || sdc.baud == 460800)
+          {
+            sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
           }
         }
 
-        if(!sdc.baud) continue;
+        if(!sdc.baud)
+        {
+          //D("uart-no-baud", i, spc.id, spc.functionMask, spc.baud);
+          continue;
+        }
 
+        //D("uart-flash", i, spc.id, spc.functionMask, spc.baud);
         port->flush();
         delay(10);
+
+        //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
         port->begin(sdc);
         _model.state.serial[i].stream = port;
+        delay(10);
 
-        if(i == SERIAL_UART_0)
+        if(i == ESPFC_SERIAL_DEBUG_PORT)
         {
-          LOG_SERIAL_INIT(port)
-          //port->setDebugOutput(true);
+          initDebugStream(port);
         }
+
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
       }
       return 1;
@@ -111,8 +142,7 @@ class SerialManager
 
     int update()
     {
-      if(!_model.state.serialTimer.check()) return 0;
-
+      //D("serial", _current);
       SerialPortState& ss = _model.state.serial[_current];
       const SerialPortConfig& sc = _model.config.serial[_current];
       Stream * stream = ss.stream;
@@ -152,10 +182,12 @@ class SerialManager
         _telemetry.process(*stream);
       }
 
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
       if(_current == SERIAL_SOFT_0)
       {
         _wireless.update();
       }
+#endif
 
       next();
 
@@ -166,12 +198,20 @@ class SerialManager
     {
       switch(portId)
       {
-        case SERIAL_UART_0: return &uart0;
-        case SERIAL_UART_1: return &uart1;
-#if defined(ESP32)
-        case SERIAL_UART_2: return &uart2;
-#elif defined(USE_SOFT_SERIAL)
-        case SERIAL_SOFT_0: return &soft0;
+#ifdef ESPFC_SERIAL_0
+        case SERIAL_UART_0: return &_uart0;
+#endif
+#ifdef ESPFC_SERIAL_1
+        case SERIAL_UART_1: return &_uart1;
+#endif
+#ifdef ESPFC_SERIAL_2
+        case SERIAL_UART_2: return &_uart2;
+#endif
+#ifdef ESPFC_SERIAL_USB
+        case SERIAL_USB: return &_usb;
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0_RX
+        case SERIAL_SOFT_0: return &_soft0;
 #endif
         default: return nullptr;
       }

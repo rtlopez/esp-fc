@@ -148,7 +148,7 @@ class MspProcessor
           // 1.42
           r.writeU8(2);  // configuration state: configured
           // 1.43
-          r.writeU16(_model.state.gyroTimer.rate); // sample rate
+          r.writeU16(_model.state.gyroClock); // sample rate
           r.writeU32(0); // configuration problems
           // 1.44
           r.writeU8(0);  // spi dev count
@@ -162,18 +162,9 @@ class MspProcessor
           break;
 
         case MSP_UID:
-          {
-#if defined(ESP8266)
-            r.writeU32(ESP.getChipId());
-            r.writeU32(ESP.getFlashChipId());
-            r.writeU32(ESP.getFlashChipSize());
-#else
-            int64_t mac = ESP.getEfuseMac();
-            r.writeU32((uint32_t)mac);
-            r.writeU32((uint32_t)(mac >> 32));
-            r.writeU32(0);
-#endif
-          }
+          r.writeU32(getBoardId0());
+          r.writeU32(getBoardId1());
+          r.writeU32(getBoardId2());
           break;
 
         case MSP_STATUS_EX:
@@ -428,7 +419,7 @@ class MspProcessor
           break;
 
         case MSP_CF_SERIAL_CONFIG:
-          for(int i = SERIAL_UART_0; i < SERIAL_UART_COUNT; i++)
+          for(int i = 0; i < SERIAL_UART_COUNT; i++)
           {
             if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
             r.writeU8(_model.config.serial[i].id); // identifier

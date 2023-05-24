@@ -3,10 +3,10 @@
 
 #include "Model.h"
 #include "Device/SerialDeviceAdapter.h"
-#if defined(ESP32)
-#include <WiFi.h>
-#elif defined(ESP8266)
+#ifdef ESPFC_WIFI_ALT
 #include <ESP8266WiFi.h>
+#else
+#include <WiFi.h>
 #endif
 
 namespace Espfc {
@@ -14,11 +14,16 @@ namespace Espfc {
 class Wireless
 {
   public:
-    Wireless(Model& model): _model(model), _server(1111), _adapter(_client), _initialized(false) {}
+    Wireless(Model& model): _model(model), 
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
+      _server(1111),
+      _adapter(_client), 
+#endif
+      _initialized(false) {}
 
     int begin()
     {
-#if defined(ESP32)
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
       int status = -1;
       if(_model.config.wireless.mode != WIRELESS_MODE_NULL)
       {
@@ -35,16 +40,17 @@ class Wireless
       }
       const char * modeName = WirelessConfig::getModeName((WirelessMode)_model.config.wireless.mode);
       _model.logger.info().log(F("WIFI")).log(FPSTR(modeName)).log(_model.config.wireless.ssid).log(_model.config.wireless.pass).logln(status);
-#elif defined(ESP8266)
+      return 1;
+#elif defined(ESPFC_WIFI_ALT)
       WiFi.disconnect();
       WiFi.mode(WIFI_OFF);
       _model.logger.info().logln(F("WIFI OFF"));
 #endif
 
-      return 1;
+      return 0;
     }
 
-#if defined(ESP32)
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
     void wifiEvent(WiFiEvent_t event, WiFiEventInfo_t info)
     {
       static const char * names[] = {
@@ -99,10 +105,7 @@ class Wireless
 
     int update()
     {
-#if defined(ESP8266)
-      return 0;
-#endif
-
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
       if(_model.config.wireless.mode == WIRELESS_MODE_NULL) return 0;
       if(!_initialized) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_WIFI);
@@ -113,14 +116,17 @@ class Wireless
       }
 
       return 1;
+#endif
+      return 0;
     }
 
   private:
     Model& _model;
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
     WiFiServer _server;
     WiFiClient _client;
     Device::SerialDeviceAdapter<WiFiClient> _adapter;
-
+#endif
     bool _initialized;
 };
 

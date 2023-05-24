@@ -1,6 +1,7 @@
 #ifndef _ESPFC_MODEL_CONFIG_H_
 #define _ESPFC_MODEL_CONFIG_H_
 
+#include "Target/Target.h"
 #include "EscDriver.h"
 #include "Filter.h"
 #include "Device/BusDevice.h"
@@ -233,43 +234,59 @@ const size_t MODEL_NAME_LEN  = 16;
 const size_t AXES            = 4;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
 const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
+static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
 
 enum PinFunction {
-#if defined(ESP8266)
+#ifdef ESPFC_INPUT
   PIN_INPUT_RX,
-  PIN_OUTPUT_0,
-  PIN_OUTPUT_1,
-  PIN_OUTPUT_2,
-  PIN_OUTPUT_3,
-  PIN_BUZZER,
-  PIN_I2C_0_SCL,
-  PIN_I2C_0_SDA,
-  PIN_INPUT_ADC_0,
 #endif
-#if defined(ESP32) || defined(UNIT_TEST)
-  PIN_INPUT_RX,
   PIN_OUTPUT_0,
   PIN_OUTPUT_1,
   PIN_OUTPUT_2,
   PIN_OUTPUT_3,
+#if ESPFC_OUTPUT_COUNT > 4
   PIN_OUTPUT_4,
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
   PIN_OUTPUT_5,
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
   PIN_OUTPUT_6,
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
   PIN_OUTPUT_7,
+#endif
+#ifdef ESPFC_BUZZER
   PIN_BUZZER,
+#endif
+#ifdef ESPFC_SERIAL_0
   PIN_SERIAL_0_TX,
   PIN_SERIAL_0_RX,
+#endif
+#ifdef ESPFC_SERIAL_1
   PIN_SERIAL_1_TX,
   PIN_SERIAL_1_RX,
+#endif
+#ifdef ESPFC_SERIAL_2
   PIN_SERIAL_2_TX,
   PIN_SERIAL_2_RX,
+#endif
+#ifdef ESPFC_I2C_0
   PIN_I2C_0_SCL,
   PIN_I2C_0_SDA,
+#endif
+#ifdef ESPFC_ADC_0
   PIN_INPUT_ADC_0,
+#endif
+#ifdef ESPFC_ADC_1
   PIN_INPUT_ADC_1,
+#endif
+#ifdef ESPFC_SPI_0
   PIN_SPI_0_SCK,
   PIN_SPI_0_MOSI,
   PIN_SPI_0_MISO,
+#endif
+#ifdef ESPFC_SPI_0
   PIN_SPI_CS0,
   PIN_SPI_CS1,
   PIN_SPI_CS2,
@@ -426,7 +443,7 @@ class OutputConfig
     int8_t throttleLimitPercent = 100;
     int8_t motorLimit = 100;
 
-    OutputChannelConfig channel[OUTPUT_CHANNELS];
+    OutputChannelConfig channel[ESPFC_OUTPUT_COUNT];
 };
 
 enum ArmingDisabledFlags {
@@ -609,47 +626,58 @@ class ModelConfig
 
     ModelConfig()
     {
-      pin[PIN_OUTPUT_0] = -1;
-      pin[PIN_OUTPUT_1] = -1;
-      pin[PIN_OUTPUT_2] = -1;
-      pin[PIN_OUTPUT_3] = -1;
-
-      pin[PIN_OUTPUT_0] = 0;     // D3
-      pin[PIN_OUTPUT_1] = 14;    // D5
-      pin[PIN_OUTPUT_2] = 12;    // D6
-      pin[PIN_OUTPUT_3] = 15;    // D8
-      pin[PIN_INPUT_RX] = 13;    // D7
-      pin[PIN_I2C_0_SCL] = 5;    // D1
-      pin[PIN_I2C_0_SDA] = 4;    // D2
-      pin[PIN_INPUT_ADC_0] = 17; // A0
-      pin[PIN_BUZZER] = 16;      // D0
-
-#if defined(ESP32)
-      pin[PIN_INPUT_RX] = 35;
-      pin[PIN_OUTPUT_0] = 0;
-      pin[PIN_OUTPUT_1] = 2;
-      pin[PIN_OUTPUT_2] = 25;
-      pin[PIN_OUTPUT_3] = 26;
-      pin[PIN_OUTPUT_4] = 27;
-      pin[PIN_OUTPUT_5] = 12;
-      pin[PIN_OUTPUT_6] = 13;
-      pin[PIN_OUTPUT_7] = 14;
-      pin[PIN_BUZZER] = 4;
-      pin[PIN_SERIAL_0_TX] = 1;
-      pin[PIN_SERIAL_0_RX] = 3;
-      pin[PIN_SERIAL_1_TX] = 33;
-      pin[PIN_SERIAL_1_RX] = 32;
-      pin[PIN_SERIAL_2_TX] = 17;
-      pin[PIN_SERIAL_2_RX] = 16;
-      pin[PIN_I2C_0_SCL] = 22;
-      pin[PIN_I2C_0_SDA] = 21;
-      pin[PIN_INPUT_ADC_0] = 36;
-      pin[PIN_INPUT_ADC_1] = 39;
-      pin[PIN_SPI_0_SCK] = 18;
-      pin[PIN_SPI_0_MOSI] = 23;
-      pin[PIN_SPI_0_MISO] = 19;
-      pin[PIN_SPI_CS0] = 5;
-      pin[PIN_SPI_CS1] = 15;
+#ifdef ESPFC_INPUT
+      pin[PIN_INPUT_RX] = ESPFC_INPUT_PIN;
+#endif
+      pin[PIN_OUTPUT_0] = ESPFC_OUTPUT_0;
+      pin[PIN_OUTPUT_1] = ESPFC_OUTPUT_1;
+      pin[PIN_OUTPUT_2] = ESPFC_OUTPUT_2;
+      pin[PIN_OUTPUT_3] = ESPFC_OUTPUT_3;
+#if ESPFC_OUTPUT_COUNT > 4
+      pin[PIN_OUTPUT_4] = ESPFC_OUTPUT_4;
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
+      pin[PIN_OUTPUT_5] = ESPFC_OUTPUT_5;
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
+      pin[PIN_OUTPUT_6] = ESPFC_OUTPUT_6;
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
+      pin[PIN_OUTPUT_7] = ESPFC_OUTPUT_7;
+#endif
+#ifdef ESPFC_BUZZER
+      pin[PIN_BUZZER] = ESPFC_BUZZER_PIN;
+#endif
+#ifdef ESPFC_SERIAL_0
+      pin[PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX;
+      pin[PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX;
+#endif
+#ifdef ESPFC_SERIAL_1
+      pin[PIN_SERIAL_1_TX] = ESPFC_SERIAL_1_TX;
+      pin[PIN_SERIAL_1_RX] = ESPFC_SERIAL_1_RX;
+#endif
+#ifdef ESPFC_SERIAL_2
+      pin[PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX;
+      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_TX;
+#endif
+#ifdef ESPFC_I2C_0
+      pin[PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL;
+      pin[PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA;
+#endif
+#ifdef ESPFC_ADC_0
+      pin[PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN;
+#endif
+#ifdef ESPFC_ADC_1
+      pin[PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN;
+#endif
+#ifdef ESPFC_SPI_0
+      pin[PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK;
+      pin[PIN_SPI_0_MOSI] = ESPFC_SPI_0_MOSI;
+      pin[PIN_SPI_0_MISO] = ESPFC_SPI_0_MISO;
+#endif
+#ifdef ESPFC_SPI_0
+      pin[PIN_SPI_CS0] = ESPFC_SPI_CS_GYRO;
+      pin[PIN_SPI_CS1] = ESPFC_SPI_CS_BARO;
       pin[PIN_SPI_CS2] = -1;
 #endif
       i2cSpeed = 1000;
@@ -659,8 +687,11 @@ class ModelConfig
       gyroAlign = ALIGN_DEFAULT;
       gyroDlpf = GYRO_DLPF_256;
       gyroFsr  = GYRO_FS_2000;
-      //gyroSync = 16;
-      gyroSync = 8;
+      gyroSync = 1; // unused, force 1
+
+      loopSync = 8; // MPU 1000Hz
+      loopSync = 4; // LSM 833Hz
+      mixerSync = 1;
 
       accelBus = BUS_AUTO;
       accelDev = GYRO_AUTO;
@@ -673,9 +704,6 @@ class ModelConfig
 
       baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
-
-      loopSync = 1;
-      mixerSync = 1;
 
       fusion.mode = FUSION_MADGWICK;
       fusion.gain = 50;
@@ -705,44 +733,33 @@ class ModelConfig
       softSerialGuard = false;
       serialRxGuard = false;
 
-#if defined(ESP32)
+#ifdef ESPFC_SERIAL_0
       serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
-      serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_UART_0].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_UART_0].blackboxBaud = SERIAL_SPEED_NONE;
-
+      serial[SERIAL_UART_0].functionMask = ESPFC_SERIAL_0_FN;
+      serial[SERIAL_UART_0].baud = ESPFC_SERIAL_0_BAUD;
+      serial[SERIAL_UART_0].blackboxBaud = ESPFC_SERIAL_0_BBAUD;
+#endif
+#ifdef ESPFC_SERIAL_1
       serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_RX_SERIAL;
-      serial[SERIAL_UART_1].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_UART_1].blackboxBaud = SERIAL_SPEED_NONE;
-
+      serial[SERIAL_UART_1].functionMask = ESPFC_SERIAL_1_FN;
+      serial[SERIAL_UART_1].baud = ESPFC_SERIAL_1_BAUD;
+      serial[SERIAL_UART_1].blackboxBaud = ESPFC_SERIAL_1_BBAUD;
+#endif
+#ifdef ESPFC_SERIAL_2
       serial[SERIAL_UART_2].id = SERIAL_ID_UART_3;
-      serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_UART_2].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_UART_2].blackboxBaud = SERIAL_SPEED_NONE;
-      
-      serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1; // as soft serial
-      serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_SOFT_0].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_SOFT_0].blackboxBaud = SERIAL_SPEED_NONE;
-
-      //serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-      //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      //serial[SERIAL_UART_2].blackboxBaud = SERIAL_SPEED_250000;
-      //serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_TELEMETRY_FRSKY;
-#elif defined(ESP8266)
-      serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
-      serial[SERIAL_UART_0].functionMask = SERIAL_FUNCTION_MSP;
-      serial[SERIAL_UART_0].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_UART_0].blackboxBaud = SERIAL_SPEED_NONE;
-
-      serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_NONE;
-      serial[SERIAL_UART_1].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_UART_1].blackboxBaud = SERIAL_SPEED_NONE;
-
-      serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1; // present as soft serial
-      serial[SERIAL_SOFT_0].functionMask = SERIAL_FUNCTION_NONE;
+      serial[SERIAL_UART_2].functionMask = ESPFC_SERIAL_2_FN;
+      serial[SERIAL_UART_2].baud = ESPFC_SERIAL_2_BAUD;
+      serial[SERIAL_UART_2].blackboxBaud = ESPFC_SERIAL_2_BBAUD;
+#endif
+#ifdef ESPFC_SERIAL_USB
+      serial[SERIAL_USB].id = SERIAL_ID_USB_VCP;
+      serial[SERIAL_USB].functionMask = ESPFC_SERIAL_USB_FN;
+      serial[SERIAL_USB].baud = SERIAL_SPEED_115200;
+      serial[SERIAL_USB].blackboxBaud = SERIAL_SPEED_NONE;
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
+      serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1;
+      serial[SERIAL_SOFT_0].functionMask = ESPFC_SERIAL_SOFT_0_FN;
       serial[SERIAL_SOFT_0].baud = SERIAL_SPEED_115200;
       serial[SERIAL_SOFT_0].blackboxBaud = SERIAL_SPEED_NONE;
 #endif
@@ -764,7 +781,7 @@ class ModelConfig
       mixerType = MIXER_QUADX;
       yawReverse = 0;
 
-      output.protocol = ESC_PROTOCOL_DISABLED;
+      output.protocol = ESPFC_OUTPUT_PROTOCOL;
       //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
       //output.async = true;
@@ -836,11 +853,7 @@ class ModelConfig
       angleLimit = 55;  // deg
       angleRateLimit = 300;  // deg
 
-    #if defined(ESP8266)
-      featureMask = FEATURE_RX_PPM | FEATURE_DYNAMIC_FILTER;
-    #elif defined(ESP32)
-      featureMask = FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_DYNAMIC_FILTER;
-    #endif
+      featureMask = ESPFC_FEATURE_MASK;
 
       input.serialRxProvider = SERIALRX_SBUS;
 
@@ -930,18 +943,6 @@ class ModelConfig
 
 // development settings
 #if !defined(ESPFC_REVISION)
-  #if defined(ESP8266)
-      output.protocol = ESC_PROTOCOL_DSHOT150;
-      serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
-      serial[SERIAL_UART_1].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      serial[SERIAL_UART_1].blackboxBaud = SERIAL_SPEED_250000;
-  #elif defined(ESP32)
-      output.protocol = ESC_PROTOCOL_DSHOT300;
-      serial[SERIAL_UART_2].id = SERIAL_ID_UART_3;
-      serial[SERIAL_UART_2].functionMask = SERIAL_FUNCTION_BLACKBOX;
-      serial[SERIAL_UART_2].blackboxBaud = SERIAL_SPEED_250000;
-  #endif
-
       quad();
 #endif
     }

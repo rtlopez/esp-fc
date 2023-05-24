@@ -15,12 +15,6 @@
 #include "Logger.h"
 #include "Math/Utils.h"
 
-#if defined(ESP8266)
-#define ESPFC_GUARD 1
-#else
-#define ESPFC_GUARD 0
-#endif
-
 namespace Espfc {
 
 class Model
@@ -203,14 +197,21 @@ class Model
     {
       switch(id)
       {
+#ifdef ESPFC_SERIAL_0
         case SERIAL_ID_UART_1: return SERIAL_UART_0;
+#endif
+#ifdef ESPFC_SERIAL_1
         case SERIAL_ID_UART_2: return SERIAL_UART_1;
-      #if defined(ESP32)
+#endif
+#ifdef ESPFC_SERIAL_2
         case SERIAL_ID_UART_3: return SERIAL_UART_2;
+#endif
+#ifdef ESPFC_SERIAL_USB
+        case SERIAL_ID_USB_VCP: return SERIAL_USB;
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
         case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
-      #elif defined(ESP8266)
-        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
-      #endif
+#endif
         default: break;
       }
       return -1;
@@ -224,43 +225,45 @@ class Model
       return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0, 1023)), 0l, 1023l);
     }
 
-    void begin()
+    int load()
     {
       logger.begin();
       #ifndef UNIT_TEST
       _storage.begin();
+      _storageResult = _storage.load(config);
       #endif
-      load();
-      sanitize();
+      postLoad();
+      return 1;
+    }
+
+    void save()
+    {
+      preSave();
+      #ifndef UNIT_TEST
+      _storageResult = _storage.write(config);
+      #endif
+    }
+
+    void reload()
+    {
+      begin();
+    }
+
+    void reset()
+    {
+      initialize();
+      save();
+      reload();
     }
 
     void sanitize()
     {
-      int gyroSyncMax = 1; // max 8kHz
-      #if defined(ESP8266)
-        gyroSyncMax = 4; // max 2khz
-      #endif
-      //if(config.accelDev != GYRO_NONE) gyroSyncMax /= 2;
-      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) gyroSyncMax /= 2;
-      config.gyroSync = std::max((int)config.gyroSync, gyroSyncMax);
+      int loopSyncMax = ESPFC_GYRO_DENOM_MAX; // max 8kHz
+      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) loopSyncMax /= 2;
+      config.loopSync = std::max((int)config.loopSync, loopSyncMax);
 
-      switch(config.gyroDlpf)
-      {
-        case GYRO_DLPF_256:
-        case GYRO_DLPF_EX:
-          state.gyroClock = 8000;
-          state.gyroRate = 8000 / config.gyroSync;
-          state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
-          break;
-        default:
-          config.gyroSync = ((config.gyroSync + 7) / 8) * 8; // multiply 8x and round (BF GUI uses this convention)
-          state.gyroClock = 1000;
-          state.gyroRate = 8000 / config.gyroSync;
-          state.gyroDivider = (state.gyroClock / (state.gyroRate + 1)) + 1;
-          break;
-      }
-
-      state.loopRate = state.gyroRate / config.loopSync;
+      state.gyroRate = state.gyroClock / config.loopSync;
+      state.loopRate = state.gyroClock / config.loopSync;
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
@@ -307,7 +310,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 499) / 500)); // align loop rate to lower than 500Hz
-          state.loopRate = state.gyroRate / config.loopSync;
+          state.loopRate = state.gyroClock / config.loopSync;
           if(state.loopRate > 480 && config.output.maxThrottle > 1940)
           {
             config.output.maxThrottle = 1940;
@@ -317,7 +320,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
-          state.loopRate = state.gyroRate / config.loopSync;
+          state.loopRate = state.gyroClock / config.loopSync;
         }
       }
 
@@ -355,22 +358,11 @@ class Model
       }
       config.featureMask &= featureAllowMask;
 
-#if defined(ESP32)
-      config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_UART_2].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_SOFT_0].functionMask &= serialFunctionAllowedMask & ~FEATURE_RX_SERIAL;
-#elif defined(ESP8266)
-      config.serial[SERIAL_UART_0].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_UART_1].functionMask &= serialFunctionAllowedMask;
-      config.serial[SERIAL_SOFT_0].functionMask &= serialFunctionAllowedMask;
-      //config.serial[SERIAL_SOFT_0].functionMask &= ~SERIAL_FUNCTION_RX_SERIAL;  // disallow
-      //config.serial[SERIAL_SOFT_0].functionMask |= SERIAL_FUNCTION_RX_SERIAL; // force
-#endif
+      for(int i = 0; i < SERIAL_UART_COUNT; i++) {
+        config.serial[i].functionMask &= serialFunctionAllowedMask;
+      }
       //config.featureMask |= FEATURE_RX_PPM; // force ppm
       //config.featureMask &= ~FEATURE_RX_PPM; // disallow ppm
-
-      config.serial[SERIAL_UART_0].functionMask |= SERIAL_FUNCTION_MSP; // msp always enabled on uart0
 
       // only few beeper modes allowed
       config.buzzer.beeperMask &=
@@ -383,15 +375,17 @@ class Model
         1 << (BEEPER_BAT_LOW - 1);
     }
 
-    void update()
+    void begin()
     {
+      sanitize();
+
       // init timers
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
       state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
       state.accelTimer.setInterval(state.accelTimer.interval - 10);
       //state.accelTimer.setRate(state.gyroTimer.rate, 2);
-      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
+      state.loopTimer.setRate(state.gyroTimer.rate, 1);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
       state.actuatorTimer.setRate(25); // 25 hz
       state.dynamicFilterTimer.setRate(50);
@@ -530,37 +524,6 @@ class Model
         config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 10.0f);
         config.magCalibrationScale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
       }
-    }
-
-    int load()
-    {
-      #ifndef UNIT_TEST
-      _storageResult = _storage.load(config);
-      #endif
-      postLoad();
-      return 1;
-    }
-
-    void save()
-    {
-      preSave();
-      #ifndef UNIT_TEST
-      _storageResult = _storage.write(config);
-      #endif
-    }
-
-    void reload()
-    {
-      sanitize();
-      update();
-    }
-
-    void reset()
-    {
-      initialize();
-      save();
-      sanitize();
-      update();
     }
 
     ModelState state;

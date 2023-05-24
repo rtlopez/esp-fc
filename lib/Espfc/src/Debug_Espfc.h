@@ -7,16 +7,18 @@
 namespace Espfc
 {
 
-#if 0
-#define PIN_DEBUG(v) EspGpio::digitalWrite(D0, v)
-#define PIN_DEBUG_INIT() pinMode(D0, OUTPUT)
+#ifdef ESPFC_DEBUG_PIN
+  #define PIN_DEBUG(v) EspGpio::digitalWrite(ESPFC_DEBUG_PIN, v)
+  #define PIN_DEBUG_INIT() pinMode(ESPFC_DEBUG_PIN, OUTPUT)
 #else
-#define PIN_DEBUG(v)
-#define PIN_DEBUG_INIT()
+  #define PIN_DEBUG(v)
+  #define PIN_DEBUG_INIT()
 #endif
 
-#if defined(ESPFC_SERIAL_DEBUG)
+#ifdef ESPFC_DEBUG_SERIAL
 static Stream * _debugStream = nullptr;
+
+static inline void initDebugStream(Stream * p) { _debugStream = p; }
 
 #define LOG_SERIAL_INIT(p) _debugStream = p;
 #define LOG_SERIAL_DEBUG(v) if(_debugStream) { _debugStream->print(' '); _debugStream->print(v); }
@@ -24,25 +26,24 @@ static Stream * _debugStream = nullptr;
 template <typename T>
 void D(T t)
 {
-  if(_debugStream)
-  {
-    _debugStream->print(t);
-    _debugStream->print('\n');
-  }
+  if(!_debugStream) return;
+  _debugStream->print(t);
+  _debugStream->print('\r');
+  _debugStream->print('\n');
 }
 
 template<typename T, typename... Args>
 void D(T t, Args... args) // recursive variadic function
 {
-  if(_debugStream)
-  {
-    _debugStream->print(t);
-    _debugStream->print(' ');
-    D(args...);
-  }
+  if(!_debugStream) return;
+  _debugStream->print(t);
+  _debugStream->print(' ');
+  D(args...);
 }
 
 #else
+
+static inline void initDebugStream(Stream * p) {}
 
 #define LOG_SERIAL_INIT(p)
 #define LOG_SERIAL_DEBUG(v)

@@ -3,9 +3,7 @@
 
 #include "BusDevice.h"
 
-#define USE_ESP_WIRE
-
-#if defined(USE_ESP_WIRE)
+#if defined(ESPFC_I2C_0_SOFT)
 #include "EspWire.h"
 #define WireClass EspTwoWire
 #define WireImpl EspWire
@@ -26,8 +24,7 @@ class BusI2C: public BusDevice
 
     int begin(int sda, int scl, int speed)
     {
-      WireImpl.begin(sda, scl);
-      WireImpl.setClock(speed);
+      targetI2CInit(WireImpl, sda, scl, speed);
       return 1;
     }
 
@@ -41,20 +38,20 @@ class BusI2C: public BusDevice
       int8_t count = 0;
       uint32_t t1 = millis();
 
-      //Serial.print("I2C R "); Serial.print(devAddr, HEX); Serial.print(' '); Serial.print(regAddr, HEX); Serial.print(' '); Serial.println(length);
+      //D("i2c:r0", devAddr, regAddr, length);
 
       WireImpl.beginTransmission(devAddr);
       WireImpl.write(regAddr);
       WireImpl.endTransmission();
-      WireImpl.beginTransmission(devAddr);
       WireImpl.requestFrom(devAddr, length);
 
       for (; WireImpl.available() && (timeout == 0 || millis() - t1 < timeout); count++)
       {
         data[count] = WireImpl.read();
-        //Serial.print("I2C R "); Serial.print(count); Serial.print(' '); Serial.println(data[count], HEX);
+        //D("i2c:r1", count, data[count]);
       }
 
+      //D("i2c:r3", length, count);
       if (timeout > 0 && millis() - t1 >= timeout && count < length) count = -1; // timeout
 
       if(onError && count != length) onError();
