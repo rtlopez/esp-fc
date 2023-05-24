@@ -1287,12 +1287,12 @@ class MspProcessor
       }
       hdr[3] = r.len;
       hdr[4] = r.cmd;
-      uint8_t checksum = _parser.crc8_xor(0, &hdr[3], 2);
+      uint8_t checksum = Math::crc8_xor(0, &hdr[3], 2);
       s.write(hdr, 5);
       if(r.len > 0)
       {
         s.write(r.data, r.len);
-        checksum = _parser.crc8_xor(checksum, r.data, r.len);
+        checksum = Math::crc8_xor(checksum, r.data, r.len);
       }
       s.write(checksum);
     }
@@ -1308,12 +1308,12 @@ class MspProcessor
       hdr[5] = (r.cmd >> 8) & 0xff;
       hdr[6] = r.len & 0xff;
       hdr[7] = (r.len >> 8) & 0xff;
-      uint8_t checksum = _parser.crc8_dvb_s2(0, &hdr[3], 5);
+      uint8_t checksum = Math::crc8_dvb_s2(0, &hdr[3], 5);
       s.write(hdr, 8);
       if(r.len > 0)
       {
         s.write(r.data, r.len);
-        checksum = _parser.crc8_dvb_s2(checksum, r.data, r.len);
+        checksum = Math::crc8_dvb_s2(checksum, r.data, r.len);
       }
       s.write(checksum);
     }

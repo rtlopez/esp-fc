@@ -102,6 +102,12 @@ class SerialManager
               sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
               sdc.inverted = true;
               break;
+            case SERIALRX_CRSF:
+              sdc.baud = 420000ul;
+              //sdc.parity = SDC_SERIAL_PARITY_EVEN;
+              //sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+              //sdc.inverted = true;
+              break;
             default:
               break;
           }
