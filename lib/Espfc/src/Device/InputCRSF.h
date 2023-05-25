@@ -133,7 +133,7 @@ class InputCRSF: public InputDevice
       {
         while((*_serial).available())
         {
-          parse((*_serial).read());
+          parse(_frame, (*_serial).read());
         }
       }
 
@@ -160,8 +160,7 @@ class InputCRSF: public InputDevice
       //Serial.write(c);
     }
 
-  private:
-    void parse(int d)
+    void parse(CrsfFrame& frame, int d)
     {
       uint8_t c = (uint8_t)(d & 0xff);
       //print(c);
@@ -170,55 +169,69 @@ class InputCRSF: public InputDevice
         case CRSF_ADDR:
           if(c == CRSF_ADDRESS_FLIGHT_CONTROLLER)
           {
-            _frame.data[_idx++] = c;
+            frame.data[_idx++] = c;
             _state = CRSF_SIZE;
           }
           break;
         case CRSF_SIZE:
           if(c > 3 && c <= CRSF_PAYLOAD_SIZE_MAX)
           {
-            _frame.data[_idx++] = c;
+            frame.data[_idx++] = c;
             _state = CRSF_TYPE;
           } else {
-            _state = CRSF_ADDR;
-            _idx = 0;
+            reset();
           }
           break;
         case CRSF_TYPE:
           if(c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED)
           {
-            _frame.data[_idx++] = c;
+            frame.data[_idx++] = c;
             _state = CRSF_DATA;
           } else {
-            _state = CRSF_ADDR;
-            _idx = 0;
+            reset();
           }
           break;
         case CRSF_DATA:
-          _frame.data[_idx++] = c;
-          if(_idx >= _frame.message.size - 1)
+          frame.data[_idx++] = c;
+          if(_idx > frame.message.size) // _idx is incremented here and operator > accounts as size - 2
           {
             _state = CRSF_CRC;
           }
           break;
         case CRSF_CRC:
-          _frame.data[_idx++] = c;
-          _state = CRSF_ADDR;
-          _idx = 0;
-          uint8_t crc = frameCrc();
+          frame.data[_idx++] = c;
+          reset();
+          uint8_t crc = frameCrc(frame);
           if(c == crc) {
-            apply();
+            apply(frame);
           }
           break;
        }
     }
 
-    void apply()
+    uint8_t frameCrc(const CrsfFrame& frame)
     {
-      switch (_frame.message.type)
+      // CRC includes type and payload
+      uint8_t crc = Math::crc8_dvb_s2(0, frame.message.type);
+      for (int i = 0; i < frame.message.size - 2; i++) { // size includes type and crc
+          crc = Math::crc8_dvb_s2(crc, frame.message.payload[i]);
+      }
+      return crc;
+    }
+
+  private:
+    void reset()
+    {
+      _state = CRSF_ADDR;
+      _idx = 0;
+    }
+
+    void apply(const CrsfFrame& frame)
+    {
+      switch (frame.message.type)
       {
         case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
-          applyChannels();
+          applyChannels(frame);
           break;
         
         default:
@@ -226,9 +239,9 @@ class InputCRSF: public InputDevice
       }
     }
 
-    void applyChannels()
+    void applyChannels(const CrsfFrame f)
     {
-      const CrsfData* frame = reinterpret_cast<const CrsfData*>(_frame.message.payload);
+      const CrsfData* frame = reinterpret_cast<const CrsfData*>(f.message.payload);
       _channels[0]  = convert(frame->chan0);
       _channels[1]  = convert(frame->chan1);
       _channels[2]  = convert(frame->chan2);
@@ -253,23 +266,12 @@ class InputCRSF: public InputDevice
       return Math::map(v, 172, 1811, 988, 2012);
     }
 
-    uint8_t frameCrc(void)
-    {
-        // CRC includes type and payload
-        uint8_t crc = Math::crc8_dvb_s2(0, _frame.message.type);
-        for (int i = 0; i < _frame.message.size - 1; ++i) {
-            crc = Math::crc8_dvb_s2(crc, _frame.message.payload[i]);
-        }
-        return crc;
-    }
+    static const size_t CHANNELS = 16;
 
     Device::SerialDevice * _serial;
     CrsfState _state;
-    uint8_t _idx = 0;
+    uint8_t _idx;
     bool _new_data;
-
-    static const size_t CHANNELS = 16;
-
     CrsfFrame _frame;
     uint16_t _channels[CHANNELS];
 };
