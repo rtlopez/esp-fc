@@ -1,5 +1,5 @@
-#ifndef _ESC_DRIVER_ESP8266_H_
-#define _ESC_DRIVER_ESP8266_H_
+#ifndef _ESC_DRIVER_RP2040_H_
+#define _ESC_DRIVER_RP2040_H_
 
 #if defined(ARCH_RP2040)
 
@@ -48,8 +48,7 @@ class EscDriverRP2040: public EscDriverBase
     uint32_t usToTicks(uint32_t us) IRAM_ATTR;
     uint32_t usToTicksReal(uint32_t us) IRAM_ATTR;
     uint32_t nsToDshotTicks(uint32_t ns);
-    uint32_t dshotWriteBB() IRAM_ATTR;
-    uint32_t dshotWriteDMA() IRAM_ATTR;
+    void dshotWriteDMA();
     bool isSliceDriven(int slice);
     void clearDmaBuffer();
 
@@ -66,7 +65,7 @@ class EscDriverRP2040: public EscDriverBase
     int _dl;
     int _dt;
 
-    uint32_t _dma_buffer[NUM_PWM_SLICES][DSHOT_BIT_COUNT];
+    uint32_t _dma_buffer[NUM_PWM_SLICES][DSHOT_BIT_COUNT + 1];
 };
 
 #endif // ARCH_RP2040

@@ -16,7 +16,7 @@ namespace Espfc
 #endif
 
 #ifdef ESPFC_DEBUG_SERIAL
-static Stream * _debugStream = nullptr;
+extern Stream * _debugStream;
 
 static inline void initDebugStream(Stream * p) { _debugStream = p; }
 
