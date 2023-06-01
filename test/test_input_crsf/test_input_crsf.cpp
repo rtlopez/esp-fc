@@ -1,6 +1,7 @@
 #include <unity.h>
 #include <ArduinoFake.h>
 #include "Device/InputCRSF.h"
+#include <EspGpio.h>
 
 using namespace Espfc;
 using namespace Espfc::Device;
