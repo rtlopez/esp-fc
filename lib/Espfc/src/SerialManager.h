@@ -127,14 +127,15 @@ class SerialManager
           continue;
         }
 
-        //D("uart-flash", i, spc.id, spc.functionMask, spc.baud);
-        port->flush();
-        delay(10);
+        if(!isUsbPort) {
+          //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
+          port->flush();
+          delay(10);
 
-        //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
-        port->begin(sdc);
+          //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
+          port->begin(sdc);
+        }
         _model.state.serial[i].stream = port;
-        delay(10);
 
         if(i == ESPFC_SERIAL_DEBUG_PORT)
         {
