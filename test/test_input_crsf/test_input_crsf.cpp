@@ -35,10 +35,10 @@ void test_input_crsf_rc_valid()
 
   TEST_ASSERT_EQUAL_UINT16(1500u, input.get(0));
   TEST_ASSERT_EQUAL_UINT16(1500u, input.get(1));
-  TEST_ASSERT_EQUAL_UINT16(1424u, input.get(2));
+  TEST_ASSERT_EQUAL_UINT16(1425u, input.get(2));
   TEST_ASSERT_EQUAL_UINT16(1500u, input.get(3));
-  TEST_ASSERT_EQUAL_UINT16( 999u, input.get(4));
-  TEST_ASSERT_EQUAL_UINT16( 999u, input.get(5));
+  TEST_ASSERT_EQUAL_UINT16(1000u, input.get(4));
+  TEST_ASSERT_EQUAL_UINT16(1000u, input.get(5));
 }
 
 void test_input_crsf_rc_prefix()

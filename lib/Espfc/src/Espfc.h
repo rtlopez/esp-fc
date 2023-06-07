@@ -27,6 +27,7 @@ class Espfc
 
     int load()
     {
+      PIN_DEBUG_INIT();
       _model.load();
       return 1;
     }
@@ -61,15 +62,15 @@ class Espfc
         _sensor.update();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
-          _input.update();
-          if(_model.state.actuatorTimer.check())
-          {
-            _actuator.update();
-          }
           _controller.update();
           if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
           {
             _mixer.update();
+          }
+          _input.update();
+          if(_model.state.actuatorTimer.check())
+          {
+            _actuator.update();
           }
           _blackbox.update();
         }
@@ -81,12 +82,12 @@ class Espfc
     // other task
     int updateOther()
     {
-      _model.state.stats.update();
       if(_model.state.serialTimer.check())
       {
         _serial.update();
       }
       _buzzer.update();
+      _model.state.stats.update();
       return 1;
     }
 

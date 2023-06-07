@@ -72,7 +72,7 @@ class EscDriverBase
 
 #elif defined(ARCH_RP2040)
 
-  #define ESC_CHANNEL_COUNT 4
+  #define ESC_CHANNEL_COUNT 8
   #include "EscDriverRP2040.h"
   #define EscDriver EscDriverRP2040
 

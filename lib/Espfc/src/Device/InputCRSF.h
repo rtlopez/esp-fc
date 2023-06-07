@@ -59,6 +59,35 @@ enum {
     CRSF_FRAMETYPE_DISPLAYPORT_CMD = 0x7D, // displayport control command
 };
 
+/*
+ * 0x14 Link statistics
+ * Payload:
+ *
+ * uint8_t Uplink RSSI Ant. 1 ( dBm * -1 )
+ * uint8_t Uplink RSSI Ant. 2 ( dBm * -1 )
+ * uint8_t Uplink Package success rate / Link quality ( % )
+ * int8_t Uplink SNR ( db )
+ * uint8_t Diversity active antenna ( enum ant. 1 = 0, ant. 2 )
+ * uint8_t RF Mode ( enum 4fps = 0 , 50fps, 150hz)
+ * uint8_t Uplink TX Power ( enum 0mW = 0, 10mW, 25 mW, 100 mW, 500 mW, 1000 mW, 2000mW, 250mW )
+ * uint8_t Downlink RSSI ( dBm * -1 )
+ * uint8_t Downlink package success rate / Link quality ( % )
+ * int8_t Downlink SNR ( db )
+ * Uplink is the connection from the ground to the UAV and downlink the opposite direction.
+ */
+struct CrsfLinkStats {
+    uint8_t uplink_RSSI_1;
+    uint8_t uplink_RSSI_2;
+    uint8_t uplink_Link_quality;
+    int8_t uplink_SNR;
+    uint8_t active_antenna;
+    uint8_t rf_Mode;
+    uint8_t uplink_TX_Power;
+    uint8_t downlink_RSSI;
+    uint8_t downlink_Link_quality;
+    int8_t downlink_SNR;
+} __attribute__ ((__packed__));
+
 struct CrsfData
 {
   unsigned int chan0 : 11;
@@ -129,12 +158,10 @@ class InputCRSF: public InputDevice
     {
       if(!_serial) return INPUT_IDLE;
 
-      if((*_serial).available() >= 4)
+      size_t len = _serial->available();
+      while(len--)
       {
-        while((*_serial).available())
-        {
-          parse(_frame, (*_serial).read());
-        }
+        parse(_frame, _serial->read());
       }
 
       if(_new_data)
@@ -183,7 +210,7 @@ class InputCRSF: public InputDevice
           }
           break;
         case CRSF_TYPE:
-          if(c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED)
+          if(c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED || c == CRSF_FRAMETYPE_LINK_STATISTICS)
           {
             frame.data[_idx++] = c;
             _state = CRSF_DATA;
@@ -233,10 +260,21 @@ class InputCRSF: public InputDevice
         case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
           applyChannels(frame);
           break;
-        
+
+        case CRSF_FRAMETYPE_LINK_STATISTICS:
+          applyLinkStats(frame);
+          break;
+
         default:
           break;
       }
+    }
+
+    void applyLinkStats(const CrsfFrame f)
+    {
+      const CrsfLinkStats* frame = reinterpret_cast<const CrsfLinkStats*>(f.message.payload);
+      (void)frame;
+      // TODO:
     }
 
     void applyChannels(const CrsfFrame f)
@@ -263,7 +301,19 @@ class InputCRSF: public InputDevice
 
     inline uint16_t convert(int v)
     {
-      return Math::map(v, 172, 1811, 988, 2012);
+      /* conversion from RC value to PWM
+       * for 0x16 RC frame
+       *       RC     PWM
+       * min  172 ->  988us
+       * mid  992 -> 1500us
+       * max 1811 -> 2012us
+       * scale factor = (2012-988) / (1811-172) = 0.62477120195241    => 1024 / 1639 = 0.62477
+       * offset = 988 - 172 * 0.62477120195241 = 880.53935326418548   => 988 - 107.46 = 880.54
+       */
+      return ((v * 1024) / 1639) + 881;
+      //return lrintf((0.62477120195241 * (float)v) + 880.54);
+      //return Math::map(v, 172, 1811, 988, 2012);
+      //return Math::mapi(v, 172, 1811, 988, 2012);
     }
 
     static const size_t CHANNELS = 16;

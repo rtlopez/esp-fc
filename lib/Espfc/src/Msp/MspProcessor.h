@@ -659,7 +659,7 @@ class MspProcessor
           _model.config.input.maxRc = m.readU16(); //max_us
           if (m.remain() >= 4) {
             _model.config.input.interpolationMode = m.readU8(); // rc interpolation
-             _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
+            _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
             m.readU16(); // airmode activate threshold
           }
           if (m.remain() >= 6) {

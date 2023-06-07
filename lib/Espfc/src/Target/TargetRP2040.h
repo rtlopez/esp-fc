@@ -3,11 +3,16 @@
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 7 // ppm
 
-#define ESPFC_OUTPUT_COUNT 4
+#define ESPFC_OUTPUT_COUNT 8
 #define ESPFC_OUTPUT_0 14
 #define ESPFC_OUTPUT_1 15
 #define ESPFC_OUTPUT_2 16
 #define ESPFC_OUTPUT_3 17
+#define ESPFC_OUTPUT_4 -1
+#define ESPFC_OUTPUT_5 -1
+#define ESPFC_OUTPUT_6 -1
+#define ESPFC_OUTPUT_7 -1
+
 
 #define ESPFC_SERIAL_0
 #define ESPFC_SERIAL_0_DEV Serial1

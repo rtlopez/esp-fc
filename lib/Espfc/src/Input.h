@@ -35,6 +35,21 @@ class Input
       _model.state.inputFrameDelta = FRAME_TIME_DEFAULT_US;
       _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
       _model.state.inputFrameCount = 0;
+      switch(_model.config.input.interpolationMode)
+      {
+        case INPUT_INTERPOLATION_AUTO:
+          _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+          break;
+        case INPUT_INTERPOLATION_MANUAL:
+          _model.state.inputInterpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
+          break;
+        case INPUT_INTERPOLATION_DEFAULT:
+        case INPUT_INTERPOLATION_OFF:
+        default:
+          _model.state.inputInterpolationDelta = FRAME_TIME_DEFAULT_US * 0.000001f;
+          break;
+      }
+      _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;
       _step = 0.0f;
       for(size_t c = 0; c < INPUT_CHANNELS; ++c)
       {
@@ -83,18 +98,20 @@ class Input
     {
       if(!_device) return 0;
 
-      InputStatus status = readInput();
+      InputStatus status = readInputs();
 
       failsafe(status);
 
-      filterInput(status);
+      filterInputs(status);
 
       return 1;
     }
 
-    InputStatus readInput()
+    InputStatus readInputs()
     {
       Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
+      uint32_t now = micros();
+
       InputStatus status = _device->update();
 
       if(status == INPUT_IDLE) return status;
@@ -103,9 +120,9 @@ class Input
       _model.state.inputRxFailSafe = (status == INPUT_FAILSAFE);
       _model.state.inputFrameCount++;
 
-      updateFrameRate(micros());
+      updateFrameRate(now);
 
-      processInput();
+      processInputs();
 
       if(_model.config.debugMode == DEBUG_RX_SIGNAL_LOSS)
       {
@@ -118,7 +135,7 @@ class Input
       return status;
     }
 
-    void processInput()
+    void processInputs()
     {
       if(_model.state.inputFrameCount < 5) return; // ignore few first frames that might be garbage
 
@@ -146,7 +163,7 @@ class Input
           v = Math::deadband(v - PWM_RANGE_MID, (int)_model.config.input.deadband) + PWM_RANGE_MID;
         }
 
-        // check if inputs are valid then apply failsafe value
+        // check if inputs are valid, apply failsafe value otherwise
         if(v < _model.config.input.minRc || v > _model.config.input.maxRc)
         {
           v = getFailsafeValue(c);
@@ -218,26 +235,34 @@ class Input
       }
     }
 
-    void filterInput(InputStatus status)
+    void filterInputs(InputStatus status)
     {
       Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
 
-      bool newFrame = status != INPUT_IDLE;
-      if(newFrame)
-      {
-        _step = 0.0f;
-      }
+      const bool newFrame = status != INPUT_IDLE;
+      const bool interpolation = _model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF;
 
-      const float interpolationStep = _model.state.loopTimer.intervalf * _model.state.inputInterpolationRate;
-      if(_step < 1.f) _step += interpolationStep;
+      if(interpolation)
+      {
+        if(newFrame)
+        {
+          _step = 0.0f;
+        }
+        if(_step < 1.f)
+        {
+          _step += _model.state.inputInterpolationStep;
+        }
+      }
 
       for(size_t c = 0; c < _model.state.inputChannelCount; c++)
       {
         float v = _model.state.inputBuffer[c];
-        if(c <= AXIS_THRUST && _model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF)
+        if(c <= AXIS_THRUST)
         {
-          float p = _model.state.inputBufferPrevious[c];
-          v =_interpolate(p, v, _step);
+          if(interpolation)
+          {
+            v = _interpolate(_model.state.inputBufferPrevious[c], v, _step);
+          }
           v = _model.state.inputFilter[c].update(v);
         }
         setInput((Axis)c, v, newFrame);
@@ -250,21 +275,11 @@ class Input
       _model.state.inputFrameTime = now;
       _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
 
-      switch(_model.config.input.interpolationMode)
+      if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO)
       {
-        case INPUT_INTERPOLATION_AUTO:
-          _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
-          break;
-        case INPUT_INTERPOLATION_MANUAL:
-          _model.state.inputInterpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
-          break;
-        case INPUT_INTERPOLATION_DEFAULT:
-        case INPUT_INTERPOLATION_OFF:
-        default:
-          _model.state.inputInterpolationDelta = FRAME_TIME_DEFAULT_US * 0.000001f;
-          break;
+        _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+        _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;
       }
-      _model.state.inputInterpolationRate = 1.0f / _model.state.inputInterpolationDelta;
     }
 
     Device::InputDevice * getInputDevice()

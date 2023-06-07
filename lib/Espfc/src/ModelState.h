@@ -196,7 +196,7 @@ struct ModelState
   uint32_t inputFrameRate;
   uint32_t inputFrameCount;
   float inputInterpolationDelta;
-  float inputInterpolationRate;
+  float inputInterpolationStep;
 
   int16_t inputRaw[INPUT_CHANNELS];
   int16_t inputBuffer[INPUT_CHANNELS];
