@@ -75,6 +75,26 @@ static Espfc::SerialSpeed fromBaudIndex(SerialSpeedIndex index)
   }
 }
 
+static uint8_t toFilterTypeDerivative(uint8_t t)
+{
+  switch(t) {
+    case 0: return Espfc::FILTER_NONE;
+    case 1: return Espfc::FILTER_PT1;
+    case 2: return Espfc::FILTER_BIQUAD;
+    default: return Espfc::FILTER_PT1;
+  }
+}
+
+static uint8_t fromFilterTypeDerivative(uint8_t t)
+{
+  switch(t) {
+    case Espfc::FILTER_NONE: return 0;
+    case Espfc::FILTER_PT1: return 1;
+    case Espfc::FILTER_BIQUAD: return 2;
+    default: return 1;
+  }
+}
+
 }
 
 namespace Espfc {
@@ -638,11 +658,11 @@ class MspProcessor
           r.writeU8(0); // rx spi chan count
           r.writeU8(0); // fpv camera angle
           r.writeU8(2); // rc iterpolation channels: RPYT
-          r.writeU8(0); // rc_smoothing_type
-          r.writeU8(0); // rc_smoothing_input_cutoff
-          r.writeU8(0); // rc_smoothing_derivative_cutoff
-          r.writeU8(0); // rc_smoothing_input_type
-          r.writeU8(0); // rc_smoothing_derivative_type
+          r.writeU8(_model.config.input.filterType); // rc_smoothing_type
+          r.writeU8(_model.config.input.filter.freq); // rc_smoothing_input_cutoff
+          r.writeU8(_model.config.input.filterDerivative.freq); // rc_smoothing_derivative_cutoff
+          r.writeU8(_model.config.input.filter.type); // rc_smoothing_input_type
+          r.writeU8(fromFilterTypeDerivative(_model.config.input.filterDerivative.type)); // rc_smoothing_derivative_type
           r.writeU8(0); // usb type
           // 1.42+
           r.writeU8(0); // rc_smoothing_auto_factor
@@ -673,11 +693,11 @@ class MspProcessor
           // 1.40+
           if (m.remain() >= 6) {
             m.readU8(); // rc iterpolation channels
-            m.readU8(); // rc_smoothing_type
-            m.readU8(); // rc_smoothing_input_cutoff
-            m.readU8(); // rc_smoothing_derivative_cutoff
-            m.readU8(); // rc_smoothing_input_type
-            m.readU8(); // rc_smoothing_derivative_type
+            _model.config.input.filterType = m.readU8(); // rc_smoothing_type
+            _model.config.input.filter.freq = m.readU8(); // rc_smoothing_input_cutoff
+            _model.config.input.filterDerivative.freq = m.readU8(); // rc_smoothing_derivative_cutoff
+            _model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
+            _model.config.input.filterDerivative.type = toFilterTypeDerivative(m.readU8()); // rc_smoothing_derivative_type
           }
           if (m.remain() >= 1) {
             m.readU8(); // usb type

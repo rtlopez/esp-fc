@@ -369,6 +369,7 @@ class Cli
                                                  PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("PROSHOT1000"), PSTR("DISABLED"), NULL };
       static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
       static const char* throtleLimitTypeChoices[] = { PSTR("NONE"), PSTR("SCALE"), PSTR("CLIP"), NULL };
+      static const char* inputFilterChoices[] = { PSTR("INTERPOLATION"), PSTR("FILTER"), NULL };
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
@@ -455,6 +456,12 @@ class Cli
 
         Param(PSTR("input_interpolation"), &c.input.interpolationMode, interpolChoices),
         Param(PSTR("input_interpolation_interval"), &c.input.interpolationInterval),
+
+        Param(PSTR("input_filter_type"), &c.input.filterType, inputFilterChoices),
+        Param(PSTR("input_lpf_type"), &c.input.filter.type, filterTypeChoices),
+        Param(PSTR("input_lpf_freq"), &c.input.filter.freq),
+        Param(PSTR("input_ff_lpf_type"), &c.input.filterDerivative.type, filterTypeChoices),
+        Param(PSTR("input_ff_lpf_freq"), &c.input.filterDerivative.freq),
 
         Param(PSTR("input_rssi_channel"), &c.input.rssiChannel),
 

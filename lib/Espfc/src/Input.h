@@ -81,15 +81,21 @@ class Input
 
     void setInput(Axis i, float v, bool newFrame, bool noDelta = false)
     {
-      _model.state.inputUs[i] = v;
       const InputChannelConfig& ich = _model.config.input.channel[i];
-      if(i <= AXIS_THRUST) {
-        _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
-        _model.state.inputDelta[i] = noDelta ? 0 : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
+      if(i <= AXIS_THRUST)
+      {
+        v = _model.state.inputFilter[i].update(v);
+        _model.state.inputUs[i] = v;
+        _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
+        float delta = noDelta ? 0.f : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
+        _model.state.inputDelta[i] = _model.state.inputFilterDerivative[i].update(delta);
         _model.state.inputPrevious[i] = _model.state.input[i];
-      } else if(newFrame) {
-        _model.state.input[i] = Math::map(_model.state.inputUs[i], ich.min, ich.max, -1.f, 1.f);
-        _model.state.inputDelta[i] = noDelta ? 0 : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.inputFrameRate;
+      }
+      else if(newFrame)
+      {
+        _model.state.inputUs[i] = v;
+        _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
+        _model.state.inputDelta[i] = noDelta ? 0.f : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.inputFrameRate;
         _model.state.inputPrevious[i] = _model.state.input[i];
       }
     }
@@ -110,7 +116,6 @@ class Input
     InputStatus readInputs()
     {
       Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
-      uint32_t now = micros();
 
       InputStatus status = _device->update();
 
@@ -119,6 +124,7 @@ class Input
       _model.state.inputRxLoss = (status == INPUT_LOST || status == INPUT_FAILSAFE);
       _model.state.inputRxFailSafe = (status == INPUT_FAILSAFE);
       _model.state.inputFrameCount++;
+      uint32_t now = micros();
 
       updateFrameRate(now);
 
@@ -240,7 +246,7 @@ class Input
       Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
 
       const bool newFrame = status != INPUT_IDLE;
-      const bool interpolation = _model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF;
+      const bool interpolation = _model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF && _model.config.input.filterType == INPUT_INTERPOLATION;
 
       if(interpolation)
       {
@@ -259,11 +265,7 @@ class Input
         float v = _model.state.inputBuffer[c];
         if(c <= AXIS_THRUST)
         {
-          if(interpolation)
-          {
-            v = _interpolate(_model.state.inputBufferPrevious[c], v, _step);
-          }
-          v = _model.state.inputFilter[c].update(v);
+          v = interpolation ? _interpolate(_model.state.inputBufferPrevious[c], v, _step) : v;
         }
         setInput((Axis)c, v, newFrame);
       }
@@ -271,11 +273,12 @@ class Input
 
     void updateFrameRate(uint32_t now)
     {
-      _model.state.inputFrameDelta = (now - _model.state.inputFrameTime);
+      //_model.state.inputFrameDelta = (now - _model.state.inputFrameTime);
+      _model.state.inputFrameDelta = ((now - _model.state.inputFrameTime) >> 1) + (_model.state.inputFrameDelta >> 1); // avg
       _model.state.inputFrameTime = now;
       _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
 
-      if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO)
+      if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO && _model.config.input.filterType == INPUT_INTERPOLATION)
       {
         _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
         _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;

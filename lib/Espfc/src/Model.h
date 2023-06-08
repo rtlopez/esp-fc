@@ -426,7 +426,16 @@ class Model
 
       for(size_t i = 0; i < 4; i++)
       {
-        state.inputFilter[i].begin(FilterConfig(FILTER_PT1, 30), state.gyroTimer.rate);
+        if (config.input.filterType == INPUT_FILTER)
+        {
+          state.inputFilter[i].begin(config.input.filter, state.loopTimer.rate);
+          state.inputFilterDerivative[i].begin(config.input.filterDerivative, state.loopTimer.rate);
+        }
+        else
+        {
+          state.inputFilter[i].begin(FilterConfig(FILTER_PT1, 30), state.loopTimer.rate);
+          state.inputFilterDerivative[i].begin(FilterConfig(FILTER_NONE, 0), state.loopTimer.rate);
+        }
       }
 
       // ensure disarmed pulses
