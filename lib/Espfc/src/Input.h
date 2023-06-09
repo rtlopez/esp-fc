@@ -69,7 +69,8 @@ class Input
       switch(ich.fsMode)
       {
         case FAILSAFE_MODE_AUTO:
-          return c != AXIS_THRUST ? _model.config.input.midRc : _model.config.input.minRc;
+          //return c != AXIS_THRUST ? _model.config.input.midRc : _model.config.input.minRc;
+          return c == AXIS_THRUST ? PWM_RANGE_MIN : PWM_RANGE_MID;
         case FAILSAFE_MODE_SET:
           return ich.fsValue;
         case FAILSAFE_MODE_INVALID:
@@ -84,19 +85,17 @@ class Input
       const InputChannelConfig& ich = _model.config.input.channel[i];
       if(i <= AXIS_THRUST)
       {
-        v = _model.state.inputFilter[i].update(v);
+        v = noDelta ? v : _model.state.inputFilter[i].update(v);
         _model.state.inputUs[i] = v;
         _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
         float delta = noDelta ? 0.f : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
-        _model.state.inputDelta[i] = _model.state.inputFilterDerivative[i].update(delta);
+        _model.state.inputDerivative[i] = _model.state.inputFilterDerivative[i].update(delta);
         _model.state.inputPrevious[i] = _model.state.input[i];
       }
       else if(newFrame)
       {
         _model.state.inputUs[i] = v;
         _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
-        _model.state.inputDelta[i] = noDelta ? 0.f : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.inputFrameRate;
-        _model.state.inputPrevious[i] = _model.state.input[i];
       }
     }
 
@@ -106,7 +105,7 @@ class Input
 
       InputStatus status = readInputs();
 
-      failsafe(status);
+      if(failsafe(status)) return 1;
 
       filterInputs(status);
 
@@ -182,39 +181,41 @@ class Input
       }
     }
 
-    void failsafe(InputStatus status)
+    bool failsafe(InputStatus status)
     {
       Stats::Measure readMeasure(_model.state.stats, COUNTER_FAILSAFE);
 
       if(_model.isSwitchActive(MODE_FAILSAFE))
       {
         failsafeStage2();
-        return;
+        return true;
       }
 
       if(status == INPUT_RECEIVED)
       {
         failsafeIdle();
-        return;
+        return false;
       }
 
       if(status == INPUT_FAILSAFE)
       {
         failsafeStage2();
-        return;
+        return true;
       }
 
       uint32_t lossTime = micros() - _model.state.inputFrameTime;
       if(lossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
       {
         failsafeStage2();
-        return;
+        return true;
       }
       else if(lossTime >= 1 * TENTH_TO_US)
       {
         failsafeStage1();
-        return;
+        return true;
       }
+
+      return false;
     }
 
     void failsafeIdle()
@@ -225,6 +226,7 @@ class Input
     void failsafeStage1()
     {
       _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+      _model.state.inputRxLoss = true;
       for(size_t i = 0; i < _model.state.inputChannelCount; i++)
       {
         setInput((Axis)i, getFailsafeValue(i), true, true);
@@ -234,6 +236,8 @@ class Input
     void failsafeStage2()
     {
       _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+      _model.state.inputRxLoss = true;
+      _model.state.inputRxFailSafe = true;
       if(_model.isActive(MODE_ARMED))
       {
         _model.state.failsafe.phase = FAILSAFE_LANDED;

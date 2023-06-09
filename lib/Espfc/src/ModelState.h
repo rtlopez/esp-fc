@@ -206,7 +206,7 @@ struct ModelState
   float inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
   float inputPrevious[INPUT_CHANNELS];
-  float inputDelta[INPUT_CHANNELS];
+  float inputDerivative[INPUT_CHANNELS];
   FailsafeState failsafe;
 
   float output[OUTPUT_CHANNELS];

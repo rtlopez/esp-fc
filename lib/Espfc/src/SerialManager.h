@@ -121,6 +121,11 @@ class SerialManager
           }
         }
 
+        /*if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY)
+        {
+          sdc.baud = 420000ul;
+        }*/
+
         if(!sdc.baud)
         {
           //D("uart-no-baud", i, spc.id, spc.functionMask, spc.baud);

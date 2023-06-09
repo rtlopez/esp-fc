@@ -482,6 +482,9 @@ class Cli
         Param(PSTR("input_14"), &c.input.channel[14]),
         Param(PSTR("input_15"), &c.input.channel[15]),
 
+        Param(PSTR("failsafe_delay"), &c.failsafe.delay),
+        Param(PSTR("failsafe_kill_switch"), &c.failsafe.killSwitch),
+
 #ifdef ESPFC_SERIAL_0
         Param(PSTR("serial_0"), &c.serial[SERIAL_UART_0]),
 #endif
@@ -645,7 +648,7 @@ class Cli
         Param(PSTR("i2c_speed"), &c.i2cSpeed),
 #endif
         //Param(PSTR("telemetry"), &c.telemetry),
-        //Param(PSTR("telemetry_interval"), &c.telemetryInterval),
+        Param(PSTR("telemetry_interval"), &c.telemetryInterval),
         //Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
         //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
