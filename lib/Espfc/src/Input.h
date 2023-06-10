@@ -35,6 +35,7 @@ class Input
       _model.state.inputFrameDelta = FRAME_TIME_DEFAULT_US;
       _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
       _model.state.inputFrameCount = 0;
+      _model.state.inputAutoFactor = 1.5f / (1.f + _model.config.input.filterAutoFactor * 0.1f);
       switch(_model.config.input.interpolationMode)
       {
         case INPUT_INTERPOLATION_AUTO:
@@ -286,6 +287,27 @@ class Input
       {
         _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
         _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;
+      }
+
+      // auto cutoff input freq
+      float freq = std::max(_model.state.inputFrameRate * _model.state.inputAutoFactor, 15.f);
+      if(freq > _model.state.inputAutoFreq * 1.2f || freq < _model.state.inputAutoFreq * 0.8f)
+      {
+        //_model.state.inputAutoFreq = freq;
+        _model.state.inputAutoFreq += 0.25f * (freq - _model.state.inputAutoFreq);
+        FilterConfig conf((FilterType)_model.config.input.filter.type, freq);
+        FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, freq);
+        for(size_t i = 0; i <= AXIS_THRUST; i++)
+        {
+          if(_model.config.input.filter.freq == 0)
+          {
+            _model.state.inputFilter[i].reconfigure(conf, _model.state.inputFrameRate);
+          }
+          if(_model.config.input.filterDerivative.freq == 0)
+          {
+            _model.state.inputFilterDerivative[i].reconfigure(confDerivative, _model.state.inputFrameRate);
+          }
+        }
       }
     }
 

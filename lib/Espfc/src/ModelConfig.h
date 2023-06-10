@@ -411,6 +411,7 @@ class InputConfig
     int8_t deadband;
 
     int8_t filterType;
+    int8_t filterAutoFactor;
     FilterConfig filter;
     FilterConfig filterDerivative;
 
@@ -736,7 +737,8 @@ class ModelConfig
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
       baroFilter = FilterConfig(FILTER_BIQUAD, 15);
 
-      input.filterType = 0;
+      input.filterType = 1;
+      input.filterAutoFactor = 30;
       input.filter = FilterConfig(FILTER_PT1, 20);
       input.filterDerivative = FilterConfig(FILTER_PT1, 20);
 

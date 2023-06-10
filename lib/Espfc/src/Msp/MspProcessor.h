@@ -665,8 +665,7 @@ class MspProcessor
           r.writeU8(fromFilterTypeDerivative(_model.config.input.filterDerivative.type)); // rc_smoothing_derivative_type
           r.writeU8(0); // usb type
           // 1.42+
-          r.writeU8(0); // rc_smoothing_auto_factor
-
+          r.writeU8(_model.config.input.filterAutoFactor); // rc_smoothing_auto_factor
           break;
 
         case MSP_SET_RX_CONFIG:
@@ -704,7 +703,7 @@ class MspProcessor
           }
           // 1.42+
           if (m.remain() >= 1) {
-            m.readU8(); // rc_smoothing_auto_factor
+            _model.config.input.filterAutoFactor = m.readU8(); // rc_smoothing_auto_factor
           }
 
           _model.reload();
