@@ -136,12 +136,165 @@ void test_crsf_encode_rc()
   TEST_ASSERT_EQUAL_UINT8(CRSF_FRAMETYPE_RC_CHANNELS_PACKED, frame.message.type);
 }
 
+void test_crsf_decode_rc_struct()
+{
+  CrsfFrame frame;
+  memset(&frame, 0, sizeof(frame));
+
+  CrsfData data;
+  data.chan0 = 992;
+  data.chan1 = 992;
+  data.chan2 = 172;
+  data.chan3 = 992;
+  data.chan4 = 992;
+  data.chan5 = 992;
+  data.chan6 = 992;
+  data.chan7 = 992;
+  data.chan8 = 992;
+  data.chan9 = 992;
+  data.chan10 = 992;
+  data.chan11 = 992;
+  data.chan12 = 992;
+  data.chan13 = 992;
+  data.chan14 = 992;
+  data.chan15 = 992;
+
+  Crsf::encodeRcData(frame, data);
+
+  uint16_t channels[16] = { 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0};
+
+  Crsf::decodeRcData(channels, (const CrsfData*)frame.message.payload);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[0]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[1]);
+  TEST_ASSERT_EQUAL_UINT16( 988, channels[2]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[3]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[4]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[5]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[6]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[7]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[8]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[9]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[10]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[11]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[12]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[13]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[14]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[15]);
+}
+
+void test_crsf_decode_rc_shift8()
+{
+  CrsfFrame frame;
+  memset(&frame, 0, sizeof(frame));
+
+  CrsfData data;
+  data.chan0 = 992;
+  data.chan1 = 992;
+  data.chan2 = 172;
+  data.chan3 = 992;
+  data.chan4 = 992;
+  data.chan5 = 992;
+  data.chan6 = 992;
+  data.chan7 = 992;
+  data.chan8 = 992;
+  data.chan9 = 992;
+  data.chan10 = 992;
+  data.chan11 = 992;
+  data.chan12 = 992;
+  data.chan13 = 992;
+  data.chan14 = 992;
+  data.chan15 = 992;
+
+  Crsf::encodeRcData(frame, data);
+
+  uint16_t channels[16] = { 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0};
+
+  Crsf::decodeRcDataShift8(channels, (const CrsfData*)frame.message.payload);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[0]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[1]);
+  TEST_ASSERT_EQUAL_UINT16( 988, channels[2]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[3]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[4]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[5]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[6]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[7]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[8]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[9]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[10]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[11]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[12]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[13]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[14]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[15]);
+}
+
+/*void test_crsf_decode_rc_shift32()
+{
+  CrsfFrame frame;
+  memset(&frame, 0, sizeof(frame));
+
+  CrsfData data;
+  data.chan0 = 992;
+  data.chan1 = 992;
+  data.chan2 = 191;
+  data.chan3 = 992;
+  data.chan4 = 992;
+  data.chan5 = 992;
+  data.chan6 = 992;
+  data.chan7 = 992;
+  data.chan8 = 992;
+  data.chan9 = 992;
+  data.chan10 = 992;
+  data.chan11 = 992;
+  data.chan12 = 992;
+  data.chan13 = 992;
+  data.chan14 = 992;
+  data.chan15 = 992;
+
+  Crsf::encodeRcData(frame, data);
+
+  uint16_t channels[16] = { 0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0};
+
+  Crsf::decodeRcDataShift32(channels, (const CrsfData*)frame.message.payload);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[0]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[1]);
+  TEST_ASSERT_EQUAL_UINT16(1000, channels[2]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[3]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[4]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[5]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[6]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[7]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[8]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[9]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[10]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[11]);
+
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[12]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[13]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[14]);
+  TEST_ASSERT_EQUAL_UINT16(1500, channels[15]);
+}*/
+
 int main(int argc, char **argv)
 {
   UNITY_BEGIN();
   RUN_TEST(test_input_crsf_rc_valid);
   RUN_TEST(test_input_crsf_rc_prefix);
   RUN_TEST(test_crsf_encode_rc);
+  RUN_TEST(test_crsf_decode_rc_struct);
+  RUN_TEST(test_crsf_decode_rc_shift8);
+  //RUN_TEST(test_crsf_decode_rc_shift32);
   UNITY_END();
 
   return 0;

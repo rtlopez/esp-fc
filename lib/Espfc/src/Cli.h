@@ -462,6 +462,7 @@ class Cli
         Param(PSTR("input_lpf_freq"), &c.input.filter.freq),
         Param(PSTR("input_ff_lpf_type"), &c.input.filterDerivative.type, filterTypeChoices),
         Param(PSTR("input_ff_lpf_freq"), &c.input.filterDerivative.freq),
+        Param(PSTR("input_lpf_factor"), &c.input.filterAutoFactor),
 
         Param(PSTR("input_rssi_channel"), &c.input.rssiChannel),
 
@@ -1120,43 +1121,49 @@ class Cli
         Device::MagDevice  * mag  = _model.state.magDev;
         if(gyro)
         {
-          s.print(F("gyro device: "));
+          s.print(F(" gyro device: "));
           s.print(FPSTR(Device::GyroDevice::getName(gyro->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(gyro->getBus()->getType())));
         }
         else
         {
-          s.println(F("gyro device: NONE"));
+          s.println(F(" gyro device: NONE"));
         }
 
         if(baro)
         {
-          s.print(F("baro device: "));
+          s.print(F(" baro device: "));
           s.print(FPSTR(Device::BaroDevice::getName(baro->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
         }
         else
         {
-          s.println(F("baro device: NONE"));
+          s.println(F(" baro device: NONE"));
         }
 
         if(mag)
         {
-          s.print(F("  mag device: "));
+          s.print(F("   mag device: "));
           s.print(FPSTR(Device::MagDevice::getName(mag->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
         }
         else
         {
-          s.println(F(" mag device: NONE"));
+          s.println(F("  mag device: NONE"));
         }
 
         s.print(F("     rx rate: "));
         s.println(_model.state.inputFrameRate);
 
+        s.print(F("     rx lpfs: "));
+        s.print(_model.state.inputAutoFreq);
+        s.print(F(", "));
+        s.println(_model.state.inputAutoFactor);
+
+        s.println();
         s.print(F(" arming disabled: "));
         s.println(_model.state.armingDisabledFlags);
       }

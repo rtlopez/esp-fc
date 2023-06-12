@@ -157,7 +157,8 @@ class Input
         v -= _model.config.input.midRc - PWM_RANGE_MID;
 
         // adj range
-        float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, (float)PWM_RANGE_MIN, (float)PWM_RANGE_MID, (float)PWM_RANGE_MAX);
+        //float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, (float)PWM_RANGE_MIN, (float)PWM_RANGE_MID, (float)PWM_RANGE_MAX);
+        float t = Math::mapi(v, ich.min, ich.max, PWM_RANGE_MIN, PWM_RANGE_MAX);
 
         // filter if required
         t = _filter[c].update(t);
@@ -278,9 +279,10 @@ class Input
 
     void updateFrameRate(uint32_t now)
     {
-      //_model.state.inputFrameDelta = (now - _model.state.inputFrameTime);
-      _model.state.inputFrameDelta = ((now - _model.state.inputFrameTime) >> 1) + (_model.state.inputFrameDelta >> 1); // avg
+      const uint32_t frameDelta = now - _model.state.inputFrameTime;
+
       _model.state.inputFrameTime = now;
+      _model.state.inputFrameDelta += (((int)frameDelta - (int)_model.state.inputFrameDelta) >> 3); // avg * 0.125
       _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
 
       if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO && _model.config.input.filterType == INPUT_INTERPOLATION)
@@ -290,10 +292,9 @@ class Input
       }
 
       // auto cutoff input freq
-      float freq = std::max(_model.state.inputFrameRate * _model.state.inputAutoFactor, 15.f);
-      if(freq > _model.state.inputAutoFreq * 1.2f || freq < _model.state.inputAutoFreq * 0.8f)
+      float freq = std::max(_model.state.inputFrameRate * _model.state.inputAutoFactor, 15.f); // no lower than 15Hz
+      if(freq > _model.state.inputAutoFreq * 1.1f || freq < _model.state.inputAutoFreq * 0.9f)
       {
-        //_model.state.inputAutoFreq = freq;
         _model.state.inputAutoFreq += 0.25f * (freq - _model.state.inputAutoFreq);
         FilterConfig conf((FilterType)_model.config.input.filter.type, freq);
         FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, freq);

@@ -155,7 +155,7 @@ class InputCRSF: public InputDevice
     void applyChannels(const CrsfFrame f)
     {
       const CrsfData* frame = reinterpret_cast<const CrsfData*>(f.message.payload);
-      Crsf::decodeRcData(_channels, frame);
+      Crsf::decodeRcDataShift8(_channels, frame);
       _new_data = true;
     }
 

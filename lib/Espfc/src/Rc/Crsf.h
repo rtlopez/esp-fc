@@ -147,6 +147,60 @@ public:
     channels[15] = convert(frame->chan15);
   }
 
+  static void decodeRcDataShift8(uint16_t* channels, const CrsfData* frame)
+  {
+    // 8-bit
+    // 0....... ...1.... ......2. ........ .3...... ....4... .......5 ........ ..6..... .....7.. ........ 
+    // 8....... ...9.... ......A. ........ .B...... ....C... .......D ........ ..E..... .....F.. ........ 
+    const uint8_t * crsfData = reinterpret_cast<const uint8_t *>(frame);
+    channels[0]  = convert((crsfData[0]       | crsfData[1]  << 8) & 0x07FF);
+    channels[1]  = convert((crsfData[1]  >> 3 | crsfData[2]  << 5) & 0x07FF);
+    channels[2]  = convert((crsfData[2]  >> 6 | crsfData[3]  << 2 | crsfData[4] << 10) & 0x07FF);
+    channels[3]  = convert((crsfData[4]  >> 1 | crsfData[5]  << 7) & 0x07FF);
+
+    channels[4]  = convert((crsfData[5]  >> 4 | crsfData[6]  << 4) & 0x07FF);
+    channels[5]  = convert((crsfData[6]  >> 7 | crsfData[7]  << 1 | crsfData[8] << 9)  & 0x07FF);
+    channels[6]  = convert((crsfData[8]  >> 2 | crsfData[9]  << 6) & 0x07FF);
+    channels[7]  = convert((crsfData[9]  >> 5 | crsfData[10] << 3) & 0x07FF);
+
+    channels[8]  = convert((crsfData[11]      | crsfData[12] << 8) & 0x07FF);
+    channels[9]  = convert((crsfData[12] >> 3 | crsfData[13] << 5) & 0x07FF);
+    channels[10] = convert((crsfData[13] >> 6 | crsfData[14] << 2 | crsfData[15] << 10) & 0x07FF);
+    channels[11] = convert((crsfData[15] >> 1 | crsfData[16] << 7) & 0x07FF);
+
+    channels[12] = convert((crsfData[16] >> 4 | crsfData[17] << 4) & 0x07FF);
+    channels[13] = convert((crsfData[17] >> 7 | crsfData[18] << 1 | crsfData[19] << 9)  & 0x07FF);
+    channels[14] = convert((crsfData[19] >> 2 | crsfData[20] << 6) & 0x07FF);
+    channels[15] = convert((crsfData[20] >> 5 | crsfData[21] << 3) & 0x07FF);
+  }
+
+  /*static void decodeRcDataShift32(uint16_t* channels, const CrsfData* frame)
+  {
+    // 32-bit
+    // 0..........1..........2......... .3..........4..........5........ ..6..........7..........8....... 
+    // ...9..........A..........B...... ....C..........D..........E..... .....F.......... 
+    const uint32_t * crsfData = reinterpret_cast<const uint32_t *>(frame);
+    channels[0]  = convert((crsfData[0]) & 0x07FF);
+    channels[1]  = convert((crsfData[0] >> 11) & 0x07FF);
+    channels[2]  = convert((crsfData[0] >> 22 | crsfData[1] << 10) & 0x07FF);
+    channels[3]  = convert((crsfData[1] >> 1) & 0x07FF);
+
+    channels[4]  = convert((crsfData[1] >> 12) & 0x07FF);
+    channels[5]  = convert((crsfData[1] >> 23 | crsfData[2] << 9)  & 0x07FF);
+    channels[6]  = convert((crsfData[2] >> 2) & 0x07FF);
+    channels[7]  = convert((crsfData[2] >> 13) & 0x07FF);
+
+    channels[8]  = convert((crsfData[2] >> 24 | crsfData[3] << 8) & 0x07FF);
+    channels[9]  = convert((crsfData[3] >> 3) & 0x07FF);
+    channels[10] = convert((crsfData[3] >> 14) & 0x07FF);
+    channels[11] = convert((crsfData[3] >> 25 | crsfData[4] << 7) & 0x07FF);
+
+    channels[12] = convert((crsfData[4] >> 4) & 0x07FF);
+    channels[13] = convert((crsfData[4] >> 15)  & 0x07FF);
+    channels[14] = convert((crsfData[4] >> 26 | crsfData[5] << 6) & 0x07FF);
+    channels[15] = convert((crsfData[5] >> 5) & 0x07FF);
+  }*/
+
   static void encodeRcData(CrsfFrame& frame, const CrsfData& data)
   {
     frame.message.addr = CRSF_ADDRESS_FLIGHT_CONTROLLER;
