@@ -167,16 +167,18 @@ class SerialManager
         }
 
         uint32_t now = millis();
-        if(!ss.availableFrom && stream->available()) ss.availableFrom = now;
+        int available = stream->available();
+        if(!ss.availableFrom && available) ss.availableFrom = now;
         bool timeout = ss.availableFrom && now - ss.availableFrom > 10;
 
         size_t count = 0;
-        if(stream->available() > 3 || timeout)
+        if(available > 3 || timeout)
         {
           ss.availableFrom = 0;
           while(stream->available())
           {
-            char c = stream->read();
+            int c = stream->read();
+            if(c == -1) break;
             if(sc.functionMask & SERIAL_FUNCTION_MSP)
             {
               bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
