@@ -5,8 +5,12 @@
 #include "Target/Target.h"
 #include "Model.h"
 #include "Device/BusDevice.h"
+#if defined(ESPFC_I2C_0)
 #include "Device/BusI2C.h"
+#endif
+#if defined(ESPFC_SPI_0)
 #include "Device/BusSPI.h"
+#endif
 #include "Device/GyroDevice.h"
 #include "Device/GyroMPU6050.h"
 #include "Device/GyroMPU9250.h"
@@ -44,7 +48,6 @@ class Hardware
 
     int begin()
     {
-      //return 0;
       initBus();
       detectGyro();
       detectMag();
@@ -155,6 +158,7 @@ class Hardware
       _model.state.baroPresent = (bool)detectedBaro;
     }
 
+#if defined(ESPFC_SPI_0)
     template<typename Dev>
     bool detectDevice(Dev& dev, Device::BusSPI& bus, int cs)
     {
@@ -163,7 +167,9 @@ class Hardware
       _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).log(cs).logln(status);
       return status;
     }
+#endif
 
+#if defined(ESPFC_I2C_0)
     template<typename Dev>
     bool detectDevice(Dev& dev, Device::BusI2C& bus)
     {
@@ -172,6 +178,7 @@ class Hardware
       _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status);
       return status;
     }
+#endif
 
     int update()
     {

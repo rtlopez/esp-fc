@@ -128,17 +128,10 @@ inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
 template<typename T>
 inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
 {
-  D("spi:d", 0, &SPI == &dev);
-  D("spi:d", 0, &SPI1 == &dev);
-  D("spi:i", sck, mosi, miso, ss);
   dev.setSCK(sck);
-  D("spi:i", sck);
   dev.setRX(miso);
-  D("spi:i", miso);
   dev.setTX(mosi);
-  D("spi:i", mosi);
   dev.begin();
-  D("spi:begin");
   return 1;
 }
 
