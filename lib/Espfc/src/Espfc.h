@@ -3,6 +3,7 @@
 
 #include "Target/Target.h"
 #include "Model.h"
+#include "Hardware.h"
 #include "Controller.h"
 #include "Input.h"
 #include "Actuator.h"
@@ -12,7 +13,6 @@
 #include "Output/Mixer.h"
 #include "Blackbox.h"
 #include "Cli.h"
-#include "Hardware.h"
 #include "Buzzer.h"
 
 namespace Espfc {
