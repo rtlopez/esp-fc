@@ -48,7 +48,7 @@
 #define ESPFC_SPI_0_MISO 12
 
 #define ESPFC_SPI_CS_GYRO 13
-#define ESPFC_SPI_CS_BARO -1
+#define ESPFC_SPI_CS_BARO 11
 
 #define ESPFC_I2C_0
 #define ESPFC_I2C_0_SDA -1 //12 //8

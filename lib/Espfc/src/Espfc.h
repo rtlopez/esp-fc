@@ -60,6 +60,7 @@ class Espfc
       if(_model.state.gyroTimer.check())
       {
         _sensor.update();
+        _sensor.updateDelayed();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
           _controller.update();
@@ -74,7 +75,7 @@ class Espfc
           }
           _blackbox.update();
         }
-        _sensor.updateDelayed();
+        //_sensor.updateDelayed();
       }
       return 1;
     }

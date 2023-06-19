@@ -296,6 +296,7 @@ struct ModelState
   float baroAltitude;
   float baroAltitudeBias;
   int32_t baroAlititudeBiasSamples;
+  int32_t baroRate;
 
   uint32_t armingDisabledFlags;
 

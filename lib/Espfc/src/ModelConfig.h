@@ -74,6 +74,7 @@ class FusionConfig
   public:
     int8_t mode;
     uint8_t gain;
+    uint8_t gainI;
 
     static const char * getModeName(FusionMode mode)
     {
@@ -715,8 +716,9 @@ class ModelConfig
       baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
 
-      fusion.mode = FUSION_MADGWICK;
+      fusion.mode = FUSION_MAHONY;
       fusion.gain = 50;
+      fusion.gainI = 5;
 
       gyroFilter = FilterConfig(FILTER_PT1, 100);
       gyroFilter2 = FilterConfig(FILTER_PT1, 188);
@@ -731,7 +733,7 @@ class ModelConfig
       dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter = FilterConfig(FILTER_BIQUAD, 10);
+      accelFilter = FilterConfig(FILTER_PT2, 15);
       magFilter = FilterConfig(FILTER_BIQUAD, 10);
       yawFilter = FilterConfig(FILTER_PT1, 90);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
