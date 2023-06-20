@@ -230,6 +230,11 @@ enum InputInterpolation {
   INPUT_INTERPOLATION_MANUAL,
 };
 
+enum InputFilterType : uint8_t {
+  INPUT_INTERPOLATION,
+  INPUT_FILTER
+};
+
 const size_t MODEL_NAME_LEN  = 16;
 const size_t AXES            = 4;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
@@ -404,6 +409,11 @@ class InputConfig
     int8_t interpolationMode;
     int8_t interpolationInterval;
     int8_t deadband;
+
+    int8_t filterType;
+    int8_t filterAutoFactor;
+    FilterConfig filter;
+    FilterConfig filterDerivative;
 
     uint8_t expo[3];
     uint8_t rate[3];
@@ -726,6 +736,11 @@ class ModelConfig
       yawFilter = FilterConfig(FILTER_PT1, 90);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
       baroFilter = FilterConfig(FILTER_BIQUAD, 15);
+
+      input.filterType = 1;
+      input.filterAutoFactor = 30;
+      input.filter = FilterConfig(FILTER_PT1, 20);
+      input.filterDerivative = FilterConfig(FILTER_PT1, 20);
 
       telemetry = 0;
       telemetryInterval = 1000;

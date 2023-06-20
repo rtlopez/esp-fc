@@ -2,6 +2,7 @@
 #define _ESPFC_MSP_PARSER_H_
 
 #include "Msp.h"
+#include "Math/Crc.h"
 
 namespace Espfc {
 
@@ -72,7 +73,7 @@ class MspParser
 
         case MSP_STATE_HEADER_V1:
           msg.buffer[msg.received++] = c;
-          msg.checksum = crc8_xor(msg.checksum, c);
+          msg.checksum = Math::crc8_xor(msg.checksum, c);
           if(msg.received == sizeof(MspHeaderV1))
           {
             const MspHeaderV1 * hdr = reinterpret_cast<MspHeaderV1*>(msg.buffer);
@@ -89,7 +90,7 @@ class MspParser
 
         case MSP_STATE_PAYLOAD_V1:
           msg.buffer[msg.received++] = c;
-          msg.checksum = crc8_xor(msg.checksum, c);
+          msg.checksum = Math::crc8_xor(msg.checksum, c);
           if(msg.received == msg.expected)
           {
             msg.state = MSP_STATE_CHECKSUM_V1;
@@ -102,7 +103,7 @@ class MspParser
 
         case MSP_STATE_HEADER_V2:
           msg.buffer[msg.received++] = c;
-          msg.checksum2 = crc8_dvb_s2(msg.checksum2, c);
+          msg.checksum2 = Math::crc8_dvb_s2(msg.checksum2, c);
           if(msg.received == sizeof(MspHeaderV2))
           {
             const MspHeaderV2 * hdr = reinterpret_cast<MspHeaderV2*>(msg.buffer);
@@ -120,7 +121,7 @@ class MspParser
 
         case MSP_STATE_PAYLOAD_V2:
           msg.buffer[msg.received++] = c;
-          msg.checksum2 = crc8_dvb_s2(msg.checksum2, c);
+          msg.checksum2 = Math::crc8_dvb_s2(msg.checksum2, c);
           if(msg.received == msg.expected)
           {
             msg.state = MSP_STATE_CHECKSUM_V2;
@@ -135,39 +136,6 @@ class MspParser
           //msg.state = MSP_STATE_IDLE;
           break;
       }
-    }
-
-    uint8_t crc8_dvb_s2(uint8_t crc, const uint8_t a)
-    {
-      crc ^= a;
-      for (size_t i = 0; i < 8; ++i) {
-        if (crc & 0x80) crc = (crc << 1) ^ 0xD5;
-        else crc = crc << 1;
-      }
-      return crc;
-    }
-
-    uint8_t crc8_dvb_s2(uint8_t crc, const uint8_t* data, size_t len)
-    {
-      while (len-- > 0)
-      {
-        crc = crc8_dvb_s2(crc, *data++);
-      }
-      return crc;
-    }
-
-    uint8_t crc8_xor(uint8_t checksum, const uint8_t a)
-    {
-      return checksum ^ a;
-    }
-
-    uint8_t crc8_xor(uint8_t checksum, const uint8_t *data, int len)
-    {
-      while (len-- > 0)
-      {
-        checksum = crc8_xor(checksum, *data++);
-      }
-      return checksum;
     }
 };
 

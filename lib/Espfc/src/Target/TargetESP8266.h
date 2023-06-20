@@ -103,8 +103,8 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
     case SDC_SERIAL_STOP_BITS_1:  sc |= UART_NB_STOP_BIT_2;  break;
     default: break;
   }
-  if(conf.inverted) sc |= (SERIAL_RXD_INV | SERIAL_TXD_INV);
-  dev.begin(conf.baud, (SerialConfig)sc);
+  //if(conf.inverted) sc |= (SERIAL_RXD_INV | SERIAL_TXD_INV);
+  dev.begin(conf.baud, (SerialConfig)sc, SERIAL_FULL, &Serial == &dev ? 1 : 2, conf.inverted);
 
   return 1;
 }

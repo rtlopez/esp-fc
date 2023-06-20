@@ -75,6 +75,26 @@ static Espfc::SerialSpeed fromBaudIndex(SerialSpeedIndex index)
   }
 }
 
+static uint8_t toFilterTypeDerivative(uint8_t t)
+{
+  switch(t) {
+    case 0: return Espfc::FILTER_NONE;
+    case 1: return Espfc::FILTER_PT1;
+    case 2: return Espfc::FILTER_BIQUAD;
+    default: return Espfc::FILTER_PT1;
+  }
+}
+
+static uint8_t fromFilterTypeDerivative(uint8_t t)
+{
+  switch(t) {
+    case Espfc::FILTER_NONE: return 0;
+    case Espfc::FILTER_PT1: return 1;
+    case Espfc::FILTER_BIQUAD: return 2;
+    default: return 1;
+  }
+}
+
 }
 
 namespace Espfc {
@@ -638,15 +658,14 @@ class MspProcessor
           r.writeU8(0); // rx spi chan count
           r.writeU8(0); // fpv camera angle
           r.writeU8(2); // rc iterpolation channels: RPYT
-          r.writeU8(0); // rc_smoothing_type
-          r.writeU8(0); // rc_smoothing_input_cutoff
-          r.writeU8(0); // rc_smoothing_derivative_cutoff
-          r.writeU8(0); // rc_smoothing_input_type
-          r.writeU8(0); // rc_smoothing_derivative_type
+          r.writeU8(_model.config.input.filterType); // rc_smoothing_type
+          r.writeU8(_model.config.input.filter.freq); // rc_smoothing_input_cutoff
+          r.writeU8(_model.config.input.filterDerivative.freq); // rc_smoothing_derivative_cutoff
+          r.writeU8(_model.config.input.filter.type); // rc_smoothing_input_type
+          r.writeU8(fromFilterTypeDerivative(_model.config.input.filterDerivative.type)); // rc_smoothing_derivative_type
           r.writeU8(0); // usb type
           // 1.42+
-          r.writeU8(0); // rc_smoothing_auto_factor
-
+          r.writeU8(_model.config.input.filterAutoFactor); // rc_smoothing_auto_factor
           break;
 
         case MSP_SET_RX_CONFIG:
@@ -659,7 +678,7 @@ class MspProcessor
           _model.config.input.maxRc = m.readU16(); //max_us
           if (m.remain() >= 4) {
             _model.config.input.interpolationMode = m.readU8(); // rc interpolation
-             _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
+            _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
             m.readU16(); // airmode activate threshold
           }
           if (m.remain() >= 6) {
@@ -673,18 +692,18 @@ class MspProcessor
           // 1.40+
           if (m.remain() >= 6) {
             m.readU8(); // rc iterpolation channels
-            m.readU8(); // rc_smoothing_type
-            m.readU8(); // rc_smoothing_input_cutoff
-            m.readU8(); // rc_smoothing_derivative_cutoff
-            m.readU8(); // rc_smoothing_input_type
-            m.readU8(); // rc_smoothing_derivative_type
+            _model.config.input.filterType = m.readU8(); // rc_smoothing_type
+            _model.config.input.filter.freq = m.readU8(); // rc_smoothing_input_cutoff
+            _model.config.input.filterDerivative.freq = m.readU8(); // rc_smoothing_derivative_cutoff
+            _model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
+            _model.config.input.filterDerivative.type = toFilterTypeDerivative(m.readU8()); // rc_smoothing_derivative_type
           }
           if (m.remain() >= 1) {
             m.readU8(); // usb type
           }
           // 1.42+
           if (m.remain() >= 1) {
-            m.readU8(); // rc_smoothing_auto_factor
+            _model.config.input.filterAutoFactor = m.readU8(); // rc_smoothing_auto_factor
           }
 
           _model.reload();
@@ -1287,12 +1306,12 @@ class MspProcessor
       }
       hdr[3] = r.len;
       hdr[4] = r.cmd;
-      uint8_t checksum = _parser.crc8_xor(0, &hdr[3], 2);
+      uint8_t checksum = Math::crc8_xor(0, &hdr[3], 2);
       s.write(hdr, 5);
       if(r.len > 0)
       {
         s.write(r.data, r.len);
-        checksum = _parser.crc8_xor(checksum, r.data, r.len);
+        checksum = Math::crc8_xor(checksum, r.data, r.len);
       }
       s.write(checksum);
     }
@@ -1308,12 +1327,12 @@ class MspProcessor
       hdr[5] = (r.cmd >> 8) & 0xff;
       hdr[6] = r.len & 0xff;
       hdr[7] = (r.len >> 8) & 0xff;
-      uint8_t checksum = _parser.crc8_dvb_s2(0, &hdr[3], 5);
+      uint8_t checksum = Math::crc8_dvb_s2(0, &hdr[3], 5);
       s.write(hdr, 8);
       if(r.len > 0)
       {
         s.write(r.data, r.len);
-        checksum = _parser.crc8_dvb_s2(checksum, r.data, r.len);
+        checksum = Math::crc8_dvb_s2(checksum, r.data, r.len);
       }
       s.write(checksum);
     }

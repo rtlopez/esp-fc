@@ -348,6 +348,7 @@ void test_filter_pt1_10_100_step()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.967f, filter.update(1.0f));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.980f, filter.update(1.0f));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.988f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.992f, filter.update(1.0f));
 }
 
 void test_filter_pt1_above_nyquist()
@@ -360,6 +361,43 @@ void test_filter_pt1_above_nyquist()
     TEST_ASSERT_GREATER_THAN(10, filter._conf.freq);
 }
 
+void test_filter_pt2_10_100_step()
+{
+    Filter filter;
+    const FilterConfig config(FILTER_PT2, 10);
+    filter.begin(config, 100);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.244f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.490f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.678f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.804f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.885f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.933f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.962f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.978f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.988f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.993f, filter.update(1.0f));
+}
+
+void test_filter_pt3_10_100_step()
+{
+    Filter filter;
+    const FilterConfig config(FILTER_PT3, 10);
+    filter.begin(config, 100);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.168f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.394f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.596f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.748f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.850f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.913f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.952f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.973f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.986f, filter.update(1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.992f, filter.update(1.0f));
+}
 
 void test_filter_biquad_off()
 {
@@ -730,6 +768,8 @@ int main(int argc, char **argv)
     RUN_TEST(test_filter_pt1_50_100);
     RUN_TEST(test_filter_pt1_10_100_step);
     RUN_TEST(test_filter_pt1_above_nyquist);
+    RUN_TEST(test_filter_pt2_10_100_step);
+    RUN_TEST(test_filter_pt3_10_100_step);
     RUN_TEST(test_filter_biquad_off);
     RUN_TEST(test_filter_biquad_20_100);
     RUN_TEST(test_filter_biquad_10_100_step);
