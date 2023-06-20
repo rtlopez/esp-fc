@@ -3,16 +3,6 @@
 
 #include "BusDevice.h"
 
-#if defined(ESPFC_I2C_0_SOFT)
-#include "EspWire.h"
-#define WireClass EspTwoWire
-#define WireImpl EspWire
-#else
-#include "Wire.h"
-#define WireClass TwoWire
-#define WireImpl Wire
-#endif
-
 namespace Espfc {
 
 namespace Device {
@@ -20,11 +10,15 @@ namespace Device {
 class BusI2C: public BusDevice
 {
   public:
+    BusI2C(WireClass& i2c): _dev(i2c) {}
+
     BusType getType() const override { return BUS_I2C; }
 
     int begin(int sda, int scl, int speed)
     {
-      targetI2CInit(WireImpl, sda, scl, speed);
+      if(sda == -1 || scl == -1) return 0;
+
+      targetI2CInit(_dev, sda, scl, speed);
       return 1;
     }
 
@@ -40,14 +34,14 @@ class BusI2C: public BusDevice
 
       //D("i2c:r0", devAddr, regAddr, length);
 
-      WireImpl.beginTransmission(devAddr);
-      WireImpl.write(regAddr);
-      WireImpl.endTransmission();
-      WireImpl.requestFrom(devAddr, length);
+      _dev.beginTransmission(devAddr);
+      _dev.write(regAddr);
+      _dev.endTransmission();
+      _dev.requestFrom(devAddr, length);
 
-      for (; WireImpl.available() && (timeout == 0 || millis() - t1 < timeout); count++)
+      for (; _dev.available() && (timeout == 0 || millis() - t1 < timeout); count++)
       {
-        data[count] = WireImpl.read();
+        data[count] = _dev.read();
         //D("i2c:r1", count, data[count]);
       }
 
@@ -63,14 +57,14 @@ class BusI2C: public BusDevice
     {
       //Serial.print("I2C W "); Serial.print(devAddr, HEX); Serial.print(' '); Serial.print(regAddr, HEX); Serial.print(' '); Serial.println(length);
 
-      WireImpl.beginTransmission(devAddr);
-      WireImpl.write((uint8_t) regAddr); // send address
+      _dev.beginTransmission(devAddr);
+      _dev.write((uint8_t) regAddr); // send address
       for (uint8_t i = 0; i < length; i++)
       {
-        WireImpl.write(data[i]);
+        _dev.write(data[i]);
         //Serial.print("I2C W "); Serial.print(i); Serial.print(' '); Serial.println(data[i], HEX);
       }
-      uint8_t status = WireImpl.endTransmission();
+      uint8_t status = _dev.endTransmission();
 
       if(onError && status != 0) onError();
 
@@ -78,10 +72,7 @@ class BusI2C: public BusDevice
     }
 
   private:
-#if defined(NO_GLOBAL_INSTANCES) || defined(NO_GLOBAL_TWOWIRE)
-    WireClass WireImpl;
-#endif
-
+    WireClass& _dev;
 };
 
 }

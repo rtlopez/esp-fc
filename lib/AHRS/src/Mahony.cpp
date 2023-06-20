@@ -222,19 +222,17 @@ void Mahony::update(float gx, float gy, float gz, float ax, float ay, float az)
 		gz += twoKp * halfez;
 	}
 
-	if(hasGyro) {
-		// Integrate rate of change of quaternion
-		gx *= (0.5f * invSampleFreq);		// pre-multiply common factors
-		gy *= (0.5f * invSampleFreq);
-		gz *= (0.5f * invSampleFreq);
-		qa = q0;
-		qb = q1;
-		qc = q2;
-		q0 += (-qb * gx - qc * gy - q3 * gz);
-		q1 += (qa * gx + qc * gz - q3 * gy);
-		q2 += (qa * gy - qb * gz + q3 * gx);
-		q3 += (qa * gz + qb * gy - qc * gx);
-	}
+	// Integrate rate of change of quaternion
+	gx *= (0.5f * invSampleFreq);		// pre-multiply common factors
+	gy *= (0.5f * invSampleFreq);
+	gz *= (0.5f * invSampleFreq);
+	qa = q0;
+	qb = q1;
+	qc = q2;
+	q0 += (-qb * gx - qc * gy - q3 * gz);
+	q1 += (qa * gx + qc * gz - q3 * gy);
+	q2 += (qa * gy - qb * gz + q3 * gx);
+	q3 += (qa * gz + qb * gy - qc * gx);
 
 	// Normalise quaternion
 	recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);

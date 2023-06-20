@@ -429,7 +429,8 @@ class Cli
         Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
 
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
-        Param(PSTR("fusion_gain"), &c.fusion.gain),
+        Param(PSTR("fusion_gain_p"), &c.fusion.gain),
+        Param(PSTR("fusion_gain_i"), &c.fusion.gainI),
 
         Param(PSTR("input_rate_type"), &c.input.rateType, inputRateTypeChoices),
 
@@ -1289,6 +1290,18 @@ class Cli
 
       s.print(F("  mixer rate: "));
       s.print(_model.state.mixerTimer.rate);
+      s.println(F(" Hz"));
+
+      s.print(F("  accel rate: "));
+      s.print(_model.state.accelTimer.rate);
+      s.println(F(" Hz"));
+
+      s.print(F("   baro rate: "));
+      s.print(_model.state.baroRate);
+      s.println(F(" Hz"));
+
+      s.print(F("    mag rate: "));
+      s.print(_model.state.magTimer.rate);
       s.println(F(" Hz"));
     }
 

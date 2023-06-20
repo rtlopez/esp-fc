@@ -1,18 +1,17 @@
 #pragma once
 
 #define ESPFC_INPUT
-#define ESPFC_INPUT_PIN 7 // ppm
+#define ESPFC_INPUT_PIN -1 // ppm
 
 #define ESPFC_OUTPUT_COUNT 8
-#define ESPFC_OUTPUT_0 14
-#define ESPFC_OUTPUT_1 15
-#define ESPFC_OUTPUT_2 16
-#define ESPFC_OUTPUT_3 17
+#define ESPFC_OUTPUT_0 2
+#define ESPFC_OUTPUT_1 3
+#define ESPFC_OUTPUT_2 4
+#define ESPFC_OUTPUT_3 5
 #define ESPFC_OUTPUT_4 -1
 #define ESPFC_OUTPUT_5 -1
 #define ESPFC_OUTPUT_6 -1
 #define ESPFC_OUTPUT_7 -1
-
 
 #define ESPFC_SERIAL_0
 #define ESPFC_SERIAL_0_DEV Serial1
@@ -26,8 +25,8 @@
 #define ESPFC_SERIAL_1
 #define ESPFC_SERIAL_1_DEV Serial2
 #define ESPFC_SERIAL_1_DEV_T SerialUART
-#define ESPFC_SERIAL_1_TX 20
-#define ESPFC_SERIAL_1_RX 21
+#define ESPFC_SERIAL_1_TX 8
+#define ESPFC_SERIAL_1_RX 9
 #define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_RX_SERIAL)
 #define ESPFC_SERIAL_1_BAUD (SERIAL_SPEED_115200)
 #define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_NONE)
@@ -38,23 +37,25 @@
 #define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
 
 #define ESPFC_SERIAL_REMAP_PINS
-#define SERIAL_TX_FIFO_SIZE 64
+#define SERIAL_TX_FIFO_SIZE 128
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_USB
 
 #define ESPFC_SPI_0
-#define ESPFC_SPI_0_SCK 2
-#define ESPFC_SPI_0_MOSI 3
-#define ESPFC_SPI_0_MISO 4
+#define ESPFC_SPI_0_DEV SPI1
+#define ESPFC_SPI_0_DEV_T SPIClassRP2040
+#define ESPFC_SPI_0_SCK 14
+#define ESPFC_SPI_0_MOSI 15
+#define ESPFC_SPI_0_MISO 12
 
-#define ESPFC_SPI_CS_GYRO 5
-#define ESPFC_SPI_CS_BARO 6
+#define ESPFC_SPI_CS_GYRO 13
+#define ESPFC_SPI_CS_BARO 11
 
 #define ESPFC_I2C_0
-#define ESPFC_I2C_0_SDA 12 //8
-#define ESPFC_I2C_0_SCL 13 //9
+#define ESPFC_I2C_0_SDA -1 //12 //8
+#define ESPFC_I2C_0_SCL -1 //13 //9
 
 #define ESPFC_BUZZER
-#define ESPFC_BUZZER_PIN 22
+#define ESPFC_BUZZER_PIN -1
 
 #define ESPFC_ADC_0
 #define ESPFC_ADC_0_PIN 26
@@ -127,7 +128,6 @@ inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
 template<typename T>
 inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
 {
-  //D("spi:i", sck, mosi, miso);
   dev.setSCK(sck);
   dev.setRX(miso);
   dev.setTX(mosi);

@@ -23,6 +23,7 @@ class BaroSensor: public BaseSensor
 
     int begin()
     {
+      _model.state.baroRate = 0;
       if(!_model.baroActive()) return 0;
       _baro = _model.state.baroDev;
       if(!_baro) return 0;
@@ -32,6 +33,7 @@ class BaroSensor: public BaseSensor
       int toGyroRate = (delay / _model.state.gyroTimer.interval) + 1; // number of gyro readings per cycle
       int interval = _model.state.gyroTimer.interval * toGyroRate;
       int rate = 1000000 / interval;
+      _model.state.baroRate = rate;
 
       _temperatureFilter.begin(FilterConfig(FILTER_PT1, 10), rate);
       _pressureFilter.begin(FilterConfig(FILTER_MEDIAN3, 10), rate);
