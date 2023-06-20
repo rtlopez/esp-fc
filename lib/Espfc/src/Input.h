@@ -70,7 +70,6 @@ class Input
       switch(ich.fsMode)
       {
         case FAILSAFE_MODE_AUTO:
-          //return c != AXIS_THRUST ? _model.config.input.midRc : _model.config.input.minRc;
           return c == AXIS_THRUST ? PWM_RANGE_MIN : PWM_RANGE_MID;
         case FAILSAFE_MODE_SET:
           return ich.fsValue;
@@ -89,9 +88,9 @@ class Input
         v = noDelta ? v : _model.state.inputFilter[i].update(v);
         _model.state.inputUs[i] = v;
         _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
-        float delta = noDelta ? 0.f : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
-        _model.state.inputDerivative[i] = _model.state.inputFilterDerivative[i].update(delta);
-        _model.state.inputPrevious[i] = _model.state.input[i];
+        //float delta = noDelta ? 0.f : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
+        //_model.state.inputDerivative[i] = _model.state.inputFilterDerivative[i].update(delta);
+        //_model.state.inputPrevious[i] = _model.state.input[i];
       }
       else if(newFrame)
       {
@@ -145,13 +144,16 @@ class Input
     {
       if(_model.state.inputFrameCount < 5) return; // ignore few first frames that might be garbage
 
+      uint16_t channels[INPUT_CHANNELS];
+      _device->get(channels, _model.state.inputChannelCount);
+
       _model.state.inputChannelsValid = true;
       for(size_t c = 0; c < _model.state.inputChannelCount; c++)
       {
         const InputChannelConfig& ich = _model.config.input.channel[c];
 
         // remap channels
-        int16_t v = _model.state.inputRaw[c] = _device->get(ich.map);
+        int16_t v = _model.state.inputRaw[c] = (int16_t)channels[ich.map];
 
         // adj midrc
         v -= _model.config.input.midRc - PWM_RANGE_MID;

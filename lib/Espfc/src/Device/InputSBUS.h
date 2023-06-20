@@ -89,6 +89,14 @@ class InputSBUS: public InputDevice
       return _channels[i];
     }
 
+    void get(uint16_t * data, size_t len) const override
+    {
+      const uint16_t * src = _channels;
+      while(len--)
+      {
+        *data++ = *src++;
+      }
+    }
 
     size_t getChannelCount() const override { return CHANNELS; }
 
