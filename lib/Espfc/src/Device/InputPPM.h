@@ -22,19 +22,18 @@ class InputPPM: public InputDevice
     void handle() IRAM_ATTR;
     static void handle_isr() IRAM_ATTR;
 
-    /*bool fail()
-    {
-      // sometimes micros() is lower than _last_tick,
-      // probably ISR occured before comparision,
-      // small time compensation allows to avoid false detection
-      uint32_t now = micros() + 1000;
-      uint32_t delta = now - _last_tick;
-      return delta > BROKEN_LINK_US;
-    }*/
-
     uint16_t get(uint8_t i) const override
     {
       return _channels[i];
+    }
+
+    void get(uint16_t * data, size_t len) const override
+    {
+      const uint16_t * src = const_cast<const uint16_t *>(_channels);
+      while(len--)
+      {
+        *data++ = *src++;
+      }
     }
 
     InputStatus update() override

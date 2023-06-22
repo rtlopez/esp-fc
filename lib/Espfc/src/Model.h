@@ -390,7 +390,7 @@ class Model
       state.actuatorTimer.setRate(25); // 25 hz
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(10);
+      state.stats.timer.setRate(2);
       state.serialTimer.setRate(1000);
       if(magActive())
       {
