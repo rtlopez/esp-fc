@@ -122,8 +122,8 @@ class SerialManager
         }
 
         //D("uart-flash", i, spc.id, spc.functionMask, spc.baud);
-        port->flush();
-        delay(10);
+        //port->flush();
+        //delay(10);
 
         //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
         port->begin(sdc);
@@ -154,6 +154,7 @@ class SerialManager
           return 0;
         }
 
+        /*
         uint32_t now = millis();
         if(!ss.availableFrom && stream->available()) ss.availableFrom = now;
         bool timeout = ss.availableFrom && now - ss.availableFrom > 10;
@@ -174,6 +175,21 @@ class SerialManager
               }
             }
             if(++count > 127) break;
+          }
+        }
+        */
+
+        size_t len = stream->available();
+        while(len--)
+        {
+          const int c = stream->read();
+          if(sc.functionMask & SERIAL_FUNCTION_MSP)
+          {
+            bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
+            if(!consumed)
+            {
+              _cli.process(c, ss.cliCmd, *stream);
+            }
           }
         }
       }
