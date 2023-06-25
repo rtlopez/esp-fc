@@ -44,33 +44,45 @@ class AccelSensor: public BaseSensor
 
     int update()
     {
+      int status = read();
+
+      if (status) filter();
+
+      return status;
+    }
+
+    int read()
+    {
       if(!_model.accelActive()) return 0;
 
       if(!_model.state.accelTimer.check()) return 0;
 
+      Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
+      _gyro->readAccel(_model.state.accelRaw);
+
+      return 1;
+    }
+
+    int filter()
+    {
+      if(!_model.accelActive()) return 0;
+
+      Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
+
+      align(_model.state.accelRaw, _model.config.accelAlign);
+
+      _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
+      for(size_t i = 0; i < 3; i++)
       {
-        Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
-        _gyro->readAccel(_model.state.accelRaw);
-      }
-
-      {
-        Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
-
-        align(_model.state.accelRaw, _model.config.accelAlign);
-
-        _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
-        for(size_t i = 0; i < 3; i++)
+        if(_model.config.debugMode == DEBUG_ACCELEROMETER)
         {
-          if(_model.config.debugMode == DEBUG_ACCELEROMETER)
-          {
-            _model.state.debug[i] = _model.state.accelRaw[i];
-          }
-          _model.state.accel.set(i, _filter[i].update(_model.state.accel[i]));
-          _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accel[i]));
+          _model.state.debug[i] = _model.state.accelRaw[i];
         }
-
-        calibrate();
+        _model.state.accel.set(i, _filter[i].update(_model.state.accel[i]));
+        _model.state.accel.set(i, _model.state.accelFilter[i].update(_model.state.accel[i]));
       }
+
+      calibrate();
 
       return 1;
     }

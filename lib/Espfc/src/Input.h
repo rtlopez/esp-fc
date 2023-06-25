@@ -99,6 +99,20 @@ class Input
       }
     }
 
+    int onIoEvent(const Event& e)
+    {
+      switch(e.type)
+      {
+        case EVENT_BARO_READ:
+          update();
+          _model.state.notify(Event(EVENT_INPUT_READ));
+          return 1;
+        default:
+          break;
+      }
+      return 0;
+    }
+
     int update()
     {
       if(!_device) return 0;

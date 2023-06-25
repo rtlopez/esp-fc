@@ -57,6 +57,20 @@ class Mixer
       return 1;
     }
 
+    int onAppEvent(const Event& e)
+    {
+      switch(e.type)
+      {
+        case EVENT_PID_UPDATE:
+          update();
+          _model.state.notify(Event(EVENT_MIXER_UPDATE));
+          return 1;
+        default:
+          break;
+      }
+      return 0;
+    }
+
     int update()
     {
       float outputs[OUTPUT_CHANNELS];

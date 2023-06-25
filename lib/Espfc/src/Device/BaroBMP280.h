@@ -139,7 +139,7 @@ class BaroBMP280: public BaroDevice
     int32_t readReg(uint8_t reg)
     {
       uint8_t buffer[3];
-      _bus->read(_addr, reg, 3, buffer);
+      _bus->readFast(_addr, reg, 3, buffer);
       return buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
     }
 

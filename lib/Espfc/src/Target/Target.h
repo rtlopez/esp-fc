@@ -14,6 +14,8 @@
   #error "Unsupported platform!"
 #endif
 
+#include "Queue.h"
+
 #if defined(ESPFC_I2C_0)
   #if defined(ESPFC_I2C_0_SOFT)
     #include "EspWire.h"

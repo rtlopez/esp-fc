@@ -29,6 +29,8 @@ class Espfc
     {
       PIN_DEBUG_INIT();
       _model.load();
+      _model.state.ioQueue.begin();
+      _model.state.appQueue.begin();
       return 1;
     }
 
@@ -57,7 +59,24 @@ class Espfc
 
     int update()
     {
-      if(_model.state.gyroTimer.check())
+      if(_model.state.gyroTimer.check()) {
+        //_model.state.notify(Event(EVENT_START));
+        _sensor.read();
+      }
+
+      if(_model.state.ioQueue.isEmpty()) {
+        return 0;
+      }
+
+      Event e = _model.state.ioQueue.reveive();
+      Serial2.write((uint8_t)e.type);
+
+      //_sensor.onIoEvent(e);
+      _input.onIoEvent(e);
+      _actuator.onIoEvent(e);
+      _serial.onIoEvent(e);
+
+      /*if(_model.state.gyroTimer.check())
       {
         _sensor.update();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
@@ -75,19 +94,33 @@ class Espfc
           _blackbox.update();
         }
         _sensor.updateDelayed();
-      }
+      }*/
+
       return 1;
     }
 
     // other task
     int updateOther()
     {
-      if(_model.state.serialTimer.check())
+      if(_model.state.appQueue.isEmpty()) {
+        return 1;
+      }
+
+      Event e = _model.state.appQueue.reveive();
+      //Serial2.write((uint8_t)e.type);
+
+      _sensor.onAppEvent(e);
+      _controller.onAppEvent(e);
+      _mixer.onAppEvent(e);
+      _blackbox.onAppEvent(e);
+
+      /*if(_model.state.serialTimer.check())
       {
         _serial.update();
-      }
+      }*/
       _buzzer.update();
       _model.state.stats.update();
+
       return 1;
     }
 

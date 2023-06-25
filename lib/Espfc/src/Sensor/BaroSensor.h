@@ -46,8 +46,14 @@ class BaroSensor: public BaseSensor
 
     int update()
     {
-      if(!_model.baroActive()) return 0;
-      if(!_baro) return 0;
+      int status = read();
+
+      return status;
+    }
+
+    int read()
+    {
+      if(!_baro || !_model.baroActive()) return 0;
       
       Stats::Measure measure(_model.state.stats, COUNTER_BARO);
       
@@ -112,9 +118,9 @@ class BaroSensor: public BaseSensor
     {
       _model.state.baroPressure = _pressureFilter.update(_model.state.baroPressureRaw);
       _model.state.baroAltitude = _altitudeFilter.update(_baro->getAltitude(_model.state.baroPressure));
-      if(_model.state.baroAlititudeBiasSamples > 0)
+      if(_model.state.baroAltitudeBiasSamples > 0)
       {
-        _model.state.baroAlititudeBiasSamples--;
+        _model.state.baroAltitudeBiasSamples--;
         _model.state.baroAltitudeBias += (_model.state.baroAltitude - _model.state.baroAltitudeBias) * 0.2f;
       }
       _model.state.baroAltitude -= _model.state.baroAltitudeBias;

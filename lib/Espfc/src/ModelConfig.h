@@ -701,7 +701,7 @@ class ModelConfig
       gyroSync = 1; // unused, force 1
 
       loopSync = 8; // MPU 1000Hz
-      loopSync = 4; // LSM 833Hz
+      //loopSync = 4; // LSM 833Hz
       mixerSync = 1;
 
       accelBus = BUS_AUTO;

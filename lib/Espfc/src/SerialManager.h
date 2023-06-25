@@ -132,7 +132,7 @@ class SerialManager
           continue;
         }
 
-        if(!isUsbPort) {
+        if(true || !isUsbPort) {
           //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
           port->flush();
           delay(10);
@@ -150,6 +150,20 @@ class SerialManager
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
       }
       return 1;
+    }
+
+    int onIoEvent(const Event& e)
+    {
+      switch(e.type)
+      {
+        case EVENT_VOLTAGE_READ:
+          update();
+          _model.state.notify(Event(EVENT_SERIAL_READ));
+          return 1;
+        default:
+          break;
+      }
+      return 0;
     }
 
     int update()
