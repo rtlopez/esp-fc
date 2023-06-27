@@ -230,7 +230,7 @@ class Model
       logger.begin();
       #ifndef UNIT_TEST
       _storage.begin();
-      //_storageResult = _storage.load(config);
+      _storageResult = _storage.load(config);
       #endif
       postLoad();
       return 1;

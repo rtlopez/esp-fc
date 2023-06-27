@@ -155,6 +155,7 @@ struct ModelState
   Quaternion accelPoseQ;
   VectorFloat magPose;
 
+  bool imuUpdate;
   VectorFloat pose;
   Quaternion poseQ;
 
@@ -305,15 +306,7 @@ struct ModelState
   SerialPortState serial[SERIAL_UART_COUNT];
   Timer serialTimer;
 
-  Target::Queue ioQueue;
   Target::Queue appQueue;
-
-  void notify(const Event& e)
-  {
-    Serial1.write((uint8_t)e.type);
-    ioQueue.send(e);
-    appQueue.send(e);
-  }
 };
 
 }

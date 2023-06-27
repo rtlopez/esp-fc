@@ -65,7 +65,7 @@ class BaroSensor: public BaseSensor
           _baro->setMode(BARO_MODE_TEMP);
           _state = BARO_STATE_TEMP_GET;
           _wait = micros() + _baro->getDelay();
-          break;
+          return 0;
         case BARO_STATE_TEMP_GET:
           readTemperature();
           updateTemperature();
@@ -74,7 +74,7 @@ class BaroSensor: public BaseSensor
           _state = BARO_STATE_PRESS_GET;
           _wait = micros() + _baro->getDelay();
           _counter = 9;
-          break;
+          return 1;
         case BARO_STATE_PRESS_GET:
           readPressure();
           updateAltitude();
@@ -89,13 +89,14 @@ class BaroSensor: public BaseSensor
             _state = BARO_STATE_TEMP_GET;
           }
           _wait = micros() + _baro->getDelay();
+          return 1;
           break;
         default:
           _state = BARO_STATE_INIT;
           break;
       }
 
-      return 1;
+      return 0;
     }
 
   private:

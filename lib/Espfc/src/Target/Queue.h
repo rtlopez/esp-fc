@@ -10,7 +10,9 @@
 #elif defined(ESPFC_FREE_RTOS)
   #include <freertos/queue.h>
   typedef QueueHandle_t TargetQueueHandle;
-#elif
+#elif defined(UNIT_TEST)
+  typedef int TargetQueueHandle;
+#else
   #error "Not yet implelented multicore queue"
 #endif
 
@@ -21,17 +23,12 @@ enum EventType
   EVENT_IDLE,
   EVENT_START,
   EVENT_GYRO_READ,
-  EVENT_GYRO_FILTER,
   EVENT_ACCEL_READ,
-  EVENT_ACCEL_FILTER,
   EVENT_MAG_READ,
-  EVENT_MAG_FILTER,
   EVENT_BARO_READ,
-  EVENT_BARO_FILTER,
+  EVENT_SENSOR_READ,
   EVENT_INPUT_READ,
-  EVENT_MODE_UPDATE,
   EVENT_VOLTAGE_READ,
-  EVENT_SERIAL_READ,
   EVENT_IMU_UPDATE,
   EVENT_PID_UPDATE,
   EVENT_MIXER_UPDATE,
@@ -56,12 +53,19 @@ class Queue
   public:
     void begin();
     void send(const Event& e);
-    Event reveive();
+    Event receive();
     bool isEmpty() const;
 
   private:
     TargetQueueHandle _q;
 };
+
+#if defined(UNIT_TEST)
+void Queue::begin() {}
+void Queue::send(const Event& e) { (void)e; }
+Event Queue::receive() { return Event(); }
+bool Queue::isEmpty() const { return true; }
+#endif
 
 }
 

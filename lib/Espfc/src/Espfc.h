@@ -29,7 +29,6 @@ class Espfc
     {
       PIN_DEBUG_INIT();
       _model.load();
-      _model.state.ioQueue.begin();
       _model.state.appQueue.begin();
       return 1;
     }
@@ -59,24 +58,29 @@ class Espfc
 
     int update()
     {
-      if(_model.state.gyroTimer.check()) {
-        //_model.state.notify(Event(EVENT_START));
-        _sensor.read();
-      }
-
-      if(_model.state.ioQueue.isEmpty()) {
+#if defined(ESPFC_MULTI_CORE)
+      if(!_model.state.appQueue.isEmpty())
+      {
         return 0;
       }
 
-      Event e = _model.state.ioQueue.reveive();
-      Serial2.write((uint8_t)e.type);
+      if(!_model.state.gyroTimer.check())
+      {
+        return 0;
+      }
 
-      //_sensor.onIoEvent(e);
-      _input.onIoEvent(e);
-      _actuator.onIoEvent(e);
-      _serial.onIoEvent(e);
+      _sensor.read();
+      _input.update();
+      _actuator.update();
+      _serial.update();
+      _buzzer.update();
+      _model.state.stats.update();
 
-      /*if(_model.state.gyroTimer.check())
+      _model.state.appQueue.send(Event(EVENT_IDLE));
+
+      return 1;
+#else
+      if(_model.state.gyroTimer.check())
       {
         _sensor.update();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
@@ -94,7 +98,8 @@ class Espfc
           _blackbox.update();
         }
         _sensor.updateDelayed();
-      }*/
+      }
+#endif
 
       return 1;
     }
@@ -102,24 +107,22 @@ class Espfc
     // other task
     int updateOther()
     {
-      if(_model.state.appQueue.isEmpty()) {
-        return 1;
-      }
-
-      Event e = _model.state.appQueue.reveive();
+#if defined(ESPFC_MULTI_CORE)
+      Event e = _model.state.appQueue.receive();
       //Serial2.write((uint8_t)e.type);
 
       _sensor.onAppEvent(e);
       _controller.onAppEvent(e);
       _mixer.onAppEvent(e);
       _blackbox.onAppEvent(e);
-
-      /*if(_model.state.serialTimer.check())
+#else
+      if(_model.state.serialTimer.check())
       {
         _serial.update();
-      }*/
+      }
       _buzzer.update();
       _model.state.stats.update();
+#endif
 
       return 1;
     }

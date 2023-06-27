@@ -63,7 +63,7 @@ class Mixer
       {
         case EVENT_PID_UPDATE:
           update();
-          _model.state.notify(Event(EVENT_MIXER_UPDATE));
+          _model.state.appQueue.send(Event(EVENT_MIXER_UPDATE));
           return 1;
         default:
           break;

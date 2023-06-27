@@ -153,20 +153,6 @@ class SerialManager
       return 1;
     }
 
-    int onIoEvent(const Event& e)
-    {
-      switch(e.type)
-      {
-        case EVENT_VOLTAGE_READ:
-          update();
-          _model.state.notify(Event(EVENT_SERIAL_READ));
-          return 1;
-        default:
-          break;
-      }
-      return 0;
-    }
-
     int update()
     {
       //D("serial", _current);

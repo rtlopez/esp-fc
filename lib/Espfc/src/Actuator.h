@@ -18,20 +18,6 @@ class Actuator
       return 1;
     }
 
-    int onIoEvent(const Event& e)
-    {
-      switch(e.type)
-      {
-        case EVENT_INPUT_READ:
-          update();
-          _model.state.notify(Event(EVENT_MODE_UPDATE));
-          return 1;
-        default:
-          break;
-      }
-      return 0;
-    }
-
     int update()
     {
       Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);

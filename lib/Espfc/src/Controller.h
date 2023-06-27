@@ -25,7 +25,7 @@ class Controller
       {
         case EVENT_IMU_UPDATE:
           update();
-          _model.state.notify(Event(EVENT_PID_UPDATE));
+          _model.state.appQueue.send(Event(EVENT_PID_UPDATE));
           return 1;
         default:
           break;

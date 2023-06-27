@@ -18,7 +18,7 @@ void Queue::send(const Event& e)
   xQueueSend(_q, &e, (TickType_t)0);
 }
 
-Event Queue::reveive()
+Event Queue::receive()
 {
   Event e;
   xQueueReceive(_q, &e, portMAX_DELAY);

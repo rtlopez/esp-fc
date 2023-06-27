@@ -15,10 +15,11 @@ void Queue::begin()
 
 void Queue::send(const Event& e)
 {
+  //Serial1.write((uint8_t)e.type);
   queue_add_blocking(&_q, &e);
 }
 
-Event Queue::reveive()
+Event Queue::receive()
 {
   Event e;
   queue_remove_blocking(&_q, &e);
