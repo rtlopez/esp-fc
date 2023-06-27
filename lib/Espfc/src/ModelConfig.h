@@ -669,7 +669,7 @@ class ModelConfig
 #endif
 #ifdef ESPFC_SERIAL_2
       pin[PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX;
-      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_TX;
+      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_RX;
 #endif
 #ifdef ESPFC_I2C_0
       pin[PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL;
