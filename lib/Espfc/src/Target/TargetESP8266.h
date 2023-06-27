@@ -59,9 +59,9 @@
 
 #define ESPFC_DEBUG_PIN D0
 
-#define SERIAL_RXD_INV (1 << UCRXI) // bit 19 - invert rx
-#define SERIAL_TXD_INV (1 << UCTXI) // bit 22 - invert tx
-#define SERIAL_TX_FIFO_SIZE 0x80
+//#define SERIAL_RXD_INV (1 << UCRXI) // bit 19 - invert rx
+//#define SERIAL_TXD_INV (1 << UCTXI) // bit 22 - invert tx
+#define SERIAL_TX_FIFO_SIZE UART_TX_FIFO_SIZE
 
 #if !defined(ESPFC_REVISION) // development build
   #undef ESPFC_OUTPUT_PROTOCOL
@@ -98,13 +98,14 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
   }
   switch(conf.stop_bits)
   {
-    case SDC_SERIAL_STOP_BITS_2:  sc |= UART_NB_STOP_BIT_1;  break;
+    case SDC_SERIAL_STOP_BITS_2:  sc |= UART_NB_STOP_BIT_2;  break;
     case SDC_SERIAL_STOP_BITS_15: sc |= UART_NB_STOP_BIT_15; break;
-    case SDC_SERIAL_STOP_BITS_1:  sc |= UART_NB_STOP_BIT_2;  break;
+    case SDC_SERIAL_STOP_BITS_1:  sc |= UART_NB_STOP_BIT_1;  break;
     default: break;
   }
-  if(conf.inverted) sc |= (SERIAL_RXD_INV | SERIAL_TXD_INV);
-  dev.begin(conf.baud, (SerialConfig)sc);
+
+  const bool isUart0 = &dev == &Serial;
+  dev.begin(conf.baud, (SerialConfig)sc, isUart0 ? SERIAL_FULL : SERIAL_TX_ONLY, isUart0 ? 1 : 2, conf.inverted);
 
   return 1;
 }
