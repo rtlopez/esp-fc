@@ -134,12 +134,13 @@ class SerialManager
 
         if(true || !isUsbPort) {
           //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
-          port->flush();
-          delay(10);
-
-          //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
-          port->begin(sdc);
+          //port->flush();
+          //delay(10);
         }
+  
+        //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
+        port->begin(sdc);
+
         _model.state.serial[i].stream = port;
 
         if(i == ESPFC_SERIAL_DEBUG_PORT)
@@ -180,6 +181,7 @@ class SerialManager
           return 0;
         }
 
+        /*
         uint32_t now = millis();
         int available = stream->available();
         if(!ss.availableFrom && available) ss.availableFrom = now;
@@ -202,6 +204,21 @@ class SerialManager
               }
             }
             if(++count > 127) break;
+          }
+        }
+        */
+
+        size_t len = stream->available();
+        while(len--)
+        {
+          const int c = stream->read();
+          if(sc.functionMask & SERIAL_FUNCTION_MSP)
+          {
+            bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
+            if(!consumed)
+            {
+              _cli.process(c, ss.cliCmd, *stream);
+            }
           }
         }
       }
