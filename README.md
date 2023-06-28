@@ -27,7 +27,7 @@ Hardware:
 * Buzzer and some electronic components (optionally).
 
 Software:
-* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.9)
+* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.8)
 * [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
 * [Espressif Flash Download Tools](https://www.espressif.com/en/support/download/other-tools)
 
