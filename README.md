@@ -5,6 +5,7 @@ The mini, DIY, ~$5 cost, ESP8266 based, high performance flight controller.
 * Frames (Quad X)
 * Betaflight contiguration tool compatible
 * Receiver protocol (8 channel PPM)
+* SBUS and CRSF Serial Rx protocols on ESP32 and RP2040
 * ESC protocols (PWM, Oneshot125, Oneshot42, Multishot, Brushed, Dshot150, Dshot300, Dshot600)
 * Configurable Gyro Filters (LPF, Notch, dTerm)
 * Blackbox recording (OpenLog serial)
@@ -26,7 +27,7 @@ Hardware:
 * Buzzer and some electronic components (optionally).
 
 Software:
-* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.7)
+* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.8)
 * [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
 * [Espressif Flash Download Tools](https://www.espressif.com/en/support/download/other-tools)
 
@@ -49,42 +50,45 @@ The rule of thumb is if you cannot change specific option in Betaflight Configur
 
 ## Supported protocols
 
-| Protocol        | ESP8266 | ESP32 |
-|----------------:|--------:|------:|
-| UART            | Yes     |   Yes |
-| I2C             | Yes     |   Yes |
-| SPI             | -       |   Yes |
-| MSP             | Yes     |   Yes |
-| CLI             | Yes     |   Yes |
-| PPM (IN)        | Yes     |   Yes |
-| SBUS            | -       |   Yes |
-| IBUS            | -       |     - |
-| BLACKBOX        | Yes     |   Yes |
-| PWM (OUT)       | Yes     |   Yes |
-| ONESHOT125      | Yes     |   Yes |
-| ONESHOT42       | -       |   Yes |
-| MULTISHOT       | -       |   Yes |
-| DSHOT150        | Yes     |   Yes |
-| DSHOT300        | Yes     |   Yes |
-| DSHOT600        | -       |   Yes |
+| Protocol        | ESP8266 | ESP32 | RP2040 |
+|----------------:|--------:|------:|-------:|
+| UART            | Yes     |   Yes |    Yes |
+| I2C             | Yes     |   Yes |    Yes |
+| SPI             | -       |   Yes |    Yes |
+| MSP             | Yes     |   Yes |    Yes |
+| CLI             | Yes     |   Yes |    Yes |
+| PPM (IN)        | Yes     |   Yes |    Yes |
+| SBUS            | -       |   Yes |    Yes |
+| IBUS            | -       |     - |      - |
+| CRSF (ELRS)     | -       |   Yes |    Yes |
+| BLACKBOX        | Yes     |   Yes |    Yes |
+| PWM (OUT)       | Yes     |   Yes |    Yes |
+| ONESHOT125      | Yes     |   Yes |    Yes |
+| ONESHOT42       | -       |   Yes |    Yes |
+| MULTISHOT       | -       |   Yes |    Yes |
+| DSHOT150        | Yes     |   Yes |    Yes |
+| DSHOT300        | Yes     |   Yes |    Yes |
+| DSHOT600        | -       |   Yes |    Yes |
 
 ## Supported devices
 
-| Device          | ESP8266 | ESP32 |
-|----------------:|--------:|------:|
-| MPU6050/I2C     | Yes     |   Yes |
-| MPU6000/SPI     | -       |     ? |
-| MPU6500/I2C     | ?       |     ? |
-| MPU6500/SPI     | -       |     ? |
-| MPU9250/I2C     | ?       |     ? |
-| MPU9250/SPI     | -       |   Yes |
-| BMP280/I2C      | Yes     |   Yes |
-| BMP280/SPI      | -       |   Yes |
-| HMC5883/I2C     | Yes     |   Yes |
-| HMC5883/SPI     | -       |     ? |
-| AK8963/I2C      | -       |   Yes |
+| Device          | ESP8266 | ESP32 | RP2040 |
+|----------------:|--------:|------:|-------:|
+| MPU6050/I2C     | Yes     |   Yes |    Yes |
+| MPU6000/SPI     | -       |     ? |      ? |
+| MPU6500/I2C     | ?       |     ? |      ? |
+| MPU6500/SPI     | -       |     ? |      ? |
+| MPU9250/I2C     | ?       |     ? |      ? |
+| MPU9250/SPI     | -       |   Yes |    Yes |
+| BMP280/I2C      | Yes     |   Yes |    Yes |
+| BMP280/SPI      | -       |   Yes |    Yes |
+| HMC5883/I2C     | Yes     |   Yes |    Yes |
+| HMC5883/SPI     | -       |     ? |      ? |
+| AK8963/I2C      | -       |   Yes |    Yes |
+| ICM20602/I2C    | ?       |     ? |      ? |
+| ICM20602/SPI    | -       |   Yes |    Yes |
 
-? - not tested
+? - not tested, but should work
 
 ## Issues
 You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues)
@@ -96,12 +100,10 @@ You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/i
 
 ## Todo
 * Update documentation
-* Mixers: Quad+, Bicopter, Tricopter, Helicopter, Custom and more
 * Balancing robot
 * Serial Rx (IBUS)
 * Baro (MS5611)
 * GPS navigation
-* ESP32 board
 
 ## Licence
 This project is distributed under MIT Licence. Bear in mind that:

@@ -43,62 +43,73 @@ class GyroSensor: public BaseSensor
 
     int update()
     {
+      int status = read();
+
+      if (status) filter();
+
+      return status;
+    }
+
+    int read()
+    {
       if(!_model.gyroActive()) return 0;
 
+      Stats::Measure measure(_model.state.stats, COUNTER_GYRO_READ);
+
+      _gyro->readGyro(_model.state.gyroRaw);
+
+      return 1;
+    }
+
+    int filter()
+    {
+      if(!_model.gyroActive()) return 0;
+
+      Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FILTER);
+
+      align(_model.state.gyroRaw, _model.config.gyroAlign);
+
+      _model.state.gyro = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
+
+      calibrate();
+
+      bool dynamicFilterEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
+      bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ;
+      bool dynamicFilterUpdate = dynamicFilterEnabled && _model.state.dynamicFilterTimer.check();
+
+      // filtering
+      for(size_t i = 0; i < 3; ++i)
       {
-        Stats::Measure measure(_model.state.stats, COUNTER_GYRO_READ);
-        _gyro->readGyro(_model.state.gyroRaw);
-      }
-
-      {
-        Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FILTER);
-
-        if(!_model.gyroActive()) return 0;
-
-        align(_model.state.gyroRaw, _model.config.gyroAlign);
-
-        _model.state.gyro = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
-
-        calibrate();
-
-        bool dynamicFilterEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
-        bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ;
-        bool dynamicFilterUpdate = dynamicFilterEnabled && _model.state.dynamicFilterTimer.check();
-
-        // filtering
-        for(size_t i = 0; i < 3; ++i)
+        if(_model.config.debugMode == DEBUG_GYRO_RAW)
         {
-          if(_model.config.debugMode == DEBUG_GYRO_RAW)
-          {
-            _model.state.debug[i] = _model.state.gyroRaw[i];
-          }
-          if(_model.config.debugMode == DEBUG_GYRO_SCALED)
-          {
-            _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
-          }
-          _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
+          _model.state.debug[i] = _model.state.gyroRaw[i];
+        }
+        if(_model.config.debugMode == DEBUG_GYRO_SCALED)
+        {
+          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+        }
+        _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
 
-          if(dynamicFilterEnabled || dynamicFilterDebug)
-          {
-            dynamicFilterAnalyze((Axis)i, dynamicFilterDebug);
-            if(dynamicFilterUpdate) dynamicFilterApply((Axis)i);
-            if(dynamicFilterEnabled) {
-              _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
-              _model.state.gyro.set(i, _model.state.gyroDynamicFilter2[i].update(_model.state.gyro[i]));
-            }
+        if(dynamicFilterEnabled || dynamicFilterDebug)
+        {
+          dynamicFilterAnalyze((Axis)i, dynamicFilterDebug);
+          if(dynamicFilterUpdate) dynamicFilterApply((Axis)i);
+          if(dynamicFilterEnabled) {
+            _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
+            _model.state.gyro.set(i, _model.state.gyroDynamicFilter2[i].update(_model.state.gyro[i]));
           }
-          _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
-          _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
-          if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
-          {
-            _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
-          }
-          _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
-          _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
-          if(_model.accelActive())
-          {
-            _model.state.gyroImu.set(i, _model.state.gyroFilterImu[i].update(_model.state.gyro[i]));
-          }
+        }
+        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
+        if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
+        {
+          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+        }
+        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
+        if(_model.accelActive())
+        {
+          _model.state.gyroImu.set(i, _model.state.gyroFilterImu[i].update(_model.state.gyro[i]));
         }
       }
 

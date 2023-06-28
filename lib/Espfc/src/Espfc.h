@@ -3,6 +3,7 @@
 
 #include "Target/Target.h"
 #include "Model.h"
+#include "Hardware.h"
 #include "Controller.h"
 #include "Input.h"
 #include "Actuator.h"
@@ -12,7 +13,6 @@
 #include "Output/Mixer.h"
 #include "Blackbox.h"
 #include "Cli.h"
-#include "Hardware.h"
 #include "Buzzer.h"
 
 namespace Espfc {
@@ -27,7 +27,9 @@ class Espfc
 
     int load()
     {
+      PIN_DEBUG_INIT();
       _model.load();
+      _model.state.appQueue.begin();
       return 1;
     }
 
@@ -56,37 +58,72 @@ class Espfc
 
     int update()
     {
+#if defined(ESPFC_MULTI_CORE)
+      if(!_model.state.appQueue.isEmpty())
+      {
+        return 0;
+      }
+
+      if(!_model.state.gyroTimer.check())
+      {
+        return 0;
+      }
+
+      _sensor.read();
+      _input.update();
+      _actuator.update();
+      _serial.update();
+      _buzzer.update();
+      _model.state.stats.update();
+
+      _model.state.appQueue.send(Event(EVENT_IDLE));
+
+      return 1;
+#else
       if(_model.state.gyroTimer.check())
       {
         _sensor.update();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
-          _input.update();
-          if(_model.state.actuatorTimer.check())
-          {
-            _actuator.update();
-          }
           _controller.update();
           if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
           {
             _mixer.update();
           }
+          _input.update();
+          if(_model.state.actuatorTimer.check())
+          {
+            _actuator.update();
+          }
           _blackbox.update();
         }
         _sensor.updateDelayed();
       }
+#endif
+
       return 1;
     }
 
     // other task
     int updateOther()
     {
-      _model.state.stats.update();
+#if defined(ESPFC_MULTI_CORE)
+      Event e = _model.state.appQueue.receive();
+      //Serial2.write((uint8_t)e.type);
+
+      _sensor.onAppEvent(e);
+      _controller.onAppEvent(e);
+      _mixer.onAppEvent(e);
+      _blackbox.onAppEvent(e);
+#else
       if(_model.state.serialTimer.check())
       {
         _serial.update();
       }
       _buzzer.update();
+      _model.state.stats.update();
+#endif
+
       return 1;
     }
 

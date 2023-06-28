@@ -215,6 +215,20 @@ class Blackbox
       return 1;
     }
 
+    int onAppEvent(const Event& e)
+    {
+      switch(e.type)
+      {
+        case EVENT_MIXER_UPDATE:
+          update();
+          _model.state.appQueue.send(Event(EVENT_BBLOG_UPDATE));
+          return 1;
+        default:
+          break;
+      }
+      return 0;
+    }
+
     int update()
     {
       if(!_model.blackboxEnabled()) return 0;

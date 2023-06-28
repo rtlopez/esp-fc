@@ -23,6 +23,7 @@ class BaroSensor: public BaseSensor
 
     int begin()
     {
+      _model.state.baroRate = 0;
       if(!_model.baroActive()) return 0;
       _baro = _model.state.baroDev;
       if(!_baro) return 0;
@@ -32,6 +33,7 @@ class BaroSensor: public BaseSensor
       int toGyroRate = (delay / _model.state.gyroTimer.interval) + 1; // number of gyro readings per cycle
       int interval = _model.state.gyroTimer.interval * toGyroRate;
       int rate = 1000000 / interval;
+      _model.state.baroRate = rate;
 
       _temperatureFilter.begin(FilterConfig(FILTER_PT1, 10), rate);
       _pressureFilter.begin(FilterConfig(FILTER_MEDIAN3, 10), rate);
@@ -44,8 +46,14 @@ class BaroSensor: public BaseSensor
 
     int update()
     {
-      if(!_model.baroActive()) return 0;
-      if(!_baro) return 0;
+      int status = read();
+
+      return status;
+    }
+
+    int read()
+    {
+      if(!_baro || !_model.baroActive()) return 0;
       
       Stats::Measure measure(_model.state.stats, COUNTER_BARO);
       
@@ -57,7 +65,7 @@ class BaroSensor: public BaseSensor
           _baro->setMode(BARO_MODE_TEMP);
           _state = BARO_STATE_TEMP_GET;
           _wait = micros() + _baro->getDelay();
-          break;
+          return 0;
         case BARO_STATE_TEMP_GET:
           readTemperature();
           updateTemperature();
@@ -66,7 +74,7 @@ class BaroSensor: public BaseSensor
           _state = BARO_STATE_PRESS_GET;
           _wait = micros() + _baro->getDelay();
           _counter = 9;
-          break;
+          return 1;
         case BARO_STATE_PRESS_GET:
           readPressure();
           updateAltitude();
@@ -81,13 +89,14 @@ class BaroSensor: public BaseSensor
             _state = BARO_STATE_TEMP_GET;
           }
           _wait = micros() + _baro->getDelay();
+          return 1;
           break;
         default:
           _state = BARO_STATE_INIT;
           break;
       }
 
-      return 1;
+      return 0;
     }
 
   private:
@@ -110,9 +119,9 @@ class BaroSensor: public BaseSensor
     {
       _model.state.baroPressure = _pressureFilter.update(_model.state.baroPressureRaw);
       _model.state.baroAltitude = _altitudeFilter.update(_baro->getAltitude(_model.state.baroPressure));
-      if(_model.state.baroAlititudeBiasSamples > 0)
+      if(_model.state.baroAltitudeBiasSamples > 0)
       {
-        _model.state.baroAlititudeBiasSamples--;
+        _model.state.baroAltitudeBiasSamples--;
         _model.state.baroAltitudeBias += (_model.state.baroAltitude - _model.state.baroAltitudeBias) * 0.2f;
       }
       _model.state.baroAltitude -= _model.state.baroAltitudeBias;

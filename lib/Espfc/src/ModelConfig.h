@@ -74,6 +74,7 @@ class FusionConfig
   public:
     int8_t mode;
     uint8_t gain;
+    uint8_t gainI;
 
     static const char * getModeName(FusionMode mode)
     {
@@ -228,6 +229,11 @@ enum InputInterpolation {
   INPUT_INTERPOLATION_DEFAULT,
   INPUT_INTERPOLATION_AUTO,
   INPUT_INTERPOLATION_MANUAL,
+};
+
+enum InputFilterType : uint8_t {
+  INPUT_INTERPOLATION,
+  INPUT_FILTER
 };
 
 const size_t MODEL_NAME_LEN  = 16;
@@ -404,6 +410,11 @@ class InputConfig
     int8_t interpolationMode;
     int8_t interpolationInterval;
     int8_t deadband;
+
+    int8_t filterType;
+    int8_t filterAutoFactor;
+    FilterConfig filter;
+    FilterConfig filterDerivative;
 
     uint8_t expo[3];
     uint8_t rate[3];
@@ -658,7 +669,7 @@ class ModelConfig
 #endif
 #ifdef ESPFC_SERIAL_2
       pin[PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX;
-      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_TX;
+      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_RX;
 #endif
 #ifdef ESPFC_I2C_0
       pin[PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL;
@@ -690,7 +701,7 @@ class ModelConfig
       gyroSync = 1; // unused, force 1
 
       loopSync = 8; // MPU 1000Hz
-      loopSync = 4; // LSM 833Hz
+      //loopSync = 4; // LSM 833Hz
       mixerSync = 1;
 
       accelBus = BUS_AUTO;
@@ -705,8 +716,9 @@ class ModelConfig
       baroBus = BUS_AUTO;
       baroDev = BARO_NONE;
 
-      fusion.mode = FUSION_MADGWICK;
+      fusion.mode = FUSION_MAHONY;
       fusion.gain = 50;
+      fusion.gainI = 5;
 
       gyroFilter = FilterConfig(FILTER_PT1, 100);
       gyroFilter2 = FilterConfig(FILTER_PT1, 188);
@@ -721,11 +733,16 @@ class ModelConfig
       dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter = FilterConfig(FILTER_BIQUAD, 10);
+      accelFilter = FilterConfig(FILTER_PT2, 15);
       magFilter = FilterConfig(FILTER_BIQUAD, 10);
       yawFilter = FilterConfig(FILTER_PT1, 90);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
       baroFilter = FilterConfig(FILTER_BIQUAD, 15);
+
+      input.filterType = 1;
+      input.filterAutoFactor = 30;
+      input.filter = FilterConfig(FILTER_PT1, 20);
+      input.filterDerivative = FilterConfig(FILTER_PT1, 20);
 
       telemetry = 0;
       telemetryInterval = 1000;

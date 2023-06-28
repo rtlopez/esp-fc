@@ -12,7 +12,7 @@
 #define ESPFC_OUTPUT_3 26
 #define ESPFC_OUTPUT_4 27
 #define ESPFC_OUTPUT_5 12
-#define ESPFC_OUTPUT_6 13
+#define ESPFC_OUTPUT_6 15
 #define ESPFC_OUTPUT_7 14
 
 #define ESPFC_SERIAL_0
@@ -55,7 +55,7 @@
 #define ESPFC_SPI_0_MISO 19
 
 #define ESPFC_SPI_CS_GYRO 5
-#define ESPFC_SPI_CS_BARO 15
+#define ESPFC_SPI_CS_BARO 13
 
 #define ESPFC_I2C_0
 #define ESPFC_I2C_0_SCL 22

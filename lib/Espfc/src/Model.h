@@ -390,7 +390,7 @@ class Model
       state.actuatorTimer.setRate(25); // 25 hz
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(10);
+      state.stats.timer.setRate(2);
       state.serialTimer.setRate(1000);
       if(magActive())
       {
@@ -426,7 +426,16 @@ class Model
 
       for(size_t i = 0; i < 4; i++)
       {
-        state.inputFilter[i].begin(FilterConfig(FILTER_PT1, 30), state.gyroTimer.rate);
+        if (config.input.filterType == INPUT_FILTER)
+        {
+          state.inputFilter[i].begin(config.input.filter, state.loopTimer.rate);
+          state.inputFilterDerivative[i].begin(config.input.filterDerivative, state.loopTimer.rate);
+        }
+        else
+        {
+          state.inputFilter[i].begin(FilterConfig(FILTER_PT1, 30), state.loopTimer.rate);
+          state.inputFilterDerivative[i].begin(FilterConfig(FILTER_NONE, 0), state.loopTimer.rate);
+        }
       }
 
       // ensure disarmed pulses
@@ -495,7 +504,7 @@ class Model
       //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_YAW | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
 
       state.telemetry = config.telemetry;
-      state.baroAlititudeBiasSamples = 200;
+      state.baroAltitudeBiasSamples = 200;
 
       // override temporary
       //state.telemetry = true;

@@ -6,7 +6,7 @@
 
 namespace Espfc {
 
-enum StatCounter {
+enum StatCounter : int8_t {
   COUNTER_GYRO_READ,
   COUNTER_GYRO_FILTER,
   COUNTER_ACCEL_READ,
@@ -60,15 +60,18 @@ class Stats
       }
     }
 
-    void start(StatCounter c) /* IRAM_ATTR */
+    inline void start(StatCounter c) /* IRAM_ATTR */
     {
       _start[c] = micros();
+      //Serial1.write((uint8_t)c);
     }
 
-    void end(StatCounter c) /* IRAM_ATTR */
+    inline void end(StatCounter c) /* IRAM_ATTR */
     {
       uint32_t diff = micros() - _start[c];
       _sum[c] += diff;
+      //uint8_t t = Math::clamp(diff, 0ul, 255ul);
+      //Serial1.write(t);
     }
 
     void update()
@@ -120,7 +123,7 @@ class Stats
         case COUNTER_IMU_FUSION2:  return PSTR("  imu_c");
         case COUNTER_INPUT_READ:   return PSTR("   rx_r");
         case COUNTER_INPUT_FILTER: return PSTR("   rx_f");
-        case COUNTER_FAILSAFE:     return PSTR("     fs");
+        case COUNTER_FAILSAFE:     return PSTR("   rx_s");
         case COUNTER_ACTUATOR:     return PSTR("   rx_a");
         case COUNTER_OUTER_PID:    return PSTR("  pid_o");
         case COUNTER_INNER_PID:    return PSTR("  pid_i");

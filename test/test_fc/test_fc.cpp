@@ -5,7 +5,6 @@
 #include "Controller.h"
 #include "Actuator.h"
 #include "Output/Mixer.h"
-
 using namespace fakeit;
 using namespace Espfc;
 

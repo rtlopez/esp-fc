@@ -13,6 +13,17 @@
 #define QMF_SORTF(a,b) { if ((a)>(b)) QMF_SWAPF((a),(b)); }
 #define QMF_SWAPF(a,b) { float temp=(a);(a)=(b);(b)=temp; }
 
+namespace {
+
+static float pt1Gain(float rate, float freq)
+{
+  float rc = 1.f / (2.f * Espfc::Math::pi() * freq);
+  float dt = 1.f / rate;
+  return dt / (dt + rc);
+}
+
+}
+
 namespace Espfc {
 
 enum FilterType {
@@ -23,6 +34,8 @@ enum FilterType {
   FILTER_BPF,
   FILTER_FIR2,
   FILTER_MEDIAN3,
+  FILTER_PT2,
+  FILTER_PT3,
   FILTER_NONE,
 };
 
@@ -80,9 +93,7 @@ class FilterStatePt1 {
 
     void init(float rate, float freq)
     {
-      float rc = 1.f / (2.f * Math::pi() * freq);
-      float dt = 1.f / rate;
-      k = dt / (dt + rc);
+      k = pt1Gain(rate, freq);
     }
 
     float update(float n)
@@ -221,6 +232,54 @@ class FilterStateMedian {
     float v[3];
 };
 
+class FilterStatePt2 {
+  public:
+    void reset()
+    {
+      v[0] = v[1] = 0.f;
+    }
+
+    void init(float rate, float freq)
+    {
+      constexpr float correction = 1.553773974f; // 1 / sqrt(2^(1/n) - 1)
+      k = pt1Gain(rate, freq * correction);
+    }
+
+    float update(float n)
+    {
+      v[0] += k * (n - v[0]);
+      v[1] += k * (v[0] - v[1]);
+      return v[1];
+    }
+
+    float k;
+    float v[2];
+};
+
+class FilterStatePt3 {
+  public:
+    void reset()
+    {
+      v[0] = v[1] = v[2] = 0.f;
+    }
+
+    void init(float rate, float freq)
+    {
+      constexpr float correction = 1.961459177f; // 1 / sqrt(2^(1/n) - 1)
+      k = pt1Gain(rate, freq * correction);
+    }
+
+    float update(float n)
+    {
+      v[0] += k * (n - v[0]);
+      v[1] += k * (v[0] - v[1]);
+      v[2] += k * (v[1] - v[2]);
+      return v[2];
+    }
+
+    float k;
+    float v[3];
+};
 
 class Filter
 {
@@ -254,6 +313,10 @@ class Filter
           return _state.fir2.update(v);
         case FILTER_MEDIAN3:
           return _state.median.update(v);
+        case FILTER_PT2:
+          return _state.pt2.update(v);
+        case FILTER_PT3:
+          return _state.pt3.update(v);
         case FILTER_NONE:
         default:
           return v;
@@ -279,6 +342,10 @@ class Filter
         case FILTER_MEDIAN3:
           _state.median.reset();
           break;
+        case FILTER_PT2:
+          return _state.pt2.reset();
+        case FILTER_PT3:
+          return _state.pt3.reset();
         case FILTER_NONE:
         default:
           ;
@@ -314,6 +381,12 @@ class Filter
           break;
         case FILTER_MEDIAN3:
           _state.median.init();
+          break;
+        case FILTER_PT2:
+          _state.pt2.init(_rate, _conf.freq);
+          break;
+        case FILTER_PT3:
+          _state.pt3.init(_rate, _conf.freq);
           break;
         case FILTER_NONE:
         default:
@@ -362,6 +435,8 @@ class Filter
       FilterStateBiquad bq;
       FilterStateFir2 fir2;
       FilterStateMedian median;
+      FilterStatePt2 pt2;
+      FilterStatePt3 pt3;
     } _state;
 };
 

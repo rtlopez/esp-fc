@@ -1,9 +1,10 @@
-#ifndef _ESC_DRIVER_ESP8266_H_
-#define _ESC_DRIVER_ESP8266_H_
+#ifndef _ESC_DRIVER_RP2040_H_
+#define _ESC_DRIVER_RP2040_H_
 
 #if defined(ARCH_RP2040)
 
 #include "EscDriver.h"
+#include <hardware/dma.h>
 
 // TODO: 
 // https://cocode.se/linux/raspberry/pwm.html
@@ -22,11 +23,14 @@ class EscDriverRP2040: public EscDriverBase
     class Slot
     {
       public:
-        Slot(): pin(-1), pulse(0), slice(0), channel(0) {}
+        Slot(): pin(-1), pulse(0), slice(0), channel(0), drive(false) {}
         int pin;
         int pulse;
         int slice;
         int channel;
+        bool drive;
+        int pwm_dma_chan;
+        dma_channel_config dma_config;
         inline bool active() const { return pin != -1; }
     };
 
@@ -43,7 +47,10 @@ class EscDriverRP2040: public EscDriverBase
   private:
     uint32_t usToTicks(uint32_t us) IRAM_ATTR;
     uint32_t usToTicksReal(uint32_t us) IRAM_ATTR;
-    uint32_t dshotWrite() IRAM_ATTR;
+    uint32_t nsToDshotTicks(uint32_t ns);
+    void dshotWriteDMA();
+    bool isSliceDriven(int slice);
+    void clearDmaBuffer();
 
     EscProtocol _protocol;
     bool _async;
@@ -56,6 +63,9 @@ class EscDriverRP2040: public EscDriverBase
 
     int _dh;
     int _dl;
+    int _dt;
+
+    uint32_t _dma_buffer[NUM_PWM_SLICES][DSHOT_BIT_COUNT + 1];
 };
 
 #endif // ARCH_RP2040

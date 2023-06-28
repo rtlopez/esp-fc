@@ -102,6 +102,12 @@ class SerialManager
               sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
               sdc.inverted = true;
               break;
+            case SERIALRX_CRSF:
+              sdc.baud = 420000ul;
+              //sdc.parity = SDC_SERIAL_PARITY_EVEN;
+              //sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+              //sdc.inverted = true;
+              break;
             default:
               break;
           }
@@ -115,20 +121,27 @@ class SerialManager
           }
         }
 
+        /*if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY)
+        {
+          sdc.baud = 420000ul;
+        }*/
+
         if(!sdc.baud)
         {
           //D("uart-no-baud", i, spc.id, spc.functionMask, spc.baud);
           continue;
         }
 
-        //D("uart-flash", i, spc.id, spc.functionMask, spc.baud);
-        //port->flush();
-        //delay(10);
-
+        if(true || !isUsbPort) {
+          //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
+          //port->flush();
+          //delay(10);
+        }
+  
         //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
         port->begin(sdc);
+
         _model.state.serial[i].stream = port;
-        delay(10);
 
         if(i == ESPFC_SERIAL_DEBUG_PORT)
         {
@@ -156,16 +169,18 @@ class SerialManager
 
         /*
         uint32_t now = millis();
-        if(!ss.availableFrom && stream->available()) ss.availableFrom = now;
+        int available = stream->available();
+        if(!ss.availableFrom && available) ss.availableFrom = now;
         bool timeout = ss.availableFrom && now - ss.availableFrom > 10;
 
         size_t count = 0;
-        if(stream->available() > 3 || timeout)
+        if(available > 3 || timeout)
         {
           ss.availableFrom = 0;
           while(stream->available())
           {
-            char c = stream->read();
+            int c = stream->read();
+            if(c == -1) break;
             if(sc.functionMask & SERIAL_FUNCTION_MSP)
             {
               bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);

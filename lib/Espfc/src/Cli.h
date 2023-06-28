@@ -356,7 +356,7 @@ class Cli
                                                   PSTR("DSHOT_RPM_TELEMETRY"), PSTR("RPM_FILTER"), PSTR("D_MIN"), PSTR("AC_CORRECTION"), PSTR("AC_ERROR"), PSTR("DUAL_GYRO_SCALED"), PSTR("DSHOT_RPM_ERRORS"), 
                                                   PSTR("CRSF_LINK_STATISTICS_UPLINK"), PSTR("CRSF_LINK_STATISTICS_PWR"), PSTR("CRSF_LINK_STATISTICS_DOWN"), PSTR("BARO"), PSTR("GPS_RESCUE_THROTTLE_PID"), 
                                                   PSTR("DYN_IDLE"), PSTR("FF_LIMIT"), PSTR("FF_INTERPOLATED"), PSTR("BLACKBOX_OUTPUT"), PSTR("GYRO_SAMPLE"), PSTR("RX_TIMING"), NULL };
-      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
+      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("PT2"), PSTR("PT3"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
                                                  PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
@@ -369,6 +369,7 @@ class Cli
                                                  PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("PROSHOT1000"), PSTR("DISABLED"), NULL };
       static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
       static const char* throtleLimitTypeChoices[] = { PSTR("NONE"), PSTR("SCALE"), PSTR("CLIP"), NULL };
+      static const char* inputFilterChoices[] = { PSTR("INTERPOLATION"), PSTR("FILTER"), NULL };
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
@@ -428,7 +429,8 @@ class Cli
         Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
 
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
-        Param(PSTR("fusion_gain"), &c.fusion.gain),
+        Param(PSTR("fusion_gain_p"), &c.fusion.gain),
+        Param(PSTR("fusion_gain_i"), &c.fusion.gainI),
 
         Param(PSTR("input_rate_type"), &c.input.rateType, inputRateTypeChoices),
 
@@ -456,6 +458,13 @@ class Cli
         Param(PSTR("input_interpolation"), &c.input.interpolationMode, interpolChoices),
         Param(PSTR("input_interpolation_interval"), &c.input.interpolationInterval),
 
+        Param(PSTR("input_filter_type"), &c.input.filterType, inputFilterChoices),
+        Param(PSTR("input_lpf_type"), &c.input.filter.type, filterTypeChoices),
+        Param(PSTR("input_lpf_freq"), &c.input.filter.freq),
+        Param(PSTR("input_ff_lpf_type"), &c.input.filterDerivative.type, filterTypeChoices),
+        Param(PSTR("input_ff_lpf_freq"), &c.input.filterDerivative.freq),
+        Param(PSTR("input_lpf_factor"), &c.input.filterAutoFactor),
+
         Param(PSTR("input_rssi_channel"), &c.input.rssiChannel),
 
         Param(PSTR("input_0"), &c.input.channel[0]),
@@ -474,6 +483,9 @@ class Cli
         Param(PSTR("input_13"), &c.input.channel[13]),
         Param(PSTR("input_14"), &c.input.channel[14]),
         Param(PSTR("input_15"), &c.input.channel[15]),
+
+        Param(PSTR("failsafe_delay"), &c.failsafe.delay),
+        Param(PSTR("failsafe_kill_switch"), &c.failsafe.killSwitch),
 
 #ifdef ESPFC_SERIAL_0
         Param(PSTR("serial_0"), &c.serial[SERIAL_UART_0]),
@@ -638,7 +650,7 @@ class Cli
         Param(PSTR("i2c_speed"), &c.i2cSpeed),
 #endif
         //Param(PSTR("telemetry"), &c.telemetry),
-        //Param(PSTR("telemetry_interval"), &c.telemetryInterval),
+        Param(PSTR("telemetry_interval"), &c.telemetryInterval),
         //Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
         //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
@@ -1110,43 +1122,49 @@ class Cli
         Device::MagDevice  * mag  = _model.state.magDev;
         if(gyro)
         {
-          s.print(F("gyro device: "));
+          s.print(F(" gyro device: "));
           s.print(FPSTR(Device::GyroDevice::getName(gyro->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(gyro->getBus()->getType())));
         }
         else
         {
-          s.println(F("gyro device: NONE"));
+          s.println(F(" gyro device: NONE"));
         }
 
         if(baro)
         {
-          s.print(F("baro device: "));
+          s.print(F(" baro device: "));
           s.print(FPSTR(Device::BaroDevice::getName(baro->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
         }
         else
         {
-          s.println(F("baro device: NONE"));
+          s.println(F(" baro device: NONE"));
         }
 
         if(mag)
         {
-          s.print(F("  mag device: "));
+          s.print(F("   mag device: "));
           s.print(FPSTR(Device::MagDevice::getName(mag->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
         }
         else
         {
-          s.println(F(" mag device: NONE"));
+          s.println(F("  mag device: NONE"));
         }
 
         s.print(F("     rx rate: "));
         s.println(_model.state.inputFrameRate);
 
+        s.print(F("     rx lpfs: "));
+        s.print(_model.state.inputAutoFreq);
+        s.print(F(", "));
+        s.println(_model.state.inputAutoFactor);
+
+        s.println();
         s.print(F(" arming disabled: "));
         s.println(_model.state.armingDisabledFlags);
       }
@@ -1272,6 +1290,18 @@ class Cli
 
       s.print(F("  mixer rate: "));
       s.print(_model.state.mixerTimer.rate);
+      s.println(F(" Hz"));
+
+      s.print(F("  accel rate: "));
+      s.print(_model.state.accelTimer.rate);
+      s.println(F(" Hz"));
+
+      s.print(F("   baro rate: "));
+      s.print(_model.state.baroRate);
+      s.println(F(" Hz"));
+
+      s.print(F("    mag rate: "));
+      s.print(_model.state.magTimer.rate);
       s.println(F(" Hz"));
     }
 

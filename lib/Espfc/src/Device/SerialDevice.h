@@ -1,6 +1,10 @@
 #ifndef _ESPFC_DEVICE_SERIAL_DEVICE_H_
 #define _ESPFC_DEVICE_SERIAL_DEVICE_H_
 
+#include <cstdint>
+#include <cstddef>
+#include <Arduino.h>
+
 namespace Espfc {
 
 enum SerialSpeed {
