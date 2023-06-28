@@ -155,6 +155,7 @@ struct ModelState
   Quaternion accelPoseQ;
   VectorFloat magPose;
 
+  bool imuUpdate;
   VectorFloat pose;
   Quaternion poseQ;
 
@@ -295,7 +296,7 @@ struct ModelState
   float baroPressure;
   float baroAltitude;
   float baroAltitudeBias;
-  int32_t baroAlititudeBiasSamples;
+  int32_t baroAltitudeBiasSamples;
   int32_t baroRate;
 
   uint32_t armingDisabledFlags;
@@ -304,6 +305,8 @@ struct ModelState
 
   SerialPortState serial[SERIAL_UART_COUNT];
   Timer serialTimer;
+
+  Target::Queue appQueue;
 };
 
 }

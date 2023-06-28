@@ -504,7 +504,7 @@ class Model
       //config.scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_YAW | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
 
       state.telemetry = config.telemetry;
-      state.baroAlititudeBiasSamples = 200;
+      state.baroAltitudeBiasSamples = 200;
 
       // override temporary
       //state.telemetry = true;

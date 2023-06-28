@@ -132,7 +132,7 @@ class SerialManager
           continue;
         }
 
-        if(!isUsbPort) {
+        if(true || !isUsbPort) {
           //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
           //port->flush();
           //delay(10);

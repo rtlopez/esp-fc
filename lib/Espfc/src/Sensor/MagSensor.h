@@ -35,27 +35,38 @@ class MagSensor: public BaseSensor
 
     int update()
     {
-      if(!_model.magActive() || !_model.state.magTimer.check()) return 0;
-      if(!_mag) return 0;
+      int status = read();
 
+      if (status) filter();
+
+      return status;
+    }
+
+    int read()
+    {
+      if(!_mag || !_model.magActive() || !_model.state.magTimer.check()) return 0;
+
+      Stats::Measure measure(_model.state.stats, COUNTER_MAG_READ);
+      _mag->readMag(_model.state.magRaw);
+
+      return 1;
+    }
+
+    int filter()
+    {
+      if(!_mag || !_model.magActive() || !_model.state.magTimer.check()) return 0;
+
+      Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
+
+      align(_model.state.magRaw, _model.config.magAlign);
+      _model.state.mag = _mag->convert(_model.state.magRaw);
+
+      for(size_t i = 0; i < 3; i++)
       {
-        Stats::Measure measure(_model.state.stats, COUNTER_MAG_READ);
-        _mag->readMag(_model.state.magRaw);
+        _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
       }
 
-      {      
-        Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
-
-        align(_model.state.magRaw, _model.config.magAlign);
-        _model.state.mag = _mag->convert(_model.state.magRaw);
-
-        for(size_t i = 0; i < 3; i++)
-        {
-          _model.state.mag.set(i, _model.state.magFilter[i].update(_model.state.mag[i]));
-        }
-
-        calibrate();
-      }
+      calibrate();
 
       return 1;
     }

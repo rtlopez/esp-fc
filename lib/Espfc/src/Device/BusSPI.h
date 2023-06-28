@@ -15,7 +15,7 @@ class BusSPI: public BusDevice
     static const uint8_t  SPI_READ = 0x80;
     
     static const uint32_t SPI_SPEED_NORMAL =  1000000;
-    static const uint32_t SPI_SPEED_FAST   = 20000000;
+    static const uint32_t SPI_SPEED_FAST   = 10000000;
 
     BusType getType() const override { return BUS_SPI; }
 
@@ -53,7 +53,7 @@ class BusSPI: public BusDevice
     void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *in, uint8_t *out, uint32_t speed)
     {
       digitalWrite(devAddr, LOW);
-      _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE3));
+      _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
       _dev.transfer(regAddr); // specify the starting register address
       for(uint8_t i = 0; i < length; i++)
       {

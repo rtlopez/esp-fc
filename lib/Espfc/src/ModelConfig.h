@@ -669,7 +669,7 @@ class ModelConfig
 #endif
 #ifdef ESPFC_SERIAL_2
       pin[PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX;
-      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_TX;
+      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_RX;
 #endif
 #ifdef ESPFC_I2C_0
       pin[PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL;
@@ -701,7 +701,7 @@ class ModelConfig
       gyroSync = 1; // unused, force 1
 
       loopSync = 8; // MPU 1000Hz
-      loopSync = 4; // LSM 833Hz
+      //loopSync = 4; // LSM 833Hz
       mixerSync = 1;
 
       accelBus = BUS_AUTO;
