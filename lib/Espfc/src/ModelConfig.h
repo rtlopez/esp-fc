@@ -739,11 +739,6 @@ class ModelConfig
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
       baroFilter = FilterConfig(FILTER_BIQUAD, 15);
 
-      input.filterType = 1;
-      input.filterAutoFactor = 30;
-      input.filter = FilterConfig(FILTER_PT1, 20);
-      input.filterDerivative = FilterConfig(FILTER_PT1, 20);
-
       telemetry = 0;
       telemetryInterval = 1000;
 
@@ -798,7 +793,7 @@ class ModelConfig
       mixerType = MIXER_QUADX;
       yawReverse = 0;
 
-      output.protocol = ESPFC_OUTPUT_PROTOCOL;
+      output.protocol = ESC_PROTOCOL_DISABLED;
       //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
       output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
       //output.async = true;
@@ -843,6 +838,11 @@ class ModelConfig
       input.superRate[AXIS_YAW] = 50;
       input.rateLimit[AXIS_YAW] = 1998;
 
+      input.filterType = INPUT_FILTER;
+      input.filterAutoFactor = 30;
+      input.filter = FilterConfig(FILTER_PT1, 0);
+      input.filterDerivative = FilterConfig(FILTER_PT1, 0);
+
       input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
       //input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode
       input.interpolationInterval = 26;
@@ -886,31 +886,6 @@ class ModelConfig
         conditions[i].min = 900;
         conditions[i].max = 900;
       }
-
-      //conditions[0].id = MODE_ARMED;
-      //conditions[0].ch = AXIS_AUX_1 + 0;
-      //conditions[0].min = 1700;
-      //conditions[0].max = 2100;
-
-      //conditions[1].id = MODE_ANGLE;
-      //conditions[1].ch = AXIS_AUX_1 + 0; // aux1
-      //conditions[1].min = 1900;
-      //conditions[1].max = 2100;
-
-      //conditions[2].id = MODE_AIRMODE;
-      //conditions[2].ch = 0; // aux1
-      //conditions[2].min = (1700 - 900) / 25;
-      //conditions[2].max = (2100 - 900) / 25;
-
-      //conditions[3].id = MODE_FAILSAFE;
-      //conditions[3].ch = 1; // aux1
-      //conditions[3].min = (1700 - 900) / 25;
-      //conditions[3].max = (2100 - 900) / 25;
-
-      //conditions[4].id = MODE_BUZZER;
-      //conditions[4].ch = 2; // aux1
-      //conditions[4].min = (1700 - 900) / 25;
-      //conditions[4].max = (2100 - 900) / 25;
 
       // actuator config - pid scaling
       scaler[0].dimension = (ScalerDimension)(0);
@@ -958,18 +933,25 @@ class ModelConfig
 
       modelName[0] = 0;
 
-// development settings
-#if !defined(ESPFC_REVISION)
-      quad();
-#endif
-    }
-
-    void quad()
-    {
-      debugMode = DEBUG_GYRO_SCALED;
+      debugMode = DEBUG_NONE;
       blackboxDev = 3; // serial
       blackboxPdenom = 32; // 1kHz
 
+// development settings
+#if !defined(ESPFC_REVISION)
+      devPreset();
+#endif
+    }
+
+    void devPreset()
+    {
+#ifdef ESPFC_DEV_PRESET_BLACKBOX
+      debugMode = DEBUG_GYRO_SCALED;
+      serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
+      serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;
+#endif
+
+#ifdef ESPFC_DEV_PRESET_MODES
       conditions[0].id = MODE_ARMED;
       conditions[0].ch = AXIS_AUX_1 + 0; // aux1
       conditions[0].min = 1300;
@@ -990,13 +972,20 @@ class ModelConfig
       conditions[2].max = 2100;
       conditions[2].logicMode = 0;
       conditions[2].linkId = 0;
+#endif
 
+#ifdef ESPFC_DEV_PRESET_SCALER
       scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[0].channel = AXIS_AUX_1 + 1;
       scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[1].channel = AXIS_AUX_1 + 2;
       scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[2].channel = AXIS_AUX_1 + 3;
+#endif
+
+#ifdef ESPFC_DEV_PRESET_DSHOT
+      output.protocol = ESC_PROTOCOL_DSHOT300;
+#endif
     }
 
     void brobot()
