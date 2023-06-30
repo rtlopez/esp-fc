@@ -136,7 +136,7 @@ class SerialDevice: public Stream
     virtual int peek() = 0;
     virtual void flush() = 0;
     virtual size_t write(uint8_t c) = 0;
-    virtual size_t write(uint8_t * c, size_t l) = 0;
+    virtual size_t write(const uint8_t * c, size_t l) = 0;
     virtual int availableForWrite() = 0;
     virtual bool isTxFifoEmpty() = 0;
     virtual bool isSoft() const = 0;
