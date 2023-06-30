@@ -8,7 +8,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "printf.h"
+#include <printf.h>
 
 #if defined(ESP8266)
 #define ESPFC_TARGET "ESP8266"

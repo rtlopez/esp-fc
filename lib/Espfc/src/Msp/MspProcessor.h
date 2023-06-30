@@ -1251,7 +1251,7 @@ class MspProcessor
               disableRunawayTakeoff = m.readU8();
             }
             (void)disableRunawayTakeoff;
-            //_model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+            _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
           }
           break;
 
