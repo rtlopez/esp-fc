@@ -934,7 +934,7 @@ class ModelConfig
       modelName[0] = 0;
 
       debugMode = DEBUG_NONE;
-      blackboxDev = 3; // serial
+      blackboxDev = 0;
       blackboxPdenom = 32; // 1kHz
 
 // development settings
@@ -946,6 +946,7 @@ class ModelConfig
     void devPreset()
     {
 #ifdef ESPFC_DEV_PRESET_BLACKBOX
+      blackboxDev = 3; // serial
       debugMode = DEBUG_GYRO_SCALED;
       serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
       serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;

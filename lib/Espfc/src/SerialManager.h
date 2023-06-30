@@ -114,7 +114,7 @@ class SerialManager
         }
         else if(spc.functionMask & SERIAL_FUNCTION_BLACKBOX)
         {
-          sdc.baud = spc.blackboxBaud;
+          //sdc.baud = spc.blackboxBaud;
           if(sdc.baud == 230400 || sdc.baud == 460800)
           {
             sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
@@ -132,11 +132,11 @@ class SerialManager
           continue;
         }
 
-        if(true || !isUsbPort) {
+        //if(true || !isUsbPort) {
           //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
           //port->flush();
           //delay(10);
-        }
+        //}
   
         //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
         port->begin(sdc);

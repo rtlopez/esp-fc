@@ -44,7 +44,8 @@ Espfc::Espfc espfc;
     void setup()
     {
       disableCore0WDT();
-      xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
+      //xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
+      xTaskCreateUniversal(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
       ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
       espfc.begin();
     }

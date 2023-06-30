@@ -10,7 +10,46 @@ extern "C" {
 #include "blackbox/blackbox.h"
 }
 
-static Espfc::Device::SerialDevice * blackboxSerial = nullptr;
+class BlackboxBuffer
+{
+  public:
+    BlackboxBuffer(): _stream(nullptr), _idx(0) {}
+
+    void begin(Espfc::Device::SerialDevice * s)
+    {
+      _stream = s;
+    }
+
+    void write(uint8_t c)
+    {
+      _data[_idx++] = c;
+      if(c >= SIZE) flush();
+    }
+
+    void flush()
+    {
+      if(_stream) _stream->write(_data, _idx);
+      _idx = 0;
+    }
+
+    size_t availableForWrite() const
+    {
+      return SIZE - _idx;
+    }
+
+    size_t isTxFifoEmpty() const
+    {
+      return _idx == 0;
+    }
+
+    static const size_t SIZE = 128;
+
+    Espfc::Device::SerialDevice * _stream;
+    size_t _idx;
+    uint8_t _data[SIZE];
+};
+
+static BlackboxBuffer * blackboxSerial = nullptr;
 static Espfc::Model * _model_ptr = nullptr;
 
 void serialWrite(serialPort_t * instance, uint8_t ch)
@@ -19,7 +58,7 @@ void serialWrite(serialPort_t * instance, uint8_t ch)
   if(blackboxSerial) blackboxSerial->write(ch);
 }
 
-void serialWriteInit(Espfc::Device::SerialDevice * serial)
+void serialWriteInit(BlackboxBuffer * serial)
 {
   blackboxSerial = serial;
 }
@@ -112,7 +151,8 @@ class Blackbox
       Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
       if(!serial) return 0;
 
-      serialWriteInit(serial);
+      _buffer.begin(serial);
+      serialWriteInit(&_buffer);
 
       systemConfigMutable()->activeRateProfile = 0;
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
@@ -221,7 +261,7 @@ class Blackbox
       {
         case EVENT_MIXER_UPDATE:
           update();
-          _model.state.appQueue.send(Event(EVENT_BBLOG_UPDATE));
+          //_model.state.appQueue.send(Event(EVENT_BBLOG_UPDATE));
           return 1;
         default:
           break;
@@ -238,6 +278,7 @@ class Blackbox
       updateMode();
       updateData();
       blackboxUpdate(_model.state.loopTimer.last);
+      _buffer.flush();
       return 1;
     }
 
@@ -316,6 +357,7 @@ class Blackbox
 
     Model& _model;
     pidProfile_s _pidProfile;
+    BlackboxBuffer _buffer;
 };
 
 }

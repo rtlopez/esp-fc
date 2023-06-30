@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Esp.h"
+#include "Debug_Espfc.h"
 
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 35 // ppm
@@ -48,7 +49,7 @@
 
 #define ESPFC_SERIAL_REMAP_PINS
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_UART_0
-#define SERIAL_TX_FIFO_SIZE 0x7f
+#define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_SCK 18
@@ -126,6 +127,7 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
     case SDC_SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
     default: break;
   }
+  dev.setTxBufferSize(SERIAL_TX_FIFO_SIZE);
   dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
   return 1;
 }
