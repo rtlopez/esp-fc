@@ -7,6 +7,13 @@
 #include "Msp/MspParser.h"
 #include "platform.h"
 
+extern "C" {
+  int blackboxCalculatePDenom(int rateNum, int rateDenom);
+  uint8_t blackboxCalculateSampleRate(uint16_t pRatio);
+  uint8_t blackboxGetRateDenom(void);
+  uint16_t blackboxGetPRatio(void);
+}
+
 namespace {
 
 enum SerialSpeedIndex {
@@ -525,7 +532,9 @@ class MspProcessor
           r.writeU8(_model.config.blackboxDev); // device serial or none
           r.writeU8(1); // blackboxGetRateNum()); // unused
           r.writeU8(1); // blackboxGetRateDenom());
-          r.writeU16(_model.config.blackboxPdenom); // p_denom
+          r.writeU16(_model.config.blackboxPdenom);//blackboxGetPRatio()); // p_denom
+          //r.writeU8(_model.config.blackboxPdenom); // sample_rate
+          //r.writeU32(_model.config.blackboxFieldsDisabledMask);
           break;
 
         case MSP_SET_BLACKBOX_CONFIG:
@@ -534,13 +543,25 @@ class MspProcessor
             _model.config.blackboxDev = m.readU8();
             const int rateNum = m.readU8(); // was rate_num
             const int rateDenom = m.readU8(); // was rate_denom
+            uint16_t pRatio = 0;
             if (m.remain() >= 2) {
-                _model.config.blackboxPdenom = m.readU16(); // p_denom specified, so use it directly
+                pRatio = m.readU16(); // p_denom specified, so use it directly
             } else {
                 // p_denom not specified in MSP, so calculate it from old rateNum and rateDenom
-                //p_denom = blackboxCalculatePDenom(rateNum, rateDenom);
+                //pRatio = blackboxCalculatePDenom(rateNum, rateDenom);
                 (void)(rateNum + rateDenom);
             }
+            _model.config.blackboxPdenom = pRatio;
+
+            /*if (m.remain() >= 1) {
+                _model.config.blackboxPdenom = m.readU8();
+            } else if(pRatio > 0) {
+                _model.config.blackboxPdenom = blackboxCalculateSampleRate(pRatio);
+                //_model.config.blackboxPdenom = pRatio;
+            }
+            if (m.remain() >= 4) {
+              _model.config.blackboxFieldsDisabledMask = m.readU32();
+            }*/
           }
           break;
 

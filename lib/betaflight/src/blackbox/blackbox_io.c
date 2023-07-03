@@ -214,7 +214,7 @@ void blackboxDeviceFlush(void)
          * devices will progressively write in the background without Blackbox calling anything.
          */
     case BLACKBOX_DEVICE_FLASH:
-        flashfsFlushAsync();
+        flashfsFlushAsync(false);
         break;
 #endif // USE_FLASHFS
 
@@ -237,19 +237,41 @@ bool blackboxDeviceFlushForce(void)
 
 #ifdef USE_FLASHFS
     case BLACKBOX_DEVICE_FLASH:
-        return flashfsFlushAsync();
+        return flashfsFlushAsync(true);
 #endif // USE_FLASHFS
 
 #ifdef USE_SDCARD
     case BLACKBOX_DEVICE_SDCARD:
-        /* SD card will flush itself without us calling it, but we need to call flush manually in order to check
-         * if it's done yet or not!
-         */
+        // SD card will flush itself without us calling it, but we need to call flush manually in order to check
+        // if it's done yet or not!
+        // However the "flush" only queues one dirty sector each time and the process is asynchronous. So after
+        // the last dirty sector is queued the flush returns true even though the sector may not actually have
+        // been physically written to the SD card yet.
         return afatfs_flush();
 #endif // USE_SDCARD
 
     default:
         return false;
+    }
+}
+
+// Flush the blackbox device and only return true if sync is actually complete.
+// Primarily to ensure the async operations of SD card sector writes complete thus freeing the cache entries.
+bool blackboxDeviceFlushForceComplete(void)
+{
+    switch (blackboxConfig()->device) {
+#ifdef USE_SDCARD
+    case BLACKBOX_DEVICE_SDCARD:
+        if (afatfs_sectorCacheInSync()) {
+            return true;
+        } else {
+            blackboxDeviceFlushForce();
+            return false;
+        }
+#endif // USE_SDCARD
+
+    default:
+        return blackboxDeviceFlushForce();
     }
 }
 
@@ -352,6 +374,11 @@ void blackboxEraseAll(void)
 {
     switch (blackboxConfig()->device) {
     case BLACKBOX_DEVICE_FLASH:
+        /* Stop the recorder as if blackbox_mode = ALWAYS it will attempt to resume writing after
+         * the erase and leave a corrupted first log.
+         * Possible enhancement here is to restart logging after erase.
+         */
+        blackboxInit();
         flashfsEraseCompletely();
         break;
     default:
@@ -708,7 +735,7 @@ blackboxBufferReserveStatus_e blackboxDeviceReserveBufferSpace(int32_t bytes)
              * that the Blackbox header writing code doesn't have to guess about the best time to ask flashfs to
              * flush, and doesn't stall waiting for a flush that would otherwise not automatically be called.
              */
-            flashfsFlushAsync();
+            flashfsFlushAsync(true);
         }
         return BLACKBOX_RESERVE_TEMPORARY_FAILURE;
 #endif // USE_FLASHFS
@@ -722,5 +749,22 @@ blackboxBufferReserveStatus_e blackboxDeviceReserveBufferSpace(int32_t bytes)
     default:
         return BLACKBOX_RESERVE_PERMANENT_FAILURE;
     }
+}
+
+int8_t blackboxGetLogFileNo(void)
+{   
+#ifdef USE_BLACKBOX
+#ifdef USE_SDCARD
+    // return current file number or -1 
+    if (blackboxSDCard.state == BLACKBOX_SDCARD_READY_TO_LOG) {
+        return blackboxSDCard.largestLogFileNumber;
+    } else {
+        return -1;
+    }
+#else
+    // will be implemented later for flash based storage
+    return -1;
+#endif
+#endif    
 }
 #endif // BLACKBOX
