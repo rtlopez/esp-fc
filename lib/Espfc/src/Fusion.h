@@ -19,8 +19,8 @@ class Fusion
       _madgwick.setKp(_model.config.fusion.gain * 0.05f);
 
       _mahony.begin(_model.state.accelTimer.rate);
-      _mahony.setKp(_model.config.fusion.gain * 0.05f);
-      _mahony.setKi(_model.config.fusion.gainI * 0.05f);
+      _mahony.setKp(_model.config.fusion.gain * 0.1f);
+      _mahony.setKi(_model.config.fusion.gainI * 0.1f);
 
       _model.logger.info().log(F("FUSION")).log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))).logln(_model.config.fusion.gain);
 
@@ -30,8 +30,8 @@ class Fusion
     void restoreGain()
     {
       _madgwick.setKp(_model.config.fusion.gain * 0.005f);
-      _mahony.setKp(_model.config.fusion.gain * 0.005f);
-      _mahony.setKi(_model.config.fusion.gainI * 0.005f);
+      _mahony.setKp(_model.config.fusion.gain * 0.02f);
+      _mahony.setKi(_model.config.fusion.gainI * 0.02f);
     }
 
     int update()
