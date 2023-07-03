@@ -840,12 +840,11 @@ class ModelConfig
       input.rateLimit[AXIS_YAW] = 1998;
 
       input.filterType = INPUT_FILTER;
-      input.filterAutoFactor = 30;
-      input.filter = FilterConfig(FILTER_PT1, 0);
-      input.filterDerivative = FilterConfig(FILTER_PT1, 0);
+      input.filterAutoFactor = 50;
+      input.filter = FilterConfig(FILTER_PT3, 0);
+      input.filterDerivative = FilterConfig(FILTER_PT3, 0);
 
       input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
-      //input.interpolationMode = INPUT_INTERPOLATION_MANUAL; // mode
       input.interpolationInterval = 26;
       input.deadband = 3; // us
 

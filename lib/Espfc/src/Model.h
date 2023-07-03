@@ -416,7 +416,7 @@ class Model
         state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
         state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
         state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
-        state.gyroFilterImu[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), state.gyroTimer.rate);
+        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), state.gyroTimer.rate);
         if(magActive())
         {
           state.magFilter[i].begin(config.magFilter, state.magTimer.rate);
@@ -428,12 +428,10 @@ class Model
         if (config.input.filterType == INPUT_FILTER)
         {
           state.inputFilter[i].begin(config.input.filter, state.loopTimer.rate);
-          state.inputFilterDerivative[i].begin(config.input.filterDerivative, state.loopTimer.rate);
         }
         else
         {
-          state.inputFilter[i].begin(FilterConfig(FILTER_PT1, 30), state.loopTimer.rate);
-          state.inputFilterDerivative[i].begin(FilterConfig(FILTER_NONE, 0), state.loopTimer.rate);
+          state.inputFilter[i].begin(FilterConfig(FILTER_PT3, 25), state.loopTimer.rate);
         }
       }
 
@@ -471,7 +469,7 @@ class Model
           pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
         }
         pid.dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
-        pid.ftermFilter.begin(FilterConfig(FILTER_PT1, 20), state.loopTimer.rate);
+        pid.ftermFilter.begin(config.input.filterDerivative, state.loopTimer.rate);
         if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
         pid.begin();
       }

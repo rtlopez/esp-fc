@@ -86,9 +86,9 @@ static uint8_t toFilterTypeDerivative(uint8_t t)
 {
   switch(t) {
     case 0: return Espfc::FILTER_NONE;
-    case 1: return Espfc::FILTER_PT1;
+    case 1: return Espfc::FILTER_PT3;
     case 2: return Espfc::FILTER_BIQUAD;
-    default: return Espfc::FILTER_PT1;
+    default: return Espfc::FILTER_PT3;
   }
 }
 
@@ -96,7 +96,7 @@ static uint8_t fromFilterTypeDerivative(uint8_t t)
 {
   switch(t) {
     case Espfc::FILTER_NONE: return 0;
-    case Espfc::FILTER_PT1: return 1;
+    case Espfc::FILTER_PT3: return 1;
     case Espfc::FILTER_BIQUAD: return 2;
     default: return 1;
   }
@@ -682,7 +682,7 @@ class MspProcessor
           r.writeU8(_model.config.input.filterType); // rc_smoothing_type
           r.writeU8(_model.config.input.filter.freq); // rc_smoothing_input_cutoff
           r.writeU8(_model.config.input.filterDerivative.freq); // rc_smoothing_derivative_cutoff
-          r.writeU8(_model.config.input.filter.type); // rc_smoothing_input_type
+          r.writeU8(0);//_model.config.input.filter.type); // rc_smoothing_input_type
           r.writeU8(fromFilterTypeDerivative(_model.config.input.filterDerivative.type)); // rc_smoothing_derivative_type
           r.writeU8(0); // usb type
           // 1.42+
@@ -716,7 +716,8 @@ class MspProcessor
             _model.config.input.filterType = m.readU8(); // rc_smoothing_type
             _model.config.input.filter.freq = m.readU8(); // rc_smoothing_input_cutoff
             _model.config.input.filterDerivative.freq = m.readU8(); // rc_smoothing_derivative_cutoff
-            _model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
+            //_model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
+            m.readU8();
             _model.config.input.filterDerivative.type = toFilterTypeDerivative(m.readU8()); // rc_smoothing_derivative_type
           }
           if (m.remain() >= 1) {

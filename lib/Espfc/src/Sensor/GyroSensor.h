@@ -109,7 +109,7 @@ class GyroSensor: public BaseSensor
         _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
         if(_model.accelActive())
         {
-          _model.state.gyroImu.set(i, _model.state.gyroFilterImu[i].update(_model.state.gyro[i]));
+          _model.state.gyroImu.set(i, _model.state.gyroImuFilter[i].update(_model.state.gyro[i]));
         }
       }
 

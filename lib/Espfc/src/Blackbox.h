@@ -238,11 +238,6 @@ class Blackbox
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
-      //blackboxConfigMutable()->record_acc = _model.accelActive();
-      /*if(blackboxConfig()->record_acc)
-      {
-          enabledSensors |= SENSOR_ACC;
-      }*/
       barometerConfigMutable()->baro_hardware = _model.config.baroDev;
       compassConfigMutable()->mag_hardware = _model.config.magDev;
 
@@ -325,7 +320,7 @@ class Blackbox
         pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
         pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
         pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
-        rcCommand[i] = _model.state.input[i] * (i == AXIS_YAW ? -500.f : 500.f);
+        rcCommand[i] = (_model.state.inputBuffer[i] - 1500) * (i == AXIS_YAW ? -1 : 1);
         if(_model.accelActive()) {
           acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
         }
@@ -336,7 +331,7 @@ class Blackbox
           baro.altitude = lrintf(_model.state.baroAltitude * 100.f); // cm
         }
       }
-      rcCommand[AXIS_THRUST] = _model.state.input[AXIS_THRUST] * 500.f + 1500.f;
+      rcCommand[AXIS_THRUST] = _model.state.inputBuffer[AXIS_THRUST];
       for(size_t i = 0; i < 4; i++)
       {
         motor[i] = Math::clamp(_model.state.outputUs[i], (int16_t)1000, (int16_t)2000);
