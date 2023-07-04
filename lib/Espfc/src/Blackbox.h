@@ -195,7 +195,7 @@ class Blackbox
       cp->pidAtMinThrottle = 1;
       cp->dterm_lpf1_type = _model.config.dtermFilter.type;
       cp->dterm_lpf1_static_hz = _model.config.dtermFilter.freq;
-      cp->dterm_lpf1_dyn_min_hz = _model.config.dtermDynLpfFilter.freq;
+      cp->dterm_lpf1_dyn_min_hz = _model.config.dtermDynLpfFilter.cutoff;
       cp->dterm_lpf1_dyn_max_hz = _model.config.dtermDynLpfFilter.freq;
       cp->dterm_lpf2_type = _model.config.dtermFilter2.type;
       cp->dterm_lpf2_static_hz = _model.config.dtermFilter2.freq;
@@ -225,16 +225,20 @@ class Blackbox
 
       gyroConfigMutable()->gyro_hardware_lpf = _model.config.gyroDlpf;
       gyroConfigMutable()->gyro_lpf1_type = _model.config.gyroFilter.type;
-      gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyroFilter.freq;
-      gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyroFilter.cutoff;
+      gyroConfigMutable()->gyro_lpf1_static_hz = _model.config.gyroFilter.freq;
+      gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyroDynLpfFilter.cutoff;
+      gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyroDynLpfFilter.freq;
       gyroConfigMutable()->gyro_lpf2_type = _model.config.gyroFilter2.type;
       gyroConfigMutable()->gyro_lpf2_static_hz = _model.config.gyroFilter2.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyroNotch1Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyroNotch2Filter.freq;
-      gyroConfigMutable()->dyn_lpf_gyro_min_hz = _model.config.gyroDynLpfFilter.freq;
-      gyroConfigMutable()->dyn_lpf_gyro_max_hz = _model.config.gyroDynLpfFilter.cutoff;
+
+      dynNotchConfigMutable()->dyn_notch_count = _model.config.dynamicFilter.width;
+      dynNotchConfigMutable()->dyn_notch_q = _model.config.dynamicFilter.q;
+      dynNotchConfigMutable()->dyn_notch_min_hz = _model.config.dynamicFilter.min_freq;
+      dynNotchConfigMutable()->dyn_notch_max_hz = _model.config.dynamicFilter.max_freq;
 
       accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
       accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;

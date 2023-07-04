@@ -6,6 +6,7 @@
 #define USE_BARO
 #define USE_DYN_LPF
 #define USE_D_MIN
+#define USE_DYN_NOTCH_FILTER
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -855,26 +856,31 @@ typedef struct gyroConfig_s {
     //uint8_t  gyroMovementCalibrationThreshold; // people keep forgetting that moving model while init results in wrong gyro offsets. and then they never reset gyro. so this is now on by default.
     uint8_t  gyro_sync_denom;                  // Gyro sample divider
     uint8_t  gyro_hardware_lpf;                         // gyro LPF setting - values are driver specific, in case of invalid number, a reasonable default ~30-40HZ is chosen.
-    uint8_t  gyro_lowpass_type;
-    uint16_t  gyro_lowpass_hz;
-    uint8_t  gyro_lowpass2_type;
-    uint16_t  gyro_lowpass2_hz;
     uint8_t  gyro_to_use;
     uint16_t gyro_soft_notch_hz_1;
     uint16_t gyro_soft_notch_cutoff_1;
     uint16_t gyro_soft_notch_hz_2;
     uint16_t gyro_soft_notch_cutoff_2;
-    uint16_t dyn_lpf_gyro_min_hz;
-    uint16_t dyn_lpf_gyro_max_hz;
     uint8_t gyro_lpf1_type;
     uint16_t gyro_lpf1_static_hz;
     uint16_t gyro_lpf1_dyn_min_hz;
+    uint16_t gyro_lpf1_dyn_max_hz;
     uint8_t gyro_lpf2_type;
     uint16_t gyro_lpf2_static_hz;
-    uint16_t gyro_lpf1_dyn_max_hz;
 } gyroConfig_t;
 
 PG_DECLARE(gyroConfig_t, gyroConfig);
+
+typedef struct dynNotchConfig_s
+{
+    uint16_t dyn_notch_min_hz;
+    uint16_t dyn_notch_max_hz;
+    uint16_t dyn_notch_q;
+    uint8_t  dyn_notch_count;
+
+} dynNotchConfig_t;
+
+PG_DECLARE(dynNotchConfig_t, dynNotchConfig);
 
 typedef struct currentSensorADCConfig_s {
     int16_t scale;              // scale the current sensor output voltage to milliamps. Value in 1/10th mV/A
