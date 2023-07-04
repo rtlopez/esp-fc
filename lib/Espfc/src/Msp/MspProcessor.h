@@ -102,6 +102,24 @@ static uint8_t fromFilterTypeDerivative(uint8_t t)
   }
 }
 
+static int8_t toVbatSource(uint8_t t)
+{
+  switch(t) {
+    case 0: return 0; // none
+    case 1: return 1; // internal adc
+    default: return 0;
+  }
+}
+
+static int8_t toIbatSource(uint8_t t)
+{
+  switch(t) {
+    case 0: return 0; // none
+    //case 1: return 1; // internal adc, not yet
+    default: return 0;
+  }
+}
+
 }
 
 namespace Espfc {
@@ -308,8 +326,8 @@ class MspProcessor
           r.writeU8(42);  // vbatmaxcellvoltage
           r.writeU8(_model.config.vbatCellWarning);  // vbatwarningcellvoltage // TODO to volts
           r.writeU16(0); // batteryCapacity
-          r.writeU8(1);  // voltageMeterSource
-          r.writeU8(0);  // currentMeterSource
+          r.writeU8(_model.config.vbatSource);  // voltageMeterSource
+          r.writeU8(_model.config.ibatSource);  // currentMeterSource
           r.writeU16(340); // vbatmincellvoltage
           r.writeU16(420); // vbatmaxcellvoltage
           r.writeU16(_model.config.vbatCellWarning * 10); // vbatwarningcellvoltage // TODO to volts
@@ -320,8 +338,8 @@ class MspProcessor
           m.readU8();  // vbatmaxcellvoltage
           _model.config.vbatCellWarning = m.readU8();  // vbatwarningcellvoltage // TODO to volts
           m.readU16(); // batteryCapacity
-          m.readU8();  // voltageMeterSource
-          m.readU8();  // currentMeterSource
+          _model.config.vbatSource = toVbatSource(m.readU8());  // voltageMeterSource
+          _model.config.ibatSource = toIbatSource(m.readU8());  // currentMeterSource
           if(m.remain() >= 6)
           {
             m.readU16();
@@ -1064,7 +1082,7 @@ class MspProcessor
           r.writeU8(_model.config.angleLimit); // levelAngleLimit;
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); // itermThrottleThreshold;
-          r.writeU16(0); // itermAcceleratorGain;
+          r.writeU16(0); // itermAcceleratorGain; anti_gravity_gain
           r.writeU16(_model.config.dtermSetpointWeight);
           r.writeU8(0); // iterm rotation
           r.writeU8(0); // smart feed forward

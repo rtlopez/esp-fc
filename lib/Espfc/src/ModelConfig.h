@@ -617,6 +617,9 @@ class ModelConfig
     uint8_t vbatScale;
     uint8_t vbatResDiv;
     uint8_t vbatResMult;
+    uint8_t vbatSource;
+
+    uint8_t ibatSource;
 
     int8_t debugMode;
 
@@ -722,19 +725,19 @@ class ModelConfig
       fusion.gainI = 5;
 
       gyroFilter = FilterConfig(FILTER_PT1, 100);
-      gyroFilter2 = FilterConfig(FILTER_PT1, 188);
+      gyroFilter2 = FilterConfig(FILTER_PT1, 213);
       gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
-      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 375, 150);
+      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       dynamicFilter = DynamicFilterConfig(8, 120, 80, 400); // 8%. q:1.2, 80-400 Hz
 
-      dtermFilter = FilterConfig(FILTER_PT1, 90);
-      dtermFilter2 = FilterConfig(FILTER_PT1, 113);
-      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
+      dtermFilter = FilterConfig(FILTER_PT1, 128);
+      dtermFilter2 = FilterConfig(FILTER_PT1, 128);
+      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 145, 60);
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
 
-      accelFilter = FilterConfig(FILTER_PT2, 15);
+      accelFilter = FilterConfig(FILTER_BIQUAD, 15);
       magFilter = FilterConfig(FILTER_BIQUAD, 10);
       yawFilter = FilterConfig(FILTER_PT1, 90);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
@@ -822,6 +825,7 @@ class ModelConfig
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
       input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
 
+      /*
       input.rateType = 0; // betaflight
 
       input.rate[AXIS_ROLL] = 70;
@@ -837,6 +841,24 @@ class ModelConfig
       input.rate[AXIS_YAW] = 120;
       input.expo[AXIS_YAW] = 0;
       input.superRate[AXIS_YAW] = 50;
+      input.rateLimit[AXIS_YAW] = 1998;
+      */
+
+      input.rateType = 3; // actual
+
+      input.rate[AXIS_ROLL] = 15;
+      input.expo[AXIS_ROLL] = 0;
+      input.superRate[AXIS_ROLL] = 47;
+      input.rateLimit[AXIS_ROLL] = 1998;
+
+      input.rate[AXIS_PITCH] = 15;
+      input.expo[AXIS_PITCH] = 0;
+      input.superRate[AXIS_PITCH] = 47;
+      input.rateLimit[AXIS_PITCH] = 1998;
+
+      input.rate[AXIS_YAW] = 15;
+      input.expo[AXIS_YAW] = 0;
+      input.superRate[AXIS_YAW] = 47;
       input.rateLimit[AXIS_YAW] = 1998;
 
       input.filterType = INPUT_FILTER;
@@ -921,6 +943,9 @@ class ModelConfig
       vbatResDiv = 16;
       vbatResMult = 1;
       vbatCellWarning = 35;
+      vbatSource = 0;
+
+      ibatSource = 0;
 
       buzzer.inverted = true;
 
