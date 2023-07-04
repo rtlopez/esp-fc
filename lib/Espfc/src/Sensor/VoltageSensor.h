@@ -24,7 +24,10 @@ class VoltageSensor: public BaseSensor
 
     int update()
     {
-      return 0;
+      if(_model.config.vbatSource != 1 || _model.config.pin[PIN_INPUT_ADC_0] == -1)
+      {
+        return 0;
+      }
 
       if(!_model.state.battery.timer.check()) return 0;
 
@@ -33,7 +36,7 @@ class VoltageSensor: public BaseSensor
       // total should equals ~18.24:1, 73:4 resDiv:resMult should be ideal,
       // but ~52:1 is real, did I miss something?
       const float alpha = 0.33f;
-      float val = _model.state.battery.rawVoltage = analogRead(A0);
+      float val = _model.state.battery.rawVoltage = analogRead(_model.config.pin[PIN_INPUT_ADC_0]);
       val *= (int)_model.config.vbatScale;
       val /= 10.f;
       val *= _model.config.vbatResMult;
