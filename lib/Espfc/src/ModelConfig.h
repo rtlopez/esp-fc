@@ -730,7 +730,7 @@ class ModelConfig
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
-      dynamicFilter = DynamicFilterConfig(8, 120, 80, 400); // 8%. q:1.2, 80-400 Hz
+      dynamicFilter = DynamicFilterConfig(0, 300, 80, 400); // 8%. q:1.2, 80-400 Hz
 
       dtermFilter = FilterConfig(FILTER_PT1, 128);
       dtermFilter2 = FilterConfig(FILTER_PT1, 128);

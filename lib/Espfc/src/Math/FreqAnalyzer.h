@@ -46,10 +46,10 @@ class FreqAnalyzer
       _pitch_count_raise++;
       _pitch_count_fall++;
 
-      freq = lrintf(_lpf.update(std::min(_pitch_freq_raise, _pitch_freq_fall))); // use lower value
+      freq = _lpf.update(std::min(_pitch_freq_raise, _pitch_freq_fall)); // use lower value
     }
 
-    int freq;
+    float freq;
     float noise;
 
   private:

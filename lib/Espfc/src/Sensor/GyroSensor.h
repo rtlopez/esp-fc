@@ -137,12 +137,12 @@ class GyroSensor: public BaseSensor
 
     void dynamicFilterApply(Axis i)
     {
-      float freq = _model.state.gyroAnalyzer[i].freq;
-      float bw = 0.5f * (freq / _model.config.dynamicFilter.q);
+      const float freq = _model.state.gyroAnalyzer[i].freq;
+      const float bw = 0.5f * (freq / (_model.config.dynamicFilter.q * 0.01)); // half bandwidth
       if(_model.config.dynamicFilter.width > 0 && _model.config.dynamicFilter.width < 30) {
-        float bw =  freq / _model.config.dynamicFilter.q;
-        float freq1 = freq * (1.0f - 0.005f * _model.config.dynamicFilter.width);
-        float freq2 = freq * (1.0f + 0.005f * _model.config.dynamicFilter.width);
+        const float w = 0.005f * _model.config.dynamicFilter.width; // half witdh
+        const float freq1 = freq * (1.0f - w);
+        const float freq2 = freq * (1.0f + w);
         _model.state.gyroDynamicFilter[i].reconfigure(freq1, freq1 - bw);
         _model.state.gyroDynamicFilter2[i].reconfigure(freq2, freq2 - bw);
       } else {

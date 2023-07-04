@@ -411,8 +411,8 @@ class Filter
     // BIQUAD
     void initBiquadLpf(float rate, float freq)
     {
-      //const float q = 0.70710678118f;
-      const float q = 1.0f / sqrtf(2.0f); /* quality factor: butterworth for lpf */
+      const float q = 0.70710678118f;
+      //const float q = 1.0f / sqrtf(2.0f); /* quality factor: butterworth for lpf */
       _state.bq.init(BIQUAD_FILTER_LPF, rate, freq, q);
     }
 

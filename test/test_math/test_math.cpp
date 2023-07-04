@@ -480,6 +480,9 @@ void test_filter_notch_q()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.667f, filter.getNotchQ(200, 100));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.667f, filter.getNotchQApprox(200, 100));
 
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.007f, filter.getNotchQ(200, 124));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.007f, filter.getNotchQApprox(200, 124));
+
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.714f, filter.getNotchQ(200, 150));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.714f, filter.getNotchQApprox(200, 150));
 
@@ -494,6 +497,15 @@ void test_filter_notch_q()
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.216f, filter.getNotchQ(100, 67));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.216f, filter.getNotchQApprox(100, 67));
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.667f, filter.getNotchQ(300, 150));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.667f, filter.getNotchQApprox(300, 150));
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.884f, filter.getNotchQ(300, 175));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.884f, filter.getNotchQApprox(300, 175));
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.200f, filter.getNotchQ(300, 200));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.200f, filter.getNotchQApprox(300, 200));
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.733f, filter.getNotchQ(400, 350));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.733f, filter.getNotchQApprox(400, 350));
