@@ -84,6 +84,8 @@
   #define ESPFC_MULTI_CORE
 #endif
 
+#define ESPFC_DSP
+
 #include "Device/SerialDevice.h"
 
 #define SERIAL_UART_PARITY_NONE      0B00000000
