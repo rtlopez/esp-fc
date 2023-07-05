@@ -120,10 +120,16 @@ class GyroSensor: public BaseSensor
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
         }
         _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
 
         if(dynamicFilterEnabled || dynamicFilterDebug)
         {
 #ifdef ESPFC_DSP
+          if(dynamicFilterDebug && i == 0)
+          {
+            _model.state.debug[3] = _model.state.gyro[i];
+          }
           _fft_in[i][_fft_c] = _model.state.gyro[i];
 #else
           dynamicFilterAnalyze((Axis)i, dynamicFilterDebug);
@@ -135,8 +141,6 @@ class GyroSensor: public BaseSensor
             _model.state.gyro.set(i, _model.state.gyroDynamicFilter2[i].update(_model.state.gyro[i]));
           }
         }
-        _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
-        _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
         if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
         {
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
@@ -161,7 +165,7 @@ class GyroSensor: public BaseSensor
     void dynamicFilterFFTInit()
     {
       _fft_c = 0;
-      _fft_bucket_width = (float)(_model.state.loopTimer.rate * 0.5) / N;
+      _fft_bucket_width = (float)_model.state.loopTimer.rate / N;
 
       dsps_fft4r_init_fc32(NULL, N >> 1);
 
@@ -174,6 +178,10 @@ class GyroSensor: public BaseSensor
       if(++_fft_c < N) return;
 
       _fft_c = 0;
+
+      const float loFreq = _model.config.dynamicFilter.min_freq;
+      const float hiFreq = _model.config.dynamicFilter.max_freq;
+      const float offset = _fft_bucket_width * 0.5f; // center of bucket
 
       for(size_t i = 0; i < 3; ++i)
       {
@@ -201,11 +209,9 @@ class GyroSensor: public BaseSensor
         // TODO: find max noise freq
         float maxAmt = 0;
         float maxFreq = 0;
-        float loFreq = 100;
-        float hiFreq = 400;
         for (size_t j = 1; j < (N >> 1) - 1; j++)
         {
-          const float freq = _fft_bucket_width * j;
+          const float freq = _fft_bucket_width * j + offset;
           if(freq < loFreq) continue;
           if(freq > hiFreq) break;
           const float amt = _fft_out[i][j];
