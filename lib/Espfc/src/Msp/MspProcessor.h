@@ -7,6 +7,13 @@
 #include "Msp/MspParser.h"
 #include "platform.h"
 
+extern "C" {
+  int blackboxCalculatePDenom(int rateNum, int rateDenom);
+  uint8_t blackboxCalculateSampleRate(uint16_t pRatio);
+  uint8_t blackboxGetRateDenom(void);
+  uint16_t blackboxGetPRatio(void);
+}
+
 namespace {
 
 enum SerialSpeedIndex {
@@ -79,9 +86,9 @@ static uint8_t toFilterTypeDerivative(uint8_t t)
 {
   switch(t) {
     case 0: return Espfc::FILTER_NONE;
-    case 1: return Espfc::FILTER_PT1;
+    case 1: return Espfc::FILTER_PT3;
     case 2: return Espfc::FILTER_BIQUAD;
-    default: return Espfc::FILTER_PT1;
+    default: return Espfc::FILTER_PT3;
   }
 }
 
@@ -89,9 +96,27 @@ static uint8_t fromFilterTypeDerivative(uint8_t t)
 {
   switch(t) {
     case Espfc::FILTER_NONE: return 0;
-    case Espfc::FILTER_PT1: return 1;
+    case Espfc::FILTER_PT3: return 1;
     case Espfc::FILTER_BIQUAD: return 2;
     default: return 1;
+  }
+}
+
+static int8_t toVbatSource(uint8_t t)
+{
+  switch(t) {
+    case 0: return 0; // none
+    case 1: return 1; // internal adc
+    default: return 0;
+  }
+}
+
+static int8_t toIbatSource(uint8_t t)
+{
+  switch(t) {
+    case 0: return 0; // none
+    //case 1: return 1; // internal adc, not yet
+    default: return 0;
   }
 }
 
@@ -301,8 +326,8 @@ class MspProcessor
           r.writeU8(42);  // vbatmaxcellvoltage
           r.writeU8(_model.config.vbatCellWarning);  // vbatwarningcellvoltage // TODO to volts
           r.writeU16(0); // batteryCapacity
-          r.writeU8(1);  // voltageMeterSource
-          r.writeU8(0);  // currentMeterSource
+          r.writeU8(_model.config.vbatSource);  // voltageMeterSource
+          r.writeU8(_model.config.ibatSource);  // currentMeterSource
           r.writeU16(340); // vbatmincellvoltage
           r.writeU16(420); // vbatmaxcellvoltage
           r.writeU16(_model.config.vbatCellWarning * 10); // vbatwarningcellvoltage // TODO to volts
@@ -313,8 +338,8 @@ class MspProcessor
           m.readU8();  // vbatmaxcellvoltage
           _model.config.vbatCellWarning = m.readU8();  // vbatwarningcellvoltage // TODO to volts
           m.readU16(); // batteryCapacity
-          m.readU8();  // voltageMeterSource
-          m.readU8();  // currentMeterSource
+          _model.config.vbatSource = toVbatSource(m.readU8());  // voltageMeterSource
+          _model.config.ibatSource = toIbatSource(m.readU8());  // currentMeterSource
           if(m.remain() >= 6)
           {
             m.readU16();
@@ -525,7 +550,9 @@ class MspProcessor
           r.writeU8(_model.config.blackboxDev); // device serial or none
           r.writeU8(1); // blackboxGetRateNum()); // unused
           r.writeU8(1); // blackboxGetRateDenom());
-          r.writeU16(_model.config.blackboxPdenom); // p_denom
+          r.writeU16(_model.config.blackboxPdenom);//blackboxGetPRatio()); // p_denom
+          //r.writeU8(_model.config.blackboxPdenom); // sample_rate
+          //r.writeU32(_model.config.blackboxFieldsDisabledMask);
           break;
 
         case MSP_SET_BLACKBOX_CONFIG:
@@ -534,13 +561,25 @@ class MspProcessor
             _model.config.blackboxDev = m.readU8();
             const int rateNum = m.readU8(); // was rate_num
             const int rateDenom = m.readU8(); // was rate_denom
+            uint16_t pRatio = 0;
             if (m.remain() >= 2) {
-                _model.config.blackboxPdenom = m.readU16(); // p_denom specified, so use it directly
+                pRatio = m.readU16(); // p_denom specified, so use it directly
             } else {
                 // p_denom not specified in MSP, so calculate it from old rateNum and rateDenom
-                //p_denom = blackboxCalculatePDenom(rateNum, rateDenom);
+                //pRatio = blackboxCalculatePDenom(rateNum, rateDenom);
                 (void)(rateNum + rateDenom);
             }
+            _model.config.blackboxPdenom = pRatio;
+
+            /*if (m.remain() >= 1) {
+                _model.config.blackboxPdenom = m.readU8();
+            } else if(pRatio > 0) {
+                _model.config.blackboxPdenom = blackboxCalculateSampleRate(pRatio);
+                //_model.config.blackboxPdenom = pRatio;
+            }
+            if (m.remain() >= 4) {
+              _model.config.blackboxFieldsDisabledMask = m.readU32();
+            }*/
           }
           break;
 
@@ -661,7 +700,7 @@ class MspProcessor
           r.writeU8(_model.config.input.filterType); // rc_smoothing_type
           r.writeU8(_model.config.input.filter.freq); // rc_smoothing_input_cutoff
           r.writeU8(_model.config.input.filterDerivative.freq); // rc_smoothing_derivative_cutoff
-          r.writeU8(_model.config.input.filter.type); // rc_smoothing_input_type
+          r.writeU8(0);//_model.config.input.filter.type); // rc_smoothing_input_type
           r.writeU8(fromFilterTypeDerivative(_model.config.input.filterDerivative.type)); // rc_smoothing_derivative_type
           r.writeU8(0); // usb type
           // 1.42+
@@ -695,7 +734,8 @@ class MspProcessor
             _model.config.input.filterType = m.readU8(); // rc_smoothing_type
             _model.config.input.filter.freq = m.readU8(); // rc_smoothing_input_cutoff
             _model.config.input.filterDerivative.freq = m.readU8(); // rc_smoothing_derivative_cutoff
-            _model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
+            //_model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
+            m.readU8();
             _model.config.input.filterDerivative.type = toFilterTypeDerivative(m.readU8()); // rc_smoothing_derivative_type
           }
           if (m.remain() >= 1) {
@@ -1042,7 +1082,7 @@ class MspProcessor
           r.writeU8(_model.config.angleLimit); // levelAngleLimit;
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); // itermThrottleThreshold;
-          r.writeU16(0); // itermAcceleratorGain;
+          r.writeU16(0); // itermAcceleratorGain; anti_gravity_gain
           r.writeU16(_model.config.dtermSetpointWeight);
           r.writeU8(0); // iterm rotation
           r.writeU8(0); // smart feed forward

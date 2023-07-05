@@ -59,6 +59,11 @@ class EspSoftSerial: public Stream
       return 0;
     }
 
+    virtual size_t write(const uint8_t* c, size_t l) override
+    {
+      return 0;
+    }
+
     void flush() override
     {
 

@@ -35,7 +35,7 @@ class Input
       _model.state.inputFrameDelta = FRAME_TIME_DEFAULT_US;
       _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
       _model.state.inputFrameCount = 0;
-      _model.state.inputAutoFactor = 1.5f / (1.f + _model.config.input.filterAutoFactor * 0.1f);
+      _model.state.inputAutoFactor = 1.f / (2.f + _model.config.input.filterAutoFactor * 0.1f);
       switch(_model.config.input.interpolationMode)
       {
         case INPUT_INTERPOLATION_AUTO:
@@ -88,9 +88,6 @@ class Input
         v = noDelta ? v : _model.state.inputFilter[i].update(v);
         _model.state.inputUs[i] = v;
         _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
-        //float delta = noDelta ? 0.f : (_model.state.input[i] - _model.state.inputPrevious[i]) * _model.state.loopTimer.rate;
-        //_model.state.inputDerivative[i] = _model.state.inputFilterDerivative[i].update(delta);
-        //_model.state.inputPrevious[i] = _model.state.input[i];
       }
       else if(newFrame)
       {
@@ -293,22 +290,32 @@ class Input
         _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;
       }
 
+      if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
+      {
+        _model.state.debug[0] = _model.state.inputFrameRate;
+      }
+
       // auto cutoff input freq
       float freq = std::max(_model.state.inputFrameRate * _model.state.inputAutoFactor, 15.f); // no lower than 15Hz
       if(freq > _model.state.inputAutoFreq * 1.1f || freq < _model.state.inputAutoFreq * 0.9f)
       {
         _model.state.inputAutoFreq += 0.25f * (freq - _model.state.inputAutoFreq);
-        FilterConfig conf((FilterType)_model.config.input.filter.type, freq);
-        FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, freq);
+        if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
+        {
+          _model.state.debug[1] = lrintf(freq);
+          _model.state.debug[2] = lrintf(_model.state.inputAutoFreq);
+        }
+        FilterConfig conf((FilterType)_model.config.input.filter.type, _model.state.inputAutoFreq);
+        FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, _model.state.inputAutoFreq);
         for(size_t i = 0; i <= AXIS_THRUST; i++)
         {
           if(_model.config.input.filter.freq == 0)
           {
-            _model.state.inputFilter[i].reconfigure(conf, _model.state.inputFrameRate);
+            _model.state.inputFilter[i].reconfigure(conf, _model.state.loopTimer.rate);
           }
           if(_model.config.input.filterDerivative.freq == 0)
           {
-            _model.state.inputFilterDerivative[i].reconfigure(confDerivative, _model.state.inputFrameRate);
+            _model.state.innerPid[i].ftermFilter.reconfigure(confDerivative, _model.state.loopTimer.rate);
           }
         }
       }

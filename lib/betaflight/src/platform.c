@@ -33,6 +33,8 @@ PG_RESET_TEMPLATE_DEF(barometerConfig_t, barometerConfig);
 PG_RESET_TEMPLATE_DEF(gyroConfig_t, gyroConfig);
 PG_RESET_TEMPLATE_DEF(currentSensorADCConfig_t, currentSensorADCConfig);
 PG_RESET_TEMPLATE_DEF(rxConfig_t, rxConfig);
+PG_RESET_TEMPLATE_DEF(positionConfig_t, positionConfig);
+PG_RESET_TEMPLATE_DEF(dynNotchConfig_t, dynNotchConfig);
 
 PG_RESET_TEMPLATE_ARRAY_DEF(controlRateConfig_t, CONTROL_RATE_PROFILE_COUNT, controlRateProfiles);
 PG_RESET_TEMPLATE_ARRAY_DEF(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -65,7 +67,6 @@ float motor[MAX_SUPPORTED_MOTORS];
 float motor_disarmed[MAX_SUPPORTED_MOTORS];
 uint32_t targetPidLooptime;
 float rcCommand[4];
-float motorOutputHigh, motorOutputLow;
 
 static serialPort_t _sp = {
     .txBufferSize = 128

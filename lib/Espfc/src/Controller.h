@@ -24,7 +24,9 @@ class Controller
       switch(e.type)
       {
         case EVENT_IMU_UPDATE:
-          update();
+          if(_model.state.loopTimer.syncTo(_model.state.gyroTimer)) {
+            update();
+          }
           _model.state.appQueue.send(Event(EVENT_PID_UPDATE));
           return 1;
         default:

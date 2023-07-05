@@ -62,7 +62,9 @@ class Mixer
       switch(e.type)
       {
         case EVENT_PID_UPDATE:
-          update();
+          if(_model.state.mixerTimer.syncTo(_model.state.loopTimer)) {
+            update();
+          }
           _model.state.appQueue.send(Event(EVENT_MIXER_UPDATE));
           return 1;
         default:

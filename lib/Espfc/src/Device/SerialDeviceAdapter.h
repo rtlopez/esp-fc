@@ -24,6 +24,7 @@ class SerialDeviceAdapter: public SerialDevice
     virtual int peek() { return _dev.peek(); }
     virtual void flush() { _dev.flush(); }
     virtual size_t write(uint8_t c) { return _dev.write(c); }
+    virtual size_t write(const uint8_t * c, size_t l) { return _dev.write(c, l); }
     virtual bool isSoft() const { return false; };
     virtual int availableForWrite() { return _dev.availableForWrite(); }
     virtual bool isTxFifoEmpty() { return _dev.availableForWrite() >= SERIAL_TX_FIFO_SIZE; }

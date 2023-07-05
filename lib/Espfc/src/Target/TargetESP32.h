@@ -1,19 +1,20 @@
 #pragma once
 
 #include "Esp.h"
+#include "Debug_Espfc.h"
 
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 35 // ppm
 
 #define ESPFC_OUTPUT_COUNT 8
-#define ESPFC_OUTPUT_0 0
-#define ESPFC_OUTPUT_1 2
-#define ESPFC_OUTPUT_2 25
-#define ESPFC_OUTPUT_3 26
-#define ESPFC_OUTPUT_4 27
-#define ESPFC_OUTPUT_5 12
-#define ESPFC_OUTPUT_6 15
-#define ESPFC_OUTPUT_7 14
+#define ESPFC_OUTPUT_0 27
+#define ESPFC_OUTPUT_1 25
+#define ESPFC_OUTPUT_2 12
+#define ESPFC_OUTPUT_3 4
+#define ESPFC_OUTPUT_4 -1
+#define ESPFC_OUTPUT_5 -1
+#define ESPFC_OUTPUT_6 -1
+#define ESPFC_OUTPUT_7 -1
 
 #define ESPFC_SERIAL_0
 #define ESPFC_SERIAL_0_DEV Serial
@@ -29,7 +30,7 @@
 #define ESPFC_SERIAL_1_DEV_T HardwareSerial
 #define ESPFC_SERIAL_1_TX 33
 #define ESPFC_SERIAL_1_RX 32
-#define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_RX_SERIAL)
+#define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_MSP)
 #define ESPFC_SERIAL_1_BAUD (SERIAL_SPEED_115200)
 #define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_NONE)
 
@@ -38,7 +39,7 @@
 #define ESPFC_SERIAL_2_DEV_T HardwareSerial
 #define ESPFC_SERIAL_2_TX 17
 #define ESPFC_SERIAL_2_RX 16
-#define ESPFC_SERIAL_2_FN (SERIAL_FUNCTION_MSP)
+#define ESPFC_SERIAL_2_FN (SERIAL_FUNCTION_RX_SERIAL)
 #define ESPFC_SERIAL_2_BAUD (SERIAL_SPEED_115200)
 #define ESPFC_SERIAL_2_BBAUD (SERIAL_SPEED_NONE)
 
@@ -48,6 +49,7 @@
 
 #define ESPFC_SERIAL_REMAP_PINS
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_UART_0
+#define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_SCK 18
@@ -63,7 +65,7 @@
 #define ESPFC_I2C_0_SOFT
 
 #define ESPFC_BUZZER
-#define ESPFC_BUZZER_PIN 4
+#define ESPFC_BUZZER_PIN 0
 
 #define ESPFC_ADC_0
 #define ESPFC_ADC_0_PIN 36
@@ -71,9 +73,7 @@
 #define ESPFC_ADC_1
 #define ESPFC_ADC_1_PIN 39
 
-#define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL | FEATURE_SOFTSERIAL | FEATURE_DYNAMIC_FILTER)
-
-#define ESPFC_OUTPUT_PROTOCOL ESC_PROTOCOL_DISABLED
+#define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL | FEATURE_DYNAMIC_FILTER)
 
 #define ESPFC_GUARD 0
 #define ESPFC_GYRO_DENOM_MAX 1
@@ -82,19 +82,6 @@
 #define ESPFC_FREE_RTOS
 #ifndef CONFIG_FREERTOS_UNICORE
   #define ESPFC_MULTI_CORE
-#endif
-
-#define SERIAL_TX_FIFO_SIZE 0x7f
-
-#if !defined(ESPFC_REVISION) // development build
-  #undef ESPFC_OUTPUT_PROTOCOL
-  #define ESPFC_OUTPUT_PROTOCOL ESC_PROTOCOL_DSHOT300
-
-  #undef ESPFC_SERIAL_2_FN
-  #define ESPFC_SERIAL_2_FN (SERIAL_FUNCTION_BLACKBOX)
-
-  #undef ESPFC_SERIAL_2_BBAUD
-  #define ESPFC_SERIAL_2_BBAUD (SERIAL_SPEED_250000)
 #endif
 
 #include "Device/SerialDevice.h"
@@ -140,6 +127,7 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
     case SDC_SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
     default: break;
   }
+  dev.setTxBufferSize(SERIAL_TX_FIFO_SIZE);
   dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
   return 1;
 }

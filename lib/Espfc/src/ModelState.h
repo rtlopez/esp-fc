@@ -40,7 +40,6 @@ class SerialPortState
     Msp::MspResponse mspResponse;
     CliCmd cliCmd;
     Device::SerialDevice * stream;
-    uint32_t availableFrom;
 };
 
 class BuzzerState
@@ -169,13 +168,12 @@ struct ModelState
   Filter gyroNotch2Filter[3];
   Filter gyroDynamicFilter[3];
   Filter gyroDynamicFilter2[3];
-  Filter gyroFilterImu[3];
+  Filter gyroImuFilter[3];
   Math::FreqAnalyzer gyroAnalyzer[3];
   
   Filter accelFilter[3];
   Filter magFilter[3];
   Filter inputFilter[4];
-  Filter inputFilterDerivative[4];
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;
@@ -208,8 +206,6 @@ struct ModelState
 
   float inputUs[INPUT_CHANNELS];
   float input[INPUT_CHANNELS];
-  float inputPrevious[INPUT_CHANNELS];
-  float inputDerivative[INPUT_CHANNELS];
   FailsafeState failsafe;
 
   float output[OUTPUT_CHANNELS];

@@ -654,6 +654,10 @@ class Cli
         //Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
         //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
+        Param(PSTR("blackbox_dev"), &c.blackboxDev),
+        Param(PSTR("blackbox_rate"), &c.blackboxPdenom),
+        Param(PSTR("blackbox_mask"), &c.blackboxFieldsDisabledMask),
+
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
         Param(PSTR("wifi_mode"), &c.wireless.mode, wifiModeChoices),
         Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL),

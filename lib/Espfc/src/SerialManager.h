@@ -114,7 +114,7 @@ class SerialManager
         }
         else if(spc.functionMask & SERIAL_FUNCTION_BLACKBOX)
         {
-          sdc.baud = spc.blackboxBaud;
+          //sdc.baud = spc.blackboxBaud;
           if(sdc.baud == 230400 || sdc.baud == 460800)
           {
             sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
@@ -132,11 +132,11 @@ class SerialManager
           continue;
         }
 
-        if(true || !isUsbPort) {
+        //if(true || !isUsbPort) {
           //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
           //port->flush();
           //delay(10);
-        }
+        //}
   
         //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
         port->begin(sdc);
@@ -166,33 +166,6 @@ class SerialManager
           next();
           return 0;
         }
-
-        /*
-        uint32_t now = millis();
-        int available = stream->available();
-        if(!ss.availableFrom && available) ss.availableFrom = now;
-        bool timeout = ss.availableFrom && now - ss.availableFrom > 10;
-
-        size_t count = 0;
-        if(available > 3 || timeout)
-        {
-          ss.availableFrom = 0;
-          while(stream->available())
-          {
-            int c = stream->read();
-            if(c == -1) break;
-            if(sc.functionMask & SERIAL_FUNCTION_MSP)
-            {
-              bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
-              if(!consumed)
-              {
-                _cli.process(c, ss.cliCmd, *stream);
-              }
-            }
-            if(++count > 127) break;
-          }
-        }
-        */
 
         size_t len = stream->available();
         while(len--)
