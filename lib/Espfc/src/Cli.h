@@ -384,7 +384,6 @@ class Cli
         Param(PSTR("gyro_bus"), &c.gyroBus, busDevChoices),
         Param(PSTR("gyro_dev"), &c.gyroDev, gyroDevChoices),
         Param(PSTR("gyro_dlpf"), &c.gyroDlpf, gyroDlpfChoices),
-        Param(PSTR("gyro_sync"), &c.gyroSync),
         Param(PSTR("gyro_align"), &c.gyroAlign, alignChoices),
         Param(PSTR("gyro_lpf_type"), &c.gyroFilter.type, filterTypeChoices),
         Param(PSTR("gyro_lpf_freq"), &c.gyroFilter.freq),

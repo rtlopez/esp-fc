@@ -253,7 +253,7 @@ class Blackbox
       motorConfigMutable()->minthrottle = _model.state.minThrottle;
       motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
 
-      gyroConfigMutable()->gyro_sync_denom = 1; //_model.config.gyroSync;
+      gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
       gyro.sampleLooptime = 125; //_model.state.gyroTimer.interval;

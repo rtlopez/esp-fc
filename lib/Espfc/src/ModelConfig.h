@@ -535,7 +535,6 @@ class ModelConfig
     int8_t gyroDev;
     int8_t gyroDlpf;
     int8_t gyroFsr;
-    int8_t gyroSync;
     int8_t gyroAlign;
     FilterConfig gyroFilter;
     FilterConfig gyroFilter2;
@@ -702,10 +701,8 @@ class ModelConfig
       gyroAlign = ALIGN_DEFAULT;
       gyroDlpf = GYRO_DLPF_256;
       gyroFsr  = GYRO_FS_2000;
-      gyroSync = 1; // unused, force 1
 
       loopSync = 8; // MPU 1000Hz
-      //loopSync = 4; // LSM 833Hz
       mixerSync = 1;
 
       accelBus = BUS_AUTO;
