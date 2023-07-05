@@ -291,9 +291,9 @@ class Blackbox
     {
       switch(e.type)
       {
-        case EVENT_MIXER_UPDATE:
+        case EVENT_MIXER_UPDATED:
           update();
-          //_model.state.appQueue.send(Event(EVENT_BBLOG_UPDATE));
+          //_model.state.appQueue.send(Event(EVENT_BBLOG_UPDATED));
           return 1;
         default:
           break;

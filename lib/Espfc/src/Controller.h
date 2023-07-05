@@ -23,11 +23,16 @@ class Controller
     {
       switch(e.type)
       {
-        case EVENT_IMU_UPDATE:
-          if(_model.state.loopTimer.syncTo(_model.state.gyroTimer)) {
+        case EVENT_GYRO_READ:
+          _model.state.loopUpdate = true;
+          return 1;
+        case EVENT_IMU_UPDATED:
+          if(_model.state.loopUpdate)
+          {
             update();
+            _model.state.loopUpdate = false;
+            _model.state.appQueue.send(Event(EVENT_PID_UPDATED));
           }
-          _model.state.appQueue.send(Event(EVENT_PID_UPDATE));
           return 1;
         default:
           break;

@@ -102,6 +102,15 @@ static uint8_t fromFilterTypeDerivative(uint8_t t)
   }
 }
 
+static uint8_t fromGyroDlpf(uint8_t t)
+{
+  switch(t) {
+    case Espfc::GYRO_DLPF_256: return 0;
+    case Espfc::GYRO_DLPF_EX: return 1;
+    default: return 2;
+  }
+}
+
 static int8_t toVbatSource(uint8_t t)
 {
   switch(t) {
@@ -193,7 +202,7 @@ class MspProcessor
           // 1.42
           r.writeU8(2);  // configuration state: configured
           // 1.43
-          r.writeU16(_model.state.gyroClock); // sample rate
+          r.writeU16(_model.state.gyroTimer.rate); // sample rate
           r.writeU32(0); // configuration problems
           // 1.44
           r.writeU8(0);  // spi dev count
@@ -214,13 +223,14 @@ class MspProcessor
 
         case MSP_STATUS_EX:
         case MSP_STATUS:
-          r.writeU16(_model.state.loopTimer.delta);
+          //r.writeU16(_model.state.loopTimer.delta);
+          r.writeU16(_model.state.stats.loopTime());
           r.writeU16(_model.state.i2cErrorCount); // i2c error count
           //         acc,     baro,    mag,     gps,     sonar,   gyro
           r.writeU16(_model.accelActive() | _model.baroActive() << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | _model.gyroActive() << 5);
           r.writeU32(_model.state.modeMask); // flight mode flags
           r.writeU8(0); // pid profile
-          r.writeU16(lrintf(_model.state.stats.getTotalLoad()));
+          r.writeU16(lrintf(_model.state.stats.getCpuLoad()));
           if (m.cmd == MSP_STATUS_EX) {
             r.writeU8(1); // max profile count
             r.writeU8(0); // current rate profile index
@@ -235,7 +245,7 @@ class MspProcessor
           // Write arming disable flags
           r.writeU8(ARMING_DISABLED_FLAGS_COUNT);  // 1 byte, flag count
           r.writeU32(_model.state.armingDisabledFlags);  // 4 bytes, flags
-          r.writeU8(0); // rebbot required
+          r.writeU8(0); // reboot required
           break;
 
         case MSP_NAME:
@@ -964,7 +974,7 @@ class MspProcessor
           r.writeU16(_model.config.gyroNotch2Filter.freq);    // gyro notch 2 hz
           r.writeU16(_model.config.gyroNotch2Filter.cutoff);  // gyro notch 2 cutoff
           r.writeU8(_model.config.dtermFilter.type);          // dterm type
-          r.writeU8(_model.config.gyroDlpf == GYRO_DLPF_256 ? 0 : (_model.config.gyroDlpf == GYRO_DLPF_EX ? 1 : 2)); // dlfp type
+          r.writeU8(fromGyroDlpf(_model.config.gyroDlpf));
           r.writeU8(0);                                       // dlfp 32khz type
           r.writeU16(_model.config.gyroFilter.freq);          // lowpass1 freq
           r.writeU16(_model.config.gyroFilter2.freq);         // lowpass2 freq

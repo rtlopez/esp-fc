@@ -68,6 +68,7 @@ class Espfc
       {
         return 0;
       }
+      Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
       _sensor.read();
       _input.update();
@@ -82,6 +83,7 @@ class Espfc
 #else
       if(_model.state.gyroTimer.check())
       {
+        Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
         _sensor.update();
         if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
         {
@@ -110,6 +112,7 @@ class Espfc
 #if defined(ESPFC_MULTI_CORE)
       Event e = _model.state.appQueue.receive();
       //Serial2.write((uint8_t)e.type);
+      Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
       _sensor.onAppEvent(e);
       _controller.onAppEvent(e);
@@ -118,10 +121,11 @@ class Espfc
 #else
       if(_model.state.serialTimer.check())
       {
+        Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
         _serial.update();
+        _buzzer.update();
+        _model.state.stats.update();
       }
-      _buzzer.update();
-      _model.state.stats.update();
 #endif
 
       return 1;

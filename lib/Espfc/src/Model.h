@@ -258,12 +258,19 @@ class Model
 
     void sanitize()
     {
-      int loopSyncMax = ESPFC_GYRO_DENOM_MAX; // max 8kHz
-      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) loopSyncMax /= 2;
-      config.loopSync = std::max((int)config.loopSync, loopSyncMax);
+      state.gyroRate = 1000;
+      int loopSyncMax = 1;
+      if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) loopSyncMax /= 2;
 
-      state.gyroRate = state.gyroClock / config.loopSync;
-      state.loopRate = state.gyroClock / config.loopSync;
+      // for spi gyro allow full speed mode
+      if (state.gyroDev && state.gyroDev->getBus()->getType() == BUS_SPI)
+      {
+        loopSyncMax = ESPFC_GYRO_DENOM_MAX; // max 8kHz
+        state.gyroRate = state.gyroClock;
+      }
+
+      config.loopSync = std::max((int)config.loopSync, loopSyncMax);
+      state.loopRate = state.gyroRate / config.loopSync;
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
@@ -309,7 +316,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 499) / 500)); // align loop rate to lower than 500Hz
-          state.loopRate = state.gyroClock / config.loopSync;
+          state.loopRate = state.gyroRate / config.loopSync;
           if(state.loopRate > 480 && config.output.maxThrottle > 1940)
           {
             config.output.maxThrottle = 1940;
@@ -319,7 +326,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
-          state.loopRate = state.gyroClock / config.loopSync;
+          state.loopRate = state.gyroRate / config.loopSync;
         }
       }
 
@@ -382,9 +389,9 @@ class Model
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
       state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
-      state.accelTimer.setInterval(state.accelTimer.interval - 10);
+      state.accelTimer.setInterval(state.accelTimer.interval - 5);
       //state.accelTimer.setRate(state.gyroTimer.rate, 2);
-      state.loopTimer.setRate(state.gyroTimer.rate, 1);
+      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
       state.actuatorTimer.setRate(25); // 25 hz
       state.dynamicFilterTimer.setRate(50);
@@ -396,27 +403,31 @@ class Model
         state.magTimer.setRate(state.magRate);
       }
 
+      const uint32_t gyroFilterRate = state.loopTimer.rate;
+      const uint32_t inputFilterRate = state.loopTimer.rate;
+      const uint32_t pidFilterRate = state.loopTimer.rate;
+
       // configure filters
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
-        state.gyroAnalyzer[i].begin(state.gyroTimer.rate, config.dynamicFilter);
+        state.gyroAnalyzer[i].begin(gyroFilterRate, config.dynamicFilter);
         if(isActive(FEATURE_DYNAMIC_FILTER)) {
-          state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
+          state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), gyroFilterRate);
           if(config.dynamicFilter.width > 0) {
-            state.gyroDynamicFilter2[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), state.gyroTimer.rate);
+            state.gyroDynamicFilter2[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), gyroFilterRate);
           }
         }
-        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, state.gyroTimer.rate);
-        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, state.gyroTimer.rate);
+        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, gyroFilterRate);
+        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, gyroFilterRate);
         if(config.gyroDynLpfFilter.cutoff > 0) {
-          state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), state.gyroTimer.rate);
+          state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), gyroFilterRate);
         } else {
-          state.gyroFilter[i].begin(config.gyroFilter, state.gyroTimer.rate);
+          state.gyroFilter[i].begin(config.gyroFilter, gyroFilterRate);
         }
-        state.gyroFilter2[i].begin(config.gyroFilter2, state.gyroTimer.rate);
-        state.gyroFilter3[i].begin(config.gyroFilter3, state.gyroTimer.rate);
-        state.accelFilter[i].begin(config.accelFilter, state.accelTimer.rate);
-        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), state.gyroTimer.rate);
+        state.gyroFilter2[i].begin(config.gyroFilter2, gyroFilterRate);
+        state.gyroFilter3[i].begin(config.gyroFilter3, gyroFilterRate);
+        state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
+        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), gyroFilterRate);
         if(magActive())
         {
           state.magFilter[i].begin(config.magFilter, state.magTimer.rate);
@@ -427,11 +438,11 @@ class Model
       {
         if (config.input.filterType == INPUT_FILTER)
         {
-          state.inputFilter[i].begin(config.input.filter, state.loopTimer.rate);
+          state.inputFilter[i].begin(config.input.filter, inputFilterRate);
         }
         else
         {
-          state.inputFilter[i].begin(FilterConfig(FILTER_PT3, 25), state.loopTimer.rate);
+          state.inputFilter[i].begin(FilterConfig(FILTER_PT3, 25), inputFilterRate);
         }
       }
 
@@ -462,15 +473,15 @@ class Model
         pid.iLimit = 0.15f;
         pid.oLimit = 0.5f;
         pid.rate = state.loopTimer.rate;
-        pid.dtermNotchFilter.begin(config.dtermNotchFilter, state.loopTimer.rate);
+        pid.dtermNotchFilter.begin(config.dtermNotchFilter, pidFilterRate);
         if(config.dtermDynLpfFilter.cutoff > 0) {
-          pid.dtermFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), state.loopTimer.rate);
+          pid.dtermFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), pidFilterRate);
         } else {
-          pid.dtermFilter.begin(config.dtermFilter, state.loopTimer.rate);
+          pid.dtermFilter.begin(config.dtermFilter, pidFilterRate);
         }
-        pid.dtermFilter2.begin(config.dtermFilter2, state.loopTimer.rate);
-        pid.ftermFilter.begin(config.input.filterDerivative, state.loopTimer.rate);
-        if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, state.loopTimer.rate);
+        pid.dtermFilter2.begin(config.dtermFilter2, pidFilterRate);
+        pid.ftermFilter.begin(config.input.filterDerivative, pidFilterRate);
+        if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, pidFilterRate);
         pid.begin();
       }
 
@@ -485,7 +496,7 @@ class Model
         pid.iLimit = Math::toRad(config.angleRateLimit) * 0.1f;
         pid.oLimit = Math::toRad(config.angleRateLimit);
         pid.rate = state.loopTimer.rate;
-        pid.ptermFilter.begin(config.levelPtermFilter, state.loopTimer.rate);
+        pid.ptermFilter.begin(config.levelPtermFilter, pidFilterRate);
         //pid.iLimit = 0.3f; // ROBOT
         //pid.oLimit = 1.f;  // ROBOT
         pid.begin();

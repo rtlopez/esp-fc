@@ -34,9 +34,13 @@ class GyroSensor: public BaseSensor
       _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
 
       _model.state.gyroCalibrationState = CALIBRATION_START; // calibrate gyro on start
-      _model.state.gyroBiasAlpha = 5.0f / _model.state.gyroTimer.rate;
+      _model.state.gyroCalibrationRate = _model.state.loopTimer.rate;
+      _model.state.gyroBiasAlpha = 5.0f / _model.state.gyroCalibrationRate;
 
       _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
+
+      _idx = 0;
+      _count = std::min(_model.config.loopSync, (int8_t)8);
 
       return 1;
     }
@@ -58,6 +62,25 @@ class GyroSensor: public BaseSensor
 
       _gyro->readGyro(_model.state.gyroRaw);
 
+      align(_model.state.gyroRaw, _model.config.gyroAlign);
+
+      VectorFloat input = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
+
+      // moving average filter
+      if(_count > 1)
+      {
+        _sum -= _samples[_idx];
+        _sum += input;
+        _samples[_idx] = input;
+        if (++_idx == _count) _idx = 0;
+
+        _model.state.gyroSampled = _sum / (float)_count;
+      }
+      else
+      {
+        _model.state.gyroSampled = input;
+      }
+
       return 1;
     }
 
@@ -67,9 +90,7 @@ class GyroSensor: public BaseSensor
 
       Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FILTER);
 
-      align(_model.state.gyroRaw, _model.config.gyroAlign);
-
-      _model.state.gyro = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
+      _model.state.gyro = _model.state.gyroSampled;
 
       calibrate();
 
@@ -159,7 +180,7 @@ class GyroSensor: public BaseSensor
           break;
         case CALIBRATION_START:
           //_model.state.gyroBias = VectorFloat();
-          _model.state.gyroBiasSamples = 2 * _model.state.gyroTimer.rate;
+          _model.state.gyroBiasSamples = 2 * _model.state.gyroCalibrationRate;
           _model.state.gyroCalibrationState = CALIBRATION_UPDATE;
           break;
         case CALIBRATION_UPDATE:
@@ -186,6 +207,11 @@ class GyroSensor: public BaseSensor
           break;
       }
     }
+
+    size_t _idx;
+    size_t _count;
+    VectorFloat _sum;
+    VectorFloat _samples[8];
 
     Model& _model;
     Device::GyroDevice * _gyro;

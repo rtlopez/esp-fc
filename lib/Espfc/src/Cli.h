@@ -1182,16 +1182,16 @@ class Cli
         {
           s.print(FPSTR(_model.state.stats.getName((StatCounter)i)));
           s.print(": ");
-          s.print((int)(_model.state.stats.getTime((StatCounter)i) * _model.state.loopTimer.interval), 1);
+          s.print((int)(_model.state.stats.getTime((StatCounter)i)), 1);
           s.print("us, ");
           s.print(_model.state.stats.getLoad((StatCounter)i), 1);
           s.print("%");
           s.println();
         }
         s.print(F("  TOTAL: "));
-        s.print((int)(_model.state.stats.getTotalTime() * _model.state.loopTimer.interval));
+        s.print((int)(_model.state.stats.getCpuTime()));
         s.print(F("us, "));
-        s.print(_model.state.stats.getTotalLoad(), 1);
+        s.print(_model.state.stats.getCpuLoad(), 1);
         s.print(F("%"));
         s.println();
       }

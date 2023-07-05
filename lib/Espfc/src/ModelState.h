@@ -138,6 +138,7 @@ struct ModelState
   Device::BaroDevice* baroDev;
 
   VectorInt16 gyroRaw;
+  VectorFloat gyroSampled;
   VectorInt16 accelRaw;
   VectorInt16 magRaw;
 
@@ -155,6 +156,7 @@ struct ModelState
   VectorFloat magPose;
 
   bool imuUpdate;
+  bool loopUpdate;
   VectorFloat pose;
   Quaternion poseQ;
 
@@ -227,8 +229,9 @@ struct ModelState
   float gyroBiasAlpha;
   int gyroBiasSamples;
   int gyroCalibrationState;
+  int gyroCalibrationRate;
 
-  int32_t gyroClock = 2000;
+  int32_t gyroClock = 1000;
   int32_t gyroRate;
 
   Timer gyroTimer;
