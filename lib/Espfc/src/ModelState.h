@@ -269,6 +269,7 @@ struct ModelState
   uint32_t modeMask;
   uint32_t modeMaskPrev;
   uint32_t modeMaskSwitch;
+  uint32_t disarmReason;
 
   bool airmodeAllowed;
 

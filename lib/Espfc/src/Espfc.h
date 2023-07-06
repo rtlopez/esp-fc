@@ -72,11 +72,16 @@ class Espfc
 
       _sensor.read();
       _input.update();
-      _actuator.update();
-      _serial.update();
-      _buzzer.update();
-      _model.state.stats.update();
-
+      if(_model.state.actuatorTimer.check())
+      {
+        _actuator.update();
+      }
+      if(_model.state.serialTimer.check())
+      {
+        _serial.update();
+        _buzzer.update();
+        _model.state.stats.update();
+      }
       _model.state.appQueue.send(Event(EVENT_IDLE));
 
       return 1;

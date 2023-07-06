@@ -457,6 +457,19 @@ class OutputConfig
     OutputChannelConfig channel[ESPFC_OUTPUT_COUNT];
 };
 
+enum DisarmReason {
+    DISARM_REASON_ARMING_DISABLED   = 0,
+    DISARM_REASON_FAILSAFE          = 1,
+    DISARM_REASON_THROTTLE_TIMEOUT  = 2,
+    DISARM_REASON_STICKS            = 3,
+    DISARM_REASON_SWITCH            = 4,
+    DISARM_REASON_CRASH_PROTECTION  = 5,
+    DISARM_REASON_RUNAWAY_TAKEOFF   = 6,
+    DISARM_REASON_GPS_RESCUE        = 7,
+    DISARM_REASON_SERIAL_COMMAND    = 8,
+    DISARM_REASON_SYSTEM            = 255,
+};
+
 enum ArmingDisabledFlags {
   ARMING_DISABLED_NO_GYRO         = (1 << 0),
   ARMING_DISABLED_FAILSAFE        = (1 << 1),

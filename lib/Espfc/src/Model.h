@@ -74,10 +74,12 @@ class Model
       state.modeMaskSwitch = mask;
     }
 
-    void disarm()
+    void disarm(DisarmReason r)
     {
+      state.disarmReason = r;
       clearMode(MODE_ARMED);
       clearMode(MODE_AIRMODE);
+      state.appQueue.send(Event(EVENT_DISARM));
     }
 
     /**
@@ -95,7 +97,7 @@ class Model
 
     bool isAirModeActive() const
     {
-      return isActive(MODE_AIRMODE);// || isActive(FEATURE_AIRMODE);
+      return isModeActive(MODE_AIRMODE);// || isActive(FEATURE_AIRMODE);
     }
 
     bool isThrottleLow() const
@@ -108,7 +110,7 @@ class Model
       return config.blackboxDev == 3 && config.blackboxPdenom > 0;
     }
 
-    bool gyroActive() const IRAM_ATTR
+    bool gyroActive() const /* IRAM_ATTR */
     {
       return state.gyroPresent && config.gyroDev != GYRO_NONE;
     }
@@ -168,7 +170,7 @@ class Model
       }
     }
 
-    bool armingDisabled() const IRAM_ATTR
+    bool armingDisabled() const /* IRAM_ATTR */
     {
       return state.armingDisabledFlags != 0;
     }
@@ -177,6 +179,11 @@ class Model
     {
       if(value) state.armingDisabledFlags |= flag;
       else state.armingDisabledFlags &= ~flag;
+    }
+
+    bool getArmingDisabled(ArmingDisabledFlags flag)
+    {
+      return state.armingDisabledFlags & flag;
     }
 
     Device::SerialDevice * getSerialStream(SerialPort i)
