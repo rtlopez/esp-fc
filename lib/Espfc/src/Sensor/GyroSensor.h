@@ -4,11 +4,9 @@
 #include "BaseSensor.h"
 #include "Device/GyroDevice.h"
 #include "Math/Sma.h"
-
+#include "Math/FreqAnalyzer.h"
 #ifdef ESPFC_DSP
-// https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
-#include "dsps_fft4r.h"
-#include "dsps_wind_hann.h"
+#include "Math/FFTAnalyzer.h"
 #endif
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
@@ -49,7 +47,10 @@ class GyroSensor: public BaseSensor
       _sma.begin(_model.config.loopSync);
 
 #ifdef ESPFC_DSP
-      dynamicFilterFFTInit();
+      for(size_t i = 0; i < 3; i++)
+      {
+        _fft[i].begin(_model.state.loopTimer.rate, _model.config.dynamicFilter);
+      }
 #endif
 
       return 1;
@@ -96,6 +97,8 @@ class GyroSensor: public BaseSensor
       bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ;
       bool dynamicFilterUpdate = dynamicFilterEnabled && _model.state.dynamicFilterTimer.check();
 
+      const int debugAxis = 1;
+
       // filtering
       for(size_t i = 0; i < 3; ++i)
       {
@@ -107,152 +110,81 @@ class GyroSensor: public BaseSensor
         {
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
         }
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
+        {
+          _model.state.debug[0] = lrintf(degrees(_model.state.gyro[i]));
+        }
+
         _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
+        {
+          _model.state.debug[1] = lrintf(degrees(_model.state.gyro[i]));
+        }
+
         _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
         _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
+
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
+        {
+          _model.state.debug[2] = lrintf(degrees(_model.state.gyro[i]));
+        }
 
         if(dynamicFilterEnabled || dynamicFilterDebug)
         {
 #ifdef ESPFC_DSP
-          if(dynamicFilterDebug && i == 0)
-          {
-            _model.state.debug[3] = _model.state.gyro[i];
-          }
-          _fft_in[i][_fft_c] = _model.state.gyro[i];
+          int status = _fft[i].update(_model.state.gyro[i]);
+          dynamicFilterUpdate = dynamicFilterEnabled && status;
+          const float freq = _fft[i].freq;
 #else
-          dynamicFilterAnalyze((Axis)i, dynamicFilterDebug);
+          _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
+          const float freq = _model.state.gyroAnalyzer[i].freq;
 #endif
-          if(dynamicFilterUpdate) dynamicFilterApply((Axis)i);
+          if (dynamicFilterDebug)
+          {
+            _model.state.debug[i] = lrintf(_fft[i].freq);
+            if (i == debugAxis) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+          }
+          if(dynamicFilterUpdate) dynamicFilterApply((Axis)i, freq);
           if(dynamicFilterEnabled)
           {
             _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
             _model.state.gyro.set(i, _model.state.gyroDynamicFilter2[i].update(_model.state.gyro[i]));
           }
         }
+
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
+        {
+          _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+        }
+
         if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
         {
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
         }
-        _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
-        _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
         if(_model.accelActive())
         {
           _model.state.gyroImu.set(i, _model.state.gyroImuFilter[i].update(_model.state.gyro[i]));
         }
       }
 
-#ifdef ESPFC_DSP
-      dynamicFilterFFTAnalyze(dynamicFilterDebug);
-#endif
-
       return 1;
     }
 
   private:
-#ifdef ESPFC_DSP
-    void dynamicFilterFFTInit()
+    void dynamicFilterApply(Axis i, const float freq)
     {
-      _fft_c = 0;
-      _fft_bucket_width = (float)_model.state.loopTimer.rate / FFT_SIZE;
-
-      dsps_fft4r_init_fc32(NULL, FFT_SIZE >> 1);
-
-      // Generate hann window
-      dsps_wind_hann_f32(_fft_wind, FFT_SIZE);
-    }
-
-    void dynamicFilterFFTAnalyze(bool debug)
-    {
-      if(++_fft_c < FFT_SIZE) return;
-
-      _fft_c = 0;
-
-      const float loFreq = _model.config.dynamicFilter.min_freq;
-      const float hiFreq = _model.config.dynamicFilter.max_freq;
-      const float offset = _fft_bucket_width * 0.5f; // center of bucket
-
-      for(size_t i = 0; i < 3; ++i)
-      {
-        // apply window
-        for (size_t j = 0; j < FFT_SIZE; j++)
-        {
-          _fft_in[i][j] *= _fft_wind[j]; // real
-        }
-
-        // FFT Radix-4
-        dsps_fft4r_fc32(_fft_in[i], FFT_SIZE >> 1);
-
-        // Bit reverse 
-        dsps_bit_rev4r_fc32(_fft_in[i], FFT_SIZE >> 1);
-
-        // Convert one complex vector with length FFT_SIZE/2 to one real spectrum vector with length FFT_SIZE/2
-        dsps_cplx2real_fc32(_fft_in[i], FFT_SIZE >> 1);
-
-        // calculate magnitude
-        for (size_t j = 0; j < FFT_SIZE >> 1; j++)
-        {
-          _fft_out[i][j] = _fft_in[i][j * 2 + 0] * _fft_in[i][j * 2 + 0] + _fft_in[i][j * 2 + 1] * _fft_in[i][j * 2 + 1];
-        }
-
-        // TODO: find max noise freq
-        float maxAmt = 0;
-        float maxFreq = 0;
-        for (size_t j = 1; j < (FFT_SIZE >> 1) - 1; j++)
-        {
-          const float freq = _fft_bucket_width * j + offset;
-          if(freq < loFreq) continue;
-          if(freq > hiFreq) break;
-          const float amt = _fft_out[i][j];
-          if(amt > maxAmt)
-          {
-            maxAmt = amt;
-            maxFreq = freq;
-          }
-        }
-        _fft_max_freq[i] = maxFreq;
-
-        if(debug)
-        {
-          _model.state.debug[i] = lrintf(maxFreq);
-        }
-      }     
-    }
-#endif
-
-    void dynamicFilterAnalyze(Axis i, bool debug)
-    {
-      _model.state.gyroAnalyzer[i].update(_model.state.gyro[i]);
-      if(debug)
-      {
-        if(i == 0)
-        {
-          _model.state.debug[0] = _model.state.gyroAnalyzer[0].freq;
-          _model.state.debug[2] = lrintf(degrees(_model.state.gyroAnalyzer[0].noise));
-          _model.state.debug[3] = lrintf(degrees(_model.state.gyro[0]));
-        }
-        else if(i == 1)
-        {
-          _model.state.debug[1] = _model.state.gyroAnalyzer[1].freq;
-        }
-      }
-    }
-
-    void dynamicFilterApply(Axis i)
-    {
-#ifdef ESPFC_DSP
-      const float freq = _fft_max_freq[i];
-#else
-      const float freq = _model.state.gyroAnalyzer[i].freq;
-#endif
-      const float bw = 0.5f * (freq / (_model.config.dynamicFilter.q * 0.01)); // half bandwidth
+      const float q = _model.config.dynamicFilter.q * 0.01;
+      //const float bw = 0.5f * (freq / q)); // half bandwidth
       if(_model.config.dynamicFilter.width > 0 && _model.config.dynamicFilter.width < 30) {
         const float w = 0.005f * _model.config.dynamicFilter.width; // half witdh
         const float freq1 = freq * (1.0f - w);
         const float freq2 = freq * (1.0f + w);
-        _model.state.gyroDynamicFilter[i].reconfigure(freq1, freq1 - bw);
-        _model.state.gyroDynamicFilter2[i].reconfigure(freq2, freq2 - bw);
+        _model.state.gyroDynamicFilter[i].reconfigure(freq1, freq1, q);
+        _model.state.gyroDynamicFilter2[i].reconfigure(freq2, freq2, q);
       } else {
-        _model.state.gyroDynamicFilter[i].reconfigure(freq, freq - bw);
+        _model.state.gyroDynamicFilter[i].reconfigure(freq, freq, q);
       }
     }
 
@@ -299,16 +231,7 @@ class GyroSensor: public BaseSensor
     Device::GyroDevice * _gyro;
 
 #ifdef ESPFC_DSP
-    static const size_t FFT_SIZE = 128;
-    size_t _fft_c;
-    float _fft_bucket_width;
-    float _fft_max_freq[3];
-
-    // fft input and aoutput
-    __attribute__((aligned(16))) float _fft_in[3][FFT_SIZE];
-    __attribute__((aligned(16))) float _fft_out[3][FFT_SIZE];
-    // Window coefficients
-    __attribute__((aligned(16))) float _fft_wind[FFT_SIZE];
+    Math::FFTAnalyzer<128> _fft[3];
 #endif
 
 };

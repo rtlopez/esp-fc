@@ -64,11 +64,6 @@ class FilterConfig
       return FilterConfig(t, f, c);
     }
 
-    FilterConfig reconfigure(int16_t freq, int16_t cutoff = 0) const
-    {
-      return FilterConfig((FilterType)type, freq, cutoff);
-    }
-
     int8_t type;
     int16_t freq;
     int16_t cutoff;
@@ -354,10 +349,34 @@ class Filter
 
     void reconfigure(int16_t freq, int16_t cutoff = 0)
     {
-      reconfigure(_conf.reconfigure(freq, cutoff), _rate);
+      reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate);
+    }
+
+    void reconfigure(int16_t freq, int16_t cutoff, float q)
+    {
+      reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate, q);
     }
 
     void reconfigure(const FilterConfig& config, int rate)
+    {
+      _rate = rate;
+      _conf = config.sanitize(_rate);
+      switch(_conf.type)
+      {
+        case FILTER_BIQUAD:
+          reconfigure(config, rate, 0.70710678118f); // 1.0f / sqrtf(2.0f); // quality factor for butterworth lpf
+          break;
+        case FILTER_NOTCH:
+        case FILTER_NOTCH_DF1:
+        case FILTER_BPF:
+          reconfigure(config, rate, getNotchQApprox(config.freq, config.cutoff));
+          break;
+        default:
+          reconfigure(config, rate, 0.f);
+      }
+    }
+
+    void reconfigure(const FilterConfig& config, int rate, float q)
     {
       _rate = rate;
       _conf = config.sanitize(_rate);
@@ -367,14 +386,14 @@ class Filter
           _state.pt1.init(_rate, _conf.freq);
           break;
         case FILTER_BIQUAD:
-          initBiquadLpf(_rate, _conf.freq);
+          _state.bq.init(BIQUAD_FILTER_LPF, _rate, _conf.freq, q);
           break;
         case FILTER_NOTCH:
         case FILTER_NOTCH_DF1:
-          initBiquadNotch(_rate, _conf.freq, _conf.cutoff);
+          _state.bq.init(BIQUAD_FILTER_NOTCH, _rate, _conf.freq, q);
           break;
         case FILTER_BPF:
-          initBiquadBpf(_rate, _conf.freq, _conf.cutoff);
+          _state.bq.init(BIQUAD_FILTER_BPF, _rate, _conf.freq, q);
           break;
         case FILTER_FIR2:
           _state.fir2.init();
@@ -408,25 +427,6 @@ class Filter
 #if !defined(UNIT_TEST)
   private:
 #endif
-    // BIQUAD
-    void initBiquadLpf(float rate, float freq)
-    {
-      const float q = 0.70710678118f;
-      //const float q = 1.0f / sqrtf(2.0f); /* quality factor: butterworth for lpf */
-      _state.bq.init(BIQUAD_FILTER_LPF, rate, freq, q);
-    }
-
-    void initBiquadNotch(float rate, float freq, float cutoff)
-    {
-      const float q = getNotchQApprox(freq, cutoff);
-      _state.bq.init(BIQUAD_FILTER_NOTCH, rate, freq, q);
-    }
-
-    void initBiquadBpf(float rate, float freq, float cutoff)
-    {
-      const float q = getNotchQApprox(freq, cutoff);
-      _state.bq.init(BIQUAD_FILTER_BPF, rate, freq, q);
-    }
 
     int _rate;
     FilterConfig _conf;
