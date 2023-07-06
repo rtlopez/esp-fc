@@ -143,7 +143,7 @@ class GyroSensor: public BaseSensor
 #endif
           if (dynamicFilterDebug)
           {
-            _model.state.debug[i] = lrintf(_fft[i].freq);
+            _model.state.debug[i] = lrintf(freq);
             if (i == debugAxis) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
           }
           if(dynamicFilterUpdate) dynamicFilterApply((Axis)i, freq);
