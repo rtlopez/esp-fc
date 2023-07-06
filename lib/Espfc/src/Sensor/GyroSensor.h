@@ -3,6 +3,7 @@
 
 #include "BaseSensor.h"
 #include "Device/GyroDevice.h"
+#include "Math/Sma.h"
 
 #ifdef ESPFC_DSP
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
@@ -45,8 +46,7 @@ class GyroSensor: public BaseSensor
 
       _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
 
-      _idx = 0;
-      _count = std::min(_model.config.loopSync, (int8_t)8);
+      _sma.begin(_model.config.loopSync);
 
 #ifdef ESPFC_DSP
       dynamicFilterFFTInit();
@@ -77,19 +77,7 @@ class GyroSensor: public BaseSensor
       VectorFloat input = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
 
       // moving average filter
-      if(_count > 1)
-      {
-        _sum -= _samples[_idx];
-        _sum += input;
-        _samples[_idx] = input;
-        if (++_idx == _count) _idx = 0;
-
-        _model.state.gyroSampled = _sum / (float)_count;
-      }
-      else
-      {
-        _model.state.gyroSampled = input;
-      }
+      _model.state.gyroSampled = _sma.update(input);
 
       return 1;
     }
@@ -165,17 +153,17 @@ class GyroSensor: public BaseSensor
     void dynamicFilterFFTInit()
     {
       _fft_c = 0;
-      _fft_bucket_width = (float)_model.state.loopTimer.rate / N;
+      _fft_bucket_width = (float)_model.state.loopTimer.rate / FFT_SIZE;
 
-      dsps_fft4r_init_fc32(NULL, N >> 1);
+      dsps_fft4r_init_fc32(NULL, FFT_SIZE >> 1);
 
       // Generate hann window
-      dsps_wind_hann_f32(_fft_wind, N);
+      dsps_wind_hann_f32(_fft_wind, FFT_SIZE);
     }
 
     void dynamicFilterFFTAnalyze(bool debug)
     {
-      if(++_fft_c < N) return;
+      if(++_fft_c < FFT_SIZE) return;
 
       _fft_c = 0;
 
@@ -186,22 +174,22 @@ class GyroSensor: public BaseSensor
       for(size_t i = 0; i < 3; ++i)
       {
         // apply window
-        for (size_t j = 0; j < N; j++)
+        for (size_t j = 0; j < FFT_SIZE; j++)
         {
           _fft_in[i][j] *= _fft_wind[j]; // real
         }
 
         // FFT Radix-4
-        dsps_fft4r_fc32(_fft_in[i], N >> 1);
+        dsps_fft4r_fc32(_fft_in[i], FFT_SIZE >> 1);
 
         // Bit reverse 
-        dsps_bit_rev4r_fc32(_fft_in[i], N >> 1);
+        dsps_bit_rev4r_fc32(_fft_in[i], FFT_SIZE >> 1);
 
-        // Convert one complex vector with length N/2 to one real spectrum vector with length N/2
-        dsps_cplx2real_fc32(_fft_in[i], N >> 1);
+        // Convert one complex vector with length FFT_SIZE/2 to one real spectrum vector with length FFT_SIZE/2
+        dsps_cplx2real_fc32(_fft_in[i], FFT_SIZE >> 1);
 
         // calculate magnitude
-        for (size_t j = 0; j < N >> 1; j++)
+        for (size_t j = 0; j < FFT_SIZE >> 1; j++)
         {
           _fft_out[i][j] = _fft_in[i][j * 2 + 0] * _fft_in[i][j * 2 + 0] + _fft_in[i][j * 2 + 1] * _fft_in[i][j * 2 + 1];
         }
@@ -209,7 +197,7 @@ class GyroSensor: public BaseSensor
         // TODO: find max noise freq
         float maxAmt = 0;
         float maxFreq = 0;
-        for (size_t j = 1; j < (N >> 1) - 1; j++)
+        for (size_t j = 1; j < (FFT_SIZE >> 1) - 1; j++)
         {
           const float freq = _fft_bucket_width * j + offset;
           if(freq < loFreq) continue;
@@ -305,25 +293,22 @@ class GyroSensor: public BaseSensor
       }
     }
 
-    size_t _idx;
-    size_t _count;
-    VectorFloat _sum;
-    VectorFloat _samples[8];
+    Math::Sma<VectorFloat, 8> _sma;
 
     Model& _model;
     Device::GyroDevice * _gyro;
 
 #ifdef ESPFC_DSP
-    static const size_t N = 128;
+    static const size_t FFT_SIZE = 128;
     size_t _fft_c;
     float _fft_bucket_width;
     float _fft_max_freq[3];
 
     // fft input and aoutput
-    __attribute__((aligned(16))) float _fft_in[3][N];
-    __attribute__((aligned(16))) float _fft_out[3][N];
+    __attribute__((aligned(16))) float _fft_in[3][FFT_SIZE];
+    __attribute__((aligned(16))) float _fft_out[3][FFT_SIZE];
     // Window coefficients
-    __attribute__((aligned(16))) float _fft_wind[N];
+    __attribute__((aligned(16))) float _fft_wind[FFT_SIZE];
 #endif
 
 };
