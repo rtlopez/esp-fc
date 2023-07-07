@@ -257,6 +257,10 @@ class Blackbox
       gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
+      if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
+      if(_model.magActive()) enabledSensors |= SENSOR_MAG;
+      if(_model.baroActive()) enabledSensors |= SENSOR_BARO;
+
       gyro.sampleLooptime = 125; //_model.state.gyroTimer.interval;
       targetPidLooptime = _model.state.loopTimer.interval;
       activePidLoopDenom = _model.config.loopSync;
