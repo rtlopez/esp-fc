@@ -454,7 +454,7 @@ void test_actuator_arming_gyro_motor_calbration()
 
   TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
 
-  actuator.updateArming();
+  actuator.updateArmingDisabled();
 
   TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_NO_GYRO | ARMING_DISABLED_MOTOR_PROTOCOL, model.state.armingDisabledFlags);
 }
@@ -476,7 +476,7 @@ void test_actuator_arming_failsafe()
 
   TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
 
-  actuator.updateArming();
+  actuator.updateArmingDisabled();
 
   TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_RX_FAILSAFE | ARMING_DISABLED_FAILSAFE | ARMING_DISABLED_CALIBRATING, model.state.armingDisabledFlags);
 }
@@ -496,7 +496,7 @@ void test_actuator_arming_throttle()
 
   TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
 
-  actuator.updateArming();
+  actuator.updateArmingDisabled();
 
   TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.armingDisabledFlags);
 }
