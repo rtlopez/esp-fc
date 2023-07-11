@@ -410,6 +410,7 @@ class Model
         state.magTimer.setRate(state.magRate);
       }
 
+      const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
       const uint32_t inputFilterRate = state.loopTimer.rate;
       const uint32_t pidFilterRate = state.loopTimer.rate;
@@ -431,7 +432,7 @@ class Model
         } else {
           state.gyroFilter[i].begin(config.gyroFilter, gyroFilterRate);
         }
-        state.gyroFilter2[i].begin(config.gyroFilter2, gyroFilterRate);
+        state.gyroFilter2[i].begin(config.gyroFilter2, gyroPreFilterRate);
         state.gyroFilter3[i].begin(config.gyroFilter3, gyroFilterRate);
         state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
         state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), gyroFilterRate);

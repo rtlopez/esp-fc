@@ -139,6 +139,8 @@ struct ModelState
 
   VectorInt16 gyroRaw;
   VectorFloat gyroSampled;
+  VectorFloat gyroImu;
+  VectorFloat gyroDynNotch;
   VectorInt16 accelRaw;
   VectorInt16 magRaw;
 
@@ -146,7 +148,6 @@ struct ModelState
   VectorFloat accel;
   VectorFloat mag;
 
-  VectorFloat gyroImu;
 
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;

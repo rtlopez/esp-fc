@@ -3,6 +3,7 @@
 
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 
+#include <algorithm>
 #include "Filter.h"
 #include "dsps_fft4r.h"
 #include "dsps_wind_hann.h"
@@ -10,6 +11,15 @@
 namespace Espfc {
 
 namespace Math {
+
+class Peak
+{
+public:
+  Peak(): freq(0), value(0) {}
+  Peak(float f, float v): freq(f), value(v) {}
+  float freq;
+  float value;
+};
 
 template<size_t Size = 128>
 class FFTAnalyzer
@@ -34,6 +44,8 @@ public:
 
     // Generate hann window
     dsps_wind_hann_f32(_wind, Size);
+
+    clearPeaks();
 
     return 1;
   }
@@ -67,24 +79,59 @@ public:
     {
       size_t k = j * 2;
       _samples[j] = _samples[k] * _samples[k] + _samples[k + 1] * _samples[k + 1];
+      //_samples[j] = sqrt(_samples[j]);
     }
 
-    // find highest noise peak freq
-    float maxAmt = 0;
-    float maxFreq = 0;
-    for (size_t j = 1; j < (Size >> 1) - 1; j++)
+    clearPeaks();
+    const size_t begin = std::max((size_t)1, (size_t)(_freq_min / _bin_width));
+    const size_t end = std::min(BINS - 1, (size_t)(_freq_max / _bin_width));
+
+    float noise = 0;
+    size_t noiseCount = 0;
+    float valueMax = 0;
+    for(size_t b = begin; b <= end; b++)
     {
-      const float freq = _bin_width * j + _bin_offset;
-      if(freq < _freq_min) continue;
-      if(freq > _freq_max) break;
-      const float amt = _samples[j];
-      if(amt > maxAmt)
+      noiseCount++;
+      float value = _samples[b];
+      if (value > valueMax) valueMax = value;
+      noise += value;
+    }
+    noise -= valueMax;
+    noise /= noiseCount;
+
+    size_t peakCount = 0;
+    for(size_t b = begin; b <= end; b++)
+    {
+      if(_samples[b] > noise && _samples[b] > _samples[b - 1] && _samples[b] > _samples[b + 1])
       {
-        maxAmt = amt;
-        maxFreq = freq;
+        float f0 = b * _bin_width + _bin_offset;
+        float k0 = _samples[b];
+
+        float fl = f0 - _bin_width;
+        float kl = _samples[b - 1];
+
+        float fh = f0 + _bin_width;
+        float kh = _samples[b + 1];
+
+        // weighted average
+        float centerFreq = (k0 * f0 + kl * fl + kh * fh) / (k0 + kl + kh);
+
+        _peaks[peakCount] = Peak(centerFreq, _samples[b]);
+
+        peakCount++;
+        b++; // next bin can't be peak
       }
     }
-    if(maxFreq > 0) freq = maxFreq;
+
+    if(peakCount > 1)
+    {
+      // sort peaks by value
+      std::sort(_peaks, _peaks + peakCount, [](const Peak& a, const Peak& b) -> bool {
+        return a.value < b.value;
+      });
+    }
+
+    freq = _peaks[0].freq;
 
     return 1;
   }
@@ -92,6 +139,13 @@ public:
   float freq;
 
 private:
+  void clearPeaks()
+  {
+    for(size_t i = 0; i < PEAKS_COUNT; i++) _peaks[i] = Peak();
+  }
+
+  static const size_t BINS = Size >> 1;
+
   int16_t _rate;
   int16_t _freq_min;
   int16_t _freq_max;
@@ -100,6 +154,9 @@ private:
   size_t _idx;
   float _bin_width;
   float _bin_offset;
+
+  static const size_t PEAKS_COUNT = BINS >> 1;
+  Peak _peaks[PEAKS_COUNT];
 
   // fft input and output
   __attribute__((aligned(16))) float _samples[Size];

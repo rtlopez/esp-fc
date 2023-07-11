@@ -737,6 +737,7 @@ class ModelConfig
       gyroFilter = FilterConfig(FILTER_PT1, 100);
       gyroFilter2 = FilterConfig(FILTER_PT1, 213);
       gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
+      //gyroFilter3 = FilterConfig(FILTER_PT1, 100); // 0 to off
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
