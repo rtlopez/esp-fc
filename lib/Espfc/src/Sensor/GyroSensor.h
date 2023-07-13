@@ -43,13 +43,13 @@ class GyroSensor: public BaseSensor
       _model.state.gyroBiasAlpha = 5.0f / _model.state.gyroCalibrationRate;
 
       _sma.begin(_model.config.loopSync);
-      _dyn_notch_denom = std::min(1u, _model.state.loopTimer.rate / 1000);
+      _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
       _dyn_notch_sma.begin(_dyn_notch_denom);
 
 #ifdef ESPFC_DSP
       for(size_t i = 0; i < 3; i++)
       {
-        _fft[i].begin(_model.state.loopTimer.rate, _model.config.dynamicFilter);
+        _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.dynamicFilter);
       }
 #endif
 
@@ -103,12 +103,6 @@ class GyroSensor: public BaseSensor
 
       calibrate();
 
-      bool dynamicFilterEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
-      bool dynamicFilterFeed = _model.state.loopTimer.iteration % _dyn_notch_denom == 0;
-      bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ;
-      bool dynamicFilterUpdate = dynamicFilterEnabled && _model.state.dynamicFilterTimer.check();
-
-      const int debugAxis = 1;
 
       // filtering
       for(size_t i = 0; i < 3; ++i)
@@ -121,67 +115,38 @@ class GyroSensor: public BaseSensor
         {
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
         }
-        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {
           _model.state.debug[0] = lrintf(degrees(_model.state.gyro[i]));
         }
 
         _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
-        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
+
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {
           _model.state.debug[1] = lrintf(degrees(_model.state.gyro[i]));
         }
 
         _model.state.gyro.set(i, _model.state.gyroNotch1Filter[i].update(_model.state.gyro[i]));
         _model.state.gyro.set(i, _model.state.gyroNotch2Filter[i].update(_model.state.gyro[i]));
+
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
+        {
+          _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+        }
+
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
 
-        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
+        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {
           _model.state.debug[2] = lrintf(degrees(_model.state.gyro[i]));
         }
       }
 
-      _model.state.gyroDynNotch = _dyn_notch_sma.update(_model.state.gyro);
+      filterDynNotch();
 
       for(size_t i = 0; i < 3; ++i)
       {
-        if(dynamicFilterEnabled || dynamicFilterDebug)
-        {
-          float freq = 0;
-          if(dynamicFilterFeed)
-          {
-#ifdef ESPFC_DSP
-            int status = _fft[i].update(_model.state.gyroDynNotch[i]);
-            dynamicFilterUpdate = dynamicFilterEnabled && status;
-            freq = _fft[i].freq;
-#else
-            _model.state.gyroAnalyzer[i].update(_model.state.gyroDynNotch[i]);
-            freq = _model.state.gyroAnalyzer[i].freq;
-#endif
-            if (dynamicFilterDebug)
-            {
-              _model.state.debug[i] = lrintf(freq);
-              if (i == debugAxis) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
-            }
-            if(dynamicFilterEnabled && dynamicFilterUpdate)
-            {
-              dynamicFilterApply((Axis)i, freq);
-            }
-          }
-        }
-
-        if(dynamicFilterEnabled)
-        {
-          _model.state.gyro.set(i, _model.state.gyroDynamicFilter[i].update(_model.state.gyro[i]));
-          _model.state.gyro.set(i, _model.state.gyroDynamicFilter2[i].update(_model.state.gyro[i]));
-        }
-
-        if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == debugAxis)
-        {
-          _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
-        }
-
         if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
         {
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
@@ -196,18 +161,73 @@ class GyroSensor: public BaseSensor
     }
 
   private:
-    void dynamicFilterApply(Axis i, const float freq)
+    void filterDynNotch()
     {
+      bool dynamicFilterEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
+      bool dynamicFilterFeed = _model.state.loopTimer.iteration % _dyn_notch_denom == 0;
+      bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ;
+      bool dynamicFilterUpdate = dynamicFilterEnabled && _model.state.dynamicFilterTimer.check();
       const float q = _model.config.dynamicFilter.q * 0.01;
-      //const float bw = 0.5f * (freq / q)); // half bandwidth
-      if(_model.config.dynamicFilter.width > 0 && _model.config.dynamicFilter.width < 30) {
-        const float w = 0.005f * _model.config.dynamicFilter.width; // half witdh
-        const float freq1 = freq * (1.0f - w);
-        const float freq2 = freq * (1.0f + w);
-        _model.state.gyroDynamicFilter[i].reconfigure(freq1, freq1, q);
-        _model.state.gyroDynamicFilter2[i].reconfigure(freq2, freq2, q);
-      } else {
-        _model.state.gyroDynamicFilter[i].reconfigure(freq, freq, q);
+
+      if(dynamicFilterEnabled || dynamicFilterDebug)
+      {
+        _model.state.gyroDynNotch = _dyn_notch_sma.update(_model.state.gyro);
+
+        for(size_t i = 0; i < 3; ++i)
+        {
+#ifdef ESPFC_DSP
+          const size_t peakCount = _model.config.dynamicFilter.width;
+          if(dynamicFilterFeed)
+          {
+            int status = _fft[i].update(_model.state.gyroDynNotch[i]);
+            dynamicFilterUpdate = dynamicFilterEnabled && status;
+            if(dynamicFilterDebug)
+            {
+              if(i == _model.config.debugAxis)
+              {
+                _model.state.debug[0] = lrintf(_fft[i].peaks[0].freq);
+                _model.state.debug[1] = lrintf(_fft[i].peaks[1].freq);
+                _model.state.debug[2] = lrintf(_fft[i].peaks[2].freq);
+                _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+              }
+            }
+            if(dynamicFilterEnabled && dynamicFilterUpdate)
+            {
+              for(size_t p = 0; p < peakCount; p++)
+              {
+                float freq = _fft[i].peaks[p].freq;
+                _model.state.gyroDynNotchFilter[i][p].reconfigure(freq, freq, q);
+              }
+            }
+          }
+          if(dynamicFilterEnabled)
+          {
+            for(size_t p = 0; p < peakCount; p++)
+            {
+              _model.state.gyro.set(i, _model.state.gyroDynNotchFilter[i][p].update(_model.state.gyro[i]));
+            }
+          }
+#else
+          if(dynamicFilterFeed)
+          {
+            _model.state.gyroAnalyzer[i].update(_model.state.gyroDynNotch[i]);
+            float freq = _model.state.gyroAnalyzer[i].freq;
+            if(dynamicFilterDebug)
+            {
+              _model.state.debug[i] = lrintf(freq);
+              if(i == _model.config.debugAxis) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+            }
+            if(dynamicFilterEnabled && dynamicFilterUpdate)
+            {
+              _model.state.gyroDynNotchFilter[i][0].reconfigure(freq, freq, q);
+            }
+          }
+          if(dynamicFilterEnabled)
+          {
+            _model.state.gyro.set(i, _model.state.gyroDynNotchFilter[i][0].update(_model.state.gyro[i]));
+          }
+#endif
+        }
       }
     }
 

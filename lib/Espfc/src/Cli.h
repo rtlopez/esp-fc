@@ -380,6 +380,7 @@ class Cli
 
         Param(PSTR("features"), &c.featureMask),
         Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
+        Param(PSTR("debug_axis"), &c.debugAxis),
 
         Param(PSTR("gyro_bus"), &c.gyroBus, busDevChoices),
         Param(PSTR("gyro_dev"), &c.gyroDev, gyroDevChoices),

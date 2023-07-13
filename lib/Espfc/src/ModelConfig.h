@@ -634,6 +634,7 @@ class ModelConfig
     uint8_t ibatSource;
 
     int8_t debugMode;
+    uint8_t debugAxis;
 
     BuzzerConfig buzzer;
 
@@ -736,8 +737,8 @@ class ModelConfig
 
       gyroFilter = FilterConfig(FILTER_PT1, 100);
       gyroFilter2 = FilterConfig(FILTER_PT1, 213);
-      gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
-      //gyroFilter3 = FilterConfig(FILTER_PT1, 100); // 0 to off
+      //gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
+      gyroFilter3 = FilterConfig(FILTER_PT1, 120); // 0 to off
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
@@ -857,19 +858,19 @@ class ModelConfig
 
       input.rateType = 3; // actual
 
-      input.rate[AXIS_ROLL] = 15;
+      input.rate[AXIS_ROLL] = 18;
       input.expo[AXIS_ROLL] = 0;
-      input.superRate[AXIS_ROLL] = 47;
+      input.superRate[AXIS_ROLL] = 36;
       input.rateLimit[AXIS_ROLL] = 1998;
 
-      input.rate[AXIS_PITCH] = 15;
+      input.rate[AXIS_PITCH] = 18;
       input.expo[AXIS_PITCH] = 0;
-      input.superRate[AXIS_PITCH] = 47;
+      input.superRate[AXIS_PITCH] = 36;
       input.rateLimit[AXIS_PITCH] = 1998;
 
-      input.rate[AXIS_YAW] = 15;
+      input.rate[AXIS_YAW] = 20;
       input.expo[AXIS_YAW] = 0;
-      input.superRate[AXIS_YAW] = 47;
+      input.superRate[AXIS_YAW] = 36;
       input.rateLimit[AXIS_YAW] = 1998;
 
       input.filterType = INPUT_FILTER;
@@ -970,6 +971,7 @@ class ModelConfig
       modelName[0] = 0;
 
       debugMode = DEBUG_NONE;
+      debugAxis = 1;
       blackboxDev = 0;
       blackboxPdenom = 32; // 1kHz
       blackboxFieldsDisabledMask = 0;
