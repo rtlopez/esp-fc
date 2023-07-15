@@ -3,7 +3,7 @@
 
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 
-#include <algorithm>
+#include "Math/Utils.h"
 #include "Filter.h"
 #include "dsps_fft4r.h"
 #include "dsps_wind_hann.h"
@@ -11,15 +11,6 @@
 namespace Espfc {
 
 namespace Math {
-
-class Peak
-{
-public:
-  Peak(): freq(0), value(0) {}
-  Peak(float f, float v): freq(f), value(v) {}
-  float freq;
-  float value;
-};
 
 template<size_t SAMPLES>
 class FFTAnalyzer
@@ -86,43 +77,13 @@ public:
     const size_t begin = std::max((size_t)1, (size_t)(_freq_min / _bin_width));
     const size_t end = std::min(BINS - 1, (size_t)(_freq_max / _bin_width));
 
-    for(size_t b = begin; b <= end; b++)
-    {
-      if(!(_samples[b] > _samples[b - 1] && _samples[b] > _samples[b + 1])) continue;
-
-      float f0 = b * _bin_width;
-      float k0 = _samples[b];
-
-      float fl = f0 - _bin_width;
-      float kl = _samples[b - 1];
-
-      float fh = f0 + _bin_width;
-      float kh = _samples[b + 1];
-
-      // weighted average
-      float centerFreq = (k0 * f0 + kl * fl + kh * fh) / (k0 + kl + kh);
-
-      for(size_t p = 0; p < _peak_count; p++)
-      {
-        if(!(_samples[b] > peaks[p].value)) continue;
-        for(size_t k = _peak_count - 1; k > p; k--)
-        {
-          peaks[k] = peaks[k - 1];
-        }
-        peaks[p] = Peak(centerFreq, _samples[b]);
-      }
-      b++; // next bin can't be peak
-    }
+    Math::peakDetect(_samples, begin, end, _bin_width, peaks, _peak_count);
 
     // max peak freq
     freq = peaks[0].freq;
 
     // sort peaks by freq
-    std::sort(peaks, peaks + _peak_count, [](const Peak& a, const Peak& b) -> bool {
-      if (a.freq == 0.f) return false;
-      if (b.freq == 0.f) return true;
-      return a.freq > b.freq;
-    });
+    Math::peakSort(peaks, _peak_count);
   
     return 1;
   }

@@ -196,7 +196,7 @@ class GyroSensor: public BaseSensor
               for(size_t p = 0; p < peakCount; p++)
               {
                 float freq = _fft[i].peaks[p].freq;
-                _model.state.gyroDynNotchFilter[i][p].reconfigure(freq, freq, q);
+                if(freq > 0) _model.state.gyroDynNotchFilter[i][p].reconfigure(freq, freq, q);
               }
             }
           }
@@ -219,7 +219,7 @@ class GyroSensor: public BaseSensor
             }
             if(dynamicFilterEnabled && dynamicFilterUpdate)
             {
-              _model.state.gyroDynNotchFilter[i][0].reconfigure(freq, freq, q);
+              if(freq > 0) _model.state.gyroDynNotchFilter[i][0].reconfigure(freq, freq, q);
             }
           }
           if(dynamicFilterEnabled)
