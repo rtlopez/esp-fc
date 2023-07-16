@@ -1,40 +1,41 @@
 # ESP-FC Flight Controller
-The mini, DIY, ~$5 cost, ESP8266 based, high performance flight controller.
+The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller.
 
 ## Features
 * Frames (Quad X)
-* Betaflight contiguration tool compatible
+* Betaflight contiguration tool compatible (v10.8)
 * Receiver protocol (8 channel PPM)
 * SBUS and CRSF Serial Rx protocols on ESP32 and RP2040
-* ESC protocols (PWM, Oneshot125, Oneshot42, Multishot, Brushed, Dshot150, Dshot300, Dshot600)
+* ESC protocols (PWM, Oneshot125, Brushed, Dshot150, Dshot300, Dshot600)
 * Configurable Gyro Filters (LPF, Notch, dTerm)
-* Blackbox recording (OpenLog serial)
+* Blackbox recording (OpenLog/Opelager serial)
 * In flight PID Tuning
 * Flight modes (ACRO, ANGLE, AIRMODE, ARM)
-* Up to 2kHz gyro/loop in acro, 1kHz with accelerometer (level)
+* Up to 8kHz gyro/loop on ESP32/SPI gyro
 * MSP protocol interface
-* Cli interface
-* Resorce mapping
+* CLI Interface
+* Resorce/Pin mapping
 * Buzzer
 * Lipo voltage monitor
 * Failsafe
 
 ## Requirements
 Hardware:
-* Wemos D1 Mini board (D1 Mini Lite too, ESP-12 for experienced users)
-* MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar)
+* ESP8266 Wemos D1 Mini or ESP32 mini board
+* MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar) or MPU9250 SPI on ESP32
 * PDB with 5V BEC
-* Buzzer and some electronic components (optionally).
+* Buzzer and some electronic components (optional).
 
 Software:
 * [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.8)
 * [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
-* [Espressif Flash Download Tools](https://www.espressif.com/en/support/download/other-tools)
 
 ## Flashing
-**Windows:** download and unzip [Espressif Flash Download Tools](https://www.espressif.com/en/support/download/other-tools)
-
-![ESP-FC Flashing](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_flashing.png?raw=true)
+1. Download and unzip selected firmware from [Releases page](https://github.com/rtlopez/esp-fc/releases)
+2. Visit [ESP Tool website](https://espressif.github.io/esptool-js/)
+3. Connect to your device
+4. Add file and set address to `0x00`
+5. Click upload
 
 ## Configuration
 After flashing you need to configure few things first:
