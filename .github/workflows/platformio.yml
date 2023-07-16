@@ -93,7 +93,7 @@ jobs:
       - name: Merge Development Target
         if: ${{ !startsWith(github.ref, 'refs/tags/') && startsWith(matrix.target, 'esp32') }}
         run: |
-          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ${{ matrix.target }} merge_bin -o .pio/build/lolin32/firmware_merged.bin --target-offset 0x0 --flash_size 4MB 0x1000 .pio/build/lolin32/bootloader.bin 0x8000 .pio/build/lolin32/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/lolin32/firmware.bin
+          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ${{ matrix.target }} merge_bin -o .pio/build/${{ matrix.target }}/firmware_merged.bin --target-offset 0x0 --flash_mode keep --flash_freq keep --flash_size 4MB 0x1000 .pio/build/${{ matrix.target }}/bootloader.bin 0x8000 .pio/build/${{ matrix.target }}/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/${{ matrix.target }}/firmware.bin
 
       - name: Create Development Artifact
         uses: actions/upload-artifact@v3
