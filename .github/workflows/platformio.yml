@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        target: ['d1_mini', 'lolin32', 'pico']
+        target: ['esp32', 'esp8266', 'rp2040']
     steps:
       - uses: actions/checkout@v3
       - name: Extract Version
@@ -51,8 +51,8 @@ jobs:
           echo "build_sha=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
       - name: Make Version
         run: |
-          echo "build_file_devel=espfc_${{ env.build_sha }}_${{ matrix.target }}.bin" >> $GITHUB_ENV
-          echo "build_file_release=espfc_${{ env.build_tag }}_${{ matrix.target }}.bin" >> $GITHUB_ENV
+          echo "build_file_devel=espfc_${{ env.build_sha }}_${{ matrix.target }}" >> $GITHUB_ENV
+          echo "build_file_release=espfc_${{ env.build_tag }}_${{ matrix.target }}" >> $GITHUB_ENV
       - name: Print Version
         run: |
           echo SHA:     ${{ env.build_sha }}
@@ -83,33 +83,33 @@ jobs:
           pip install platformio
 
 
-      - name: Run Development Build
-        if: "!startsWith(github.ref, 'refs/tags/')"
+      - name: Build Development Target
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           platformio run -e ${{ matrix.target }}
         env:
           PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ env.build_sha }}
 
-      - name: Merge ESP32 Development Build
-        if: "!startsWith(github.ref, 'refs/tags/') && ${{ matrix.target }} == 'lolin32'"
+      - name: Merge Development Target
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && startsWith(matrix.target, 'esp32') }}
         run: |
-          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ESP32 merge_bin -o .pio/build/lolin32/firmware_full.bin --target-offset 0x0 --flash_mode dio --flash_freq 80m --flash_size 4MB 0x1000 .pio/build/lolin32/bootloader.bin 0x8000 .pio/build/lolin32/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/lolin32/firmware.bin
-        env:
-          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ env.build_sha }}
+#          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ESP32 merge_bin -o .pio/build/lolin32/firmware_merged.bin --target-offset 0x0 --flash_mode dio --flash_freq 80m --flash_size 4MB 0x1000 .pio/build/lolin32/bootloader.bin 0x8000 .pio/build/lolin32/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/lolin32/firmware.bin
+          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ${{ matrix.target }} merge_bin -o .pio/build/lolin32/firmware_merged.bin --target-offset 0x0 --flash_size 4MB 0x1000 .pio/build/lolin32/bootloader.bin 0x8000 .pio/build/lolin32/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/lolin32/firmware.bin
 
       - name: Create Development Artifact
         uses: actions/upload-artifact@v3
-        if: "!startsWith(github.ref, 'refs/tags/')"
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
-          name: ${{ env.build_file_devel }}
+          name: ${{ env.build_file_devel }}.bin
           path: .pio/build/${{ matrix.target }}/firmware.bin
 
-      - name: Create ESP32 Merged Development Artifact
+      - name: Create Development Artifact Merged 
         uses: actions/upload-artifact@v3
-        if: "!startsWith(github.ref, 'refs/tags/') && ${{ matrix.target }} == 'lolin32'"
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && startsWith(matrix.target, 'esp32') }}
         with:
-          name: "${{ env.build_file_devel }}_full"
-          path: .pio/build/${{ matrix.target }}/firmware_full.bin
+          name: "${{ env.build_file_devel }}_0x00.bin"
+          path: .pio/build/${{ matrix.target }}/firmware_merged.bin
+
 
       - name: Run Release Build
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -122,5 +122,5 @@ jobs:
         uses: actions/upload-artifact@v3
         if: "startsWith(github.ref, 'refs/tags/')"
         with:
-          name: ${{ env.build_file_release }}
+          name: ${{ env.build_file_release }}.bin
           path: .pio/build/${{ matrix.target }}/firmware.bin
