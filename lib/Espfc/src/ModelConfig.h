@@ -735,19 +735,30 @@ class ModelConfig
       fusion.gain = 50;
       fusion.gainI = 5;
 
+      // BF x 0.85
+      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
       gyroFilter = FilterConfig(FILTER_PT1, 100);
       gyroFilter2 = FilterConfig(FILTER_PT1, 213);
-      //gyroFilter3 = FilterConfig(FILTER_FIR2, 250); // 0 to off
-      gyroFilter3 = FilterConfig(FILTER_PT1, 120); // 0 to off
-      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
-      gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
-      gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
-      dynamicFilter = DynamicFilterConfig(0, 300, 80, 400); // 8%. q:1.2, 80-400 Hz
+      dynamicFilter = DynamicFilterConfig(0, 300, 80, 400); // 8%. q:3.0, 80-400 Hz
 
+      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 145, 60);
       dtermFilter = FilterConfig(FILTER_PT1, 128);
       dtermFilter2 = FilterConfig(FILTER_PT1, 128);
-      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 145, 60);
-      dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0);
+
+      // ESPFC defaults => BF x 0.75
+      //gyroDynLpfFilter = FilterConfig(FILTER_PT1, 375, 150);
+      //gyroFilter = FilterConfig(FILTER_PT1, 100);
+      //gyroFilter2 = FilterConfig(FILTER_PT1, 188);
+      //dynamicFilter = DynamicFilterConfig(5, 200, 80, 400); // 8%. q:2.0, 80-400 Hz
+
+      //dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
+      //dtermFilter = FilterConfig(FILTER_PT1, 113);
+      //dtermFilter2 = FilterConfig(FILTER_PT1, 113);
+
+      gyroFilter3 = FilterConfig(FILTER_PT1, 150);
+      gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
+      gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
+      dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0); // off
 
       accelFilter = FilterConfig(FILTER_BIQUAD, 15);
       magFilter = FilterConfig(FILTER_BIQUAD, 10);
@@ -858,25 +869,25 @@ class ModelConfig
 
       input.rateType = 3; // actual
 
-      input.rate[AXIS_ROLL] = 18;
+      input.rate[AXIS_ROLL] = 20;
       input.expo[AXIS_ROLL] = 0;
-      input.superRate[AXIS_ROLL] = 36;
+      input.superRate[AXIS_ROLL] = 40;
       input.rateLimit[AXIS_ROLL] = 1998;
 
-      input.rate[AXIS_PITCH] = 18;
+      input.rate[AXIS_PITCH] = 20;
       input.expo[AXIS_PITCH] = 0;
-      input.superRate[AXIS_PITCH] = 36;
+      input.superRate[AXIS_PITCH] = 40;
       input.rateLimit[AXIS_PITCH] = 1998;
 
-      input.rate[AXIS_YAW] = 20;
+      input.rate[AXIS_YAW] = 30;
       input.expo[AXIS_YAW] = 0;
       input.superRate[AXIS_YAW] = 36;
       input.rateLimit[AXIS_YAW] = 1998;
 
       input.filterType = INPUT_FILTER;
       input.filterAutoFactor = 50;
-      input.filter = FilterConfig(FILTER_PT3, 0);
-      input.filterDerivative = FilterConfig(FILTER_PT3, 0);
+      input.filter = FilterConfig(FILTER_PT3, 0); // 0: auto
+      input.filterDerivative = FilterConfig(FILTER_PT3, 0); // 0: auto
 
       input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
       input.interpolationInterval = 26;
@@ -885,10 +896,16 @@ class ModelConfig
       failsafe.delay = 4;
       failsafe.killSwitch = 0;
 
-      // PID controller config
-      pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
-      pid[PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
-      pid[PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
+      // PID controller config (BF default)
+      //pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
+      //pid[PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
+      //pid[PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
+      //pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
+
+      // PID controller config (ESPFC default)
+      pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 };
+      pid[PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 };
+      pid[PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 };
       pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
 
       pid[PID_ALT]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
@@ -989,6 +1006,7 @@ class ModelConfig
       debugMode = DEBUG_GYRO_SCALED;
       serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
       serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;
+      serial[ESPFC_DEV_PRESET_BLACKBOX].baud = SERIAL_SPEED_250000;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_MODES

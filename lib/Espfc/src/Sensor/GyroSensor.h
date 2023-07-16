@@ -132,14 +132,14 @@ class GyroSensor: public BaseSensor
 
         if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {
-          _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+          _model.state.debug[2] = lrintf(degrees(_model.state.gyro[i]));
         }
 
         _model.state.gyro.set(i, _model.state.gyroFilter[i].update(_model.state.gyro[i]));
 
         if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {
-          _model.state.debug[2] = lrintf(degrees(_model.state.gyro[i]));
+          _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
         }
       }
 

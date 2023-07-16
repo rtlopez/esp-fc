@@ -20,16 +20,14 @@ public:
 
   int begin(int16_t rate, const DynamicFilterConfig& config)
   {
+    int16_t nyquistLimit = rate / 2;
     _rate = rate;
     _freq_min = config.min_freq;
-    _freq_max = config.max_freq;
+    _freq_max = std::min(config.max_freq, nyquistLimit);
     _peak_count = std::min((size_t)config.width, PEAKS_MAX);
-
-    freq = (_freq_min + _freq_max) * 0.5f;
 
     _idx = 0;
     _bin_width = (float)_rate / SAMPLES; // no need to dived by 2 as we next process `SAMPLES / 2` results
-    _bin_offset = _bin_width * 0.5f; // center of bin
 
     dsps_fft4r_init_fc32(NULL, BINS);
 
@@ -74,13 +72,10 @@ public:
     }
 
     clearPeaks();
-    const size_t begin = std::max((size_t)1, (size_t)(_freq_min / _bin_width));
-    const size_t end = std::min(BINS - 1, (size_t)(_freq_max / _bin_width));
+    const size_t begin = (_freq_min / _bin_width) + 1;
+    const size_t end = std::min(BINS - 1, (size_t)(_freq_max / _bin_width)) - 1;
 
     Math::peakDetect(_samples, begin, end, _bin_width, peaks, _peak_count);
-
-    // max peak freq
-    freq = peaks[0].freq;
 
     // sort peaks by freq
     Math::peakSort(peaks, _peak_count);
@@ -88,8 +83,6 @@ public:
     return 1;
   }
   
-  float freq;
-
   static const size_t PEAKS_MAX = 8;
   Peak peaks[PEAKS_MAX];
 
@@ -108,7 +101,6 @@ private:
 
   size_t _idx;
   float _bin_width;
-  float _bin_offset;
 
   // fft input and output
   __attribute__((aligned(16))) float _samples[SAMPLES];
