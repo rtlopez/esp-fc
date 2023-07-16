@@ -49,7 +49,6 @@ class SensorManager
           return 1;
         case EVENT_MAG_READ:
           _mag.filter();
-          _model.state.imuUpdate = true;
           return 1;
         case EVENT_SENSOR_READ:
           if(_model.state.imuUpdate)
@@ -57,7 +56,7 @@ class SensorManager
             _fusion.update();
             _model.state.imuUpdate = false;
           }
-          _model.state.appQueue.send(Event(EVENT_IMU_UPDATE));
+          _model.state.appQueue.send(Event(EVENT_IMU_UPDATED));
           return 1;
         default:
           break;
@@ -70,24 +69,40 @@ class SensorManager
       _model.state.appQueue.send(Event(EVENT_START));
 
       _gyro.read();
-      _model.state.appQueue.send(Event(EVENT_GYRO_READ));
+      if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
+      {
+        _model.state.appQueue.send(Event(EVENT_GYRO_READ));
+      }
 
-      if(_accel.read())
+      int status = _accel.read();
+      if(status)
       {
         _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
       }
 
-      if(_mag.read())
+      if (!status)
+      {
+        status = _mag.read();
+      }
+      if(status)
       {
         _model.state.appQueue.send(Event(EVENT_MAG_READ));
       }
 
-      if(_baro.update())
+      if(!status)
+      {
+        status = _baro.update();
+      }
+      if(status)
       {
         _model.state.appQueue.send(Event(EVENT_BARO_READ));
       }
 
-      if (_voltage.update())
+      if(!status)
+      {
+        status = _voltage.update();
+      }
+      if (status)
       {
         _model.state.appQueue.send(Event(EVENT_VOLTAGE_READ));
       }

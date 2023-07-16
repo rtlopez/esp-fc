@@ -58,13 +58,6 @@ class Timer
       return 1;
     }
 
-    /*bool sync(Timer& t) const
-    {
-      if(iteration % t.denom != 0) return false;
-      t.update();
-      return true;
-    }*/
-
     bool syncTo(const Timer& t)
     {
       if(t.iteration % denom != 0) return false;

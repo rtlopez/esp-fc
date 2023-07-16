@@ -380,11 +380,11 @@ class Cli
 
         Param(PSTR("features"), &c.featureMask),
         Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
+        Param(PSTR("debug_axis"), &c.debugAxis),
 
         Param(PSTR("gyro_bus"), &c.gyroBus, busDevChoices),
         Param(PSTR("gyro_dev"), &c.gyroDev, gyroDevChoices),
         Param(PSTR("gyro_dlpf"), &c.gyroDlpf, gyroDlpfChoices),
-        Param(PSTR("gyro_sync"), &c.gyroSync),
         Param(PSTR("gyro_align"), &c.gyroAlign, alignChoices),
         Param(PSTR("gyro_lpf_type"), &c.gyroFilter.type, filterTypeChoices),
         Param(PSTR("gyro_lpf_freq"), &c.gyroFilter.freq),
@@ -1182,16 +1182,16 @@ class Cli
         {
           s.print(FPSTR(_model.state.stats.getName((StatCounter)i)));
           s.print(": ");
-          s.print((int)(_model.state.stats.getTime((StatCounter)i) * _model.state.loopTimer.interval), 1);
+          s.print((int)(_model.state.stats.getTime((StatCounter)i)), 1);
           s.print("us, ");
           s.print(_model.state.stats.getLoad((StatCounter)i), 1);
           s.print("%");
           s.println();
         }
         s.print(F("  TOTAL: "));
-        s.print((int)(_model.state.stats.getTotalTime() * _model.state.loopTimer.interval));
+        s.print((int)(_model.state.stats.getCpuTime()));
         s.print(F("us, "));
-        s.print(_model.state.stats.getTotalLoad(), 1);
+        s.print(_model.state.stats.getCpuLoad(), 1);
         s.print(F("%"));
         s.println();
       }

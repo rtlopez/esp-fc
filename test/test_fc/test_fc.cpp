@@ -105,8 +105,7 @@ void test_model_gyro_init_1k_256dlpf()
   Model model;
   model.state.gyroClock = 8000;
   model.config.gyroDlpf = GYRO_DLPF_256;
-  model.config.gyroSync = 1; // 1khz
-  model.config.loopSync = 8;
+  model.config.loopSync = 1;
   model.config.mixerSync = 1;
   model.begin();
 
@@ -123,14 +122,13 @@ void test_model_gyro_init_1k_188dlpf()
   Model model;
   model.state.gyroClock = 1000;
   model.config.gyroDlpf = GYRO_DLPF_188;
-  model.config.gyroSync = 1; // 1khz
   model.config.loopSync = 2;
   model.config.mixerSync = 2;
   model.begin();
 
   TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroClock);
-  TEST_ASSERT_EQUAL_INT32( 500, model.state.gyroRate);
-  TEST_ASSERT_EQUAL_INT32( 500, model.state.gyroTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroRate);
+  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroTimer.rate);
   TEST_ASSERT_EQUAL_INT32( 500, model.state.loopRate);
   TEST_ASSERT_EQUAL_INT32( 500, model.state.loopTimer.rate);
   TEST_ASSERT_EQUAL_INT32( 250, model.state.mixerTimer.rate);
@@ -139,10 +137,9 @@ void test_model_gyro_init_1k_188dlpf()
 void test_model_inner_pid_init()
 {
   Model model;
-  model.state.gyroClock = 8000;
+  model.state.gyroClock = 1000;
   model.config.gyroDlpf = GYRO_DLPF_256;
-  model.config.gyroSync = 1; // 1khz
-  model.config.loopSync = 8;
+  model.config.loopSync = 1;
   model.config.mixerSync = 1;
   model.config.mixerType = MIXER_QUADX;
   model.config.pid[PID_ROLL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
@@ -174,8 +171,7 @@ void test_model_outer_pid_init()
   Model model;
   model.state.gyroClock = 8000;
   model.config.gyroDlpf = GYRO_DLPF_256;
-  model.config.gyroSync = 1; // 1khz
-  model.config.loopSync = 8;
+  model.config.loopSync = 1;
   model.config.mixerSync = 1;
   model.config.mixerType = MIXER_QUADX;
   model.config.pid[PID_LEVEL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
@@ -199,7 +195,6 @@ void test_controller_rates()
   Model model;
   model.state.gyroClock = 8000;
   model.config.gyroDlpf = GYRO_DLPF_256;
-  model.config.gyroSync = 1; // 1khz
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
   model.config.mixerType = MIXER_QUADX;
@@ -250,7 +245,6 @@ void test_controller_rates_limit()
   Model model;
   model.state.gyroClock = 8000;
   model.config.gyroDlpf = GYRO_DLPF_256;
-  model.config.gyroSync = 1; // 1khz
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
   model.config.mixerType = MIXER_QUADX;
@@ -460,7 +454,7 @@ void test_actuator_arming_gyro_motor_calbration()
 
   TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
 
-  actuator.updateArming();
+  actuator.updateArmingDisabled();
 
   TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_NO_GYRO | ARMING_DISABLED_MOTOR_PROTOCOL, model.state.armingDisabledFlags);
 }
@@ -482,7 +476,7 @@ void test_actuator_arming_failsafe()
 
   TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
 
-  actuator.updateArming();
+  actuator.updateArmingDisabled();
 
   TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_RX_FAILSAFE | ARMING_DISABLED_FAILSAFE | ARMING_DISABLED_CALIBRATING, model.state.armingDisabledFlags);
 }
@@ -502,7 +496,7 @@ void test_actuator_arming_throttle()
 
   TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
 
-  actuator.updateArming();
+  actuator.updateArmingDisabled();
 
   TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.armingDisabledFlags);
 }

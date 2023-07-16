@@ -8,6 +8,7 @@
 
 extern "C" {
 #include "blackbox/blackbox.h"
+#include "blackbox/blackbox_fielddefs.h"
 }
 
 class BlackboxBuffer
@@ -253,8 +254,12 @@ class Blackbox
       motorConfigMutable()->minthrottle = _model.state.minThrottle;
       motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
 
-      gyroConfigMutable()->gyro_sync_denom = 1; //_model.config.gyroSync;
+      gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
+
+      if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
+      if(_model.magActive()) enabledSensors |= SENSOR_MAG;
+      if(_model.baroActive()) enabledSensors |= SENSOR_BARO;
 
       gyro.sampleLooptime = 125; //_model.state.gyroTimer.interval;
       targetPidLooptime = _model.state.loopTimer.interval;
@@ -291,9 +296,9 @@ class Blackbox
     {
       switch(e.type)
       {
-        case EVENT_MIXER_UPDATE:
+        case EVENT_MIXER_UPDATED:
           update();
-          //_model.state.appQueue.send(Event(EVENT_BBLOG_UPDATE));
+          //_model.state.appQueue.send(Event(EVENT_BBLOG_UPDATED));
           return 1;
         default:
           break;
@@ -350,25 +355,36 @@ class Blackbox
 
     void updateArmed()
     {
+      // log arming beep event
       static uint32_t beep = 0;
-      if(beep != 0 && beep < _model.state.loopTimer.last)
+      if(beep != 0 && _model.state.loopTimer.last > beep)
       {
         setArmingBeepTimeMicros(_model.state.loopTimer.last);
         beep = 0;
       }
 
-      bool armed =_model.isActive(MODE_ARMED);
+      // stop logging
+      static uint32_t stop = 0;
+      if(stop != 0 && _model.state.loopTimer.last > stop)
+      {
+        blackboxFinish();
+        stop = 0;
+      }
+
+      bool armed = _model.isActive(MODE_ARMED);
       if(armed == ARMING_FLAG(ARMED)) return;
       if(armed)
       {
         ENABLE_ARMING_FLAG(ARMED);
-        beep = _model.state.loopTimer.last + 200000; // delay arming beep event ~50ms (200ms)
+        beep = _model.state.loopTimer.last + 200000; // schedule arming beep event ~200ms
       }
       else
       {
         DISABLE_ARMING_FLAG(ARMED);
-        setArmingBeepTimeMicros(micros());
-        blackboxFinish();
+        flightLogEventData_t eventData;
+        eventData.disarm.reason = _model.state.disarmReason;
+        blackboxLogEvent(FLIGHT_LOG_EVENT_DISARM, &eventData);
+        stop = _model.state.loopTimer.last + 500000; // schedule stop in 500ms
       }
     }
 

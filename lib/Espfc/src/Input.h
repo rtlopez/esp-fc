@@ -120,9 +120,8 @@ class Input
       _model.state.inputRxLoss = (status == INPUT_LOST || status == INPUT_FAILSAFE);
       _model.state.inputRxFailSafe = (status == INPUT_FAILSAFE);
       _model.state.inputFrameCount++;
-      uint32_t now = micros();
 
-      updateFrameRate(now);
+      updateFrameRate();
 
       processInputs();
 
@@ -189,7 +188,7 @@ class Input
       if(_model.isSwitchActive(MODE_FAILSAFE))
       {
         failsafeStage2();
-        return true;
+        return false; // not real failsafe, rx link is still valid
       }
 
       if(status == INPUT_RECEIVED)
@@ -204,13 +203,16 @@ class Input
         return true;
       }
 
-      uint32_t lossTime = micros() - _model.state.inputFrameTime;
+      // stage 2 timeout
+      const uint32_t lossTime = micros() - _model.state.inputFrameTime;
       if(lossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
       {
         failsafeStage2();
         return true;
       }
-      else if(lossTime >= 1 * TENTH_TO_US)
+
+      // stage 1 timeout
+      if(lossTime >= 1 * TENTH_TO_US)
       {
         failsafeStage1();
         return true;
@@ -239,10 +241,10 @@ class Input
       _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
       _model.state.inputRxLoss = true;
       _model.state.inputRxFailSafe = true;
-      if(_model.isActive(MODE_ARMED))
+      if(_model.isModeActive(MODE_ARMED))
       {
         _model.state.failsafe.phase = FAILSAFE_LANDED;
-        _model.disarm();
+        _model.disarm(DISARM_REASON_FAILSAFE);
       }
     }
 
@@ -276,8 +278,9 @@ class Input
       }
     }
 
-    void updateFrameRate(uint32_t now)
+    void updateFrameRate()
     {
+      const uint32_t now = micros();
       const uint32_t frameDelta = now - _model.state.inputFrameTime;
 
       _model.state.inputFrameTime = now;
