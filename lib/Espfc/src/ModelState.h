@@ -139,14 +139,15 @@ struct ModelState
 
   VectorInt16 gyroRaw;
   VectorFloat gyroSampled;
+  VectorFloat gyroDynNotch;
+  VectorFloat gyroImu;
+
   VectorInt16 accelRaw;
   VectorInt16 magRaw;
 
   VectorFloat gyro;
   VectorFloat accel;
   VectorFloat mag;
-
-  VectorFloat gyroImu;
 
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;
@@ -168,8 +169,7 @@ struct ModelState
   Filter gyroFilter3[3];
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
-  Filter gyroDynamicFilter[3];
-  Filter gyroDynamicFilter2[3];
+  Filter gyroDynNotchFilter[3][8];
   Filter gyroImuFilter[3];
   Math::FreqAnalyzer gyroAnalyzer[3];
   
@@ -269,6 +269,7 @@ struct ModelState
   uint32_t modeMask;
   uint32_t modeMaskPrev;
   uint32_t modeMaskSwitch;
+  uint32_t disarmReason;
 
   bool airmodeAllowed;
 

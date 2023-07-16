@@ -21,8 +21,9 @@ class Actuator
     int update()
     {
       Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
-      updateArming();
+      updateArmingDisabled();
       updateModeMask();
+      updateArmed();
       updateAirMode();
       updateScaler();
       updateBuzzer();
@@ -73,7 +74,7 @@ class Actuator
       }
     }
 
-    void updateArming()
+    void updateArmingDisabled()
     {
       int errors = _model.state.i2cErrorDelta;
       _model.state.i2cErrorDelta = 0;
@@ -119,11 +120,13 @@ class Actuator
 
       for(size_t i = 0; i < MODE_COUNT; i++)
       {
-        bool next = newMask & (1 << i);
-        bool prev = _model.state.modeMaskPrev & (1 << i);
-        if(next == prev) continue; // mode unchanged
-        if(next && canActivateMode((FlightMode)i)) continue; // mode can be set
-        newMask &= ~(1 << i); // block activation, clear bit
+        bool newVal = newMask & (1 << i);
+        bool oldVal = _model.state.modeMask & (1 << i);
+        if(newVal == oldVal) continue; // mode unchanged
+        if(newVal && !canActivateMode((FlightMode)i))
+        {
+          newMask &= ~(1 << i); // block activation, clear bit
+        }
       }
 
       _model.updateModes(newMask);
@@ -144,9 +147,25 @@ class Actuator
       }
     }
 
+    void updateArmed()
+    {
+      if((_model.hasChanged(MODE_ARMED)))
+      {
+        bool armed = _model.isModeActive(MODE_ARMED);
+        if(armed)
+        {
+          _model.state.disarmReason = DISARM_REASON_SYSTEM;
+        }
+        else if(!armed && _model.state.disarmReason == DISARM_REASON_SYSTEM)
+        {
+          _model.state.disarmReason = DISARM_REASON_SWITCH;
+        }
+      }
+    }
+
     void updateAirMode()
     {
-      bool armed = _model.isActive(MODE_ARMED);
+      bool armed = _model.isModeActive(MODE_ARMED);
       if(!armed)
       {
         _model.state.airmodeAllowed = false;
@@ -159,7 +178,7 @@ class Actuator
 
     void updateBuzzer()
     {
-      if(_model.isActive(MODE_FAILSAFE))
+      if(_model.isModeActive(MODE_FAILSAFE))
       {
         _model.state.buzzer.play(BEEPER_RX_LOST);
       }
@@ -167,13 +186,13 @@ class Actuator
       {
         _model.state.buzzer.play(BEEPER_BAT_LOW);
       }
-      if(_model.isActive(MODE_BUZZER))
+      if(_model.isModeActive(MODE_BUZZER))
       {
         _model.state.buzzer.play(BEEPER_RX_SET);
       }
       if((_model.hasChanged(MODE_ARMED)))
       {
-        _model.state.buzzer.push(_model.isActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
+        _model.state.buzzer.push(_model.isModeActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
       }
     }
 

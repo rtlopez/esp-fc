@@ -33,6 +33,7 @@ enum EventType
   EVENT_PID_UPDATED,
   EVENT_MIXER_UPDATED,
   EVENT_BBLOG_UPDATED,
+  EVENT_DISARM,
 };
 
 class Event

@@ -1302,6 +1302,7 @@ class MspProcessor
             }
             (void)disableRunawayTakeoff;
             _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+            if (_model.isModeActive(MODE_ARMED)) _model.disarm(DISARM_REASON_ARMING_DISABLED);
           }
           break;
 

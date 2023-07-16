@@ -74,10 +74,12 @@ class Model
       state.modeMaskSwitch = mask;
     }
 
-    void disarm()
+    void disarm(DisarmReason r)
     {
+      state.disarmReason = r;
       clearMode(MODE_ARMED);
       clearMode(MODE_AIRMODE);
+      state.appQueue.send(Event(EVENT_DISARM));
     }
 
     /**
@@ -95,7 +97,7 @@ class Model
 
     bool isAirModeActive() const
     {
-      return isActive(MODE_AIRMODE);// || isActive(FEATURE_AIRMODE);
+      return isModeActive(MODE_AIRMODE);// || isActive(FEATURE_AIRMODE);
     }
 
     bool isThrottleLow() const
@@ -108,7 +110,7 @@ class Model
       return config.blackboxDev == 3 && config.blackboxPdenom > 0;
     }
 
-    bool gyroActive() const IRAM_ATTR
+    bool gyroActive() const /* IRAM_ATTR */
     {
       return state.gyroPresent && config.gyroDev != GYRO_NONE;
     }
@@ -168,7 +170,7 @@ class Model
       }
     }
 
-    bool armingDisabled() const IRAM_ATTR
+    bool armingDisabled() const /* IRAM_ATTR */
     {
       return state.armingDisabledFlags != 0;
     }
@@ -177,6 +179,11 @@ class Model
     {
       if(value) state.armingDisabledFlags |= flag;
       else state.armingDisabledFlags &= ~flag;
+    }
+
+    bool getArmingDisabled(ArmingDisabledFlags flag)
+    {
+      return state.armingDisabledFlags & flag;
     }
 
     Device::SerialDevice * getSerialStream(SerialPort i)
@@ -403,6 +410,7 @@ class Model
         state.magTimer.setRate(state.magRate);
       }
 
+      const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
       const uint32_t inputFilterRate = state.loopTimer.rate;
       const uint32_t pidFilterRate = state.loopTimer.rate;
@@ -411,10 +419,11 @@ class Model
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
         state.gyroAnalyzer[i].begin(gyroFilterRate, config.dynamicFilter);
-        if(isActive(FEATURE_DYNAMIC_FILTER)) {
-          state.gyroDynamicFilter[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), gyroFilterRate);
-          if(config.dynamicFilter.width > 0) {
-            state.gyroDynamicFilter2[i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 300), gyroFilterRate);
+        if(isActive(FEATURE_DYNAMIC_FILTER))
+        {
+          for(size_t p = 0; p < (size_t)config.dynamicFilter.width; p++)
+          {
+            state.gyroDynNotchFilter[i][p].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
           }
         }
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, gyroFilterRate);
@@ -424,7 +433,7 @@ class Model
         } else {
           state.gyroFilter[i].begin(config.gyroFilter, gyroFilterRate);
         }
-        state.gyroFilter2[i].begin(config.gyroFilter2, gyroFilterRate);
+        state.gyroFilter2[i].begin(config.gyroFilter2, gyroPreFilterRate);
         state.gyroFilter3[i].begin(config.gyroFilter3, gyroFilterRate);
         state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
         state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), gyroFilterRate);

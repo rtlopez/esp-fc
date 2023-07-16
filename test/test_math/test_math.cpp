@@ -44,6 +44,61 @@ void test_math_deadband()
     TEST_ASSERT_EQUAL_INT32(10, Math::deadband( 20, 10));
 }
 
+void test_math_peak_detect_full()
+{
+    using Math::Peak;
+
+    float samples[32] = { 0, 20, 0, 0,  4, 0, 2, 4,  5, 3, 1, 4,  0, 6, 0, 0 };
+    Peak peaks[8] = { Peak(), Peak(), Peak(), Peak() };
+
+    Math::peakDetect(samples, 1, 14, 1, peaks, 4);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,  1.f, peaks[0].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 20.f, peaks[0].value);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 13.f, peaks[1].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,  6.f, peaks[1].value);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 7.92f, peaks[2].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.f, peaks[2].value);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,  4.f, peaks[3].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,  4.f, peaks[3].value);
+}
+
+void test_math_peak_detect_partial()
+{
+    using Math::Peak;
+
+    float samples[32] = { 0, 20, 0, 0,  4, 0, 2, 4,  5, 3, 1, 4,  0, 6, 0, 0 };
+    Peak peaks[8] = { Peak(), Peak(), Peak(), Peak() };
+
+    Math::peakDetect(samples, 3, 12, 1, peaks, 3);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 7.92f, peaks[0].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.f, peaks[0].value);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.f, peaks[1].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.f, peaks[1].value);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 10.8f, peaks[2].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.f, peaks[2].value);
+}
+
+void test_math_peak_sort()
+{
+    using Math::Peak;
+
+    Peak peaks[8] = { Peak(20, 10), Peak(10, 10), Peak(0, 10), Peak(5, 5) };
+
+    Math::peakSort(peaks, 4);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,  5.f, peaks[0].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 10.f, peaks[1].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 20.f, peaks[2].freq);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, peaks[3].freq);
+}
+
 void test_vector_int16_access()
 {
     VectorInt16 v;
@@ -757,6 +812,9 @@ int main(int argc, char **argv)
     RUN_TEST(test_math_map);
     RUN_TEST(test_math_map3);
     RUN_TEST(test_math_deadband);
+    RUN_TEST(test_math_peak_detect_full);
+    RUN_TEST(test_math_peak_detect_partial);
+    RUN_TEST(test_math_peak_sort);
 
     RUN_TEST(test_vector_int16_access);
     RUN_TEST(test_vector_int16_math);
