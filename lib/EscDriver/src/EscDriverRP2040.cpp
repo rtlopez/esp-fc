@@ -126,7 +126,6 @@ uint32_t EscDriverRP2040::usToTicks(uint32_t us)
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:
     case ESC_PROTOCOL_DSHOT600:
-    //case ESC_PROTOCOL_DSHOT1200:
       ticks = constrain(us, 1000, 2000);
       break;
     default:

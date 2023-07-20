@@ -15,6 +15,7 @@ static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 #define TO_INTERVAL(v) (1 * 1000 * 1000 / (v)) // [us]
 
 // faster esc response, but unsafe (no task synchronisation)
+// set to 0 in case of issues
 #define ESPFC_RMT_BYPASS_WRITE_SYNC 1
 
 #if ESPFC_RMT_BYPASS_WRITE_SYNC
@@ -53,10 +54,6 @@ IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
 #define _rmt_tx_start rmt_tx_start
 #define _rmt_fill_tx_items rmt_fill_tx_items
 #endif
-
-
-class EscDriverEsp32;
-static EscDriverEsp32* instances[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 class EscDriverEsp32: public EscDriverBase
 {
@@ -117,13 +114,12 @@ class EscDriverEsp32: public EscDriverBase
         }
     };
 
-    EscDriverEsp32(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50)
+    EscDriverEsp32(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _digital(false)
     {
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
         _channel[i].dev.gpio_num = gpio_num_t(-1);
       }
-      //begin(_protocol, _async, _rate);
     }
 
     void end()
@@ -138,17 +134,15 @@ class EscDriverEsp32: public EscDriverBase
     int begin(EscProtocol protocol, bool async, int32_t rate, int timer = 0)
     {
       (void)timer; // unused
-      if(_async) rmt_register_tx_end_callback(NULL, NULL); // unregister old callback
 
       _protocol = protocol;
-      _async = async;// && false;
+      _digital = isDigital(protocol);
+      _async = async;
       _rate = rate;
       _interval = TO_INTERVAL(_rate);
       
-      if(_async) rmt_register_tx_end_callback(&txDoneCallback, NULL);
-
       return 1;
-    }   
+    }
 
     int attach(size_t channel, int pin, int pulse)
     {
@@ -216,20 +210,27 @@ class EscDriverEsp32: public EscDriverBase
 
       rmt_config(&_channel[i].dev);
       rmt_driver_install(_channel[i].dev.channel, 0, 0);
-
-      if(_async) txDoneCallback((rmt_channel_t)i, NULL);
+      if (_async && !_tx_end_installed)
+      {
+        _tx_end_installed = true;
+        rmt_register_tx_end_callback(txDoneCallback, NULL);
+      }
+      if(_async)
+      {
+        rmt_set_tx_intr_en(_channel[i].dev.channel, true);
+        txDoneCallback((rmt_channel_t)i, NULL); // start generating pulses
+      }
     }
 
     static void txDoneCallback(rmt_channel_t channel, void *arg)
     {
-      if(!instances[channel] || !instances[channel]->_async) return;
-      instances[channel]->transmitOne(channel);
+      if(instances[channel] && instances[channel]->_async) instances[channel]->transmitOne(channel);
     }
 
     void transmitOne(uint8_t i)
     {
       if(!_channel[i].attached()) return;
-      if(isDigital())
+      if(_digital)
       {
         writeDshotCommand(i, _channel[i].pulse);
       }
@@ -242,11 +243,10 @@ class EscDriverEsp32: public EscDriverBase
 
     void transmitAll()
     {
-      bool digital = isDigital();
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
         if(!_channel[i].attached()) continue;
-        if(digital)
+        if(_digital)
         {
           writeDshotCommand(i, _channel[i].pulse);
         }
@@ -341,7 +341,6 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        //case ESC_PROTOCOL_DSHOT1200:
         default:
           return 0;
       }
@@ -359,7 +358,6 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        //case ESC_PROTOCOL_DSHOT1200:
         default:
           return 2048;
       }
@@ -384,7 +382,6 @@ class EscDriverEsp32: public EscDriverBase
         case ESC_PROTOCOL_DSHOT150:  return (width / (div * DURATION_CLOCK / 2)) * 4;
         case ESC_PROTOCOL_DSHOT300:  return (width / (div * DURATION_CLOCK / 2)) * 2;
         case ESC_PROTOCOL_DSHOT600:  return (width / (div * DURATION_CLOCK / 2)) * 1;
-        //case ESC_PROTOCOL_DSHOT1200: return (width / (div * DURATION_CLOCK / 2)) / 2;
         case ESC_PROTOCOL_BRUSHED:
         case ESC_PROTOCOL_PWM:
         case ESC_PROTOCOL_ONESHOT125:
@@ -395,14 +392,13 @@ class EscDriverEsp32: public EscDriverBase
       }
     }
 
-    bool isDigital() const
+    bool isDigital(EscProtocol protocol) const
     {
-      switch(_protocol)
+      switch(protocol)
       {
         case ESC_PROTOCOL_DSHOT150:
         case ESC_PROTOCOL_DSHOT300:
         case ESC_PROTOCOL_DSHOT600:
-        //case ESC_PROTOCOL_DSHOT1200:
           return true;
         default:
           return false;
@@ -414,6 +410,10 @@ class EscDriverEsp32: public EscDriverBase
     int32_t _async;
     int32_t _rate;
     int32_t _interval;
+    bool _digital;
+
+    static bool _tx_end_installed;
+    static EscDriverEsp32* instances[];
 };
 
 #endif

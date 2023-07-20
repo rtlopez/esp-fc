@@ -12,7 +12,6 @@ enum EscProtocol {
   ESC_PROTOCOL_DSHOT150,
   ESC_PROTOCOL_DSHOT300,
   ESC_PROTOCOL_DSHOT600,
-//  ESC_PROTOCOL_DSHOT1200, // not used anymore
   ESC_PROTOCOL_PROSHOT,
   ESC_PROTOCOL_DISABLED,
   ESC_PROTOCOL_COUNT
@@ -68,7 +67,7 @@ class EscDriverBase
   #define EscDriver EscDriverEsp32
 
   #define ESC_DRIVER_MOTOR_TIMER 0
-  #define ESC_DRIVER_SERVO_TIMER 0
+  #define ESC_DRIVER_SERVO_TIMER 1
 
 #elif defined(ARCH_RP2040)
 
@@ -85,7 +84,7 @@ class EscDriverBase
   #define EscDriver EscDriverBase
 
   #define ESC_DRIVER_MOTOR_TIMER 0
-  #define ESC_DRIVER_SERVO_TIMER 0
+  #define ESC_DRIVER_SERVO_TIMER 1
 
 #else
 

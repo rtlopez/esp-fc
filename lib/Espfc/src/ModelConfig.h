@@ -356,7 +356,6 @@ enum BuzzerEvent {
 class BuzzerConfig
 {
   public:
-    int8_t pin;
     int8_t inverted;
     int32_t beeperMask;
 };
