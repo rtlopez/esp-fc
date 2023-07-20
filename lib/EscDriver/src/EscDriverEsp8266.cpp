@@ -330,7 +330,6 @@ uint32_t EscDriverEsp8266::usToTicks(uint32_t us)
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:
     case ESC_PROTOCOL_DSHOT600:
-    //case ESC_PROTOCOL_DSHOT1200:
       ticks = us;
       break;
     default:
@@ -373,7 +372,6 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate, EscD
       }
       break;
     case ESC_PROTOCOL_DSHOT600:
-    //case ESC_PROTOCOL_DSHOT1200:
     case ESC_PROTOCOL_PROSHOT:
       {
         const float base = 47;
