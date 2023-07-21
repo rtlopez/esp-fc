@@ -86,6 +86,7 @@ class BaroBMP280: public BaroDevice
       int32_t var1 = ((((adc_T >> 3) - ((int32_t)_cal.dig_T1 << 1))) * ((int32_t)_cal.dig_T2)) >> 11;
       int32_t var2 = (((((adc_T >> 4) - ((int32_t)_cal.dig_T1)) * ((adc_T >> 4) - ((int32_t)_cal.dig_T1))) >> 12) * ((int32_t)_cal.dig_T3)) >> 14;
       _t_fine = var1 + var2;
+      //_t_fine += ((var1 + var2) - _t_fine) >> 1;
 
       float T = (_t_fine * 5 + 128) >> 8;
       return T * 0.01f;
@@ -98,7 +99,7 @@ class BaroBMP280: public BaroDevice
 
       int64_t var1 = ((int64_t)_t_fine) - 128000;
       int64_t var2 = var1 * var1 * (int64_t)_cal.dig_P6;
-      var2 += ((var1*(int64_t)_cal.dig_P5) << 17);
+      var2 += ((var1 * (int64_t)_cal.dig_P5) << 17);
       var2 += (((int64_t)_cal.dig_P4) << 35);
       var1 = ((var1 * var1 * (int64_t)_cal.dig_P3) >> 8) + ((var1 * (int64_t)_cal.dig_P2) << 12);
       var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)_cal.dig_P1) >> 33;
@@ -113,7 +114,7 @@ class BaroBMP280: public BaroDevice
 
       p = ((p + var1 + var2) >> 8) + (((int64_t)_cal.dig_P7) << 4);
 
-      return (float)p / 256;
+      return ((float)p) / 256.f;
     }
 
     void setMode(BaroDeviceMode mode)
@@ -139,7 +140,7 @@ class BaroBMP280: public BaroDevice
     int32_t readReg(uint8_t reg)
     {
       uint8_t buffer[3];
-      _bus->readFast(_addr, reg, 3, buffer);
+      _bus->read(_addr, reg, 3, buffer);
       return buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
     }
 

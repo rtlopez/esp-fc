@@ -39,11 +39,6 @@ class BaroDevice: public BusAwareDevice
 
     virtual bool testConnection() = 0;
 
-    float getAltitude(float pressure, float seaLevelPressure = 101325.f)
-    {
-      return 44330.f * (1.f - powf(pressure / seaLevelPressure, 0.1903));
-    }
-
     static const char ** getNames()
     {
       static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("BMP085"), PSTR("MS5611"), PSTR("BMP280"), NULL };
