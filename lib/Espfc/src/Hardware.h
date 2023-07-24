@@ -24,6 +24,9 @@
 
 namespace {
 #if defined(ESPFC_SPI_0)
+#ifdef ESP32
+  static SPIClass SPI1(VSPI);
+#endif
   static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
 #endif
 #if defined(ESPFC_I2C_0)

@@ -11,14 +11,20 @@
 #define BMP280_WHOAMI_REG             0xD0
 #define BMP280_VERSION_REG            0xD1
 #define BMP280_RESET_REG              0xE0
+#define BMP280_RESET_VAL              0xB6
 
 #define BMP280_CALIB_REG              0x88
 #define BMP280_CAL26_REG              0xE1     // R calibration stored in 0xE1-0xF0
 
+#define BMP280_STATUS_REG             0xF3
 #define BMP280_CONTROL_REG            0xF4
 #define BMP280_CONFIG_REG             0xF5
 #define BMP280_PRESSURE_REG           0xF7
 #define BMP280_TEMPERATURE_REG        0xFA
+
+#define BMP280_OSPS_T_X1              (1 << 5)
+#define BMP280_OSPS_P_X1              (1 << 2)
+#define BMP280_MODE_NORMAL            0x03
 
 namespace Espfc {
 
@@ -40,13 +46,13 @@ class BaroBMP280: public BaroDevice
       int16_t  dig_P7;
       int16_t  dig_P8;
       int16_t  dig_P9;
-      uint8_t  dig_H1;
+      /*uint8_t  dig_H1;
       int16_t  dig_H2;
       uint8_t  dig_H3;
       int16_t  dig_H4;
       int16_t  dig_H5;
-      int8_t   dig_H6;
-    };
+      int8_t   dig_H6;*/
+    } __attribute__ ((__packed__));
 
     int begin(BusDevice * bus) override
     {
@@ -59,16 +65,17 @@ class BaroBMP280: public BaroDevice
 
       if(!testConnection()) return 0;
 
-      _bus->writeByte(_addr, BMP280_RESET_REG, 0xB6); // device reset
-      delay(10);
+      readReg(BMP280_CALIB_REG, (uint8_t*)&_cal, sizeof(CalibrationData)); // read callibration
 
-      _bus->read(_addr, BMP280_CALIB_REG, sizeof(CalibrationData), (uint8_t*)&_cal);
+      writeReg(BMP280_RESET_REG, BMP280_RESET_VAL); // device reset
+      delay(100);
 
-      uint8_t conf = 0;
-      conf |= (1 << 5); // osps_t: x1
-      conf |= (1 << 2); // osps_p: x1
-      conf |= 3;        // mode: normal;
-      _bus->writeByte(_addr, BMP280_CONTROL_REG, conf);
+      writeReg(BMP280_CONTROL_REG, BMP280_OSPS_T_X1 | BMP280_OSPS_P_X1 | BMP280_MODE_NORMAL); // set sampling mode
+
+      writeReg(BMP280_CONFIG_REG, 0); // set minimal standby and turn off IIR filter
+      delay(100);
+
+      readReg8(BMP280_STATUS_REG);
 
       return 1;
     }
@@ -131,17 +138,33 @@ class BaroBMP280: public BaroDevice
 
     bool testConnection() override
     {
-      uint8_t whoami = 0;
-      _bus->readByte(_addr, BMP280_WHOAMI_REG, &whoami);
+      uint8_t whoami = readReg8(BMP280_WHOAMI_REG);
       return whoami == BMP280_WHOAMI_ID;
     }
 
   protected:
+    uint8_t readReg8(uint8_t reg)
+    {
+      uint8_t buffer = 0;
+      _bus->read(_addr, reg, 1, &buffer);
+      return buffer;
+    }
+
     int32_t readReg(uint8_t reg)
     {
-      uint8_t buffer[3];
+      uint8_t buffer[3] = {0, 0, 0};
       _bus->read(_addr, reg, 3, buffer);
       return buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
+    }
+
+    int32_t readReg(uint8_t reg, uint8_t * buffer, uint8_t length)
+    {
+      return _bus->read(_addr, reg, length, buffer);
+    }
+
+    int8_t writeReg(uint8_t reg, uint8_t val)
+    {
+      return _bus->write(_addr, reg, 1, &val);
     }
 
     int8_t _mode;
