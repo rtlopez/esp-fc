@@ -59,27 +59,27 @@ https://github.com/esp8266/esp8266-wiki/wiki/Boot-Process#esp-boot-modes
 ```
 Pin | Name | Function                                   | ESPFC external device
 ----+------+--------------------------------------------+----------------------------------------------
- 0  |      | PU,ADC2_CH1,CLK_OUT1                       | >  M0
+ 0  |      | PU,ADC2_CH1,CLK_OUT1                       | >  BUZZER
  1  | TXD  | U0TXD,CLK_OUT3                             |    TX0, PROG, MSP
- 2  |      | ADC2_CH2,HSPIWP,HS2_DATA0,SD_DATA0         | >  M1
+ 2  |      | ADC2_CH2,HSPIWP,HS2_DATA0,SD_DATA0         | >  M5
  3  | RXD  | U0RXD,CLK_OUT2                             |    RX0, PROG, MSP
- 4  |      | ADC2_CH0,HSPIHD,HS2_DATA1,SD_DATA1         | $  BUZZER
+ 4  |      | ADC2_CH0,HSPIHD,HS2_DATA1,SD_DATA1         | $  M2
  5  |      | VSPICS0,HS1_DATA6                          | >  SPI_CS0_GYRO, SPI0_SS
-11  | CMD  | SD_CMD,SPICS0,HS1_CMD,U1RTS                | $  SPI_CS1_BARO
-12  | TD1  | PD,ADC2_CH5,MTDI,HSPIQ,HS2_DATA2,SD_DATA2  | >  M5, SPI1_MISO 
-13  | TCK  | ADC2_CH4,MTCK,HSPID,HS2_DATA3,SD_DATA3     |    M6, SPI1_MOSI
+11  | CMD  | SD_CMD,SPICS0,HS1_CMD,U1RTS                | $  
+12  | TD1  | PD,ADC2_CH5,MTDI,HSPIQ,HS2_DATA2,SD_DATA2  | >  M4, SPI1_MISO 
+13  | TCK  | ADC2_CH4,MTCK,HSPID,HS2_DATA3,SD_DATA3     |    SPI_CS1_BARO, M6, SPI1_MOSI
 14  | TMS  | ADC2_CH6,MTMS,HSPICLK,HS2_CLK,SD_CLK       |    M7, SPI1_SCK
 15  | TD0  | PU,ADC2_CH3,MTDO,HSPICS0,HS2_CMD,SD_CMD    | >  SPI_CS2_SDCARD, SPI1_SS
 16  |      | HS1_DATA4,U2RXD                            |    RX2
 17  |      | HS1_DATA5,U2TXD                            |    TX2
 18  |      | VSPICLK,HS1_DATA7                          |    SPI0_SCK
 19  |      | VSPIQ,U0CTS                                |    SPI0_MISO
-21  |      | VSPIHD                                     |    I2C0_SCL
-22  |      | VSPIWP,U0RTS                               |    I2C0_SDA
+21  |      | VSPIHD                                     |    I2C0_SDA
+22  |      | VSPIWP,U0RTS                               |    I2C0_SCL
 23  |      | VSPID,HS1_STROBE                           |    SPI0_MOSI
-25  |      | ADC2_CH8,DAC1                              |    M2
+25  |      | ADC2_CH8,DAC1                              |    M1
 26  |      | ADC2_CH9,DAC2                              |    M3
-27  |      | ADC2_CH7                                   |    M4
+27  |      | ADC2_CH7                                   |    M0
 32  |      | ADC1_CH4,XTAL                              |    RX1
 33  |      | ADC1_CH5,XTAL                              |    TX1
 34  |      | ADC1_CH6                                   | <$ ADC, INTR
