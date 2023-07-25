@@ -24,6 +24,7 @@
 
 #define BMP280_OSPS_T_X1              (1 << 5)
 #define BMP280_OSPS_P_X1              (1 << 2)
+#define BMP280_FILTER_X2              (1 << 2)
 #define BMP280_MODE_NORMAL            0x03
 
 namespace Espfc {
@@ -66,16 +67,30 @@ class BaroBMP280: public BaroDevice
       if(!testConnection()) return 0;
 
       readReg(BMP280_CALIB_REG, (uint8_t*)&_cal, sizeof(CalibrationData)); // read callibration
+      delay(2);
 
+      // FIXME: strange bug in ESP32 SPI that distorts some commands,
+      // call get status and then write command twice for sure.
+      readReg8(BMP280_STATUS_REG);
+      readReg8(BMP280_STATUS_REG);
       writeReg(BMP280_RESET_REG, BMP280_RESET_VAL); // device reset
-      delay(100);
-
-      writeReg(BMP280_CONTROL_REG, BMP280_OSPS_T_X1 | BMP280_OSPS_P_X1 | BMP280_MODE_NORMAL); // set sampling mode
-
-      writeReg(BMP280_CONFIG_REG, 0); // set minimal standby and turn off IIR filter
-      delay(100);
+      readReg8(BMP280_STATUS_REG);
+      writeReg(BMP280_RESET_REG, BMP280_RESET_VAL); // device reset
+      delay(2);
 
       readReg8(BMP280_STATUS_REG);
+      readReg8(BMP280_STATUS_REG);
+      writeReg(BMP280_CONFIG_REG, BMP280_FILTER_X2); // set minimal standby and IIR filter X2
+      readReg8(BMP280_STATUS_REG);
+      writeReg(BMP280_CONFIG_REG, BMP280_FILTER_X2); // set minimal standby and IIR filter X2
+      delay(2);
+
+      readReg8(BMP280_STATUS_REG);
+      readReg8(BMP280_STATUS_REG);
+      writeReg(BMP280_CONTROL_REG, BMP280_OSPS_T_X1 | BMP280_OSPS_P_X1 | BMP280_MODE_NORMAL); // set sampling mode
+      readReg8(BMP280_STATUS_REG);
+      writeReg(BMP280_CONTROL_REG, BMP280_OSPS_T_X1 | BMP280_OSPS_P_X1 | BMP280_MODE_NORMAL); // set sampling mode
+      delay(20);
 
       return 1;
     }
@@ -92,8 +107,8 @@ class BaroBMP280: public BaroDevice
 
       int32_t var1 = ((((adc_T >> 3) - ((int32_t)_cal.dig_T1 << 1))) * ((int32_t)_cal.dig_T2)) >> 11;
       int32_t var2 = (((((adc_T >> 4) - ((int32_t)_cal.dig_T1)) * ((adc_T >> 4) - ((int32_t)_cal.dig_T1))) >> 12) * ((int32_t)_cal.dig_T3)) >> 14;
-      _t_fine = var1 + var2;
-      //_t_fine += ((var1 + var2) - _t_fine) >> 1;
+      //_t_fine = var1 + var2;
+      _t_fine += ((var1 + var2) - _t_fine + 4) >> 3; // smooth t_fine
 
       float T = (_t_fine * 5 + 128) >> 8;
       return T * 0.01f;

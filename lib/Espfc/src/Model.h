@@ -513,7 +513,7 @@ class Model
       state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
 
       state.telemetry = config.telemetry;
-      state.baroAltitudeBiasSamples = 200;
+      state.baroAltitudeBiasSamples = 300;
 
       // override temporary
       //state.telemetry = true;
