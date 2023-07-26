@@ -1150,7 +1150,7 @@ class Cli
 
         if(mag)
         {
-          s.print(F("   mag device: "));
+          s.print(F("  mag device: "));
           s.print(FPSTR(Device::MagDevice::getName(mag->getType())));
           s.print('/');
           s.println(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));

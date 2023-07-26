@@ -26,7 +26,7 @@
 #define AK8963_RESET              0x01
 #define AK8963_ASA                0x10
 #define AK8963_WHO_AM_I           0x00
-#define AK8963_INIT_DELAY         200
+#define AK8963_INIT_DELAY         20
 
 namespace Espfc {
 

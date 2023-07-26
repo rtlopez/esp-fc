@@ -52,6 +52,7 @@
 #define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
+#define ESPFC_SPI_0_DEV SPI1
 #define ESPFC_SPI_0_SCK 18
 #define ESPFC_SPI_0_MOSI 23
 #define ESPFC_SPI_0_MISO 19

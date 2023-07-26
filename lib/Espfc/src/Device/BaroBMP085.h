@@ -133,6 +133,11 @@ class BaroBMP085: public BaroDevice
       else return 4500 + 50; // invalid mode
     }
 
+    virtual int getDenom() const override
+    {
+      return 1;
+    }
+
     bool testConnection() override
     {
       uint8_t whoami = 0;

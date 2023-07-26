@@ -35,14 +35,10 @@ class BaroDevice: public BusAwareDevice
     virtual float readTemperature() = 0;
     virtual float readPressure() = 0;
     virtual int getDelay() const = 0;
+    virtual int getDenom() const = 0;
     virtual void setMode(BaroDeviceMode mode) = 0;
 
     virtual bool testConnection() = 0;
-
-    float getAltitude(float pressure, float seaLevelPressure = 101325.f)
-    {
-      return 44330.f * (1.f - powf(pressure / seaLevelPressure, 0.1903));
-    }
 
     static const char ** getNames()
     {

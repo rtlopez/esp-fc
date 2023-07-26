@@ -294,6 +294,7 @@ struct ModelState
   float baroTemperature;
   float baroPressureRaw;
   float baroPressure;
+  float baroAltitudeRaw;
   float baroAltitude;
   float baroAltitudeBias;
   int32_t baroAltitudeBiasSamples;

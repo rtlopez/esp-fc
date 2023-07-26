@@ -34,6 +34,13 @@ void test_math_map3()
     TEST_ASSERT_FLOAT_WITHIN(1.f, -500.f, Math::map3(-50.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
 }
 
+void test_math_baro_altitude()
+{
+    TEST_ASSERT_FLOAT_WITHIN(0.1f,   0.0f, Math::toAltitude(101325.f)); // sea level
+    TEST_ASSERT_FLOAT_WITHIN(0.1f,  27.0f, Math::toAltitude(101000.f));
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 110.9f, Math::toAltitude(100000.f));
+}
+
 void test_math_deadband()
 {
     TEST_ASSERT_EQUAL_INT32( 0, Math::deadband(  0, 10));
@@ -812,6 +819,7 @@ int main(int argc, char **argv)
     RUN_TEST(test_math_map);
     RUN_TEST(test_math_map3);
     RUN_TEST(test_math_deadband);
+    RUN_TEST(test_math_baro_altitude);
     RUN_TEST(test_math_peak_detect_full);
     RUN_TEST(test_math_peak_detect_partial);
     RUN_TEST(test_math_peak_sort);

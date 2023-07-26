@@ -763,7 +763,7 @@ class ModelConfig
       magFilter = FilterConfig(FILTER_BIQUAD, 10);
       yawFilter = FilterConfig(FILTER_PT1, 90);
       levelPtermFilter = FilterConfig(FILTER_PT1, 90);
-      baroFilter = FilterConfig(FILTER_BIQUAD, 15);
+      baroFilter = FilterConfig(FILTER_BIQUAD, 10);
 
       telemetry = 0;
       telemetryInterval = 1000;

@@ -76,6 +76,11 @@ public:
     return rad * (180.0f * invPi());
   }
 
+  float toAltitude(float pressure, float seaLevelPressure = 101325.f)
+  {
+    return 44330.f * (1.f - powf(pressure / seaLevelPressure, 0.1903));
+  }
+
   void peakDetect(float * samples, size_t begin_bin, size_t end_bin, float bin_width, Peak * peaks, size_t peak_count)
   {
     for(size_t b = begin_bin; b <= end_bin; b++)

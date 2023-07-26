@@ -24,6 +24,9 @@
 
 namespace {
 #if defined(ESPFC_SPI_0)
+#ifdef ESP32
+  static SPIClass SPI1(VSPI);
+#endif
   static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
 #endif
 #if defined(ESPFC_I2C_0)
@@ -82,8 +85,8 @@ class Hardware
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS0] != -1)
       {
-        pinMode(_model.config.pin[PIN_SPI_CS0], OUTPUT);
         digitalWrite(_model.config.pin[PIN_SPI_CS0], HIGH);
+        pinMode(_model.config.pin[PIN_SPI_CS0], OUTPUT);
         if(!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
         if(!detectedGyro && detectDevice(icm20602, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
         if(!detectedGyro && detectDevice(lsm6dso, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
@@ -93,8 +96,8 @@ class Hardware
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
         if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
-        if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
         if(!detectedGyro && detectDevice(icm20602, i2cBus)) detectedGyro = &icm20602;
+        if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
         if(!detectedGyro && detectDevice(lsm6dso, i2cBus)) detectedGyro = &lsm6dso;
       }
 #endif
@@ -141,8 +144,8 @@ class Hardware
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS1] != -1)
       {
-        pinMode(_model.config.pin[PIN_SPI_CS1], OUTPUT);
         digitalWrite(_model.config.pin[PIN_SPI_CS1], HIGH);
+        pinMode(_model.config.pin[PIN_SPI_CS1], OUTPUT);
         if(!detectedBaro && detectDevice(bmp280, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp280;
         if(!detectedBaro && detectDevice(bmp085, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
       }
