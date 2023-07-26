@@ -32,14 +32,13 @@ class BaroSensor: public BaseSensor
       int delay = _baro->getDelay();
       int toGyroRate = (delay / _model.state.gyroTimer.interval) + 1; // number of gyro readings per cycle
       int interval = _model.state.gyroTimer.interval * toGyroRate;
-      int rate = 1000000 / interval;
-      _model.state.baroRate = rate;
+      _model.state.baroRate = (1000000 / interval) / _baro->getDenom();
 
-      _temperatureFilter.begin(FilterConfig(FILTER_PT1, 5), (rate / 2) / _temp_denom);
-      _pressureFilter.begin(FilterConfig(FILTER_PT1, 5), (rate / 2));
-      _altitudeFilter.begin(_model.config.baroFilter, rate);
+      _temperatureFilter.begin(FilterConfig(FILTER_PT1, 5), _model.state.baroRate / _temp_denom);
+      _pressureFilter.begin(FilterConfig(FILTER_PT1, 5), _model.state.baroRate);
+      _altitudeFilter.begin(_model.config.baroFilter, _model.state.baroRate);
 
-      _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(toGyroRate).log(rate).logln(_model.config.baroFilter.freq);
+      _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(toGyroRate).log(_model.state.baroRate).logln(_model.config.baroFilter.freq);
 
       return 1;
     }
@@ -73,7 +72,6 @@ class BaroSensor: public BaseSensor
           return 0;
         case BARO_STATE_TEMP_GET:
           readTemperature();
-          updateAltitude();
           _baro->setMode(BARO_MODE_PRESS);
           _state = BARO_STATE_PRESS_GET;
           _wait = micros() + _baro->getDelay();
@@ -122,7 +120,7 @@ class BaroSensor: public BaseSensor
       if(_model.state.baroAltitudeBiasSamples > 0)
       {
         _model.state.baroAltitudeBiasSamples--;
-        _model.state.baroAltitudeBias += (_model.state.baroAltitudeRaw - _model.state.baroAltitudeBias) * 0.2f;
+        _model.state.baroAltitudeBias += (_model.state.baroAltitudeRaw - _model.state.baroAltitudeBias) * 0.25f;
       }
       _model.state.baroAltitude = _model.state.baroAltitudeRaw - _model.state.baroAltitudeBias;
 

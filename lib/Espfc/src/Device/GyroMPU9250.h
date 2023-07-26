@@ -8,6 +8,7 @@
 
 #define MPU9250_USER_CTRL         0x6A
 #define MPU9250_I2C_MST_EN        0x20
+#define MPU9250_I2C_IF_DIS        0x10
 #define MPU9250_I2C_MST_400       0x0D
 #define MPU9250_I2C_MST_500       0x09
 #define MPU9250_I2C_MST_CTRL      0x24
@@ -53,8 +54,15 @@ class GyroMPU9250: public GyroMPU6050
       setRate(9); // 1000 / (9+1) = 100hz
       delay(100);
 
-      // enable I2C master mode
-      _bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_EN);
+      // enable I2C master mode, and disable I2C if SPI
+      if(_bus->getType() == BUS_SPI)
+      {
+        _bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_EN | MPU9250_I2C_IF_DIS);
+      }
+      else
+      {
+        _bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_EN);
+      }
       //delay(100);
 
       // set the I2C bus speed to 400 kHz

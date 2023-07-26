@@ -22,10 +22,13 @@
 #define BMP280_PRESSURE_REG           0xF7
 #define BMP280_TEMPERATURE_REG        0xFA
 
-#define BMP280_OSPS_T_X1              (1 << 5)
-#define BMP280_OSPS_P_X1              (1 << 2)
 #define BMP280_FILTER_X2              (1 << 2)
 #define BMP280_MODE_NORMAL            0x03
+
+#define BMP280_SAMPLING_X1            1
+#define BMP280_SAMPLING_X2            2
+#define BMP280_SAMPLING_X4            3
+#define BMP280_SAMPLING_X8            4
 
 namespace Espfc {
 
@@ -66,30 +69,16 @@ class BaroBMP280: public BaroDevice
 
       if(!testConnection()) return 0;
 
-      readReg(BMP280_CALIB_REG, (uint8_t*)&_cal, sizeof(CalibrationData)); // read callibration
-      delay(2);
+      _bus->read(_addr, BMP280_CALIB_REG, sizeof(CalibrationData), (uint8_t*)&_cal); // read callibration
 
-      // FIXME: strange bug in ESP32 SPI that distorts some commands,
-      // call get status and then write command twice for sure.
-      readReg8(BMP280_STATUS_REG);
-      readReg8(BMP280_STATUS_REG);
-      writeReg(BMP280_RESET_REG, BMP280_RESET_VAL); // device reset
-      readReg8(BMP280_STATUS_REG);
       writeReg(BMP280_RESET_REG, BMP280_RESET_VAL); // device reset
       delay(2);
 
-      readReg8(BMP280_STATUS_REG);
-      readReg8(BMP280_STATUS_REG);
       writeReg(BMP280_CONFIG_REG, BMP280_FILTER_X2); // set minimal standby and IIR filter X2
-      readReg8(BMP280_STATUS_REG);
-      writeReg(BMP280_CONFIG_REG, BMP280_FILTER_X2); // set minimal standby and IIR filter X2
-      delay(2);
+      //writeReg(BMP280_CONFIG_REG, 0); // set minimal standby and IIR filter off
 
-      readReg8(BMP280_STATUS_REG);
-      readReg8(BMP280_STATUS_REG);
-      writeReg(BMP280_CONTROL_REG, BMP280_OSPS_T_X1 | BMP280_OSPS_P_X1 | BMP280_MODE_NORMAL); // set sampling mode
-      readReg8(BMP280_STATUS_REG);
-      writeReg(BMP280_CONTROL_REG, BMP280_OSPS_T_X1 | BMP280_OSPS_P_X1 | BMP280_MODE_NORMAL); // set sampling mode
+      writeReg(BMP280_CONTROL_REG, BMP280_SAMPLING_X1 << 5 | BMP280_SAMPLING_X4 << 2 | BMP280_MODE_NORMAL); // set sampling mode
+
       delay(20);
 
       return 1;
@@ -102,21 +91,23 @@ class BaroBMP280: public BaroDevice
 
     virtual float readTemperature() override
     {
-      int32_t adc_T = readReg(BMP280_TEMPERATURE_REG);
-      adc_T >>= 4;
-
-      int32_t var1 = ((((adc_T >> 3) - ((int32_t)_cal.dig_T1 << 1))) * ((int32_t)_cal.dig_T2)) >> 11;
-      int32_t var2 = (((((adc_T >> 4) - ((int32_t)_cal.dig_T1)) * ((adc_T >> 4) - ((int32_t)_cal.dig_T1))) >> 12) * ((int32_t)_cal.dig_T3)) >> 14;
-      //_t_fine = var1 + var2;
-      _t_fine += ((var1 + var2) - _t_fine + 4) >> 3; // smooth t_fine
-
       float T = (_t_fine * 5 + 128) >> 8;
       return T * 0.01f;
     }
 
     virtual float readPressure() override
     {
-      int32_t adc_P = readReg(BMP280_PRESSURE_REG);
+      readMesurment();
+
+      int32_t adc_T = _raw_temp;
+      adc_T >>= 4;
+
+      int32_t vart1 = ((((adc_T >> 3) - ((int32_t)_cal.dig_T1 << 1))) * ((int32_t)_cal.dig_T2)) >> 11;
+      int32_t vart2 = (((((adc_T >> 4) - ((int32_t)_cal.dig_T1)) * ((adc_T >> 4) - ((int32_t)_cal.dig_T1))) >> 12) * ((int32_t)_cal.dig_T3)) >> 14;
+      _t_fine = vart1 + vart2;
+      //_t_fine += ((var1 + var2) - _t_fine + 4) >> 3; // smooth t_fine
+
+      int32_t adc_P = _raw_pressure;
       adc_P >>= 4;
 
       int64_t var1 = ((int64_t)_t_fine) - 128000;
@@ -146,35 +137,31 @@ class BaroBMP280: public BaroDevice
 
     virtual int getDelay() const override
     {
-      return 5500;
-      //const int comp = 50;
-      //return 4500 + comp;        // temp
+      //return 5500 / 2;  // if sapling X1
+      //return 7500 / 2;  // if sampling X2
+      return 11500 / 2;  // if sampling X4
+    }
+
+    // notify BaroSensor to sample lower as delay is divided by 2
+    virtual int getDenom() const override
+    {
+      return 2;
     }
 
     bool testConnection() override
     {
-      uint8_t whoami = readReg8(BMP280_WHOAMI_REG);
+      uint8_t whoami = 0;
+      _bus->read(_addr, BMP280_WHOAMI_REG, 1, &whoami);
       return whoami == BMP280_WHOAMI_ID;
     }
 
   protected:
-    uint8_t readReg8(uint8_t reg)
+    void readMesurment()
     {
-      uint8_t buffer = 0;
-      _bus->read(_addr, reg, 1, &buffer);
-      return buffer;
-    }
-
-    int32_t readReg(uint8_t reg)
-    {
-      uint8_t buffer[3] = {0, 0, 0};
-      _bus->read(_addr, reg, 3, buffer);
-      return buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
-    }
-
-    int32_t readReg(uint8_t reg, uint8_t * buffer, uint8_t length)
-    {
-      return _bus->read(_addr, reg, length, buffer);
+      uint8_t buffer[6] = {0, 0, 0, 0, 0, 0};
+      _bus->readFast(_addr, BMP280_PRESSURE_REG, 6, buffer);
+      _raw_pressure = buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
+      _raw_temp = buffer[5] | (buffer[4] << 8) | (buffer[3] << 16);
     }
 
     int8_t writeReg(uint8_t reg, uint8_t val)
@@ -184,6 +171,8 @@ class BaroBMP280: public BaroDevice
 
     int8_t _mode;
     int32_t _t_fine;
+    int32_t _raw_temp;
+    int32_t _raw_pressure;
     CalibrationData _cal;
 };
 
