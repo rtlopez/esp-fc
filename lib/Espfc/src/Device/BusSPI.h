@@ -53,7 +53,7 @@ class BusSPI: public BusDevice
   private:
     void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *in, uint8_t *out, uint32_t speed)
     {
-      _dev.beginTransaction(SPISettings(speed, SPI_MSBFIRST, SPI_MODE0));
+      _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
       digitalWrite(devAddr, LOW);
 #if defined (ARCH_RP2040)
       _dev.transfer(regAddr);
