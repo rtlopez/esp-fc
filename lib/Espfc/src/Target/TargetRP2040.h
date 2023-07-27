@@ -134,7 +134,7 @@ inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss
 }
 
 template<typename T>
-inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, int speed)
+inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, uint32_t speed)
 {
   if(!dev.setSCL(scl)) return -1;
   if(!dev.setSDA(sda)) return -2;

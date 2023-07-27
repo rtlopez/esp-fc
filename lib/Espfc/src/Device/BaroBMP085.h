@@ -6,6 +6,7 @@
 #include "Debug_Espfc.h"
 
 #define BMP085_DEFAULT_ADDRESS 0x77
+#define BMP085_WHOAMI_ID       0x55
 
 #define BMP085_CALIB_REG       0xAA
 #define BMP085_WHOAMI_REG      0xD0
@@ -19,7 +20,6 @@
 #define BMP085_MEASURE_P2      0xB4                // pressure measurement oversampling x4
 #define BMP085_MEASURE_P3      0xF4                // pressure measurement oversampling x8
 
-#define BMP085_WHOAMI_ID       0x55
 
 namespace Espfc {
 
@@ -40,7 +40,7 @@ class BaroBMP085: public BaroDevice
       int16_t mb;
       int16_t mc;
       int16_t md;
-    };
+    } __attribute__ ((__packed__));
 
     int begin(BusDevice * bus) override
     {
@@ -77,8 +77,8 @@ class BaroBMP085: public BaroDevice
 
       int32_t x1 = ((ut - (int32_t)_cal.ac6) * (int32_t)_cal.ac5) >> 15;
       int32_t x2 = ((int32_t)_cal.mc << 11) / (x1 + _cal.md);
-      //_t_fine = x1 + x2;
-      _t_fine = (_t_fine + x1 + x2 + 1) >> 1; // avg of last two samples
+      _t_fine = x1 + x2;
+      //_t_fine = (_t_fine + x1 + x2 + 1) >> 1; // avg of last two samples
       return (float)((_t_fine + 8) >> 4) / 10.0f;
     }
 

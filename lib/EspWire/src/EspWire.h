@@ -50,7 +50,7 @@ class EspTwoWire : public Stream
     static void onReceiveService(uint8_t*, int);
   public:
     EspTwoWire();
-    void begin(int sda, int scl);
+    void begin(int sda, int scl, uint32_t frequency = 0);
     void pins(int sda, int scl) __attribute__((deprecated)); // use begin(sda, scl) in new code
     void begin();
     void begin(uint8_t);

@@ -54,10 +54,11 @@ EspTwoWire::EspTwoWire(){}
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-void EspTwoWire::begin(int sda, int scl){
+void EspTwoWire::begin(int sda, int scl, uint32_t frequency){
   default_sda_pin = sda;
   default_scl_pin = scl;
   esp_twi_init(sda, scl);
+  if(frequency) setClock(frequency);
   flush();
 }
 
