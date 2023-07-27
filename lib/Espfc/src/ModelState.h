@@ -273,7 +273,7 @@ struct ModelState
 
   bool airmodeAllowed;
 
-  int16_t debug[4];
+  int16_t debug[8];
 
   BuzzerState buzzer;
 

@@ -220,6 +220,11 @@ class Blackbox
       cp->anti_gravity_cutoff_hz = 100;
       cp->d_min_gain = 0;
       cp->d_min_advance = 0;
+      cp->angle_limit = _model.config.angleLimit;
+      cp->angle_earth_ref = 100;
+      cp->horizon_limit_degrees = 135;
+      cp->horizon_delay_ms = 500;
+      cp->thrustLinearization = 0;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
@@ -274,7 +279,7 @@ class Blackbox
         blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackboxPdenom);
       }
       blackboxConfigMutable()->device = _model.config.blackboxDev;
-      blackboxConfigMutable()->fields_disabled_mask = 0;
+      blackboxConfigMutable()->fields_disabled_mask = _model.config.blackboxFieldsDisabledMask;
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
@@ -325,6 +330,7 @@ class Blackbox
       for(size_t i = 0; i < 3; i++)
       {
         gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
+        gyro.gyroADC[i] = degrees(_model.state.gyroSampled[i]);
         pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
         pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
         pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;

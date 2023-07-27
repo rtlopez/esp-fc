@@ -634,6 +634,11 @@ typedef struct pidProfile_s {
     uint8_t d_min[XYZ_AXIS_COUNT];          // Minimum D value on each axis
     uint8_t d_min_gain;                     // Gain factor for amount of gyro / setpoint activity required to boost D
     uint8_t d_min_advance;                  // Percentage multiplier for setpoint input to boost algorithm
+    uint8_t angle_limit;                    // Max angle in degrees in Angle mode
+    uint8_t angle_earth_ref;                // Control amount of "co-ordination" from yaw into roll while pitched forward in angle mode
+    uint8_t horizon_limit_degrees;          // in Horizon mode, zero levelling when the quad's attitude exceeds this angle
+    uint16_t horizon_delay_ms;              // delay when Horizon Strength increases, 50 = 500ms time constant
+    uint8_t thrustLinearization;            // Compensation factor for pid linearization
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -750,6 +755,7 @@ typedef struct gyro_s {
     //uint32_t targetLooptime;
     uint32_t sampleLooptime;
     float gyroADCf[XYZ_AXIS_COUNT];
+    float gyroADC[XYZ_AXIS_COUNT];
 } gyro_t;
 extern gyro_t gyro;
 
