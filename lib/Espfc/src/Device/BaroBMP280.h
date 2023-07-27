@@ -135,17 +135,17 @@ class BaroBMP280: public BaroDevice
       (void)mode;
     }
 
-    virtual int getDelay() const override
+    virtual int getDelay(BaroDeviceMode mode) const override
     {
-      //return 5500 / 2;  // if sapling X1
-      //return 7500 / 2;  // if sampling X2
-      return 11500 / 2;  // if sampling X4
-    }
-
-    // notify BaroSensor to sample lower as delay is divided by 2
-    virtual int getDenom() const override
-    {
-      return 2;
+      switch(mode)
+      {
+        case BARO_MODE_TEMP:
+          return 0;
+        default:
+          //return 5500; // if sapling X1
+          //return 7500; // if sampling X2
+          return 11500;  // if sampling X4
+      }
     }
 
     bool testConnection() override
