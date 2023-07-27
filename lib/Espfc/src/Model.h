@@ -551,6 +551,7 @@ class Model
     void logStorageResult()
     {
 #ifndef UNIT_TEST
+      logger.info().log(F("F_CPU")).logln(F_CPU);
       switch(_storageResult)
       {
         case STORAGE_LOAD_SUCCESS:    logger.info().logln(F("EEPROM loaded")); break;

@@ -14,7 +14,7 @@ class BusI2C: public BusDevice
 
     BusType getType() const override { return BUS_I2C; }
 
-    int begin(int sda, int scl, int speed)
+    int begin(int sda, int scl, uint32_t speed)
     {
       if(sda == -1 || scl == -1) return 0;
 
