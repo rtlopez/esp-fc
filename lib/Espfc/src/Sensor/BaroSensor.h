@@ -19,7 +19,7 @@ class BaroSensor: public BaseSensor
       BARO_STATE_PRESS_GET,
     };
 
-    BaroSensor(Model& model): _model(model), _state(BARO_STATE_INIT), _counter(0), _temp_denom(1) {}
+    BaroSensor(Model& model): _model(model), _state(BARO_STATE_INIT), _counter(0) {}
 
     int begin()
     {
@@ -29,13 +29,15 @@ class BaroSensor: public BaseSensor
       if(!_baro) return 0;
 
       _baro->setMode(BARO_MODE_TEMP);
-      int delay = _baro->getDelay();
+      int delay = _baro->getDelay(BARO_MODE_TEMP) + _baro->getDelay(BARO_MODE_PRESS);
       int toGyroRate = (delay / _model.state.gyroTimer.interval) + 1; // number of gyro readings per cycle
       int interval = _model.state.gyroTimer.interval * toGyroRate;
-      _model.state.baroRate = (1000000 / interval) / _baro->getDenom();
+      _model.state.baroRate = 1000000 / interval;
 
-      _temperatureFilter.begin(FilterConfig(FILTER_PT1, 5), _model.state.baroRate / _temp_denom);
-      _pressureFilter.begin(FilterConfig(FILTER_PT1, 5), _model.state.baroRate);
+      _model.state.baroAltitudeBiasSamples = 2 * _model.state.baroRate;
+
+      _temperatureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baroRate * 0.1f), _model.state.baroRate);
+      _pressureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baroRate * 0.1f), _model.state.baroRate);
       _altitudeFilter.begin(_model.config.baroFilter, _model.state.baroRate);
 
       _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(toGyroRate).log(_model.state.baroRate).logln(_model.config.baroFilter.freq);
@@ -68,14 +70,14 @@ class BaroSensor: public BaseSensor
         case BARO_STATE_INIT:
           _baro->setMode(BARO_MODE_TEMP);
           _state = BARO_STATE_TEMP_GET;
-          _wait = micros() + _baro->getDelay();
+          _wait = micros() + _baro->getDelay(BARO_MODE_TEMP);
           return 0;
         case BARO_STATE_TEMP_GET:
           readTemperature();
           _baro->setMode(BARO_MODE_PRESS);
           _state = BARO_STATE_PRESS_GET;
-          _wait = micros() + _baro->getDelay();
-          _counter = _temp_denom;
+          _wait = micros() + _baro->getDelay(BARO_MODE_PRESS);
+          _counter = 1;
           return 1;
         case BARO_STATE_PRESS_GET:
           readPressure();
@@ -84,13 +86,14 @@ class BaroSensor: public BaseSensor
           {
             _baro->setMode(BARO_MODE_PRESS);
             _state = BARO_STATE_PRESS_GET;
+            _wait = micros() + _baro->getDelay(BARO_MODE_PRESS);
           }
           else
           {
             _baro->setMode(BARO_MODE_TEMP);
             _state = BARO_STATE_TEMP_GET;
+            _wait = micros() + _baro->getDelay(BARO_MODE_TEMP);
           }
-          _wait = micros() + _baro->getDelay();
           return 1;
           break;
         default:
@@ -120,7 +123,7 @@ class BaroSensor: public BaseSensor
       if(_model.state.baroAltitudeBiasSamples > 0)
       {
         _model.state.baroAltitudeBiasSamples--;
-        _model.state.baroAltitudeBias += (_model.state.baroAltitudeRaw - _model.state.baroAltitudeBias) * 0.25f;
+        _model.state.baroAltitudeBias += (_model.state.baroAltitudeRaw - _model.state.baroAltitudeBias) * 0.2f;
       }
       _model.state.baroAltitude = _model.state.baroAltitudeRaw - _model.state.baroAltitudeBias;
 
@@ -140,7 +143,6 @@ class BaroSensor: public BaseSensor
     Filter _altitudeFilter;
     uint32_t _wait;
     int32_t _counter;
-    int32_t _temp_denom;
 };
 
 }

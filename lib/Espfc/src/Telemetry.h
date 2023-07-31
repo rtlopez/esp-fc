@@ -16,36 +16,6 @@ class Telemetry
     {
       Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
 
-      /*
-      _value = _value + (_up ? 1 : -1);
-
-      if (_up && _value >= 1811) _up = false;
-      if (!_up && _value <= 172) _up = true;
-
-      Rc::CrsfFrame frame;
-      Rc::CrsfData data;
-      data.chan0 = _value;
-      data.chan1 = _value;
-      data.chan2 = _value;
-      data.chan3 = _value;
-      data.chan4 = _value;
-      data.chan5 = _value;
-      data.chan6 = _value;
-      data.chan7 = _value;
-      data.chan8 = _value;
-      data.chan9 = _value;
-      data.chan10 = _value;
-      data.chan11 = _value;
-      data.chan12 = _value;
-      data.chan13 = _value;
-      data.chan14 = _value;
-      data.chan15 = _value;
-
-      Rc::Crsf::encodeRcData(frame, data);
-
-      size_t size = frame.message.size + 2;
-      s.write(frame.data, size);
-      */
       //print(s, _model.state.gyro.x, 3);
       //println(s);
 
