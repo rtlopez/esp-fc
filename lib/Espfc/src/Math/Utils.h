@@ -51,6 +51,17 @@ public:
     return value;
   }
 
+  int alignToClock(uint32_t clock, uint32_t maxFreq)
+  {
+    uint32_t result = clock;
+    uint32_t div = 1;
+    while(result > maxFreq)
+    {
+      result = clock / ++div;
+    }
+    return result;
+  }
+
   constexpr float pi()
   {
     return 3.14159265358979f;
