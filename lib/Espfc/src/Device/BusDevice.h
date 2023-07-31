@@ -31,6 +31,11 @@ class BusDevice
 
     virtual bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) = 0;
 
+    bool isSPI() const
+    {
+      return getType() == BUS_SPI;
+    }
+
     void setTimeout(uint32_t t)
     {
       _timeout = t;

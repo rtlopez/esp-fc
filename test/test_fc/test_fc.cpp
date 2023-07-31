@@ -110,11 +110,11 @@ void test_model_gyro_init_1k_256dlpf()
   model.begin();
 
   TEST_ASSERT_EQUAL_INT32(8000, model.state.gyroClock);
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroRate);
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroTimer.rate);
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.loopRate);
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.loopTimer.rate);
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.mixerTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.gyroRate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.gyroTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.loopRate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.loopTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.mixerTimer.rate);
 }
 
 void test_model_gyro_init_1k_188dlpf()
@@ -177,13 +177,13 @@ void test_model_outer_pid_init()
   model.config.pid[PID_LEVEL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.begin();
 
-  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.outerPid[PID_ROLL].rate);
+  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 2000.0f, model.state.outerPid[PID_ROLL].rate);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_ROLL].Kp);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_ROLL].Ki);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[PID_ROLL].Kd);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[PID_ROLL].Kf);
 
-  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.outerPid[PID_PITCH].rate);
+  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 2000.0f, model.state.outerPid[PID_PITCH].rate);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_PITCH].Kp);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_PITCH].Ki);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[PID_PITCH].Kd);

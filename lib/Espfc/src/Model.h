@@ -265,16 +265,18 @@ class Model
 
     void sanitize()
     {
-      state.gyroRate = 1000;
-      int loopSyncMax = 1;
-      if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) loopSyncMax /= 2;
-
       // for spi gyro allow full speed mode
-      if (state.gyroDev && state.gyroDev->getBus()->getType() == BUS_SPI)
+      if (state.gyroDev && state.gyroDev->getBus()->isSPI())
       {
-        loopSyncMax = ESPFC_GYRO_DENOM_MAX; // max 8kHz
-        state.gyroRate = state.gyroClock;
+        state.gyroRate = Math::alignToClock(state.gyroClock, ESPFC_GYRO_SPI_RATE_MAX);
       }
+      else
+      {
+        state.gyroRate = Math::alignToClock(state.gyroClock, ESPFC_GYRO_I2C_RATE_MAX);
+      }
+
+      int loopSyncMax = 1;
+      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) loopSyncMax /= 2;
 
       config.loopSync = std::max((int)config.loopSync, loopSyncMax);
       state.loopRate = state.gyroRate / config.loopSync;

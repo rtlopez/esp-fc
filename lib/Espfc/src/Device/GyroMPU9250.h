@@ -55,7 +55,7 @@ class GyroMPU9250: public GyroMPU6050
       delay(100);
 
       // enable I2C master mode, and disable I2C if SPI
-      if(_bus->getType() == BUS_SPI)
+      if(_bus->isSPI())
       {
         _bus->writeByte(_addr, MPU9250_USER_CTRL, MPU9250_I2C_MST_EN | MPU9250_I2C_IF_DIS);
       }
