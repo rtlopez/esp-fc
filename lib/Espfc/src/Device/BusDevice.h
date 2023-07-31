@@ -21,17 +21,24 @@ namespace Device {
 class BusDevice
 {
   public:
+    BusDevice(): _timeout(ESPFC_BUS_TIMEOUT) {}
+
     virtual BusType getType() const = 0;
 
-    virtual int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) = 0;
+    virtual int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) = 0;
 
-    virtual int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) = 0;
+    virtual int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) = 0;
 
-    virtual bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) = 0;
+    virtual bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) = 0;
 
-    int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT)
+    void setTimeout(uint32_t t)
     {
-      return read(devAddr, regAddr, 1, data, timeout);
+      _timeout = t;
+    }
+
+    int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data)
+    {
+      return read(devAddr, regAddr, 1, data);
     }
 
     bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data)
@@ -39,18 +46,18 @@ class BusDevice
       return write(devAddr, regAddr, 1, &data);
     }
 
-    int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT)
+    int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data)
     {
       uint8_t b;
-      uint8_t count = readByte(devAddr, regAddr, &b, timeout);
+      uint8_t count = readByte(devAddr, regAddr, &b);
       *data = b & (1 << bitNum);
       return count;
     }
 
-    int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT)
+    int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data)
     {
       uint8_t count, b;
-      if ((count = readByte(devAddr, regAddr, &b, timeout)) != 0)
+      if ((count = readByte(devAddr, regAddr, &b)) != 0)
       {
         uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
         b &= mask;
@@ -111,6 +118,9 @@ class BusDevice
     }
 
     std::function<void(void)> onError;
+
+  protected:
+    uint32_t _timeout;
 };
 
 }

@@ -29,21 +29,21 @@ class BusSPI: public BusDevice
       return 1;
     }
 
-    int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override
+    int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override
     {
       //D("spi:r", regAddr, length);
       transfer(devAddr, regAddr | SPI_READ, length, NULL, data, SPI_SPEED_NORMAL);
       return length;
     }
 
-    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override
+    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override
     {
       //D("spi:r", regAddr, length);
       transfer(devAddr, regAddr | SPI_READ, length, NULL, data, SPI_SPEED_FAST);
       return length;
     }
 
-    bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) override
+    bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) override
     {
       //D("spi:w", regAddr, length, *data);
       transfer(devAddr, regAddr & SPI_WRITE, length, data, NULL, SPI_SPEED_NORMAL);
@@ -51,7 +51,7 @@ class BusSPI: public BusDevice
     }
 
   private:
-    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *in, uint8_t *out, uint32_t speed)
+    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed)
     {
       _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
       digitalWrite(devAddr, LOW);
