@@ -76,11 +76,24 @@ class Mixer
 
     int update()
     {
+      uint32_t startTime = micros();
+
       float outputs[OUTPUT_CHANNELS];
       const MixerConfig& mixer = _model.state.currentMixer;
 
       updateMixer(mixer, outputs);
       writeOutput(mixer, outputs);
+
+      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      {
+        _model.state.debug[3] = micros() - startTime;
+      }
+
+      if(_model.config.debugMode == DEBUG_CYCLETIME)
+      {
+        _model.state.debug[0] = _model.state.stats.loopTime();
+        _model.state.debug[1] = lrintf(_model.state.stats.getCpuLoad());
+      }
 
       return 1;
     }

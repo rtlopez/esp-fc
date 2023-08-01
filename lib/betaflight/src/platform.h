@@ -69,7 +69,7 @@ extern const char * boardIdentifier;
 #define CONCAT3(_1,_2,_3)  CONCAT(CONCAT(_1, _2), _3)
 #define CONCAT4(_1,_2,_3,_4)  CONCAT(CONCAT3(_1, _2, _3), _4)
 #define XYZ_AXIS_COUNT 3
-#define DEBUG16_VALUE_COUNT 4
+#define DEBUG16_VALUE_COUNT 8
 #define DEBUG_SET(mode, index, value) {if (debugMode == (mode)) {debug[(index)] = (value);}}
 
 #define LOG2_8BIT(v)  (8 - 90/(((v)/4+14)|1) - 2/((v)/2+1))

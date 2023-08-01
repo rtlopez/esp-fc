@@ -103,6 +103,7 @@ class GyroSensor: public BaseSensor
 
       calibrate();
 
+      _model.state.gyroScaled = _model.state.gyro;
 
       // filtering
       for(size_t i = 0; i < 3; ++i)
@@ -113,7 +114,7 @@ class GyroSensor: public BaseSensor
         }
         if(_model.config.debugMode == DEBUG_GYRO_SCALED)
         {
-          _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
+          _model.state.debug[i] = lrintf(degrees(_model.state.gyroScaled[i]));
         }
         if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {

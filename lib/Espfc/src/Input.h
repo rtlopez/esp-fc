@@ -100,11 +100,19 @@ class Input
     {
       if(!_device) return 0;
 
+      uint32_t startTime = micros();
+
       InputStatus status = readInputs();
 
-      if(failsafe(status)) return 1;
+      if(!failsafe(status))
+      {
+        filterInputs(status);
+      }
 
-      filterInputs(status);
+      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      {
+        _model.state.debug[1] = micros() - startTime;
+      }
 
       return 1;
     }
