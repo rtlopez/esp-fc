@@ -189,7 +189,7 @@ class GyroSensor: public BaseSensor
                 _model.state.debug[0] = lrintf(_fft[i].peaks[0].freq);
                 _model.state.debug[1] = lrintf(_fft[i].peaks[1].freq);
                 _model.state.debug[2] = lrintf(_fft[i].peaks[2].freq);
-                _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+                _model.state.debug[3] = lrintf(_fft[i].peaks[3].freq);
               }
             }
             if(dynamicFilterEnabled && dynamicFilterUpdate)
@@ -216,7 +216,7 @@ class GyroSensor: public BaseSensor
             if(dynamicFilterDebug)
             {
               _model.state.debug[i] = lrintf(freq);
-              if(i == _model.config.debugAxis) _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
+              if(i == _model.config.debugAxis) _model.state.debug[3] = lrintf(degrees(_model.state.gyroDynNotch[i]));
             }
             if(dynamicFilterEnabled && dynamicFilterUpdate)
             {

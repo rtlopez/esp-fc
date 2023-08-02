@@ -266,7 +266,7 @@ class Blackbox
       if(_model.magActive()) enabledSensors |= SENSOR_MAG;
       if(_model.baroActive()) enabledSensors |= SENSOR_BARO;
 
-      gyro.sampleLooptime = 125; //_model.state.gyroTimer.interval;
+      gyro.sampleLooptime = _model.state.gyroTimer.interval;
       targetPidLooptime = _model.state.loopTimer.interval;
       activePidLoopDenom = _model.config.loopSync;
 
