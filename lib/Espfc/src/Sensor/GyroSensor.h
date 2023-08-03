@@ -49,7 +49,7 @@ class GyroSensor: public BaseSensor
 #ifdef ESPFC_DSP
       for(size_t i = 0; i < 3; i++)
       {
-        _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.dynamicFilter);
+        _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.dynamicFilter, i);
       }
 #endif
 
@@ -166,7 +166,7 @@ class GyroSensor: public BaseSensor
     {
       bool dynamicFilterEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
       bool dynamicFilterFeed = _model.state.loopTimer.iteration % _dyn_notch_denom == 0;
-      bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ;
+      bool dynamicFilterDebug = _model.config.debugMode == DEBUG_FFT_FREQ || _model.config.debugMode == DEBUG_FFT_TIME;
       bool dynamicFilterUpdate = dynamicFilterEnabled && _model.state.dynamicFilterTimer.check();
       const float q = _model.config.dynamicFilter.q * 0.01;
 
@@ -180,11 +180,17 @@ class GyroSensor: public BaseSensor
           const size_t peakCount = _model.config.dynamicFilter.width;
           if(dynamicFilterFeed)
           {
+            uint32_t startTime = micros();
             int status = _fft[i].update(_model.state.gyroDynNotch[i]);
+            if(_model.config.debugMode == DEBUG_FFT_TIME)
+            {
+              if(i == 0) _model.state.debug[0] = status;
+              _model.state.debug[i + 1] = micros() - startTime;
+            }
             dynamicFilterUpdate = dynamicFilterEnabled && status;
             if(dynamicFilterDebug)
             {
-              if(i == _model.config.debugAxis)
+              if(_model.config.debugMode == DEBUG_FFT_FREQ && i == _model.config.debugAxis)
               {
                 _model.state.debug[0] = lrintf(_fft[i].peaks[0].freq);
                 _model.state.debug[1] = lrintf(_fft[i].peaks[1].freq);
