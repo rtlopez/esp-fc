@@ -31,11 +31,13 @@ Software:
 * [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
 
 ## Flashing
-1. Download and unzip selected firmware from [Releases page](https://github.com/rtlopez/esp-fc/releases)
-2. Visit [ESP Tool website](https://espressif.github.io/esptool-js/)
-3. Connect to your device
-4. Add file and set address to `0x00`
-5. Click upload
+1. Download and unzip selected firmware from [Releases Page](https://github.com/rtlopez/esp-fc/releases)
+2. Visit [ESP Tool Website](https://espressif.github.io/esptool-js/)
+3. Click "Connect" and choose device port in dialog
+4. Add firmware file and set Flash Address to `0x00`
+5. Click "Program"
+
+![ESP-FC Flashing](/docs/images/esptool-js-flash-connect.png)
 
 ## Configuration
 After flashing you need to configure few things first:
@@ -44,7 +46,8 @@ After flashing you need to configure few things first:
  3. Test motors without propellers
  4. Have fun ;)
 
-The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported.
+> [!NOTE]
+> Not all functions displayed in configurator are avalable in firmware. The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported. It usually rolls back to previous value after save.
 
 ## Wiring diagrams
 
