@@ -139,6 +139,7 @@ struct ModelState
 
   VectorInt16 gyroRaw;
   VectorFloat gyroSampled;
+  VectorFloat gyroScaled;
   VectorFloat gyroDynNotch;
   VectorFloat gyroImu;
 

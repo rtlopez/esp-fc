@@ -100,11 +100,19 @@ class Input
     {
       if(!_device) return 0;
 
+      uint32_t startTime = micros();
+
       InputStatus status = readInputs();
 
-      if(failsafe(status)) return 1;
+      if(!failsafe(status))
+      {
+        filterInputs(status);
+      }
 
-      filterInputs(status);
+      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      {
+        _model.state.debug[1] = micros() - startTime;
+      }
 
       return 1;
     }
@@ -112,8 +120,14 @@ class Input
     InputStatus readInputs()
     {
       Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
+      uint32_t startTime = micros();
 
       InputStatus status = _device->update();
+
+      if(_model.config.debugMode == DEBUG_RX_TIMING)
+      {
+        _model.state.debug[0] = micros() - startTime;
+      }
 
       if(status == INPUT_IDLE) return status;
 
@@ -139,6 +153,8 @@ class Input
     void processInputs()
     {
       if(_model.state.inputFrameCount < 5) return; // ignore few first frames that might be garbage
+
+      uint32_t startTime = micros();
 
       uint16_t channels[INPUT_CHANNELS];
       _device->get(channels, _model.state.inputChannelCount);
@@ -178,6 +194,11 @@ class Input
         // update input buffer
         _model.state.inputBufferPrevious[c] = _model.state.inputBuffer[c];
         _model.state.inputBuffer[c] = v;
+      }
+
+      if(_model.config.debugMode == DEBUG_RX_TIMING)
+      {
+        _model.state.debug[2] = micros() - startTime;
       }
     }
 
@@ -251,6 +272,7 @@ class Input
     void filterInputs(InputStatus status)
     {
       Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
+      uint32_t startTime = micros();
 
       const bool newFrame = status != INPUT_IDLE;
       const bool interpolation = _model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF && _model.config.input.filterType == INPUT_INTERPOLATION;
@@ -276,6 +298,11 @@ class Input
         }
         setInput((Axis)c, v, newFrame);
       }
+
+      if(_model.config.debugMode == DEBUG_RX_TIMING)
+      {
+        _model.state.debug[3] = micros() - startTime;
+      }
     }
 
     void updateFrameRate()
@@ -295,7 +322,8 @@ class Input
 
       if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
       {
-        _model.state.debug[0] = _model.state.inputFrameRate;
+        _model.state.debug[0] = _model.state.inputFrameDelta / 10;
+        _model.state.debug[1] = _model.state.inputFrameRate;
       }
 
       // auto cutoff input freq
@@ -305,8 +333,8 @@ class Input
         _model.state.inputAutoFreq += 0.25f * (freq - _model.state.inputAutoFreq);
         if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
         {
-          _model.state.debug[1] = lrintf(freq);
-          _model.state.debug[2] = lrintf(_model.state.inputAutoFreq);
+          _model.state.debug[2] = lrintf(freq);
+          _model.state.debug[3] = lrintf(_model.state.inputAutoFreq);
         }
         FilterConfig conf((FilterType)_model.config.input.filter.type, _model.state.inputAutoFreq);
         FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, _model.state.inputAutoFreq);
@@ -321,6 +349,11 @@ class Input
             _model.state.innerPid[i].ftermFilter.reconfigure(confDerivative, _model.state.loopTimer.rate);
           }
         }
+      }
+
+      if(_model.config.debugMode == DEBUG_RX_TIMING)
+      {
+        _model.state.debug[1] = micros() - now;
       }
     }
 

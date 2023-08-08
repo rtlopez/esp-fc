@@ -266,7 +266,7 @@ class Blackbox
       if(_model.magActive()) enabledSensors |= SENSOR_MAG;
       if(_model.baroActive()) enabledSensors |= SENSOR_BARO;
 
-      gyro.sampleLooptime = 125; //_model.state.gyroTimer.interval;
+      gyro.sampleLooptime = _model.state.gyroTimer.interval;
       targetPidLooptime = _model.state.loopTimer.interval;
       activePidLoopDenom = _model.config.loopSync;
 
@@ -316,11 +316,19 @@ class Blackbox
       if(!_model.blackboxEnabled()) return 0;
       if(!blackboxSerial) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
+
+      uint32_t startTime = micros();
       updateArmed();
       updateMode();
       updateData();
       blackboxUpdate(_model.state.loopTimer.last);
       _buffer.flush();
+
+      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      {
+        _model.state.debug[5] = micros() - startTime;
+      }
+
       return 1;
     }
 
@@ -330,7 +338,7 @@ class Blackbox
       for(size_t i = 0; i < 3; i++)
       {
         gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
-        gyro.gyroADC[i] = degrees(_model.state.gyroSampled[i]);
+        gyro.gyroADC[i] = degrees(_model.state.gyroScaled[i]);
         pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
         pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
         pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
@@ -350,10 +358,15 @@ class Blackbox
       for(size_t i = 0; i < 4; i++)
       {
         motor[i] = Math::clamp(_model.state.outputUs[i], (int16_t)1000, (int16_t)2000);
-        if(_model.state.digitalOutput) {
+        if(_model.state.digitalOutput)
+        {
           motor[i] = PWM_TO_DSHOT(motor[i]);
         }
-        if(_model.config.debugMode != DEBUG_NONE && _model.config.debugMode != DEBUG_BLACKBOX_OUTPUT) {
+      }
+      if(_model.config.debugMode != DEBUG_NONE && _model.config.debugMode != DEBUG_BLACKBOX_OUTPUT)
+      {
+        for(size_t i = 0; i < 8; i++)
+        {
           debug[i] = _model.state.debug[i];
         }
       }

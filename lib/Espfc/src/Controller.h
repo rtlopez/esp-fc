@@ -42,6 +42,13 @@ class Controller
 
     int update()
     {
+      uint32_t startTime = 0;
+      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      {
+        startTime = micros();
+        _model.state.debug[0] = startTime - _model.state.loopTimer.last;
+      }
+
       {
         Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
         resetIterm();
@@ -65,6 +72,11 @@ class Controller
         {
           innerLoop();
         }
+      }
+
+      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      {
+        _model.state.debug[2] = micros() - startTime;
       }
 
       return 1;
