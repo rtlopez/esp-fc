@@ -80,7 +80,8 @@ class Stats
     {
       uint32_t now = micros();
       uint32_t diff = now - _loop_last;
-      _loop_time += (((int32_t)diff - _loop_time + 8) >> 4);
+      _loop_time = diff;
+      //_loop_time += (((int32_t)diff - _loop_time + 8) >> 4);
       _loop_last = now;
     }
 

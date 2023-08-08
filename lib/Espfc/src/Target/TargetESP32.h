@@ -63,7 +63,7 @@
 #define ESPFC_I2C_0
 #define ESPFC_I2C_0_SCL 22
 #define ESPFC_I2C_0_SDA 21
-//#define ESPFC_I2C_0_SOFT
+#define ESPFC_I2C_0_SOFT
 
 #define ESPFC_BUZZER
 #define ESPFC_BUZZER_PIN 0
@@ -77,7 +77,10 @@
 #define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL | FEATURE_DYNAMIC_FILTER)
 
 #define ESPFC_GUARD 0
-#define ESPFC_GYRO_DENOM_MAX 1
+
+#define ESPFC_GYRO_I2C_RATE_MAX 2000
+#define ESPFC_GYRO_SPI_RATE_MAX 8000
+
 //#define ESPFC_LOGGER_FS // doesn't compile on ESP32
 
 #define ESPFC_FREE_RTOS
@@ -146,6 +149,7 @@ template<typename T>
 inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, uint32_t speed)
 {
   dev.begin(sda, scl, speed);
+  dev.setTimeout(50);
   return 1;
 }
 

@@ -19,15 +19,16 @@ class BusI2C: public BusDevice
       if(sda == -1 || scl == -1) return 0;
 
       targetI2CInit(_dev, sda, scl, speed);
+
       return 1;
     }
 
-    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override
+    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override
     {
-      return read(devAddr, regAddr, length, data, timeout);
+      return read(devAddr, regAddr, length, data);
     }
 
-    int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout = ESPFC_BUS_TIMEOUT) override
+    int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override
     {
       int8_t count = 0;
       uint32_t t1 = millis();
@@ -39,21 +40,21 @@ class BusI2C: public BusDevice
       _dev.endTransmission();
       _dev.requestFrom(devAddr, length);
 
-      for (; _dev.available() && (timeout == 0 || millis() - t1 < timeout); count++)
+      for (; _dev.available() && (_timeout == 0 || millis() - t1 < _timeout); count++)
       {
         data[count] = _dev.read();
         //D("i2c:r1", count, data[count]);
       }
 
       //D("i2c:r3", length, count);
-      if (timeout > 0 && millis() - t1 >= timeout && count < length) count = -1; // timeout
+      if (_timeout > 0 && millis() - t1 >= _timeout && count < length) count = -1; // timeout
 
       if(onError && count != length) onError();
 
       return count;
     }
 
-    bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) override
+    bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) override
     {
       //Serial.print("I2C W "); Serial.print(devAddr, HEX); Serial.print(' '); Serial.print(regAddr, HEX); Serial.print(' '); Serial.println(length);
 

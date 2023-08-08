@@ -1092,7 +1092,7 @@ class MspProcessor
           r.writeU8(_model.config.angleLimit); // levelAngleLimit;
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); // itermThrottleThreshold;
-          r.writeU16(0); // itermAcceleratorGain; anti_gravity_gain
+          r.writeU16(1000); // itermAcceleratorGain; anti_gravity_gain, 0 in 1.45+
           r.writeU16(_model.config.dtermSetpointWeight);
           r.writeU8(0); // iterm rotation
           r.writeU8(0); // smart feed forward
@@ -1140,8 +1140,8 @@ class MspProcessor
               m.readU8(); // was pidProfile.levelSensitivity
           }
           if (m.remain() >= 4) {
-              m.readU16();
-              m.readU16();
+              m.readU16(); // itermThrottleThreshold;
+              m.readU16(); // itermAcceleratorGain; anti_gravity_gain
           }
           if (m.remain() >= 2) {
             _model.config.dtermSetpointWeight = m.readU16();

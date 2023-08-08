@@ -79,7 +79,7 @@ class BaroBMP085: public BaroDevice
       int32_t x2 = ((int32_t)_cal.mc << 11) / (x1 + _cal.md);
       _t_fine = x1 + x2;
       //_t_fine = (_t_fine + x1 + x2 + 1) >> 1; // avg of last two samples
-      return (float)((_t_fine + 8) >> 4) / 10.0f;
+      return (float)((_t_fine + 8) >> 4) * 0.1f;
     }
 
     virtual float readPressure() override
@@ -87,12 +87,13 @@ class BaroBMP085: public BaroDevice
       uint8_t buffer[3];
       _bus->read(_addr, BMP085_MEASUREMENT_REG, 3, buffer);
 
+      uint8_t oss = (_mode & 0xC0) >> 6;
+
       uint32_t up = ((uint32_t)buffer[0] << 16) + ((uint16_t)buffer[1] << 8) + buffer[2];
-      if(_mode & 0x34) up = up >> (8 - ((_mode & 0xC0) >> 6));
+      if(_mode & 0x34) up = up >> (8 - oss);
 
       if(up == 0) return NAN;
 
-      uint8_t oss = (_mode & 0xC0) >> 6;
       int32_t b6 = _t_fine - 4000;
       int32_t x1 = ((int32_t)_cal.b2 * ((b6 * b6) >> 12)) >> 11;
       int32_t x2 = ((int32_t)_cal.ac2 * b6) >> 11;
@@ -118,24 +119,22 @@ class BaroBMP085: public BaroDevice
 
     void setMode(BaroDeviceMode mode)
     {
-      _mode = mode == BARO_MODE_TEMP ? BMP085_MEASURE_T : BMP085_MEASURE_P0;
+      _mode = mode == BARO_MODE_TEMP ? BMP085_MEASURE_T : BMP085_MEASURE_P2;
       _bus->writeByte(_addr, BMP085_CONTROL_REG, _mode);
     }
 
-    virtual int getDelay() const override
+    virtual int getDelay(BaroDeviceMode mode) const override
     {
-      const int comp = 50;
-      if(_mode == BMP085_MEASURE_T) return 4500 + comp;        // temp
-      else if(_mode == BMP085_MEASURE_P0) return 4500 + comp;  // press_0
-      else if(_mode == BMP085_MEASURE_P1) return 7500 + comp;  // press_1
-      else if(_mode == BMP085_MEASURE_P2) return 13500 + comp; // press_2
-      else if(_mode == BMP085_MEASURE_P3) return 25500 + comp; // press_3
-      else return 4500 + 50; // invalid mode
-    }
-
-    virtual int getDenom() const override
-    {
-      return 1;
+      switch(mode)
+      {
+        case BARO_MODE_TEMP:
+          return 4550;        // temp
+        default:
+          //return 4550;  // press_0
+          //return 7550;  // press_1
+          return 13550; // press_2
+          //return 25550; // press_3
+      }
     }
 
     bool testConnection() override

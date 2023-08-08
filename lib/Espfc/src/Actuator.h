@@ -20,6 +20,7 @@ class Actuator
 
     int update()
     {
+      uint32_t startTime = micros();
       Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
       updateArmingDisabled();
       updateModeMask();
@@ -28,6 +29,12 @@ class Actuator
       updateScaler();
       updateBuzzer();
       updateDynLpf();
+
+      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      {
+        _model.state.debug[4] = micros() - startTime;
+      }
+
       return 1;
     }
 

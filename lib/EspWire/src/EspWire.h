@@ -29,7 +29,7 @@
 #include <Stream.h>
 #endif
 
-#define ESPWIRE_BUFFER_LENGTH 32
+#define ESPWIRE_BUFFER_LENGTH 64
 
 class EspTwoWire : public Stream
 {

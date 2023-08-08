@@ -139,6 +139,7 @@ struct ModelState
 
   VectorInt16 gyroRaw;
   VectorFloat gyroSampled;
+  VectorFloat gyroScaled;
   VectorFloat gyroDynNotch;
   VectorFloat gyroImu;
 
@@ -261,7 +262,6 @@ struct ModelState
   VectorFloat magCalibrationScale;
   VectorFloat magCalibrationOffset;
   
-  bool telemetry;
   Timer telemetryTimer;
 
   Stats stats;
@@ -273,7 +273,7 @@ struct ModelState
 
   bool airmodeAllowed;
 
-  int16_t debug[4];
+  int16_t debug[8];
 
   BuzzerState buzzer;
 

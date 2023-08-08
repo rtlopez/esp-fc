@@ -37,7 +37,8 @@ static uint32_t esp_twi_clockStretchLimit;
   #define SCL_HIGH()  (GPEC = (1 << esp_twi_scl))
   #define SCL_READ()  ((GPI & (1 << esp_twi_scl)) != 0)
 #elif defined(ESP32)
-  #define SDA_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+  //#define SDA_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+  static inline void SDA_LOW() { GPIO.enable_w1ts = 1 << esp_twi_sda; GPIO.out_w1tc = 1 << esp_twi_sda; }
   #define SDA_HIGH()  (GPIO.enable_w1tc = (1 << esp_twi_sda)) //Disable SDA (becomes input and since it has pullup it will go high)
   #define SDA_READ()  ((GPIO.in & (1 << esp_twi_sda)) != 0)
   #define SCL_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_scl))
@@ -97,10 +98,9 @@ void esp_twi_setClock(unsigned int freq){
   else if(freq < 400000) esp_twi_dcount = 1;//about 400KHz
   else esp_twi_dcount = 0;//about 400KHz
 #elif F_CPU == FCPU240
-  if(freq <= 60000) esp_twi_dcount = 280;      //about  50kHz
-  else if(freq <  80000) esp_twi_dcount = 180; //about  80kHz
-  else if(freq < 100000) esp_twi_dcount = 140; //about 100kHz
-  else if(freq < 150000) esp_twi_dcount = 90;  //about 150kHz
+  if(freq < 50000) esp_twi_dcount = 300;      //about  50kHz
+  else if(freq < 100000) esp_twi_dcount = 190; //about 100kHz
+  else if(freq < 150000) esp_twi_dcount = 133; //about 150kHz
   else if(freq < 200000) esp_twi_dcount = 65;  //about 200kHz
   else if(freq < 250000) esp_twi_dcount = 50;  //about 250kHz
   else if(freq < 300000) esp_twi_dcount = 39;  //about 300kHz
@@ -110,8 +110,8 @@ void esp_twi_setClock(unsigned int freq){
   else if(freq < 700000) esp_twi_dcount = 11;  //about 700kHz
   else if(freq < 800000) esp_twi_dcount = 8;   //about 800kHz
   else if(freq < 900000) esp_twi_dcount = 7;   //about 900kHz
-  else if(freq < 1000000) esp_twi_dcount = 4;  //about 1.0MHz
-  else if(freq < 1100000) esp_twi_dcount = 3;  //about 1.1MHz
+  else if(freq < 1000000) esp_twi_dcount = 5;  //about 1.0MHz
+  else if(freq < 1100000) esp_twi_dcount = 4;  //about 1.1MHz
   else if(freq < 1200000) esp_twi_dcount = 2;  //about 1.2MHz
   else esp_twi_dcount = 1;                     //above 1.2MHz
 #elif F_CPU == FCPU133 // 133 mhz

@@ -59,10 +59,10 @@ class Espfc
     int update()
     {
 #if defined(ESPFC_MULTI_CORE)
-      if(!_model.state.appQueue.isEmpty())
+      /*if(!_model.state.appQueue.isEmpty())
       {
         return 0;
-      }
+      }*/
 
       if(!_model.state.gyroTimer.check())
       {
@@ -82,7 +82,7 @@ class Espfc
         _buzzer.update();
         _model.state.stats.update();
       }
-      _model.state.appQueue.send(Event(EVENT_IDLE));
+      //_model.state.appQueue.send(Event(EVENT_IDLE));
 
       return 1;
 #else
