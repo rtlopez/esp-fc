@@ -39,15 +39,17 @@ Software:
 
 ## Configuration
 After flashing you need to configure few things first:
- 1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](https://github.com/rtlopez/esp-fc/blob/master/docs/cli.md)
+ 1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](/docs/cli.md)
  2. Connect to [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) and setup to your preferences,
  3. Test motors without propellers
  4. Have fun ;)
 
 The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported.
 
-## Wiring diagram
-![ESP-FC Wemos D1 mini wiring diagram](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_wemos_d1_mini_wiring.png?raw=true)
+## Wiring diagrams
+
+[![ESP-FC Wiring](/docs/images/espfc_wiring_combined.png)](/docs/wiring.md)
+
 
 ## Supported protocols
 
