@@ -3,7 +3,7 @@ The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller
 
 ## Features
 * Frames (Quad X)
-* Betaflight contiguration tool compatible (v10.8)
+* Betaflight contiguration tool compatible (v10.8 or v10.9)
 * Receiver protocol (8 channel PPM)
 * SBUS and CRSF Serial Rx protocols on ESP32 and RP2040
 * ESC protocols (PWM, Oneshot125, Brushed, Dshot150, Dshot300, Dshot600)
@@ -11,7 +11,7 @@ The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller
 * Blackbox recording (OpenLog/Opelager serial)
 * In flight PID Tuning
 * Flight modes (ACRO, ANGLE, AIRMODE, ARM)
-* Up to 8kHz gyro/loop on ESP32/SPI gyro
+* Up to 8kHz gyro/loop on ESP32 with SPI gyro
 * MSP protocol interface
 * CLI Interface
 * Resorce/Pin mapping
@@ -27,7 +27,7 @@ Hardware:
 * Buzzer and some electronic components (optional).
 
 Software:
-* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.8)
+* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.8 or v10.9)
 * [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
 
 ## Flashing
@@ -39,15 +39,17 @@ Software:
 
 ## Configuration
 After flashing you need to configure few things first:
- 1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](https://github.com/rtlopez/esp-fc/blob/master/docs/cli.md)
+ 1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](/docs/cli.md)
  2. Connect to [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) and setup to your preferences,
  3. Test motors without propellers
  4. Have fun ;)
 
 The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported.
 
-## Wiring diagram
-![ESP-FC Wemos D1 mini wiring diagram](https://github.com/rtlopez/esp-fc/blob/master/docs/images/espfc_wemos_d1_mini_wiring.png?raw=true)
+## Wiring diagrams
+
+[![ESP-FC example wiring diagrams](/docs/images/espfc_wiring_combined.png)](/docs/wiring.md)
+
 
 ## Supported protocols
 
