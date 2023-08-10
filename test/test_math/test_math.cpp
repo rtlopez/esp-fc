@@ -3,7 +3,7 @@
 #include "Math/Utils.h"
 #include "helper_3dmath.h"
 #include "Filter.h"
-#include "Pid.h"
+#include "Control/Pid.h"
 
 // void setUp(void) {
 // // set stuff up here
@@ -14,6 +14,7 @@
 // }
 
 using namespace Espfc;
+using namespace Espfc::Control;
 
 void test_math_map()
 {

@@ -1,5 +1,5 @@
-#ifndef _ESPFC_PID_H_
-#define _ESPFC_PID_H_
+#ifndef _ESPFC_CONTROL_PID_H_
+#define _ESPFC_CONTROL_PID_H_
 
 #include "Math/Utils.h"
 #include "Filter.h"
@@ -22,6 +22,8 @@
 
 namespace Espfc {
 
+namespace Control {
+
 class Pid
 {
   public:
@@ -29,7 +31,8 @@ class Pid
       Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f),
       pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f),
       pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
-      prevMeasure(0.f), prevError(0.f), prevSetpoint(0.f)
+      prevMeasure(0.f), prevError(0.f), prevSetpoint(0.f),
+      outputStaurated(false)
       {}
 
     void begin()
@@ -41,19 +44,25 @@ class Pid
     {
       error = setpoint - measure;
       
+      // P-term
       pTerm = Kp * error * pScale;
       pTerm = ptermFilter.update(pTerm);
 
+      // I-term
       if(Ki > 0.f && iScale > 0.f)
       {
-        iTerm += Ki * error * dt * iScale;
-        iTerm = Math::clamp(iTerm, -iLimit, iLimit);
+        if(!outputStaurated)
+        {
+          iTerm += Ki * error * dt * iScale;
+          iTerm = Math::clamp(iTerm, -iLimit, iLimit);
+        }
       }
       else
       {
         iTerm = 0; // zero integral
       }
 
+      // D-term
       if(Kd > 0.f && dScale > 0.f)
       {
         //dTerm = (Kd * dScale * (((error - prevError) * dGamma) + (prevMeasure - measure) * (1.f - dGamma)) / dt);
@@ -67,6 +76,7 @@ class Pid
         dTerm = 0;
       }
 
+      // F-term
       if(Kf > 0.f && fScale > 0.f)
       {
         fTerm = Kf * fScale * ((setpoint - prevSetpoint) * rate);
@@ -116,7 +126,11 @@ class Pid
     float prevMeasure;
     float prevError;
     float prevSetpoint;
+
+    bool outputStaurated;
 };
+
+}
 
 }
 

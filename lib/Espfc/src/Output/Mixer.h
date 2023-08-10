@@ -227,6 +227,7 @@ class Mixer
       Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
 
       bool stop = _stop();
+      bool saturated = false;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         const OutputChannelConfig& och = _model.config.output.channel[i];
@@ -243,11 +244,13 @@ class Mixer
           }
           else
           {
+            if(out[i] >= 0.98f) saturated = true;
             float v = Math::clamp(out[i], -1.f, 1.f);
             _model.state.outputUs[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
           }
         }
       }
+      _model.setOputputSaturated(saturated);
       applyOutput();
     }
 

@@ -186,6 +186,15 @@ class Model
       return state.armingDisabledFlags & flag;
     }
 
+    bool setOputputSaturated(bool val)
+    {
+      for(size_t i = 0; i < 3; i++)
+      {
+        state.innerPid[i].outputStaurated = val;
+        state.outerPid[i].outputStaurated = val;
+      }
+    }
+
     Device::SerialDevice * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
@@ -476,7 +485,7 @@ class Model
       for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
         const PidConfig& pc = config.pid[i];
-        Pid& pid = state.innerPid[i];
+        Control::Pid& pid = state.innerPid[i];
         pid.Kp = (float)pc.P * PTERM_SCALE * pidScale[i];
         pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
         pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
@@ -499,7 +508,7 @@ class Model
       for(size_t i = 0; i < AXIS_YAW; i++)
       {
         PidConfig& pc = config.pid[PID_LEVEL];
-        Pid& pid = state.outerPid[i];
+        Control::Pid& pid = state.outerPid[i];
         pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
         pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
         pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;

@@ -10,7 +10,7 @@
 #include "ModelConfig.h"
 #include "Stats.h"
 #include "helper_3dmath.h"
-#include "Pid.h"
+#include "Control/Pid.h"
 #include "Kalman.h"
 #include "Filter.h"
 #include "Stats.h"
@@ -186,8 +186,8 @@ struct ModelState
 
   float desiredRate[AXES];
 
-  Pid innerPid[AXES];
-  Pid outerPid[AXES];
+  Control::Pid innerPid[AXES];
+  Control::Pid outerPid[AXES];
 
   size_t inputChannelCount;
   bool inputChannelsValid;
