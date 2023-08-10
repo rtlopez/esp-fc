@@ -186,12 +186,13 @@ class Model
       return state.armingDisabledFlags & flag;
     }
 
-    bool setOputputSaturated(bool val)
+    void setOutputSaturated(bool val)
     {
+      state.outputSaturated = val;
       for(size_t i = 0; i < 3; i++)
       {
-        state.innerPid[i].outputStaurated = val;
-        state.outerPid[i].outputStaurated = val;
+        state.innerPid[i].outputSaturated = val;
+        state.outerPid[i].outputSaturated = val;
       }
     }
 

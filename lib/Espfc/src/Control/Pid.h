@@ -32,7 +32,7 @@ class Pid
       pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f),
       pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
       prevMeasure(0.f), prevError(0.f), prevSetpoint(0.f),
-      outputStaurated(false)
+      outputSaturated(false)
       {}
 
     void begin()
@@ -49,9 +49,10 @@ class Pid
       pTerm = ptermFilter.update(pTerm);
 
       // I-term
+      // TODO: https://github.com/betaflight/betaflight/blob/master/src/main/flight/pid.c#L667
       if(Ki > 0.f && iScale > 0.f)
       {
-        if(!outputStaurated)
+        if(!outputSaturated)
         {
           iTerm += Ki * error * dt * iScale;
           iTerm = Math::clamp(iTerm, -iLimit, iLimit);
@@ -127,7 +128,7 @@ class Pid
     float prevError;
     float prevSetpoint;
 
-    bool outputStaurated;
+    bool outputSaturated;
 };
 
 }

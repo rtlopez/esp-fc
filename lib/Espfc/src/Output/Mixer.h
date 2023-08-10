@@ -182,10 +182,14 @@ class Mixer
         entry++;
       }
 
+      bool saturated = false;
       for(size_t i = 0; i < mixer.count; i++)
       {
-        outputs[i] = limitOutput(outputs[i], _model.config.output.channel[i], _model.config.output.motorLimit);
+        const OutputChannelConfig& occ = _model.config.output.channel[i];
+        if(!occ.servo && outputs[i] >= 0.98f) saturated = true;
+        outputs[i] = limitOutput(outputs[i], occ, _model.config.output.motorLimit);
       }
+      _model.setOutputSaturated(saturated);
     }
 
     float limitThrust(float thrust, ThrottleLimitType type, int8_t limit)
@@ -227,7 +231,6 @@ class Mixer
       Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
 
       bool stop = _stop();
-      bool saturated = false;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         const OutputChannelConfig& och = _model.config.output.channel[i];
@@ -244,13 +247,11 @@ class Mixer
           }
           else
           {
-            if(out[i] >= 0.98f) saturated = true;
             float v = Math::clamp(out[i], -1.f, 1.f);
             _model.state.outputUs[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
           }
         }
       }
-      _model.setOputputSaturated(saturated);
       applyOutput();
     }
 

@@ -214,6 +214,7 @@ struct ModelState
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];
   int16_t outputDisarmed[OUTPUT_CHANNELS];
+  bool outputSaturated;
 
   // other state
   Kalman kalman[AXES];

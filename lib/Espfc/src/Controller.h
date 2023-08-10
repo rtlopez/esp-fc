@@ -205,11 +205,6 @@ class Controller
     }
 
   private:
-    float power3(float x)
-    {
-      return x * x * x;
-    }
-
     Model& _model;
     Rates _rates;
     Filter _speedFilter;
