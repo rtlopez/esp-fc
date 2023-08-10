@@ -539,6 +539,15 @@ class FailsafeConfig
     uint8_t killSwitch;
 };
 
+enum ItermRelaxType {
+  ITERM_RELAX_OFF,
+  ITERM_RELAX_RP,
+  ITERM_RELAX_RPY,
+  ITERM_RELAX_RP_INC,
+  ITERM_RELAX_RPY_INC,
+  ITERM_RELAX_COUNT,
+};
+
 // persistent data
 class ModelConfig
 {
@@ -594,6 +603,8 @@ class ModelConfig
 
     int16_t dtermSetpointWeight;
     int8_t itermWindupPointPercent;
+    int8_t itermRelax;
+    int8_t itermRelaxCutoff;
 
     int8_t angleLimit;
     int16_t angleRateLimit;
@@ -738,7 +749,7 @@ class ModelConfig
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
       gyroFilter = FilterConfig(FILTER_PT1, 100);
       gyroFilter2 = FilterConfig(FILTER_PT1, 213);
-      dynamicFilter = DynamicFilterConfig(0, 300, 80, 400); // 8%. q:3.0, 80-400 Hz
+      dynamicFilter = DynamicFilterConfig(4, 300, 80, 400); // 8%. q:3.0, 80-400 Hz
 
       dtermDynLpfFilter = FilterConfig(FILTER_PT1, 145, 60);
       dtermFilter = FilterConfig(FILTER_PT1, 128);
@@ -915,6 +926,8 @@ class ModelConfig
       pid[PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
       itermWindupPointPercent = 30;
+      itermRelax = ITERM_RELAX_RP_INC;
+      itermRelaxCutoff = 15;
       dtermSetpointWeight = 30;
 
       angleLimit = 55;  // deg

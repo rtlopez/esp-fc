@@ -554,6 +554,8 @@ class Cli
         Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
         Param(PSTR("pid_iterm_limit"), &c.itermWindupPointPercent),
         Param(PSTR("pid_iterm_zero"), &c.lowThrottleZeroIterm),
+        Param(PSTR("pid_iterm_relax"), &c.itermRelax),
+        Param(PSTR("pid_iterm_relax_cutoff"), &c.itermRelaxCutoff),
         Param(PSTR("pid_tpa_scale"), &c.tpaScale),
         Param(PSTR("pid_tpa_breakpoint"), &c.tpaBreakpoint),
 

@@ -1096,8 +1096,8 @@ class MspProcessor
           r.writeU16(_model.config.dtermSetpointWeight);
           r.writeU8(0); // iterm rotation
           r.writeU8(0); // smart feed forward
-          r.writeU8(0); // iterm relax
-          r.writeU8(0); // iterm ralx type
+          r.writeU8(_model.config.itermRelax); // iterm relax
+          r.writeU8(1); // iterm relax type (setpoint only)
           r.writeU8(0); // abs control gain
           r.writeU8(0); // throttle boost
           r.writeU8(0); // acro trainer max angle
@@ -1114,7 +1114,7 @@ class MspProcessor
           r.writeU8(0); // use_integrated_yaw
           r.writeU8(0); // integrated_yaw_relax
           // 1.42+
-          r.writeU8(0); // iterm_relax_cutoff
+          r.writeU8(_model.config.itermRelaxCutoff); // iterm_relax_cutoff
           // 1.43+
           r.writeU8(_model.config.output.motorLimit); // motor_output_limit
           r.writeU8(0); // auto_profile_cell_count
@@ -1149,8 +1149,8 @@ class MspProcessor
           if (m.remain() >= 14) {
             m.readU8(); //iterm rotation
             m.readU8(); //smart feed forward
-            m.readU8(); //iterm relax
-            m.readU8(); //iterm ralx type
+            _model.config.itermRelax = m.readU8(); //iterm relax
+            m.readU8(); //iterm relax type
             m.readU8(); //abs control gain
             m.readU8(); //throttle boost
             m.readU8(); //acro trainer max angle
@@ -1171,7 +1171,7 @@ class MspProcessor
           }
           // 1.42+
           if (m.remain() >= 1) {
-            m.readU8(); // iterm_relax_cutoff
+            _model.config.itermRelaxCutoff = m.readU8(); // iterm_relax_cutoff
           }
           // 1.43+
           if (m.remain() >= 3) {

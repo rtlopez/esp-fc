@@ -502,7 +502,13 @@ class Model
         }
         pid.dtermFilter2.begin(config.dtermFilter2, pidFilterRate);
         pid.ftermFilter.begin(config.input.filterDerivative, pidFilterRate);
-        if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, pidFilterRate);
+        pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, config.itermRelaxCutoff), pidFilterRate);
+        if(i == AXIS_YAW) {
+          pid.itermRelax = config.itermRelax == ITERM_RELAX_RPY || config.itermRelax == ITERM_RELAX_RPY_INC ? config.itermRelax : ITERM_RELAX_OFF;
+          pid.ptermFilter.begin(config.yawFilter, pidFilterRate);
+        } else {
+          pid.itermRelax = config.itermRelax;
+        }
         pid.begin();
       }
 

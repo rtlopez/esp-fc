@@ -28,11 +28,8 @@ class Pid
 {
   public:
     Pid():
-      Kp(0.1), Ki(0), Kd(0), iLimit(0), dGamma(0), oLimit(1.f),
-      pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f),
-      pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
-      prevMeasure(0.f), prevError(0.f), prevSetpoint(0.f),
-      outputSaturated(false)
+      Kp(0.1), Ki(0), Kd(0), iLimit(0.3), oLimit(1.f),
+      pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f)
       {}
 
     void begin()
@@ -49,12 +46,22 @@ class Pid
       pTerm = ptermFilter.update(pTerm);
 
       // I-term
-      // TODO: https://github.com/betaflight/betaflight/blob/master/src/main/flight/pid.c#L667
+      iTermError = error;
       if(Ki > 0.f && iScale > 0.f)
       {
         if(!outputSaturated)
         {
-          iTerm += Ki * error * dt * iScale;
+          // I-term relax
+          if(itermRelax)
+          {
+            const bool increasing = (iTerm > 0 && iTermError > 0) || (iTerm < 0 && iTermError < 0);
+            const bool incrementOnly = itermRelax == ITERM_RELAX_RP_INC || itermRelax == ITERM_RELAX_RPY_INC;
+            float setpointLpf = itermRelaxFilter.update(setpoint);
+            itermRelaxBase = Math::toDeg(setpoint - setpointLpf);
+            itermRelaxFactor = std::max(0.0f, 1.0f - std::abs(itermRelaxBase) * 0.025f); // (itermRelaxBase / 40)
+            if(!incrementOnly || increasing) iTermError *= itermRelaxFactor;
+          }
+          iTerm += Ki * iScale * iTermError * dt;
           iTerm = Math::clamp(iTerm, -iLimit, iLimit);
         }
       }
@@ -80,7 +87,7 @@ class Pid
       // F-term
       if(Kf > 0.f && fScale > 0.f)
       {
-        fTerm = Kf * fScale * ((setpoint - prevSetpoint) * rate);
+        fTerm = Kf * fScale * (setpoint - prevSetpoint) * rate;
         fTerm = ftermFilter.update(fTerm);
       }
       else
@@ -113,6 +120,8 @@ class Pid
     float fScale;
 
     float error;
+    float iTermError;
+
     float pTerm;
     float iTerm;
     float dTerm;
@@ -123,12 +132,16 @@ class Pid
     Filter dtermNotchFilter;
     Filter ptermFilter;
     Filter ftermFilter;
+    Filter itermRelaxFilter;
 
     float prevMeasure;
     float prevError;
     float prevSetpoint;
 
     bool outputSaturated;
+    int8_t itermRelax;
+    float itermRelaxFactor;
+    float itermRelaxBase;
 };
 
 }
