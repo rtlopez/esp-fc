@@ -22,6 +22,15 @@
 
 namespace Espfc {
 
+enum ItermRelaxType {
+  ITERM_RELAX_OFF,
+  ITERM_RELAX_RP,
+  ITERM_RELAX_RPY,
+  ITERM_RELAX_RP_INC,
+  ITERM_RELAX_RPY_INC,
+  ITERM_RELAX_COUNT,
+};
+
 namespace Control {
 
 class Pid
@@ -58,7 +67,7 @@ class Pid
             const bool incrementOnly = itermRelax == ITERM_RELAX_RP_INC || itermRelax == ITERM_RELAX_RPY_INC;
             float setpointLpf = itermRelaxFilter.update(setpoint);
             itermRelaxBase = Math::toDeg(setpoint - setpointLpf);
-            itermRelaxFactor = std::max(0.0f, 1.0f - std::abs(itermRelaxBase) * 0.025f); // (itermRelaxBase / 40)
+            itermRelaxFactor = std::max(0.0f, 1.0f - abs(itermRelaxBase) * 0.025f); // (itermRelaxBase / 40)
             if(!incrementOnly || increasing) iTermError *= itermRelaxFactor;
           }
           iTerm += Ki * iScale * iTermError * dt;
@@ -111,7 +120,7 @@ class Pid
     float dt;
 
     float iLimit;
-    float dGamma;
+    //float dGamma;
     float oLimit;
 
     float pScale;

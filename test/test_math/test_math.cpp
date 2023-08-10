@@ -638,6 +638,10 @@ void ensure(Pid& pid, float rate = 100.0f)
     pid.fScale = 1.0f;
     pid.oLimit = 1.0f;
     pid.iLimit = 0.2f;
+    pid.iTerm = 0.0f;
+    pid.prevError = 0.0f;
+    pid.prevMeasure = 0.0f;
+    pid.prevSetpoint = 0.0f;
 }
 
 void gain(Pid& pid, float p, float i, float d, float f)

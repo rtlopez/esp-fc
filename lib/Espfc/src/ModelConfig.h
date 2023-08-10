@@ -11,6 +11,7 @@
 #include "Device/SerialDevice.h"
 #include "Device/InputPPM.h"
 #include "Output/Mixers.h"
+#include "Control/Pid.h"
 
 namespace Espfc {
 
@@ -537,15 +538,6 @@ class FailsafeConfig
   public:
     uint8_t delay;
     uint8_t killSwitch;
-};
-
-enum ItermRelaxType {
-  ITERM_RELAX_OFF,
-  ITERM_RELAX_RP,
-  ITERM_RELAX_RPY,
-  ITERM_RELAX_RP_INC,
-  ITERM_RELAX_RPY_INC,
-  ITERM_RELAX_COUNT,
 };
 
 // persistent data
