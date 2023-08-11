@@ -37,8 +37,13 @@ class Pid
 {
   public:
     Pid():
-      Kp(0.1), Ki(0), Kd(0), iLimit(0.3), oLimit(1.f),
-      pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f)
+      rate(1.0f), dt(1.0f), Kp(0.1), Ki(0.f), Kd(0.f), Kf(0.0f), iLimit(0.3f), oLimit(1.f),
+      pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f),
+      error(0.f), iTermError(0.f),
+      pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
+      prevMeasure(0.f), prevError(0.f), prevSetpoint(0.f),
+      outputSaturated(false),
+      itermRelax(ITERM_RELAX_OFF), itermRelaxBase(0.f), itermRelaxFactor(1.0f)
       {}
 
     void begin()
@@ -65,9 +70,8 @@ class Pid
           {
             const bool increasing = (iTerm > 0 && iTermError > 0) || (iTerm < 0 && iTermError < 0);
             const bool incrementOnly = itermRelax == ITERM_RELAX_RP_INC || itermRelax == ITERM_RELAX_RPY_INC;
-            float setpointLpf = itermRelaxFilter.update(setpoint);
-            itermRelaxBase = Math::toDeg(setpoint - setpointLpf);
-            itermRelaxFactor = std::max(0.0f, 1.0f - abs(itermRelaxBase) * 0.025f); // (itermRelaxBase / 40)
+            itermRelaxBase = setpoint - itermRelaxFilter.update(setpoint);
+            itermRelaxFactor = std::max(0.0f, 1.0f - abs(Math::toDeg(itermRelaxBase)) * 0.025f); // (itermRelaxBase / 40)
             if(!incrementOnly || increasing) iTermError *= itermRelaxFactor;
           }
           iTerm += Ki * iScale * iTermError * dt;
@@ -111,17 +115,17 @@ class Pid
       return Math::clamp(pTerm + iTerm + dTerm + fTerm, -oLimit, oLimit);
     }
 
+    float rate;
+    float dt;
+
     float Kp;
     float Ki;
     float Kd;
     float Kf;
 
-    float rate;
-    float dt;
-
     float iLimit;
-    //float dGamma;
     float oLimit;
+    //float dGamma;
 
     float pScale;
     float iScale;
