@@ -43,7 +43,7 @@ class Pid
       pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
       prevMeasure(0.f), prevError(0.f), prevSetpoint(0.f),
       outputSaturated(false),
-      itermRelax(ITERM_RELAX_OFF), itermRelaxBase(0.f), itermRelaxFactor(1.0f)
+      itermRelax(ITERM_RELAX_OFF), itermRelaxFactor(1.0f), itermRelaxBase(0.f)
       {}
 
     void begin()
