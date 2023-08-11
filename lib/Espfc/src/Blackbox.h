@@ -225,6 +225,9 @@ class Blackbox
       cp->horizon_limit_degrees = 135;
       cp->horizon_delay_ms = 500;
       cp->thrustLinearization = 0;
+      cp->iterm_relax = _model.config.itermRelax;
+      cp->iterm_relax_type = 1;
+      cp->iterm_relax_cutoff = _model.config.itermRelaxCutoff;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;

@@ -7,6 +7,7 @@
 #define USE_DYN_LPF
 #define USE_D_MIN
 #define USE_DYN_NOTCH_FILTER
+#define USE_ITERM_RELAX
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -639,6 +640,9 @@ typedef struct pidProfile_s {
     uint8_t horizon_limit_degrees;          // in Horizon mode, zero levelling when the quad's attitude exceeds this angle
     uint16_t horizon_delay_ms;              // delay when Horizon Strength increases, 50 = 500ms time constant
     uint8_t thrustLinearization;            // Compensation factor for pid linearization
+    uint8_t iterm_relax_type;               // Specifies type of relax algorithm
+    uint8_t iterm_relax_cutoff;             // This cutoff frequency specifies a low pass filter which predicts average response of the quad to setpoint
+    uint8_t iterm_relax;                    // Enable iterm suppression during stick input
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
