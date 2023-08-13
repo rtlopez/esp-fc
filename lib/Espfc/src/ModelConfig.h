@@ -973,7 +973,7 @@ class ModelConfig
       magCalibrationScale[2] = 1000;
 
       vbatScale = 100;
-      vbatResDiv = 16;
+      vbatResDiv = 10;
       vbatResMult = 1;
       vbatCellWarning = 35;
       vbatSource = 0;

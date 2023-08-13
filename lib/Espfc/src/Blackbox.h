@@ -86,7 +86,8 @@ void initBlackboxModel(Espfc::Model * m)
 uint16_t getBatteryVoltageLatest(void)
 {
   if(!_model_ptr) return 0;
-  return ((*_model_ptr).state.battery.voltage);
+  float v = (*_model_ptr).state.battery.voltage;
+  return constrain(lrintf(v * 10), 0, 255);
 }
 
 bool rxIsReceivingSignal(void)

@@ -89,12 +89,12 @@ class BatteryState
   public:
     bool warn(int vbatCellWarning) const
     {
-      if(voltage < 20) return false; // no battery connected
+      if(voltage < 2.0) return false; // no battery connected
       return !samples && cellVoltage < vbatCellWarning;
     }
 
     int16_t rawVoltage;
-    uint8_t voltage;
+    float voltage;
     uint8_t cellVoltage;
     int8_t cells;
     int8_t samples;

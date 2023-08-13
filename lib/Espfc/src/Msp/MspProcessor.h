@@ -315,11 +315,11 @@ class MspProcessor
           break;
 
         case MSP_ANALOG:
-          r.writeU8(_model.state.battery.voltage);  // voltage
+          r.writeU8(constrain(lrintf(_model.state.battery.voltage * 10.0f), 0, 255));  // voltage
           r.writeU16(0); // mah drawn
           r.writeU16(_model.getRssi()); // rssi
           r.writeU16(0); // amperage
-          r.writeU16(_model.state.battery.voltage * 10);  // voltage: TODO to volts
+          r.writeU16(constrain(lrintf(_model.state.battery.voltage * 100.0f), 0, 3000));  // voltage: TODO to volts
           break;
 
         case MSP_FEATURE_CONFIG:
@@ -364,20 +364,20 @@ class MspProcessor
           r.writeU16(0); // capacity in mAh
 
           // battery state
-          r.writeU8(_model.state.battery.voltage); // in 0.1V steps
+          r.writeU8(constrain(lrintf(_model.state.battery.voltage * 10.0f), 0, 255)); // in 0.1V steps
           r.writeU16(0); // milliamp hours drawn from battery
           r.writeU16(0); // send current in 0.01 A steps, range is -320A to 320A
 
           // battery alerts
           r.writeU8(0);
-          r.writeU16(_model.state.battery.voltage * 10); // FIXME: in volts
+          r.writeU16(constrain(lrintf(_model.state.battery.voltage * 100.0f), 0, 3000)); // in 0.01 volts
           break;
 
         case MSP_VOLTAGE_METERS:
           for(int i = 0; i < 1; i++)
           {
             r.writeU8(i + 10);  // meter id (10-19 vbat adc)
-            r.writeU8(_model.state.battery.voltage);  // meter value
+            r.writeU8(constrain(lrintf(_model.state.battery.voltage * 10.0f), 0, 255));  // meter value
           }
           break;
 
@@ -1163,7 +1163,7 @@ class MspProcessor
           if (m.remain() >= 7) {
             m.readU8(); // d min roll
             m.readU8(); // d min pitch
-            m.readU8(); // g min yaw
+            m.readU8(); // d min yaw
             m.readU8(); // d min gain
             m.readU8(); // d min advance
             m.readU8(); // use_integrated_yaw
