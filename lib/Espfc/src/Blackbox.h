@@ -273,12 +273,6 @@ class Blackbox
       gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
 
-      batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibatSource;
-      batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbatSource;
-      batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbatCellWarning;
-      batteryConfigMutable()->vbatmaxcellvoltage = 420;
-      batteryConfigMutable()->vbatmincellvoltage = 340;
-
       if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
       if(_model.magActive()) enabledSensors |= SENSOR_MAG;
       if(_model.baroActive()) enabledSensors |= SENSOR_BARO;
@@ -300,8 +294,11 @@ class Blackbox
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
-      batteryConfigMutable()->voltageMeterSource = VOLTAGE_METER_NONE; //VOLTAGE_METER_ADC;
-      batteryConfigMutable()->currentMeterSource = CURRENT_METER_NONE;
+      batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibatSource;
+      batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbatSource;
+      batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbatCellWarning;
+      batteryConfigMutable()->vbatmaxcellvoltage = 420;
+      batteryConfigMutable()->vbatmincellvoltage = 340;
 
       rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
       rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
