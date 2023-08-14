@@ -94,8 +94,11 @@ class BatteryState
     }
 
     int16_t rawVoltage;
+    int16_t rawCurrent;
     float voltage;
     float voltageUnfiltered;
+    float current;
+    float currentUnfiltered;
     float cellVoltage;
     int8_t cells;
     int8_t samples;

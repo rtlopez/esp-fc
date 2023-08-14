@@ -124,7 +124,7 @@ static int8_t toIbatSource(uint8_t t)
 {
   switch(t) {
     case 0: return 0; // none
-    //case 1: return 1; // internal adc, not yet
+    case 1: return 1; // internal adc
     default: return 0;
   }
 }
@@ -137,6 +137,11 @@ static uint8_t toVbatVoltageLegacy(float voltage)
 static uint16_t toVbatVoltage(float voltage)
 {
   return constrain(lrintf(voltage * 100.0f), 0, 32000);
+}
+
+static uint16_t toIbatCurrent(float current)
+{
+  return constrain(lrintf(current * 100.0f), -32000, 32000);
 }
 
 }
@@ -328,7 +333,7 @@ class MspProcessor
           r.writeU8(toVbatVoltageLegacy(_model.state.battery.voltage));  // voltage in 0.1V
           r.writeU16(0); // mah drawn
           r.writeU16(_model.getRssi()); // rssi
-          r.writeU16(0); // amperage
+          r.writeU16(toIbatCurrent(_model.state.battery.current));  // amperage in 0.01A
           r.writeU16(toVbatVoltage(_model.state.battery.voltage));  // voltage in 0.01V
           break;
 
@@ -362,8 +367,8 @@ class MspProcessor
           _model.config.ibatSource = toIbatSource(m.readU8());  // currentMeterSource
           if(m.remain() >= 6)
           {
-            m.readU16();
-            m.readU16();
+            m.readU16(); // vbatmincellvoltage
+            m.readU16(); // vbatmaxcellvoltage
             _model.config.vbatCellWarning = m.readU16();
           }
           break;
@@ -376,7 +381,7 @@ class MspProcessor
           // battery state
           r.writeU8(toVbatVoltageLegacy(_model.state.battery.voltage)); // in 0.1V steps
           r.writeU16(0); // milliamp hours drawn from battery
-          r.writeU16(0); // send current in 0.01 A steps, range is -320A to 320A
+          r.writeU16(toIbatCurrent(_model.state.battery.current)); // send current in 0.01 A steps, range is -320A to 320A
 
           // battery alerts
           r.writeU8(0);
@@ -392,6 +397,12 @@ class MspProcessor
           break;
 
         case MSP_CURRENT_METERS:
+          for(int i = 0; i < 1; i++)
+          {
+            r.writeU8(i + 10);  // meter id (10-19 ibat adc)
+            r.writeU16(0); // mah drawn
+            r.writeU16(constrain(toIbatCurrent(_model.state.battery.current) * 10, 0, 0xffff));  // meter value
+          }
           break;
 
         case MSP_VOLTAGE_METER_CONFIG:
@@ -415,6 +426,29 @@ class MspProcessor
               _model.config.vbatScale = m.readU8();
               _model.config.vbatResDiv = m.readU8();
               _model.config.vbatResMult = m.readU8();
+            }
+          }
+          break;
+
+        case MSP_CURRENT_METER_CONFIG:
+          r.writeU8(1); // num voltage sensors
+          for(int i = 0; i < 1; i++)
+          {
+            r.writeU8(6); // frame size (6)
+            r.writeU8(i + 10); // id (10-19 ibat adc)
+            r.writeU8(1); // type adc
+            r.writeU16(_model.config.ibatScale); // scale
+            r.writeU16(_model.config.ibatOffset);  // offset
+          }
+          break;
+
+        case MSP_SET_CURRENT_METER_CONFIG:
+          {
+            int id = m.readU8();
+            if(id == 10 + 0) // id (10-19 ibat adc, allow only 10)
+            {
+              _model.config.ibatScale = m.readU16();
+              _model.config.ibatOffset = m.readU16();
             }
           }
           break;

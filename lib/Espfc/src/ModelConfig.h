@@ -634,6 +634,8 @@ class ModelConfig
     uint8_t vbatSource;
 
     uint8_t ibatSource;
+    uint16_t ibatScale;
+    uint16_t ibatOffset;
 
     int8_t debugMode;
     uint8_t debugAxis;
@@ -809,7 +811,7 @@ class ModelConfig
       output.minCommand  = 1000;
       output.minThrottle = 1050;
       output.maxThrottle = 2000;
-      output.dshotIdle = 450;
+      output.dshotIdle = 550;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         output.channel[i].servo = false;
@@ -972,13 +974,15 @@ class ModelConfig
       magCalibrationScale[1] = 1000;
       magCalibrationScale[2] = 1000;
 
+      vbatSource = 0;
       vbatScale = 100;
       vbatResDiv = 10;
       vbatResMult = 1;
       vbatCellWarning = 350;
-      vbatSource = 0;
 
       ibatSource = 0;
+      ibatScale = 100;
+      ibatOffset = 0;
 
       buzzer.inverted = true;
 

@@ -150,11 +150,6 @@ bool areMotorsRunning(void)
     return false;
 }
 
-int32_t getAmperageLatest(void)
-{
-    return 0;
-}
-
 bool isModeActivationConditionPresent(boxId_e modeId)
 {
     return false;

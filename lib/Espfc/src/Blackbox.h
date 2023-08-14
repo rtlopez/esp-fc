@@ -90,6 +90,13 @@ uint16_t getBatteryVoltageLatest(void)
   return constrain(lrintf(v * 100.0f), 0, 32000);
 }
 
+int32_t getAmperageLatest(void)
+{
+  if(!_model_ptr) return 0;
+  float v = (*_model_ptr).state.battery.currentUnfiltered;
+  return constrain(lrintf(v * 100.0f), 0, 32000);
+}
+
 bool rxIsReceivingSignal(void)
 {
   if(!_model_ptr) return false;
@@ -265,6 +272,12 @@ class Blackbox
 
       gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
+
+      batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibatSource;
+      batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbatSource;
+      batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbatCellWarning;
+      batteryConfigMutable()->vbatmaxcellvoltage = 420;
+      batteryConfigMutable()->vbatmincellvoltage = 340;
 
       if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
       if(_model.magActive()) enabledSensors |= SENSOR_MAG;
