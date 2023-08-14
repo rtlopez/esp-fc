@@ -129,6 +129,16 @@ static int8_t toIbatSource(uint8_t t)
   }
 }
 
+static uint8_t toVbatVoltageLegacy(float voltage)
+{
+  return constrain(lrintf(voltage * 10.0f), 0, 255);
+}
+
+static uint16_t toVbatVoltage(float voltage)
+{
+  return constrain(lrintf(voltage * 100.0f), 0, 32000);
+}
+
 }
 
 namespace Espfc {
@@ -315,11 +325,11 @@ class MspProcessor
           break;
 
         case MSP_ANALOG:
-          r.writeU8(constrain(lrintf(_model.state.battery.voltage * 10.0f), 0, 255));  // voltage
+          r.writeU8(toVbatVoltageLegacy(_model.state.battery.voltage));  // voltage in 0.1V
           r.writeU16(0); // mah drawn
           r.writeU16(_model.getRssi()); // rssi
           r.writeU16(0); // amperage
-          r.writeU16(constrain(lrintf(_model.state.battery.voltage * 100.0f), 0, 3000));  // voltage: TODO to volts
+          r.writeU16(toVbatVoltage(_model.state.battery.voltage));  // voltage in 0.01V
           break;
 
         case MSP_FEATURE_CONFIG:
@@ -334,19 +344,19 @@ class MspProcessor
         case MSP_BATTERY_CONFIG:
           r.writeU8(34);  // vbatmincellvoltage
           r.writeU8(42);  // vbatmaxcellvoltage
-          r.writeU8(_model.config.vbatCellWarning);  // vbatwarningcellvoltage // TODO to volts
+          r.writeU8((_model.config.vbatCellWarning + 5) / 10);  // vbatwarningcellvoltage
           r.writeU16(0); // batteryCapacity
           r.writeU8(_model.config.vbatSource);  // voltageMeterSource
           r.writeU8(_model.config.ibatSource);  // currentMeterSource
           r.writeU16(340); // vbatmincellvoltage
           r.writeU16(420); // vbatmaxcellvoltage
-          r.writeU16(_model.config.vbatCellWarning * 10); // vbatwarningcellvoltage // TODO to volts
+          r.writeU16(_model.config.vbatCellWarning); // vbatwarningcellvoltage
           break;
 
         case MSP_SET_BATTERY_CONFIG:
           m.readU8();  // vbatmincellvoltage
           m.readU8();  // vbatmaxcellvoltage
-          _model.config.vbatCellWarning = m.readU8();  // vbatwarningcellvoltage // TODO to volts
+          _model.config.vbatCellWarning = m.readU8() * 10;  // vbatwarningcellvoltage
           m.readU16(); // batteryCapacity
           _model.config.vbatSource = toVbatSource(m.readU8());  // voltageMeterSource
           _model.config.ibatSource = toIbatSource(m.readU8());  // currentMeterSource
@@ -354,7 +364,7 @@ class MspProcessor
           {
             m.readU16();
             m.readU16();
-            _model.config.vbatCellWarning = (m.readU16() + 5) / 10;
+            _model.config.vbatCellWarning = m.readU16();
           }
           break;
 
@@ -364,20 +374,20 @@ class MspProcessor
           r.writeU16(0); // capacity in mAh
 
           // battery state
-          r.writeU8(constrain(lrintf(_model.state.battery.voltage * 10.0f), 0, 255)); // in 0.1V steps
+          r.writeU8(toVbatVoltageLegacy(_model.state.battery.voltage)); // in 0.1V steps
           r.writeU16(0); // milliamp hours drawn from battery
           r.writeU16(0); // send current in 0.01 A steps, range is -320A to 320A
 
           // battery alerts
           r.writeU8(0);
-          r.writeU16(constrain(lrintf(_model.state.battery.voltage * 100.0f), 0, 3000)); // in 0.01 volts
+          r.writeU16(toVbatVoltage(_model.state.battery.voltage)); // in 0.01 steps
           break;
 
         case MSP_VOLTAGE_METERS:
           for(int i = 0; i < 1; i++)
           {
             r.writeU8(i + 10);  // meter id (10-19 vbat adc)
-            r.writeU8(constrain(lrintf(_model.state.battery.voltage * 10.0f), 0, 255));  // meter value
+            r.writeU8(toVbatVoltageLegacy(_model.state.battery.voltage));  // meter value
           }
           break;
 

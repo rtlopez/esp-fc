@@ -627,7 +627,7 @@ class ModelConfig
 
     char modelName[MODEL_NAME_LEN + 1];
 
-    int8_t vbatCellWarning;
+    int16_t vbatCellWarning;
     uint8_t vbatScale;
     uint8_t vbatResDiv;
     uint8_t vbatResMult;
@@ -975,7 +975,7 @@ class ModelConfig
       vbatScale = 100;
       vbatResDiv = 10;
       vbatResMult = 1;
-      vbatCellWarning = 35;
+      vbatCellWarning = 350;
       vbatSource = 0;
 
       ibatSource = 0;

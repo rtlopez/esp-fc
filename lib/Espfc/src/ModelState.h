@@ -90,12 +90,13 @@ class BatteryState
     bool warn(int vbatCellWarning) const
     {
       if(voltage < 2.0) return false; // no battery connected
-      return !samples && cellVoltage < vbatCellWarning;
+      return !samples && cellVoltage < vbatCellWarning * 0.01f;
     }
 
     int16_t rawVoltage;
     float voltage;
-    uint8_t cellVoltage;
+    float voltageUnfiltered;
+    float cellVoltage;
     int8_t cells;
     int8_t samples;
     Timer timer;
