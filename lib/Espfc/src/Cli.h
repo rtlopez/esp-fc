@@ -372,6 +372,9 @@ class Cli
       static const char* inputFilterChoices[] = { PSTR("INTERPOLATION"), PSTR("FILTER"), NULL };
       static const char* inputItermRelaxChoices[] = { PSTR("OFF"), PSTR("RP"), PSTR("RPY"), PSTR("RP_INC"), PSTR("RPY_INC"), NULL };
 
+      static const char* voltageSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
+      static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
+
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
 #endif
@@ -399,6 +402,10 @@ class Cli
         Param(PSTR("gyro_notch2_cutoff"), &c.gyroNotch2Filter.cutoff),
         Param(PSTR("gyro_dyn_lpf_min"), &c.gyroDynLpfFilter.cutoff),
         Param(PSTR("gyro_dyn_lpf_max"), &c.gyroDynLpfFilter.freq),
+        Param(PSTR("gyro_dyn_notch_q"), &c.dynamicFilter.q),
+        Param(PSTR("gyro_dyn_notch_count"), &c.dynamicFilter.width),
+        Param(PSTR("gyro_dyn_notch_min"), &c.dynamicFilter.min_freq),
+        Param(PSTR("gyro_dyn_notch_max"), &c.dynamicFilter.max_freq),
         Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
@@ -428,6 +435,16 @@ class Cli
         Param(PSTR("baro_dev"), &c.baroDev, baroDevChoices),
         Param(PSTR("baro_lpf_type"), &c.baroFilter.type, filterTypeChoices),
         Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
+
+        Param(PSTR("vbat_source"), &c.vbatSource, voltageSourceChoices),
+        Param(PSTR("vbat_scale"), &c.vbatScale),
+        Param(PSTR("vbat_mul"), &c.vbatResMult),
+        Param(PSTR("vbat_div"), &c.vbatResDiv),
+        Param(PSTR("vbat_cell_warn"), &c.vbatCellWarning),
+
+        Param(PSTR("ibat_source"), &c.ibatSource, currentSourceChoices),
+        Param(PSTR("ibat_scale"), &c.ibatScale),
+        Param(PSTR("ibat_offset"), &c.ibatOffset),
 
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
         Param(PSTR("fusion_gain_p"), &c.fusion.gain),

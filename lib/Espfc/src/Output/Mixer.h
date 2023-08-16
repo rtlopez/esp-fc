@@ -65,7 +65,6 @@ class Mixer
           if(_model.state.mixerTimer.syncTo(_model.state.loopTimer)) {
             update();
           }
-          _model.state.stats.loopTick();
           _model.state.appQueue.send(Event(EVENT_MIXER_UPDATED));
           return 1;
         default:
@@ -88,6 +87,8 @@ class Mixer
       {
         _model.state.debug[3] = micros() - startTime;
       }
+
+      _model.state.stats.loopTick();
 
       if(_model.config.debugMode == DEBUG_CYCLETIME)
       {

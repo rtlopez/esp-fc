@@ -458,16 +458,16 @@ class OutputConfig
 };
 
 enum DisarmReason {
-    DISARM_REASON_ARMING_DISABLED   = 0,
-    DISARM_REASON_FAILSAFE          = 1,
-    DISARM_REASON_THROTTLE_TIMEOUT  = 2,
-    DISARM_REASON_STICKS            = 3,
-    DISARM_REASON_SWITCH            = 4,
-    DISARM_REASON_CRASH_PROTECTION  = 5,
-    DISARM_REASON_RUNAWAY_TAKEOFF   = 6,
-    DISARM_REASON_GPS_RESCUE        = 7,
-    DISARM_REASON_SERIAL_COMMAND    = 8,
-    DISARM_REASON_SYSTEM            = 255,
+  DISARM_REASON_ARMING_DISABLED   = 0,
+  DISARM_REASON_FAILSAFE          = 1,
+  DISARM_REASON_THROTTLE_TIMEOUT  = 2,
+  DISARM_REASON_STICKS            = 3,
+  DISARM_REASON_SWITCH            = 4,
+  DISARM_REASON_CRASH_PROTECTION  = 5,
+  DISARM_REASON_RUNAWAY_TAKEOFF   = 6,
+  DISARM_REASON_GPS_RESCUE        = 7,
+  DISARM_REASON_SERIAL_COMMAND    = 8,
+  DISARM_REASON_SYSTEM            = 255,
 };
 
 enum ArmingDisabledFlags {
@@ -502,11 +502,11 @@ enum ArmingDisabledFlags {
 static const size_t ARMING_DISABLED_FLAGS_COUNT = 25;
 
 enum WirelessMode {
-    WIRELESS_MODE_NULL = 0,  /**< null mode */
-    WIRELESS_MODE_STA,       /**< WiFi station mode */
-    WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
-    WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
-    WIRELESS_MODE_MAX
+  WIRELESS_MODE_NULL = 0,  /**< null mode */
+  WIRELESS_MODE_STA,       /**< WiFi station mode */
+  WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
+  WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
+  WIRELESS_MODE_MAX
 };
 
 class WirelessConfig
@@ -809,7 +809,7 @@ class ModelConfig
 
       // output config
       output.minCommand  = 1000;
-      output.minThrottle = 1050;
+      output.minThrottle = 1070;
       output.maxThrottle = 2000;
       output.dshotIdle = 550;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -920,7 +920,7 @@ class ModelConfig
       pid[PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
       itermWindupPointPercent = 30;
-      itermRelax = ITERM_RELAX_RP_INC;
+      itermRelax = ITERM_RELAX_RP;
       itermRelaxCutoff = 15;
       dtermSetpointWeight = 30;
 

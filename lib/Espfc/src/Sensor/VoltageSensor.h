@@ -19,8 +19,11 @@ class VoltageSensor: public BaseSensor
       _model.state.battery.timer.setRate(50);
       _model.state.battery.samples = 50;
 
-      _vFilter.begin(FilterConfig(FILTER_PT1, 2), _model.state.battery.timer.rate);
-      _iFilter.begin(FilterConfig(FILTER_PT1, 2), _model.state.battery.timer.rate);
+      _vFilterFast.begin(FilterConfig(FILTER_PT1, 15), _model.state.battery.timer.rate);
+      _vFilter.begin(FilterConfig(FILTER_PT2, 2), _model.state.battery.timer.rate);
+
+      _iFilterFast.begin(FilterConfig(FILTER_PT1, 15), _model.state.battery.timer.rate);
+      _iFilter.begin(FilterConfig(FILTER_PT2, 2), _model.state.battery.timer.rate);
 
       return 1;
     }
@@ -41,7 +44,7 @@ class VoltageSensor: public BaseSensor
         // total should equals ~18.24:1, 73:4 resDiv:resMult should be ideal,
         // but ~52:1 is real, did I miss something?
         _model.state.battery.rawVoltage = analogRead(_model.config.pin[PIN_INPUT_ADC_0]);
-        float volts = _model.state.battery.rawVoltage * ESPFC_ADC_SCALE;
+        float volts = _vFilterFast.update(_model.state.battery.rawVoltage * ESPFC_ADC_SCALE);
 
         volts *= _model.config.vbatScale * 0.1f;
         volts *= _model.config.vbatResMult;
@@ -71,10 +74,10 @@ class VoltageSensor: public BaseSensor
       if(_model.config.ibatSource == 1 && _model.config.pin[PIN_INPUT_ADC_1] != -1)
       {
         _model.state.battery.rawCurrent = analogRead(_model.config.pin[PIN_INPUT_ADC_1]);
-        float volts = _model.state.battery.rawCurrent * ESPFC_ADC_SCALE;
+        float volts = _iFilterFast.update(_model.state.battery.rawCurrent * ESPFC_ADC_SCALE);
         float milivolts = volts * 1000.0f;
 
-        volts += _model.config.ibatOffset;
+        volts += _model.config.ibatOffset * 0.001f;
         volts *= _model.config.ibatScale * 0.1f;
 
         _model.state.battery.currentUnfiltered = volts;
@@ -82,8 +85,9 @@ class VoltageSensor: public BaseSensor
 
         if(_model.config.debugMode == DEBUG_CURRENT_SENSOR)
         {
-          _model.state.debug[0] = lrintf(milivolts * 100.0f);
+          _model.state.debug[0] = lrintf(milivolts);
           _model.state.debug[1] = constrain(lrintf(_model.state.battery.currentUnfiltered * 100.0f), 0, 32000);
+          _model.state.debug[2] = _model.state.battery.rawCurrent;
         }
         result = 1;
       }
@@ -94,7 +98,9 @@ class VoltageSensor: public BaseSensor
 
   private:
     Model& _model;
+    Filter _vFilterFast;
     Filter _vFilter;
+    Filter _iFilterFast;
     Filter _iFilter;
 };
 
