@@ -10,7 +10,7 @@
 #include "ModelConfig.h"
 #include "Stats.h"
 #include "helper_3dmath.h"
-#include "Pid.h"
+#include "Control/Pid.h"
 #include "Kalman.h"
 #include "Filter.h"
 #include "Stats.h"
@@ -89,13 +89,17 @@ class BatteryState
   public:
     bool warn(int vbatCellWarning) const
     {
-      if(voltage < 20) return false; // no battery connected
-      return !samples && cellVoltage < vbatCellWarning;
+      if(voltage < 2.0) return false; // no battery connected
+      return !samples && cellVoltage < vbatCellWarning * 0.01f;
     }
 
     int16_t rawVoltage;
-    uint8_t voltage;
-    uint8_t cellVoltage;
+    int16_t rawCurrent;
+    float voltage;
+    float voltageUnfiltered;
+    float current;
+    float currentUnfiltered;
+    float cellVoltage;
     int8_t cells;
     int8_t samples;
     Timer timer;
@@ -186,8 +190,8 @@ struct ModelState
 
   float desiredRate[AXES];
 
-  Pid innerPid[AXES];
-  Pid outerPid[AXES];
+  Control::Pid innerPid[AXES];
+  Control::Pid outerPid[AXES];
 
   size_t inputChannelCount;
   bool inputChannelsValid;
@@ -214,6 +218,7 @@ struct ModelState
   float output[OUTPUT_CHANNELS];
   int16_t outputUs[OUTPUT_CHANNELS];
   int16_t outputDisarmed[OUTPUT_CHANNELS];
+  bool outputSaturated;
 
   // other state
   Kalman kalman[AXES];

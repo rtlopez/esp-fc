@@ -86,7 +86,15 @@ void initBlackboxModel(Espfc::Model * m)
 uint16_t getBatteryVoltageLatest(void)
 {
   if(!_model_ptr) return 0;
-  return ((*_model_ptr).state.battery.voltage);
+  float v = (*_model_ptr).state.battery.voltageUnfiltered;
+  return constrain(lrintf(v * 100.0f), 0, 32000);
+}
+
+int32_t getAmperageLatest(void)
+{
+  if(!_model_ptr) return 0;
+  float v = (*_model_ptr).state.battery.currentUnfiltered;
+  return constrain(lrintf(v * 100.0f), 0, 32000);
 }
 
 bool rxIsReceivingSignal(void)
@@ -225,6 +233,9 @@ class Blackbox
       cp->horizon_limit_degrees = 135;
       cp->horizon_delay_ms = 500;
       cp->thrustLinearization = 0;
+      cp->iterm_relax = _model.config.itermRelax;
+      cp->iterm_relax_type = 1;
+      cp->iterm_relax_cutoff = _model.config.itermRelaxCutoff;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
@@ -283,8 +294,11 @@ class Blackbox
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
-      batteryConfigMutable()->voltageMeterSource = VOLTAGE_METER_NONE; //VOLTAGE_METER_ADC;
-      batteryConfigMutable()->currentMeterSource = CURRENT_METER_NONE;
+      batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibatSource;
+      batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbatSource;
+      batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbatCellWarning;
+      batteryConfigMutable()->vbatmaxcellvoltage = 420;
+      batteryConfigMutable()->vbatmincellvoltage = 340;
 
       rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
       rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;

@@ -356,7 +356,7 @@ class Cli
                                                   PSTR("DSHOT_RPM_TELEMETRY"), PSTR("RPM_FILTER"), PSTR("D_MIN"), PSTR("AC_CORRECTION"), PSTR("AC_ERROR"), PSTR("DUAL_GYRO_SCALED"), PSTR("DSHOT_RPM_ERRORS"), 
                                                   PSTR("CRSF_LINK_STATISTICS_UPLINK"), PSTR("CRSF_LINK_STATISTICS_PWR"), PSTR("CRSF_LINK_STATISTICS_DOWN"), PSTR("BARO"), PSTR("GPS_RESCUE_THROTTLE_PID"), 
                                                   PSTR("DYN_IDLE"), PSTR("FF_LIMIT"), PSTR("FF_INTERPOLATED"), PSTR("BLACKBOX_OUTPUT"), PSTR("GYRO_SAMPLE"), PSTR("RX_TIMING"), NULL };
-      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("PT2"), PSTR("PT3"), PSTR("NONE"), NULL };
+      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT2"), PSTR("PT3"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
                                                  PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
@@ -370,6 +370,10 @@ class Cli
       static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
       static const char* throtleLimitTypeChoices[] = { PSTR("NONE"), PSTR("SCALE"), PSTR("CLIP"), NULL };
       static const char* inputFilterChoices[] = { PSTR("INTERPOLATION"), PSTR("FILTER"), NULL };
+      static const char* inputItermRelaxChoices[] = { PSTR("OFF"), PSTR("RP"), PSTR("RPY"), PSTR("RP_INC"), PSTR("RPY_INC"), NULL };
+
+      static const char* voltageSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
+      static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
@@ -398,6 +402,10 @@ class Cli
         Param(PSTR("gyro_notch2_cutoff"), &c.gyroNotch2Filter.cutoff),
         Param(PSTR("gyro_dyn_lpf_min"), &c.gyroDynLpfFilter.cutoff),
         Param(PSTR("gyro_dyn_lpf_max"), &c.gyroDynLpfFilter.freq),
+        Param(PSTR("gyro_dyn_notch_q"), &c.dynamicFilter.q),
+        Param(PSTR("gyro_dyn_notch_count"), &c.dynamicFilter.width),
+        Param(PSTR("gyro_dyn_notch_min"), &c.dynamicFilter.min_freq),
+        Param(PSTR("gyro_dyn_notch_max"), &c.dynamicFilter.max_freq),
         Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
@@ -427,6 +435,16 @@ class Cli
         Param(PSTR("baro_dev"), &c.baroDev, baroDevChoices),
         Param(PSTR("baro_lpf_type"), &c.baroFilter.type, filterTypeChoices),
         Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
+
+        Param(PSTR("vbat_source"), &c.vbatSource, voltageSourceChoices),
+        Param(PSTR("vbat_scale"), &c.vbatScale),
+        Param(PSTR("vbat_mul"), &c.vbatResMult),
+        Param(PSTR("vbat_div"), &c.vbatResDiv),
+        Param(PSTR("vbat_cell_warn"), &c.vbatCellWarning),
+
+        Param(PSTR("ibat_source"), &c.ibatSource, currentSourceChoices),
+        Param(PSTR("ibat_scale"), &c.ibatScale),
+        Param(PSTR("ibat_offset"), &c.ibatOffset),
 
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
         Param(PSTR("fusion_gain_p"), &c.fusion.gain),
@@ -554,6 +572,8 @@ class Cli
         Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
         Param(PSTR("pid_iterm_limit"), &c.itermWindupPointPercent),
         Param(PSTR("pid_iterm_zero"), &c.lowThrottleZeroIterm),
+        Param(PSTR("pid_iterm_relax"), &c.itermRelax, inputItermRelaxChoices),
+        Param(PSTR("pid_iterm_relax_cutoff"), &c.itermRelaxCutoff),
         Param(PSTR("pid_tpa_scale"), &c.tpaScale),
         Param(PSTR("pid_tpa_breakpoint"), &c.tpaBreakpoint),
 

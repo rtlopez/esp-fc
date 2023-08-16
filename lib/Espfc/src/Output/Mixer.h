@@ -65,7 +65,6 @@ class Mixer
           if(_model.state.mixerTimer.syncTo(_model.state.loopTimer)) {
             update();
           }
-          _model.state.stats.loopTick();
           _model.state.appQueue.send(Event(EVENT_MIXER_UPDATED));
           return 1;
         default:
@@ -88,6 +87,8 @@ class Mixer
       {
         _model.state.debug[3] = micros() - startTime;
       }
+
+      _model.state.stats.loopTick();
 
       if(_model.config.debugMode == DEBUG_CYCLETIME)
       {
@@ -182,10 +183,14 @@ class Mixer
         entry++;
       }
 
+      bool saturated = false;
       for(size_t i = 0; i < mixer.count; i++)
       {
-        outputs[i] = limitOutput(outputs[i], _model.config.output.channel[i], _model.config.output.motorLimit);
+        const OutputChannelConfig& occ = _model.config.output.channel[i];
+        if(!occ.servo && outputs[i] >= 0.98f) saturated = true;
+        outputs[i] = limitOutput(outputs[i], occ, _model.config.output.motorLimit);
       }
+      _model.setOutputSaturated(saturated);
     }
 
     float limitThrust(float thrust, ThrottleLimitType type, int8_t limit)

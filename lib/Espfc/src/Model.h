@@ -186,6 +186,16 @@ class Model
       return state.armingDisabledFlags & flag;
     }
 
+    void setOutputSaturated(bool val)
+    {
+      state.outputSaturated = val;
+      for(size_t i = 0; i < 3; i++)
+      {
+        state.innerPid[i].outputSaturated = val;
+        state.outerPid[i].outputSaturated = val;
+      }
+    }
+
     Device::SerialDevice * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
@@ -476,7 +486,7 @@ class Model
       for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
       {
         const PidConfig& pc = config.pid[i];
-        Pid& pid = state.innerPid[i];
+        Control::Pid& pid = state.innerPid[i];
         pid.Kp = (float)pc.P * PTERM_SCALE * pidScale[i];
         pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
         pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
@@ -492,14 +502,20 @@ class Model
         }
         pid.dtermFilter2.begin(config.dtermFilter2, pidFilterRate);
         pid.ftermFilter.begin(config.input.filterDerivative, pidFilterRate);
-        if(i == AXIS_YAW) pid.ptermFilter.begin(config.yawFilter, pidFilterRate);
+        pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, config.itermRelaxCutoff), pidFilterRate);
+        if(i == AXIS_YAW) {
+          pid.itermRelax = config.itermRelax == ITERM_RELAX_RPY || config.itermRelax == ITERM_RELAX_RPY_INC ? config.itermRelax : ITERM_RELAX_OFF;
+          pid.ptermFilter.begin(config.yawFilter, pidFilterRate);
+        } else {
+          pid.itermRelax = config.itermRelax;
+        }
         pid.begin();
       }
 
       for(size_t i = 0; i < AXIS_YAW; i++)
       {
         PidConfig& pc = config.pid[PID_LEVEL];
-        Pid& pid = state.outerPid[i];
+        Control::Pid& pid = state.outerPid[i];
         pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
         pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
         pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;

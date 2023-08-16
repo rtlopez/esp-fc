@@ -11,6 +11,7 @@
 #include "Device/SerialDevice.h"
 #include "Device/InputPPM.h"
 #include "Output/Mixers.h"
+#include "Control/Pid.h"
 
 namespace Espfc {
 
@@ -457,16 +458,16 @@ class OutputConfig
 };
 
 enum DisarmReason {
-    DISARM_REASON_ARMING_DISABLED   = 0,
-    DISARM_REASON_FAILSAFE          = 1,
-    DISARM_REASON_THROTTLE_TIMEOUT  = 2,
-    DISARM_REASON_STICKS            = 3,
-    DISARM_REASON_SWITCH            = 4,
-    DISARM_REASON_CRASH_PROTECTION  = 5,
-    DISARM_REASON_RUNAWAY_TAKEOFF   = 6,
-    DISARM_REASON_GPS_RESCUE        = 7,
-    DISARM_REASON_SERIAL_COMMAND    = 8,
-    DISARM_REASON_SYSTEM            = 255,
+  DISARM_REASON_ARMING_DISABLED   = 0,
+  DISARM_REASON_FAILSAFE          = 1,
+  DISARM_REASON_THROTTLE_TIMEOUT  = 2,
+  DISARM_REASON_STICKS            = 3,
+  DISARM_REASON_SWITCH            = 4,
+  DISARM_REASON_CRASH_PROTECTION  = 5,
+  DISARM_REASON_RUNAWAY_TAKEOFF   = 6,
+  DISARM_REASON_GPS_RESCUE        = 7,
+  DISARM_REASON_SERIAL_COMMAND    = 8,
+  DISARM_REASON_SYSTEM            = 255,
 };
 
 enum ArmingDisabledFlags {
@@ -501,11 +502,11 @@ enum ArmingDisabledFlags {
 static const size_t ARMING_DISABLED_FLAGS_COUNT = 25;
 
 enum WirelessMode {
-    WIRELESS_MODE_NULL = 0,  /**< null mode */
-    WIRELESS_MODE_STA,       /**< WiFi station mode */
-    WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
-    WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
-    WIRELESS_MODE_MAX
+  WIRELESS_MODE_NULL = 0,  /**< null mode */
+  WIRELESS_MODE_STA,       /**< WiFi station mode */
+  WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
+  WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
+  WIRELESS_MODE_MAX
 };
 
 class WirelessConfig
@@ -594,6 +595,8 @@ class ModelConfig
 
     int16_t dtermSetpointWeight;
     int8_t itermWindupPointPercent;
+    int8_t itermRelax;
+    int8_t itermRelaxCutoff;
 
     int8_t angleLimit;
     int16_t angleRateLimit;
@@ -624,13 +627,15 @@ class ModelConfig
 
     char modelName[MODEL_NAME_LEN + 1];
 
-    int8_t vbatCellWarning;
+    int16_t vbatCellWarning;
     uint8_t vbatScale;
     uint8_t vbatResDiv;
     uint8_t vbatResMult;
-    uint8_t vbatSource;
+    int8_t vbatSource;
 
-    uint8_t ibatSource;
+    int8_t ibatSource;
+    int16_t ibatScale;
+    int16_t ibatOffset;
 
     int8_t debugMode;
     uint8_t debugAxis;
@@ -738,7 +743,7 @@ class ModelConfig
       gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
       gyroFilter = FilterConfig(FILTER_PT1, 100);
       gyroFilter2 = FilterConfig(FILTER_PT1, 213);
-      dynamicFilter = DynamicFilterConfig(0, 300, 80, 400); // 8%. q:3.0, 80-400 Hz
+      dynamicFilter = DynamicFilterConfig(4, 300, 80, 400); // 8%. q:3.0, 80-400 Hz
 
       dtermDynLpfFilter = FilterConfig(FILTER_PT1, 145, 60);
       dtermFilter = FilterConfig(FILTER_PT1, 128);
@@ -804,9 +809,9 @@ class ModelConfig
 
       // output config
       output.minCommand  = 1000;
-      output.minThrottle = 1050;
+      output.minThrottle = 1070;
       output.maxThrottle = 2000;
-      output.dshotIdle = 450;
+      output.dshotIdle = 550;
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         output.channel[i].servo = false;
@@ -915,6 +920,8 @@ class ModelConfig
       pid[PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
       itermWindupPointPercent = 30;
+      itermRelax = ITERM_RELAX_RP;
+      itermRelaxCutoff = 15;
       dtermSetpointWeight = 30;
 
       angleLimit = 55;  // deg
@@ -967,13 +974,15 @@ class ModelConfig
       magCalibrationScale[1] = 1000;
       magCalibrationScale[2] = 1000;
 
-      vbatScale = 100;
-      vbatResDiv = 16;
-      vbatResMult = 1;
-      vbatCellWarning = 35;
       vbatSource = 0;
+      vbatScale = 100;
+      vbatResDiv = 10;
+      vbatResMult = 1;
+      vbatCellWarning = 350;
 
       ibatSource = 0;
+      ibatScale = 100;
+      ibatOffset = 0;
 
       buzzer.inverted = true;
 
