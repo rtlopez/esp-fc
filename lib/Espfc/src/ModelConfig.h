@@ -631,11 +631,11 @@ class ModelConfig
     uint8_t vbatScale;
     uint8_t vbatResDiv;
     uint8_t vbatResMult;
-    uint8_t vbatSource;
+    int8_t vbatSource;
 
-    uint8_t ibatSource;
-    uint16_t ibatScale;
-    uint16_t ibatOffset;
+    int8_t ibatSource;
+    int16_t ibatScale;
+    int16_t ibatOffset;
 
     int8_t debugMode;
     uint8_t debugAxis;
