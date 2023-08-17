@@ -174,10 +174,9 @@ struct ModelState
   Filter gyroFilter3[3];
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
-  Filter gyroDynNotchFilter[3][8];
+  Filter gyroDynNotchFilter[3][6];
   Filter gyroImuFilter[3];
-  Math::FreqAnalyzer gyroAnalyzer[3];
-  
+
   Filter accelFilter[3];
   Filter magFilter[3];
   Filter inputFilter[4];
