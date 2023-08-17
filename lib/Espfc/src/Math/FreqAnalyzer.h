@@ -50,8 +50,7 @@ class FreqAnalyzer
       _pitch_count_raise++;
       _pitch_count_fall++;
 
-      //freq = _lpf.update(std::min(_pitch_freq_raise, _pitch_freq_fall)); // use lower value
-      freq = (_pitch_freq_raise * _pitch_freq_fall) * 0.5f;
+      freq = (_pitch_freq_raise + _pitch_freq_fall) * 0.5f;
     }
 
     float freq;
