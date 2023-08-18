@@ -359,24 +359,24 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate, EscD
     // pulse delays experimentally selected
     case ESC_PROTOCOL_DSHOT150:
       {
-        const float base = 206;
-        _dh = lrintf(base * 0.35f);
-        _dl = lrintf(base * 0.30f);
+        //const float base = 175;
+        _dh = 61;//lrintf(base * 0.36f);
+        _dl = 44;//lrintf(base * 0.28f);
       }
       break;
     case ESC_PROTOCOL_DSHOT300:
       {
-        const float base = 101;
-        _dh = lrintf(base * 0.35f);
-        _dl = lrintf(base * 0.30f);
+        //const float base = 85;
+        _dh = 30;//lrintf(base * 0.36f);
+        _dl = 22;//lrintf(base * 0.28f);
       }
       break;
     case ESC_PROTOCOL_DSHOT600:
     case ESC_PROTOCOL_PROSHOT:
       {
-        const float base = 47;
-        _dh = lrintf(base * 0.36f);
-        _dl = lrintf(base * 0.28f);
+        //const float base = 35;
+        _dh = 14;//lrintf(base * 0.36f);
+        _dl = 10;//lrintf(base * 0.28f);
       }
       break;
     default: // analog

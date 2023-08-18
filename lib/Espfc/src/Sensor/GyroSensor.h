@@ -222,7 +222,7 @@ class GyroSensor: public BaseSensor
             }
             if(_model.config.debugMode == DEBUG_FFT_FREQ)
             {
-              _model.state.debug[i] = lrintf(freq);
+              if(update) _model.state.debug[i] = lrintf(freq);
               if(i == _model.config.debugAxis) _model.state.debug[3] = lrintf(degrees(_model.state.gyroDynNotch[i]));
             }
             if(enabled && update)
