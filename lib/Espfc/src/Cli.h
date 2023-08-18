@@ -374,6 +374,7 @@ class Cli
 
       static const char* voltageSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
       static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
+      static const char* blackboxModeChoices[] = { PSTR("NORMAL"), PSTR("TEST"), PSTR("ALWAYS"), NULL };
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       const char ** wifiModeChoices            = WirelessConfig::getModeNames();
@@ -675,6 +676,7 @@ class Cli
         //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
         Param(PSTR("blackbox_dev"), &c.blackboxDev),
+        Param(PSTR("blackbox_mode"), &c.blackboxMode, blackboxModeChoices),
         Param(PSTR("blackbox_rate"), &c.blackboxPdenom),
         Param(PSTR("blackbox_mask"), &c.blackboxFieldsDisabledMask),
 

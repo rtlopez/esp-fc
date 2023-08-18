@@ -615,6 +615,7 @@ class ModelConfig
     int8_t blackboxDev;
     int16_t blackboxPdenom;
     int32_t blackboxFieldsDisabledMask;
+    int8_t blackboxMode;
 
     SerialPortConfig serial[SERIAL_UART_COUNT];
 
@@ -1000,6 +1001,7 @@ class ModelConfig
       blackboxDev = 0;
       blackboxPdenom = 32; // 1kHz
       blackboxFieldsDisabledMask = 0;
+      blackboxMode = 0;
 
 // development settings
 #if !defined(ESPFC_REVISION)

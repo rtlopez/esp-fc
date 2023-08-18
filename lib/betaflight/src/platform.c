@@ -104,7 +104,7 @@ bool IS_RC_MODE_ACTIVE(boxId_e boxId)
 
 serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction)
 {
-    return &_sp;
+    return NULL;
 }
 
 void mspSerialReleasePortIfAllocated(struct serialPort_s *serialPort)
@@ -116,6 +116,7 @@ serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function)
 {
     return &_spc;
 }
+
 serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options)
 {
     return &_sp;
@@ -143,11 +144,6 @@ bool rxAreFlightChannelsValid(void)
 uint8_t getMotorCount()
 {
     return MAX_SUPPORTED_MOTORS;
-}
-
-bool areMotorsRunning(void)
-{
-    return false;
 }
 
 bool isModeActivationConditionPresent(boxId_e modeId)
