@@ -28,6 +28,7 @@ enum StatCounter : int8_t {
   COUNTER_TELEMETRY,
   COUNTER_SERIAL,
   COUNTER_WIFI,
+  COUNTER_BATTERY,
   COUNTER_CPU_0,
   COUNTER_CPU_1,
   COUNTER_COUNT
@@ -168,12 +169,13 @@ class Stats
         case COUNTER_ACTUATOR:     return PSTR("   rx_a");
         case COUNTER_OUTER_PID:    return PSTR("  pid_o");
         case COUNTER_INNER_PID:    return PSTR("  pid_i");
-        case COUNTER_MIXER:        return PSTR("  mixer");
+        case COUNTER_MIXER:        return PSTR("mixer_p");
         case COUNTER_MIXER_WRITE:  return PSTR("mixer_w");
         case COUNTER_BLACKBOX:     return PSTR("  bblog");
         case COUNTER_TELEMETRY:    return PSTR("    tlm");
         case COUNTER_SERIAL:       return PSTR(" serial");
         case COUNTER_WIFI:         return PSTR("   wifi");
+        case COUNTER_BATTERY:      return PSTR("    bat");
         case COUNTER_CPU_0:        return PSTR("  cpu_0");
         case COUNTER_CPU_1:        return PSTR("  cpu_1");
         default:                   return PSTR("unknown");

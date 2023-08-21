@@ -3,7 +3,7 @@
 #include "Math/Utils.h"
 #include "helper_3dmath.h"
 #include "Filter.h"
-#include "Pid.h"
+#include "Control/Pid.h"
 
 // void setUp(void) {
 // // set stuff up here
@@ -14,6 +14,7 @@
 // }
 
 using namespace Espfc;
+using namespace Espfc::Control;
 
 void test_math_map()
 {
@@ -624,19 +625,45 @@ void test_pid_init()
     Pid pid;
     pid.rate = 100;
     pid.begin();
+
     TEST_ASSERT_FLOAT_WITHIN(0.1f, 100.0f, pid.rate);
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.01f, pid.dt);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1f, pid.Kp);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.Ki);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.Kd);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.Kf);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.3f, pid.iLimit);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.oLimit);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.pScale);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.iScale);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.dScale);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.fScale);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.error);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.iTermError);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.pTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.iTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.dTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.fTerm);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.prevError);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.prevSetpoint);
+
+    TEST_ASSERT_FALSE(pid.outputSaturated);
+
+    TEST_ASSERT_EQUAL(0, pid.itermRelax);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.itermRelaxBase);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.itermRelaxFactor);
 }
 
 void ensure(Pid& pid, float rate = 100.0f)
 {
     pid.rate = rate;
-    pid.pScale = 1.0f;
-    pid.iScale = 1.0f;
-    pid.dScale = 1.0f;
-    pid.fScale = 1.0f;
-    pid.oLimit = 1.0f;
-    pid.iLimit = 0.2f;
 }
 
 void gain(Pid& pid, float p, float i, float d, float f)
@@ -683,6 +710,18 @@ void test_pid_update_i()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.02f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.fTerm);
+
+    float result2 = pid.update(0.2f, 0.f);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.04f, result2);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.error);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.prevSetpoint);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.prevError);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.04f, pid.iTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.fTerm);
 }
 
 void test_pid_update_i_limit()
@@ -690,6 +729,7 @@ void test_pid_update_i_limit()
     Pid pid;
     ensure(pid);
     gain(pid, 0, 10, 0, 0);
+    pid.iLimit = 0.2f;
     pid.begin();
 
     float result1 = pid.update(0.8f, 0.f);
@@ -718,6 +758,55 @@ void test_pid_update_i_limit()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.fTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.20f, result3);
+}
+
+void test_pid_update_i_relax()
+{
+    Pid pid;
+    ensure(pid);
+    gain(pid, 0, 10, 0, 0);
+    pid.itermRelax = ITERM_RELAX_RP;
+    pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, 15), pid.rate);
+    pid.begin();
+
+    float result0 = pid.update(0.0f, 0.f);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, result0);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.error);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.iTermError);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.itermRelaxBase);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, pid.itermRelaxFactor);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.iTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.fTerm);
+
+    float result1 = pid.update(1.f, 0.f);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.026f, result1);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, pid.error);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.262f, pid.iTermError);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.515f, pid.itermRelaxBase);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.262f, pid.itermRelaxFactor);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.026f, pid.iTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, pid.pTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, pid.dTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, pid.fTerm);
+
+    float result2 = pid.update(3.f, 0.f);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.026f, result2);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.000f, pid.error);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, pid.iTermError);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.294f, pid.itermRelaxBase);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, pid.itermRelaxFactor);
+
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.026f, pid.iTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.00f, pid.pTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.00f, pid.dTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.00f, pid.fTerm);
 }
 
 void test_pid_update_d()
@@ -806,7 +895,7 @@ void test_pid_update_sum_limit()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.error);
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.pTerm);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.iTerm);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.3f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.fTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, result);
@@ -863,6 +952,7 @@ int main(int argc, char **argv)
     RUN_TEST(test_pid_update_p);
     RUN_TEST(test_pid_update_i);
     RUN_TEST(test_pid_update_i_limit);
+    RUN_TEST(test_pid_update_i_relax);
     RUN_TEST(test_pid_update_d);
     RUN_TEST(test_pid_update_f);
     RUN_TEST(test_pid_update_sum);

@@ -175,6 +175,14 @@ class Controller
         //_model.state.debug[i] = lrintf(_model.state.innerPid[i].fTerm * 1000);
       }
       _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
+
+      if(_model.config.debugMode == DEBUG_ITERM_RELAX)
+      {
+        _model.state.debug[0] = lrintf(Math::toDeg(_model.state.innerPid[0].itermRelaxBase));
+        _model.state.debug[1] = lrintf(_model.state.innerPid[0].itermRelaxFactor * 100.0f);
+        _model.state.debug[2] = lrintf(Math::toDeg(_model.state.innerPid[0].iTermError));
+        _model.state.debug[3] = lrintf(_model.state.innerPid[0].iTerm * 1000.0f);
+      }
     }
 
     float getTpaFactor() const
@@ -205,11 +213,6 @@ class Controller
     }
 
   private:
-    float power3(float x)
-    {
-      return x * x * x;
-    }
-
     Model& _model;
     Rates _rates;
     Filter _speedFilter;

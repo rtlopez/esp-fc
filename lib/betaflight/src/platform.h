@@ -7,10 +7,12 @@
 #define USE_DYN_LPF
 #define USE_D_MIN
 #define USE_DYN_NOTCH_FILTER
+#define USE_ITERM_RELAX
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <printf.h>
+#include <stddef.h>
 
 #if defined(ESP8266)
 #define ESPFC_TARGET "ESP8266"
@@ -639,6 +641,9 @@ typedef struct pidProfile_s {
     uint8_t horizon_limit_degrees;          // in Horizon mode, zero levelling when the quad's attitude exceeds this angle
     uint16_t horizon_delay_ms;              // delay when Horizon Strength increases, 50 = 500ms time constant
     uint8_t thrustLinearization;            // Compensation factor for pid linearization
+    uint8_t iterm_relax_type;               // Specifies type of relax algorithm
+    uint8_t iterm_relax_cutoff;             // This cutoff frequency specifies a low pass filter which predicts average response of the quad to setpoint
+    uint8_t iterm_relax;                    // Enable iterm suppression during stick input
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -807,9 +812,9 @@ typedef enum {
 
 typedef struct batteryConfig_s {
     // voltage
-    uint8_t vbatmaxcellvoltage;             // maximum voltage per cell, used for auto-detecting battery voltage in 0.1V units, default is 43 (4.3V)
-    uint8_t vbatmincellvoltage;             // minimum voltage per cell, this triggers battery critical alarm, in 0.1V units, default is 33 (3.3V)
-    uint8_t vbatwarningcellvoltage;         // warning voltage per cell, this triggers battery warning alarm, in 0.1V units, default is 35 (3.5V)
+    uint16_t vbatmaxcellvoltage;             // maximum voltage per cell, used for auto-detecting battery voltage in 0.1V units, default is 43 (4.3V)
+    uint16_t vbatmincellvoltage;             // minimum voltage per cell, this triggers battery critical alarm, in 0.1V units, default is 33 (3.3V)
+    uint16_t vbatwarningcellvoltage;         // warning voltage per cell, this triggers battery warning alarm, in 0.1V units, default is 35 (3.5V)
     uint8_t vbatnotpresentcellvoltage;      // Between vbatmaxcellvoltage and 2*this is considered to be USB powered. Below this it is notpresent
     voltageMeterSource_e voltageMeterSource; // source of battery voltage meter used, either ADC or ESC
     currentMeterSource_e currentMeterSource; // source of battery current meter used, either ADC, Virtual or ESC
