@@ -18,8 +18,9 @@ class FreqAnalyzer
       _rate = rate;
       _freq_min = config.min_freq;
       _freq_max = config.max_freq;
-      _bpf.begin(FilterConfig(FILTER_BPF, 180, 80), _rate); // 80 - 180 - 280 [Hz]
-      _lpf.begin(FilterConfig(FILTER_BIQUAD, 5), _rate); // 5 Hz
+      _pitch_freq_raise = _pitch_freq_fall = (_freq_min + _freq_max) * 0.5f;
+      _pitch_count_raise = _pitch_count_fall = 0;
+      _bpf.begin(FilterConfig(FILTER_BPF, 180, 100), _rate); // 100 - 180 - 260 [Hz]
       return 1;
     }
 
@@ -29,16 +30,19 @@ class FreqAnalyzer
       // pitch detection
       noise = _bpf.update(v);
       bool sign = noise > 0.f;
+      float k = 0.33f;
 
       // detect rising zero crossing
       if(sign && !_sign_prev) {
-        _pitch_freq_raise = Math::clamp((float)_rate / std::max(_pitch_count_raise, 1), _freq_min, _freq_max);
+        float f = Math::clamp(_rate / std::max(_pitch_count_raise, 1), _freq_min, _freq_max);
+        _pitch_freq_raise += k * (f - _pitch_freq_raise);
         _pitch_count_raise = 0;
       }
 
       // detect falling zero crossing
       if(!sign && _sign_prev) {
-        _pitch_freq_fall = Math::clamp((float)_rate / std::max(_pitch_count_fall, 1), _freq_min, _freq_max);
+        float f = Math::clamp(_rate / std::max(_pitch_count_fall, 1), _freq_min, _freq_max);
+        _pitch_freq_fall += k * (f - _pitch_freq_fall);
         _pitch_count_fall = 0;
       }
 
@@ -46,7 +50,7 @@ class FreqAnalyzer
       _pitch_count_raise++;
       _pitch_count_fall++;
 
-      freq = _lpf.update(std::min(_pitch_freq_raise, _pitch_freq_fall)); // use lower value
+      freq = (_pitch_freq_raise + _pitch_freq_fall) * 0.5f;
     }
 
     float freq;
@@ -54,8 +58,7 @@ class FreqAnalyzer
 
   private:
     Filter _bpf;
-    Filter _lpf;
-    int _rate;
+    float _rate;
 
     float _freq_min;
     float _freq_max;

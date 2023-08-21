@@ -154,6 +154,11 @@ int16_t getMotorOutputHigh()
   return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
 }
 
+bool areMotorsRunning(void)
+{
+  return _model_ptr->areMotorsRunning();
+}
+
 namespace Espfc {
 
 class Blackbox
@@ -291,6 +296,7 @@ class Blackbox
       }
       blackboxConfigMutable()->device = _model.config.blackboxDev;
       blackboxConfigMutable()->fields_disabled_mask = _model.config.blackboxFieldsDisabledMask;
+      blackboxConfigMutable()->mode = _model.config.blackboxMode;
 
       featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 

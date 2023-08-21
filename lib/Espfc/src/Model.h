@@ -196,6 +196,18 @@ class Model
       }
     }
 
+    bool areMotorsRunning() const
+    {
+      size_t count = state.currentMixer.count;
+      for(size_t i = 0; i < count; i++)
+      {
+        if(config.output.channel[i].servo) continue;
+        if(state.outputDisarmed[i] != config.output.minCommand) return true;
+        //if(state.outputUs[i] != config.output.minCommand) return true;
+      }
+      return false;
+    }
+
     Device::SerialDevice * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
@@ -398,6 +410,11 @@ class Model
         1 << (BEEPER_DISARMING - 1) |
         1 << (BEEPER_ARMING - 1) |
         1 << (BEEPER_BAT_LOW - 1);
+
+        if(config.dynamicFilter.width > 6)
+        {
+          config.dynamicFilter.width = 6;
+        }
     }
 
     void begin()
@@ -430,7 +447,6 @@ class Model
       // configure filters
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
-        state.gyroAnalyzer[i].begin(gyroFilterRate, config.dynamicFilter);
         if(isActive(FEATURE_DYNAMIC_FILTER))
         {
           for(size_t p = 0; p < (size_t)config.dynamicFilter.width; p++)
