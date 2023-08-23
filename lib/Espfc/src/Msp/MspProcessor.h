@@ -155,7 +155,7 @@ class MspProcessor
   public:
     MspProcessor(Model& model): _model(model) {}
 
-    bool process(char c, MspMessage& msg, MspResponse& res, Stream& s)
+    bool process(char c, MspMessage& msg, MspResponse& res, Device::SerialDevice& s)
     {
       _parser.parse(c, msg);
 
@@ -1377,7 +1377,7 @@ class MspProcessor
       }
     }
 
-    void sendResponse(MspResponse& r, Stream& s)
+    void sendResponse(MspResponse& r, Device::SerialDevice& s)
     {
       debugResponse(r);
       switch(r.version)
@@ -1392,8 +1392,9 @@ class MspProcessor
       postCommand();
     }
 
-    void sendResponseV1(MspResponse& r, Stream& s)
+    void sendResponseV1(MspResponse& r, Device::SerialDevice& s)
     {
+      // TODO: optimize to write at once
       uint8_t hdr[5] = { '$', 'M', '>' };
       if(r.result == -1)
       {
@@ -1411,7 +1412,7 @@ class MspProcessor
       s.write(checksum);
     }
 
-    void sendResponseV2(MspResponse& r, Stream& s)
+    void sendResponseV2(MspResponse& r, Device::SerialDevice& s)
     {
       uint8_t hdr[8] = { '$', 'X', '>', 0 };
       if(r.result == -1)
@@ -1463,7 +1464,7 @@ class MspProcessor
     void debugMessage(const MspMessage& m)
     {
       if(debugSkip(m.cmd)) return;
-      Stream * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
+      Device::SerialDevice * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
       s->print(m.dir == MSP_TYPE_REPLY ? '>' : '<'); s->print(' ');
@@ -1479,7 +1480,7 @@ class MspProcessor
     void debugResponse(const MspResponse& r)
     {
       if(debugSkip(r.cmd)) return;
-      Stream * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
+      Device::SerialDevice * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
       s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); s->print(' ');

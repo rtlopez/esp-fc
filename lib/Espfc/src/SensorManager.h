@@ -102,7 +102,7 @@ class SensorManager
       {
         status = _voltage.update();
       }
-      if (status)
+      if(status)
       {
         _model.state.appQueue.send(Event(EVENT_VOLTAGE_READ));
       }
