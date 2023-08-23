@@ -323,7 +323,7 @@ class Blackbox
       {
         case EVENT_MIXER_UPDATED:
           update();
-          //_model.state.appQueue.send(Event(EVENT_BBLOG_UPDATED));
+          _model.state.appQueue.send(Event(EVENT_BBLOG_UPDATED));
           return 1;
         default:
           break;

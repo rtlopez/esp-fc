@@ -50,13 +50,13 @@ class SensorManager
         case EVENT_MAG_READ:
           _mag.filter();
           return 1;
-        case EVENT_SENSOR_READ:
+        case EVENT_BBLOG_UPDATED:
           if(_model.state.imuUpdate)
           {
             _fusion.update();
             _model.state.imuUpdate = false;
+            _model.state.appQueue.send(Event(EVENT_IMU_UPDATED));
           }
-          _model.state.appQueue.send(Event(EVENT_IMU_UPDATED));
           return 1;
         default:
           break;
