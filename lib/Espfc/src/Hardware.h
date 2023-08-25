@@ -25,7 +25,7 @@
 namespace {
 #if defined(ESPFC_SPI_0)
 #ifdef ESP32
-  static SPIClass SPI1(VSPI);
+  static SPIClass SPI1(HSPI);
 #endif
   static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
 #endif
@@ -80,7 +80,7 @@ class Hardware
     void detectGyro()
     {
       if(_model.config.gyroDev == GYRO_NONE) return;
-
+      
       Espfc::Device::GyroDevice * detectedGyro = nullptr;
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS0] != -1)

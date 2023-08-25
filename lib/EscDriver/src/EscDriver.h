@@ -69,6 +69,15 @@ class EscDriverBase
   #define ESC_DRIVER_MOTOR_TIMER 0
   #define ESC_DRIVER_SERVO_TIMER 1
 
+#elif defined(ESP32_C3)
+
+  #define ESC_CHANNEL_COUNT RMT_CHANNEL_MAX
+  #include "EscDriverEsp32.h"
+  #define EscDriver EscDriverEsp32
+
+  #define ESC_DRIVER_MOTOR_TIMER 0
+  #define ESC_DRIVER_SERVO_TIMER 1
+
 #elif defined(ARCH_RP2040)
 
   #define ESC_CHANNEL_COUNT 8
