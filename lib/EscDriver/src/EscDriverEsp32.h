@@ -31,7 +31,7 @@ IRAM_ATTR static esp_err_t _rmt_fill_tx_items(rmt_channel_t channel, const rmt_i
 
   //rmt_fill_memory(channel, item, item_num, mem_offset);
   //portENTER_CRITICAL(&rmt_spinlock);
-  RMT.apb_conf.fifo_mask = RMT_DATA_MODE_MEM;
+  RMT.sys_conf.fifo_mask = RMT_DATA_MODE_MEM;
   //portEXIT_CRITICAL(&rmt_spinlock);
   for(size_t i = 0; i < item_num; i++) {
     RMTMEM.chan[channel].data32[i + mem_offset].val = item[i].val;
@@ -43,10 +43,10 @@ IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
   //RMT_CHECK(channel < RMT_CHANNEL_MAX, RMT_CHANNEL_ERROR_STR, ESP_ERR_INVALID_ARG);
   //portENTER_CRITICAL(&rmt_spinlock);
   if(tx_idx_rst) {
-    RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
+    RMT.tx_conf[channel].mem_rd_rst = 1;
   }
-  RMT.conf_ch[channel].conf1.mem_owner = RMT_MEM_OWNER_TX;
-  RMT.conf_ch[channel].conf1.tx_start = 1;
+  //RMT.tx_conf[channel].mem_owner = RMT_MEM_OWNER_TX;
+  RMT.tx_conf[channel].tx_start = 1;
   //portEXIT_CRITICAL(&rmt_spinlock);
   return ESP_OK;
 }
