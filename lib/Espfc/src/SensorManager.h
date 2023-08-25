@@ -51,6 +51,7 @@ class SensorManager
           _mag.filter();
           return 1;
         case EVENT_BBLOG_UPDATED:
+          _gyro.dynNotchAnalyze();
           if(_model.state.imuUpdate)
           {
             _fusion.update();
@@ -129,6 +130,7 @@ class SensorManager
     // sub task
     int updateDelayed()
     {
+      _gyro.dynNotchAnalyze();
       int status = _accel.update();
       if(!status)
       {

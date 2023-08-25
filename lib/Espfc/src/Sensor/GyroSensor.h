@@ -107,6 +107,8 @@ class GyroSensor: public BaseSensor
 
       _model.state.gyroScaled = _model.state.gyro;
 
+      bool dynNotchEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0;
+
       // filtering
       for(size_t i = 0; i < 3; ++i)
       {
@@ -144,12 +146,15 @@ class GyroSensor: public BaseSensor
         {
           _model.state.debug[3] = lrintf(degrees(_model.state.gyro[i]));
         }
-      }
 
-      filterDynNotch();
+        if(dynNotchEnabled)
+        {
+          for(size_t p = 0; p < _model.config.dynamicFilter.width; p++)
+          {
+            _model.state.gyro.set(i, _model.state.gyroDynNotchFilter[i][p].update(_model.state.gyro[i]));
+          }
+        }
 
-      for(size_t i = 0; i < 3; ++i)
-      {
         if(_model.config.debugMode == DEBUG_GYRO_FILTERED)
         {
           _model.state.debug[i] = lrintf(degrees(_model.state.gyro[i]));
@@ -163,8 +168,7 @@ class GyroSensor: public BaseSensor
       return 1;
     }
 
-  private:
-    void filterDynNotch()
+    void dynNotchAnalyze()
     {
       bool enabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
       bool feed = _model.state.loopTimer.iteration % _dyn_notch_denom == 0;
@@ -239,17 +243,11 @@ class GyroSensor: public BaseSensor
             }
           }
 #endif
-          if(enabled)
-          {
-            for(size_t p = 0; p < peakCount; p++)
-            {
-              _model.state.gyro.set(i, _model.state.gyroDynNotchFilter[i][p].update(_model.state.gyro[i]));
-            }
-          }
         }
       }
     }
 
+  private:
     void calibrate()
     {
       switch(_model.state.gyroCalibrationState)

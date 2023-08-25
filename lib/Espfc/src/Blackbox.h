@@ -24,7 +24,7 @@ class BlackboxBuffer
     void write(uint8_t c)
     {
       _data[_idx++] = c;
-      if(c >= SIZE) flush();
+      if(_idx >= SIZE) flush();
     }
 
     void flush()
