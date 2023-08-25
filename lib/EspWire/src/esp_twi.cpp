@@ -37,12 +37,19 @@ static uint32_t esp_twi_clockStretchLimit;
   #define SCL_HIGH()  (GPEC = (1 << esp_twi_scl))
   #define SCL_READ()  ((GPI & (1 << esp_twi_scl)) != 0)
 #elif defined(ESP32)
-  #define SDA_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+#define SDA_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
   #define SDA_HIGH()  (GPIO.enable_w1tc = (1 << esp_twi_sda)) //Disable SDA (becomes input and since it has pullup it will go high)
   #define SDA_READ()  ((GPIO.in & (1 << esp_twi_sda)) != 0)
   #define SCL_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_scl))
   #define SCL_HIGH()  (GPIO.enable_w1tc = (1 << esp_twi_scl))
   #define SCL_READ()  ((GPIO.in & (1 << esp_twi_scl)) != 0)
+#elif defined(ESP32_C3)
+  #define SDA_LOW()   (GPIO.enable_w1ts.enable_w1ts = ((uint32_t) 1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+  #define SDA_HIGH()  (GPIO.enable_w1tc.enable_w1tc = ((uint32_t) 1 << esp_twi_sda)) //Disable SDA (becomes input and since it has pullup it will go high)
+  #define SDA_READ()  ((GPIO.in.val & ((uint32_t) 1 << esp_twi_sda)) != 0)
+  #define SCL_LOW()   (GPIO.enable_w1ts.enable_w1ts = ((uint32_t) 1 << esp_twi_scl))
+  #define SCL_HIGH()  (GPIO.enable_w1tc.enable_w1tc = ((uint32_t) 1 << esp_twi_scl))
+  #define SCL_READ()  ((GPIO.in.val & ((uint32_t) 1 << esp_twi_scl)) != 0)
 #elif defined(ARCH_RP2040)
   #define SDA_LOW()   (pinMode(esp_twi_sda, OUTPUT)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
   #define SDA_HIGH()  (pinMode(esp_twi_sda, INPUT_PULLUP))  //Disable SDA (becomes input and since it has pullup it will go high)
@@ -158,7 +165,7 @@ static inline IRAM_ATTR unsigned int _getCycleCount()
 {
 #if defined(ESP32) || defined(ESP8266)
     unsigned int ccount = 0;
-    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+    //__asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
     return ccount;
 #elif defined(ARCH_RP2040)
   return rp2040.getCycleCount();
