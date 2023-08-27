@@ -82,6 +82,7 @@ class Hardware
     void detectGyro()
     {
       if(_model.config.gyroDev == GYRO_NONE) return;
+
       Espfc::Device::GyroDevice * detectedGyro = nullptr;
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS0] != -1)
