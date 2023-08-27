@@ -52,9 +52,9 @@
 //#define ESPFC_LOGGER_FS // doesn't compile on ESP32
 
 #define ESPFC_FREE_RTOS
-//#ifndef CONFIG_FREERTOS_UNICORE
-  #define ESPFC_MULTI_CORE
-//#endif
+// #ifndef CONFIG_FREERTOS_UNICORE
+//   #define ESPFC_MULTI_CORE
+// #endif
 
 #define ESPFC_DSP
 

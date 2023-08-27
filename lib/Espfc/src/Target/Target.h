@@ -2,8 +2,8 @@
 
 #if defined(ESP32)
   #include "TargetESP32.h"
-#elif defined(ESP32_C3)
-  #include "TargetESP32C3.h"
+#elif defined(ESP32_C3) //where is this defined???
+  #include "TargetESP32c3.h"
 #elif defined(ESP8266)
   #include "TargetESP8266.h"
 #elif defined(ARCH_RP2040)

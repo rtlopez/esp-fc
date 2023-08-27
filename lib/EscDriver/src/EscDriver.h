@@ -69,11 +69,11 @@ class EscDriverBase
   #define ESC_DRIVER_MOTOR_TIMER 0
   #define ESC_DRIVER_SERVO_TIMER 1
 
-#elif defined(ESP32_C3)
+#elif defined(ESP32_C3) //where is this defined???
 
   #define ESC_CHANNEL_COUNT RMT_CHANNEL_MAX
-  #include "EscDriverEsp32.h"
-  #define EscDriver EscDriverEsp32
+  #include "EscDriverEsp32c3.h"
+  #define EscDriver EscDriverEsp32c3
 
   #define ESC_DRIVER_MOTOR_TIMER 0
   #define ESC_DRIVER_SERVO_TIMER 1

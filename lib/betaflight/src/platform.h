@@ -18,7 +18,7 @@
 #define ESPFC_TARGET "ESP8266"
 #elif defined(ESP32)
 #define ESPFC_TARGET "ESP32"
-#elif defined(ESP32_C3)
+#elif defined(ESP32_C3) //where is this defined???
 #define ESPFC_TARGET "ESP32_C3"
 #elif defined(ARCH_RP2040)
 #define ESPFC_TARGET "RP2040"
