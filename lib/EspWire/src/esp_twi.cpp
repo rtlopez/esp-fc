@@ -168,7 +168,7 @@ static inline IRAM_ATTR unsigned int _getCycleCount()
     unsigned int ccount = 0;
     __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
     return ccount;
-#elif defined(ESP32_3)
+#elif defined(ESP32_C3)
   //what is this??
 #elif defined(ARCH_RP2040)
   return rp2040.getCycleCount();
