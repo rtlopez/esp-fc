@@ -1,7 +1,7 @@
 #ifndef _ESC_DRIVER_ESP32C3_H_
 #define _ESC_DRIVER_ESP32C3_H_
 
-#if defined(ESP32_C3)
+#if defined(ESP32C3)
 
 #include "EscDriver.h"
 #include <Arduino.h>

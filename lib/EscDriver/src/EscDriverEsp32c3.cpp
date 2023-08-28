@@ -1,4 +1,4 @@
-#if defined(ESP32_C3)
+#if defined(ESP32C3)
 
 #include "EscDriverEsp32c3.h"
 

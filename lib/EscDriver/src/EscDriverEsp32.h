@@ -1,7 +1,7 @@
 #ifndef _ESC_DRIVER_ESP32_H_
 #define _ESC_DRIVER_ESP32_H_
 
-#if defined(ESP32)
+#if defined(ESP32x) //where is this defined???
 
 #include "EscDriver.h"
 #include <Arduino.h>

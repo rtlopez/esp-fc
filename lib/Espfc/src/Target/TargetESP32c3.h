@@ -2,7 +2,7 @@
 
 #include "Esp.h"
 #include "Debug_Espfc.h"
-
+//free pins left: IO15 IO16 IO17
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 3 // ppm
 
@@ -21,6 +21,15 @@
 #define ESPFC_SERIAL_0_BAUD (SERIAL_SPEED_115200)
 #define ESPFC_SERIAL_0_BBAUD (SERIAL_SPEED_NONE)
 
+#define ESPFC_SERIAL_1
+#define ESPFC_SERIAL_1_DEV Serial1
+#define ESPFC_SERIAL_1_DEV_T HardwareSerial
+#define ESPFC_SERIAL_1_TX -1
+#define ESPFC_SERIAL_1_RX -1
+#define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_MSP)
+#define ESPFC_SERIAL_1_BAUD (SERIAL_SPEED_115200)
+#define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_NONE)
+
 #define ESPFC_SERIAL_REMAP_PINS
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_UART_0
 #define SERIAL_TX_FIFO_SIZE 0xFF
@@ -28,7 +37,7 @@
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_DEV SPI1
 #define ESPFC_SPI_0_SCK 6
-#define ESPFC_SPI_0_MOSI 5
+#define ESPFC_SPI_0_MOSI 14
 #define ESPFC_SPI_0_MISO 7
 
 #define ESPFC_SPI_CS_GYRO 10
@@ -45,17 +54,19 @@
 #define ESPFC_ADC_0
 #define ESPFC_ADC_0_PIN 1
 
+#define ESPFC_ADC_1
+#define ESPFC_ADC_1_PIN 5
+
+#define ESPFC_ADC_SCALE (3.3f / 4096)
+
 #define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL | FEATURE_DYNAMIC_FILTER)
 
 #define ESPFC_GUARD 0
-#define ESPFC_GYRO_DENOM_MAX 1
+
+#define ESPFC_GYRO_I2C_RATE_MAX 2000
+#define ESPFC_GYRO_SPI_RATE_MAX 8000
+
 //#define ESPFC_LOGGER_FS // doesn't compile on ESP32
-
-#define ESPFC_FREE_RTOS
-// #ifndef CONFIG_FREERTOS_UNICORE
-//   #define ESPFC_MULTI_CORE
-// #endif
-
 #define ESPFC_DSP
 
 #include "Device/SerialDevice.h"

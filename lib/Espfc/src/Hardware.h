@@ -24,10 +24,10 @@
 
 namespace {
 #if defined(ESPFC_SPI_0)
-  #if defined(ESP32)
-    static SPIClass SPI1(VSPI);
-  #elif defined(ESP32_C3) //where is this defined???
+  #if defined(ESP32C3)
     static SPIClass SPI1(HSPI);
+  #elif defined(ESP32) //where is this defined???
+    static SPIClass SPI1(VSPI);
   #endif
   static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
 #endif
