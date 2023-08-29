@@ -1,7 +1,7 @@
-#ifndef _ESC_DRIVER_ESP32_H_
-#define _ESC_DRIVER_ESP32_H_
+#ifndef _ESC_DRIVER_ESP32C3_H_
+#define _ESC_DRIVER_ESP32C3_H_
 
-#if defined(ESP32) and not defined(ESP32C3) //where is this defined???
+#if defined(ESP32C3)
 
 #include "EscDriver.h"
 #include <Arduino.h>
@@ -31,7 +31,7 @@ IRAM_ATTR static esp_err_t _rmt_fill_tx_items(rmt_channel_t channel, const rmt_i
 
   //rmt_fill_memory(channel, item, item_num, mem_offset);
   //portENTER_CRITICAL(&rmt_spinlock);
-  RMT.apb_conf.fifo_mask = RMT_DATA_MODE_MEM;
+  RMT.sys_conf.fifo_mask = RMT_DATA_MODE_MEM;
   //portEXIT_CRITICAL(&rmt_spinlock);
   for(size_t i = 0; i < item_num; i++) {
     RMTMEM.chan[channel].data32[i + mem_offset].val = item[i].val;
@@ -43,10 +43,10 @@ IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
   //RMT_CHECK(channel < RMT_CHANNEL_MAX, RMT_CHANNEL_ERROR_STR, ESP_ERR_INVALID_ARG);
   //portENTER_CRITICAL(&rmt_spinlock);
   if(tx_idx_rst) {
-    RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
+    RMT.tx_conf[channel].mem_rd_rst = 1;
   }
-  RMT.conf_ch[channel].conf1.mem_owner = RMT_MEM_OWNER_TX;
-  RMT.conf_ch[channel].conf1.tx_start = 1;
+  //RMT.tx_conf[channel].mem_owner = RMT_MEM_OWNER_TX;
+  RMT.tx_conf[channel].tx_start = 1;
   //portEXIT_CRITICAL(&rmt_spinlock);
   return ESP_OK;
 }
@@ -55,7 +55,7 @@ IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
 #define _rmt_fill_tx_items rmt_fill_tx_items
 #endif
 
-class EscDriverEsp32: public EscDriverBase
+class EscDriverEsp32c3: public EscDriverBase
 {
   public:
     class Slot {
@@ -114,7 +114,7 @@ class EscDriverEsp32: public EscDriverBase
         }
     };
 
-    EscDriverEsp32(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _digital(false)
+    EscDriverEsp32c3(): _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _digital(false)
     {
       for(size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
       {
@@ -413,7 +413,7 @@ class EscDriverEsp32: public EscDriverBase
     bool _digital;
 
     static bool _tx_end_installed;
-    static EscDriverEsp32* instances[];
+    static EscDriverEsp32c3* instances[];
 };
 
 #endif

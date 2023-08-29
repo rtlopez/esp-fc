@@ -19,6 +19,9 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "esp_twi.h"
+#if defined(ESP32C3)
+  #include <soc/cpu.h>
+#endif
 #ifndef UNIT_TEST
 #include <pins_arduino.h>
 #include <wiring_private.h>
@@ -36,6 +39,14 @@ static uint32_t esp_twi_clockStretchLimit;
   #define SCL_LOW()   (GPES = (1 << esp_twi_scl))
   #define SCL_HIGH()  (GPEC = (1 << esp_twi_scl))
   #define SCL_READ()  ((GPI & (1 << esp_twi_scl)) != 0)
+#elif defined(ESP32C3) //where is this defined???
+  //#define SDA_LOW()   (GPIO.enable_w1ts.enable_w1ts = ((uint32_t) 1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+  static inline void SDA_LOW() { GPIO.enable_w1ts.enable_w1ts = (uint32_t) 1 << esp_twi_sda; GPIO.out_w1tc.out_w1tc = (uint32_t) 1 << esp_twi_sda; }
+  #define SDA_HIGH()  (GPIO.enable_w1tc.enable_w1tc = ((uint32_t) 1 << esp_twi_sda)) //Disable SDA (becomes input and since it has pullup it will go high)
+  #define SDA_READ()  ((GPIO.in.val & ((uint32_t) 1 << esp_twi_sda)) != 0)
+  #define SCL_LOW()   (GPIO.enable_w1ts.enable_w1ts = ((uint32_t) 1 << esp_twi_scl))
+  #define SCL_HIGH()  (GPIO.enable_w1tc.enable_w1tc = ((uint32_t) 1 << esp_twi_scl))
+  #define SCL_READ()  ((GPIO.in.val & ((uint32_t) 1 << esp_twi_scl)) != 0)
 #elif defined(ESP32)
   //#define SDA_LOW()   (GPIO.enable_w1ts = (1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
   static inline void SDA_LOW() { GPIO.enable_w1ts = 1 << esp_twi_sda; GPIO.out_w1tc = 1 << esp_twi_sda; }
@@ -156,10 +167,13 @@ void esp_twi_stop(void){
 
 static inline IRAM_ATTR unsigned int _getCycleCount()
 {
-#if defined(ESP32) || defined(ESP8266)
-    unsigned int ccount = 0;
-    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
-    return ccount;
+
+#if defined(ESP32C3) //where is this defined???
+  return esp_cpu_get_ccount();
+#elif defined(ESP32) || defined(ESP8266)
+  unsigned int ccount = 0;
+  __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+  return ccount;
 #elif defined(ARCH_RP2040)
   return rp2040.getCycleCount();
 #elif defined(UNIT_TEST)
