@@ -19,7 +19,9 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "esp_twi.h"
-#include <soc/cpu.h>
+#if defined(ESP32C3)
+  #include <soc/cpu.h>
+#endif
 #ifndef UNIT_TEST
 #include <pins_arduino.h>
 #include <wiring_private.h>
