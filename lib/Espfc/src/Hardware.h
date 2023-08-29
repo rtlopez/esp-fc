@@ -13,6 +13,7 @@
 #endif
 #include "Device/GyroDevice.h"
 #include "Device/GyroMPU6050.h"
+#include "Device/GyroMPU6500.h"
 #include "Device/GyroMPU9250.h"
 #include "Device/GyroLSM6DSO.h"
 #include "Device/GyroICM20602.h"
@@ -33,6 +34,7 @@ namespace {
   static Espfc::Device::BusI2C i2cBus(WireInstance);
 #endif
   static Espfc::Device::GyroMPU6050 mpu6050;
+  static Espfc::Device::GyroMPU6500 mpu6500;
   static Espfc::Device::GyroMPU9250 mpu9250;
   static Espfc::Device::GyroLSM6DSO lsm6dso;
   static Espfc::Device::GyroICM20602 icm20602;
@@ -88,6 +90,7 @@ class Hardware
         digitalWrite(_model.config.pin[PIN_SPI_CS0], HIGH);
         pinMode(_model.config.pin[PIN_SPI_CS0], OUTPUT);
         if(!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
+        if(!detectedGyro && detectDevice(mpu6500, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu6500;
         if(!detectedGyro && detectDevice(icm20602, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
         if(!detectedGyro && detectDevice(lsm6dso, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
       }
@@ -96,6 +99,7 @@ class Hardware
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
         if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
+        if(!detectedGyro && detectDevice(mpu6500, i2cBus)) detectedGyro = &mpu6500;
         if(!detectedGyro && detectDevice(icm20602, i2cBus)) detectedGyro = &icm20602;
         if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
         if(!detectedGyro && detectDevice(lsm6dso, i2cBus)) detectedGyro = &lsm6dso;
