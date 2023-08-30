@@ -26,7 +26,7 @@ class Controller
         case EVENT_GYRO_READ:
           _model.state.loopUpdate = true;
           return 1;
-        case EVENT_IMU_UPDATED:
+        case EVENT_SENSOR_READ:
           if(_model.state.loopUpdate)
           {
             update();

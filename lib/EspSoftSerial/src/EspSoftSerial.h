@@ -49,6 +49,16 @@ class EspSoftSerial: public Stream
       return _rx_buff.get();
     }
 
+    int read(uint8_t * buff, size_t len) override
+    {
+      size_t count = std::min(len, (size_t)available());
+      for(size_t i = 0; i < count; i++)
+      {
+        buff[i] = read();
+      }
+      return count;
+    }
+
     int peek() override
     {
       return _rx_buff.peek();

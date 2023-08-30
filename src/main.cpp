@@ -51,7 +51,11 @@ Espfc::Espfc espfc;
     }
     void loop()
     {
-      espfc.update();
+      const uint32_t timeout = millis() + 200;
+      while(millis() < timeout)
+      {
+        espfc.update();
+      }
     }
 
   #elif defined(ESPFC_MULTI_CORE_RP2040)
