@@ -170,6 +170,8 @@ class GyroSensor: public BaseSensor
 
     void dynNotchAnalyze()
     {
+      Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FFT);
+
       bool enabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
       bool feed = _model.state.loopTimer.iteration % _dyn_notch_denom == 0;
       bool debug = _model.config.debugMode == DEBUG_FFT_FREQ || _model.config.debugMode == DEBUG_FFT_TIME;
