@@ -123,7 +123,7 @@ template<>
 inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
 {
   dev.begin(conf.baud);
-  while(!dev) delay(10);
+  //while(!dev) delay(10);
   return 1;
 }
 
