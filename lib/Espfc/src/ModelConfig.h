@@ -54,7 +54,8 @@ enum SensorAlign {
   ALIGN_CW0_DEG_FLIP   = 5,
   ALIGN_CW90_DEG_FLIP  = 6,
   ALIGN_CW180_DEG_FLIP = 7,
-  ALIGN_CW270_DEG_FLIP = 8
+  ALIGN_CW270_DEG_FLIP = 8,
+  ALIGN_CUSTOM         = 9,
 };
 
 enum FusionMode {
