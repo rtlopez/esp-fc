@@ -69,7 +69,7 @@ class AccelSensor: public BaseSensor
 
       Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
-      align(_model.state.accelRaw, _model.config.accelAlign);
+      align(_model.state.accelRaw, _model.config.gyroAlign);
 
       _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       for(size_t i = 0; i < 3; i++)
