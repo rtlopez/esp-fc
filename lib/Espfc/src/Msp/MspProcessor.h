@@ -490,12 +490,13 @@ class MspProcessor
 
         case MSP_SENSOR_ALIGNMENT:
           r.writeU8(_model.config.gyroAlign); // gyro align
-          r.writeU8(_model.config.gyroAlign); // acc align
+          r.writeU8(_model.config.gyroAlign); // acc align, Starting with 4.0 gyro and acc alignment are the same
           r.writeU8(_model.config.magAlign);  // mag align
           //1.41+
-          r.writeU8(1); // gyro detection mask GYRO_1_MASK
-          r.writeU8(_model.config.gyroAlign);
-          r.writeU8(0); // default align
+          r.writeU8(_model.state.gyroPresent ? 1 : 0); // gyro detection mask GYRO_1_MASK
+          r.writeU8(0); // gyro_to_use
+          r.writeU8(_model.config.gyroAlign); // gyro 1
+          r.writeU8(0); // gyro 2
           break;
 
         case MSP_SET_SENSOR_ALIGNMENT:
@@ -503,17 +504,14 @@ class MspProcessor
             uint8_t gyroAlign = m.readU8(); // gyro align
             m.readU8(); // discard deprecated acc align
             _model.config.magAlign = m.readU8(); // mag align
+            // API >= 1.41 - support the gyro_to_use and alignment for gyros 1 & 2
             if(m.remain() >= 3)
             {
-              m.readU8(); // gyro to use
-              _model.config.gyroAlign = m.readU8(); // gyro 1 align
+              m.readU8(); // gyro_to_use
+              gyroAlign = m.readU8(); // gyro 1 align
               m.readU8(); // gyro 2 align
             }
-            else
-            {
-              _model.config.gyroAlign = gyroAlign;
-            }
-            _model.config.accelAlign = _model.config.gyroAlign;
+            _model.config.gyroAlign = gyroAlign;
           }
           break;
 
@@ -954,7 +952,7 @@ class MspProcessor
           r.writeU16(_model.config.output.dshotIdle);
           r.writeU8(0);    // 32k gyro
           r.writeU8(0);    // PWM inversion
-          r.writeU8(0);    // gyro to use: {1:0, 2:1. 2:both}
+          r.writeU8(0);    // gyro_to_use: {1:0, 2:1. 2:both}
           r.writeU8(0);    // gyro high fsr (flase)
           r.writeU8(48);   // gyro cal threshold
           r.writeU16(125); // gyro cal duration (1.25s)
@@ -980,7 +978,7 @@ class MspProcessor
             m.readU8();  // PWM inversion
           }
           if(m.remain() >= 8) {
-            m.readU8();  // gyro to use
+            m.readU8();  // gyro_to_use
             m.readU8();  // gyro high fsr
             m.readU8();  // gyro cal threshold
             m.readU16(); // gyro cal duration
