@@ -4,8 +4,8 @@
 #include "MagDevice.h"
 #include "BusDevice.h"
 
-#define MPU9250_ADDRESS           0x68
-#define MPU9250_DEFAULT_ADDRESS   MPU9250_ADDRESS
+#define MPU9250_ADDRESS_FIRST     0x68
+#define MPU9250_ADDRESS_SECOND    0x68
 #define MPU9250_I2C_SLV0_ADDR     0x25
 #define MPU9250_I2C_SLV0_REG      0x26
 #define MPU9250_I2C_SLV0_DO       0x63
@@ -37,14 +37,14 @@ class MagAK8963: public MagDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_DEFAULT_ADDRESS);
+      return begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_FIRST) ? 1 : begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_SECOND) ? 1 : 0;
     }
 
     int begin(BusDevice * bus, uint8_t addr) override
     {
       if(bus->getType() == BUS_I2C)
       {
-        return begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_DEFAULT_ADDRESS);
+        return begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_FIRST) ? 1 : begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_SECOND) ? 1 : 0;
       }
       else
       {

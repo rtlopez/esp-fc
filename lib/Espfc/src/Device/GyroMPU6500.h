@@ -27,7 +27,7 @@ class GyroMPU6500: public GyroMPU6050
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, MPU6050_DEFAULT_ADDRESS);
+      return begin(bus, MPU6050_ADDRESS_FIRST) ? 1 : begin(bus, MPU6050_ADDRESS_SECOND) ? 1 : 0;
     }
 
     int begin(BusDevice * bus, uint8_t addr) override

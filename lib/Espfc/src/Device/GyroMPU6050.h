@@ -6,9 +6,8 @@
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
 
-#define MPU6050_ADDRESS_AD0_LOW     0x68 // address pin low (GND), default for InvenSense evaluation board
-#define MPU6050_ADDRESS_AD0_HIGH    0x69 // address pin high (VCC)
-#define MPU6050_DEFAULT_ADDRESS     MPU6050_ADDRESS_AD0_LOW
+#define MPU6050_ADDRESS_FIRST       0x68 // address pin low (GND), default for InvenSense evaluation board
+#define MPU6050_ADDRESS_SECOND      0x69 // address pin high (VCC)
 
 #define MPU6050_RA_SMPLRT_DIV       0x19
 #define MPU6050_RA_CONFIG           0x1A
@@ -87,7 +86,7 @@ class GyroMPU6050: public GyroDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, MPU6050_DEFAULT_ADDRESS);
+      return begin(bus, MPU6050_ADDRESS_FIRST) ? 1 : begin(bus, MPU6050_ADDRESS_SECOND) ? 1 : 0;
     }
 
     int begin(BusDevice * bus, uint8_t addr) override
