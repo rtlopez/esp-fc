@@ -295,6 +295,11 @@ class Model
       else
       {
         state.gyroRate = Math::alignToClock(state.gyroClock, ESPFC_GYRO_I2C_RATE_MAX);
+        // first usage
+        if(_storageResult == STORAGE_ERR_BAD_MAGIC || _storageResult == STORAGE_ERR_BAD_SIZE || _storageResult == STORAGE_ERR_BAD_VERSION)
+        {
+          config.loopSync = 1;
+        }
       }
 
       int loopSyncMax = 1;
@@ -599,8 +604,8 @@ class Model
   private:
     #ifndef UNIT_TEST
     Storage _storage;
-    StorageResult _storageResult;
     #endif
+    StorageResult _storageResult;
 };
 
 }

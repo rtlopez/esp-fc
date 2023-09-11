@@ -217,8 +217,17 @@ class MspProcessor
           // 1.42
           r.writeU8(2);  // configuration state: configured
           // 1.43
-          r.writeU16(_model.state.gyroTimer.rate); // sample rate
-          r.writeU32(0); // configuration problems
+          r.writeU16(_model.state.gyroPresent ? _model.state.gyroTimer.rate : 0); // sample rate
+          {
+            uint32_t problems = 0;
+            if(_model.state.accelBias.x == 0 && _model.state.accelBias.y == 0 && _model.state.accelBias.z == 0) {
+              problems |= 1 << 0; // acc calibration required
+            }
+            if(_model.config.output.protocol == ESC_PROTOCOL_DISABLED) {
+              problems |= 1 << 1; // no motor protocol
+            }
+            r.writeU32(problems); // configuration problems
+          }
           // 1.44
           r.writeU8(0);  // spi dev count
           r.writeU8(0);  // i2c dev count
