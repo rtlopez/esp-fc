@@ -604,8 +604,8 @@ class Model
   private:
     #ifndef UNIT_TEST
     Storage _storage;
-    StorageResult _storageResult;
     #endif
+    StorageResult _storageResult;
 };
 
 }
