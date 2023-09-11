@@ -1,13 +1,6 @@
 #ifndef _ESPFC_STORAGE_H_
 #define _ESPFC_STORAGE_H_
 
-#ifndef UNIT_TEST
-
-#include <Arduino.h>
-#include "ModelConfig.h"
-#include "EEPROM.h"
-#include "Logger.h"
-
 namespace Espfc {
 
 enum StorageResult
@@ -19,6 +12,17 @@ enum StorageResult
   STORAGE_ERR_BAD_VERSION,
   STORAGE_ERR_BAD_SIZE,
 };
+
+}
+
+#ifndef UNIT_TEST
+
+#include <Arduino.h>
+#include "ModelConfig.h"
+#include "EEPROM.h"
+#include "Logger.h"
+
+namespace Espfc {
 
 class Storage
 {
