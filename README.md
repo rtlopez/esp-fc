@@ -36,6 +36,7 @@ Software:
 3. Click "Connect" and choose device port in dialog
 4. Add firmware file and set Flash Address to `0x00`
 5. Click "Program"
+6. After success power cycle board
 
 ![ESP-FC Flashing](/docs/images/esptool-js-flash-connect.png)
 
