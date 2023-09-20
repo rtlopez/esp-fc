@@ -17,6 +17,7 @@
 #define MPU6500_ACCEL_CONF2       0x1D
 
 #define MPU6500_WHOAMI_DEFAULT_VALUE 0x70
+#define MPU6555_WHOAMI_DEFAULT_VALUE 0x75
 
 namespace Espfc {
 
@@ -27,7 +28,7 @@ class GyroMPU6500: public GyroMPU6050
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, MPU6050_DEFAULT_ADDRESS);
+      return begin(bus, MPU6050_ADDRESS_FIRST) ? 1 : begin(bus, MPU6050_ADDRESS_SECOND) ? 1 : 0;
     }
 
     int begin(BusDevice * bus, uint8_t addr) override
@@ -91,7 +92,7 @@ class GyroMPU6500: public GyroMPU6050
       uint8_t whoami = 0;
       _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
       //D("MPU6500:whoami", _addr, whoami);
-      return whoami == MPU6500_WHOAMI_DEFAULT_VALUE;
+      return whoami == MPU6500_WHOAMI_DEFAULT_VALUE || whoami == MPU6555_WHOAMI_DEFAULT_VALUE;
     }
 };
 
