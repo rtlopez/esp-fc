@@ -155,11 +155,11 @@ class GyroBMI160: public GyroDevice
       delay(1);
 
       // Enable accel offset
-      _bus->writeBitsBMI160(_addr, BMI160_RA_OFFSET_6, BMI160_ACC_OFFSET_EN, BMI160_ACC_OFFSET_LEN, BMI160_RESULT_OK);
+      //_bus->writeBitsBMI160(_addr, BMI160_RA_OFFSET_6, BMI160_ACC_OFFSET_EN, BMI160_ACC_OFFSET_LEN, BMI160_RESULT_OK);
       delay(1);
 
       // Enable gyro offset
-      _bus->writeBitsBMI160(_addr, BMI160_RA_OFFSET_6, BMI160_GYR_OFFSET_EN, BMI160_GYR_OFFSET_LEN, BMI160_RESULT_OK);
+      //_bus->writeBitsBMI160(_addr, BMI160_RA_OFFSET_6, BMI160_GYR_OFFSET_EN, BMI160_GYR_OFFSET_LEN, BMI160_RESULT_OK);
       delay(1);
 
       // Enable data ready interrupt
@@ -175,7 +175,7 @@ class GyroBMI160: public GyroDevice
       delay(1);
 
       // Set Accel rate 1600HZ
-      _bus->writeByte(_addr, BMI160_RA_ACCEL_CONF, BMI160_ACCEL_RATE_1600HZ);
+      _bus->writeByte(_addr, BMI160_RA_ACCEL_CONF, BMI160_ACCEL_RATE_800HZ);
       delay(1);
 
       // Set Gyro rate 3200HZ
@@ -222,38 +222,7 @@ class GyroBMI160: public GyroDevice
 
     int getRate() const override
     {
-      uint8_t valRate = 0;
-      _bus->readBitsBMI160(_addr, BMI160_RA_GYRO_CONF, BMI160_GYRO_RATE_SEL_BIT, BMI160_GYRO_RATE_SEL_LEN, &valRate);
-
-      switch (valRate)
-      {
-      case BMI160_GYRO_RATE_3200HZ:
-        return 3200;
-        break;
-      case BMI160_GYRO_RATE_1600HZ:
-        return 1600;
-        break;
-      case BMI160_GYRO_RATE_800HZ:
-        return 800;
-        break;
-      case BMI160_GYRO_RATE_400HZ:
-        return 400;
-        break;
-      case BMI160_GYRO_RATE_200HZ:
-        return 200;
-        break;
-      case BMI160_GYRO_RATE_100HZ:
-        return 100;
-        break;
-      case BMI160_GYRO_RATE_50HZ:
-        return 50;
-        break;
-      case BMI160_GYRO_RATE_25HZ:
-        return 25;
-        break;
-      default:
-        return 99; //detect error
-      }
+      return 3200;
     }
 
     void setRate(int rate) override
