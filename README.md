@@ -94,6 +94,8 @@ After flashing you need to configure few things first:
 | AK8963/I2C      | -       |   Yes |    Yes |
 | ICM20602/I2C    | ?       |     ? |      ? |
 | ICM20602/SPI    | -       |   Yes |    Yes |
+| BMI160/I2C      | ?       |   Yes |      ? |
+| BMI160/SPI      | -       |   Yes |    Yes |
 
 ? - not tested, but should work
 

@@ -1,9 +1,6 @@
 #ifndef _ESPFC_SENSOR_BASE_SENSOR_H_
 #define _ESPFC_SENSOR_BASE_SENSOR_H_
 
-#define ESPFC_FUZZY_ACCEL_ZERO 0.05
-#define ESPFC_FUZZY_GYRO_ZERO 0.20
-
 #include "Model.h"
 #include "Hardware.h"
 

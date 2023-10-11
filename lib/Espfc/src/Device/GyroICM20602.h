@@ -6,9 +6,8 @@
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
 
-#define ICM20602_ADDRESS_AD0_LOW     0x68 // address pin low (GND), default for InvenSense evaluation board
-#define ICM20602_ADDRESS_AD0_HIGH    0x69 // address pin high (VCC)
-#define ICM20602_DEFAULT_ADDRESS     ICM20602_ADDRESS_AD0_LOW
+#define ICM20602_ADDRESS_FIRST       0x68 // address pin low (GND), default for InvenSense evaluation board
+#define ICM20602_ADDRESS_SECOND      0x69 // address pin high (VCC)
 
 #define ICM20602_RA_SMPLRT_DIV       0x19
 #define ICM20602_RA_CONFIG           0x1A
@@ -87,7 +86,7 @@ class GyroICM20602: public GyroDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, ICM20602_DEFAULT_ADDRESS);
+      return begin(bus, ICM20602_ADDRESS_FIRST) ? 1 : begin(bus, ICM20602_ADDRESS_SECOND) ? 1 : 0;
     }
 
     int begin(BusDevice * bus, uint8_t addr) override

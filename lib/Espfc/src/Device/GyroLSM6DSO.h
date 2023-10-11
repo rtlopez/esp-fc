@@ -7,7 +7,8 @@
 #include "Debug_Espfc.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp
-#define LSM6DSOX_DEFAULT_ADDRESS    0x6A
+#define LSM6DSOX_ADDRESS_FIRST     0x6A
+#define LSM6DSOX_ADDRESS_SECOND    0x6b
 
 // registers
 #define LSM6DSO_REG_WHO_AM_I       0x0F
@@ -69,7 +70,7 @@ class GyroLSM6DSO: public GyroDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, LSM6DSOX_DEFAULT_ADDRESS);
+      return begin(bus, LSM6DSOX_ADDRESS_FIRST) ? 1 : begin(bus, LSM6DSOX_ADDRESS_SECOND) ? 1 : 0;
     }
 
     int begin(BusDevice * bus, uint8_t addr) override

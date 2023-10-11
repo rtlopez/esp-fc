@@ -72,6 +72,19 @@ class BusDevice
       return count;
     }
 
+    int8_t readBitsBMI160(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data)
+    {
+      uint8_t count, b;
+      if ((count = readByte(devAddr, regAddr, &b)) != 0)
+      {
+        uint8_t mask = (1 << length) - 1;
+        b >>= bitStart;
+        b &= mask;
+        *data = b;
+      }
+      return count;
+    }
+
     bool writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t data)
     {
       uint8_t b;
@@ -87,6 +100,22 @@ class BusDevice
       {
         uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
         data <<= (bitStart - length + 1); // shift data into correct position
+        data &= mask; // zero all non-important bits in data
+        b &= ~(mask); // zero all important bits in existing byte
+        b |= data; // combine data with existing byte
+        return writeByte(devAddr, regAddr, b);
+      } else {
+        return false;
+      }
+    }
+
+    bool writeBitsBMI160(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data)
+    {
+      uint8_t b = 0;
+      if (readByte(devAddr, regAddr, &b) != 0)
+      {
+        uint8_t mask = ((1 << length) - 1) << bitStart;
+        data <<= bitStart; // shift data into correct position
         data &= mask; // zero all non-important bits in data
         b &= ~(mask); // zero all important bits in existing byte
         b |= data; // combine data with existing byte
