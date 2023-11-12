@@ -53,3 +53,8 @@ docker-compose run pio pio test -e native
 Keep in mind, that to be able to flash device, additional effort is required as by default docker is isolated enviroment devices are't accessible.
 
 ## VSCode
+
+This project is based on [platformio](https://platformio.org/), it is recommended to install it as VSCode IDE extension.
+
+1. if you don't have VSCode yet? visit https://code.visualstudio.com/download
+2. then install https://platformio.org/install/ide?install=vscode

@@ -40,7 +40,7 @@ Software:
 
 ![ESP-FC Flashing](/docs/images/esptool-js-flash-connect.png)
 
-## Configuration
+## Setup
 After flashing you need to configure few things first:
  1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](/docs/cli.md)
  2. Connect to [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) and setup to your preferences,
@@ -49,6 +49,8 @@ After flashing you need to configure few things first:
 
 > [!NOTE]
 > Not all functions displayed in configurator are avalable in firmware. The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported. It usually rolls back to previous value after save.
+
+Here are more details about [how to setup](/docs/setup.md).
 
 ## Wiring diagrams
 
