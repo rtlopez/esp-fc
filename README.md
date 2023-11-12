@@ -101,6 +101,7 @@ After flashing you need to configure few things first:
 
 ## Issues
 You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues)
+You can also join to our [Discord Channel](https://discord.gg/jhyPPM5UEH)
 
 ## Development
 * Visual Studio Code
@@ -111,6 +112,9 @@ You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/i
 * Update documentation
 * Balancing robot
 * Serial Rx (IBUS)
+* ELRS telemetry
+* ESP32-S2/S3/C3 targets
+* BiDir Dshot
 * Baro (MS5611)
 * GPS navigation
 
