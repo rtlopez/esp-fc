@@ -121,7 +121,7 @@ Logging using serial device is possible, like [D-ronin OpenLager](https://github
 2. Then in `Blackbox` tab select `Serial Port` as `logging device`
 
 > [!NOTE]
-> Port speed from column `Configuration/MSP` is used, and the same seep must be used in logging device, this might change in a future versions.
+> Port speed from column `Configuration/MSP` is used, and the same speed must be used in logging device, _(this might be subject of change in a future versions)_.
 
 Recommended settings
 
