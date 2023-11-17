@@ -244,14 +244,6 @@ class GyroBMI160: public GyroDevice
       //D("bmi160:whoami", _addr, whoami);
       return whoami == BMI160_CHIP_ID_DEFAULT_VALUE;
     }
-
-    void setSleepEnabled(bool enabled)
-    {
-    }
-
-    void setClockSource(uint8_t source)
-    {
-    }
 };
 
 }

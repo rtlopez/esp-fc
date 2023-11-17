@@ -51,6 +51,53 @@ class BusDevice
       return write(devAddr, regAddr, 1, &data);
     }
 
+    static bool getBit(uint8_t data, uint8_t bitNum)
+    {
+      return data & (1 << bitNum);
+    }
+
+    static uint8_t setBit(uint8_t data, uint8_t bitNum, uint8_t bitVal)
+    {
+      data = (bitVal != 0) ? (data | (1 << bitNum)) : (data & ~(1 << bitNum));
+      return data;
+    }
+
+    static uint8_t setBitsLsb(uint8_t data, uint8_t bitStart, uint8_t bitLen, uint8_t bitVal)
+    {
+      uint8_t mask = ((1 << bitLen) - 1) << (bitStart - bitLen + 1);
+      bitVal <<= (bitStart - bitLen + 1); // shift data into correct position
+      bitVal &= mask; // zero all non-important bits in data
+      data &= ~(mask); // zero all important bits in existing byte
+      data |= bitVal; // combine data with existing byte
+      return data;
+    }
+
+    static uint8_t setBitsMsb(uint8_t data, uint8_t bitStart, uint8_t bitLen, uint8_t bitVal)
+    {
+      uint8_t mask = ((1 << bitLen) - 1) << bitStart;
+      bitVal <<= bitStart; // shift data into correct position
+      bitVal &= mask; // zero all non-important bits in data
+      data &= ~(mask); // zero all important bits in existing byte
+      data |= bitVal; // combine data with existing byte
+      return data;
+    }
+
+    static uint8_t getBitsLsb(uint8_t data, uint8_t bitStart, uint8_t bitLen)
+    {
+      uint8_t mask = ((1 << bitLen) - 1) << (bitStart - bitLen + 1);
+      data &= mask;
+      data >>= (bitStart - bitLen + 1);
+      return data;
+    }
+
+    static uint8_t getBitsMsb(uint8_t data, uint8_t bitStart, uint8_t bitLen)
+    {
+      uint8_t mask = ((1 << bitLen) - 1);
+      data >>= bitStart;
+      data &= mask;
+      return data;
+    }
+
     int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data)
     {
       uint8_t b;

@@ -89,12 +89,14 @@ class MagHMC5338L: public MagDevice
     {
       setBus(bus, addr, masterAddr);
 
-      return testConnection();
+      if(!testConnection()) return 0;
 
       setMode(HMC5883L_MODE_CONTINUOUS);
       setSampleAveraging(HMC5883L_AVERAGING_1);
       setSampleRate(HMC5883L_RATE_75);
       setGain(HMC5883L_GAIN_1090);
+
+      return 1;
     }
 
     int readMag(VectorInt16& v) override
@@ -108,13 +110,14 @@ class MagHMC5338L: public MagDevice
       v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
       v.z = (((int16_t)buffer[2]) << 8) | buffer[3];
       v.y = (((int16_t)buffer[4]) << 8) | buffer[5];
+
       return 1;
     }
 
     const VectorFloat convert(const VectorInt16& v) const override
     {
       const float scale = 1.f / 1090.f;
-      return VectorFloat(v) * scale;
+      return VectorFloat{v} * scale;
     }
 
     int getRate() const override
@@ -129,33 +132,39 @@ class MagHMC5338L: public MagDevice
 
     void setSampleAveraging(uint8_t averaging)
     {
-      _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_AVERAGE_BIT, HMC5883L_CRA_AVERAGE_LENGTH, averaging);
+      uint8_t res = _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_AVERAGE_BIT, HMC5883L_CRA_AVERAGE_LENGTH, averaging);
+      //D("hmc5338l:avg", averaging, res);
+      (void)res;
     }
 
     void setSampleRate(uint8_t rate)
     {
-      _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_RATE_BIT, HMC5883L_CRA_RATE_LENGTH, rate);
+      uint8_t res = _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_RATE_BIT, HMC5883L_CRA_RATE_LENGTH, rate);
+      //D("hmc5338l:rate", rate, res);
+      (void)res;
     }
 
     void setMode(uint8_t mode)
     {
-      _bus->writeByte(_addr, HMC5883L_RA_MODE, mode << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
       _mode = mode; // track to tell if we have to clear bit 7 after a read
+      uint8_t res = _bus->writeByte(_addr, HMC5883L_RA_MODE, mode << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
+      //D("hmc5338l:mode", mode, res);
+      (void)res;
     }
 
     void setGain(uint8_t gain)
     {
-      _bus->writeByte(_addr, HMC5883L_RA_CONFIG_B, gain << (HMC5883L_CRB_GAIN_BIT - HMC5883L_CRB_GAIN_LENGTH + 1));
+      uint8_t res = _bus->writeByte(_addr, HMC5883L_RA_CONFIG_B, gain << (HMC5883L_CRB_GAIN_BIT - HMC5883L_CRB_GAIN_LENGTH + 1));
+      //D("hmc5338l:gain", gain, res);
+      (void)res;
     }
 
     bool testConnection() override
     {
-      uint8_t buffer[3];
-      if(_bus->read(_addr, HMC5883L_RA_ID_A, 3, buffer) == 3)
-      {
-        return (buffer[0] == 'H' && buffer[1] == '4' && buffer[2] == '3');
-      }
-      return false;
+      uint8_t buffer[3] = { 0, 0, 0 };
+      uint8_t len = _bus->read(_addr, HMC5883L_RA_ID_A, 3, buffer);
+      //D("hmc5338l:whoami", len, buffer[0], buffer[1], buffer[2]);
+      return len == 3 && buffer[0] == 'H' && buffer[1] == '4' && buffer[2] == '3';
     }
 
   private:

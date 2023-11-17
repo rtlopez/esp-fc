@@ -17,7 +17,7 @@
 #define MPU6500_ACCEL_CONF2       0x1D
 
 #define MPU6500_WHOAMI_DEFAULT_VALUE 0x70
-#define MPU6555_WHOAMI_DEFAULT_VALUE 0x75
+#define MPU6500_WHOAMI_ALT_VALUE     0x75
 
 namespace Espfc {
 
@@ -26,55 +26,6 @@ namespace Device {
 class GyroMPU6500: public GyroMPU6050
 {
   public:
-    int begin(BusDevice * bus) override
-    {
-      return begin(bus, MPU6050_ADDRESS_FIRST) ? 1 : begin(bus, MPU6050_ADDRESS_SECOND) ? 1 : 0;
-    }
-
-    int begin(BusDevice * bus, uint8_t addr) override
-    {
-      setBus(bus, addr);
-
-      if(!testConnection()) return 0;
-
-      _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_RESET);
-      delay(100);
-
-      setClockSource(MPU6050_CLOCK_PLL_XGYRO);
-
-      setSleepEnabled(false);
-      delay(100);      
-
-      // reset I2C master
-      //_bus->writeByte(_addr, MPU6500_USER_CTRL, MPU6500_I2C_MST_RESET);
-
-      // disable I2C master to reset slave registers allocation
-      _bus->writeByte(_addr, MPU6500_USER_CTRL, 0);
-      //delay(100);
-
-      // temporary force 1k sample rate for mag initiation, will be overwritten in GyroSensor
-      setDLPFMode(GYRO_DLPF_188);
-      setRate(9); // 1000 / (9+1) = 100hz
-      delay(100);
-
-      // enable I2C master mode, and disable I2C if SPI
-      if(_bus->isSPI())
-      {
-        _bus->writeByte(_addr, MPU6500_USER_CTRL, MPU6500_I2C_MST_EN | MPU6500_I2C_IF_DIS);
-      }
-      else
-      {
-        _bus->writeByte(_addr, MPU6500_USER_CTRL, MPU6500_I2C_MST_EN);
-      }
-      //delay(100);
-
-      // set the I2C bus speed to 400 kHz
-      _bus->writeByte(_addr, MPU6500_I2C_MST_CTRL, MPU6500_I2C_MST_400);
-      //delay(100);
-
-      return 1;
-    }
-
     GyroDeviceType getType() const override
     {
       return GYRO_MPU6500;
@@ -90,9 +41,9 @@ class GyroMPU6500: public GyroMPU6050
     bool testConnection() override
     {
       uint8_t whoami = 0;
-      _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
+      uint8_t len = _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
       //D("MPU6500:whoami", _addr, whoami);
-      return whoami == MPU6500_WHOAMI_DEFAULT_VALUE || whoami == MPU6555_WHOAMI_DEFAULT_VALUE;
+      return len == 1 && (whoami == MPU6500_WHOAMI_DEFAULT_VALUE || whoami == MPU6500_WHOAMI_ALT_VALUE);
     }
 };
 

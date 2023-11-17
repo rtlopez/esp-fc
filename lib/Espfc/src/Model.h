@@ -430,7 +430,7 @@ class Model
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
       state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
-      state.accelTimer.setInterval(state.accelTimer.interval - 5);
+      state.accelTimer.setInterval(state.accelTimer.interval);
       //state.accelTimer.setRate(state.gyroTimer.rate, 2);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);

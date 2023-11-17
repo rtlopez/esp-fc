@@ -48,7 +48,6 @@ class SensorManager
           _model.state.imuUpdate = true;
           return 1;
         case EVENT_MAG_READ:
-          _mag.filter();
           return 1;
         case EVENT_BBLOG_UPDATED:
           _gyro.dynNotchAnalyze();
@@ -83,7 +82,7 @@ class SensorManager
 
       if (!status)
       {
-        status = _mag.read();
+        status = _mag.update();
       }
       if(status)
       {

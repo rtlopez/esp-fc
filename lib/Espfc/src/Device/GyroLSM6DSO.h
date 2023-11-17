@@ -165,14 +165,6 @@ class GyroLSM6DSO: public GyroDevice
       //D("lsm6dso:whoami", _addr, whoami);
       return whoami == 0x6C || whoami == 0x69;
     }
-
-    void setSleepEnabled(bool enabled)
-    {
-    }
-
-    void setClockSource(uint8_t source)
-    {
-    }
 };
 
 }

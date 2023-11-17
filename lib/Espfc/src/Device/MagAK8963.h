@@ -83,7 +83,8 @@ class MagAK8963: public MagDevice
       scale.y = ((((float)buffer[0]) - 128.0f)/(256.0f) + 1.0f) * 4912.0f / 32760.0f; // micro Tesla
       scale.x = ((((float)buffer[1]) - 128.0f)/(256.0f) + 1.0f) * 4912.0f / 32760.0f; // micro Tesla
       scale.z = ((((float)buffer[2]) - 128.0f)/(256.0f) + 1.0f) * 4912.0f / 32760.0f; // micro Tesla
-      scale *= 10.f; // convert to milli Gauss
+      //scale *= 10.f; // convert to milli Gauss
+      scale *= 0.01f; // convert to Gauss
 
       // set AK8963 to Power Down
       writeSlave(AK8963_CNTL1, AK8963_PWR_DOWN);

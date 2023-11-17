@@ -70,9 +70,6 @@
 #define ICM20602_ACONFIG_AFS_SEL_BIT         4
 #define ICM20602_ACONFIG_AFS_SEL_LENGTH      2
 
-#define ICM20602_WHO_AM_I_BIT        6
-#define ICM20602_WHO_AM_I_LENGTH     6
-
 #define ICM20602_USERCTRL_FIFO_EN_BIT            6
 #define ICM20602_USERCTRL_FIFO_RESET_BIT         2
 
@@ -95,13 +92,13 @@ class GyroICM20602: public GyroDevice
 
       if(!testConnection()) return 0;
 
+      // reset gyro
       _bus->writeByte(_addr, ICM20602_RA_PWR_MGMT_1, ICM20602_RESET);
       delay(100);
 
-      setClockSource(ICM20602_CLOCK_PLL_XGYRO);
+      // disable sleep mode and set clock source
+      _bus->writeByte(_addr, ICM20602_RA_PWR_MGMT_1, ICM20602_CLOCK_PLL_XGYRO);
       delay(15);
-
-      setSleepEnabled(false);
 
       return 1;
     }
@@ -160,7 +157,7 @@ class GyroICM20602: public GyroDevice
       // Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV)
       // where Gyroscope Output Rate = 8kHz when the DLPF is disabled (DLPF_CFG = 0 or 7),
       // and 1kHz when the DLPF is enabled (see Register 26).
-      const uint8_t divider = getRate() / (rate + 1);
+      const uint8_t divider = (getRate() / rate) - 1;
       _bus->writeByte(_addr, ICM20602_RA_SMPLRT_DIV, divider);
     }
 
@@ -178,18 +175,8 @@ class GyroICM20602: public GyroDevice
     {
       uint8_t whoami = 0;
       _bus->readByte(_addr, ICM20602_RA_WHO_AM_I, &whoami);
-      //D("mpu6050:whoami", _addr, whoami);
+      //D("icm20602:whoami", _addr, whoami);
       return whoami == 0x12;
-    }
-
-    void setSleepEnabled(bool enabled)
-    {
-      _bus->writeBit(_addr, ICM20602_RA_PWR_MGMT_1, ICM20602_PWR1_SLEEP_BIT, enabled);
-    }
-
-    void setClockSource(uint8_t source)
-    {
-      _bus->writeBits(_addr, ICM20602_RA_PWR_MGMT_1, ICM20602_PWR1_CLKSEL_BIT, ICM20602_PWR1_CLKSEL_LENGTH, source);
     }
 
     uint8_t _dlpf;
