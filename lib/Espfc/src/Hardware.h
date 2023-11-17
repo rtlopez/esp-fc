@@ -86,7 +86,7 @@ class Hardware
       if(_model.config.gyroDev == GYRO_NONE) return;
 
       Espfc::Device::GyroDevice * detectedGyro = nullptr;
-#if false && defined(ESPFC_SPI_0)
+#if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS0] != -1)
       {
         digitalWrite(_model.config.pin[PIN_SPI_CS0], HIGH);
@@ -149,7 +149,7 @@ class Hardware
       if(_model.config.baroDev == BARO_NONE) return;
 
       Espfc::Device::BaroDevice * detectedBaro = nullptr;
-#if false && defined(ESPFC_SPI_0)
+#if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS1] != -1)
       {
         digitalWrite(_model.config.pin[PIN_SPI_CS1], HIGH);
