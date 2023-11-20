@@ -311,7 +311,7 @@ void test_filter_sanitize_pt1_nyquist()
 
     FilterConfig conf2 = conf.sanitize(100);
     TEST_ASSERT_EQUAL(FILTER_PT1, conf2.type);
-    TEST_ASSERT_EQUAL_INT16(50, conf2.freq);
+    TEST_ASSERT_EQUAL_INT16(49, conf2.freq);
     TEST_ASSERT_EQUAL_INT16(0, conf2.cutoff);
 }
 
@@ -363,7 +363,7 @@ void test_filter_sanitize_biquad_lpf_nyqist()
 
     FilterConfig conf2 = conf.sanitize(100);
     TEST_ASSERT_EQUAL(FILTER_BIQUAD, conf2.type);
-    TEST_ASSERT_EQUAL_INT16(50, conf2.freq);
+    TEST_ASSERT_EQUAL_INT16(49, conf2.freq);
     TEST_ASSERT_EQUAL_INT16(0, conf2.cutoff);
 }
 
@@ -415,8 +415,8 @@ void test_filter_sanitize_biquad_notch_nyquist()
 
     FilterConfig conf2 = conf.sanitize(100);
     TEST_ASSERT_EQUAL(FILTER_NOTCH, conf2.type);
-    TEST_ASSERT_EQUAL_INT16(50, conf2.freq);
-    TEST_ASSERT_EQUAL_INT16(49, conf2.cutoff);
+    TEST_ASSERT_EQUAL_INT16(49, conf2.freq);
+    TEST_ASSERT_EQUAL_INT16(48, conf2.cutoff);
 }
 
 void assert_filter_off(Filter& filter)
@@ -458,9 +458,9 @@ void test_filter_pt1_50_100()
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.076f, filter.update(0.1f));
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.397f, filter.update(0.5f));
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.234f, filter.update(1.5f));
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.436f, filter.update(1.5f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.395f, filter.update(0.5f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.229f, filter.update(1.5f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.434f, filter.update(1.5f));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.484f, filter.update(1.5f));
 }
 
