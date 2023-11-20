@@ -384,7 +384,7 @@ class Model
       uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;// | FEATURE_AIRMODE;
 
       // allow dynamic filter only above 1k sampling rate
-      if(state.gyroRate >= 1000)
+      if(state.loopRate >= DynamicFilterConfig::MIN_FREQ)
       {
         featureAllowMask |= FEATURE_DYNAMIC_FILTER;
       }

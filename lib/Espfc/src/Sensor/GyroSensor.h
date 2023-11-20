@@ -107,7 +107,7 @@ class GyroSensor: public BaseSensor
 
       _model.state.gyroScaled = _model.state.gyro;
 
-      bool dynNotchEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0;
+      bool dynNotchEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
 
       // filtering
       for(size_t i = 0; i < 3; ++i)
@@ -171,6 +171,7 @@ class GyroSensor: public BaseSensor
     void dynNotchAnalyze()
     {
       if(!_model.gyroActive()) return;
+      if(_model.state.loopTimer.rate < DynamicFilterConfig::MIN_FREQ) return;
 
       Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FFT);
 
