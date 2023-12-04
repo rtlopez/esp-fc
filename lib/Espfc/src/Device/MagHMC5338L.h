@@ -77,17 +77,12 @@ class MagHMC5338L: public MagDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, HMC5883L_DEFAULT_ADDRESS, 0);
+      return begin(bus, HMC5883L_DEFAULT_ADDRESS);
     }
 
     int begin(BusDevice * bus, uint8_t addr) override
     {
-      return begin(bus, addr, 0);
-    }
-
-    int begin(BusDevice * bus, uint8_t addr, uint8_t masterAddr) override
-    {
-      setBus(bus, addr, masterAddr);
+      setBus(bus, addr);
 
       if(!testConnection()) return 0;
 

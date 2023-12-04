@@ -88,6 +88,13 @@
 #define MPU6050_I2C_MST_CTRL      0x24
 #define MPU6050_I2C_MST_RESET     0x02
 
+#define MPU6050_I2C_MST_DELAY_CTRL 0x67
+#define MPU6050_I2C_SLV0_DLY_EN    0x01
+#define MPU6050_I2C_DELAY_ES_SHADOW 0x80
+
+#define MPU6050_I2C_SLV4_CTRL     0x34
+#define MPU6050_I2C_MST_DLY_15    0x0f
+
 #define MPU6050_INT_PIN_CFG       0x37
 #define MPU6050_I2C_BYPASS_EN     0x02
 
@@ -126,9 +133,18 @@ class GyroMPU6050: public GyroDevice
       delay(10);
 
       // temporary force 1k gyro rate for mag initiation, will be overwritten in GyroSensor
-      setDLPFMode(GYRO_DLPF_188);
-      setRate(100);
+      //setDLPFMode(GYRO_DLPF_188);
+      //setRate(100);
+
+      setDLPFMode(GYRO_DLPF_256);
+      setRate(8000);
       delay(10);
+
+      // gyro range to 2000 deg/s
+      _bus->writeByte(_addr, MPU6050_RA_GYRO_CONFIG, MPU6050_GYRO_FS_2000 << 3);
+
+      // accel range to 16G
+      _bus->writeByte(_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACCEL_FS_16 << 3);
 
       if(_bus->isSPI())
       {
@@ -142,6 +158,10 @@ class GyroMPU6050: public GyroDevice
         // set the I2C bus speed to 400 kHz
         res = _bus->writeByte(_addr, MPU6050_I2C_MST_CTRL, MPU6050_I2C_MST_400);
         //D("mpu6050:i2c_master_speed", b, res);
+
+        // set i2c master delay and enable for slave 0
+        res = _bus->writeByte(_addr, MPU6050_I2C_SLV4_CTRL, MPU6050_I2C_MST_DLY_15);
+        res = _bus->writeByte(_addr, MPU6050_I2C_MST_DELAY_CTRL, MPU6050_I2C_DELAY_ES_SHADOW | MPU6050_I2C_SLV0_DLY_EN);
       }
       else
       {
@@ -190,7 +210,7 @@ class GyroMPU6050: public GyroDevice
     void setDLPFMode(uint8_t mode) override
     {
       _dlpf = mode;
-      bool res = _bus->writeBits(_addr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, mode);
+      bool res = _bus->writeByte(_addr, MPU6050_RA_CONFIG, mode);
       //D("mpu6050:dlpf", mode, res);
       (void)res;
     }
@@ -217,16 +237,6 @@ class GyroMPU6050: public GyroDevice
       uint8_t res = _bus->writeByte(_addr, MPU6050_RA_SMPLRT_DIV, divider);
       //D("mpu6050:rate", rate, divider, res);
       (void)res;
-    }
-
-    void setFullScaleGyroRange(uint8_t range) override
-    {
-      _bus->writeBits(_addr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, range);
-    }
-
-    void setFullScaleAccelRange(uint8_t range) override
-    {
-      _bus->writeBits(_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, range);
     }
 
     bool testConnection() override

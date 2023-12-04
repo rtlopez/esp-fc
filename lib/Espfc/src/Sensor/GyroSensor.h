@@ -28,15 +28,7 @@ class GyroSensor: public BaseSensor
 
       _gyro->setDLPFMode(_model.config.gyroDlpf);
       _gyro->setRate(_gyro->getRate());
-
-      switch(_model.config.gyroFsr)
-      {
-        case GYRO_FS_2000: _model.state.gyroScale = radians(2000.f) / 32768.f; break;
-        case GYRO_FS_1000: _model.state.gyroScale = radians(1000.f) / 32768.f; break;
-        case GYRO_FS_500:  _model.state.gyroScale =  radians(500.f) / 32768.f; break;
-        case GYRO_FS_250:  _model.state.gyroScale =  radians(250.f) / 32768.f; break;
-      }
-      _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
+      _model.state.gyroScale = radians(2000.f) / 32768.f;
 
       _model.state.gyroCalibrationState = CALIBRATION_START; // calibrate gyro on start
       _model.state.gyroCalibrationRate = _model.state.loopTimer.rate;

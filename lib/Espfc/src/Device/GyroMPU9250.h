@@ -6,15 +6,9 @@
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
 
-#define MPU9250_USER_CTRL         0x6A
-#define MPU9250_I2C_MST_EN        0x20
-#define MPU9250_I2C_IF_DIS        0x10
-#define MPU9250_I2C_MST_400       0x0D
-#define MPU9250_I2C_MST_500       0x09
-#define MPU9250_I2C_MST_CTRL      0x24
-#define MPU9250_I2C_MST_RESET     0x02
-
-#define MPU9250_ACCEL_CONF2       0x1D
+#define MPU9250_ACCEL_CONF2          0x1D
+#define MPU9250_WHOAMI_DEFAULT_VALUE 0x71
+#define MPU9250_WHOAMI_ALT_VALUE     0x73
 
 namespace Espfc {
 
@@ -39,7 +33,7 @@ class GyroMPU9250: public GyroMPU6050
       uint8_t whoami = 0;
       uint8_t len = _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
       //D("mpu9250:whoami", _addr, whoami);
-      return len == 1 && (whoami == 0x71 || whoami == 0x73);
+      return len == 1 && (whoami == MPU9250_WHOAMI_DEFAULT_VALUE || whoami == MPU9250_WHOAMI_ALT_VALUE);
     }
 };
 

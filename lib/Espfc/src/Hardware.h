@@ -11,6 +11,7 @@
 #if defined(ESPFC_SPI_0)
 #include "Device/BusSPI.h"
 #endif
+#include "Device/BusSlave.h"
 #include "Device/GyroDevice.h"
 #include "Device/GyroMPU6050.h"
 #include "Device/GyroMPU6500.h"
@@ -34,6 +35,7 @@ namespace {
 #if defined(ESPFC_I2C_0)
   static Espfc::Device::BusI2C i2cBus(WireInstance);
 #endif
+  static Espfc::Device::BusSlave spiSlaveBus;
   static Espfc::Device::GyroMPU6050 mpu6050;
   static Espfc::Device::GyroMPU6500 mpu6500;
   static Espfc::Device::GyroMPU9250 mpu9250;
@@ -96,6 +98,7 @@ class Hardware
         if(!detectedGyro && detectDevice(icm20602, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
         if(!detectedGyro && detectDevice(bmi160, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
         if(!detectedGyro && detectDevice(lsm6dso, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
+        if(detectedGyro) spiSlaveBus.begin(&spiBus, _model.config.pin[PIN_SPI_CS0]);
       }
 #endif
 #if defined(ESPFC_I2C_0)
@@ -124,18 +127,15 @@ class Hardware
 
       Espfc::Device::MagDevice * detectedMag  = nullptr;
 #if defined(ESPFC_SPI_0)
-      if(_model.config.pin[PIN_SPI_CS0] != -1 && _model.state.gyroDev && _model.state.gyroDev->getType() == GYRO_MPU9250)
+      if(spiSlaveBus.getBus())
       {
-        if(!detectedMag && detectDevice(ak8963, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
+        if(!detectedMag && detectDevice(ak8963, spiSlaveBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
       }
 #endif
 #if defined(ESPFC_I2C_0)
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
-        if(_model.state.gyroDev && _model.state.gyroDev->getType() == GYRO_MPU9250)
-        {
-          if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
-        }
+        if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
         if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
       }
 #endif
@@ -190,6 +190,15 @@ class Hardware
       return status;
     }
 #endif
+
+    template<typename Dev>
+    bool detectDevice(Dev& dev, Device::BusSlave& bus, int cs)
+    {
+      typename Dev::DeviceType type = dev.getType();
+      bool status = dev.begin(&bus);
+      _model.logger.info().log(F("SLAVE DETECT")).log(FPSTR(Dev::getName(type))).log(cs).logln(status);
+      return status;
+    }
 
     int update()
     {

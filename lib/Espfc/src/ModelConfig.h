@@ -26,20 +26,6 @@ enum GyroDlpf {
   GYRO_DLPF_EX  = 0x07,
 };
 
-enum GyroGain {
-  GYRO_FS_250  = 0x00,
-  GYRO_FS_500  = 0x01,
-  GYRO_FS_1000 = 0x02,
-  GYRO_FS_2000 = 0x03
-};
-
-enum AccelGain {
-  ACCEL_FS_2  = 0x00,
-  ACCEL_FS_4  = 0x01,
-  ACCEL_FS_8  = 0x02,
-  ACCEL_FS_16 = 0x03
-};
-
 enum AccelMode {
   ACCEL_DELAYED   = 0x00,
   ACCEL_GYRO      = 0x01,
@@ -548,7 +534,6 @@ class ModelConfig
     int8_t gyroBus;
     int8_t gyroDev;
     int8_t gyroDlpf;
-    int8_t gyroFsr;
     int8_t gyroAlign;
     FilterConfig gyroFilter;
     FilterConfig gyroFilter2;
@@ -559,7 +544,6 @@ class ModelConfig
 
     int8_t accelBus;
     int8_t accelDev;
-    int8_t accelFsr;
     int8_t accelAlign;
     FilterConfig accelFilter;
 
@@ -720,7 +704,6 @@ class ModelConfig
       gyroDev = GYRO_AUTO;
       gyroAlign = ALIGN_DEFAULT;
       gyroDlpf = GYRO_DLPF_256;
-      gyroFsr  = GYRO_FS_2000;
 
       loopSync = 8; // MPU 1000Hz
       mixerSync = 1;
@@ -728,7 +711,6 @@ class ModelConfig
       accelBus = BUS_AUTO;
       accelDev = GYRO_AUTO;
       accelAlign = ALIGN_DEFAULT;
-      accelFsr = ACCEL_FS_16;
 
       magBus = BUS_AUTO;
       magDev = MAG_NONE;

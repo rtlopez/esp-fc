@@ -14,6 +14,7 @@ enum BusType {
   BUS_AUTO,
   BUS_I2C,
   BUS_SPI,
+  BUS_SLV,
   BUS_MAX
 };
 
@@ -126,7 +127,7 @@ class BusDevice
 
     static const char ** getNames()
     {
-      static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), NULL };
+      static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), PSTR("SLV"), NULL };
       return busDevChoices;
     }
 

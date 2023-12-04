@@ -6,16 +6,7 @@
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
 
-#define MPU6500_USER_CTRL         0x6A
-#define MPU6500_I2C_MST_EN        0x20
-#define MPU6500_I2C_IF_DIS        0x10
-#define MPU6500_I2C_MST_400       0x0D
-#define MPU6500_I2C_MST_500       0x09
-#define MPU6500_I2C_MST_CTRL      0x24
-#define MPU6500_I2C_MST_RESET     0x02
-
-#define MPU6500_ACCEL_CONF2       0x1D
-
+#define MPU6500_ACCEL_CONF2          0x1D
 #define MPU6500_WHOAMI_DEFAULT_VALUE 0x70
 #define MPU6500_WHOAMI_ALT_VALUE     0x75
 
@@ -36,7 +27,6 @@ class GyroMPU6500: public GyroMPU6050
       GyroMPU6050::setDLPFMode(mode);
       _bus->writeByte(_addr, MPU6500_ACCEL_CONF2, mode);
     }
-
 
     bool testConnection() override
     {

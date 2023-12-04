@@ -150,14 +150,6 @@ class GyroLSM6DSO: public GyroDevice
     {
     }
 
-    void setFullScaleGyroRange(uint8_t range) override
-    {
-    }
-
-    void setFullScaleAccelRange(uint8_t range) override
-    {
-    }
-
     bool testConnection() override
     {
       uint8_t whoami = 0;

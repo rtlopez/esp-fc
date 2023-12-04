@@ -20,14 +20,7 @@ class AccelSensor: public BaseSensor
       _gyro = _model.state.gyroDev;
       if(!_gyro) return 0;
 
-      switch(_model.config.accelFsr)
-      {
-        case ACCEL_FS_16: _model.state.accelScale = 16.f * ACCEL_G / 32768.f; break;
-        case ACCEL_FS_8:  _model.state.accelScale =  8.f * ACCEL_G / 32768.f; break;
-        case ACCEL_FS_4:  _model.state.accelScale =  4.f * ACCEL_G / 32768.f; break;
-        case ACCEL_FS_2:  _model.state.accelScale =  2.f * ACCEL_G / 32768.f; break;
-      }
-      _gyro->setFullScaleAccelRange(_model.config.accelFsr);
+      _model.state.accelScale = 16.f * ACCEL_G / 32768.f;
 
       for(size_t i = 0; i < 3; i++)
       {
