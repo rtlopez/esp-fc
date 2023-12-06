@@ -101,49 +101,59 @@ static uint32_t esp_twi_clockStretchLimit;
 #define TWI_PIN_MAX 15
 #endif
 
-void esp_twi_setClock(unsigned int freq){
-#if F_CPU == FCPU80
-  if(freq < 100000) esp_twi_dcount = 19;//about 100KHz
-  else if(freq < 200000) esp_twi_dcount = 8;//about 200KHz
-  else if(freq < 300000) esp_twi_dcount = 3;//about 300KHz
-  else if(freq < 400000) esp_twi_dcount = 1;//about 400KHz
-  else esp_twi_dcount = 0;//about 400KHz
-#elif F_CPU == FCPU240
-  if(freq < 50000) esp_twi_dcount = 300;      //about  50kHz
-  else if(freq < 100000) esp_twi_dcount = 190; //about 100kHz
-  else if(freq < 150000) esp_twi_dcount = 133; //about 150kHz
-  else if(freq < 200000) esp_twi_dcount = 65;  //about 200kHz
-  else if(freq < 250000) esp_twi_dcount = 50;  //about 250kHz
-  else if(freq < 300000) esp_twi_dcount = 39;  //about 300kHz
-  else if(freq < 400000) esp_twi_dcount = 27;  //about 400kHz
-  else if(freq < 500000) esp_twi_dcount = 20;  //about 500kHz
-  else if(freq < 600000) esp_twi_dcount = 15;  //about 600kHz
-  else if(freq < 700000) esp_twi_dcount = 11;  //about 700kHz
-  else if(freq < 800000) esp_twi_dcount = 8;   //about 800kHz
-  else if(freq < 900000) esp_twi_dcount = 7;   //about 900kHz
-  else if(freq < 1000000) esp_twi_dcount = 5;  //about 1.0MHz
-  else if(freq < 1100000) esp_twi_dcount = 4;  //about 1.1MHz
-  else if(freq < 1200000) esp_twi_dcount = 2;  //about 1.2MHz
-  else esp_twi_dcount = 1;                     //above 1.2MHz
-#elif F_CPU == FCPU133 // 133 mhz
-  if(freq < 50000) esp_twi_dcount = 32;//about 50KHz
-  else if(freq < 100000) esp_twi_dcount = 16;//about 100KHz
-  else if(freq < 200000) esp_twi_dcount = 8;
-  else if(freq < 400000) esp_twi_dcount = 4;
-  else if(freq < 600000) esp_twi_dcount = 2;
-  else if(freq < 800000) esp_twi_dcount = 1;
-  else esp_twi_dcount = 0; //about 700KHz
-#else // 160 mhz
-  if(freq < 50000) esp_twi_dcount = 64;//about 50KHz
-  else if(freq < 100000) esp_twi_dcount = 32;//about 100KHz
-  else if(freq < 200000) esp_twi_dcount = 14;//about 200KHz
-  else if(freq < 300000) esp_twi_dcount = 8;//about 300KHz
-  else if(freq < 400000) esp_twi_dcount = 5;//about 400KHz
-  else if(freq < 500000) esp_twi_dcount = 3;//about 500KHz
-  else if(freq < 600000) esp_twi_dcount = 2;//about 600KHz
-  else if(freq < 800000) esp_twi_dcount = 1;//about 800KHz
-  else esp_twi_dcount = 0; //about 700KHz
+#if defined(ESP32C3)
+#define TWI_DCOUNT_SCALE 4
+#else
+#define TWI_DCOUNT_SCALE 1
 #endif
+
+static unsigned int esp_twi_getDelay(unsigned int freq){
+#if F_CPU == FCPU80
+  if(freq < 100000) return  19;     // 100KHz
+  else if(freq < 200000) return 8;  // 200KHz
+  else if(freq < 300000) return 3;  // 300KHz
+  else if(freq < 400000) return 1;  // 400KHz
+  else return 0;                    // 400KHz
+#elif F_CPU == FCPU240
+  if(freq < 50000) return 300;       //  50kHz
+  else if(freq < 100000) return 190; // 100kHz
+  else if(freq < 150000) return 133; // 150kHz
+  else if(freq < 200000) return 65;  // 200kHz
+  else if(freq < 250000) return 50;  // 250kHz
+  else if(freq < 300000) return 39;  // 300kHz
+  else if(freq < 400000) return 27;  // 400kHz
+  else if(freq < 500000) return 20;  // 500kHz
+  else if(freq < 600000) return 15;  // 600kHz
+  else if(freq < 700000) return 11;  // 700kHz
+  else if(freq < 800000) return 8;   // 800kHz
+  else if(freq < 900000) return 7;   // 900kHz
+  else if(freq < 1000000) return 5;  // 1.0MHz
+  else if(freq < 1100000) return 4;  // 1.1MHz
+  else if(freq < 1200000) return 2;  // 1.2MHz
+  else return 1;                     // 1.2MHz
+#elif F_CPU == FCPU133 // 133 mhz
+  if(freq < 50000) return 32;        // 50KHz
+  else if(freq < 100000) return 16;  // 100KHz
+  else if(freq < 200000) return 8;
+  else if(freq < 400000) return 4;
+  else if(freq < 600000) return 2;
+  else if(freq < 800000) return 1;
+  else return 0;                     // 700KHz
+#else // 160 mhz
+  if(freq < 50000) return 64;        // 50KHz
+  else if(freq < 100000) return 32;  // 100KHz
+  else if(freq < 200000) return 16;  // 200KHz
+  else if(freq < 300000) return 8;   // 300KHz
+  else if(freq < 400000) return 5;   // 400KHz
+  else if(freq < 500000) return 3;   // 500KHz
+  else if(freq < 600000) return 2;   // 600KHz
+  else if(freq < 800000) return 1;   // 800KHz
+  else return 0;                     // 700KHz
+#endif
+}
+
+void esp_twi_setClock(unsigned int freq){
+  esp_twi_dcount = esp_twi_getDelay(freq) * TWI_DCOUNT_SCALE;
 }
 
 void esp_twi_setClockStretchLimit(uint32_t limit){

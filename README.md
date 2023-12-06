@@ -82,9 +82,9 @@ After flashing you need to configure few things first:
 |----------------:|--------:|------:|-------:|
 | MPU6050/I2C     | Yes     |   Yes |    Yes |
 | MPU6000/SPI     | -       |     ? |      ? |
-| MPU6500/I2C     | ?       |     ? |      ? |
-| MPU6500/SPI     | -       |     ? |      ? |
-| MPU9250/I2C     | ?       |     ? |      ? |
+| MPU6500/I2C     | ?       |   Yes |      ? |
+| MPU6500/SPI     | -       |   Yes |    Yes |
+| MPU9250/I2C     | Yes     |   Yes |    Yes |
 | MPU9250/SPI     | -       |   Yes |    Yes |
 | BMP280/I2C      | Yes     |   Yes |    Yes |
 | BMP280/SPI      | -       |   Yes |    Yes |

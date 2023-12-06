@@ -158,7 +158,7 @@ class SerialManager
       //D("serial", _current);
       SerialPortState& ss = _model.state.serial[_current];
       const SerialPortConfig& sc = _model.config.serial[_current];
-      Stream * stream = ss.stream;
+      Device::SerialDevice * stream = ss.stream;
 
       {
         Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
@@ -168,16 +168,23 @@ class SerialManager
         }
 
         size_t len = stream->available();
-        while(len--)
+        if(len > 0)
         {
-          const int c = stream->read();
-          if(sc.functionMask & SERIAL_FUNCTION_MSP)
+          uint8_t buff[64] = {0};
+          len = std::min(len, sizeof(buff));
+          stream->readMany(buff, len);
+          char * c = (char*)&buff[0];
+          while(len--)
           {
-            bool consumed = _msp.process(c, ss.mspRequest, ss.mspResponse, *stream);
-            if(!consumed)
+            if(sc.functionMask & SERIAL_FUNCTION_MSP)
             {
-              _cli.process(c, ss.cliCmd, *stream);
+              bool consumed = _msp.process(*c, ss.mspRequest, ss.mspResponse, *stream);
+              if(!consumed)
+              {
+                _cli.process(*c, ss.cliCmd, *stream);
+              }
             }
+            c++;
           }
         }
       }

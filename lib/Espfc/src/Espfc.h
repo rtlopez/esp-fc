@@ -59,11 +59,6 @@ class Espfc
     int update()
     {
 #if defined(ESPFC_MULTI_CORE)
-      /*if(!_model.state.appQueue.isEmpty())
-      {
-        return 0;
-      }*/
-
       if(!_model.state.gyroTimer.check())
       {
         return 0;

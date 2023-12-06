@@ -9,7 +9,7 @@ namespace Espfc {
 class Timer
 {
   public:
-    Timer(): interval(0), last(0), iteration(0), delta(0) {}
+    Timer(): interval(0), last(0), next(0), iteration(0), delta(0) {}
 
     int setInterval(uint32_t interval)
     {
@@ -46,15 +46,16 @@ class Timer
     bool check(uint32_t now)
     {
       if(interval == 0) return false;
-      if(last + interval > now) return false;
+      if(now < next) return false;
       return update(now);
     }
 
     int update(uint32_t now)
     {
+      next = now + interval;
       delta = now - last;
-      iteration++;
       last = now;
+      iteration++;
       return 1;
     }
 
@@ -69,6 +70,7 @@ class Timer
     uint32_t denom;
 
     uint32_t last;
+    uint32_t next;
     uint32_t iteration;
     uint32_t delta;
     float intervalf;

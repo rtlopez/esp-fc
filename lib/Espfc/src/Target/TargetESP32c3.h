@@ -4,16 +4,16 @@
 #include "Debug_Espfc.h"
 //free pins left: IO15 IO16 IO17
 #define ESPFC_INPUT
-#define ESPFC_INPUT_PIN 3 // ppm
+#define ESPFC_INPUT_PIN -1 // ppm
 
 #define ESPFC_OUTPUT_COUNT 4
 #define ESPFC_OUTPUT_0 2
-#define ESPFC_OUTPUT_1 4
-#define ESPFC_OUTPUT_2 18
-#define ESPFC_OUTPUT_3 19
+#define ESPFC_OUTPUT_1 3
+#define ESPFC_OUTPUT_2 4
+#define ESPFC_OUTPUT_3 5
 
 #define ESPFC_SERIAL_0
-#define ESPFC_SERIAL_0_DEV Serial
+#define ESPFC_SERIAL_0_DEV Serial0
 #define ESPFC_SERIAL_0_DEV_T HardwareSerial
 #define ESPFC_SERIAL_0_TX 21
 #define ESPFC_SERIAL_0_RX 20
@@ -30,32 +30,37 @@
 #define ESPFC_SERIAL_1_BAUD (SERIAL_SPEED_115200)
 #define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_NONE)
 
+#define ESPFC_SERIAL_USB
+#define ESPFC_SERIAL_USB_DEV Serial
+#define ESPFC_SERIAL_USB_DEV_T HWCDC
+#define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
+
 #define ESPFC_SERIAL_REMAP_PINS
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_UART_0
 #define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_DEV SPI1
-#define ESPFC_SPI_0_SCK 6
-#define ESPFC_SPI_0_MOSI 14
-#define ESPFC_SPI_0_MISO 7
+#define ESPFC_SPI_0_SCK -1
+#define ESPFC_SPI_0_MOSI -1
+#define ESPFC_SPI_0_MISO -1
 
-#define ESPFC_SPI_CS_GYRO 10
-#define ESPFC_SPI_CS_BARO 12
+#define ESPFC_SPI_CS_GYRO -1
+#define ESPFC_SPI_CS_BARO -1
 
 #define ESPFC_I2C_0
-#define ESPFC_I2C_0_SCL 9
+#define ESPFC_I2C_0_SCL 6
 #define ESPFC_I2C_0_SDA 8
-//#define ESPFC_I2C_0_SOFT
+#define ESPFC_I2C_0_SOFT
 
 #define ESPFC_BUZZER
-#define ESPFC_BUZZER_PIN 0
+#define ESPFC_BUZZER_PIN -1
 
 #define ESPFC_ADC_0
-#define ESPFC_ADC_0_PIN 1
+#define ESPFC_ADC_0_PIN 0
 
 #define ESPFC_ADC_1
-#define ESPFC_ADC_1_PIN 5
+#define ESPFC_ADC_1_PIN 1
 
 #define ESPFC_ADC_SCALE (3.3f / 4096)
 
@@ -63,8 +68,8 @@
 
 #define ESPFC_GUARD 0
 
-#define ESPFC_GYRO_I2C_RATE_MAX 2000
-#define ESPFC_GYRO_SPI_RATE_MAX 8000
+#define ESPFC_GYRO_I2C_RATE_MAX 1000
+#define ESPFC_GYRO_SPI_RATE_MAX 2000
 
 //#define ESPFC_LOGGER_FS // doesn't compile on ESP32
 #define ESPFC_DSP
@@ -117,6 +122,14 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
   return 1;
 }
 
+template<>
+inline int targetSerialInit(HWCDC& dev, const SerialDeviceConfig& conf)
+{
+  dev.begin(conf.baud);
+  //while(!dev) delay(10);
+  return 1;
+}
+
 template<typename T>
 inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
 {
@@ -150,6 +163,7 @@ inline uint32_t getBoardId2()
 
 inline void targetReset()
 {
+  ESPFC_SERIAL_USB_DEV.end();
   ESP.restart();
   while(1) {}
 }
