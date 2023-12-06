@@ -309,7 +309,7 @@ class Fusion
 
     void madgwickFusion()
     {
-      if(_model.magActive())
+      if(false && _model.magActive())
       {
         _madgwick.update(
           _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
@@ -354,7 +354,7 @@ class Fusion
 
     void mahonyFusion()
     {
-      if(_model.magActive())
+      if(false && _model.magActive())
       {
         _mahony.update(
           _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,

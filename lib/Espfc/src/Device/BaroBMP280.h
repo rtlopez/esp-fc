@@ -5,7 +5,8 @@
 #include "BaroDevice.h"
 #include "Debug_Espfc.h"
 
-#define BMP280_DEFAULT_ADDRESS        0x77
+#define BMP280_ADDRESS_FIRST          0x76
+#define BMP280_ADDRESS_SECOND         0x77
 #define BMP280_WHOAMI_ID              0x58
 
 #define BMP280_WHOAMI_REG             0xD0
@@ -60,7 +61,7 @@ class BaroBMP280: public BaroDevice
 
     int begin(BusDevice * bus) override
     {
-      return begin(bus, BMP280_DEFAULT_ADDRESS);
+      return begin(bus, BMP280_ADDRESS_FIRST) ? 1 : begin(bus, BMP280_ADDRESS_SECOND) ? 1 : 0;
     }
 
     int begin(BusDevice * bus, uint8_t addr) override

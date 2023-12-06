@@ -40,7 +40,7 @@ class BaroSensor: public BaseSensor
       _pressureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baroRate * 0.1f), _model.state.baroRate);
       _altitudeFilter.begin(_model.config.baroFilter, _model.state.baroRate);
 
-      _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(toGyroRate).log(_model.state.baroRate).logln(_model.config.baroFilter.freq);
+      _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(_baro->getAddress()).log(toGyroRate).log(_model.state.baroRate).logln(_model.config.baroFilter.freq);
 
       return 1;
     }
@@ -56,9 +56,9 @@ class BaroSensor: public BaseSensor
     {
       if(!_baro || !_model.baroActive()) return 0;
       
-      Stats::Measure measure(_model.state.stats, COUNTER_BARO);
-      
       if(_wait > micros()) return 0;
+
+      Stats::Measure measure(_model.state.stats, COUNTER_BARO);
 
       if(_model.config.debugMode == DEBUG_BARO)
       {

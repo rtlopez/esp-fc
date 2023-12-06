@@ -11,12 +11,14 @@
 #if defined(ESPFC_SPI_0)
 #include "Device/BusSPI.h"
 #endif
+#include "Device/BusSlave.h"
 #include "Device/GyroDevice.h"
 #include "Device/GyroMPU6050.h"
 #include "Device/GyroMPU6500.h"
 #include "Device/GyroMPU9250.h"
 #include "Device/GyroLSM6DSO.h"
 #include "Device/GyroICM20602.h"
+#include "Device/GyroBMI160.h"
 #include "Device/MagHMC5338L.h"
 #include "Device/MagAK8963.h"
 #include "Device/BaroDevice.h"
@@ -35,11 +37,13 @@ namespace {
 #if defined(ESPFC_I2C_0)
   static Espfc::Device::BusI2C i2cBus(WireInstance);
 #endif
+  static Espfc::Device::BusSlave gyroSlaveBus;
   static Espfc::Device::GyroMPU6050 mpu6050;
   static Espfc::Device::GyroMPU6500 mpu6500;
   static Espfc::Device::GyroMPU9250 mpu9250;
   static Espfc::Device::GyroLSM6DSO lsm6dso;
   static Espfc::Device::GyroICM20602 icm20602;
+  static Espfc::Device::GyroBMI160 bmi160;
   static Espfc::Device::MagHMC5338L hmc5883l;
   static Espfc::Device::MagAK8963 ak8963;
   static Espfc::Device::BaroBMP085 bmp085;
@@ -94,17 +98,21 @@ class Hardware
         if(!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
         if(!detectedGyro && detectDevice(mpu6500, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu6500;
         if(!detectedGyro && detectDevice(icm20602, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
+        if(!detectedGyro && detectDevice(bmi160, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
         if(!detectedGyro && detectDevice(lsm6dso, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
+        if(detectedGyro) gyroSlaveBus.begin(&spiBus, detectedGyro->getAddress());
       }
 #endif
 #if defined(ESPFC_I2C_0)
-      if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+      if(!detectedGyro && _model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
         if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
         if(!detectedGyro && detectDevice(mpu6500, i2cBus)) detectedGyro = &mpu6500;
         if(!detectedGyro && detectDevice(icm20602, i2cBus)) detectedGyro = &icm20602;
+        if(!detectedGyro && detectDevice(bmi160, i2cBus)) detectedGyro = &bmi160;
         if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
         if(!detectedGyro && detectDevice(lsm6dso, i2cBus)) detectedGyro = &lsm6dso;
+        if(detectedGyro) gyroSlaveBus.begin(&i2cBus, detectedGyro->getAddress());
       }
 #endif
       if(!detectedGyro) return;
@@ -121,22 +129,18 @@ class Hardware
       if(_model.config.magDev == MAG_NONE) return;
 
       Espfc::Device::MagDevice * detectedMag  = nullptr;
-#if defined(ESPFC_SPI_0)
-      if(_model.config.pin[PIN_SPI_CS0] != -1 && _model.state.gyroDev && _model.state.gyroDev->getType() == GYRO_MPU9250)
-      {
-        if(!detectedMag && detectDevice(ak8963, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
-      }
-#endif
 #if defined(ESPFC_I2C_0)
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
-        if(_model.state.gyroDev && _model.state.gyroDev->getType() == GYRO_MPU9250)
-        {
-          if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
-        }
+        if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
         if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
       }
 #endif
+      if(gyroSlaveBus.getBus())
+      {
+        if(!detectedMag && detectDevice(ak8963, gyroSlaveBus)) detectedMag = &ak8963;
+        if(!detectedMag && detectDevice(hmc5883l, gyroSlaveBus)) detectedMag = &hmc5883l;
+      }
       _model.state.magDev = detectedMag;
       _model.state.magPresent = (bool)detectedMag;
       _model.state.magRate = detectedMag ? detectedMag->getRate() : 0;
@@ -173,7 +177,7 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus, cs);
-      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).log(cs).logln(status);
+      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 #endif
@@ -184,10 +188,19 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus);
-      _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status);
+      _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 #endif
+
+    template<typename Dev>
+    bool detectDevice(Dev& dev, Device::BusSlave& bus)
+    {
+      typename Dev::DeviceType type = dev.getType();
+      bool status = dev.begin(&bus);
+      _model.logger.info().log(F("SLV DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
+      return status;
+    }
 
     int update()
     {

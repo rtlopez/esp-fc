@@ -357,7 +357,7 @@ class Cli
                                                   PSTR("CRSF_LINK_STATISTICS_UPLINK"), PSTR("CRSF_LINK_STATISTICS_PWR"), PSTR("CRSF_LINK_STATISTICS_DOWN"), PSTR("BARO"), PSTR("GPS_RESCUE_THROTTLE_PID"), 
                                                   PSTR("DYN_IDLE"), PSTR("FF_LIMIT"), PSTR("FF_INTERPOLATED"), PSTR("BLACKBOX_OUTPUT"), PSTR("GYRO_SAMPLE"), PSTR("RX_TIMING"), NULL };
       static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT2"), PSTR("PT3"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
-      static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), NULL };
+      static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), PSTR("CUSTOM"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
                                                  PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
                                                  PSTR("HEX6X"), PSTR("OCTOX8"), PSTR("OCTOFLATP"), PSTR("OCTOFLATX"), PSTR("AIRPLANE"),
@@ -413,7 +413,7 @@ class Cli
 
         Param(PSTR("accel_bus"), &c.accelBus, busDevChoices),
         Param(PSTR("accel_dev"), &c.accelDev, gyroDevChoices),
-        Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
+        //Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
         Param(PSTR("accel_lpf_type"), &c.accelFilter.type, filterTypeChoices),
         Param(PSTR("accel_lpf_freq"), &c.accelFilter.freq),
         Param(PSTR("accel_offset_x"), &c.accelBias[0]),
@@ -1200,14 +1200,29 @@ class Cli
         s.println();
         printStats(s);
         s.println();
-        for(size_t i = 0; i < COUNTER_COUNT; ++i)
+        for(int i = 0; i < COUNTER_COUNT; ++i)
         {
-          s.print(FPSTR(_model.state.stats.getName((StatCounter)i)));
+          StatCounter c = (StatCounter)i;
+          int time = lrintf(_model.state.stats.getTime(c));
+          float load = _model.state.stats.getLoad(c);
+          int freq = lrintf(_model.state.stats.getFreq(c));
+
+          s.print(FPSTR(_model.state.stats.getName(c)));
           s.print(": ");
-          s.print((int)(_model.state.stats.getTime((StatCounter)i)), 1);
-          s.print("us, ");
-          s.print(_model.state.stats.getLoad((StatCounter)i), 1);
-          s.print("%");
+          if(time < 100) s.print(' ');
+          if(time < 10) s.print(' ');
+          s.print(time);
+          s.print("us,  ");
+
+          if(load < 10) s.print(' ');
+          s.print(load, 1);
+          s.print("%,  ");
+
+          if(freq < 1000) s.print(' ');
+          if(freq < 100) s.print(' ');
+          if(freq < 10) s.print(' ');
+          s.print(freq);
+          s.print(" Hz");
           s.println();
         }
         s.print(F("  TOTAL: "));

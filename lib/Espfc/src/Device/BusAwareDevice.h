@@ -10,11 +10,10 @@ namespace Device {
 class BusAwareDevice
 {
   public:
-    void setBus(BusDevice * bus, uint8_t addr, uint8_t masterAddr = 0)
+    void setBus(BusDevice * bus, uint8_t addr)
     {
       _bus = bus;
       _addr = addr;
-      _masterAddr = masterAddr;
     }
   
     const BusDevice * getBus() const
@@ -22,10 +21,14 @@ class BusAwareDevice
       return _bus;
     }
 
+    uint8_t getAddress() const
+    {
+      return _addr;
+    }
+
   protected:
     BusDevice * _bus;
     uint8_t _addr;
-    uint8_t _masterAddr;
 };
 
 }

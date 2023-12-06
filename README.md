@@ -36,10 +36,11 @@ Software:
 3. Click "Connect" and choose device port in dialog
 4. Add firmware file and set Flash Address to `0x00`
 5. Click "Program"
+6. After success power cycle board
 
 ![ESP-FC Flashing](/docs/images/esptool-js-flash-connect.png)
 
-## Configuration
+## Setup
 After flashing you need to configure few things first:
  1. Configure pinout according to your wiring, especially pin functions, you can find more information in [CLI Reference](/docs/cli.md)
  2. Connect to [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) and setup to your preferences,
@@ -48,6 +49,8 @@ After flashing you need to configure few things first:
 
 > [!NOTE]
 > Not all functions displayed in configurator are avalable in firmware. The rule of thumb is if you cannot change specific option in Betaflight Configurator, that means it is not supported. It usually rolls back to previous value after save.
+
+Here are more details about [how to setup](/docs/setup.md).
 
 ## Wiring diagrams
 
@@ -93,11 +96,14 @@ After flashing you need to configure few things first:
 | AK8963/I2C      | -       |   Yes |    Yes |
 | ICM20602/I2C    | ?       |     ? |      ? |
 | ICM20602/SPI    | -       |   Yes |    Yes |
+| BMI160/I2C      | ?       |   Yes |      ? |
+| BMI160/SPI      | -       |   Yes |    Yes |
 
 ? - not tested, but should work
 
 ## Issues
 You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues)
+You can also join to our [Discord Channel](https://discord.gg/jhyPPM5UEH)
 
 ## Development
 * Visual Studio Code
@@ -108,6 +114,9 @@ You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/i
 * Update documentation
 * Balancing robot
 * Serial Rx (IBUS)
+* ELRS telemetry
+* ESP32-S2/S3/C3 targets
+* BiDir Dshot
 * Baro (MS5611)
 * GPS navigation
 

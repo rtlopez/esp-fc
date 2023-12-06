@@ -53,7 +53,7 @@ class FilterConfig
 
     FilterConfig sanitize(int rate) const
     {
-      const int halfRate = rate / 2;
+      const int halfRate = rate * 0.49f;
       FilterType t = (FilterType)type;
       int16_t f = Math::clamp((int)freq, 0, halfRate);   // adj cut freq below nyquist rule
       int16_t c = Math::clamp((int)cutoff, 0, (int)(f * 0.98f));      // sanitize cutoff to be slightly below filter freq
@@ -77,6 +77,7 @@ class DynamicFilterConfig {
     int16_t q;
     int16_t min_freq;
     int16_t max_freq;
+    static const int MIN_FREQ = 1000;
 };
 
 class FilterStatePt1 {
