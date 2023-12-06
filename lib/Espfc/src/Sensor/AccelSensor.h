@@ -30,7 +30,7 @@ class AccelSensor: public BaseSensor
       _model.state.accelBiasAlpha = _model.state.accelTimer.rate > 0 ? 5.0f / _model.state.accelTimer.rate : 0;
       _model.state.accelCalibrationState = CALIBRATION_IDLE;
 
-      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
+      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
 
       return 1;
     }

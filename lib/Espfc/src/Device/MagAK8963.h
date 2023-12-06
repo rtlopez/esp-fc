@@ -4,18 +4,8 @@
 #include "MagDevice.h"
 #include "BusDevice.h"
 
-#define MPU9250_ADDRESS_FIRST     0x68
-#define MPU9250_ADDRESS_SECOND    0x68
-#define MPU9250_I2C_SLV0_ADDR     0x25
-#define MPU9250_I2C_SLV0_REG      0x26
-#define MPU9250_I2C_SLV0_DO       0x63
-#define MPU9250_I2C_SLV0_CTRL     0x27
-#define MPU9250_I2C_SLV0_EN       0x80
-#define MPU9250_WHO_AM_I          0x75
-#define MPU9250_EXT_SENS_DATA_00  0x49
-
-#define AK8963_ADDRESS            0x0C // this device only has one address
-#define AK8963_DEFAULT_ADDRESS    AK8963_ADDRESS
+#define AK8963_ADDRESS_FIRST      0x0C // this device only has one address
+#define AK8963_ADDRESS_SECOND     0x0D // 0x0E and 0x0F also possible
 #define AK8963_HXL                0x03
 #define AK8963_CNTL1              0x0A
 #define AK8963_PWR_DOWN           0x00
@@ -37,7 +27,7 @@ class MagAK8963: public MagDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, AK8963_DEFAULT_ADDRESS) ? 1 : begin(bus, AK8963_DEFAULT_ADDRESS) ? 1 : 0;
+      return begin(bus, AK8963_ADDRESS_FIRST) ? 1 : begin(bus, AK8963_ADDRESS_SECOND);
     }
 
     int begin(BusDevice * bus, uint8_t addr) override
@@ -46,13 +36,6 @@ class MagAK8963: public MagDevice
 
       if(!testConnection()) return 0;
 
-      init();
-
-      return 1;
-    }
-
-    void init()
-    {
       // set AK8963 to Power Down
       _bus->writeByte(_addr, AK8963_CNTL1, AK8963_PWR_DOWN);
       delay(AK8963_INIT_DELAY); // long wait between AK8963 mode changes
@@ -81,6 +64,8 @@ class MagAK8963: public MagDevice
 
       // instruct master to get 7 bytes of data from the AK8963 at the sample rate
       _bus->read(_addr, AK8963_HXL, 7, buffer);
+
+      return 1;
     }
 
     int readMag(VectorInt16& v) override
@@ -111,8 +96,9 @@ class MagAK8963: public MagDevice
 
     bool testConnection() override
     {
-      if(_bus->read(_addr, AK8963_WHO_AM_I, 1, buffer) != 1) return false;
-      return buffer[0] == 0x48;
+      uint8_t res = _bus->read(_addr, AK8963_WHO_AM_I, 1, buffer);
+      //D("ak8963:whoami", _addr, buffer[0], res);
+      return res == 1 && buffer[0] == 0x48;
     }
 
   private:

@@ -698,7 +698,7 @@ class ModelConfig
       pin[PIN_SPI_CS1] = ESPFC_SPI_CS_BARO;
       pin[PIN_SPI_CS2] = -1;
 #endif
-      i2cSpeed = 1000;
+      i2cSpeed = 800;
 
       gyroBus = BUS_AUTO;
       gyroDev = GYRO_AUTO;

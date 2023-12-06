@@ -1200,14 +1200,29 @@ class Cli
         s.println();
         printStats(s);
         s.println();
-        for(size_t i = 0; i < COUNTER_COUNT; ++i)
+        for(int i = 0; i < COUNTER_COUNT; ++i)
         {
-          s.print(FPSTR(_model.state.stats.getName((StatCounter)i)));
+          StatCounter c = (StatCounter)i;
+          int time = lrintf(_model.state.stats.getTime(c));
+          float load = _model.state.stats.getLoad(c);
+          int freq = lrintf(_model.state.stats.getFreq(c));
+
+          s.print(FPSTR(_model.state.stats.getName(c)));
           s.print(": ");
-          s.print((int)(_model.state.stats.getTime((StatCounter)i)), 1);
-          s.print("us, ");
-          s.print(_model.state.stats.getLoad((StatCounter)i), 1);
-          s.print("%");
+          if(time < 100) s.print(' ');
+          if(time < 10) s.print(' ');
+          s.print(time);
+          s.print("us,  ");
+
+          if(load < 10) s.print(' ');
+          s.print(load, 1);
+          s.print("%,  ");
+
+          if(freq < 1000) s.print(' ');
+          if(freq < 100) s.print(' ');
+          if(freq < 10) s.print(' ');
+          s.print(freq);
+          s.print(" Hz");
           s.println();
         }
         s.print(F("  TOTAL: "));

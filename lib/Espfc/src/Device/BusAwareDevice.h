@@ -21,6 +21,11 @@ class BusAwareDevice
       return _bus;
     }
 
+    uint8_t getAddress() const
+    {
+      return _addr;
+    }
+
   protected:
     BusDevice * _bus;
     uint8_t _addr;

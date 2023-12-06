@@ -91,13 +91,16 @@ class MagHMC5338L: public MagDevice
       setSampleRate(HMC5883L_RATE_75);
       setGain(HMC5883L_GAIN_1090);
 
+      uint8_t buffer[6];
+      _bus->read(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
+
       return 1;
     }
 
     int readMag(VectorInt16& v) override
     {
       uint8_t buffer[6];
-      _bus->read(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
+      _bus->readFast(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
       if (_mode == HMC5883L_MODE_SINGLE)
       {
         _bus->writeByte(_addr, HMC5883L_RA_MODE, HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));

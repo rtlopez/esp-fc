@@ -107,7 +107,7 @@ class GyroMPU6050: public GyroDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, MPU6050_ADDRESS_FIRST) ? 1 : begin(bus, MPU6050_ADDRESS_SECOND) ? 1 : 0;
+      return begin(bus, MPU6050_ADDRESS_FIRST) ? 1 : begin(bus, MPU6050_ADDRESS_SECOND);
     }
 
     int begin(BusDevice * bus, uint8_t addr) override
@@ -125,12 +125,12 @@ class GyroMPU6050: public GyroDevice
       // disable sleep mode and set clock source
       res = _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_CLOCK_PLL_XGYRO);
       //D("mpu6050:sleep_pll", res);
-      delay(10);
+      delay(15);
 
       // reset I2C master and sensors signal path
       res = _bus->writeByte(_addr, MPU6050_USER_CTRL, MPU6050_I2C_MST_RESET | MPU6050_SIG_COND_RESET);
       //D("mpu6050:sig_reset", res);
-      delay(10);
+      delay(15);
 
       // temporary force 1k gyro rate for mag initiation, will be overwritten in GyroSensor
       //setDLPFMode(GYRO_DLPF_188);
@@ -146,13 +146,21 @@ class GyroMPU6050: public GyroDevice
       // accel range to 16G
       _bus->writeByte(_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACCEL_FS_16 << 3);
 
-      if(_bus->isSPI())
+      bool isSpi = _bus->isSPI();
+
+      uint8_t userCtrl = MPU6050_I2C_MST_EN;
+      if(isSpi)
+      {
+        userCtrl |= MPU6050_I2C_IF_DIS;
+      }
+
+      if(true)
       {
         // reset I2C master
         //_bus->writeByte(_addr, MPU6050_USER_CTRL, MPU6050_I2C_MST_RESET);
 
         // enable I2C master mode, and disable I2C
-        res = _bus->writeByte(_addr, MPU6050_USER_CTRL, MPU6050_I2C_MST_EN | MPU6050_I2C_IF_DIS);
+        res = _bus->writeByte(_addr, MPU6050_USER_CTRL, userCtrl);
         //D("mpu6050:i2c_master_en", b, res);
 
         // set the I2C bus speed to 400 kHz
@@ -167,7 +175,7 @@ class GyroMPU6050: public GyroDevice
       {
         // enable I2C bypass mode
         res = _bus->writeByte(_addr, MPU6050_INT_PIN_CFG, MPU6050_I2C_BYPASS_EN);
-        //D("mpu6050:i2c_bypass", b, res);
+        //D("mpu6050:i2c_bypass", res);
       }
       delay(10);
 

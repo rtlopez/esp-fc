@@ -35,7 +35,7 @@ namespace {
 #if defined(ESPFC_I2C_0)
   static Espfc::Device::BusI2C i2cBus(WireInstance);
 #endif
-  static Espfc::Device::BusSlave spiSlaveBus;
+  static Espfc::Device::BusSlave gyroSlaveBus;
   static Espfc::Device::GyroMPU6050 mpu6050;
   static Espfc::Device::GyroMPU6500 mpu6500;
   static Espfc::Device::GyroMPU9250 mpu9250;
@@ -98,11 +98,11 @@ class Hardware
         if(!detectedGyro && detectDevice(icm20602, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
         if(!detectedGyro && detectDevice(bmi160, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
         if(!detectedGyro && detectDevice(lsm6dso, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
-        if(detectedGyro) spiSlaveBus.begin(&spiBus, _model.config.pin[PIN_SPI_CS0]);
+        if(detectedGyro) gyroSlaveBus.begin(&spiBus, detectedGyro->getAddress());
       }
 #endif
 #if defined(ESPFC_I2C_0)
-      if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+      if(!detectedGyro && _model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
         if(!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
         if(!detectedGyro && detectDevice(mpu6500, i2cBus)) detectedGyro = &mpu6500;
@@ -110,6 +110,7 @@ class Hardware
         if(!detectedGyro && detectDevice(bmi160, i2cBus)) detectedGyro = &bmi160;
         if(!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
         if(!detectedGyro && detectDevice(lsm6dso, i2cBus)) detectedGyro = &lsm6dso;
+        if(detectedGyro) gyroSlaveBus.begin(&i2cBus, detectedGyro->getAddress());
       }
 #endif
       if(!detectedGyro) return;
@@ -126,12 +127,6 @@ class Hardware
       if(_model.config.magDev == MAG_NONE) return;
 
       Espfc::Device::MagDevice * detectedMag  = nullptr;
-#if defined(ESPFC_SPI_0)
-      if(spiSlaveBus.getBus())
-      {
-        if(!detectedMag && detectDevice(ak8963, spiSlaveBus, _model.config.pin[PIN_SPI_CS0])) detectedMag = &ak8963;
-      }
-#endif
 #if defined(ESPFC_I2C_0)
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
@@ -139,6 +134,11 @@ class Hardware
         if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
       }
 #endif
+      if(gyroSlaveBus.getBus())
+      {
+        if(!detectedMag && detectDevice(ak8963, gyroSlaveBus)) detectedMag = &ak8963;
+        if(!detectedMag && detectDevice(hmc5883l, gyroSlaveBus)) detectedMag = &hmc5883l;
+      }
       _model.state.magDev = detectedMag;
       _model.state.magPresent = (bool)detectedMag;
       _model.state.magRate = detectedMag ? detectedMag->getRate() : 0;
@@ -175,7 +175,7 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus, cs);
-      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).log(cs).logln(status);
+      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 #endif
@@ -186,17 +186,17 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus);
-      _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status);
+      _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 #endif
 
     template<typename Dev>
-    bool detectDevice(Dev& dev, Device::BusSlave& bus, int cs)
+    bool detectDevice(Dev& dev, Device::BusSlave& bus)
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus);
-      _model.logger.info().log(F("SLAVE DETECT")).log(FPSTR(Dev::getName(type))).log(cs).logln(status);
+      _model.logger.info().log(F("SLV DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 
