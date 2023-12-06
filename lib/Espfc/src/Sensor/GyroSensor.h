@@ -28,15 +28,7 @@ class GyroSensor: public BaseSensor
 
       _gyro->setDLPFMode(_model.config.gyroDlpf);
       _gyro->setRate(_gyro->getRate());
-
-      switch(_model.config.gyroFsr)
-      {
-        case GYRO_FS_2000: _model.state.gyroScale = radians(2000.f) / 32768.f; break;
-        case GYRO_FS_1000: _model.state.gyroScale = radians(1000.f) / 32768.f; break;
-        case GYRO_FS_500:  _model.state.gyroScale =  radians(500.f) / 32768.f; break;
-        case GYRO_FS_250:  _model.state.gyroScale =  radians(250.f) / 32768.f; break;
-      }
-      _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
+      _model.state.gyroScale = radians(2000.f) / 32768.f;
 
       _model.state.gyroCalibrationState = CALIBRATION_START; // calibrate gyro on start
       _model.state.gyroCalibrationRate = _model.state.loopTimer.rate;
@@ -55,7 +47,7 @@ class GyroSensor: public BaseSensor
 #endif
       }
 
-      _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
+      _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
 
       return 1;
     }
@@ -107,7 +99,7 @@ class GyroSensor: public BaseSensor
 
       _model.state.gyroScaled = _model.state.gyro;
 
-      bool dynNotchEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0;
+      bool dynNotchEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
 
       // filtering
       for(size_t i = 0; i < 3; ++i)
@@ -171,6 +163,7 @@ class GyroSensor: public BaseSensor
     void dynNotchAnalyze()
     {
       if(!_model.gyroActive()) return;
+      if(_model.state.loopTimer.rate < DynamicFilterConfig::MIN_FREQ) return;
 
       Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FFT);
 

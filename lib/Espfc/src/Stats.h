@@ -61,21 +61,21 @@ class Stats
         _start[i] = 0;
         _avg[i] = 0;
         _sum[i] = 0;
+        _count[i] = 0;
+        _freq[i] = 0;
       }
     }
 
     inline void start(StatCounter c) IRAM_ATTR
     {
       _start[c] = micros();
-      //Serial1.write((uint8_t)c);
     }
 
     inline void end(StatCounter c) IRAM_ATTR
     {
       uint32_t diff = micros() - _start[c];
       _sum[c] += diff;
-      //uint8_t t = Math::clamp(diff, 0ul, 255ul);
-      //Serial1.write(t);
+      _count[c]++;
     }
 
     void loopTick()
@@ -99,6 +99,8 @@ class Stats
       {
         _avg[i] = (float)_sum[i] / timer.delta;
         _sum[i] = 0;
+        _freq[i] = (float)_count[i] * 1e6 / timer.delta;
+        _count[i] = 0;
       }
     }
 
@@ -113,6 +115,11 @@ class Stats
     float getTime(StatCounter c) const
     {
       return _avg[c] * timer.interval * 0.001f;
+    }
+
+    float getFreq(StatCounter c) const
+    {
+      return _freq[c];
     }
 
     float getTotalLoad() const
@@ -189,7 +196,9 @@ class Stats
   private:
     uint32_t _start[COUNTER_COUNT];
     uint32_t _sum[COUNTER_COUNT];
+    uint32_t _count[COUNTER_COUNT];
     float _avg[COUNTER_COUNT];
+    float _freq[COUNTER_COUNT];
     uint32_t _loop_last;
     int32_t _loop_time;
 };

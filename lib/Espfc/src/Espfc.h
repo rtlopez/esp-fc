@@ -77,7 +77,6 @@ class Espfc
         _buzzer.update();
         _model.state.stats.update();
       }
-      //_model.state.appQueue.send(Event(EVENT_IDLE));
 
       return 1;
 #else
@@ -111,7 +110,7 @@ class Espfc
     {
 #if defined(ESPFC_MULTI_CORE)
       Event e = _model.state.appQueue.receive();
-      //Serial2.write((uint8_t)e.type);
+
       Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
       _sensor.onAppEvent(e);

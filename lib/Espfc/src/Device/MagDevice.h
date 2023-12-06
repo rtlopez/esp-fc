@@ -24,7 +24,6 @@ class MagDevice: public BusAwareDevice
 
     virtual int begin(BusDevice * bus) = 0;
     virtual int begin(BusDevice * bus, uint8_t addr) = 0;
-    virtual int begin(BusDevice * bus, uint8_t addr, uint8_t masterAddr) = 0;
 
     virtual DeviceType getType() const = 0;
 
@@ -36,7 +35,7 @@ class MagDevice: public BusAwareDevice
 
     static const char ** getNames()
     {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883"), PSTR("AK8975"), PSTR("AK8963"), NULL };
+      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883L"), PSTR("AK8975"), PSTR("AK8963"), NULL };
       return devChoices;
     }
 

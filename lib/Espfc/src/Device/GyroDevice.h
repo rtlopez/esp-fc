@@ -38,8 +38,6 @@ class GyroDevice: public BusAwareDevice
     virtual void setDLPFMode(uint8_t mode) = 0;
     virtual int getRate() const = 0;
     virtual void setRate(int rate) = 0;
-    virtual void setFullScaleGyroRange(uint8_t range) = 0;
-    virtual void setFullScaleAccelRange(uint8_t range) = 0;
 
     virtual bool testConnection() = 0;
 

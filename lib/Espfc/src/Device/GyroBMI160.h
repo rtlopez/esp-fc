@@ -155,11 +155,11 @@ class GyroBMI160: public GyroDevice
       delay(1);
 
       // Enable accel offset
-      //_bus->writeBitsBMI160(_addr, BMI160_RA_OFFSET_6, BMI160_ACC_OFFSET_EN, BMI160_ACC_OFFSET_LEN, BMI160_RESULT_OK);
+      //_bus->writeBitsLsb(_addr, BMI160_RA_OFFSET_6, BMI160_ACC_OFFSET_EN, BMI160_ACC_OFFSET_LEN, BMI160_RESULT_OK);
       delay(1);
 
       // Enable gyro offset
-      //_bus->writeBitsBMI160(_addr, BMI160_RA_OFFSET_6, BMI160_GYR_OFFSET_EN, BMI160_GYR_OFFSET_LEN, BMI160_RESULT_OK);
+      //_bus->writeBitsLsb(_addr, BMI160_RA_OFFSET_6, BMI160_GYR_OFFSET_EN, BMI160_GYR_OFFSET_LEN, BMI160_RESULT_OK);
       delay(1);
 
       // Enable data ready interrupt
@@ -229,28 +229,12 @@ class GyroBMI160: public GyroDevice
     {
     }
 
-    void setFullScaleGyroRange(uint8_t range) override
-    {
-    }
-
-    void setFullScaleAccelRange(uint8_t range) override
-    {
-    }
-
     bool testConnection() override
     {
       uint8_t whoami = 0;
       _bus->readByte(_addr, BMI160_RA_CHIP_ID, &whoami);
       //D("bmi160:whoami", _addr, whoami);
       return whoami == BMI160_CHIP_ID_DEFAULT_VALUE;
-    }
-
-    void setSleepEnabled(bool enabled)
-    {
-    }
-
-    void setClockSource(uint8_t source)
-    {
     }
 };
 
