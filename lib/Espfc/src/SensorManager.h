@@ -31,50 +31,15 @@ class SensorManager
       return 1;
     }
 
-    int onAppEvent(const Event& e)
-    {
-      switch(e.type)
-      {
-        case EVENT_GYRO_READ:
-          _gyro.filter();
-          if(_model.state.gyroBiasSamples == 0)
-          {
-            _model.state.gyroBiasSamples = -1;
-            _fusion.restoreGain();
-          }
-          return 1;
-        case EVENT_ACCEL_READ:
-          _accel.filter();
-          _model.state.imuUpdate = true;
-          return 1;
-        case EVENT_MAG_READ:
-          return 1;
-        case EVENT_BBLOG_UPDATED:
-          _gyro.dynNotchAnalyze();
-          if(_model.state.imuUpdate)
-          {
-            _fusion.update();
-            _model.state.imuUpdate = false;
-            _model.state.appQueue.send(Event(EVENT_IMU_UPDATED));
-          }
-          return 1;
-        default:
-          break;
-      }
-      return 0;
-    }
-
     int read()
     {
-      _model.state.appQueue.send(Event(EVENT_START));
-
       _gyro.read();
       if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
       {
         _model.state.appQueue.send(Event(EVENT_GYRO_READ));
       }
 
-      int status = _accel.read();
+      int status = _accel.update();
       if(status)
       {
         _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
@@ -84,32 +49,40 @@ class SensorManager
       {
         status = _mag.update();
       }
-      if(status)
-      {
-        _model.state.appQueue.send(Event(EVENT_MAG_READ));
-      }
 
       if(!status)
       {
         status = _baro.update();
-      }
-      if(status)
-      {
-        _model.state.appQueue.send(Event(EVENT_BARO_READ));
       }
 
       if(!status)
       {
         status = _voltage.update();
       }
-      if(status)
-      {
-        _model.state.appQueue.send(Event(EVENT_VOLTAGE_READ));
-      }
-
-      _model.state.appQueue.send(Event(EVENT_SENSOR_READ));
 
       return 1;
+    }
+
+    int preLoop()
+    {
+      _gyro.filter();
+      if(_model.state.gyroBiasSamples == 0)
+      {
+        _model.state.gyroBiasSamples = -1;
+        _fusion.restoreGain();
+      }
+      return 1;
+    }
+
+    int postLoop()
+    {
+      _gyro.dynNotchAnalyze();
+      return 1;
+    }
+
+    int fusion()
+    {
+      return _fusion.update();
     }
 
     // main task

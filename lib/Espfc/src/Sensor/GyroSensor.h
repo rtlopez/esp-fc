@@ -73,13 +73,15 @@ class GyroSensor: public BaseSensor
 
       VectorFloat input = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
 
-      if(_model.config.gyroFilter2.freq)
+      if(_model.config.gyroFilter3.freq)
       {
         for(size_t i = 0; i < 3; ++i)
         {
-          _model.state.gyroSampled.set(i, _model.state.gyroFilter2[i].update(input[i]));
+          _model.state.gyroSampled.set(i, _model.state.gyroFilter3[i].update(input[i]));
         }
-      } else {
+      }
+      else
+      {
         // moving average filter
         _model.state.gyroSampled = _sma.update(input);
       }
@@ -117,7 +119,7 @@ class GyroSensor: public BaseSensor
           _model.state.debug[0] = lrintf(degrees(_model.state.gyro[i]));
         }
 
-        _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
 
         if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {
