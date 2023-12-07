@@ -115,6 +115,10 @@ class Espfc
     int updateOther()
     {
 #if defined(ESPFC_MULTI_CORE)
+      if(_model.state.appQueue.isEmpty())
+      {
+        return 0;
+      }
       Event e = _model.state.appQueue.receive();
 
       Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
