@@ -20,7 +20,6 @@ void Queue::send(const Event& e)
 Event Queue::receive()
 {
   Event e;
-  //while(!_q.pop(e));
   _q.pop(e);
   return e;
 }

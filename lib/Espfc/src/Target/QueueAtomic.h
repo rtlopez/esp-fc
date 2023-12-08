@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(ESPFC_ATOMIC_QUEUE)
+#if defined(ESPFC_ATOMIC_QUEUE) || defined(UNIT_TEST)
 
 #include <atomic>
 
@@ -12,7 +12,7 @@ class QueueAtomic
 public:
   enum { Capacity = Size + 1 };
 
-  QueueAtomic(): _tail(0), _head(0){}   
+  QueueAtomic(): _tail(0), _head(0) {}
   ~QueueAtomic() {}
 
   bool push(const Element& item)
