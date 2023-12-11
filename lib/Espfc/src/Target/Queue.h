@@ -34,7 +34,7 @@ class Event
   typedef QueueHandle_t TargetQueueHandle;
 #elif defined(ESPFC_ATOMIC_QUEUE)
   #include "QueueAtomic.h"
-  typedef Espfc::QueueAtomic<Espfc::Event, 64> TargetQueueHandle;
+  typedef Espfc::QueueAtomic<Espfc::Event, 63> TargetQueueHandle;
 #elif defined(UNIT_TEST) || !defined(ESPFC_MULTI_CORE)
   typedef int TargetQueueHandle;
 #else
@@ -52,6 +52,7 @@ class Queue
     void send(const Event& e);
     Event receive();
     bool isEmpty() const;
+    bool isFull() const;
 
   private:
     TargetQueueHandle _q;
@@ -62,6 +63,7 @@ void Queue::begin() {}
 void Queue::send(const Event& e) { (void)e; }
 Event Queue::receive() { return Event(); }
 bool Queue::isEmpty() const { return true; }
+bool Queue::isFull() const { return false; }
 #endif
 
 }
