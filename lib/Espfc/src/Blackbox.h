@@ -317,20 +317,6 @@ class Blackbox
       return 1;
     }
 
-    int onAppEvent(const Event& e)
-    {
-      switch(e.type)
-      {
-        case EVENT_MIXER_UPDATED:
-          update();
-          _model.state.appQueue.send(Event(EVENT_BBLOG_UPDATED));
-          return 1;
-        default:
-          break;
-      }
-      return 0;
-    }
-
     int update()
     {
       if(!_model.blackboxEnabled()) return 0;
@@ -368,7 +354,7 @@ class Blackbox
           acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
         }
         if(_model.magActive()) {
-          mag.magADC[i] = _model.state.mag[i];
+          mag.magADC[i] = _model.state.mag[i] * 1090;
         }
         if(_model.baroActive()) {
           baro.altitude = lrintf(_model.state.baroAltitude * 100.f); // cm

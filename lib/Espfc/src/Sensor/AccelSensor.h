@@ -20,14 +20,7 @@ class AccelSensor: public BaseSensor
       _gyro = _model.state.gyroDev;
       if(!_gyro) return 0;
 
-      switch(_model.config.accelFsr)
-      {
-        case ACCEL_FS_16: _model.state.accelScale = 16.f * ACCEL_G / 32768.f; break;
-        case ACCEL_FS_8:  _model.state.accelScale =  8.f * ACCEL_G / 32768.f; break;
-        case ACCEL_FS_4:  _model.state.accelScale =  4.f * ACCEL_G / 32768.f; break;
-        case ACCEL_FS_2:  _model.state.accelScale =  2.f * ACCEL_G / 32768.f; break;
-      }
-      _gyro->setFullScaleAccelRange(_model.config.accelFsr);
+      _model.state.accelScale = 16.f * ACCEL_G / 32768.f;
 
       for(size_t i = 0; i < 3; i++)
       {
@@ -37,7 +30,7 @@ class AccelSensor: public BaseSensor
       _model.state.accelBiasAlpha = _model.state.accelTimer.rate > 0 ? 5.0f / _model.state.accelTimer.rate : 0;
       _model.state.accelCalibrationState = CALIBRATION_IDLE;
 
-      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
+      _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.state.accelTimer.rate).log(_model.state.accelTimer.interval).logln(_model.state.accelPresent);
 
       return 1;
     }
@@ -69,7 +62,7 @@ class AccelSensor: public BaseSensor
 
       Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
-      align(_model.state.accelRaw, _model.config.accelAlign);
+      align(_model.state.accelRaw, _model.config.gyroAlign);
 
       _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
       for(size_t i = 0; i < 3; i++)

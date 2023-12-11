@@ -16,6 +16,7 @@ enum GyroDeviceType {
   GYRO_MPU9250 = 5,
   GYRO_LSM6DSO = 6,
   GYRO_ICM20602 = 7,
+  GYRO_BMI160 = 8,
   GYRO_MAX
 };
 
@@ -37,14 +38,12 @@ class GyroDevice: public BusAwareDevice
     virtual void setDLPFMode(uint8_t mode) = 0;
     virtual int getRate() const = 0;
     virtual void setRate(int rate) = 0;
-    virtual void setFullScaleGyroRange(uint8_t range) = 0;
-    virtual void setFullScaleAccelRange(uint8_t range) = 0;
 
     virtual bool testConnection() = 0;
 
     static const char ** getNames()
     {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), PSTR("LSM6DSO"), PSTR("ICM20602"), NULL };
+      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), PSTR("LSM6DSO"), PSTR("ICM20602"),PSTR("BMI160"), NULL };
       return devChoices;
     }
 

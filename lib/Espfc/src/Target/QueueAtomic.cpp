@@ -1,6 +1,6 @@
 #include "Target.h"
 
-#ifdef ESPFC_FREE_RTOS_QUEUE
+#if defined(ESPFC_ATOMIC_QUEUE)
 
 #include "Queue.h"
 
@@ -10,24 +10,23 @@ namespace Target {
 
 void Queue::begin()
 {
-  _q = xQueueCreate(64, sizeof(Event));
 }
 
 void Queue::send(const Event& e)
 {
-  xQueueSend(_q, &e, (TickType_t)0);
+  _q.push(e);
 }
 
 Event Queue::receive()
 {
   Event e;
-  xQueueReceive(_q, &e, portMAX_DELAY);
+  _q.pop(e);
   return e;
 }
 
 bool Queue::isEmpty() const
 {
-  return uxQueueMessagesWaiting(_q) == 0;
+  return _q.isEmpty();
 }
 
 }

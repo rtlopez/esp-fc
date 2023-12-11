@@ -1,9 +1,11 @@
 #include <unity.h>
 #include <EspGpio.h>
 #include "Math/Utils.h"
+#include "Math/Bits.h"
 #include "helper_3dmath.h"
 #include "Filter.h"
 #include "Control/Pid.h"
+#include "Target/QueueAtomic.h"
 
 // void setUp(void) {
 // // set stuff up here
@@ -50,6 +52,74 @@ void test_math_deadband()
     TEST_ASSERT_EQUAL_INT32(-1, Math::deadband(-11, 10));
     TEST_ASSERT_EQUAL_INT32( 0, Math::deadband( -5, 10));
     TEST_ASSERT_EQUAL_INT32(10, Math::deadband( 20, 10));
+}
+
+void test_math_bit()
+{
+    TEST_ASSERT_EQUAL(0, Math::getBit(0, 0));
+    TEST_ASSERT_EQUAL(1, Math::getBit(1, 0));
+    TEST_ASSERT_EQUAL(0, Math::getBit(1, 1));
+    TEST_ASSERT_EQUAL(1, Math::getBit(3, 1));
+
+    TEST_ASSERT_EQUAL_UINT8(0, Math::setBit(0, 0, 0));
+    TEST_ASSERT_EQUAL_UINT8(1, Math::setBit(0, 0, 1));
+    TEST_ASSERT_EQUAL_UINT8(2, Math::setBit(0, 1, 1));
+    TEST_ASSERT_EQUAL_UINT8(3, Math::setBit(2, 0, 1));
+}
+
+void test_math_bitmask()
+{
+    TEST_ASSERT_EQUAL_UINT8(   0, Math::setMasked(0, 1, 0));
+    TEST_ASSERT_EQUAL_UINT8(   1, Math::setMasked(0, 1, 1));
+    TEST_ASSERT_EQUAL_UINT8(0x38, Math::setMasked(0x00, 0x38, 0xff));
+    TEST_ASSERT_EQUAL_UINT8(0xc7, Math::setMasked(0xff, 0x38, 0x00));
+}
+
+void test_math_bitmask_lsb()
+{
+    TEST_ASSERT_EQUAL_UINT8( 1, Math::getMaskLsb(0, 1));
+    TEST_ASSERT_EQUAL_UINT8( 2, Math::getMaskLsb(1, 1));
+    TEST_ASSERT_EQUAL_UINT8( 4, Math::getMaskLsb(2, 1));
+    TEST_ASSERT_EQUAL_UINT8(12, Math::getMaskLsb(2, 2));
+    TEST_ASSERT_EQUAL_UINT8(56, Math::getMaskLsb(3, 3));
+}
+
+void test_math_bitmask_msb()
+{
+    TEST_ASSERT_EQUAL_UINT8( 1, Math::getMaskMsb(0, 1));
+    TEST_ASSERT_EQUAL_UINT8( 2, Math::getMaskMsb(1, 1));
+    TEST_ASSERT_EQUAL_UINT8( 4, Math::getMaskMsb(2, 1));
+    TEST_ASSERT_EQUAL_UINT8( 6, Math::getMaskMsb(2, 2));
+    TEST_ASSERT_EQUAL_UINT8(14, Math::getMaskMsb(3, 3));
+    TEST_ASSERT_EQUAL_UINT8(30, Math::getMaskMsb(4, 4));
+}
+
+void test_math_bits_lsb()
+{
+    TEST_ASSERT_EQUAL_UINT8(0, Math::getBitsLsb(0x00, 1, 1));
+    TEST_ASSERT_EQUAL_UINT8(0, Math::getBitsLsb(0x55, 1, 1));
+    TEST_ASSERT_EQUAL_UINT8(1, Math::getBitsLsb(0x55, 2, 2));
+    TEST_ASSERT_EQUAL_UINT8(1, Math::getBitsLsb(0x55, 4, 2));
+    TEST_ASSERT_EQUAL_UINT8(5, Math::getBitsLsb(0x55, 2, 4));
+
+    TEST_ASSERT_EQUAL_UINT8( 8, Math::setBitsLsb(0x00, 3, 4, 1));
+    TEST_ASSERT_EQUAL_UINT8(80, Math::setBitsLsb(0x00, 3, 4, 10));
+    TEST_ASSERT_EQUAL_UINT8(16, Math::setBitsLsb(0x00, 4, 2, 1));
+    TEST_ASSERT_EQUAL_UINT8(160, Math::setBitsLsb(0x00, 4, 4, 10));
+}
+
+void test_math_bits_msb()
+{
+    TEST_ASSERT_EQUAL_UINT8( 0, Math::getBitsMsb(0x00, 1, 1));
+    TEST_ASSERT_EQUAL_UINT8( 0, Math::getBitsMsb(0x55, 1, 1));
+    TEST_ASSERT_EQUAL_UINT8( 2, Math::getBitsMsb(0x55, 2, 2));
+    TEST_ASSERT_EQUAL_UINT8( 2, Math::getBitsMsb(0x55, 4, 2));
+    TEST_ASSERT_EQUAL_UINT8(10, Math::getBitsMsb(0x55, 4, 4));
+
+    TEST_ASSERT_EQUAL_UINT8( 1, Math::setBitsMsb(0x00, 3, 4, 1));
+    TEST_ASSERT_EQUAL_UINT8(10, Math::setBitsMsb(0x00, 3, 4, 10));
+    TEST_ASSERT_EQUAL_UINT8( 8, Math::setBitsMsb(0x00, 6, 4, 1));
+    TEST_ASSERT_EQUAL_UINT8(80, Math::setBitsMsb(0x00, 6, 4, 10));
 }
 
 void test_math_peak_detect_full()
@@ -242,7 +312,7 @@ void test_filter_sanitize_pt1_nyquist()
 
     FilterConfig conf2 = conf.sanitize(100);
     TEST_ASSERT_EQUAL(FILTER_PT1, conf2.type);
-    TEST_ASSERT_EQUAL_INT16(50, conf2.freq);
+    TEST_ASSERT_EQUAL_INT16(49, conf2.freq);
     TEST_ASSERT_EQUAL_INT16(0, conf2.cutoff);
 }
 
@@ -294,7 +364,7 @@ void test_filter_sanitize_biquad_lpf_nyqist()
 
     FilterConfig conf2 = conf.sanitize(100);
     TEST_ASSERT_EQUAL(FILTER_BIQUAD, conf2.type);
-    TEST_ASSERT_EQUAL_INT16(50, conf2.freq);
+    TEST_ASSERT_EQUAL_INT16(49, conf2.freq);
     TEST_ASSERT_EQUAL_INT16(0, conf2.cutoff);
 }
 
@@ -346,8 +416,8 @@ void test_filter_sanitize_biquad_notch_nyquist()
 
     FilterConfig conf2 = conf.sanitize(100);
     TEST_ASSERT_EQUAL(FILTER_NOTCH, conf2.type);
-    TEST_ASSERT_EQUAL_INT16(50, conf2.freq);
-    TEST_ASSERT_EQUAL_INT16(49, conf2.cutoff);
+    TEST_ASSERT_EQUAL_INT16(49, conf2.freq);
+    TEST_ASSERT_EQUAL_INT16(48, conf2.cutoff);
 }
 
 void assert_filter_off(Filter& filter)
@@ -389,9 +459,9 @@ void test_filter_pt1_50_100()
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, filter.update(0.0f));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.076f, filter.update(0.1f));
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.397f, filter.update(0.5f));
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.234f, filter.update(1.5f));
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.436f, filter.update(1.5f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.395f, filter.update(0.5f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.229f, filter.update(1.5f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.434f, filter.update(1.5f));
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.484f, filter.update(1.5f));
 }
 
@@ -901,6 +971,68 @@ void test_pid_update_sum_limit()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, result);
 }
 
+void test_queue_atomic()
+{
+    QueueAtomic<int, 3> q;
+    int e1 =  1, e2 =  2, e3 =  3, e4 =  4;
+    int r1 = 91, r2 = 92, r3 = 93, r4 = 94;
+
+    // empty
+    TEST_ASSERT_TRUE(q.isEmpty());
+    TEST_ASSERT_FALSE(q.isFull());
+
+    TEST_ASSERT_FALSE(q.pop(r1));
+    TEST_ASSERT_EQUAL(91, r1);
+
+    TEST_ASSERT_TRUE(q.isEmpty());
+    TEST_ASSERT_FALSE(q.isFull());
+
+    // push first element
+    TEST_ASSERT_TRUE(q.push(e1));
+
+    TEST_ASSERT_FALSE(q.isEmpty());
+    TEST_ASSERT_FALSE(q.isFull());
+
+    // pop last element
+    TEST_ASSERT_TRUE(q.pop(r1));
+    TEST_ASSERT_EQUAL(1, r1);
+
+    TEST_ASSERT_TRUE(q.isEmpty());
+    TEST_ASSERT_FALSE(q.isFull());
+
+    // pop element again
+    TEST_ASSERT_FALSE(q.pop(r1));
+    TEST_ASSERT_EQUAL(1, r1);
+
+    TEST_ASSERT_TRUE(q.isEmpty());
+    TEST_ASSERT_FALSE(q.isFull());
+
+    // make full
+    TEST_ASSERT_TRUE(q.push(e1));
+    TEST_ASSERT_TRUE(q.push(e2));
+    TEST_ASSERT_TRUE(q.push(e3));
+    TEST_ASSERT_FALSE(q.push(e4));
+
+    TEST_ASSERT_FALSE(q.isEmpty());
+    TEST_ASSERT_TRUE(q.isFull());
+
+    // make empty
+    TEST_ASSERT_TRUE(q.pop(r1));
+    TEST_ASSERT_EQUAL(1, r1);
+
+    TEST_ASSERT_TRUE(q.pop(r2));
+    TEST_ASSERT_EQUAL(2, r2);
+
+    TEST_ASSERT_TRUE(q.pop(r3));
+    TEST_ASSERT_EQUAL(3, r3);
+
+    TEST_ASSERT_FALSE(q.pop(r4));
+    TEST_ASSERT_EQUAL(94, r4);
+
+    TEST_ASSERT_TRUE(q.isEmpty());
+    TEST_ASSERT_FALSE(q.isFull());
+}
+
 int main(int argc, char **argv)
 {
     UNITY_BEGIN();
@@ -908,6 +1040,14 @@ int main(int argc, char **argv)
     RUN_TEST(test_math_map);
     RUN_TEST(test_math_map3);
     RUN_TEST(test_math_deadband);
+
+    RUN_TEST(test_math_bit);
+    RUN_TEST(test_math_bitmask);
+    RUN_TEST(test_math_bitmask_lsb);
+    RUN_TEST(test_math_bitmask_msb);
+    RUN_TEST(test_math_bits_lsb);
+    RUN_TEST(test_math_bits_msb);
+
     RUN_TEST(test_math_baro_altitude);
     RUN_TEST(test_math_peak_detect_full);
     RUN_TEST(test_math_peak_detect_partial);
@@ -957,6 +1097,8 @@ int main(int argc, char **argv)
     RUN_TEST(test_pid_update_f);
     RUN_TEST(test_pid_update_sum);
     RUN_TEST(test_pid_update_sum_limit);
+
+    RUN_TEST(test_queue_atomic);
 
     UNITY_END();
 

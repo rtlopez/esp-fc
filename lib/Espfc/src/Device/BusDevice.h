@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <Arduino.h>
+#include "Math/Bits.h"
 
 #define ESPFC_BUS_TIMEOUT 100
 
@@ -13,6 +14,7 @@ enum BusType {
   BUS_AUTO,
   BUS_I2C,
   BUS_SPI,
+  BUS_SLV,
   BUS_MAX
 };
 
@@ -55,7 +57,7 @@ class BusDevice
     {
       uint8_t b;
       uint8_t count = readByte(devAddr, regAddr, &b);
-      *data = b & (1 << bitNum);
+      *data = Math::getBit(b, bitNum);
       return count;
     }
 
@@ -64,10 +66,17 @@ class BusDevice
       uint8_t count, b;
       if ((count = readByte(devAddr, regAddr, &b)) != 0)
       {
-        uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-        b &= mask;
-        b >>= (bitStart - length + 1);
-        *data = b;
+        *data = Math::getBitsMsb(b, bitStart, length);
+      }
+      return count;
+    }
+
+    int8_t readBitsLsb(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data)
+    {
+      uint8_t count, b;
+      if ((count = readByte(devAddr, regAddr, &b)) != 0)
+      {
+        *data = Math::getBitsLsb(b, bitStart, length);
       }
       return count;
     }
@@ -76,7 +85,7 @@ class BusDevice
     {
       uint8_t b;
       readByte(devAddr, regAddr, &b);
-      b = (data != 0) ? (b | (1 << bitNum)) : (b & ~(1 << bitNum));
+      b = Math::setBit(b, bitNum, data);
       return writeByte(devAddr, regAddr, b);
     }
 
@@ -85,11 +94,19 @@ class BusDevice
       uint8_t b = 0;
       if (readByte(devAddr, regAddr, &b) != 0)
       {
-        uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
-        data <<= (bitStart - length + 1); // shift data into correct position
-        data &= mask; // zero all non-important bits in data
-        b &= ~(mask); // zero all important bits in existing byte
-        b |= data; // combine data with existing byte
+        b = Math::setBitsMsb(b, bitStart, length, data);
+        return writeByte(devAddr, regAddr, b);
+      } else {
+        return false;
+      }
+    }
+
+    bool writeBitsLsb(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data)
+    {
+      uint8_t b = 0;
+      if (readByte(devAddr, regAddr, &b) != 0)
+      {
+        b = Math::setBitsLsb(b, bitStart, length, data);
         return writeByte(devAddr, regAddr, b);
       } else {
         return false;
@@ -101,9 +118,7 @@ class BusDevice
       uint8_t b = 0;
       if (readByte(devAddr, regAddr, &b) != 0)
       {
-        data &= mask; // zero all non-important bits in data
-        b &= ~(mask); // zero all important bits in existing byte
-        b |= data; // combine data with existing byte
+        b = Math::setMasked(b, mask, data);
         return writeByte(devAddr, regAddr, b);
       } else {
         return false;
@@ -112,7 +127,7 @@ class BusDevice
 
     static const char ** getNames()
     {
-      static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), NULL };
+      static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), PSTR("SLV"), NULL };
       return busDevChoices;
     }
 

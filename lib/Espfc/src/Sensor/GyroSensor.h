@@ -28,15 +28,7 @@ class GyroSensor: public BaseSensor
 
       _gyro->setDLPFMode(_model.config.gyroDlpf);
       _gyro->setRate(_gyro->getRate());
-
-      switch(_model.config.gyroFsr)
-      {
-        case GYRO_FS_2000: _model.state.gyroScale = radians(2000.f) / 32768.f; break;
-        case GYRO_FS_1000: _model.state.gyroScale = radians(1000.f) / 32768.f; break;
-        case GYRO_FS_500:  _model.state.gyroScale =  radians(500.f) / 32768.f; break;
-        case GYRO_FS_250:  _model.state.gyroScale =  radians(250.f) / 32768.f; break;
-      }
-      _gyro->setFullScaleGyroRange(_model.config.gyroFsr);
+      _model.state.gyroScale = radians(2000.f) / 32768.f;
 
       _model.state.gyroCalibrationState = CALIBRATION_START; // calibrate gyro on start
       _model.state.gyroCalibrationRate = _model.state.loopTimer.rate;
@@ -55,7 +47,7 @@ class GyroSensor: public BaseSensor
 #endif
       }
 
-      _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
+      _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
 
       return 1;
     }
@@ -81,13 +73,15 @@ class GyroSensor: public BaseSensor
 
       VectorFloat input = (VectorFloat)_model.state.gyroRaw * _model.state.gyroScale;
 
-      if(_model.config.gyroFilter2.freq)
+      if(_model.config.gyroFilter3.freq)
       {
         for(size_t i = 0; i < 3; ++i)
         {
-          _model.state.gyroSampled.set(i, _model.state.gyroFilter2[i].update(input[i]));
+          _model.state.gyroSampled.set(i, _model.state.gyroFilter3[i].update(input[i]));
         }
-      } else {
+      }
+      else
+      {
         // moving average filter
         _model.state.gyroSampled = _sma.update(input);
       }
@@ -107,7 +101,7 @@ class GyroSensor: public BaseSensor
 
       _model.state.gyroScaled = _model.state.gyro;
 
-      bool dynNotchEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0;
+      bool dynNotchEnabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
 
       // filtering
       for(size_t i = 0; i < 3; ++i)
@@ -125,7 +119,7 @@ class GyroSensor: public BaseSensor
           _model.state.debug[0] = lrintf(degrees(_model.state.gyro[i]));
         }
 
-        _model.state.gyro.set(i, _model.state.gyroFilter3[i].update(_model.state.gyro[i]));
+        _model.state.gyro.set(i, _model.state.gyroFilter2[i].update(_model.state.gyro[i]));
 
         if(_model.config.debugMode == DEBUG_GYRO_SAMPLE && i == _model.config.debugAxis)
         {
@@ -149,7 +143,7 @@ class GyroSensor: public BaseSensor
 
         if(dynNotchEnabled)
         {
-          for(size_t p = 0; p < _model.config.dynamicFilter.width; p++)
+          for(size_t p = 0; p < (size_t)_model.config.dynamicFilter.width; p++)
           {
             _model.state.gyro.set(i, _model.state.gyroDynNotchFilter[i][p].update(_model.state.gyro[i]));
           }
@@ -170,6 +164,9 @@ class GyroSensor: public BaseSensor
 
     void dynNotchAnalyze()
     {
+      if(!_model.gyroActive()) return;
+      if(_model.state.loopTimer.rate < DynamicFilterConfig::MIN_FREQ) return;
+
       Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FFT);
 
       bool enabled = _model.isActive(FEATURE_DYNAMIC_FILTER);
@@ -239,7 +236,8 @@ class GyroSensor: public BaseSensor
                 {
                   size_t x = (p + i) % 3;
                   int harmonic = (p / 3) + 1;
-                  _model.state.gyroDynNotchFilter[x][p].reconfigure(freq * harmonic, freq * harmonic, q);
+                  int16_t f = Math::clamp((int16_t)lrintf(freq * harmonic), _model.config.dynamicFilter.min_freq, _model.config.dynamicFilter.max_freq);
+                  _model.state.gyroDynNotchFilter[x][p].reconfigure(f, f, q);
                 }
               }
             }

@@ -66,7 +66,10 @@ class Espfc
       Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
       _sensor.read();
-      _input.update();
+      if(_model.state.inputTimer.check())
+      {
+        _input.update();
+      }
       if(_model.state.actuatorTimer.check())
       {
         _actuator.update();
@@ -77,7 +80,6 @@ class Espfc
         _buzzer.update();
         _model.state.stats.update();
       }
-      //_model.state.appQueue.send(Event(EVENT_IDLE));
 
       return 1;
 #else
@@ -92,7 +94,10 @@ class Espfc
           {
             _mixer.update();
           }
-          _input.update();
+          if(_model.state.inputTimer.check())
+          {
+            _input.update();
+          }
           if(_model.state.actuatorTimer.check())
           {
             _actuator.update();
@@ -110,14 +115,30 @@ class Espfc
     int updateOther()
     {
 #if defined(ESPFC_MULTI_CORE)
+      if(_model.state.appQueue.isEmpty())
+      {
+        return 0;
+      }
       Event e = _model.state.appQueue.receive();
-      //Serial2.write((uint8_t)e.type);
+
       Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
-      _sensor.onAppEvent(e);
-      _controller.onAppEvent(e);
-      _mixer.onAppEvent(e);
-      _blackbox.onAppEvent(e);
+      switch(e.type)
+      {
+        case EVENT_GYRO_READ:
+          _sensor.preLoop();
+          _controller.update();
+          _mixer.update();
+          _blackbox.update();
+          _sensor.postLoop();
+          break;
+        case EVENT_ACCEL_READ:
+          _sensor.fusion();
+          break;
+        default:
+          break;
+          // nothing
+      }
 #else
       if(_model.state.serialTimer.check())
       {
