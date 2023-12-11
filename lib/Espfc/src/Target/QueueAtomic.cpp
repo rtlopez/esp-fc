@@ -14,6 +14,7 @@ void Queue::begin()
 
 void Queue::send(const Event& e)
 {
+  if(isFull()) return;
   _q.push(e);
 }
 
@@ -27,6 +28,11 @@ Event Queue::receive()
 bool Queue::isEmpty() const
 {
   return _q.isEmpty();
+}
+
+bool Queue::isFull() const
+{
+  return _q.isFull();
 }
 
 }

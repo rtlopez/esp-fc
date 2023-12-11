@@ -35,15 +35,17 @@ class BlackboxBuffer
 
     size_t availableForWrite() const
     {
+      //return _stream->availableForWrite();
       return SIZE - _idx;
     }
 
     size_t isTxFifoEmpty() const
     {
+      //return _stream->isTxFifoEmpty();
       return _idx == 0;
     }
 
-    static const size_t SIZE = 128;
+    static const size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
 
     Espfc::Device::SerialDevice * _stream;
     size_t _idx;
