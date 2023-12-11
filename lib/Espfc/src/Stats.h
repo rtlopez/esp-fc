@@ -146,10 +146,7 @@ class Stats
 
     float getCpuLoad() const
     {
-      float load = getLoad(COUNTER_CPU_0) + getLoad(COUNTER_CPU_1);
-#ifdef ESPFC_MULTI_CORE
-      load *= 0.5f;
-#endif
+      float load = std::max(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
       return load;
     }
 

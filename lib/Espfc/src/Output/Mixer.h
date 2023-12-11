@@ -57,22 +57,6 @@ class Mixer
       return 1;
     }
 
-    int onAppEvent(const Event& e)
-    {
-      switch(e.type)
-      {
-        case EVENT_PID_UPDATED:
-          if(_model.state.mixerTimer.syncTo(_model.state.loopTimer)) {
-            update();
-          }
-          _model.state.appQueue.send(Event(EVENT_MIXER_UPDATED));
-          return 1;
-        default:
-          break;
-      }
-      return 0;
-    }
-
     int update()
     {
       uint32_t startTime = micros();

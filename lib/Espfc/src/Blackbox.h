@@ -35,15 +35,17 @@ class BlackboxBuffer
 
     size_t availableForWrite() const
     {
+      //return _stream->availableForWrite();
       return SIZE - _idx;
     }
 
     size_t isTxFifoEmpty() const
     {
+      //return _stream->isTxFifoEmpty();
       return _idx == 0;
     }
 
-    static const size_t SIZE = 128;
+    static const size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
 
     Espfc::Device::SerialDevice * _stream;
     size_t _idx;
@@ -315,20 +317,6 @@ class Blackbox
       blackboxInit();
 
       return 1;
-    }
-
-    int onAppEvent(const Event& e)
-    {
-      switch(e.type)
-      {
-        case EVENT_MIXER_UPDATED:
-          update();
-          _model.state.appQueue.send(Event(EVENT_BBLOG_UPDATED));
-          return 1;
-        default:
-          break;
-      }
-      return 0;
     }
 
     int update()

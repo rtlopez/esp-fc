@@ -434,11 +434,12 @@ class Model
       //state.accelTimer.setRate(state.gyroTimer.rate, 2);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
-      state.actuatorTimer.setRate(25); // 25 hz
+      state.inputTimer.setRate(1000);
+      state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(2);
-      state.serialTimer.setRate(1000);
+      state.serialTimer.setRate(4000);
       if(magActive())
       {
         state.magTimer.setRate(state.magRate);
@@ -466,8 +467,8 @@ class Model
         } else {
           state.gyroFilter[i].begin(config.gyroFilter, gyroFilterRate);
         }
-        state.gyroFilter2[i].begin(config.gyroFilter2, gyroPreFilterRate);
-        state.gyroFilter3[i].begin(config.gyroFilter3, gyroFilterRate);
+        state.gyroFilter2[i].begin(config.gyroFilter2, gyroFilterRate);
+        state.gyroFilter3[i].begin(config.gyroFilter3, gyroPreFilterRate);
         state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
         state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), gyroFilterRate);
         if(magActive())

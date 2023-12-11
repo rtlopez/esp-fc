@@ -44,9 +44,16 @@ class InputCRSF: public InputDevice
       if(!_serial) return INPUT_IDLE;
 
       size_t len = _serial->available();
-      while(len--)
+      if(len)
       {
-        parse(_frame, _serial->read());
+        uint8_t buff[64] = {0};
+        len = std::min(len, sizeof(buff));
+        _serial->readMany(buff, len);
+        size_t i = 0;
+        while(i < len)
+        {
+          parse(_frame, buff[i++]);
+        }
       }
 
       if(_new_data)
