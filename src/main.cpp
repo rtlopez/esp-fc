@@ -20,6 +20,10 @@
   #include <WiFi.h>
 #endif
 
+#ifdef ESP32
+void serialEventRun(void) {}
+#endif
+
 Espfc::Espfc espfc;
 
 #ifdef ESPFC_MULTI_CORE

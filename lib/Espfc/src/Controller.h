@@ -19,27 +19,6 @@ class Controller
       return 1;
     }
 
-    int onAppEvent(const Event& e)
-    {
-      switch(e.type)
-      {
-        case EVENT_GYRO_READ:
-          _model.state.loopUpdate = true;
-          return 1;
-        case EVENT_SENSOR_READ:
-          if(_model.state.loopUpdate)
-          {
-            update();
-            _model.state.loopUpdate = false;
-            _model.state.appQueue.send(Event(EVENT_PID_UPDATED));
-          }
-          return 1;
-        default:
-          break;
-      }
-      return 0;
-    }
-
     int update()
     {
       uint32_t startTime = 0;

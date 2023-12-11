@@ -28,7 +28,7 @@ class MagSensor: public BaseSensor
       _model.state.magCalibrationState = CALIBRATION_IDLE;
       _model.state.magCalibrationValid = true;
 
-      _model.logger.info().log(F("MAG INIT")).log(FPSTR(Device::MagDevice::getName(_mag->getType()))).logln(_model.state.magTimer.rate);
+      _model.logger.info().log(F("MAG INIT")).log(FPSTR(Device::MagDevice::getName(_mag->getType()))).log(_mag->getAddress()).logln(_model.state.magTimer.rate);
       
       return 1;
     }
@@ -54,7 +54,7 @@ class MagSensor: public BaseSensor
 
     int filter()
     {
-      if(!_mag || !_model.magActive() || !_model.state.magTimer.check()) return 0;
+      if(!_mag || !_model.magActive()) return 0;
 
       Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
 

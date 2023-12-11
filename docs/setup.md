@@ -126,9 +126,10 @@ Logging using serial device is possible, like [D-ronin OpenLager](https://github
 Recommended settings
 
 - To log with 1k rate, you need device that is capable to receive data with 250kbps.
-- To log with 2k rate, you need 500kbps
+- To log with 1k rate with debug, baro and mag data, 500kbps is recommended.
+- To log with 2k rate, you need 1Mbps
 
-OpenLager can handle it easily. If you plan to use OpenLog, you might need to flash [blackbox-firmware](https://github.com/cleanflight/blackbox-firmware) to be able to handle more than 115.2kbps. Either 250kbps and 500kbps works well with modern SD cards up to 32GB.
+OpenLager can handle it easily. If you plan to use OpenLog, you might need to flash [blackbox-firmware](https://github.com/cleanflight/blackbox-firmware) to be able to handle more than 115.2kbps. Either 250kbps and 500kbps works well with modern SD cards up to 32GB size.
 
 ## Limitations
 

@@ -4,18 +4,8 @@
 #include "MagDevice.h"
 #include "BusDevice.h"
 
-#define MPU9250_ADDRESS_FIRST     0x68
-#define MPU9250_ADDRESS_SECOND    0x68
-#define MPU9250_I2C_SLV0_ADDR     0x25
-#define MPU9250_I2C_SLV0_REG      0x26
-#define MPU9250_I2C_SLV0_DO       0x63
-#define MPU9250_I2C_SLV0_CTRL     0x27
-#define MPU9250_I2C_SLV0_EN       0x80
-#define MPU9250_WHO_AM_I          0x75
-#define MPU9250_EXT_SENS_DATA_00  0x49
-
-#define AK8963_ADDRESS            0x0C // this device only has one address
-#define AK8963_DEFAULT_ADDRESS    AK8963_ADDRESS
+#define AK8963_ADDRESS_FIRST      0x0C // this device only has one address
+#define AK8963_ADDRESS_SECOND     0x0D // 0x0E and 0x0F also possible
 #define AK8963_HXL                0x03
 #define AK8963_CNTL1              0x0A
 #define AK8963_PWR_DOWN           0x00
@@ -37,69 +27,51 @@ class MagAK8963: public MagDevice
   public:
     int begin(BusDevice * bus) override
     {
-      return begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_FIRST) ? 1 : begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_SECOND) ? 1 : 0;
+      return begin(bus, AK8963_ADDRESS_FIRST) ? 1 : begin(bus, AK8963_ADDRESS_SECOND);
     }
 
     int begin(BusDevice * bus, uint8_t addr) override
     {
-      if(bus->getType() == BUS_I2C)
-      {
-        return begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_FIRST) ? 1 : begin(bus, AK8963_DEFAULT_ADDRESS, MPU9250_ADDRESS_SECOND) ? 1 : 0;
-      }
-      else
-      {
-        return begin(bus, addr, addr); // for SPI addr is CS pin
-      }
-    }
+      setBus(bus, addr);
 
-    int begin(BusDevice * bus, uint8_t addr, uint8_t masterAddr) override
-    {
-      setBus(bus, addr, masterAddr);
-
-      if(!testMasterConnection()) return 0;
-
-      //testConnection(); // wtf?
       if(!testConnection()) return 0;
 
-      init();
-
-      return 1;
-    }
-
-    void init()
-    {
       // set AK8963 to Power Down
-      writeSlave(AK8963_CNTL1, AK8963_PWR_DOWN);
+      _bus->writeByte(_addr, AK8963_CNTL1, AK8963_PWR_DOWN);
       delay(AK8963_INIT_DELAY); // long wait between AK8963 mode changes
 
       // set AK8963 to FUSE ROM access
-      writeSlave(AK8963_CNTL1, AK8963_FUSE_ROM);
+      _bus->writeByte(_addr, AK8963_CNTL1, AK8963_FUSE_ROM);
       delay(AK8963_INIT_DELAY);
 
       /* get the magnetometer calibration */
       // read the AK8963 ASA registers and compute magnetometer scale factors
-      readSlave(AK8963_ASA, 3, buffer);
+      _bus->read(_addr, AK8963_ASA, 3, buffer);
       // align CW90_FLIP (swap X Y)
       scale.y = ((((float)buffer[0]) - 128.0f)/(256.0f) + 1.0f) * 4912.0f / 32760.0f; // micro Tesla
       scale.x = ((((float)buffer[1]) - 128.0f)/(256.0f) + 1.0f) * 4912.0f / 32760.0f; // micro Tesla
       scale.z = ((((float)buffer[2]) - 128.0f)/(256.0f) + 1.0f) * 4912.0f / 32760.0f; // micro Tesla
-      scale *= 10.f; // convert to milli Gauss
+      //scale *= 10.f; // convert to milli Gauss
+      scale *= 0.01f; // convert to Gauss
 
       // set AK8963 to Power Down
-      writeSlave(AK8963_CNTL1, AK8963_PWR_DOWN);
+      _bus->writeByte(_addr, AK8963_CNTL1, AK8963_PWR_DOWN);
       delay(AK8963_INIT_DELAY);
 
       // set AK8963 to 16 bit resolution, 100 Hz update rate
-      writeSlave(AK8963_CNTL1, AK8963_CNT_MEAS2);
+      _bus->writeByte(_addr, AK8963_CNTL1, AK8963_CNT_MEAS2);
       delay(AK8963_INIT_DELAY);
 
-      // instruct the MPU9250 to get 7 bytes of data from the AK8963 at the sample rate
-      readSlave(AK8963_HXL, 7, buffer);
+      // instruct master to get 7 bytes of data from the AK8963 at the sample rate
+      _bus->read(_addr, AK8963_HXL, 7, buffer);
+
+      return 1;
     }
 
     int readMag(VectorInt16& v) override
     {
-      _bus->readFast(_masterAddr, MPU9250_EXT_SENS_DATA_00, 6, buffer);
+      _bus->readFast(_addr, AK8963_HXL, 7, buffer);
+
       // align CW90_FLIP (swap X Y, invert Z)
       v.y =  ((((int16_t)buffer[1]) << 8) | buffer[0]);
       v.x =  ((((int16_t)buffer[3]) << 8) | buffer[2]);
@@ -122,77 +94,14 @@ class MagAK8963: public MagDevice
       return MAG_AK8963;
     }
 
-    bool testMasterConnection()
-    {
-      if(readMaster(MPU9250_WHO_AM_I, 1, buffer) != 1) return false;
-      return buffer[0] == 0x71 || buffer[0] == 0x73;
-    }
-
     bool testConnection() override
     {
-      if(readSlave(AK8963_WHO_AM_I, 1, buffer) != 1) return false;
-      return buffer[0] == 0x48;
+      uint8_t res = _bus->read(_addr, AK8963_WHO_AM_I, 1, buffer);
+      //D("ak8963:whoami", _addr, buffer[0], res);
+      return res == 1 && buffer[0] == 0x48;
     }
 
   private:
-    int8_t writeMaster(uint8_t regAddr, uint8_t data)
-    {
-      int8_t res = _bus->writeByte(_masterAddr, regAddr, data);
-      delay(10);
-      return res;
-    }
-
-    int8_t readMaster(uint8_t regAddr, uint8_t length, uint8_t *data)
-    {
-      return _bus->read(_masterAddr, regAddr, length, data);
-    }
-
-    int8_t readSlave(uint8_t regAddr, uint8_t length, uint8_t *data)
-    {
-      // set slave 0 to the AK8963 and set for read
-      if(!writeMaster(MPU9250_I2C_SLV0_ADDR, AK8963_ADDRESS | 0x80)) {
-        return -1;
-      }
-      // set the register to the desired AK8963 sub address
-      if(!writeMaster(MPU9250_I2C_SLV0_REG, regAddr)) {
-        return -2;
-      }
-      // enable I2C and request the bytes
-      if(!writeMaster(MPU9250_I2C_SLV0_CTRL, MPU9250_I2C_SLV0_EN | length)) {
-        return -3;
-      }
-
-      // takes some time for these registers to fill
-      delay(1);
-
-      // read the bytes off the MPU9250 EXT_SENS_DATA registers
-      int8_t res = readMaster(MPU9250_EXT_SENS_DATA_00, length, data);
-
-      return res;
-    }
-
-    int8_t writeSlave(uint8_t regAddr, uint8_t data)
-    {
-      // set slave 0 to the AK8963 and set for write
-      if(!writeMaster(MPU9250_I2C_SLV0_ADDR, AK8963_ADDRESS)) {
-        return -1;
-      }
-      // set the register to the desired AK8963 sub address 
-      if(!writeMaster(MPU9250_I2C_SLV0_REG, regAddr)) {
-        return -2;
-      }
-      // store the data for write
-      if(!writeMaster(MPU9250_I2C_SLV0_DO, data)) {
-        return -3;
-      }
-      // enable I2C and send 1 byte
-      if(!writeMaster(MPU9250_I2C_SLV0_CTRL, MPU9250_I2C_SLV0_EN | 0x01)) {
-        return -4;
-      }
-
-      return true;
-    }
-
     uint8_t _mode;
     VectorFloat scale;
     uint8_t buffer[7];

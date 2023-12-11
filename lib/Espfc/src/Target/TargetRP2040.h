@@ -69,8 +69,8 @@
 
 #define ESPFC_GUARD 0
 
-#define ESPFC_GYRO_I2C_RATE_MAX 2000
-#define ESPFC_GYRO_SPI_RATE_MAX 2000
+#define ESPFC_GYRO_I2C_RATE_MAX 1000
+#define ESPFC_GYRO_SPI_RATE_MAX 1000
 
 #define ESPFC_MULTI_CORE
 #define ESPFC_MULTI_CORE_RP2040
@@ -123,7 +123,7 @@ template<>
 inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
 {
   dev.begin(conf.baud);
-  while(!dev) delay(10);
+  //while(!dev) delay(10);
   return 1;
 }
 
