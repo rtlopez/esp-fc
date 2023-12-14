@@ -209,8 +209,8 @@ class Hardware
 
     static void restart(const Model& model)
     {
-      //escMotor.end();
-      //if(model.config.output.servoRate) escServo.end();
+      if(model.state.escMotor) model.state.escMotor->end();
+      if(model.state.escServo) model.state.escServo->end();
       targetReset();
     }
 
