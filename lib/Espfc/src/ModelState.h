@@ -313,6 +313,8 @@ struct ModelState
   Timer serialTimer;
 
   Target::Queue appQueue;
+  EscDriver * escMotor;
+  EscDriver * escServo;
 };
 
 }

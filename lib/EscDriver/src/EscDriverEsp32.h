@@ -160,6 +160,7 @@ class EscDriverEsp32: public EscDriverBase
 
     void apply()
     {
+      if(_protocol == ESC_PROTOCOL_DISABLED) return;
       if(_async) return;
       transmitAll();
     }

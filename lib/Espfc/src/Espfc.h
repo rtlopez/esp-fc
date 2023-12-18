@@ -94,6 +94,7 @@ class Espfc
           {
             _mixer.update();
           }
+          _blackbox.update();
           if(_model.state.inputTimer.check())
           {
             _input.update();
@@ -102,7 +103,6 @@ class Espfc
           {
             _actuator.update();
           }
-          _blackbox.update();
         }
         _sensor.updateDelayed();
       }

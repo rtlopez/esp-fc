@@ -101,12 +101,6 @@ static uint32_t esp_twi_clockStretchLimit;
 #define TWI_PIN_MAX 15
 #endif
 
-#if defined(ESP32C3)
-#define TWI_DCOUNT_SCALE 4
-#else
-#define TWI_DCOUNT_SCALE 1
-#endif
-
 static unsigned int esp_twi_getDelay(unsigned int freq){
 #if F_CPU == FCPU80
   if(freq < 100000) return  19;     // 100KHz
@@ -140,6 +134,18 @@ static unsigned int esp_twi_getDelay(unsigned int freq){
   else if(freq < 800000) return 1;
   else return 0;                     // 700KHz
 #else // 160 mhz
+#if defined(ESP32C3)
+  if(freq <= 50000) return 250;        // 50KHz
+  else if(freq <= 100000) return 89;  // 100KHz.
+  else if(freq <= 200000) return 39;  // 200KHz.
+  else if(freq <= 300000) return 23;  // 300KHz.
+  else if(freq <= 400000) return 15;  // 400KHz.
+  else if(freq <= 500000) return 9;   // 500KHz.
+  else if(freq <= 600000) return 6;   // 600KHz.
+  else if(freq <= 800000) return 2;   // 800KHz.
+  else if(freq <= 1000000) return 1;  // 900KHz.
+  else return 0;                      // 1000KHz.
+#else
   if(freq < 50000) return 64;        // 50KHz
   else if(freq < 100000) return 32;  // 100KHz
   else if(freq < 200000) return 16;  // 200KHz
@@ -150,10 +156,11 @@ static unsigned int esp_twi_getDelay(unsigned int freq){
   else if(freq < 800000) return 1;   // 800KHz
   else return 0;                     // 700KHz
 #endif
+#endif
 }
 
 void esp_twi_setClock(unsigned int freq){
-  esp_twi_dcount = esp_twi_getDelay(freq) * TWI_DCOUNT_SCALE;
+  esp_twi_dcount = esp_twi_getDelay(freq);
 }
 
 void esp_twi_setClockStretchLimit(uint32_t limit){

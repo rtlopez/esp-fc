@@ -2,11 +2,13 @@
 
 #include "Esp.h"
 #include "Debug_Espfc.h"
-//free pins left: IO15 IO16 IO17
+// flash pins: 12-17 (reserved)
+// usb pins: 18,19
+// strapping pins: 2,8,9, must be high on boot
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN -1 // ppm
 
-#define ESPFC_OUTPUT_COUNT 4
+#define ESPFC_OUTPUT_COUNT ESC_CHANNEL_COUNT
 #define ESPFC_OUTPUT_0 2
 #define ESPFC_OUTPUT_1 3
 #define ESPFC_OUTPUT_2 4
