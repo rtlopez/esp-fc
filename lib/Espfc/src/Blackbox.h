@@ -52,33 +52,7 @@ class BlackboxBuffer
     uint8_t _data[SIZE];
 };
 
-static BlackboxBuffer * blackboxSerial = nullptr;
 static Espfc::Model * _model_ptr = nullptr;
-
-void serialWrite(serialPort_t * instance, uint8_t ch)
-{
-  UNUSED(instance);
-  if(blackboxSerial) blackboxSerial->write(ch);
-}
-
-void serialWriteInit(BlackboxBuffer * serial)
-{
-  blackboxSerial = serial;
-}
-
-uint32_t serialTxBytesFree(const serialPort_t * instance)
-{
-  UNUSED(instance);
-  if(!blackboxSerial) return 0;
-  return blackboxSerial->availableForWrite();
-}
-
-bool isSerialTransmitBufferEmpty(const serialPort_t * instance)
-{
-  UNUSED(instance);
-  if(!blackboxSerial) return false;
-  return blackboxSerial->isTxFifoEmpty();
-}
 
 void initBlackboxModel(Espfc::Model * m)
 {
@@ -174,11 +148,12 @@ class Blackbox
 
       if(!_model.blackboxEnabled()) return 0;
 
-      Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
-      if(!serial) return 0;
+      _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+      if(!_serial) return 0;
 
-      _buffer.begin(serial);
-      serialWriteInit(&_buffer);
+      //_buffer.begin(_serial);
+      //serialBlackboxInit(&_buffer);
+      serialDeviceInit(_serial, 0);
 
       systemConfigMutable()->activeRateProfile = 0;
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
@@ -322,7 +297,7 @@ class Blackbox
     int update()
     {
       if(!_model.blackboxEnabled()) return 0;
-      if(!blackboxSerial) return 0;
+      if(!_serial) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
       uint32_t startTime = micros();
@@ -432,6 +407,7 @@ class Blackbox
 
     Model& _model;
     pidProfile_s _pidProfile;
+    Device::SerialDevice * _serial;
     BlackboxBuffer _buffer;
 };
 

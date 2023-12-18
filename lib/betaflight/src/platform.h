@@ -241,6 +241,7 @@ typedef struct serialPort_s {
     uint32_t txBufferTail;
 
     serialReceiveCallbackPtr rxCallback;
+    void * espfcDevice;
 } serialPort_t;
 
 typedef enum {
@@ -320,17 +321,23 @@ PG_DECLARE(serialConfig_t, serialConfig);
 
 extern const uint32_t baudRates[];
 
+void mspSerialAllocatePorts(void);
+void mspSerialReleasePortIfAllocated(serialPort_t *serialPort);
 serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction);
-void mspSerialReleasePortIfAllocated(struct serialPort_s *serialPort);
 serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function);
 serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options);
 void closeSerialPort(serialPort_t *serialPort);
-void mspSerialAllocatePorts(void);
+uint32_t serialRxBytesWaiting(serialPort_t * instance);
 uint32_t serialTxBytesFree(const serialPort_t *instance);
 bool isSerialTransmitBufferEmpty(const serialPort_t *instance);
 portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function);
 
+void serialDeviceInit(void * serial, size_t index);
+
+void serialBeginWrite(serialPort_t * instance);
+void serialEndWrite(serialPort_t * instance);
 void serialWrite(serialPort_t *instance, uint8_t ch);
+int serialRead(serialPort_t *instance);
 /* SERIAL END */
 
 /* MIXER START */
@@ -1118,6 +1125,47 @@ int16_t getMotorOutputHigh();
 #define PARAM_NAME_GPS_LAP_TIMER_GATE_TOLERANCE "gps_lap_timer_gate_tolerance_m"
 #endif // USE_GPS_LAP_TIMER
 #endif
+
+// ESC 4-Way IF
+
+#define USE_SERIAL_4WAY_BLHELI_INTERFACE
+#define USE_SERIAL_4WAY_BLHELI_BOOTLOADER
+#define USE_SERIAL_4WAY_SK_BOOTLOADER
+
+typedef int8_t IO_t;
+
+typedef struct {
+    bool enabled;
+    IO_t io;
+} pwmOutputPort_t;
+
+pwmOutputPort_t * pwmGetMotors(void);
+void motorDisable(void);
+void motorEnable(void);
+
+#if defined(UNIT_TEST) || defined(ESP8266) || defined(ARCH_RP2040)
+void delay(unsigned long ms);
+void delayMicroseconds(unsigned int us);
+#else
+void delay(uint32_t ms);
+void delayMicroseconds(uint32_t us);
+#endif
+
+#define IOCFG_IPU    0x05 // INPUT_PULLUP
+#define IOCFG_OUT_PP 0x03 // OUTPUT
+#define IOCFG_AF_PP  0x03 // OUTPUT
+#define Bit_RESET    0x00 // LOW
+#define IO_NONE      -1
+
+int IORead(IO_t pin);
+void IOConfigGPIO(IO_t pin, uint8_t mode);
+void IOHi(IO_t pin);
+void IOLo(IO_t pin);
+
+#define LED0_ON do {} while(false)
+#define LED0_OFF do {} while(false)
+
+// end ESC 4-Way IF
 
 #ifdef __cplusplus
 }

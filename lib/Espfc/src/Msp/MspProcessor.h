@@ -8,6 +8,7 @@
 #include "platform.h"
 
 extern "C" {
+  #include "io/serial_4way.h"
   int blackboxCalculatePDenom(int rateNum, int rateDenom);
   uint8_t blackboxCalculateSampleRate(uint16_t pRatio);
   uint8_t blackboxGetRateDenom(void);
@@ -145,6 +146,8 @@ static uint16_t toIbatCurrent(float current)
 }
 
 }
+
+#define MSP_PASSTHROUGH_ESC_4WAY 0xff
 
 namespace Espfc {
 
@@ -1356,6 +1359,26 @@ class MspProcessor
             if (_model.isModeActive(MODE_ARMED)) _model.disarm(DISARM_REASON_ARMING_DISABLED);
           }
           break;
+
+        case MSP_SET_PASSTHROUGH:
+          {
+            uint8_t ptMode = MSP_PASSTHROUGH_ESC_4WAY;
+            uint8_t ptArg = 0;
+            if(m.remain() >= 2) {
+              ptMode = m.readU8();
+              ptArg = m.readU8();
+            }
+            switch (ptMode)
+            {
+              case MSP_PASSTHROUGH_ESC_4WAY:
+                r.writeU8(esc4wayInit());
+                break;
+              default:
+                r.writeU8(0);
+                break;
+            }
+            (void)ptArg;
+          }
 
         case MSP_DEBUG:
           for (int i = 0; i < 4; i++) {
