@@ -16,7 +16,11 @@ static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
 // faster esc response, but unsafe (no task synchronisation)
 // set to 0 in case of issues
+#if defined(ESP32S3)
+#define ESPFC_RMT_BYPASS_WRITE_SYNC 0
+#else
 #define ESPFC_RMT_BYPASS_WRITE_SYNC 1
+#endif
 
 #if ESPFC_RMT_BYPASS_WRITE_SYNC
 IRAM_ATTR static esp_err_t _rmt_fill_tx_items(rmt_channel_t channel, const rmt_item32_t* item, uint16_t item_num, uint16_t mem_offset)

@@ -27,7 +27,7 @@
 
 namespace {
 #if defined(ESPFC_SPI_0)
-  #if defined(ESP32C3)
+  #if defined(ESP32C3) || defined(ESP32S3)
     static SPIClass SPI1(HSPI);
   #elif defined(ESP32) //where is this defined???
     static SPIClass SPI1(VSPI);

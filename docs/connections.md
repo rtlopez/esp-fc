@@ -139,3 +139,62 @@ https://github.com/espressif/esptool/wiki/ESP32-Boot-Mode-Selection
                   +----|---|----+
                         USB
 ```
+
+# ESP32-S3
+
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/gpio.html
+
+```
+Pin | Function             | ESPFC external device
+----+------+---------------+----------------------------------------------
+ 0  | Strapping            |
+ 1  | ADC1_CH0             | ADC_VOLTAGE
+ 2  | ADC1_CH1             | DEBUG
+ 3  | ADC1_CH2, Strapping  |
+ 4  | ADC1_CH3             | ADC_CURRENT
+ 5  | ADC1_CH4             | BUZZER
+ 6  | ADC1_CH5             | PPM
+ 7  | ADC1_CH6             | SPI_CS_BARO
+ 8  | ADC1_CH7             | SPI_CS_GYRO
+ 9  | ADC1_CH8             | I2C_0_SDA
+10  | ADC1_CH9             | I2C_0_SCK
+11  | ADC2_CH0             | SPI_0_MOSI
+12  | ADC2_CH1             | SPI_0_SCK
+13  | ADC2_CH2             | SPI_0_MISO
+14  | ADC2_CH3             | ?
+15  | ADC2_CH4             | RX1
+16  | ADC2_CH5             | TX1
+17  | ADC2_CH6             | RX2
+18  | ADC2_CH7             | TX2
+19  | ADC2_CH8, USB        | USB
+20  | ADC2_CH9, USB        | USB
+21  | RTC_21               | ?
+38  | RGB                  | LED_RGB
+39  |                      | M0
+40  |                      | M1
+41  |                      | M2
+42  |                      | M3
+43  | U1TX                 | TX0
+44  | U1RX                 | RX0
+45  |                      | ?
+46  | Strapping            | SPI_CS_SD
+47  | Strapping            | ?
+48  |                      | ?
+
+RESERVED
+26  | FLASH                |
+27  | FLASH                |
+28  | FLASH                |
+29  | FLASH                |
+30  | FLASH                |
+31  | FLASH                |
+32  | FLASH                |
+33  | FLASH                |
+34  | FLASH                |
+35  | FLASH                |
+36  | FLASH                |
+37  | FLASH                |
+
+UNAVAILABLE
+22, 23, 24, 25
+```
