@@ -1,6 +1,8 @@
 #pragma once
 
-#if defined(ESP32)
+#if defined(ESP32C3)
+  #include "TargetESP32c3.h"
+#elif defined(ESP32) //where is this defined???
   #include "TargetESP32.h"
 #elif defined(ESP8266)
   #include "TargetESP8266.h"

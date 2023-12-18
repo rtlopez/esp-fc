@@ -171,6 +171,7 @@ int EscDriverEsp8266::write(size_t channel, int pulse)
 
 void EscDriverEsp8266::apply()
 {
+  if(_protocol == ESC_PROTOCOL_DISABLED) return;
   if(_protocol >= ESC_PROTOCOL_DSHOT150)
   {
     dshotWrite();
@@ -378,6 +379,8 @@ int EscDriverEsp8266::begin(EscProtocol protocol, bool async, int16_t rate, EscD
         _dh = 14;//lrintf(base * 0.36f);
         _dl = 10;//lrintf(base * 0.28f);
       }
+      break;
+    case ESC_PROTOCOL_DISABLED:
       break;
     default: // analog
       _isr_init(_timer, this);

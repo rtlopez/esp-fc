@@ -1,4 +1,4 @@
-#if defined(ESP32)
+#if defined(ESP32) and not defined(ESP32C3) //where is this defined???
 
 #include "EscDriverEsp32.h"
 
