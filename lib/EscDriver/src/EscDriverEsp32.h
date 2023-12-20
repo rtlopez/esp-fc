@@ -1,7 +1,7 @@
 #ifndef _ESC_DRIVER_ESP32_H_
 #define _ESC_DRIVER_ESP32_H_
 
-#if defined(ESP32) and not defined(ESP32C3) //where is this defined???
+#if defined(ESP32) && !defined(ESP32C3)
 
 #include "EscDriver.h"
 #include <Arduino.h>
@@ -16,7 +16,7 @@ static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
 // faster esc response, but unsafe (no task synchronisation)
 // set to 0 in case of issues
-#if defined(ESP32S3)
+#if defined(ESP32S3) || defined(ESP32S2)
 #define ESPFC_RMT_BYPASS_WRITE_SYNC 0
 #else
 #define ESPFC_RMT_BYPASS_WRITE_SYNC 1
