@@ -3,7 +3,7 @@ The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller
 
 ## Features
 * Frames (Quad X)
-* Betaflight contiguration tool compatible (v10.8 or v10.9)
+* Betaflight configuration tool compatible (v10.8 or v10.9)
 * Receiver protocol (8 channel PPM)
 * SBUS and CRSF Serial Rx protocols on ESP32 and RP2040
 * ESC protocols (PWM, Oneshot125, Brushed, Dshot150, Dshot300, Dshot600)
