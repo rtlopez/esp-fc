@@ -1206,6 +1206,7 @@ class Cli
           int time = lrintf(_model.state.stats.getTime(c));
           float load = _model.state.stats.getLoad(c);
           int freq = lrintf(_model.state.stats.getFreq(c));
+          int real = lrintf(_model.state.stats.getReal(c));
 
           s.print(FPSTR(_model.state.stats.getName(c)));
           s.print(": ");
@@ -1213,6 +1214,11 @@ class Cli
           if(time < 10) s.print(' ');
           s.print(time);
           s.print("us,  ");
+
+          if(real < 100) s.print(' ');
+          if(real < 10) s.print(' ');
+          s.print(real);
+          s.print("us/i,  ");
 
           if(load < 10) s.print(' ');
           s.print(load, 1);
