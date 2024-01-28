@@ -4,226 +4,110 @@
 #include <Arduino.h>
 #include "Debug_Espfc.h"
 
-#if defined(ESPFC_LOGGER_FS)
-  #if defined(ESPFC_LOGGER_FS_ALT)
-    #include "FS.h"
-  #else
-    #include "SPIFFS.h"
-  #endif
-#endif
-
 namespace Espfc {
 
 class Logger
 {
   public:
-    int begin()
+    int begin(size_t size = 1024)
     {
-#if defined(ESPFC_LOGGER_FS)
-      _valid = false;
-      SPIFFS.begin();
-      int count = 0;
-      int first = 0;
-      int last = 0;
-
-      Dir dir = SPIFFS.openDir("");
-      while(dir.next())
-      {
-        String fn = dir.fileName();
-        int id = String(fn).toInt();
-        if(!id) continue;
-
-        last = max(last, id);
-        if(!first) first = id;
-        first = min(first, id);
-        count++;
-      }
-      int next = last + 1;
-      int remove = count > 20 && first;
-
-      String name;
-      if(remove)
-      {
-        _mkname(name, first);
-        SPIFFS.remove(name);
-      }
-
-      _mkname(_name, next);
-      _valid = true;
-      info().logln(F("LOG INIT"));
-
-      if(remove)
-      {
-        info().log(F("LOG RM")).logln(name);
-      }
-#endif
+      _size = size;
+      _tail = 0;
+      _buff = new char[size];
+      _buff[0] = '\0';
       return 1;
-    }
-
-    void list(Stream * s)
-    {
-#if defined(ESPFC_LOGGER_FS)
-      if(!s) return;
-      Dir dir = SPIFFS.openDir("");
-      while(dir.next())
-      {
-        s->print(dir.fileName());
-        s->print(' ');
-        File f = dir.openFile("r");
-        s->println(f.size());
-      }
-#endif
-    }
-
-    void show(Stream * s, int i)
-    {
-      String name;
-      _mkname(name, i);
-      show(s, name);
-    }
-
-    void show(Stream * s)
-    {
-      show(s, _name);
-    }
-
-    void show(Stream * s, const String& name)
-    {
-      if(!s) return;
-#if defined(ESPFC_LOGGER_FS)
-      File f = SPIFFS.open(name, "r");
-      if(!f)
-      {
-        s->println(F("Error reading file"));
-        return;
-      }
-      while(f.available())
-      {
-        String line = f.readStringUntil('\n');
-        s->println(line);
-      }
-#endif
-    }
-
-    bool format()
-    {
-#if defined(ESPFC_LOGGER_FS)
-      return SPIFFS.format();
-#else
-      return false;
-#endif
-    }
-
-    void info(Stream * s)
-    {
-#if defined(ESPFC_LOGGER_FS)
-      if(!s) return;
-      FSInfo i;
-      SPIFFS.info(i);
-      s->print(F("total: ")); s->print(i.totalBytes / 1024); s->println(F(" kB"));
-      s->print(F(" used: ")); s->print(i.usedBytes / 1024); s->println(F(" kB"));
-      s->print(F("avail: ")); s->print((i.totalBytes - i.usedBytes) / 1024); s->println(F(" kB"));
-      s->print(F("block: ")); s->println(i.blockSize);
-      s->print(F(" page: ")); s->println(i.pageSize);
-      s->print(F("files: ")); s->println(i.maxOpenFiles);
-      s->print(F(" path: ")); s->println(i.maxPathLength);
-#endif
     }
 
     Logger& info()
     {
       LOG_SERIAL_DEBUG("I")
-#if defined(ESPFC_LOGGER_FS)
-      if(!_available()) return *this;
-      File f = SPIFFS.open(_name, "a");
-      if(f)
-      {
-        f.print(millis());
-        f.print(F(" I"));
-        f.close();
-      }
-#endif
+      append('I');
       return *this;
     }
 
     Logger& err()
     {
       LOG_SERIAL_DEBUG("E")
-#if defined(ESPFC_LOGGER_FS)
-      if(!_available()) return *this;
-      File f = SPIFFS.open(_name, "a");
-      if(f)
-      {
-        f.print(millis());
-        f.print(F(" E"));
-        f.close();
-      }
-#endif
+      append('E');
       return *this;
     }
 
     template<typename T>
     Logger& log(const T& v)
     {
+      LOG_SERIAL_DEBUG(' ')
       LOG_SERIAL_DEBUG(v)
-#if defined(ESPFC_LOGGER_FS)
-      if(!_available()) return *this;
-      File f = SPIFFS.open(_name, "a");
-      if(f)
-      {
-        f.print(' ');
-        f.print(v);
-        f.close();
-      }
-#endif
+      append(' ');
+      append(String(v));
+      return *this;
+    }
+
+    template<typename T>
+    Logger& loghex(const T& v)
+    {
+      LOG_SERIAL_DEBUG(' ')
+      LOG_SERIAL_DEBUG_HEX(v)
+      append(' ');
+      append(String(v, HEX));
       return *this;
     }
 
     template<typename T>
     Logger& logln(const T& v)
     {
+      LOG_SERIAL_DEBUG(' ')
       LOG_SERIAL_DEBUG(v)
+      append(' ');
+      append(String(v));
+      return endl();
+    }
+
+    Logger& endl()
+    {
       LOG_SERIAL_DEBUG('\r')
       LOG_SERIAL_DEBUG('\n')
-#if defined(ESPFC_LOGGER_FS)
-      if(!_available()) return *this;
-      File f = SPIFFS.open(_name, "a");
-      if(f)
-      {
-        f.print(' ');
-        f.println(v);
-        f.close();
-      }
-#endif
+      append('\r');
+      append('\n');
       return *this;
     }
 
-    bool _available()
+    void append(const String& s)
     {
-#if defined(ESPFC_LOGGER_FS)
-      if(_valid)
+      append(s.c_str(), s.length());
+    }
+
+    void append(const char * s, size_t len)
+    {
+      for(size_t i = 0; i < len; i++)
       {
-        FSInfo i;
-        SPIFFS.info(i);
-        _valid = i.totalBytes - i.usedBytes > 1024; // keep 1kB free space margin
+        append(s[i]);
       }
-      return _valid;
-#else
-      return false;
-#endif
     }
 
-    void _mkname(String& name, int i)
+    void append(char c)
     {
-      name = "";
-      if(i < 10) name += "000";
-      else if(i < 100) name += "00";
-      else if(i < 1000) name += "0";
-      name += i;
+      if(_size > 0 && _tail < _size - 1)
+      {
+        _buff[_tail] = c;
+        _tail++;
+        _buff[_tail] = '\0';
+      }
     }
 
-    String _name;
-    bool _valid;
+    const char * c_str() const
+    {
+      return _buff;
+    }
+
+    const size_t length() const
+    {
+      return _tail;
+    }
+
+  private:
+    char * _buff;
+    size_t _size;
+    size_t _tail;
 };
 
 }

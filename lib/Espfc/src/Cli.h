@@ -833,9 +833,9 @@ class Cli
           PSTR("available commands:"),
           PSTR(" help"), PSTR(" dump"), PSTR(" get param"), PSTR(" set param value ..."), PSTR(" cal [gyro]"),
           PSTR(" defaults"), PSTR(" save"), PSTR(" reboot"), PSTR(" scaler"), PSTR(" mixer"),
-          PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"),
+          PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"), PSTR(" logs"),
           //PSTR(" load"), PSTR(" eeprom"),
-          //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
+          //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" log"),
           NULL
         };
         for(const char ** ptr = helps; *ptr; ptr++)
@@ -1238,36 +1238,6 @@ class Cli
         s.print(F("%"));
         s.println();
       }
-      else if(strcmp_P(cmd.args[0], PSTR("fsinfo")) == 0)
-      {
-        _model.logger.info(&s);
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("fsformat")) == 0)
-      {
-        s.print(F("wait... "));
-        _model.logger.format();
-        s.println(F("OK"));
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
-      {
-        _model.logger.list(&s);
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("log")) == 0)
-      {
-        if(!cmd.args[1])
-        {
-          _model.logger.show(&s);
-          return;
-        }
-        int id = String(cmd.args[1]).toInt();
-        if(!id)
-        {
-          s.println(F("invalid log id"));
-          s.println();
-          return;
-        }
-        _model.logger.show(&s, id);
-      }
       else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0)
       {
         Hardware::restart(_model);
@@ -1279,6 +1249,12 @@ class Cli
       else if(strcmp_P(cmd.args[0], PSTR("exit")) == 0)
       {
         _active = false;
+      }
+      else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
+      {
+        s.print(_model.logger.c_str());
+        s.print(PSTR("total: "));
+        s.println(_model.logger.length());
       }
       else
       {
