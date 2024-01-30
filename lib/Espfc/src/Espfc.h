@@ -35,24 +35,25 @@ class Espfc
 
     int begin()
     {
+      _serial.begin();
+      _model.logStorageResult();
       _hardware.begin();
       _model.begin();
-      _mixer.begin();
+      //_mixer.begin();
       _sensor.begin();
       _input.begin();
       _actuator.begin();
       _controller.begin();
       _blackbox.begin();
-      _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
 
       return 1;
     }
 
     int beginOther()
     {
-      _serial.begin();
-      _model.logStorageResult();
+      _mixer.begin();
       _buzzer.begin();
+      _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
       return 1;
     }
 
