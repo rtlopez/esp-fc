@@ -25,7 +25,7 @@ class Wireless
     {
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       int status = -1;
-      if(_model.config.wireless.mode != WIRELESS_MODE_NULL)
+      if(_model.config.wireless.mode == WIRELESS_MODE_STA)
       {
         using std::placeholders::_1;
         using std::placeholders::_2;
@@ -33,6 +33,7 @@ class Wireless
         WiFi.persistent(false);
         WiFi.mode((WiFiMode_t)_model.config.wireless.mode);
         status = WiFi.begin(_model.config.wireless.ssid, _model.config.wireless.pass);
+        _model.setArmingDisabled(ARMING_DISABLED_PARALYZE, true);
       }
       else
       {

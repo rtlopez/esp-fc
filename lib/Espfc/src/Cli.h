@@ -1190,9 +1190,27 @@ class Cli
         s.print(F(", "));
         s.println(_model.state.inputAutoFactor);
 
+        static const char* armingDisableNames[] = {
+          PSTR("NO_GYRO"), PSTR("FAILSAFE"), PSTR("RX_FAILSAFE"), PSTR("BAD_RX_RECOVERY"),
+          PSTR("BOXFAILSAFE"), PSTR("RUNAWAY_TAKEOFF"), PSTR("CRASH_DETECTED"), PSTR("THROTTLE"),
+          PSTR("ANGLE"), PSTR("BOOT_GRACE_TIME"), PSTR("NOPREARM"), PSTR("LOAD"),
+          PSTR("CALIBRATING"), PSTR("CLI"), PSTR("CMS_MENU"), PSTR("BST"),
+          PSTR("MSP"), PSTR("PARALYZE"), PSTR("GPS"), PSTR("RESC"),
+          PSTR("RPMFILTER"), PSTR("REBOOT_REQUIRED"), PSTR("DSHOT_BITBANG"), PSTR("ACC_CALIBRATION"),
+          PSTR("MOTOR_PROTOCOL"), PSTR("ARM_SWITCH")
+        };
+        const size_t armingDisableNamesLength = sizeof(armingDisableNames) / sizeof(armingDisableNames[0]);
+
         s.println();
-        s.print(F(" arming disabled: "));
-        s.println(_model.state.armingDisabledFlags);
+        s.print(F(" arming disabled:"));
+        for(size_t i = 0; i < armingDisableNamesLength; i++)
+        {
+          if(_model.state.armingDisabledFlags & (1 << i)) {
+            s.print(' ');
+            s.print(armingDisableNames[i]);
+          }
+        }
+        s.println();
       }
       else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
       {
