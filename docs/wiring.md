@@ -8,6 +8,14 @@ ESP32 mcu allows to remap pins, so the wiring is not final and can remap intputs
 
 ![ESP-FC ESP32 SPI Wiring](./images/esp-fc-esp32_spi_wiring.png)
 
+**SPI pins**
+
+| PIN | Name | Module Names    |
+|----:|------|-----------------|
+| 18  | SCK  | SCK / SCL       |
+| 19  | MISO | SDA / SDI       |
+| 23  | MOSI | SAO / SDO / ADO |
+
 ### ESP32 I2C MPU-6050 gyro
 
 ![ESP-FC ESP32 I2C Wiring](./images/esp-fc-esp32_i2c_wiring.png)
