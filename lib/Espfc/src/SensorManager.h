@@ -17,7 +17,7 @@ namespace Espfc {
 class SensorManager
 {
   public:
-    SensorManager(Model& model): _model(model), _gyro(model), _accel(model), _mag(model), _baro(model), _voltage(model), _fusion(model) {}
+    SensorManager(Model& model): _model(model), _gyro(model), _accel(model), _mag(model), _baro(model), _voltage(model), _fusion(model), _fusionUpdate(false) {}
 
     int begin()
     {
@@ -104,14 +104,16 @@ class SensorManager
     {
       _gyro.dynNotchAnalyze();
       int status = _accel.update();
+      if(_fusionUpdate)
+      {
+        _fusionUpdate = false;
+        _fusion.update();
+      }
+      _fusionUpdate = status; // update in next loop cycle
+
       if(!status)
       {
         status = _mag.update();
-      }
-
-      if(status)
-      {
-        _fusion.update();
       }
 
       if(!status)
@@ -134,6 +136,7 @@ class SensorManager
     Sensor::BaroSensor _baro;
     Sensor::VoltageSensor _voltage;
     Fusion _fusion;
+    bool _fusionUpdate;
 };
 
 }

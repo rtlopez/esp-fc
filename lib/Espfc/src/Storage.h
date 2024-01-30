@@ -36,6 +36,8 @@ class Storage
 
     StorageResult load(ModelConfig& config)
     {
+      //return STORAGE_ERR_BAD_MAGIC;
+
       int addr = 0;
       uint8_t magic = EEPROM.read(addr++);
       if(EEPROM_MAGIC != magic)

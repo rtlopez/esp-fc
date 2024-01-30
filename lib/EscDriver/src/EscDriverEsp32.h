@@ -1,7 +1,7 @@
 #ifndef _ESC_DRIVER_ESP32_H_
 #define _ESC_DRIVER_ESP32_H_
 
-#if defined(ESP32)
+#if defined(ESP32) and not defined(ESP32C3) //where is this defined???
 
 #include "EscDriver.h"
 #include <Arduino.h>
@@ -160,6 +160,7 @@ class EscDriverEsp32: public EscDriverBase
 
     void apply()
     {
+      if(_protocol == ESC_PROTOCOL_DISABLED) return;
       if(_async) return;
       transmitAll();
     }

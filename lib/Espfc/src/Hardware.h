@@ -27,9 +27,11 @@
 
 namespace {
 #if defined(ESPFC_SPI_0)
-#ifdef ESP32
-  static SPIClass SPI1(VSPI);
-#endif
+  #if defined(ESP32C3)
+    static SPIClass SPI1(HSPI);
+  #elif defined(ESP32) //where is this defined???
+    static SPIClass SPI1(VSPI);
+  #endif
   static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
 #endif
 #if defined(ESPFC_I2C_0)
@@ -207,8 +209,8 @@ class Hardware
 
     static void restart(const Model& model)
     {
-      //escMotor.end();
-      //if(model.config.output.servoRate) escServo.end();
+      if(model.state.escMotor) model.state.escMotor->end();
+      if(model.state.escServo) model.state.escServo->end();
       targetReset();
     }
 
