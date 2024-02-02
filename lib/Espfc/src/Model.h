@@ -153,7 +153,7 @@ class Model
     {
       if(state.gyroCalibrationState == CALIBRATION_SAVE)
       {
-        save();
+        //save();
         state.buzzer.push(BEEPER_GYRO_CALIBRATED);
         logger.info().log(F("GYRO BIAS")).log(degrees(state.gyroBias.x)).log(degrees(state.gyroBias.y)).logln(degrees(state.gyroBias.z));
       }

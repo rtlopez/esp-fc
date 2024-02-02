@@ -98,8 +98,9 @@ class Stats
       for(size_t i = 0; i < COUNTER_COUNT; i++)
       {
         _avg[i] = (float)_sum[i] / timer.delta;
-        _sum[i] = 0;
         _freq[i] = (float)_count[i] * 1e6 / timer.delta;
+        _real[i] = _count[i] > 0 ? ((float)_sum[i] / _count[i]) : 0.0f;
+        _sum[i] = 0;
         _count[i] = 0;
       }
     }
@@ -115,6 +116,11 @@ class Stats
     float getTime(StatCounter c) const
     {
       return _avg[c] * timer.interval * 0.001f;
+    }
+
+    float getReal(StatCounter c) const
+    {
+      return _real[c];
     }
 
     float getFreq(StatCounter c) const
@@ -196,6 +202,7 @@ class Stats
     uint32_t _count[COUNTER_COUNT];
     float _avg[COUNTER_COUNT];
     float _freq[COUNTER_COUNT];
+    float _real[COUNTER_COUNT];
     uint32_t _loop_last;
     int32_t _loop_time;
 };

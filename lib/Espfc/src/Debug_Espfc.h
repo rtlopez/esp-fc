@@ -21,7 +21,8 @@ extern Stream * _debugStream;
 static inline void initDebugStream(Stream * p) { _debugStream = p; }
 
 #define LOG_SERIAL_INIT(p) _debugStream = p;
-#define LOG_SERIAL_DEBUG(v) if(_debugStream) { _debugStream->print(' '); _debugStream->print(v); }
+#define LOG_SERIAL_DEBUG(v) if(_debugStream) { _debugStream->print(v); }
+#define LOG_SERIAL_DEBUG_HEX(v) if(_debugStream) {  _debugStream->print(v, HEX); }
 
 template <typename T>
 void D(T t)
@@ -47,6 +48,7 @@ static inline void initDebugStream(Stream * p) {}
 
 #define LOG_SERIAL_INIT(p)
 #define LOG_SERIAL_DEBUG(v)
+#define LOG_SERIAL_DEBUG_HEX(v)
 #define D(...)
 
 #endif

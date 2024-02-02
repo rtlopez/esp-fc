@@ -16,7 +16,11 @@
 
 #if defined(ESP8266)
 #define ESPFC_TARGET "ESP8266"
-#elif defined(ESP32C3) //where is this defined???
+#elif defined(ESP32S3)
+#define ESPFC_TARGET "ESP32S3"
+#elif defined(ESP32S2)
+#define ESPFC_TARGET "ESP32S2"
+#elif defined(ESP32C3)
 #define ESPFC_TARGET "ESP32C3"
 #elif defined(ESP32)
 #define ESPFC_TARGET "ESP32"

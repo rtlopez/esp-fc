@@ -833,9 +833,9 @@ class Cli
           PSTR("available commands:"),
           PSTR(" help"), PSTR(" dump"), PSTR(" get param"), PSTR(" set param value ..."), PSTR(" cal [gyro]"),
           PSTR(" defaults"), PSTR(" save"), PSTR(" reboot"), PSTR(" scaler"), PSTR(" mixer"),
-          PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"),
+          PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"), PSTR(" logs"),
           //PSTR(" load"), PSTR(" eeprom"),
-          //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
+          //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" log"),
           NULL
         };
         for(const char ** ptr = helps; *ptr; ptr++)
@@ -1190,9 +1190,27 @@ class Cli
         s.print(F(", "));
         s.println(_model.state.inputAutoFactor);
 
+        static const char* armingDisableNames[] = {
+          PSTR("NO_GYRO"), PSTR("FAILSAFE"), PSTR("RX_FAILSAFE"), PSTR("BAD_RX_RECOVERY"),
+          PSTR("BOXFAILSAFE"), PSTR("RUNAWAY_TAKEOFF"), PSTR("CRASH_DETECTED"), PSTR("THROTTLE"),
+          PSTR("ANGLE"), PSTR("BOOT_GRACE_TIME"), PSTR("NOPREARM"), PSTR("LOAD"),
+          PSTR("CALIBRATING"), PSTR("CLI"), PSTR("CMS_MENU"), PSTR("BST"),
+          PSTR("MSP"), PSTR("PARALYZE"), PSTR("GPS"), PSTR("RESC"),
+          PSTR("RPMFILTER"), PSTR("REBOOT_REQUIRED"), PSTR("DSHOT_BITBANG"), PSTR("ACC_CALIBRATION"),
+          PSTR("MOTOR_PROTOCOL"), PSTR("ARM_SWITCH")
+        };
+        const size_t armingDisableNamesLength = sizeof(armingDisableNames) / sizeof(armingDisableNames[0]);
+
         s.println();
-        s.print(F(" arming disabled: "));
-        s.println(_model.state.armingDisabledFlags);
+        s.print(F(" arming disabled:"));
+        for(size_t i = 0; i < armingDisableNamesLength; i++)
+        {
+          if(_model.state.armingDisabledFlags & (1 << i)) {
+            s.print(' ');
+            s.print(armingDisableNames[i]);
+          }
+        }
+        s.println();
       }
       else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
       {
@@ -1206,6 +1224,7 @@ class Cli
           int time = lrintf(_model.state.stats.getTime(c));
           float load = _model.state.stats.getLoad(c);
           int freq = lrintf(_model.state.stats.getFreq(c));
+          int real = lrintf(_model.state.stats.getReal(c));
 
           s.print(FPSTR(_model.state.stats.getName(c)));
           s.print(": ");
@@ -1213,6 +1232,11 @@ class Cli
           if(time < 10) s.print(' ');
           s.print(time);
           s.print("us,  ");
+
+          if(real < 100) s.print(' ');
+          if(real < 10) s.print(' ');
+          s.print(real);
+          s.print("us/i,  ");
 
           if(load < 10) s.print(' ');
           s.print(load, 1);
@@ -1232,36 +1256,6 @@ class Cli
         s.print(F("%"));
         s.println();
       }
-      else if(strcmp_P(cmd.args[0], PSTR("fsinfo")) == 0)
-      {
-        _model.logger.info(&s);
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("fsformat")) == 0)
-      {
-        s.print(F("wait... "));
-        _model.logger.format();
-        s.println(F("OK"));
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
-      {
-        _model.logger.list(&s);
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("log")) == 0)
-      {
-        if(!cmd.args[1])
-        {
-          _model.logger.show(&s);
-          return;
-        }
-        int id = String(cmd.args[1]).toInt();
-        if(!id)
-        {
-          s.println(F("invalid log id"));
-          s.println();
-          return;
-        }
-        _model.logger.show(&s, id);
-      }
       else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0)
       {
         Hardware::restart(_model);
@@ -1273,6 +1267,12 @@ class Cli
       else if(strcmp_P(cmd.args[0], PSTR("exit")) == 0)
       {
         _active = false;
+      }
+      else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
+      {
+        s.print(_model.logger.c_str());
+        s.print(PSTR("total: "));
+        s.println(_model.logger.length());
       }
       else
       {

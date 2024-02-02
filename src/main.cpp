@@ -37,7 +37,6 @@ Espfc::Espfc espfc;
 
     void otherTask(void *pvParameters)
     {
-      espfc.load();
       espfc.beginOther();
       xTaskNotifyGive(loopTaskHandle);
       while(true)
@@ -47,19 +46,19 @@ Espfc::Espfc espfc;
     }
     void setup()
     {
+      espfc.load();
+      espfc.begin();
       disableCore0WDT();
-      //xTaskCreatePinnedToCore(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
       xTaskCreateUniversal(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
       ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
-      espfc.begin();
     }
     void loop()
     {
-      const uint32_t timeout = millis() + 200;
-      while(millis() < timeout)
-      {
+      //const uint32_t timeout = millis() + 200;
+      //while(millis() < timeout)
+      //{
         espfc.update();
-      }
+      //}
     }
 
   #elif defined(ESPFC_MULTI_CORE_RP2040)
@@ -68,14 +67,14 @@ Espfc::Espfc espfc;
     volatile static bool setup1Done = false;
     void setup1()
     {
-      espfc.load();
       espfc.beginOther();
       setup1Done = true;
     }
     void setup()
     {
-      while(!setup1Done); //wait for setup1()
+      espfc.load();
       espfc.begin();
+      while(!setup1Done); //wait for setup1()
     }
     void loop()
     {
@@ -96,8 +95,8 @@ Espfc::Espfc espfc;
   void setup()
   {
     espfc.load();
-    espfc.beginOther();
     espfc.begin();
+    espfc.beginOther();
   }
   void loop()
   {
