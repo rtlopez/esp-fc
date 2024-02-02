@@ -330,6 +330,7 @@ void mspSerialReleasePortIfAllocated(serialPort_t *serialPort);
 serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction);
 serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function);
 serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options);
+serialPort_t *getSerialPort();
 void closeSerialPort(serialPort_t *serialPort);
 uint32_t serialRxBytesWaiting(serialPort_t * instance);
 uint32_t serialTxBytesFree(const serialPort_t *instance);
@@ -1146,6 +1147,7 @@ typedef struct {
 pwmOutputPort_t * pwmGetMotors(void);
 void motorDisable(void);
 void motorEnable(void);
+void motorInitEscDevice(void * driver);
 
 #if defined(UNIT_TEST) || defined(ESP8266) || defined(ARCH_RP2040)
 void delay(unsigned long ms);

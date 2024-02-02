@@ -5,49 +5,83 @@
 #include "Hardware.h"
 #include "EscDriver.h"
 #include "Math/Utils.h"
+#include "Device/SerialDevice.h"
 
 extern "C" {
 #include "blackbox/blackbox.h"
 #include "blackbox/blackbox_fielddefs.h"
 }
 
-class BlackboxBuffer
+class BlackboxBuffer: public Espfc::Device::SerialDevice
 {
   public:
-    BlackboxBuffer(): _stream(nullptr), _idx(0) {}
+    BlackboxBuffer(): _dev(nullptr), _idx(0) {}
 
-    void begin(Espfc::Device::SerialDevice * s)
+    virtual void wrap(Espfc::Device::SerialDevice * s)
     {
-      _stream = s;
+      _dev = s;
     }
 
-    void write(uint8_t c)
+    virtual void begin(const Espfc::SerialDeviceConfig& conf)
+    {
+      //_dev->begin(conf);
+    }
+
+    virtual size_t write(uint8_t c)
     {
       _data[_idx++] = c;
       if(_idx >= SIZE) flush();
+      return 1;
     }
 
-    void flush()
+    virtual void flush()
     {
-      if(_stream) _stream->write(_data, _idx);
+      if(_dev) _dev->write(_data, _idx);
       _idx = 0;
     }
 
-    size_t availableForWrite() const
+    virtual int availableForWrite()
     {
-      //return _stream->availableForWrite();
+      //return _dev->availableForWrite();
       return SIZE - _idx;
     }
 
-    size_t isTxFifoEmpty() const
+    virtual bool isTxFifoEmpty()
     {
-      //return _stream->isTxFifoEmpty();
+      //return _dev->isTxFifoEmpty();
       return _idx == 0;
     }
 
+    virtual int available() { return _dev->available(); }
+    virtual int read() { return _dev->read(); }
+    virtual size_t readMany(uint8_t * c, size_t l) {
+#ifdef TARGET_RP2040
+      size_t count = std::min(l, (size_t)available());
+      for(size_t i = 0; i < count; i++)
+      {
+        c[i] = read();
+      }
+      return count;
+#else
+      return _dev->readMany(c, l);
+#endif
+    }
+    virtual int peek() { return _dev->peek(); }
+
+    virtual size_t write(const uint8_t * c, size_t l)
+    {
+      for(size_t i = 0; i < l; i++)
+      {
+        write(c[i]);
+      }
+      return l;
+    }
+    virtual bool isSoft() const { return false; };
+    virtual operator bool() const { return (bool)(*_dev); }
+
     static const size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
 
-    Espfc::Device::SerialDevice * _stream;
+    Espfc::Device::SerialDevice * _dev;
     size_t _idx;
     uint8_t _data[SIZE];
 };
@@ -151,9 +185,9 @@ class Blackbox
       _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
       if(!_serial) return 0;
 
-      //_buffer.begin(_serial);
-      //serialBlackboxInit(&_buffer);
-      serialDeviceInit(_serial, 0);
+      _buffer.wrap(_serial);
+      serialDeviceInit(&_buffer, 0);
+      //serialDeviceInit(_serial, 0);
 
       systemConfigMutable()->activeRateProfile = 0;
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;

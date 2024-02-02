@@ -19,6 +19,7 @@ class Mixer
       escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_MOTOR_TIMER);
       _model.state.escMotor = _motor = &escMotor;
       _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).logln(ESC_DRIVER_MOTOR_TIMER);
+      motorInitEscDevice(_motor);
 
       if(_model.config.output.servoRate)
       {

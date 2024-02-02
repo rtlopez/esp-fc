@@ -168,7 +168,7 @@ class MspProcessor
         switch(msg.dir)
         {
           case MSP_TYPE_CMD:
-            processCommand(msg, res);
+            processCommand(msg, res, s);
             sendResponse(res, s);
             msg = MspMessage();
             res = MspResponse();
@@ -183,7 +183,7 @@ class MspProcessor
       return msg.state != MSP_STATE_IDLE;
     }
 
-    void processCommand(MspMessage& m, MspResponse& r)
+    void processCommand(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
     {
       r.cmd = m.cmd;
       r.version = m.version;
@@ -1372,6 +1372,8 @@ class MspProcessor
             {
               case MSP_PASSTHROUGH_ESC_4WAY:
                 r.writeU8(esc4wayInit());
+                serialDeviceInit(&s, 0);
+                _postCommand = std::bind(&MspProcessor::processEsc4way, this);
                 break;
               default:
                 r.writeU8(0);
@@ -1398,13 +1400,24 @@ class MspProcessor
           break;
 
         case MSP_REBOOT:
-          _reboot = true;
+          _postCommand = std::bind(&MspProcessor::processRestart, this);
           break;
 
         default:
           r.result = 0;
           break;
       }
+    }
+
+    void processEsc4way()
+    {
+      esc4wayProcess(getSerialPort());
+      processRestart();
+    }
+
+    void processRestart()
+    {
+      Hardware::restart(_model);
     }
 
     void sendResponse(MspResponse& r, Device::SerialDevice& s)
@@ -1465,10 +1478,10 @@ class MspProcessor
 
     void postCommand()
     {
-      if(_reboot)
-      {
-        Hardware::restart(_model);
-      }
+      if(!_postCommand) return;
+      std::function<void(void)> cb = _postCommand;
+      _postCommand = {};
+      cb();
     }
 
     bool debugSkip(uint8_t cmd)
@@ -1526,7 +1539,7 @@ class MspProcessor
   private:
     Model& _model;
     MspParser _parser;
-    bool _reboot;
+    std::function<void(void)> _postCommand;
 };
 
 }

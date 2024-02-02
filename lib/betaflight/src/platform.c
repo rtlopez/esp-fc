@@ -149,13 +149,3 @@ pwmOutputPort_t * pwmGetMotors(void)
 {
     return motors;
 }
-
-void motorDisable(void)
-{
-
-}
-
-void motorEnable(void)
-{
-
-}

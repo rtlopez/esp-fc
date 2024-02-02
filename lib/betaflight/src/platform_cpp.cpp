@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "platform.h"
 #include "Device/SerialDevice.h"
+#include "EscDriver.h"
 
 int IORead(IO_t pin)
 {
@@ -59,6 +60,11 @@ serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFuncti
     return &_sp[0];
 }
 
+serialPort_t *getSerialPort()
+{
+    return &_sp[0];
+}
+
 void closeSerialPort(serialPort_t *serialPort)
 {
     UNUSED(serialPort);
@@ -113,4 +119,20 @@ bool isSerialTransmitBufferEmpty(const serialPort_t * instance)
   Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
   if(!dev) return 0;
   return dev->isTxFifoEmpty();
+}
+
+static EscDriver * escDriver;
+
+void motorInitEscDevice(void * driver)
+{
+    escDriver = (EscDriver *)driver;
+}
+
+void motorDisable(void)
+{
+    if(escDriver) escDriver->end();
+}
+
+void motorEnable(void)
+{
 }
