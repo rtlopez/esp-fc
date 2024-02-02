@@ -1,7 +1,7 @@
 Import("env")
 
 APP_BIN = "$BUILD_DIR/${PROGNAME}.bin"
-MERGED_BIN = "$BUILD_DIR/${PROGNAME}_esp32_0x00.bin"
+MERGED_BIN = "$BUILD_DIR/${PROGNAME}_0x00.bin"
 BOARD_CONFIG = env.BoardConfig()
 
 

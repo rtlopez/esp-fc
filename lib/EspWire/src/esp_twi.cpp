@@ -39,7 +39,7 @@ static uint32_t esp_twi_clockStretchLimit;
   #define SCL_LOW()   (GPES = (1 << esp_twi_scl))
   #define SCL_HIGH()  (GPEC = (1 << esp_twi_scl))
   #define SCL_READ()  ((GPI & (1 << esp_twi_scl)) != 0)
-#elif defined(ESP32C3) //where is this defined???
+#elif defined(ESP32C3)
   //#define SDA_LOW()   (GPIO.enable_w1ts.enable_w1ts = ((uint32_t) 1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
   static inline void SDA_LOW() { GPIO.enable_w1ts.enable_w1ts = (uint32_t) 1 << esp_twi_sda; GPIO.out_w1tc.out_w1tc = (uint32_t) 1 << esp_twi_sda; }
   #define SDA_HIGH()  (GPIO.enable_w1tc.enable_w1tc = ((uint32_t) 1 << esp_twi_sda)) //Disable SDA (becomes input and since it has pullup it will go high)
@@ -184,8 +184,7 @@ void esp_twi_stop(void){
 
 static inline IRAM_ATTR unsigned int _getCycleCount()
 {
-
-#if defined(ESP32C3) //where is this defined???
+#if defined(ESP32C3)
   return esp_cpu_get_ccount();
 #elif defined(ESP32) || defined(ESP8266)
   unsigned int ccount = 0;

@@ -3,7 +3,7 @@ The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller
 
 ## Features
 * Frames (Quad X)
-* Betaflight contiguration tool compatible (v10.8 or v10.9)
+* Betaflight configuration tool compatible (v10.8 or v10.9)
 * Receiver protocol (8 channel PPM)
 * SBUS and CRSF Serial Rx protocols on ESP32 and RP2040
 * ESC protocols (PWM, Oneshot125, Brushed, Dshot150, Dshot300, Dshot600)
@@ -56,6 +56,14 @@ Here are more details about [how to setup](/docs/setup.md).
 
 [![ESP-FC example wiring diagrams](/docs/images/espfc_wiring_combined.png)](/docs/wiring.md)
 
+## Supported chips
+
+ - **ESP32** - recommended
+ - **ESP32-S2** - experimantal
+ - **ESP32-S3** - experimantal
+ - **ESP32-C3** - experimantal
+ - **RP2040** - experimantal
+ - **ESP8266** - deprecated, may stop being developed
 
 ## Supported protocols
 

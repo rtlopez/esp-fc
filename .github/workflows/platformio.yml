@@ -11,21 +11,21 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Cache PlatformIO
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Install Dependencies
@@ -40,9 +40,9 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        target: ['esp32', 'esp32c3', 'esp8266', 'rp2040']
+        target: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp8266']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Extract Version
         run: |
           echo "build_name=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -62,19 +62,19 @@ jobs:
           echo DEVEL:   ${{ env.build_file_devel }}
           echo RELEASE: ${{ env.build_file_release }}
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Cache PlatformIO
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       - name: Install Dependencies
@@ -91,43 +91,47 @@ jobs:
           PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ env.build_sha }}
 
       - name: Build Release Target
-        if: "startsWith(github.ref, 'refs/tags/')"
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           platformio run -e ${{ matrix.target }}
         env:
           PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ env.build_sha }} -DESPFC_VERSION=${{ env.build_tag }}
 
-      - name: Merge ESP32 Target
-        if: ${{ startsWith(matrix.target, 'esp32') }}
-        run: |
-          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ${{ matrix.target }} merge_bin -o .pio/build/${{ matrix.target }}/firmware_merged.bin --target-offset 0x0 --flash_mode keep --flash_freq keep --flash_size 4MB 0x1000 .pio/build/${{ matrix.target }}/bootloader.bin 0x8000 .pio/build/${{ matrix.target }}/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/${{ matrix.target }}/firmware.bin
+#      - name: Merge ESP32 Target
+#        if: ${{ matrix.target == 'esp32' }}
+#        run: |
+#          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ${{ matrix.target }} merge_bin -o .pio/build/${{ matrix.target }}/firmware_merged.bin --target-offset 0x0 --flash_mode keep --flash_freq keep --flash_size 4MB 0x1000 .pio/build/${{ matrix.target }}/bootloader.bin 0x8000 .pio/build/${{ matrix.target }}/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/${{ matrix.target }}/firmware.bin
 
+#      - name: Merge ESP32-S3 Target
+#        if: ${{ matrix.target == 'esp32s3' }}
+#        run: |
+#          python3 ~/.platformio/packages/tool-esptoolpy/esptool.py --chip ${{ matrix.target }} merge_bin -o .pio/build/${{ matrix.target }}/firmware_merged.bin --target-offset 0x0 --flash_mode keep --flash_freq keep --flash_size 16MB 0x0000 .pio/build/${{ matrix.target }}/bootloader.bin 0x8000 .pio/build/${{ matrix.target }}/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 .pio/build/${{ matrix.target }}/firmware.bin
 
       - name: Create Development Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           name: ${{ env.build_file_devel }}.bin
           path: .pio/build/${{ matrix.target }}/firmware.bin
 
       - name: Create Development Artifact Merged 
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ !startsWith(github.ref, 'refs/tags/') && startsWith(matrix.target, 'esp32') }}
         with:
           name: "${{ env.build_file_devel }}_0x00.bin"
-          path: .pio/build/${{ matrix.target }}/firmware_merged.bin
+          path: .pio/build/${{ matrix.target }}/firmware_0x00.bin
 
 
       - name: Create Release Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         with:
           name: ${{ env.build_file_release }}.bin
           path: .pio/build/${{ matrix.target }}/firmware.bin
 
       - name: Create Release Artifact Merged
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(matrix.target, 'esp32') }}
         with:
           name: ${{ env.build_file_release }}_0x00.bin
-          path: .pio/build/${{ matrix.target }}/firmware_merged.bin
+          path: .pio/build/${{ matrix.target }}/firmware_0x00.bin
