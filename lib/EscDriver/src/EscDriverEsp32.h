@@ -169,6 +169,12 @@ class EscDriverEsp32: public EscDriverBase
       transmitAll();
     }
 
+    int pin(size_t channel) const
+    {
+      if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return -1;
+      return _channel[channel].dev.gpio_num;
+    }
+
   private:
     void initChannel(int i, gpio_num_t pin, int pulse)
     {

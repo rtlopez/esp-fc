@@ -31,7 +31,7 @@ class Controller
       {
         Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
         resetIterm();
-        if(_model.config.mixerType == MIXER_GIMBAL)
+        if(_model.config.mixerType == FC_MIXER_GIMBAL)
         {
           outerLoopRobot();
         }
@@ -43,7 +43,7 @@ class Controller
 
       {
         Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
-        if(_model.config.mixerType == MIXER_GIMBAL)
+        if(_model.config.mixerType == FC_MIXER_GIMBAL)
         {
           innerLoopRobot();
         }

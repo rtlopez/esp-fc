@@ -82,6 +82,12 @@ int EscDriverEsp32c3::write(size_t channel, int pulse)
   return 1;
 }
 
+int EscDriverEsp32c3::pin(size_t channel) const
+{
+  if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return -1;
+  return _slots[channel].pin;
+}
+
 void EscDriverEsp32c3::apply()
 {
   if(_protocol == ESC_PROTOCOL_DISABLED) return;

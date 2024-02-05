@@ -503,7 +503,7 @@ class Model
 
       // configure PIDs
       float pidScale[] = { 1.f, 1.f, 1.f };
-      if(config.mixerType == MIXER_GIMBAL)
+      if(config.mixerType == FC_MIXER_GIMBAL)
       {
         pidScale[AXIS_YAW] = 0.2f; // ROBOT
         pidScale[AXIS_PITCH] = 20.f; // ROBOT
@@ -540,7 +540,7 @@ class Model
 
       for(size_t i = 0; i < AXIS_YAW; i++)
       {
-        PidConfig& pc = config.pid[PID_LEVEL];
+        PidConfig& pc = config.pid[FC_PID_LEVEL];
         Control::Pid& pid = state.outerPid[i];
         pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
         pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;

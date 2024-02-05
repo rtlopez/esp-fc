@@ -4,6 +4,7 @@
 #include "Model.h"
 #include "Output/Mixers.h"
 #include "EscDriver.h"
+#include "platform.h"
 
 namespace Espfc {
 
@@ -19,7 +20,6 @@ class Mixer
       escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_MOTOR_TIMER);
       _model.state.escMotor = _motor = &escMotor;
       _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).logln(ESC_DRIVER_MOTOR_TIMER);
-      motorInitEscDevice(_motor);
 
       if(_model.config.output.servoRate)
       {
@@ -45,6 +45,7 @@ class Mixer
           _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
         }
       }
+      motorInitEscDevice(_motor);
 
       _model.state.minThrottle = _model.config.output.minThrottle;
       _model.state.maxThrottle = _model.config.output.maxThrottle;

@@ -48,6 +48,7 @@ class EscDriverEsp32c3: public EscDriverBase
     int attach(size_t channel, int pin, int pulse) IRAM_ATTR;
     int write(size_t channel, int pulse) IRAM_ATTR;
     void apply() IRAM_ATTR;
+    int pin(size_t channel) const;
     static bool handle(void * p) IRAM_ATTR;
 
   private:

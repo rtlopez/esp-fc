@@ -29,6 +29,7 @@ class EscDriverBase
     int attach(size_t channel, int pin, int pulse) { return 1; }
     int write(size_t channel, int pulse) { return 1; }
     void apply() {}
+    int pin(size_t channel) const { return -1; }
 #endif
 
     uint16_t dshotEncode(uint16_t value)

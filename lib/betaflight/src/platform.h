@@ -32,7 +32,7 @@
   #error "Unsupported platform"
 #endif
 
-#define MAX_SUPPORTED_MOTORS 4
+#define MAX_SUPPORTED_MOTORS 8
 #define MAX_SUPPORTED_SERVOS 8
 #define PID_PROCESS_DENOM_DEFAULT       1
 

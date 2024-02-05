@@ -207,7 +207,7 @@ class Blackbox
       rp->rates_type = _model.config.input.rateType;
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
-      for(size_t i = 0; i < PID_ITEM_COUNT; i++)
+      for(size_t i = 0; i < FC_PID_ITEM_COUNT; i++)
       {
         cp->pid[i].P = _model.config.pid[i].P;
         cp->pid[i].I = _model.config.pid[i].I;

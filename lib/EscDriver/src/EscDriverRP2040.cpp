@@ -77,6 +77,12 @@ int EscDriverRP2040::attach(size_t channel, int pin, int pulse)
   return 1;
 }
 
+int EscDriverRP2040::pin(size_t channel) const
+{
+  if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return -1;
+  return _slots[channel].pin;
+}
+
 bool EscDriverRP2040::isSliceDriven(int slice)
 {
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i) {

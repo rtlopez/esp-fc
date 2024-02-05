@@ -99,11 +99,6 @@ bool rxAreFlightChannelsValid(void)
     return true;
 }
 
-uint8_t getMotorCount()
-{
-    return MAX_SUPPORTED_MOTORS;
-}
-
 bool isModeActivationConditionPresent(boxId_e modeId)
 {
     return false;
@@ -141,11 +136,4 @@ uint32_t castFloatBytesToInt(float f)
 uint32_t zigzagEncode(int32_t value)
 {
     return (uint32_t)((value << 1) ^ (value >> 31));
-}
-
-pwmOutputPort_t motors[MAX_SUPPORTED_MOTORS];
-
-pwmOutputPort_t * pwmGetMotors(void)
-{
-    return motors;
 }

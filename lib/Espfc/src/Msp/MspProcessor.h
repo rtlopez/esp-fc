@@ -1155,9 +1155,9 @@ class MspProcessor
           r.writeU8(0); // abs control gain
           r.writeU8(0); // throttle boost
           r.writeU8(0); // acro trainer max angle
-          r.writeU16(_model.config.pid[PID_ROLL].F); //pid roll f
-          r.writeU16(_model.config.pid[PID_PITCH].F); //pid pitch f
-          r.writeU16(_model.config.pid[PID_YAW].F); //pid yaw f
+          r.writeU16(_model.config.pid[FC_PID_ROLL].F); //pid roll f
+          r.writeU16(_model.config.pid[FC_PID_PITCH].F); //pid pitch f
+          r.writeU16(_model.config.pid[FC_PID_YAW].F); //pid yaw f
           r.writeU8(0); // antigravity mode
           // 1.41+
           r.writeU8(0); // d min roll
@@ -1208,9 +1208,9 @@ class MspProcessor
             m.readU8(); //abs control gain
             m.readU8(); //throttle boost
             m.readU8(); //acro trainer max angle
-            _model.config.pid[PID_ROLL].F = m.readU16(); // pid roll f
-            _model.config.pid[PID_PITCH].F = m.readU16(); // pid pitch f
-            _model.config.pid[PID_YAW].F = m.readU16(); // pid yaw f
+            _model.config.pid[FC_PID_ROLL].F = m.readU16(); // pid roll f
+            _model.config.pid[FC_PID_PITCH].F = m.readU16(); // pid pitch f
+            _model.config.pid[FC_PID_YAW].F = m.readU16(); // pid yaw f
             m.readU8(); //antigravity mode
           }
           // 1.41+
@@ -1252,7 +1252,7 @@ class MspProcessor
           break;
 
         case MSP_MOTOR:
-          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          for (size_t i = 0; i < 8; i++)
           {
             if (i >= OUTPUT_CHANNELS || _model.config.pin[i + PIN_OUTPUT_0] == -1)
             {
@@ -1381,6 +1381,7 @@ class MspProcessor
             }
             (void)ptArg;
           }
+          break;
 
         case MSP_DEBUG:
           for (int i = 0; i < 4; i++) {

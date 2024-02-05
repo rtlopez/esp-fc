@@ -2,10 +2,11 @@
 #include "platform.h"
 #include "Device/SerialDevice.h"
 #include "EscDriver.h"
+#include "EspGpio.h"
 
 int IORead(IO_t pin)
 {
-    return digitalRead(pin);
+    return EspGpio::digitalRead(pin);
 }
 
 void IOConfigGPIO(IO_t pin, uint8_t mode)
@@ -15,12 +16,12 @@ void IOConfigGPIO(IO_t pin, uint8_t mode)
 
 void IOHi(IO_t pin)
 {
-    digitalWrite(pin, HIGH);
+    EspGpio::digitalWrite(pin, HIGH);
 }
 
 void IOLo(IO_t pin)
 {
-    digitalWrite(pin, LOW);
+    EspGpio::digitalWrite(pin, LOW);
 }
 
 static serialPort_t _sp[2] = {{
@@ -121,11 +122,30 @@ bool isSerialTransmitBufferEmpty(const serialPort_t * instance)
   return dev->isTxFifoEmpty();
 }
 
+static size_t _motorCount = 0;
+pwmOutputPort_t motors[MAX_SUPPORTED_MOTORS];
+
+pwmOutputPort_t * pwmGetMotors(void)
+{
+    return motors;
+}
+
 static EscDriver * escDriver;
 
 void motorInitEscDevice(void * driver)
 {
-    escDriver = (EscDriver *)driver;
+    escDriver = static_cast<EscDriver *>(driver);
+    memset(&motors, 0, sizeof(pwmOutputPort_t));
+    if(!driver) return;
+
+    for(size_t i = 0; i < MAX_SUPPORTED_MOTORS; i++)
+    {
+        int pin = escDriver->pin(i);
+        if(pin == -1) continue;
+        motors[i].enabled = true;
+        motors[i].io = pin;
+        _motorCount++;
+    }
 }
 
 void motorDisable(void)
@@ -135,4 +155,9 @@ void motorDisable(void)
 
 void motorEnable(void)
 {
+}
+
+uint8_t getMotorCount()
+{
+    return _motorCount;
 }

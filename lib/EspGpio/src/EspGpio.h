@@ -25,6 +25,8 @@ class EspGpio
         if(val) GP16O |= 1;
         else GP16O &= ~1;
       }
+#elif defined(ESP32)
+      ::gpio_set_level((gpio_num_t)pin, val);
 #elif defined(UNIT_TEST)
       // do nothing
 #else
@@ -44,6 +46,8 @@ class EspGpio
         return GP16I & 0x01;
       }
       return 0;
+#elif defined(ESP32)
+      return ::gpio_get_level((gpio_num_t)pin);
 #elif defined(UNIT_TEST)
       return 0;
       // do nothing
