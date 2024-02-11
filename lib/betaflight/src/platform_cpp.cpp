@@ -11,7 +11,15 @@ int IORead(IO_t pin)
 
 void IOConfigGPIO(IO_t pin, uint8_t mode)
 {
-    pinMode(pin, mode);
+    switch(mode) {
+        case IOCFG_IPU:
+            ::pinMode(pin, INPUT_PULLUP);
+            break;
+        case IOCFG_OUT_PP:
+        case IOCFG_AF_PP:
+            ::pinMode(pin, OUTPUT);
+            break;
+    }
 }
 
 void IOHi(IO_t pin)

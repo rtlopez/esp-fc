@@ -2,10 +2,10 @@
 ```
 Pin | Function         | ESP-8266 Pin | ESPFC external device
 ----+------------------+--------------+----------------------------------------------
-TX  | TXD0             | TXD, GPIO1   | (UART0 TX) | CLI | MSP | OSD | GPS
-RX  | RXD0             | RXD, GPIO3   | (UART0 RX) | CLI | MSP | OSD | GPS | SBUS
+TX  | TXD0             | TXD, GPIO1   | (UART0 TX) | CLI | MSP | OSD
+RX  | RXD0             | RXD, GPIO3   | (UART0 RX) | CLI | MSP | OSD
 A0  | Analog In,  3.3V | A0           | Batery voltage or current sensor, analog only
-D0  | IO               | GPIO16       | LED | BUZZER | PWM (output recommended, no interrupts)
+D0  | IO               | GPIO16       | LED | BUZZER (output recommended, no interrupts)
 D1  | IO, SCL          | GPIO5        | I2C Gyro, Compas, Pressure and other sensors
 D2  | IO, SDA          | GPIO4        | I2C Gyro, Compas, Pressure and other sensors
 D3  | IO, PU           | GPIO0        | PWM 1 (servo/motor)

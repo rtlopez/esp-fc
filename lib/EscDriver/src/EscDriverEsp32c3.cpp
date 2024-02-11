@@ -290,12 +290,16 @@ int EscDriverEsp32c3::begin(EscProtocol protocol, bool async, int16_t rate, EscD
 
 void EscDriverEsp32c3::end()
 {
-  //_isr_end(_timer, this);
+  if(_protocol < ESC_PROTOCOL_DSHOT150) // analog
+  {
+    _isr_end(_timer, this);
+  }
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
   {
     if(_slots[i].pin == -1) continue;
     digitalWrite(_slots[i].pin, LOW);
   }
+  _protocol = ESC_PROTOCOL_DISABLED;
 }
 
 static inline void dshotDelay(int delay)

@@ -133,6 +133,7 @@ class EscDriverEsp32: public EscDriverBase
         if(!_channel[i].attached()) continue;
         rmt_driver_uninstall(_channel[i].dev.channel);
       }
+      _protocol = ESC_PROTOCOL_DISABLED;
     }
 
     int begin(EscProtocol protocol, bool async, int32_t rate, int timer = 0)

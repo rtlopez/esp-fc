@@ -1157,9 +1157,9 @@ void delay(uint32_t ms);
 void delayMicroseconds(uint32_t us);
 #endif
 
-#define IOCFG_IPU    0x05 // INPUT_PULLUP
-#define IOCFG_OUT_PP 0x03 // OUTPUT
-#define IOCFG_AF_PP  0x03 // OUTPUT
+#define IOCFG_IPU    0x00 // INPUT_PULLUP
+#define IOCFG_OUT_PP 0x01 // OUTPUT
+#define IOCFG_AF_PP  0x02 // OUTPUT
 #define Bit_RESET    0x00 // LOW
 #define IO_NONE      -1
 

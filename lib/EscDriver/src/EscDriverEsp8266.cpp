@@ -401,6 +401,7 @@ void EscDriverEsp8266::end()
   {
     _isr_end(_timer, this);
   }
+  _protocol = ESC_PROTOCOL_DISABLED;
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
   {
     if(_slots[i].pin == -1) continue;
