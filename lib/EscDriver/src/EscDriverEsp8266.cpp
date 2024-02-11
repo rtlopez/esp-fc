@@ -162,6 +162,12 @@ int EscDriverEsp8266::attach(size_t channel, int pin, int pulse)
   return 1;
 }
 
+int EscDriverEsp8266::pin(size_t channel) const
+{
+  if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return -1;
+  return _slots[channel].pin;
+}
+
 int EscDriverEsp8266::write(size_t channel, int pulse)
 {
   if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
@@ -395,6 +401,7 @@ void EscDriverEsp8266::end()
   {
     _isr_end(_timer, this);
   }
+  _protocol = ESC_PROTOCOL_DISABLED;
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
   {
     if(_slots[i].pin == -1) continue;

@@ -68,14 +68,6 @@ float motor_disarmed[MAX_SUPPORTED_MOTORS];
 uint32_t targetPidLooptime;
 float rcCommand[4];
 
-static serialPort_t _sp = {
-    .txBufferSize = 128
-};
-static serialPortConfig_t _spc = {
-    .blackbox_baudrateIndex = 5,
-    .identifier = SERIAL_PORT_USART1
-};
-
 int gcd(int num, int denom)
 {
     if (denom == 0) return num;
@@ -102,48 +94,9 @@ bool IS_RC_MODE_ACTIVE(boxId_e boxId)
     return bitArrayGet(&rcModeActivationMask, boxId);
 }
 
-serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction)
-{
-    return NULL;
-}
-
-void mspSerialReleasePortIfAllocated(struct serialPort_s *serialPort)
-{
-    UNUSED(serialPort);
-}
-
-serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function)
-{
-    return &_spc;
-}
-
-serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options)
-{
-    return &_sp;
-}
-
-void closeSerialPort(serialPort_t *serialPort)
-{
-    UNUSED(serialPort);
-}
-
-void mspSerialAllocatePorts(void)
-{
-}
-
-portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function)
-{
-    return PORTSHARING_UNUSED;
-}
-
 bool rxAreFlightChannelsValid(void)
 {
     return true;
-}
-
-uint8_t getMotorCount()
-{
-    return MAX_SUPPORTED_MOTORS;
 }
 
 bool isModeActivationConditionPresent(boxId_e modeId)

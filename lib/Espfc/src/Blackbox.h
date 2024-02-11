@@ -5,80 +5,88 @@
 #include "Hardware.h"
 #include "EscDriver.h"
 #include "Math/Utils.h"
+#include "Device/SerialDevice.h"
 
 extern "C" {
 #include "blackbox/blackbox.h"
 #include "blackbox/blackbox_fielddefs.h"
 }
 
-class BlackboxBuffer
+class BlackboxBuffer: public Espfc::Device::SerialDevice
 {
   public:
-    BlackboxBuffer(): _stream(nullptr), _idx(0) {}
+    BlackboxBuffer(): _dev(nullptr), _idx(0) {}
 
-    void begin(Espfc::Device::SerialDevice * s)
+    virtual void wrap(Espfc::Device::SerialDevice * s)
     {
-      _stream = s;
+      _dev = s;
     }
 
-    void write(uint8_t c)
+    virtual void begin(const Espfc::SerialDeviceConfig& conf)
+    {
+      //_dev->begin(conf);
+    }
+
+    virtual size_t write(uint8_t c)
     {
       _data[_idx++] = c;
       if(_idx >= SIZE) flush();
+      return 1;
     }
 
-    void flush()
+    virtual void flush()
     {
-      if(_stream) _stream->write(_data, _idx);
+      if(_dev) _dev->write(_data, _idx);
       _idx = 0;
     }
 
-    size_t availableForWrite() const
+    virtual int availableForWrite()
     {
-      //return _stream->availableForWrite();
+      //return _dev->availableForWrite();
       return SIZE - _idx;
     }
 
-    size_t isTxFifoEmpty() const
+    virtual bool isTxFifoEmpty()
     {
-      //return _stream->isTxFifoEmpty();
+      //return _dev->isTxFifoEmpty();
       return _idx == 0;
     }
 
+    virtual int available() { return _dev->available(); }
+    virtual int read() { return _dev->read(); }
+    virtual size_t readMany(uint8_t * c, size_t l) {
+#ifdef TARGET_RP2040
+      size_t count = std::min(l, (size_t)available());
+      for(size_t i = 0; i < count; i++)
+      {
+        c[i] = read();
+      }
+      return count;
+#else
+      return _dev->readMany(c, l);
+#endif
+    }
+    virtual int peek() { return _dev->peek(); }
+
+    virtual size_t write(const uint8_t * c, size_t l)
+    {
+      for(size_t i = 0; i < l; i++)
+      {
+        write(c[i]);
+      }
+      return l;
+    }
+    virtual bool isSoft() const { return false; };
+    virtual operator bool() const { return (bool)(*_dev); }
+
     static const size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
 
-    Espfc::Device::SerialDevice * _stream;
+    Espfc::Device::SerialDevice * _dev;
     size_t _idx;
     uint8_t _data[SIZE];
 };
 
-static BlackboxBuffer * blackboxSerial = nullptr;
 static Espfc::Model * _model_ptr = nullptr;
-
-void serialWrite(serialPort_t * instance, uint8_t ch)
-{
-  UNUSED(instance);
-  if(blackboxSerial) blackboxSerial->write(ch);
-}
-
-void serialWriteInit(BlackboxBuffer * serial)
-{
-  blackboxSerial = serial;
-}
-
-uint32_t serialTxBytesFree(const serialPort_t * instance)
-{
-  UNUSED(instance);
-  if(!blackboxSerial) return 0;
-  return blackboxSerial->availableForWrite();
-}
-
-bool isSerialTransmitBufferEmpty(const serialPort_t * instance)
-{
-  UNUSED(instance);
-  if(!blackboxSerial) return false;
-  return blackboxSerial->isTxFifoEmpty();
-}
 
 void initBlackboxModel(Espfc::Model * m)
 {
@@ -174,11 +182,12 @@ class Blackbox
 
       if(!_model.blackboxEnabled()) return 0;
 
-      Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
-      if(!serial) return 0;
+      _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+      if(!_serial) return 0;
 
-      _buffer.begin(serial);
-      serialWriteInit(&_buffer);
+      _buffer.wrap(_serial);
+      serialDeviceInit(&_buffer, 0);
+      //serialDeviceInit(_serial, 0);
 
       systemConfigMutable()->activeRateProfile = 0;
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
@@ -198,7 +207,7 @@ class Blackbox
       rp->rates_type = _model.config.input.rateType;
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
-      for(size_t i = 0; i < PID_ITEM_COUNT; i++)
+      for(size_t i = 0; i < FC_PID_ITEM_COUNT; i++)
       {
         cp->pid[i].P = _model.config.pid[i].P;
         cp->pid[i].I = _model.config.pid[i].I;
@@ -322,7 +331,7 @@ class Blackbox
     int update()
     {
       if(!_model.blackboxEnabled()) return 0;
-      if(!blackboxSerial) return 0;
+      if(!_serial) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
       uint32_t startTime = micros();
@@ -432,6 +441,7 @@ class Blackbox
 
     Model& _model;
     pidProfile_s _pidProfile;
+    Device::SerialDevice * _serial;
     BlackboxBuffer _buffer;
 };
 

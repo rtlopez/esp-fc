@@ -244,12 +244,12 @@ class Input
 
     void failsafeIdle()
     {
-      _model.state.failsafe.phase = FAILSAFE_IDLE;
+      _model.state.failsafe.phase = FC_FAILSAFE_IDLE;
     }
 
     void failsafeStage1()
     {
-      _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+      _model.state.failsafe.phase = FC_FAILSAFE_RX_LOSS_DETECTED;
       _model.state.inputRxLoss = true;
       for(size_t i = 0; i < _model.state.inputChannelCount; i++)
       {
@@ -259,12 +259,12 @@ class Input
 
     void failsafeStage2()
     {
-      _model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+      _model.state.failsafe.phase = FC_FAILSAFE_RX_LOSS_DETECTED;
       _model.state.inputRxLoss = true;
       _model.state.inputRxFailSafe = true;
       if(_model.isModeActive(MODE_ARMED))
       {
-        _model.state.failsafe.phase = FAILSAFE_LANDED;
+        _model.state.failsafe.phase = FC_FAILSAFE_LANDED;
         _model.disarm(DISARM_REASON_FAILSAFE);
       }
     }

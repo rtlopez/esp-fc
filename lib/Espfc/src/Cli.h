@@ -534,24 +534,24 @@ class Cli
 
         Param(PSTR("pid_sync"), &c.loopSync),
 
-        Param(PSTR("pid_roll_p"), &c.pid[PID_ROLL].P),
-        Param(PSTR("pid_roll_i"), &c.pid[PID_ROLL].I),
-        Param(PSTR("pid_roll_d"), &c.pid[PID_ROLL].D),
-        Param(PSTR("pid_roll_f"), &c.pid[PID_ROLL].F),
+        Param(PSTR("pid_roll_p"), &c.pid[FC_PID_ROLL].P),
+        Param(PSTR("pid_roll_i"), &c.pid[FC_PID_ROLL].I),
+        Param(PSTR("pid_roll_d"), &c.pid[FC_PID_ROLL].D),
+        Param(PSTR("pid_roll_f"), &c.pid[FC_PID_ROLL].F),
 
-        Param(PSTR("pid_pitch_p"), &c.pid[PID_PITCH].P),
-        Param(PSTR("pid_pitch_i"), &c.pid[PID_PITCH].I),
-        Param(PSTR("pid_pitch_d"), &c.pid[PID_PITCH].D),
-        Param(PSTR("pid_pitch_f"), &c.pid[PID_PITCH].F),
+        Param(PSTR("pid_pitch_p"), &c.pid[FC_PID_PITCH].P),
+        Param(PSTR("pid_pitch_i"), &c.pid[FC_PID_PITCH].I),
+        Param(PSTR("pid_pitch_d"), &c.pid[FC_PID_PITCH].D),
+        Param(PSTR("pid_pitch_f"), &c.pid[FC_PID_PITCH].F),
 
-        Param(PSTR("pid_yaw_p"), &c.pid[PID_YAW].P),
-        Param(PSTR("pid_yaw_i"), &c.pid[PID_YAW].I),
-        Param(PSTR("pid_yaw_d"), &c.pid[PID_YAW].D),
-        Param(PSTR("pid_yaw_f"), &c.pid[PID_YAW].F),
+        Param(PSTR("pid_yaw_p"), &c.pid[FC_PID_YAW].P),
+        Param(PSTR("pid_yaw_i"), &c.pid[FC_PID_YAW].I),
+        Param(PSTR("pid_yaw_d"), &c.pid[FC_PID_YAW].D),
+        Param(PSTR("pid_yaw_f"), &c.pid[FC_PID_YAW].F),
 
-        Param(PSTR("pid_level_p"), &c.pid[PID_LEVEL].P),
-        Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
-        Param(PSTR("pid_level_d"), &c.pid[PID_LEVEL].D),
+        Param(PSTR("pid_level_p"), &c.pid[FC_PID_LEVEL].P),
+        Param(PSTR("pid_level_i"), &c.pid[FC_PID_LEVEL].I),
+        Param(PSTR("pid_level_d"), &c.pid[FC_PID_LEVEL].D),
 
         Param(PSTR("pid_level_angle_limit"), &c.angleLimit),
         Param(PSTR("pid_level_rate_limit"), &c.angleRateLimit),
@@ -1267,6 +1267,26 @@ class Cli
       else if(strcmp_P(cmd.args[0], PSTR("exit")) == 0)
       {
         _active = false;
+      }
+      else if(strcmp_P(cmd.args[0], PSTR("motors")) == 0)
+      {
+        s.print(PSTR("count: "));
+        s.println(getMotorCount());
+        for (size_t i = 0; i < 8; i++)
+        {
+          s.print(i);
+          s.print(PSTR(": "));
+          if (i >= OUTPUT_CHANNELS || _model.config.pin[i + PIN_OUTPUT_0] == -1)
+          {
+            s.print(-1);
+            s.print(' ');
+            s.println(0);
+          } else {
+            s.print(_model.config.pin[i + PIN_OUTPUT_0]);
+            s.print(' ');
+            s.println(_model.state.outputUs[i]);
+          }
+        }
       }
       else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
       {

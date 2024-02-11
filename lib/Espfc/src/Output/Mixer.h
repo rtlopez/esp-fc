@@ -4,6 +4,7 @@
 #include "Model.h"
 #include "Output/Mixers.h"
 #include "EscDriver.h"
+#include "platform.h"
 
 namespace Espfc {
 
@@ -44,6 +45,7 @@ class Mixer
           _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
         }
       }
+      motorInitEscDevice(_motor);
 
       _model.state.minThrottle = _model.config.output.minThrottle;
       _model.state.maxThrottle = _model.config.output.maxThrottle;

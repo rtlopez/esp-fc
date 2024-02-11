@@ -133,6 +133,7 @@ class EscDriverEsp32: public EscDriverBase
         if(!_channel[i].attached()) continue;
         rmt_driver_uninstall(_channel[i].dev.channel);
       }
+      _protocol = ESC_PROTOCOL_DISABLED;
     }
 
     int begin(EscProtocol protocol, bool async, int32_t rate, int timer = 0)
@@ -167,6 +168,12 @@ class EscDriverEsp32: public EscDriverBase
       if(_protocol == ESC_PROTOCOL_DISABLED) return;
       if(_async) return;
       transmitAll();
+    }
+
+    int pin(size_t channel) const
+    {
+      if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return -1;
+      return _channel[channel].dev.gpio_num;
     }
 
   private:

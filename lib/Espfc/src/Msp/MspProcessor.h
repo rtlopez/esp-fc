@@ -8,6 +8,7 @@
 #include "platform.h"
 
 extern "C" {
+  #include "io/serial_4way.h"
   int blackboxCalculatePDenom(int rateNum, int rateDenom);
   uint8_t blackboxCalculateSampleRate(uint16_t pRatio);
   uint8_t blackboxGetRateDenom(void);
@@ -146,6 +147,8 @@ static uint16_t toIbatCurrent(float current)
 
 }
 
+#define MSP_PASSTHROUGH_ESC_4WAY 0xff
+
 namespace Espfc {
 
 namespace Msp {
@@ -165,7 +168,7 @@ class MspProcessor
         switch(msg.dir)
         {
           case MSP_TYPE_CMD:
-            processCommand(msg, res);
+            processCommand(msg, res, s);
             sendResponse(res, s);
             msg = MspMessage();
             res = MspResponse();
@@ -180,7 +183,7 @@ class MspProcessor
       return msg.state != MSP_STATE_IDLE;
     }
 
-    void processCommand(MspMessage& m, MspResponse& r)
+    void processCommand(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
     {
       r.cmd = m.cmd;
       r.version = m.version;
@@ -1152,9 +1155,9 @@ class MspProcessor
           r.writeU8(0); // abs control gain
           r.writeU8(0); // throttle boost
           r.writeU8(0); // acro trainer max angle
-          r.writeU16(_model.config.pid[PID_ROLL].F); //pid roll f
-          r.writeU16(_model.config.pid[PID_PITCH].F); //pid pitch f
-          r.writeU16(_model.config.pid[PID_YAW].F); //pid yaw f
+          r.writeU16(_model.config.pid[FC_PID_ROLL].F); //pid roll f
+          r.writeU16(_model.config.pid[FC_PID_PITCH].F); //pid pitch f
+          r.writeU16(_model.config.pid[FC_PID_YAW].F); //pid yaw f
           r.writeU8(0); // antigravity mode
           // 1.41+
           r.writeU8(0); // d min roll
@@ -1205,9 +1208,9 @@ class MspProcessor
             m.readU8(); //abs control gain
             m.readU8(); //throttle boost
             m.readU8(); //acro trainer max angle
-            _model.config.pid[PID_ROLL].F = m.readU16(); // pid roll f
-            _model.config.pid[PID_PITCH].F = m.readU16(); // pid pitch f
-            _model.config.pid[PID_YAW].F = m.readU16(); // pid yaw f
+            _model.config.pid[FC_PID_ROLL].F = m.readU16(); // pid roll f
+            _model.config.pid[FC_PID_PITCH].F = m.readU16(); // pid pitch f
+            _model.config.pid[FC_PID_YAW].F = m.readU16(); // pid yaw f
             m.readU8(); //antigravity mode
           }
           // 1.41+
@@ -1249,7 +1252,7 @@ class MspProcessor
           break;
 
         case MSP_MOTOR:
-          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          for (size_t i = 0; i < 8; i++)
           {
             if (i >= OUTPUT_CHANNELS || _model.config.pin[i + PIN_OUTPUT_0] == -1)
             {
@@ -1357,6 +1360,29 @@ class MspProcessor
           }
           break;
 
+        case MSP_SET_PASSTHROUGH:
+          {
+            uint8_t ptMode = MSP_PASSTHROUGH_ESC_4WAY;
+            uint8_t ptArg = 0;
+            if(m.remain() >= 2) {
+              ptMode = m.readU8();
+              ptArg = m.readU8();
+            }
+            switch (ptMode)
+            {
+              case MSP_PASSTHROUGH_ESC_4WAY:
+                r.writeU8(esc4wayInit());
+                serialDeviceInit(&s, 0);
+                _postCommand = std::bind(&MspProcessor::processEsc4way, this);
+                break;
+              default:
+                r.writeU8(0);
+                break;
+            }
+            (void)ptArg;
+          }
+          break;
+
         case MSP_DEBUG:
           for (int i = 0; i < 4; i++) {
             r.writeU16(_model.state.debug[i]);
@@ -1375,13 +1401,24 @@ class MspProcessor
           break;
 
         case MSP_REBOOT:
-          _reboot = true;
+          _postCommand = std::bind(&MspProcessor::processRestart, this);
           break;
 
         default:
           r.result = 0;
           break;
       }
+    }
+
+    void processEsc4way()
+    {
+      esc4wayProcess(getSerialPort());
+      processRestart();
+    }
+
+    void processRestart()
+    {
+      Hardware::restart(_model);
     }
 
     void sendResponse(MspResponse& r, Device::SerialDevice& s)
@@ -1442,10 +1479,10 @@ class MspProcessor
 
     void postCommand()
     {
-      if(_reboot)
-      {
-        Hardware::restart(_model);
-      }
+      if(!_postCommand) return;
+      std::function<void(void)> cb = _postCommand;
+      _postCommand = {};
+      cb();
     }
 
     bool debugSkip(uint8_t cmd)
@@ -1503,7 +1540,7 @@ class MspProcessor
   private:
     Model& _model;
     MspParser _parser;
-    bool _reboot;
+    std::function<void(void)> _postCommand;
 };
 
 }
