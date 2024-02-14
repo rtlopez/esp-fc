@@ -32,7 +32,7 @@ class EscDriverBase
     int pin(size_t channel) const { return -1; }
 #endif
 
-    uint16_t dshotEncode(uint16_t value)
+    static inline uint16_t dshotEncode(uint16_t value, bool inverted = false)
     {
       value <<= 1;
 
@@ -43,6 +43,10 @@ class EscDriverBase
       {
         csum ^= csum_data; // xor
         csum_data >>= 4;
+      }
+      if(inverted)
+      {
+        csum = ~csum;
       }
       csum &= 0xf;
 

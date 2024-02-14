@@ -11,23 +11,30 @@ class EscDriverEsp32: public EscDriverBase
   public:
     class Slot {
       public:
-        void setTerminate(int item, bool val)
+        void inline setTerminate(int item, bool val)
         {
           items[item].val = val ? (1 << 15) : 0ul;
         }
 
-        void setDshotBit(int item, bool val)
+        void inline setDshotBit(int item, bool val, bool inverted)
         {
           const uint32_t th = (val ? dshot_t1h : dshot_t0h) & DURATION_MAX;
           const uint32_t tl = (val ? dshot_t1l : dshot_t0l) & DURATION_MAX;
-          items[item].val = th | 1 << 15 | tl << 16;
+          if(!inverted)
+          {
+            items[item].val = (th | 1 << 15) | (tl << 16 | 0 << 31);
+          }
+          else
+          {
+            items[item].val = (th | 0 << 15) | (tl << 16 | 1 << 31);
+          }
           //items[item].duration0 = th;
-          //items[item].level0 = 1;
+          //items[item].level0 = inverted ? 0 : 1;
           //items[item].duration1 = tl;
-          //items[item].level1 = 0;
+          //items[item].level1 = inverted ? 1 : 0;
         }
 
-        void setDuration(int item, int duration, bool val)
+        void inline setDuration(int item, int duration, bool val)
         {
           if(duration >= 2)
           {
@@ -46,16 +53,16 @@ class EscDriverEsp32: public EscDriverBase
           }
         }
 
-        bool attached()
+        bool inline attached()
         {
-          return (int)dev.gpio_num != -1;
+          return (int)pin != -1;
         }
 
         static const size_t ITEM_COUNT = DSHOT_BIT_COUNT + 1;
         static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
-        rmt_config_t dev;
         rmt_item32_t items[ITEM_COUNT];
+        int pin;
         EscProtocol protocol;
         int32_t pulse_min;
         int32_t pulse_max;
@@ -66,6 +73,7 @@ class EscDriverEsp32: public EscDriverBase
         uint16_t dshot_t0l;
         uint16_t dshot_t1h;
         uint16_t dshot_t1l;
+        int telemetryValue;
     };
 
     EscDriverEsp32();
@@ -77,10 +85,17 @@ class EscDriverEsp32: public EscDriverBase
     int pin(size_t channel) const;
 
   private:
-    void initChannel(int i, gpio_num_t pin, int pulse);
+    void initChannel(int channel, gpio_num_t pin, int pulse);
+    void modeTx(rmt_channel_t channel) IRAM_ATTR;
+    void modeRx(rmt_channel_t channel) IRAM_ATTR;
+    void enableTx(rmt_channel_t channel) IRAM_ATTR;
+    void enableRx(rmt_channel_t channel) IRAM_ATTR;
+    void disableTx(rmt_channel_t channel) IRAM_ATTR;
+    void disableRx(rmt_channel_t channel) IRAM_ATTR;
     static void txDoneCallback(rmt_channel_t channel, void *arg) IRAM_ATTR;
     void transmitOne(uint8_t i) IRAM_ATTR;
     void transmitAll();
+    void readTelemetry();
     void writeAnalogCommand(uint8_t channel, int32_t pulse) IRAM_ATTR;
     void writeDshotCommand(uint8_t channel, int32_t pulse) IRAM_ATTR;
     void transmitCommand(uint8_t channel) IRAM_ATTR;
@@ -98,6 +113,8 @@ class EscDriverEsp32: public EscDriverBase
     int32_t _rate;
     int32_t _interval;
     bool _digital;
+    bool _invert;
+    uint32_t _channel_mask;
 
     static bool _tx_end_installed;
     static EscDriverEsp32* instances[];
