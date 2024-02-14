@@ -177,6 +177,7 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   rmt_ll_rx_enable_filter(&RMT, rx_ch, 1);
   _rmt_zero_mem((rmt_channel_t)rx_ch, RMT_MEM_ITEM_NUM);
 
+#if SOC_RMT_SUPPORT_TX_SYNCHRO
   // sync all channels
   if(!_async)
   {
@@ -185,6 +186,7 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
     rmt_ll_tx_add_to_sync_group(&RMT, i);
     rmt_ll_tx_reset_channels_clock_div(&RMT, _channel_mask);
   }
+#endif
 
   // install driver
   rmt_driver_install((rmt_channel_t)i, 0, ESP_INTR_FLAG_IRAM);
