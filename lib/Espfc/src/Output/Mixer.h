@@ -17,13 +17,27 @@ class Mixer
 
     int begin()
     {
-      escMotor.begin((EscProtocol)_model.config.output.protocol, _model.config.output.async, _model.config.output.rate, ESC_DRIVER_MOTOR_TIMER);
+      EscConfig motorConf = {
+        .timer = ESC_DRIVER_MOTOR_TIMER,
+        .protocol = (EscProtocol)_model.config.output.protocol,
+        .rate = _model.config.output.rate,
+        .async = !!_model.config.output.async,
+        .dshotTelemetry = !!_model.config.output.dshotTelemetry,
+      };
+      escMotor.begin(motorConf);
       _model.state.escMotor = _motor = &escMotor;
       _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).logln(ESC_DRIVER_MOTOR_TIMER);
 
       if(_model.config.output.servoRate)
       {
-        escServo.begin(ESC_PROTOCOL_PWM, true, _model.config.output.servoRate, ESC_DRIVER_SERVO_TIMER);
+        EscConfig servoConf = {
+          .timer = ESC_DRIVER_SERVO_TIMER,
+          .protocol = ESC_PROTOCOL_PWM,
+          .rate = _model.config.output.servoRate,
+          .async = true,
+          .dshotTelemetry = false,
+        };
+        escServo.begin(servoConf);
         _model.state.escServo = _servo = &escServo;
         _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
       }

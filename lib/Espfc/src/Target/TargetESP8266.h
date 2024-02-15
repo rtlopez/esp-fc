@@ -58,9 +58,6 @@
 
 #define ESPFC_WIFI_ALT
 
-//#define ESPFC_LOGGER_FS // deprecated
-#define ESPFC_LOGGER_FS_ALT
-
 #include "Device/SerialDevice.h"
 
 namespace Espfc {

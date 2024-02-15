@@ -75,7 +75,7 @@ bool EscDriverEsp32::_tx_end_installed = false;
 
 EscDriverEsp32 *EscDriverEsp32::instances[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
-EscDriverEsp32::EscDriverEsp32() : _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _digital(false), _invert(false), _channel_mask(0)
+EscDriverEsp32::EscDriverEsp32() : _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _digital(false), _dshot_tlm(false), _channel_mask(0)
 {
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
@@ -93,15 +93,13 @@ void EscDriverEsp32::end()
   _protocol = ESC_PROTOCOL_DISABLED;
 }
 
-int EscDriverEsp32::begin(EscProtocol protocol, bool async, int32_t rate, int timer)
+int EscDriverEsp32::begin(const EscConfig& conf)
 {
-  (void)timer; // unused
-
-  _protocol = protocol;
-  _digital = isDigital(protocol);
-  if(_digital) _invert = true;
-  _async = async;
-  _rate = rate;
+  _protocol = conf.protocol;
+  _digital = isDigital(conf.protocol);
+  _dshot_tlm = conf.dshotTelemetry;
+  _async = conf.async;
+  _rate = conf.rate;
   _interval = TO_INTERVAL_US(_rate);
 
   return 1;
@@ -139,8 +137,8 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   if (pin == -1) return;
 
   pinMode(pin, OUTPUT);
-  digitalWrite(pin, _invert ? HIGH : LOW);
-  if(_invert) gpio_pullup_en((gpio_num_t)pin); // ?
+  digitalWrite(pin, _dshot_tlm ? HIGH : LOW);
+  if(_dshot_tlm) gpio_pullup_en((gpio_num_t)pin); // ?
 
   _channel[i].pin = pin;
   _channel[i].protocol = _protocol;
@@ -167,13 +165,13 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   // init as TX
   rmt_config_t conf = RMT_DEFAULT_CONFIG_TX(pin, (rmt_channel_t)i);
   conf.clk_div = _channel[i].divider;
-  conf.tx_config.idle_level = _invert ? RMT_IDLE_LEVEL_HIGH : RMT_IDLE_LEVEL_LOW;
+  conf.tx_config.idle_level = _dshot_tlm ? RMT_IDLE_LEVEL_HIGH : RMT_IDLE_LEVEL_LOW;
   rmt_config(&conf);
 
   // add RX specifics
   int rx_ch = RMT_ENCODE_RX_CHANNEL(i);
-  rmt_ll_rx_set_idle_thres(&RMT, rx_ch, 1000);
-  rmt_ll_rx_set_filter_thres(&RMT, rx_ch, 10);
+  rmt_ll_rx_set_idle_thres(&RMT, rx_ch, getAnalogPulse(30000)); // max bit len, (30us)
+  rmt_ll_rx_set_filter_thres(&RMT, rx_ch, 40); // min bit len, 80 ticks = 1us for div = 1, max value = 255
   rmt_ll_rx_enable_filter(&RMT, rx_ch, 1);
   _rmt_zero_mem((rmt_channel_t)rx_ch, RMT_MEM_ITEM_NUM);
 
@@ -189,10 +187,10 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
 #endif
 
   // install driver
-  rmt_driver_install((rmt_channel_t)i, 0, ESP_INTR_FLAG_IRAM);
+  rmt_driver_install((rmt_channel_t)i, 256, ESP_INTR_FLAG_IRAM);
 
   // install tx_end callback if async pwm or bidir dshot
-  if(_async || (_digital && _invert))
+  if(_async || (_digital && _dshot_tlm))
   {
     // install only once
     if(!_tx_end_installed)
@@ -278,7 +276,7 @@ void EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void *arg)
   {
     instance->transmitOne(channel);
   }
-  if(instance->_digital && instance->_invert)
+  if(instance->_digital && instance->_dshot_tlm)
   {
     instance->modeRx(channel);
   }
@@ -323,13 +321,24 @@ void EscDriverEsp32::transmitAll()
 
 void EscDriverEsp32::readTelemetry()
 {
+  PIN_DEBUG(HIGH);
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
+    if (!_digital || !_dshot_tlm) continue;
     if (!_channel[i].attached()) continue;
-    if (!_digital) continue;
-    if (!_invert) continue;
-    _channel[i].telemetryValue = _rmt_rx_get_mem_len_in_isr((rmt_channel_t)i);
+    //_channel[i].telemetryValue = _rmt_rx_get_mem_len_in_isr((rmt_channel_t)i);
+
+    RingbufHandle_t rb = NULL;
+    rmt_get_ringbuf_handle((rmt_channel_t)i, &rb);
+
+    size_t rmt_len = 0;
+    rmt_item32_t * data = (rmt_item32_t *)xRingbufferReceive(rb, &rmt_len, 0/*portMAX_DELAY*/);
+    if (data) {
+      // process data here
+      vRingbufferReturnItem(rb, (void *)data);
+    }
   }
+  PIN_DEBUG(LOW);
 }
 
 void EscDriverEsp32::writeAnalogCommand(uint8_t channel, int32_t pulse)
@@ -365,7 +374,7 @@ void EscDriverEsp32::writeAnalogCommand(uint8_t channel, int32_t pulse)
 
 void EscDriverEsp32::writeDshotCommand(uint8_t channel, int32_t pulse)
 {
-  if(_digital && _invert)
+  if(_digital && _dshot_tlm)
   {
     modeTx((rmt_channel_t)channel);
   }
@@ -373,15 +382,15 @@ void EscDriverEsp32::writeDshotCommand(uint8_t channel, int32_t pulse)
   pulse = constrain(pulse, 0, 2000);
   // scale to dshot commands (0 or 48-2047)
   int value = pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;
-  uint16_t frame = dshotEncode(value, _invert);
+  uint16_t frame = dshotEncode(value, _dshot_tlm);
 
   Slot& slot = _channel[channel];
   for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
   {
     int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
-    slot.setDshotBit(i, val, _invert);
+    slot.setDshotBit(i, val, _dshot_tlm);
   }
-  slot.setTerminate(DSHOT_BIT_COUNT, _invert);
+  slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
 
   _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
 }

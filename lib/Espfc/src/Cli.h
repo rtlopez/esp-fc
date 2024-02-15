@@ -588,13 +588,18 @@ class Cli
         Param(PSTR("output_motor_protocol"), &c.output.protocol, protocolChoices),
         Param(PSTR("output_motor_async"), &c.output.async),
         Param(PSTR("output_motor_rate"), &c.output.rate),
+#ifdef ESPFC_DSHOT_TELEMETRY
+        Param(PSTR("output_motor_poles"), &c.output.motorPoles),
+#endif
         Param(PSTR("output_servo_rate"), &c.output.servoRate),
 
         Param(PSTR("output_min_command"), &c.output.minCommand),
         Param(PSTR("output_min_throttle"), &c.output.minThrottle),
         Param(PSTR("output_max_throttle"), &c.output.maxThrottle),
         Param(PSTR("output_dshot_idle"), &c.output.dshotIdle),
-
+#ifdef ESPFC_DSHOT_TELEMETRY
+        Param(PSTR("output_dshot_telemetry"), &c.output.dshotTelemetry),
+#endif
         Param(PSTR("output_0"), &c.output.channel[0]),
         Param(PSTR("output_1"), &c.output.channel[1]),
         Param(PSTR("output_2"), &c.output.channel[2]),

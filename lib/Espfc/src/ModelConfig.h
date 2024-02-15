@@ -428,7 +428,9 @@ class OutputConfig
 {
   public:
     int8_t protocol;
-    int16_t async;
+    int8_t async;
+    int8_t dshotTelemetry;
+    int8_t motorPoles;
     int16_t rate;
     int16_t servoRate;
 
@@ -814,6 +816,8 @@ class ModelConfig
       //output.async = true;
       output.async = false;
       output.servoRate = 0; // default 50, 0 to disable
+      output.dshotTelemetry = false;
+      output.motorPoles = 14;
 
       // input config
       input.ppmMode = PPM_MODE_NORMAL;

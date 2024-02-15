@@ -702,8 +702,8 @@ class MspProcessor
           r.writeU16(_model.config.output.minCommand);  // mincommand
           r.writeU8(_model.state.currentMixer.count);   // motor count
           // 1.42+
-          r.writeU8(14); // motor pole count
-          r.writeU8(0); // dshot telemtery
+          r.writeU8(_model.config.output.motorPoles); // motor pole count
+          r.writeU8(_model.config.output.dshotTelemetry); // dshot telemtery
           r.writeU8(0); // esc sensor
           break;
 
@@ -713,8 +713,13 @@ class MspProcessor
           _model.config.output.minCommand = m.readU16();  // mincommand
           if(m.remain() >= 2)
           {
+#ifdef ESPFC_DSHOT_TELEMETRY
+            _model.config.output.motorPoles = m.readU8();
+            _model.config.output.dshotTelemetry = m.readU8();
+#else
             m.readU8();
             m.readU8();
+#endif
           }
           _model.reload();
           break;

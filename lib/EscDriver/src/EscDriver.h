@@ -17,6 +17,15 @@ enum EscProtocol {
   ESC_PROTOCOL_COUNT
 };
 
+struct EscConfig
+{
+  int timer;
+  EscProtocol protocol;
+  int rate;
+  bool async;
+  bool dshotTelemetry;
+};
+
 #define PWM_TO_DSHOT(v) (((v - 1000) * 2) + 47)
 #define ESC_PROTOCOL_SANITIZE(p) (p > ESC_PROTOCOL_DSHOT600 && p != ESC_PROTOCOL_DISABLED ? ESC_PROTOCOL_DSHOT600 : p)
 
@@ -24,7 +33,7 @@ class EscDriverBase
 {
   public:
 #if defined(UNIT_TEST)
-    int begin(EscProtocol protocol, bool async, int16_t rate, int timer = 0) { return 1; }
+    int begin(const EscConfig& conf) { return 1; }
     void end() {}
     int attach(size_t channel, int pin, int pulse) { return 1; }
     int write(size_t channel, int pulse) { return 1; }

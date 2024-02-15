@@ -77,7 +77,7 @@ class EscDriverEsp32: public EscDriverBase
     };
 
     EscDriverEsp32();
-    int begin(EscProtocol protocol, bool async, int32_t rate, int timer = 0);
+    int begin(const EscConfig& conf);
     void end();
     int attach(size_t channel, int pin, int pulse);
     int write(size_t channel, int pulse);
@@ -113,7 +113,7 @@ class EscDriverEsp32: public EscDriverBase
     int32_t _rate;
     int32_t _interval;
     bool _digital;
-    bool _invert;
+    bool _dshot_tlm;
     uint32_t _channel_mask;
 
     static bool _tx_end_installed;
