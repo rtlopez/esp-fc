@@ -39,7 +39,13 @@ class EscDriverBase
     int write(size_t channel, int pulse) { return 1; }
     void apply() {}
     int pin(size_t channel) const { return -1; }
+    uint32_t telemetry(size_t channel) const { return 0; }
 #endif
+
+    static inline uint16_t dshotConvert(uint16_t pulse)
+    {
+      return pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;
+    }
 
     static inline uint16_t dshotEncode(uint16_t value, bool inverted = false)
     {
@@ -62,6 +68,110 @@ class EscDriverBase
       return (value << 4) | csum;
     }
     
+    static inline uint32_t durationToBitLen(uint32_t duration, uint32_t len)
+    {
+      return (duration + (len >> 1)) / len;
+    }
+
+    static inline uint32_t pushBits(uint32_t value, uint32_t bitVal, size_t bitLen)
+    {
+      while(bitLen--)
+      {
+        value <<= 1;
+        value |= bitVal;
+      }
+      return value;
+    }
+
+    /**
+     * @param data expected data layout (bits): duration0(15), level0(1), duration(15), level1(1)
+     * @param len number of data items
+     * @param bitLen duration of single bit
+     * @return uint32_t raw gcr value
+     */
+    static inline uint32_t extractTelemetryGcr(uint32_t* data, size_t len, uint32_t bitLen)
+    {
+      int bitCount = 0;
+      uint32_t value = 0;
+      for(size_t i = 0; i < len; i++)
+      {
+        uint32_t duration0 = data[i] & 0x7fff;
+        if(!duration0) break;
+
+        uint32_t level0 = (data[i] >> 15) & 0x01;
+        uint32_t len0 = durationToBitLen(duration0, bitLen);
+        value = pushBits(value, level0, len0);
+        bitCount += len0;
+
+        uint32_t duration1 = (data[i] >> 16) & 0x7fff;
+        if(!duration1) break;
+        uint32_t level1 = (data[i] >> 31) & 0x01;
+        uint32_t len1 = durationToBitLen(duration1, bitLen);
+        value = pushBits(value, level1, len1);
+        bitCount += len1;
+      }
+
+      // fill missing bits with 1
+      if(bitCount < 21)
+      {
+        value = pushBits(value, 1, 21 - bitCount);
+      }
+      value = value ^ (value >> 1); // extract gcr
+
+      return value;
+    }
+
+    static const uint32_t INVALID_TELEMETRY_VALUE = 0xffff;
+
+    static inline uint32_t convertToErpm(uint32_t value)
+    {
+      if (!value || value == INVALID_TELEMETRY_VALUE) {
+        return INVALID_TELEMETRY_VALUE;
+      }
+
+      // Convert period to erpm * 100
+      return (1000000 * 60 / 100 + value / 2) / value;
+    }
+
+    static inline uint32_t convertToValue(uint32_t value)
+    {
+      // eRPM range
+      if (value == 0x0fff) {
+          return 0;
+      }
+
+      // Convert value to 16 bit from the GCR telemetry format (eeem mmmm mmmm)
+      return (value & 0x01ff) << ((value & 0xfe00) >> 9);
+    }
+
+    static uint32_t gcrToRawValue(uint32_t value)
+    {
+      constexpr uint32_t iv = 0xffffffff; // invalid code
+      // First bit is start bit so discard it.
+      value &= 0xfffff;
+      static const uint32_t decode[32] = {
+        iv, iv, iv, iv, iv, iv, iv, iv, iv, 9, 10, 11, iv, 13, 14, 15,
+        iv, iv,  2,  3, iv,  5,  6,  7, iv, 0,  8,  1, iv,  4, 12, iv,
+      };
+
+      uint32_t decodedValue = decode[value & 0x1f];
+      decodedValue |= decode[(value >>  5) & 0x1f] <<  4;
+      decodedValue |= decode[(value >> 10) & 0x1f] <<  8;
+      decodedValue |= decode[(value >> 15) & 0x1f] << 12;
+
+      uint32_t csum = decodedValue;
+      csum = csum ^ (csum >> 8); // xor bytes
+      csum = csum ^ (csum >> 4); // xor nibbles
+
+      if ((csum & 0xf) != 0xf || decodedValue > 0xffff) {
+        value = INVALID_TELEMETRY_VALUE;
+      } else {
+        value = decodedValue >> 4;
+      }
+
+      return value;
+    }
+
     static const size_t DSHOT_BIT_COUNT = 16;
 };
 

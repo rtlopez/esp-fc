@@ -50,19 +50,6 @@ IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
 #define _rmt_fill_tx_items rmt_fill_tx_items
 #endif
 
-static int IRAM_ATTR _rmt_rx_get_mem_len_in_isr(rmt_channel_t channel)
-{
-    volatile rmt_item32_t *data = (rmt_item32_t *)RMTMEM.chan[RMT_ENCODE_RX_CHANNEL(channel)].data32;
-    for (size_t idx = 0; idx < RMT_MEM_ITEM_NUM; idx++) {
-        if (data[idx].duration0 == 0) {
-            return idx;
-        } else if (data[idx].duration1 == 0) {
-            return idx + 1;
-        }
-    }
-    return RMT_MEM_ITEM_NUM;
-}
-
 static void IRAM_ATTR _rmt_zero_mem(rmt_channel_t channel, size_t len)
 {
   volatile rmt_item32_t *data = (rmt_item32_t *)RMTMEM.chan[channel].data32;
@@ -95,12 +82,13 @@ void EscDriverEsp32::end()
 
 int EscDriverEsp32::begin(const EscConfig& conf)
 {
-  _protocol = conf.protocol;
-  _digital = isDigital(conf.protocol);
-  _dshot_tlm = conf.dshotTelemetry;
-  _async = conf.async;
-  _rate = conf.rate;
+  _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
+  _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
+  _rate = constrain(conf.rate, 50, 8000);
   _interval = TO_INTERVAL_US(_rate);
+  _digital = isDigital(_protocol);
+  _dshot_tlm = conf.dshotTelemetry && (_protocol == ESC_PROTOCOL_DSHOT300 || _protocol == ESC_PROTOCOL_DSHOT600);
+  _timer.setInterval(1000000);
 
   return 1;
 }
@@ -130,6 +118,12 @@ int EscDriverEsp32::pin(size_t channel) const
 {
   if (channel < 0 || channel >= ESC_CHANNEL_COUNT) return -1;
   return _channel[channel].pin;
+}
+
+uint32_t EscDriverEsp32::telemetry(size_t channel) const
+{
+  if (channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
+  return _channel[channel].telemetryValue;
 }
 
 void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
@@ -322,21 +316,46 @@ void EscDriverEsp32::transmitAll()
 void EscDriverEsp32::readTelemetry()
 {
   PIN_DEBUG(HIGH);
+  uint32_t bit_len = getAnalogPulse(2000);
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
-    if (!_digital || !_dshot_tlm) continue;
-    if (!_channel[i].attached()) continue;
-    //_channel[i].telemetryValue = _rmt_rx_get_mem_len_in_isr((rmt_channel_t)i);
+    if(!_digital || !_dshot_tlm) continue;
+    if(!_channel[i].attached()) continue;
+
+    HardwareSerial* s = (i == 0 && _timer.check()) ? &Serial : nullptr;
 
     RingbufHandle_t rb = NULL;
-    rmt_get_ringbuf_handle((rmt_channel_t)i, &rb);
+    if(ESP_OK != rmt_get_ringbuf_handle((rmt_channel_t)i, &rb)) continue;
 
     size_t rmt_len = 0;
-    rmt_item32_t * data = (rmt_item32_t *)xRingbufferReceive(rb, &rmt_len, 0/*portMAX_DELAY*/);
-    if (data) {
-      // process data here
+    rmt_item32_t* data = (rmt_item32_t*)xRingbufferReceive(rb, &rmt_len, 0);
+    if(s) { s->print((uint8_t)rmt_len); }
+    if (data)
+    {
+      for(size_t j = 0; j < rmt_len >> 2; j++)
+      {
+        if(!data[j].duration0) break;
+        if(s) s->print(' ');
+        if(s) s->print(data[j].level0);
+        if(s) s->print(':');
+        if(s) s->print(data[j].duration0);
+
+        if(!data[j].duration1) break;
+        if(s) s->print(' ');
+        if(s) s->print(data[j].level1);
+        if(s) s->print(':');
+        if(s) s->print(data[j].duration1);
+      }
+      uint32_t value = extractTelemetryGcr((uint32_t*)data, rmt_len >> 2, bit_len);
+
+      if(s) s->print(' ');
+      if(s) s->print(value, HEX);
+      
       vRingbufferReturnItem(rb, (void *)data);
+      
+      _channel[i].telemetryValue = value;
     }
+    if(s) s->print('\n');
   }
   PIN_DEBUG(LOW);
 }

@@ -219,6 +219,17 @@ struct ModelState
   int16_t outputDisarmed[OUTPUT_CHANNELS];
   bool outputSaturated;
 
+  int16_t outputTelemetryErrors[OUTPUT_CHANNELS];
+  float outputTelemetryRpm[OUTPUT_CHANNELS];
+  float outputTelemetryFreq[OUTPUT_CHANNELS];
+  int8_t outputTelemetryTemperature[OUTPUT_CHANNELS];
+  int8_t outputTelemetryVoltage[OUTPUT_CHANNELS];
+  int8_t outputTelemetryCurrent[OUTPUT_CHANNELS];
+  int8_t outputTelemetryDebug1[OUTPUT_CHANNELS];
+  int8_t outputTelemetryDebug2[OUTPUT_CHANNELS];
+  int8_t outputTelemetryDebug3[OUTPUT_CHANNELS];
+  int8_t outputTelemetryEvents[OUTPUT_CHANNELS];
+
   // other state
   Kalman kalman[AXES];
   VectorFloat accelPrev;

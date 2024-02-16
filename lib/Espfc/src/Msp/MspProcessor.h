@@ -1268,6 +1268,35 @@ class MspProcessor
           }
           break;
 
+        case MSP_MOTOR_TELEMETRY:
+          r.writeU8(OUTPUT_CHANNELS);
+          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            int rpm = 0;
+            uint16_t invalidPct = 0;
+            uint8_t escTemperature = 0;  // degrees celcius
+            uint16_t escVoltage = 0;     // 0.01V per unit
+            uint16_t escCurrent = 0;     // 0.01A per unit
+            uint16_t escConsumption = 0; // mAh
+
+            if (_model.config.pin[i + PIN_OUTPUT_0] != -1)
+            {
+              rpm = lrintf(_model.state.outputTelemetryRpm[i]);
+              invalidPct = _model.state.outputTelemetryErrors[i];
+              escTemperature = _model.state.outputTelemetryTemperature[i];
+              escVoltage = _model.state.outputTelemetryVoltage[i];
+              escCurrent = _model.state.outputTelemetryCurrent[i];
+            }
+
+            r.writeU32(rpm);
+            r.writeU16(invalidPct);
+            r.writeU8(escTemperature);
+            r.writeU16(escVoltage);
+            r.writeU16(escCurrent);
+            r.writeU16(escConsumption);
+          }
+          break;
+
         case MSP_SET_MOTOR:
           for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {

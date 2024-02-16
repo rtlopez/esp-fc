@@ -5,6 +5,7 @@
 
 #include "EscDriver.h"
 #include <driver/rmt.h>
+#include "Timer.h"
 
 class EscDriverEsp32: public EscDriverBase
 {
@@ -73,7 +74,7 @@ class EscDriverEsp32: public EscDriverBase
         uint16_t dshot_t0l;
         uint16_t dshot_t1h;
         uint16_t dshot_t1l;
-        int telemetryValue;
+        uint32_t telemetryValue;
     };
 
     EscDriverEsp32();
@@ -83,6 +84,7 @@ class EscDriverEsp32: public EscDriverBase
     int write(size_t channel, int pulse);
     void apply();
     int pin(size_t channel) const;
+    uint32_t telemetry(size_t channel) const;
 
   private:
     void initChannel(int channel, gpio_num_t pin, int pulse);
@@ -118,6 +120,7 @@ class EscDriverEsp32: public EscDriverBase
 
     static bool _tx_end_installed;
     static EscDriverEsp32* instances[];
+    Espfc::Timer _timer;
 };
 
 #endif

@@ -6,6 +6,9 @@
 #include "EscDriver.h"
 #include "platform.h"
 
+#define ERPM_PER_LSB 100.0f
+#define SECONDS_PER_MINUTE 60
+
 namespace Espfc {
 
 namespace Output {
@@ -40,6 +43,8 @@ class Mixer
         escServo.begin(servoConf);
         _model.state.escServo = _servo = &escServo;
         _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
+
+        _erpmToHz = ERPM_PER_LSB / SECONDS_PER_MINUTE / (_model.config.output.motorPoles / 2.0f);
       }
 
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
@@ -270,8 +275,71 @@ class Mixer
           if(_motor) _motor->write(i, _model.state.outputUs[i]);
         }
       }
+
       if(_motor) _motor->apply();
       if(_servo) _servo->apply();
+
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        const OutputChannelConfig& och = _model.config.output.channel[i];
+        if(och.servo || !_motor || !_model.config.output.dshotTelemetry) continue;
+        uint32_t value = _motor->telemetry(i);
+        value = EscDriver::gcrToRawValue(value);
+        // Decode Extended DSHOT telemetry
+        switch (value & 0x0f00)
+        {
+          case 0x0200:
+            // Temperature range (in degree Celsius, just like Blheli_32 and KISS)
+            _model.state.outputTelemetryTemperature[i] = value & 0x00ff;
+            break;
+          case 0x0400:
+            // Voltage range (0-63,75V step 0,25V)
+            _model.state.outputTelemetryVoltage[i] = value & 0x00ff;
+            break;
+          case 0x0600:
+            // Current range (0-255A step 1A)
+            _model.state.outputTelemetryCurrent[i] = value & 0x00ff;
+            break;
+          case 0x0800:
+            // Debug 1 value
+            _model.state.outputTelemetryDebug1[i] = value & 0x00ff;
+            break;
+          case 0x0A00:
+            // Debug 2 value
+            _model.state.outputTelemetryDebug2[i] = value & 0x00ff;
+            break;
+          case 0x0C00:
+            // Debug 3 value
+            _model.state.outputTelemetryDebug3[i] = value & 0x00ff;
+            break;
+          case 0x0E00:
+            // State / Events
+            _model.state.outputTelemetryEvents[i] = value & 0x00ff;
+            break;
+          default:
+            value = EscDriver::convertToValue(value);
+            uint32_t erpm = EscDriver::convertToErpm(value);
+            if(_model.config.debugMode == DEBUG_DSHOT_RPM_TELEMETRY)
+            {
+              _model.state.debug[i] = erpm;
+            }
+            _model.state.outputTelemetryRpm[i] = erpmToRpm(erpm);
+            _model.state.outputTelemetryFreq[i] = erpmToHz(erpm);
+            break;
+        }
+      }
+    }
+
+    float inline erpmToHz(float erpm)
+    {
+      // rpm = (erpm * ERPM_PER_LSB) / (motorConfig()->motorPoleCount / 2)
+      // _erpmToHz = ERPM_PER_LSB / SECONDS_PER_MINUTE / (_model.config.output.motorPoles / 2.0f);
+      return _erpmToHz * erpm;
+    }
+
+    float inline erpmToRpm(float erpm)
+    {
+      return erpmToHz(erpm) * SECONDS_PER_MINUTE;
     }
 
     bool _stop(void)
@@ -287,6 +355,7 @@ class Mixer
 
     EscDriver escMotor;
     EscDriver escServo;
+    float _erpmToHz;
 };
 
 }
