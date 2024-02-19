@@ -165,7 +165,7 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   // add RX specifics
   int rx_ch = RMT_ENCODE_RX_CHANNEL(i);
   rmt_ll_rx_set_idle_thres(&RMT, rx_ch, getAnalogPulse(30000)); // max bit len, (30us)
-  rmt_ll_rx_set_filter_thres(&RMT, rx_ch, 40); // min bit len, 80 ticks = 1us for div = 1, max value = 255
+  rmt_ll_rx_set_filter_thres(&RMT, rx_ch, 30); // min bit len, 80 ticks = 1us for div = 1, max value = 255
   rmt_ll_rx_enable_filter(&RMT, rx_ch, 1);
   _rmt_zero_mem((rmt_channel_t)rx_ch, RMT_MEM_ITEM_NUM);
 

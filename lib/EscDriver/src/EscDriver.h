@@ -130,7 +130,9 @@ class EscDriverBase
 
     static inline uint32_t convertToErpm(uint32_t value)
     {
-      if (!value || value == INVALID_TELEMETRY_VALUE) {
+      if(!value) return 0;
+
+      if(!value || value == INVALID_TELEMETRY_VALUE) {
         return INVALID_TELEMETRY_VALUE;
       }
 
@@ -141,7 +143,7 @@ class EscDriverBase
     static inline uint32_t convertToValue(uint32_t value)
     {
       // eRPM range
-      if (value == 0x0fff) {
+      if(value == 0x0fff) {
           return 0;
       }
 
@@ -170,7 +172,7 @@ class EscDriverBase
       csum = csum ^ (csum >> 8); // xor bytes
       csum = csum ^ (csum >> 4); // xor nibbles
 
-      if ((csum & 0xf) != 0xf || decodedValue > 0xffff) {
+      if((csum & 0xf) != 0xf || decodedValue > 0xffff) {
         value = INVALID_TELEMETRY_VALUE;
       } else {
         value = decodedValue >> 4;

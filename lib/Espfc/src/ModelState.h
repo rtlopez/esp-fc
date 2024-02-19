@@ -220,6 +220,9 @@ struct ModelState
   bool outputSaturated;
 
   int16_t outputTelemetryErrors[OUTPUT_CHANNELS];
+  int32_t outputTelemetryErrorsSum[OUTPUT_CHANNELS];
+  int32_t outputTelemetryErrorsCount[OUTPUT_CHANNELS];
+  uint32_t outputTelemetryErpm[OUTPUT_CHANNELS];
   float outputTelemetryRpm[OUTPUT_CHANNELS];
   float outputTelemetryFreq[OUTPUT_CHANNELS];
   int8_t outputTelemetryTemperature[OUTPUT_CHANNELS];

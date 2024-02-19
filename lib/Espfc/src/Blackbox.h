@@ -169,6 +169,11 @@ bool areMotorsRunning(void)
   return _model_ptr->areMotorsRunning();
 }
 
+uint16_t getDshotTelemetry(uint8_t i)
+{
+  return _model_ptr->state.outputTelemetryErpm[i];
+}
+
 namespace Espfc {
 
 class Blackbox
@@ -285,6 +290,8 @@ class Blackbox
       motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
       motorConfigMutable()->minthrottle = _model.state.minThrottle;
       motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
+      motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;
+      motorConfigMutable()->motorPoleCount = _model.config.output.motorPoles;
 
       gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;

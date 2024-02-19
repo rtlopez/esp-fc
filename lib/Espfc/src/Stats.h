@@ -25,6 +25,7 @@ enum StatCounter : int8_t {
   COUNTER_INNER_PID,
   COUNTER_MIXER,
   COUNTER_MIXER_WRITE,
+  COUNTER_MIXER_READ,
   COUNTER_BLACKBOX,
   COUNTER_TELEMETRY,
   COUNTER_SERIAL,
@@ -183,6 +184,7 @@ class Stats
         case COUNTER_INNER_PID:    return PSTR("  pid_i");
         case COUNTER_MIXER:        return PSTR("mixer_p");
         case COUNTER_MIXER_WRITE:  return PSTR("mixer_w");
+        case COUNTER_MIXER_READ:   return PSTR("mixer_r");
         case COUNTER_BLACKBOX:     return PSTR("  bblog");
         case COUNTER_TELEMETRY:    return PSTR("    tlm");
         case COUNTER_SERIAL:       return PSTR(" serial");

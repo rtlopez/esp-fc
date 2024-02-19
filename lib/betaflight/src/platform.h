@@ -8,6 +8,7 @@
 #define USE_D_MIN
 #define USE_DYN_NOTCH_FILTER
 #define USE_ITERM_RELAX
+#define USE_DSHOT_TELEMETRY
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -388,6 +389,7 @@ typedef struct motorDevConfig_s {
     uint8_t  motorPwmProtocol;              // Pwm Protocol
     uint8_t  motorPwmInversion;             // Active-High vs Active-Low. Useful for brushed FCs converted for brushless operation
     uint8_t  useUnsyncedPwm;
+    uint8_t  useDshotTelemetry;
 //    ioTag_t  ioTags[MAX_SUPPORTED_MOTORS];
 } motorDevConfig_t;
 
@@ -397,6 +399,7 @@ typedef struct motorConfig_s {
     uint16_t minthrottle;                   // Set the minimum throttle command sent to the ESC (Electronic Speed Controller). This is the minimum value that allow motors to run at a idle speed.
     uint16_t maxthrottle;                   // This is the maximum value for the ESCs at full power this value can be increased up to 2000
     uint16_t mincommand;                    // This is the value for the ESCs when they are not armed. In some cases, this value must be lowered down to 900 for some specific ESCs
+    uint8_t motorPoleCount;
 } motorConfig_t;
 
 PG_DECLARE(motorConfig_t, motorConfig);
@@ -952,6 +955,7 @@ float mixerGetThrottle(void);
 bool isRssiConfigured(void);
 int16_t getMotorOutputLow();
 int16_t getMotorOutputHigh();
+uint16_t getDshotTelemetry(uint8_t i);
 /* FAILSAFE END */
 
 #define PARAM_NAME_GYRO_HARDWARE_LPF "gyro_hardware_lpf"

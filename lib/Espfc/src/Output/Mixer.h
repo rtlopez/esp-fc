@@ -43,9 +43,10 @@ class Mixer
         escServo.begin(servoConf);
         _model.state.escServo = _servo = &escServo;
         _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
-
-        _erpmToHz = ERPM_PER_LSB / SECONDS_PER_MINUTE / (_model.config.output.motorPoles / 2.0f);
       }
+      _erpmToHz = ERPM_PER_LSB / SECONDS_PER_MINUTE / (_model.config.output.motorPoles / 2.0f);
+      _statsCounterMax = _model.state.mixerTimer.rate / 2;
+      _statsCounter = 0;
 
       for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
       {
@@ -63,6 +64,15 @@ class Mixer
           _motor->attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1000);
           _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
         }
+        _model.state.outputTelemetryErrors[i] = 0;
+        _model.state.outputTelemetryErrorsSum[i] = 0;
+        _model.state.outputTelemetryErrorsCount[i] = 0;
+        _model.state.outputTelemetryTemperature[i] = 0;
+        _model.state.outputTelemetryCurrent[i] = 0;
+        _model.state.outputTelemetryVoltage[i] = 0;
+        _model.state.outputTelemetryErpm[i] = 0;
+        _model.state.outputTelemetryRpm[i] = 0;
+        _model.state.outputTelemetryFreq[i] = 0;
       }
       motorInitEscDevice(_motor);
 
@@ -85,6 +95,7 @@ class Mixer
       float outputs[OUTPUT_CHANNELS];
       const MixerConfig& mixer = _model.state.currentMixer;
 
+      readTelemetry();
       updateMixer(mixer, outputs);
       writeOutput(mixer, outputs);
 
@@ -258,11 +269,7 @@ class Mixer
           }
         }
       }
-      applyOutput();
-    }
 
-    void applyOutput()
-    {
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         const OutputChannelConfig& och = _model.config.output.channel[i];
@@ -278,13 +285,28 @@ class Mixer
 
       if(_motor) _motor->apply();
       if(_servo) _servo->apply();
+    }
+
+    void readTelemetry()
+    {
+      Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_READ);
+      if(!_model.config.output.dshotTelemetry || !_motor) return;
 
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         const OutputChannelConfig& och = _model.config.output.channel[i];
-        if(och.servo || !_motor || !_model.config.output.dshotTelemetry) continue;
+        if(och.servo) continue;
         uint32_t value = _motor->telemetry(i);
         value = EscDriver::gcrToRawValue(value);
+
+        _model.state.outputTelemetryErrorsCount[i]++;
+
+        if(value == EscDriver::INVALID_TELEMETRY_VALUE)
+        {
+          _model.state.outputTelemetryErrorsSum[i]++;
+          continue;
+        }
+
         // Decode Extended DSHOT telemetry
         switch (value & 0x0f00)
         {
@@ -318,7 +340,7 @@ class Mixer
             break;
           default:
             value = EscDriver::convertToValue(value);
-            uint32_t erpm = EscDriver::convertToErpm(value);
+            uint32_t erpm = _model.state.outputTelemetryErpm[i] = EscDriver::convertToErpm(value);
             if(_model.config.debugMode == DEBUG_DSHOT_RPM_TELEMETRY)
             {
               _model.state.debug[i] = erpm;
@@ -327,6 +349,25 @@ class Mixer
             _model.state.outputTelemetryFreq[i] = erpmToHz(erpm);
             break;
         }
+      }
+
+      _statsCounter++;
+      if(_statsCounter >= _statsCounterMax)
+      {
+        for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+        {
+          if(_model.state.outputTelemetryErrorsCount[i])
+          {
+            _model.state.outputTelemetryErrors[i] = _model.state.outputTelemetryErrorsSum[i] * 10000 / _model.state.outputTelemetryErrorsCount[i];
+            if(_model.config.debugMode == DEBUG_DSHOT_RPM_ERRORS)
+            {
+              _model.state.debug[i] = _model.state.outputTelemetryErrors[i];
+            }
+          }
+          _model.state.outputTelemetryErrorsCount[i] = 0;
+          _model.state.outputTelemetryErrorsSum[i] = 0;
+        }
+        _statsCounter = 0;
       }
     }
 
@@ -355,6 +396,8 @@ class Mixer
 
     EscDriver escMotor;
     EscDriver escServo;
+    uint32_t _statsCounter;
+    uint32_t _statsCounterMax;
     float _erpmToHz;
 };
 
