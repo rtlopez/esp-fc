@@ -56,6 +56,7 @@ class EscDriverEsp8266: public EscDriverBase
     int write(size_t channel, int pulse) IRAM_ATTR;
     void apply() IRAM_ATTR;
     int pin(size_t channel) const;
+    uint32_t telemetry(size_t channel) const;
     static void handle(void * p, void * x) IRAM_ATTR;
 
   private:

@@ -168,6 +168,11 @@ int EscDriverEsp8266::pin(size_t channel) const
   return _slots[channel].pin;
 }
 
+uint32_t EscDriverEsp8266::telemetry(size_t channel) const
+{
+  return 0;
+}
+
 int EscDriverEsp8266::write(size_t channel, int pulse)
 {
   if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;

@@ -43,6 +43,7 @@ class EscDriverRP2040: public EscDriverBase
     int attach(size_t channel, int pin, int pulse) IRAM_ATTR;
     int write(size_t channel, int pulse) IRAM_ATTR;
     int pin(size_t channel) const;
+    uint32_t telemetry(size_t channel) const;
     void apply() IRAM_ATTR;
 
   private:

@@ -332,7 +332,7 @@ class Mixer
 
     float inline erpmToHz(float erpm)
     {
-      // rpm = (erpm * ERPM_PER_LSB) / (motorConfig()->motorPoleCount / 2)
+      // rpm = (erpm * ERPM_PER_LSB) / (_model.config.output.motorPoles / 2)
       // _erpmToHz = ERPM_PER_LSB / SECONDS_PER_MINUTE / (_model.config.output.motorPoles / 2.0f);
       return _erpmToHz * erpm;
     }

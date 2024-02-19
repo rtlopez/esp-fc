@@ -83,6 +83,11 @@ int EscDriverRP2040::pin(size_t channel) const
   return _slots[channel].pin;
 }
 
+uint32_t EscDriverRP2040::telemetry(size_t channel) const
+{
+  return 0;
+}
+
 bool EscDriverRP2040::isSliceDriven(int slice)
 {
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i) {

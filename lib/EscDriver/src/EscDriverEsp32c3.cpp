@@ -88,6 +88,11 @@ int EscDriverEsp32c3::pin(size_t channel) const
   return _slots[channel].pin;
 }
 
+uint32_t EscDriverEsp32c3::telemetry(size_t channel) const
+{
+  return 0;
+}
+
 void EscDriverEsp32c3::apply()
 {
   if(_protocol == ESC_PROTOCOL_DISABLED) return;

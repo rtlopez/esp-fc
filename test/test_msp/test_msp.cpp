@@ -2,6 +2,7 @@
 #include <ArduinoFake.h>
 #include <EspGpio.h>
 #include <EscDriver.h>
+#include <printf.h>
 #include "Msp/Msp.h"
 #include "Msp/MspParser.h"
 

@@ -172,7 +172,7 @@ class Model
 
     bool armingDisabled() const /* IRAM_ATTR */
     {
-      return false;
+      //return false;
       return state.armingDisabledFlags != 0;
     }
 

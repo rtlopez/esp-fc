@@ -315,24 +315,24 @@ void EscDriverEsp32::transmitAll()
 
 void EscDriverEsp32::readTelemetry()
 {
-  PIN_DEBUG(HIGH);
-  uint32_t bit_len = getAnalogPulse(2000);
+  //PIN_DEBUG(HIGH);
+  uint32_t bit_len = getAnalogPulse(2136);
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
     if(!_digital || !_dshot_tlm) continue;
     if(!_channel[i].attached()) continue;
 
-    HardwareSerial* s = (i == 0 && _timer.check()) ? &Serial : nullptr;
+    //HardwareSerial* s = (i == 0 && _timer.check()) ? &Serial : nullptr;
 
     RingbufHandle_t rb = NULL;
     if(ESP_OK != rmt_get_ringbuf_handle((rmt_channel_t)i, &rb)) continue;
 
     size_t rmt_len = 0;
     rmt_item32_t* data = (rmt_item32_t*)xRingbufferReceive(rb, &rmt_len, 0);
-    if(s) { s->print((uint8_t)rmt_len); }
+    //if(s) { s->print((uint8_t)rmt_len); }
     if (data)
     {
-      for(size_t j = 0; j < rmt_len >> 2; j++)
+      /*for(size_t j = 0; j < rmt_len >> 2; j++)
       {
         if(!data[j].duration0) break;
         if(s) s->print(' ');
@@ -345,19 +345,19 @@ void EscDriverEsp32::readTelemetry()
         if(s) s->print(data[j].level1);
         if(s) s->print(':');
         if(s) s->print(data[j].duration1);
-      }
+      }*/
       uint32_t value = extractTelemetryGcr((uint32_t*)data, rmt_len >> 2, bit_len);
 
-      if(s) s->print(' ');
-      if(s) s->print(value, HEX);
+      //if(s) s->print(' ');
+      //if(s) s->print(value, HEX);
       
       vRingbufferReturnItem(rb, (void *)data);
       
       _channel[i].telemetryValue = value;
     }
-    if(s) s->print('\n');
+    //if(s) s->print('\n');
   }
-  PIN_DEBUG(LOW);
+  //PIN_DEBUG(LOW);
 }
 
 void EscDriverEsp32::writeAnalogCommand(uint8_t channel, int32_t pulse)

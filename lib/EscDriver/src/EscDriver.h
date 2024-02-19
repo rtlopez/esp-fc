@@ -97,26 +97,31 @@ class EscDriverBase
       {
         uint32_t duration0 = data[i] & 0x7fff;
         if(!duration0) break;
-
         uint32_t level0 = (data[i] >> 15) & 0x01;
         uint32_t len0 = durationToBitLen(duration0, bitLen);
-        value = pushBits(value, level0, len0);
-        bitCount += len0;
+        if(len0)
+        {
+          value = pushBits(value, level0, len0);
+          bitCount += len0;
+        }
 
         uint32_t duration1 = (data[i] >> 16) & 0x7fff;
         if(!duration1) break;
         uint32_t level1 = (data[i] >> 31) & 0x01;
         uint32_t len1 = durationToBitLen(duration1, bitLen);
-        value = pushBits(value, level1, len1);
-        bitCount += len1;
+        if(len1)
+        {
+          value = pushBits(value, level1, len1);
+          bitCount += len1;
+        }
       }
 
       // fill missing bits with 1
       if(bitCount < 21)
       {
-        value = pushBits(value, 1, 21 - bitCount);
+        value = pushBits(value, 0x1, 21 - bitCount);
       }
-      value = value ^ (value >> 1); // extract gcr
+      //value = value ^ (value >> 1); // extract gcr
 
       return value;
     }
@@ -146,6 +151,8 @@ class EscDriverBase
 
     static uint32_t gcrToRawValue(uint32_t value)
     {
+      value = value ^ (value >> 1); // extract gcr
+
       constexpr uint32_t iv = 0xffffffff; // invalid code
       // First bit is start bit so discard it.
       value &= 0xfffff;
