@@ -74,6 +74,7 @@ class EscDriverEsp32: public EscDriverBase
         uint16_t dshot_t0l;
         uint16_t dshot_t1h;
         uint16_t dshot_t1l;
+        uint16_t dshot_tlm_bit_len;
         uint32_t telemetryValue;
     };
 
@@ -104,8 +105,7 @@ class EscDriverEsp32: public EscDriverBase
     uint32_t getClockDivider() const;
     uint32_t getPulseMin() const;
     uint32_t getPulseMax() const;
-    uint32_t getPulseInterval() const;
-    uint32_t getAnalogPulse(int32_t ns) const;
+    uint32_t nsToTicks(uint32_t ns) const;
     uint16_t getDshotPulse(uint32_t width) const;
     bool isDigital(EscProtocol protocol) const;
 

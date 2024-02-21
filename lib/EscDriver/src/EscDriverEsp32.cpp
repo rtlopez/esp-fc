@@ -37,7 +37,8 @@ IRAM_ATTR static esp_err_t _rmt_fill_tx_items(rmt_channel_t channel, const rmt_i
 }
 IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
 {
-  if(tx_idx_rst) {
+  if(tx_idx_rst)
+  {
     rmt_ll_tx_reset_pointer(&RMT, channel); // BC
   }
   rmt_ll_rx_set_mem_owner(&RMT, channel, RMT_MEM_OWNER_TX); // moved to _rmt_fill_tx_items
@@ -53,7 +54,8 @@ IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
 static void IRAM_ATTR _rmt_zero_mem(rmt_channel_t channel, size_t len)
 {
   volatile rmt_item32_t *data = (rmt_item32_t *)RMTMEM.chan[channel].data32;
-  for (size_t idx = 0; idx < len; idx++) {
+  for (size_t idx = 0; idx < len; idx++)
+  {
     data[idx].val = 0;
   }
 }
@@ -140,7 +142,7 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   _channel[i].divider = getClockDivider();
   _channel[i].pulse_min = getPulseMin();
   _channel[i].pulse_max = getPulseMax();
-  _channel[i].pulse_space = getPulseInterval();
+  _channel[i].pulse_space = nsToTicks(_interval * 1000);
 
   // specification 0:37%, 1:75% of 1670ns for dshot600
   //_channel[i].dshot_t0h = getDshotPulse(625);
@@ -149,10 +151,11 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   //_channel[i].dshot_t1l = getDshotPulse(420);
 
   // betaflight 0:35%, 1:70% of 1670ns for dshot600
-  _channel[i].dshot_t0h = getDshotPulse(584 - 16);
-  _channel[i].dshot_t0l = getDshotPulse(1086 - 32);
-  _channel[i].dshot_t1h = getDshotPulse(1170 - 32);
-  _channel[i].dshot_t1l = getDshotPulse(500 - 16);
+  _channel[i].dshot_t0h = getDshotPulse(584);
+  _channel[i].dshot_t0l = getDshotPulse(1086);
+  _channel[i].dshot_t1h = getDshotPulse(1170);
+  _channel[i].dshot_t1l = getDshotPulse(500);
+  _channel[i].dshot_tlm_bit_len = (_channel[i].dshot_t0h + _channel[i].dshot_t0l) * 4 / 5;
 
   instances[i] = this;
 
@@ -164,12 +167,12 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
 
   // add RX specifics
   int rx_ch = RMT_ENCODE_RX_CHANNEL(i);
-  rmt_ll_rx_set_idle_thres(&RMT, rx_ch, getAnalogPulse(30000)); // max bit len, (30us)
-  rmt_ll_rx_set_filter_thres(&RMT, rx_ch, 30); // min bit len, 80 ticks = 1us for div = 1, max value = 255
-  rmt_ll_rx_enable_filter(&RMT, rx_ch, 1);
+  rmt_ll_rx_set_idle_thres(&RMT, rx_ch, nsToTicks(30000)); // max bit len, (30us)
+  rmt_ll_rx_set_filter_thres(&RMT, rx_ch, 40); // min bit len, 80 ticks = 1us for div = 1, max value = 255
+  rmt_ll_rx_enable_filter(&RMT, rx_ch, true);
   _rmt_zero_mem((rmt_channel_t)rx_ch, RMT_MEM_ITEM_NUM);
 
-#if SOC_RMT_SUPPORT_TX_SYNCHRO
+#if 0 && SOC_RMT_SUPPORT_TX_SYNCHRO
   // sync all channels
   if(!_async)
   {
@@ -248,7 +251,7 @@ void EscDriverEsp32::enableRx(rmt_channel_t channel)
   rmt_ll_rx_reset_pointer(&RMT, rx_ch);
   rmt_ll_clear_rx_end_interrupt(&RMT, rx_ch);
   rmt_ll_enable_rx_end_interrupt(&RMT, rx_ch, true);
-  _rmt_zero_mem(rx_ch, 1); // clear first item of rx buffer to avoid reading tx items
+  _rmt_zero_mem(rx_ch, 2); // clear first item of rx buffer to avoid reading tx items
   rmt_ll_rx_enable(&RMT, rx_ch, true);
 }
 
@@ -316,7 +319,6 @@ void EscDriverEsp32::transmitAll()
 void EscDriverEsp32::readTelemetry()
 {
   //PIN_DEBUG(HIGH);
-  uint32_t bit_len = getAnalogPulse(2136);
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
     if(!_digital || !_dshot_tlm) continue;
@@ -346,7 +348,7 @@ void EscDriverEsp32::readTelemetry()
         if(s) s->print(':');
         if(s) s->print(data[j].duration1);
       }*/
-      uint32_t value = extractTelemetryGcr((uint32_t*)data, rmt_len >> 2, bit_len);
+      uint32_t value = extractTelemetryGcr((uint32_t*)data, rmt_len >> 2, _channel[i].dshot_tlm_bit_len);
 
       //if(s) s->print(' ');
       //if(s) s->print(value, HEX);
@@ -426,7 +428,7 @@ uint32_t EscDriverEsp32::getClockDivider() const
     case ESC_PROTOCOL_PWM:        return 24;
     case ESC_PROTOCOL_ONESHOT125: return 4;
     case ESC_PROTOCOL_ONESHOT42:  return 2;
-    case ESC_PROTOCOL_MULTISHOT:  return 2;
+    case ESC_PROTOCOL_MULTISHOT:  return 1;
     case ESC_PROTOCOL_BRUSHED:    return 8;
     default: return 1;
   }
@@ -436,10 +438,10 @@ uint32_t EscDriverEsp32::getPulseMin() const
 {
   switch (_protocol)
   {
-    case ESC_PROTOCOL_PWM:        return getAnalogPulse(1000 * 1000);
-    case ESC_PROTOCOL_ONESHOT125: return getAnalogPulse(125 * 1000);
-    case ESC_PROTOCOL_ONESHOT42:  return getAnalogPulse(42 * 1000);
-    case ESC_PROTOCOL_MULTISHOT:  return getAnalogPulse(5 * 1000);
+    case ESC_PROTOCOL_PWM:        return nsToTicks(1000 * 1000);
+    case ESC_PROTOCOL_ONESHOT125: return nsToTicks(125 * 1000);
+    case ESC_PROTOCOL_ONESHOT42:  return nsToTicks(42 * 1000);
+    case ESC_PROTOCOL_MULTISHOT:  return nsToTicks(5 * 1000);
     case ESC_PROTOCOL_BRUSHED:    return 0;
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:
@@ -453,11 +455,11 @@ uint32_t EscDriverEsp32::getPulseMax() const
 {
   switch (_protocol)
   {
-  case ESC_PROTOCOL_PWM:        return getAnalogPulse(2000 * 1000);
-  case ESC_PROTOCOL_ONESHOT125: return getAnalogPulse(250 * 1000);
-  case ESC_PROTOCOL_ONESHOT42:  return getAnalogPulse(84 * 1000);
-  case ESC_PROTOCOL_MULTISHOT:  return getAnalogPulse(25 * 1000);
-  case ESC_PROTOCOL_BRUSHED:    return getAnalogPulse(_interval * 1000);
+  case ESC_PROTOCOL_PWM:        return nsToTicks(2000 * 1000);
+  case ESC_PROTOCOL_ONESHOT125: return nsToTicks(250 * 1000);
+  case ESC_PROTOCOL_ONESHOT42:  return nsToTicks(84 * 1000);
+  case ESC_PROTOCOL_MULTISHOT:  return nsToTicks(25 * 1000);
+  case ESC_PROTOCOL_BRUSHED:    return nsToTicks(_interval * 1000);
   case ESC_PROTOCOL_DSHOT150:
   case ESC_PROTOCOL_DSHOT300:
   case ESC_PROTOCOL_DSHOT600:
@@ -466,25 +468,20 @@ uint32_t EscDriverEsp32::getPulseMax() const
   }
 }
 
-uint32_t EscDriverEsp32::getPulseInterval() const
-{
-  return getAnalogPulse(_interval * 1000);
-}
-
-uint32_t EscDriverEsp32::getAnalogPulse(int32_t ns) const
+uint32_t EscDriverEsp32::nsToTicks(uint32_t ns) const
 {
   int div = getClockDivider();
-  return ns / ((div * DURATION_CLOCK) / 2);
+  // multiply by 2 as DURATION_CLOCK is aleredy doubled, and round to nearest integer
+  return (ns * 2 + ((div * DURATION_CLOCK) >> 1)) / div / DURATION_CLOCK;
 }
 
 uint16_t EscDriverEsp32::getDshotPulse(uint32_t width) const
 {
-  int div = getClockDivider();
   switch (_protocol)
   {
-    case ESC_PROTOCOL_DSHOT150: return ((width * 4) / (div * DURATION_CLOCK / 2));
-    case ESC_PROTOCOL_DSHOT300: return ((width * 2) / (div * DURATION_CLOCK / 2));
-    case ESC_PROTOCOL_DSHOT600: return ((width * 1) / (div * DURATION_CLOCK / 2));
+    case ESC_PROTOCOL_DSHOT150: return nsToTicks(width * 4);
+    case ESC_PROTOCOL_DSHOT300: return nsToTicks(width * 2);
+    case ESC_PROTOCOL_DSHOT600: return nsToTicks(width * 1);
     case ESC_PROTOCOL_BRUSHED:
     case ESC_PROTOCOL_PWM:
     case ESC_PROTOCOL_ONESHOT125:

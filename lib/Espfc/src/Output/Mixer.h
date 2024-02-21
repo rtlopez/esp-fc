@@ -6,9 +6,6 @@
 #include "EscDriver.h"
 #include "platform.h"
 
-#define ERPM_PER_LSB 100.0f
-#define SECONDS_PER_MINUTE 60
-
 namespace Espfc {
 
 namespace Output {
@@ -44,7 +41,7 @@ class Mixer
         _model.state.escServo = _servo = &escServo;
         _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
       }
-      _erpmToHz = ERPM_PER_LSB / SECONDS_PER_MINUTE / (_model.config.output.motorPoles / 2.0f);
+      _erpmToHz = EscDriver::getErpmToHzRatio(_model.config.output.motorPoles);
       _statsCounterMax = _model.state.mixerTimer.rate / 2;
       _statsCounter = 0;
 
@@ -373,14 +370,12 @@ class Mixer
 
     float inline erpmToHz(float erpm)
     {
-      // rpm = (erpm * ERPM_PER_LSB) / (_model.config.output.motorPoles / 2)
-      // _erpmToHz = ERPM_PER_LSB / SECONDS_PER_MINUTE / (_model.config.output.motorPoles / 2.0f);
       return _erpmToHz * erpm;
     }
 
     float inline erpmToRpm(float erpm)
     {
-      return erpmToHz(erpm) * SECONDS_PER_MINUTE;
+      return erpmToHz(erpm) * EscDriver::SECONDS_PER_MINUTE;
     }
 
     bool _stop(void)

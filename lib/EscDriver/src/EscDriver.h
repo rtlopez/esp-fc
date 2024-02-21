@@ -121,18 +121,25 @@ class EscDriverBase
       {
         value = pushBits(value, 0x1, 21 - bitCount);
       }
-      //value = value ^ (value >> 1); // extract gcr
 
       return value;
     }
 
-    static const uint32_t INVALID_TELEMETRY_VALUE = 0xffff;
+    static constexpr uint32_t INVALID_TELEMETRY_VALUE = 0xffff;
+    static constexpr int SECONDS_PER_MINUTE = 60;
+    static constexpr float ERPM_PER_LSB = 100.0f;
+
+    static inline float getErpmToHzRatio(int poles)
+    {
+      return ERPM_PER_LSB / SECONDS_PER_MINUTE / (poles / 2.0f);
+    }
 
     static inline uint32_t convertToErpm(uint32_t value)
     {
       if(!value) return 0;
 
-      if(!value || value == INVALID_TELEMETRY_VALUE) {
+      if(!value || value == INVALID_TELEMETRY_VALUE)
+      {
         return INVALID_TELEMETRY_VALUE;
       }
 
@@ -143,7 +150,8 @@ class EscDriverBase
     static inline uint32_t convertToValue(uint32_t value)
     {
       // eRPM range
-      if(value == 0x0fff) {
+      if(value == 0x0fff)
+      {
           return 0;
       }
 
@@ -172,11 +180,11 @@ class EscDriverBase
       csum = csum ^ (csum >> 8); // xor bytes
       csum = csum ^ (csum >> 4); // xor nibbles
 
-      if((csum & 0xf) != 0xf || decodedValue > 0xffff) {
-        value = INVALID_TELEMETRY_VALUE;
-      } else {
-        value = decodedValue >> 4;
+      if((csum & 0xf) != 0xf || decodedValue > 0xffff)
+      {
+        return INVALID_TELEMETRY_VALUE;
       }
+      value = decodedValue >> 4;
 
       return value;
     }
