@@ -174,12 +174,14 @@ struct ModelState
   Filter gyroFilter3[3];
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
-  Filter gyroDynNotchFilter[3][6];
+  Filter gyroDynNotchFilter[6][3];
   Filter gyroImuFilter[3];
 
   Filter accelFilter[3];
   Filter magFilter[3];
   Filter inputFilter[4];
+  Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
+  Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][3];
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;

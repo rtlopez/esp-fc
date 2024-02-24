@@ -330,6 +330,12 @@ class Blackbox
       rxConfigMutable()->airModeActivateThreshold = 40;
       rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
 
+      rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.rpmFilterHarmonics;
+      rpmFilterConfigMutable()->rpm_filter_q = _model.config.rpmFilterQ;
+      rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.rpmFilterMinFreq;
+      rpmFilterConfigMutable()->rpm_filter_fade_range_hz = 0;
+      rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.rpmFilterFreqLpf;
+
       blackboxInit();
 
       return 1;

@@ -1052,11 +1052,10 @@ class MspProcessor
           r.writeU16(_model.config.dynamicFilter.q); // dyn_notch_q
           r.writeU16(_model.config.dynamicFilter.min_freq); // dyn_notch_min_hz
           // rpm filter
-          r.writeU8(0);  // gyro_rpm_notch_harmonics
-          r.writeU8(0);  // gyro_rpm_notch_min
+          r.writeU8(_model.config.rpmFilterHarmonics);  // gyro_rpm_notch_harmonics
+          r.writeU8(_model.config.rpmFilterMinFreq);  // gyro_rpm_notch_min
           // 1.43+
           r.writeU16(_model.config.dynamicFilter.max_freq); // dyn_notch_max_hz
-
           break;
 
         case MSP_SET_FILTER_CONFIG:
@@ -1098,8 +1097,8 @@ class MspProcessor
             _model.config.dynamicFilter.width = m.readU8();  // dyn_notch_width_percent
             _model.config.dynamicFilter.q = m.readU16(); // dyn_notch_q
             _model.config.dynamicFilter.min_freq = m.readU16(); // dyn_notch_min_hz
-            m.readU8();  // gyro_rpm_notch_harmonics
-            m.readU8();  // gyro_rpm_notch_min
+            _model.config.rpmFilterHarmonics = m.readU8();  // gyro_rpm_notch_harmonics
+            _model.config.rpmFilterMinFreq = m.readU8();  // gyro_rpm_notch_min
           }
           // 1.43+
           if (m.remain() >= 1) {
@@ -1178,7 +1177,6 @@ class MspProcessor
           r.writeU8(_model.config.output.motorLimit); // motor_output_limit
           r.writeU8(0); // auto_profile_cell_count
           r.writeU8(0); // idle_min_rpm
-
           break;
 
         case MSP_SET_PID_ADVANCED:

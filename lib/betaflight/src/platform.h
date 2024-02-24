@@ -9,6 +9,7 @@
 #define USE_DYN_NOTCH_FILTER
 #define USE_ITERM_RELAX
 #define USE_DSHOT_TELEMETRY
+#define USE_RPM_FILTER
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -403,6 +404,17 @@ typedef struct motorConfig_s {
 } motorConfig_t;
 
 PG_DECLARE(motorConfig_t, motorConfig);
+
+typedef struct rpmFilterConfig_s {
+    uint8_t  rpm_filter_harmonics;     // how many harmonics should be covered with notches? 0 means filter off
+    //uint8_t  rpm_filter_weights[RPM_FILTER_HARMONICS_MAX];  // effect or "weight" (0% - 100%) of each RPM filter harmonic
+    uint8_t  rpm_filter_min_hz;        // minimum frequency of the notches
+    uint16_t rpm_filter_fade_range_hz; // range in which to gradually turn off notches down to minHz
+    uint16_t rpm_filter_q;             // q of the notches
+    uint16_t rpm_filter_lpf_hz;        // the cutoff of the lpf on reported motor rpm
+} rpmFilterConfig_t;
+
+PG_DECLARE(rpmFilterConfig_t, rpmFilterConfig);
 
 extern float motor[MAX_SUPPORTED_MOTORS];
 extern float motor_disarmed[MAX_SUPPORTED_MOTORS];

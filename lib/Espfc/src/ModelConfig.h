@@ -226,9 +226,13 @@ enum InputFilterType : uint8_t {
 
 const size_t MODEL_NAME_LEN  = 16;
 const size_t AXES            = 4;
+const size_t AXES_RPY        = 3;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
 const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
+
+const size_t RPM_FILTER_MOTOR_MAX = 4;
+const size_t RPM_FILTER_HARMONICS_MAX = 3;
 
 enum PinFunction {
 #ifdef ESPFC_INPUT
@@ -643,6 +647,10 @@ class ModelConfig
     WirelessConfig wireless;
 
     DynamicFilterConfig dynamicFilter;
+    uint8_t rpmFilterHarmonics;
+    uint8_t rpmFilterMinFreq;
+    int16_t rpmFilterQ;
+    uint8_t rpmFilterFreqLpf;
 
     ModelConfig()
     {
@@ -744,6 +752,11 @@ class ModelConfig
       //dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
       //dtermFilter = FilterConfig(FILTER_PT1, 113);
       //dtermFilter2 = FilterConfig(FILTER_PT1, 113);
+
+      rpmFilterHarmonics = 3;
+      rpmFilterMinFreq = 100;
+      rpmFilterQ = 500;
+      rpmFilterFreqLpf = 150;
 
       gyroFilter3 = FilterConfig(FILTER_PT1, 150);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off

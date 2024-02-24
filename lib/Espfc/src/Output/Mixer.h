@@ -291,6 +291,7 @@ class Mixer
 
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
+        if(i >= RPM_FILTER_MOTOR_MAX) continue;
         const OutputChannelConfig& och = _model.config.output.channel[i];
         if(och.servo) continue;
         uint32_t value = _motor->telemetry(i);
@@ -337,15 +338,20 @@ class Mixer
             break;
           default:
             value = EscDriver::convertToValue(value);
-            uint32_t erpm = _model.state.outputTelemetryErpm[i] = EscDriver::convertToErpm(value);
+            _model.state.outputTelemetryErpm[i] = EscDriver::convertToErpm(value);
             if(_model.config.debugMode == DEBUG_DSHOT_RPM_TELEMETRY)
             {
-              _model.state.debug[i] = erpm;
+              _model.state.debug[i] = _model.state.outputTelemetryErpm[i];
             }
-            _model.state.outputTelemetryRpm[i] = erpmToRpm(erpm);
-            _model.state.outputTelemetryFreq[i] = erpmToHz(erpm);
+            _model.state.outputTelemetryRpm[i] = erpmToRpm(_model.state.outputTelemetryErpm[i]);
             break;
         }
+      }
+
+      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+      {
+        if(i >= RPM_FILTER_MOTOR_MAX) continue;
+        _model.state.outputTelemetryFreq[i] = _model.state.rpmFreqFilter[i].update(erpmToHz(_model.state.outputTelemetryErpm[i]));
       }
 
       _statsCounter++;
