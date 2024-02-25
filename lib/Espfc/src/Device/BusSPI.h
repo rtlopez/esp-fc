@@ -54,7 +54,7 @@ class BusSPI: public BusDevice
     void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed)
     {
       _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
-      digitalWrite(devAddr, LOW);
+      EspGpio::digitalWrite(devAddr, LOW);
 #if defined (ARCH_RP2040)
       _dev.transfer(regAddr);
       _dev.transfer(in, out, length);
@@ -62,7 +62,7 @@ class BusSPI: public BusDevice
       _dev.transfer(regAddr);
       _dev.transferBytes(in, out, length);
 #endif
-      digitalWrite(devAddr, HIGH);
+      EspGpio::digitalWrite(devAddr, HIGH);
       _dev.endTransaction();
     }
     ESPFC_SPI_0_DEV_T& _dev;

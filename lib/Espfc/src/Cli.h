@@ -1234,6 +1234,7 @@ class Cli
           float load = _model.state.stats.getLoad(c);
           int freq = lrintf(_model.state.stats.getFreq(c));
           int real = lrintf(_model.state.stats.getReal(c));
+          if(freq == 0) continue;
 
           s.print(FPSTR(_model.state.stats.getName(c)));
           s.print(": ");

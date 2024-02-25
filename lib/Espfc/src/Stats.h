@@ -98,9 +98,9 @@ class Stats
       if(!timer.check()) return;
       for(size_t i = 0; i < COUNTER_COUNT; i++)
       {
-        _avg[i] = (float)_sum[i] / timer.delta;
+        _avg[i] = (float)(_sum[i] + (_count[i] >> 1)) / timer.delta;
         _freq[i] = (float)_count[i] * 1e6 / timer.delta;
-        _real[i] = _count[i] > 0 ? ((float)_sum[i] / _count[i]) : 0.0f;
+        _real[i] = _count[i] > 0 ? ((float)(_sum[i] + (_count[i] >> 1)) / _count[i]) : 0.0f;
         _sum[i] = 0;
         _count[i] = 0;
       }
@@ -112,11 +112,11 @@ class Stats
     }
 
     /**
-     * @brief Get the Time of counter normalized to one ms
+     * @brief Get the Time of counter normalized to 1 ms
      */
     float getTime(StatCounter c) const
     {
-      return _avg[c] * timer.interval * 0.001f;
+      return _avg[c] * 1000.0f;
     }
 
     float getReal(StatCounter c) const

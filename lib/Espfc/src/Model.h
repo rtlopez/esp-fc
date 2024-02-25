@@ -446,7 +446,7 @@ class Model
       state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(2);
+      state.stats.timer.setRate(4);
 #if defined(ESPFC_MULTI_CORE)
       state.serialTimer.setRate(4000);
 #else
@@ -485,7 +485,7 @@ class Model
         state.gyroFilter2[i].begin(config.gyroFilter2, gyroFilterRate);
         state.gyroFilter3[i].begin(config.gyroFilter3, gyroPreFilterRate);
         state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
-        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), gyroFilterRate);
+        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 3), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
         {
           state.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.rpmFilterFreqLpf), gyroFilterRate);
