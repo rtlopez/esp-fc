@@ -172,8 +172,11 @@ class Model
 
     bool armingDisabled() const /* IRAM_ATTR */
     {
-      //return false;
+#if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
+      return false;
+#else
       return state.armingDisabledFlags != 0;
+#endif
     }
 
     void setArmingDisabled(ArmingDisabledFlags flag, bool value)
@@ -492,7 +495,7 @@ class Model
           for(size_t n = 0; n < config.rpmFilterHarmonics; n++)
           {
             int center = Math::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.rpmFilterHarmonics, config.rpmFilterMinFreq, gyroFilterRate / 2);
-            state.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center - 10), gyroFilterRate);
+            state.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
           }
         }
         if(magActive())

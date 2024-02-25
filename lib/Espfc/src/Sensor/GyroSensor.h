@@ -187,6 +187,7 @@ class GyroSensor: public BaseSensor
             }
           }
         }
+        _model.setDebug(DEBUG_RPM_FILTER, m, lrintf(_model.state.outputTelemetryFreq[m]));
       }
     }
 

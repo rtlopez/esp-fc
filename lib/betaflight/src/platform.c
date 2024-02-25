@@ -69,6 +69,10 @@ float motor_disarmed[MAX_SUPPORTED_MOTORS];
 uint32_t targetPidLooptime;
 float rcCommand[4];
 
+const char* const lookupTableMixerType[] = {
+    "LEGACY", "LINEAR", "DYNAMIC", "EZLANDING",
+};
+
 int gcd(int num, int denom)
 {
     if (denom == 0) return num;
