@@ -7,21 +7,14 @@
 #include "Device/InputDevice.h"
 #include "Math/Utils.h"
 
-// Check Tx identity -> model
-//#define CheckMac
 
-// Set the wifi channel (1-13) -> model
-#define wifi_channel 13
-
-// REPLACE WITH YOUR RECEIVER MAC Address -> model
-uint8_t TxMacAddr[] = {0xA8,0x42,0xE3,0xCD,0x5F,0x04};
 
 namespace Espfc {
 
 namespace Device {
 
-struct PacketData {
-  //uint8_t syncByte = 0xf0;
+struct ControllerData {
+  uint8_t syncByte: 1;
   uint16_t A: 10;
   uint16_t E: 10;
   uint16_t R: 10;
@@ -33,21 +26,61 @@ struct PacketData {
   uint8_t ch4;
 }_data;
 
-unsigned long lastRecvTime = 0;
-bool _new_data = false;
 int8_t rssi;
 
+struct TelemetryData {
+  uint8_t syncByte: 1;
+
+  uint8_t Battery_v; // int/10 -> fixed point 25.6v max
+}TxData;
+
+//unsigned long lastRecvTime = 0;
+bool _new_data = false;
+
+#define wifi_channel 13 // Set the wifi channel (1-13) -> TODO: scan and choose the best one
+uint8_t TxMacAddr[] = {0xA8,0x42,0xE3,0xCD,0x5F,0x04}; // REPLACE WITH YOUR RECEIVER MAC Address -> TODO: put it into model
+bool pair_status = false; //TODO: should be save in model, can be changed using cil
+
+
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-#ifdef CheckMac
-  char MACAd[6];
-  memcpy(&MACAd, mac, sizeof(MACAd));
-  for (int i = 0; i < 6; i++) {
-    if (MACAd[i] != TxMacAddr[i]) return;
+  if(! pair_status){
+    uint8_t MacAddr[6];
+    memcpy(MacAddr, mac, 6);
+    for (int i = 0; i < 6; i++) {
+      if (MacAddr[i] != TxMacAddr[i]) return;
+    }
   }
-#endif
-  //snprintf(sys_status.StrMac, sizeof(sys_status.StrMac), "%02x:%02x:%02x:%02x:%02x:%02x",mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
   memcpy(&_data, incomingData, sizeof(_data));
-  lastRecvTime = millis();
+  switch (_data.syncByte) {
+  case 0://TODO: telemetry
+    break;
+
+  case 1://pair
+    memcpy(TxMacAddr, mac, 6);
+    pair_status = true;
+
+    // Register peer
+    esp_now_peer_info_t peerInfo = {};
+    memcpy(peerInfo.peer_addr, mac, 6);
+    peerInfo.channel = 0;
+    peerInfo.encrypt = false;
+
+    // Add peer 
+    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+      Serial.println("Failed to add peer"); // TODO: change to log E
+      ESP.restart();
+    }
+
+    // Send pair request
+    TxData.syncByte = 1;
+    esp_now_send(TxMacAddr, (uint8_t *) &TxData, sizeof(TxData));
+
+    //TODO: save
+    return;
+  }
+  //snprintf(sys_status.StrMac, sizeof(sys_status.StrMac), "%02x:%02x:%02x:%02x:%02x:%02x",mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  //lastRecvTime = millis();
   _new_data = true;
 }
 
@@ -109,8 +142,8 @@ class InputESPNOW: public InputDevice
         _channels[7]  = convert(_data.ch4 * 175 / 32 + 800);
         _channels[8]  = convert(((int)rssi + 128) * 175 /32 + 800);
 
-        if(millis() - lastRecvTime > 60) return INPUT_FAILSAFE;
-        if(millis() - lastRecvTime > 100) return INPUT_LOST;
+        //if(millis() - lastRecvTime > 60) return INPUT_FAILSAFE;
+        //if(millis() - lastRecvTime > 100) return INPUT_LOST;
         return INPUT_RECEIVED;
       }
       return INPUT_IDLE;
