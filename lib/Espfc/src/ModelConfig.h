@@ -647,10 +647,13 @@ class ModelConfig
     WirelessConfig wireless;
 
     DynamicFilterConfig dynamicFilter;
+
     uint8_t rpmFilterHarmonics;
     uint8_t rpmFilterMinFreq;
     int16_t rpmFilterQ;
     uint8_t rpmFilterFreqLpf;
+    uint8_t rpmFilterWeights[RPM_FILTER_HARMONICS_MAX];
+    uint8_t rpmFilterFade;
 
     ModelConfig()
     {
@@ -756,6 +759,10 @@ class ModelConfig
       rpmFilterHarmonics = 3;
       rpmFilterMinFreq = 100;
       rpmFilterQ = 500;
+      rpmFilterFade = 50;
+      rpmFilterWeights[0] = 100;
+      rpmFilterWeights[1] = 100;
+      rpmFilterWeights[2] = 100;
       rpmFilterFreqLpf = 150;
 
       gyroFilter3 = FilterConfig(FILTER_PT1, 150);

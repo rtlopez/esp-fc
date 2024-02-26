@@ -342,11 +342,11 @@ class Blackbox
       rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.rpmFilterHarmonics;
       rpmFilterConfigMutable()->rpm_filter_q = _model.config.rpmFilterQ;
       rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.rpmFilterMinFreq;
-      rpmFilterConfigMutable()->rpm_filter_fade_range_hz = 50;
+      rpmFilterConfigMutable()->rpm_filter_fade_range_hz = _model.config.rpmFilterFade;
       rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.rpmFilterFreqLpf;
-      rpmFilterConfigMutable()->rpm_filter_weights[0] = 100;
-      rpmFilterConfigMutable()->rpm_filter_weights[1] = 100;
-      rpmFilterConfigMutable()->rpm_filter_weights[2] = 100;
+      rpmFilterConfigMutable()->rpm_filter_weights[0] = _model.config.rpmFilterWeights[0];
+      rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.rpmFilterWeights[1];
+      rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.rpmFilterWeights[2];
 
       blackboxInit();
 

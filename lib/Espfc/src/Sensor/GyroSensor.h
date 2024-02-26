@@ -38,11 +38,20 @@ class GyroSensor: public BaseSensor
       _sma.begin(_model.config.loopSync);
       _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
       _dyn_notch_sma.begin(_dyn_notch_denom);
-
       _dyn_notch_enabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
       _dyn_notch_debug = _model.config.debugMode == DEBUG_FFT_FREQ || _model.config.debugMode == DEBUG_FFT_TIME;
-      _rpm_enabled = _model.config.rpmFilterHarmonics > 0 && _model.config.output.dshotTelemetry;
 
+      _rpm_enabled = _model.config.rpmFilterHarmonics > 0 && _model.config.output.dshotTelemetry;
+      _rpm_motor_index = 0;
+      _rpm_fade_inv = 1.0f / _model.config.rpmFilterFade;
+      _rpm_min_freq = _model.config.rpmFilterMinFreq;
+      _rpm_max_freq = 0.48f * _model.state.loopTimer.rate;
+      _rpm_q = _model.config.rpmFilterQ * 0.01f;
+
+      for(size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
+      {
+        _rpm_weights[i] = Math::clamp(0.01f * _model.config.rpmFilterWeights[i], 0.0f, 1.0f);
+      }
       for(size_t i = 0; i < 3; i++)
       {
 #ifdef ESPFC_DSP
@@ -169,25 +178,32 @@ class GyroSensor: public BaseSensor
     {
       if(!_rpm_enabled) return;
 
-      const float minFreq = _model.config.rpmFilterMinFreq;
-      const float maxFreq = 0.48f * _model.state.loopTimer.rate;
-      const float q = _model.config.rpmFilterQ * 0.01f;
-      // TODO: optimize, to update filters in steps
-      for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
+      Stats::Measure measure(_model.state.stats, COUNTER_RPM_UPDATE);
+
+      const float motorFreq = _model.state.outputTelemetryFreq[_rpm_motor_index];
+      for(size_t n = 0; n < _model.config.rpmFilterHarmonics; n++)
       {
-        const float motorFreq = _model.state.outputTelemetryFreq[m];
-        for(size_t n = 0; n < _model.config.rpmFilterHarmonics; n++)
+        const float freq = Math::clamp(motorFreq * (n + 1), _rpm_min_freq, _rpm_max_freq);
+        const float freqMargin = freq - _rpm_min_freq;
+        float weight = _rpm_weights[n];
+        if(freqMargin < _model.config.rpmFilterFade)
         {
-          const float freq = motorFreq * (n + 1);
-          if(minFreq < freq && freq < maxFreq)
-          {
-            for(size_t i = 0; i < 3; ++i)
-            {
-              _model.state.rpmFilter[m][n][i].reconfigure(freq, freq, q);
-            }
-          }
+          weight *= freqMargin * _rpm_fade_inv;
         }
-        _model.setDebug(DEBUG_RPM_FILTER, m, lrintf(_model.state.outputTelemetryFreq[m]));
+        _model.state.rpmFilter[_rpm_motor_index][n][0].reconfigure(freq, freq, _rpm_q, weight);
+        for(size_t i = 1; i < 3; ++i)
+        {
+          // copy coefs from roll to pitch and yaw
+          _model.state.rpmFilter[_rpm_motor_index][n][i].reconfigure(_model.state.rpmFilter[_rpm_motor_index][n][0]);
+        }
+      }
+
+      _model.setDebug(DEBUG_RPM_FILTER, _rpm_motor_index, lrintf(_model.state.outputTelemetryFreq[_rpm_motor_index]));
+
+      _rpm_motor_index++;
+      if(_rpm_motor_index >= RPM_FILTER_MOTOR_MAX)
+      {
+        _rpm_motor_index = 0;
       }
     }
 
@@ -315,6 +331,12 @@ class GyroSensor: public BaseSensor
     bool _dyn_notch_enabled;
     bool _dyn_notch_debug;
     bool _rpm_enabled;
+    size_t _rpm_motor_index;
+    float _rpm_weights[3];
+    float _rpm_fade_inv;
+    float _rpm_min_freq;
+    float _rpm_max_freq;
+    float _rpm_q;
 
     Model& _model;
     Device::GyroDevice * _gyro;

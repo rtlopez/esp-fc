@@ -10,6 +10,7 @@ enum StatCounter : int8_t {
   COUNTER_GYRO_READ,
   COUNTER_GYRO_FILTER,
   COUNTER_GYRO_FFT,
+  COUNTER_RPM_UPDATE,
   COUNTER_ACCEL_READ,
   COUNTER_ACCEL_FILTER,
   COUNTER_MAG_READ,
@@ -169,6 +170,7 @@ class Stats
         case COUNTER_GYRO_READ:    return PSTR(" gyro_r");
         case COUNTER_GYRO_FILTER:  return PSTR(" gyro_f");
         case COUNTER_GYRO_FFT:     return PSTR(" gyro_a");
+        case COUNTER_RPM_UPDATE:   return PSTR("  rpm_u");
         case COUNTER_ACCEL_READ:   return PSTR("  acc_r");
         case COUNTER_ACCEL_FILTER: return PSTR("  acc_f");
         case COUNTER_MAG_READ:     return PSTR("  mag_r");

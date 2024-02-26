@@ -87,6 +87,11 @@ class FilterStatePt1 {
       v = 0.f;
     }
 
+    void reconfigure(const FilterStatePt1& from)
+    {
+      k = from.k;
+    }
+
     void init(float rate, float freq)
     {
       k = pt1Gain(rate, freq);
@@ -110,6 +115,10 @@ class FilterStateFir2 {
     }
 
     void init()
+    {
+    }
+
+    void reconfigure(const FilterStateFir2& from)
     {
     }
 
@@ -173,6 +182,15 @@ class FilterStateBiquad {
       this->a2 = a2 / a0;
     }
 
+    void reconfigure(const FilterStateBiquad& from)
+    {
+      b0 = from.b0;
+      b1 = from.b1;
+      b2 = from.b2;
+      a1 = from.a1;
+      a2 = from.a2;
+    }
+
     float update(float n)
     {
       // DF2
@@ -212,6 +230,10 @@ class FilterStateMedian {
 
     }
 
+    void reconfigure(const FilterStateMedian& from)
+    {
+    }
+
     float update(float n)
     {
       v[0] = v[1];
@@ -241,6 +263,11 @@ class FilterStatePt2 {
       k = pt1Gain(rate, freq * correction);
     }
 
+    void reconfigure(const FilterStatePt2& from)
+    {
+      k = from.k;
+    }
+
     float update(float n)
     {
       v[0] += k * (n - v[0]);
@@ -263,6 +290,11 @@ class FilterStatePt3 {
     {
       constexpr float correction = 1.961459177f; // 1 / sqrt(2^(1/n) - 1)
       k = pt1Gain(rate, freq * correction);
+    }
+
+    void reconfigure(const FilterStatePt3& from)
+    {
+      k = from.k;
     }
 
     float update(float n)
@@ -304,7 +336,7 @@ class Filter
         case FILTER_BPF:
           return _state.bq.update(v);
         case FILTER_NOTCH_DF1:
-          return _state.bq.updateDF1(v);
+          return _output_weight * _state.bq.updateDF1(v) + _input_weight * v;
         case FILTER_FIR2:
           return _state.fir2.update(v);
         case FILTER_MEDIAN3:
@@ -353,9 +385,9 @@ class Filter
       reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate);
     }
 
-    void reconfigure(int16_t freq, int16_t cutoff, float q)
+    void reconfigure(int16_t freq, int16_t cutoff, float q, float weight = 1.0f)
     {
-      reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate, q);
+      reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate, q, weight);
     }
 
     void reconfigure(const FilterConfig& config, int rate)
@@ -365,22 +397,23 @@ class Filter
       switch(_conf.type)
       {
         case FILTER_BIQUAD:
-          reconfigure(config, rate, 0.70710678118f); // 1.0f / sqrtf(2.0f); // quality factor for butterworth lpf
+          reconfigure(config, rate, 0.70710678118f, 1.0f); // 1.0f / sqrtf(2.0f); // quality factor for butterworth lpf
           break;
         case FILTER_NOTCH:
         case FILTER_NOTCH_DF1:
         case FILTER_BPF:
-          reconfigure(config, rate, getNotchQApprox(config.freq, config.cutoff));
+          reconfigure(config, rate, getNotchQApprox(config.freq, config.cutoff), 1.0f);
           break;
         default:
-          reconfigure(config, rate, 0.f);
+          reconfigure(config, rate, 0.0f, 1.0f);
       }
     }
 
-    void reconfigure(const FilterConfig& config, int rate, float q)
+    void reconfigure(const FilterConfig& config, int rate, float q, float weight)
     {
       _rate = rate;
       _conf = config.sanitize(_rate);
+      setWeight(weight);
       switch(_conf.type)
       {
         case FILTER_PT1:
@@ -414,6 +447,46 @@ class Filter
       }
     }
 
+    void reconfigure(const Filter& filter)
+    {
+      _rate = filter._rate;
+      _conf = filter._conf;
+      _output_weight = filter._output_weight;
+      _input_weight = filter._input_weight;
+      switch(_conf.type)
+      {
+        case FILTER_PT1:
+          _state.pt1.reconfigure(filter._state.pt1);
+          break;
+        case FILTER_BIQUAD:
+        case FILTER_NOTCH:
+        case FILTER_NOTCH_DF1:
+          _state.bq.reconfigure(filter._state.bq);
+          break;
+        case FILTER_FIR2:
+          _state.fir2.reconfigure(filter._state.fir2);
+          break;
+        case FILTER_MEDIAN3:
+          _state.median.reconfigure(filter._state.median);
+          break;
+        case FILTER_PT2:
+          _state.pt2.reconfigure(filter._state.pt2);
+          break;
+        case FILTER_PT3:
+          _state.pt3.reconfigure(filter._state.pt3);
+          break;
+        case FILTER_NONE:
+        default:
+          ;
+      }
+    }
+
+    void setWeight(float weight)
+    {
+      _output_weight = std::max<float>(0.0f, std::min<float>(weight, 1.0));
+      _input_weight = 1.0f - _output_weight;
+    }
+
     float getNotchQApprox(float freq, float cutoff)
     {
       return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
@@ -439,6 +512,8 @@ class Filter
       FilterStatePt2 pt2;
       FilterStatePt3 pt3;
     } _state;
+    float _input_weight;
+    float _output_weight;
 };
 
 }
