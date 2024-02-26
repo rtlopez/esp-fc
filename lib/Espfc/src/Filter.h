@@ -34,6 +34,7 @@ enum FilterType {
   FILTER_NOTCH,
   FILTER_NOTCH_DF1,
   FILTER_BPF,
+  FILTER_FO,
   FILTER_FIR2,
   FILTER_MEDIAN3,
   FILTER_NONE,
@@ -218,6 +219,56 @@ class FilterStateBiquad {
     float x1, x2, y1, y2;
 };
 
+class FilterStateFirstOrder {
+  public:
+    void reset()
+    {
+      x1 = y1 = 0;
+    }
+
+    void init(float rate, float freq)
+    {
+      freq = Math::clamp(freq, 0.0f, rate * 0.48f);
+
+      const float W = std::tan(Math::pi() * freq / rate);
+
+      a1 = (W - 1) / (W + 1);
+      b1 = b0 = W / (W + 1);
+    }
+
+    void reconfigure(const FilterStateFirstOrder& from)
+    {
+      b0 = from.b0;
+      b1 = from.b1;
+      a1 = from.a1;
+    }
+
+    float update(float n)
+    {
+      // DF2
+      const float result = b0 * n + x1;
+      x1 = b1 * n - a1 * result;
+      return result;
+    }
+
+    float updateDF1(float n)
+    {
+      /* compute result */
+      const float result = b0 * n + b1 * x1 - a1 * y1;
+
+      /* shift input to x1 */
+      x1 = n;
+
+      /* shift result to y1 */
+      y1 = result;
+
+      return result;
+    }
+
+    float b0, b1, a1;
+    float x1, y1;
+};
+
 class FilterStateMedian {
   public:
     void reset()
@@ -227,7 +278,6 @@ class FilterStateMedian {
 
     void init()
     {
-
     }
 
     void reconfigure(const FilterStateMedian& from)
@@ -345,6 +395,8 @@ class Filter
           return _state.pt2.update(v);
         case FILTER_PT3:
           return _state.pt3.update(v);
+        case FILTER_FO:
+          return _state.fo.update(v);
         case FILTER_NONE:
         default:
           return v;
@@ -374,6 +426,8 @@ class Filter
           return _state.pt2.reset();
         case FILTER_PT3:
           return _state.pt3.reset();
+        case FILTER_FO:
+          return _state.fo.reset();
         case FILTER_NONE:
         default:
           ;
@@ -441,6 +495,9 @@ class Filter
         case FILTER_PT3:
           _state.pt3.init(_rate, _conf.freq);
           break;
+        case FILTER_FO:
+          _state.fo.init(_rate, _conf.freq);
+          break;
         case FILTER_NONE:
         default:
           ;
@@ -474,6 +531,9 @@ class Filter
           break;
         case FILTER_PT3:
           _state.pt3.reconfigure(filter._state.pt3);
+          break;
+        case FILTER_FO:
+          _state.fo.reconfigure(filter._state.fo);
           break;
         case FILTER_NONE:
         default:
@@ -511,6 +571,7 @@ class Filter
       FilterStateMedian median;
       FilterStatePt2 pt2;
       FilterStatePt3 pt3;
+      FilterStateFirstOrder fo;
     } _state;
     float _input_weight;
     float _output_weight;

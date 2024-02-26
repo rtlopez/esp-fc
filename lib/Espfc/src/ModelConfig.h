@@ -759,13 +759,13 @@ class ModelConfig
       rpmFilterHarmonics = 3;
       rpmFilterMinFreq = 100;
       rpmFilterQ = 500;
-      rpmFilterFade = 50;
+      rpmFilterFade = 30;
       rpmFilterWeights[0] = 100;
       rpmFilterWeights[1] = 100;
       rpmFilterWeights[2] = 100;
       rpmFilterFreqLpf = 150;
 
-      gyroFilter3 = FilterConfig(FILTER_PT1, 150);
+      gyroFilter3 = FilterConfig(FILTER_FO, 150);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0); // off
