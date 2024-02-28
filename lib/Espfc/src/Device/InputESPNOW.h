@@ -1,7 +1,7 @@
 #ifndef _INPUT_DEVICE_INPUT_ESPNOW_H_
 #define _INPUT_DEVICE_INPUT_ESPNOW_H_
 
-#include "esp_wifi.h"
+//#include "esp_wifi.h"
 #include <WiFi.h>
 #include <esp_now.h>
 #include "Device/InputDevice.h"
@@ -37,21 +37,22 @@ struct TelemetryData {
 //unsigned long lastRecvTime = 0;
 bool _new_data = false;
 
-#define wifi_channel 13 // Set the wifi channel (1-13) -> TODO: scan and choose the best one
+#define wifi_channel 4 // Set the wifi channel (1-13) -> TODO: scan and choose the best one
 uint8_t TxMacAddr[] = {0xA8,0x42,0xE3,0xCD,0x5F,0x04}; // REPLACE WITH YOUR RECEIVER MAC Address -> TODO: put it into model
 bool pair_status = false; //TODO: should be save in model, can be changed using cil
 
 
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  if(! pair_status){
-    uint8_t MacAddr[6];
-    memcpy(MacAddr, mac, 6);
+void IRAM_ATTR OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&_data, incomingData, sizeof(_data));
+  if(pair_status){
     for (int i = 0; i < 6; i++) {
-      if (MacAddr[i] != TxMacAddr[i]) return;
+      if (mac[i] != TxMacAddr[i]) return;
     }
+    if (_data.syncByte) return; //ignore the second pair req
+    _new_data = true;
+    return;
   }
 
-  memcpy(&_data, incomingData, sizeof(_data));
   switch (_data.syncByte) {
   case 0://TODO: telemetry
     break;
@@ -60,6 +61,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     memcpy(TxMacAddr, mac, 6);
     pair_status = true;
 
+    //TODO: move the following part away from this IRS function to avoid WDT
     // Register peer
     esp_now_peer_info_t peerInfo = {};
     memcpy(peerInfo.peer_addr, mac, 6);
@@ -67,10 +69,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     peerInfo.encrypt = false;
 
     // Add peer 
-    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-      Serial.println("Failed to add peer"); // TODO: change to log E
-      ESP.restart();
-    }
+    esp_now_add_peer(&peerInfo); // TODO: record errors to log
 
     // Send pair request
     TxData.syncByte = 1;
@@ -81,7 +80,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   }
   //snprintf(sys_status.StrMac, sizeof(sys_status.StrMac), "%02x:%02x:%02x:%02x:%02x:%02x",mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   //lastRecvTime = millis();
-  _new_data = true;
 }
 
 // get RSSI
