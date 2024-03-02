@@ -226,9 +226,13 @@ enum InputFilterType : uint8_t {
 
 const size_t MODEL_NAME_LEN  = 16;
 const size_t AXES            = 4;
+const size_t AXES_RPY        = 3;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
 const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
+
+const size_t RPM_FILTER_MOTOR_MAX = 4;
+const size_t RPM_FILTER_HARMONICS_MAX = 3;
 
 enum PinFunction {
 #ifdef ESPFC_INPUT
@@ -349,17 +353,17 @@ class BuzzerConfig
 };
 
 enum PidIndex {
-  PID_ROLL,
-  PID_PITCH,
-  PID_YAW,
-  PID_ALT,
-  PID_POS,
-  PID_POSR,
-  PID_NAVR,
-  PID_LEVEL,
-  PID_MAG,
-  PID_VEL,
-  PID_ITEM_COUNT
+  FC_PID_ROLL,
+  FC_PID_PITCH,
+  FC_PID_YAW,
+  FC_PID_ALT,
+  FC_PID_POS,
+  FC_PID_POSR,
+  FC_PID_NAVR,
+  FC_PID_LEVEL,
+  FC_PID_MAG,
+  FC_PID_VEL,
+  FC_PID_ITEM_COUNT
 };
 
 class PidConfig
@@ -428,7 +432,9 @@ class OutputConfig
 {
   public:
     int8_t protocol;
-    int16_t async;
+    int8_t async;
+    int8_t dshotTelemetry;
+    int8_t motorPoles;
     int16_t rate;
     int16_t servoRate;
 
@@ -568,7 +574,7 @@ class ModelConfig
     int8_t mixerType;
     bool yawReverse;
 
-    PidConfig pid[PID_ITEM_COUNT];
+    PidConfig pid[FC_PID_ITEM_COUNT];
 
     FilterConfig yawFilter;
 
@@ -641,6 +647,13 @@ class ModelConfig
     WirelessConfig wireless;
 
     DynamicFilterConfig dynamicFilter;
+
+    uint8_t rpmFilterHarmonics;
+    uint8_t rpmFilterMinFreq;
+    int16_t rpmFilterQ;
+    uint8_t rpmFilterFreqLpf;
+    uint8_t rpmFilterWeights[RPM_FILTER_HARMONICS_MAX];
+    uint8_t rpmFilterFade;
 
     ModelConfig()
     {
@@ -743,7 +756,16 @@ class ModelConfig
       //dtermFilter = FilterConfig(FILTER_PT1, 113);
       //dtermFilter2 = FilterConfig(FILTER_PT1, 113);
 
-      gyroFilter3 = FilterConfig(FILTER_PT1, 150);
+      rpmFilterHarmonics = 3;
+      rpmFilterMinFreq = 100;
+      rpmFilterQ = 500;
+      rpmFilterFade = 30;
+      rpmFilterWeights[0] = 100;
+      rpmFilterWeights[1] = 100;
+      rpmFilterWeights[2] = 100;
+      rpmFilterFreqLpf = 150;
+
+      gyroFilter3 = FilterConfig(FILTER_FO, 150);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0); // off
@@ -805,7 +827,7 @@ class ModelConfig
         output.channel[i].neutral = 1500;
       }
 
-      mixerType = MIXER_QUADX;
+      mixerType = FC_MIXER_QUADX;
       yawReverse = 0;
 
       output.protocol = ESC_PROTOCOL_DISABLED;
@@ -814,6 +836,8 @@ class ModelConfig
       //output.async = true;
       output.async = false;
       output.servoRate = 0; // default 50, 0 to disable
+      output.dshotTelemetry = false;
+      output.motorPoles = 14;
 
       // input config
       input.ppmMode = PPM_MODE_NORMAL;
@@ -885,23 +909,23 @@ class ModelConfig
       failsafe.killSwitch = 0;
 
       // PID controller config (BF default)
-      //pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
-      //pid[PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
-      //pid[PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
-      //pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
+      //pid[FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
+      //pid[FC_PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
+      //pid[FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
+      //pid[FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
 
       // PID controller config (ESPFC default)
-      pid[PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 };
-      pid[PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 };
-      pid[PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 };
-      pid[PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
+      pid[FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 };
+      pid[FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 };
+      pid[FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 };
+      pid[FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
 
-      pid[PID_ALT]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
-      pid[PID_POS]   = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
-      pid[PID_POSR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
-      pid[PID_NAVR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
-      pid[PID_MAG]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
-      pid[PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
+      pid[FC_PID_ALT]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
+      pid[FC_PID_POS]   = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
+      pid[FC_PID_POSR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
+      pid[FC_PID_NAVR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
+      pid[FC_PID_MAG]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
+      pid[FC_PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
       itermWindupPointPercent = 30;
       itermRelax = ITERM_RELAX_RP;
@@ -1041,7 +1065,7 @@ class ModelConfig
 
     void brobot()
     {
-      mixerType = MIXER_GIMBAL;
+      mixerType = FC_MIXER_GIMBAL;
 
       pin[PIN_OUTPUT_0] = 14;    // D5 // ROBOT
       pin[PIN_OUTPUT_1] = 12;    // D6 // ROBOT

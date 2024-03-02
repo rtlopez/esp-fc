@@ -56,6 +56,14 @@ Here are more details about [how to setup](/docs/setup.md).
 
 [![ESP-FC example wiring diagrams](/docs/images/espfc_wiring_combined.png)](/docs/wiring.md)
 
+## Supported chips
+
+ - **ESP32** - recommended
+ - **ESP32-S2** - experimantal
+ - **ESP32-S3** - experimantal
+ - **ESP32-C3** - experimantal
+ - **RP2040** - experimantal
+ - **ESP8266** - deprecated, may stop being developed
 
 ## Supported protocols
 

@@ -1,10 +1,12 @@
 #include <unity.h>
 #include <ArduinoFake.h>
+#include <EscDriver.h>
 #include "Timer.h"
 #include "Model.h"
 #include "Controller.h"
 #include "Actuator.h"
 #include "Output/Mixer.h"
+
 using namespace fakeit;
 using namespace Espfc;
 
@@ -141,29 +143,29 @@ void test_model_inner_pid_init()
   model.config.gyroDlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
-  model.config.mixerType = MIXER_QUADX;
-  model.config.pid[PID_ROLL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
-  model.config.pid[PID_PITCH] = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
-  model.config.pid[PID_YAW]   = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
+  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.pid[FC_PID_ROLL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
+  model.config.pid[FC_PID_PITCH] = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
+  model.config.pid[FC_PID_YAW]   = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.begin();
 
-  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.innerPid[PID_ROLL].rate);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1835f, model.state.innerPid[PID_ROLL].Kp);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.4002f, model.state.innerPid[PID_ROLL].Ki);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0030f, model.state.innerPid[PID_ROLL].Kd);
-  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 0.000788f, model.state.innerPid[PID_ROLL].Kf);
+  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.innerPid[FC_PID_ROLL].rate);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1835f, model.state.innerPid[FC_PID_ROLL].Kp);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.4002f, model.state.innerPid[FC_PID_ROLL].Ki);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0030f, model.state.innerPid[FC_PID_ROLL].Kd);
+  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 0.000788f, model.state.innerPid[FC_PID_ROLL].Kf);
 
-  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.innerPid[PID_PITCH].rate);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1835f, model.state.innerPid[PID_PITCH].Kp);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.4002f, model.state.innerPid[PID_PITCH].Ki);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0030f, model.state.innerPid[PID_PITCH].Kd);
-  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 0.000788f, model.state.innerPid[PID_PITCH].Kf);
+  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.innerPid[FC_PID_PITCH].rate);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1835f, model.state.innerPid[FC_PID_PITCH].Kp);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.4002f, model.state.innerPid[FC_PID_PITCH].Ki);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0030f, model.state.innerPid[FC_PID_PITCH].Kd);
+  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 0.000788f, model.state.innerPid[FC_PID_PITCH].Kf);
 
-  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.innerPid[PID_YAW].rate);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1835f, model.state.innerPid[PID_YAW].Kp);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.4002f, model.state.innerPid[PID_YAW].Ki);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0030f, model.state.innerPid[PID_YAW].Kd);
-  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 0.000788f, model.state.innerPid[PID_YAW].Kf);
+  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.innerPid[FC_PID_YAW].rate);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1835f, model.state.innerPid[FC_PID_YAW].Kp);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.4002f, model.state.innerPid[FC_PID_YAW].Ki);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0030f, model.state.innerPid[FC_PID_YAW].Kd);
+  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 0.000788f, model.state.innerPid[FC_PID_YAW].Kf);
 }
 
 void test_model_outer_pid_init()
@@ -173,21 +175,21 @@ void test_model_outer_pid_init()
   model.config.gyroDlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
-  model.config.mixerType = MIXER_QUADX;
-  model.config.pid[PID_LEVEL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
+  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.pid[FC_PID_LEVEL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.begin();
 
-  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 2000.0f, model.state.outerPid[PID_ROLL].rate);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_ROLL].Kp);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_ROLL].Ki);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[PID_ROLL].Kd);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[PID_ROLL].Kf);
+  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 2000.0f, model.state.outerPid[FC_PID_ROLL].rate);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[FC_PID_ROLL].Kp);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[FC_PID_ROLL].Ki);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[FC_PID_ROLL].Kd);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[FC_PID_ROLL].Kf);
 
-  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 2000.0f, model.state.outerPid[PID_PITCH].rate);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_PITCH].Kp);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[PID_PITCH].Ki);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[PID_PITCH].Kd);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[PID_PITCH].Kf);
+  TEST_ASSERT_FLOAT_WITHIN(   0.1f, 2000.0f, model.state.outerPid[FC_PID_PITCH].rate);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[FC_PID_PITCH].Kp);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[FC_PID_PITCH].Ki);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[FC_PID_PITCH].Kd);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,    0.1f, model.state.outerPid[FC_PID_PITCH].Kf);
 }
 
 void test_controller_rates()
@@ -197,7 +199,7 @@ void test_controller_rates()
   model.config.gyroDlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
-  model.config.mixerType = MIXER_QUADX;
+  model.config.mixerType = FC_MIXER_QUADX;
 
   model.config.input.rateType = RATES_TYPE_BETAFLIGHT;
   model.config.input.rate[AXIS_ROLL] = 70;
@@ -247,7 +249,7 @@ void test_controller_rates_limit()
   model.config.gyroDlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
-  model.config.mixerType = MIXER_QUADX;
+  model.config.mixerType = FC_MIXER_QUADX;
 
   model.config.input.rateType = RATES_TYPE_BETAFLIGHT;
   model.config.input.rate[AXIS_ROLL] = 70;
@@ -464,7 +466,7 @@ void test_actuator_arming_failsafe()
   Model model;
   model.state.gyroPresent = true;
   model.config.output.protocol = ESC_PROTOCOL_DSHOT150;
-  model.state.failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+  model.state.failsafe.phase = FC_FAILSAFE_RX_LOSS_DETECTED;
   model.state.gyroCalibrationState = CALIBRATION_UPDATE;
   model.state.inputRxFailSafe = true;
   model.state.inputRxLoss = true;

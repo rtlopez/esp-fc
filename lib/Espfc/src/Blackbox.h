@@ -5,80 +5,88 @@
 #include "Hardware.h"
 #include "EscDriver.h"
 #include "Math/Utils.h"
+#include "Device/SerialDevice.h"
 
 extern "C" {
 #include "blackbox/blackbox.h"
 #include "blackbox/blackbox_fielddefs.h"
 }
 
-class BlackboxBuffer
+class BlackboxBuffer: public Espfc::Device::SerialDevice
 {
   public:
-    BlackboxBuffer(): _stream(nullptr), _idx(0) {}
+    BlackboxBuffer(): _dev(nullptr), _idx(0) {}
 
-    void begin(Espfc::Device::SerialDevice * s)
+    virtual void wrap(Espfc::Device::SerialDevice * s)
     {
-      _stream = s;
+      _dev = s;
     }
 
-    void write(uint8_t c)
+    virtual void begin(const Espfc::SerialDeviceConfig& conf)
+    {
+      //_dev->begin(conf);
+    }
+
+    virtual size_t write(uint8_t c)
     {
       _data[_idx++] = c;
       if(_idx >= SIZE) flush();
+      return 1;
     }
 
-    void flush()
+    virtual void flush()
     {
-      if(_stream) _stream->write(_data, _idx);
+      if(_dev) _dev->write(_data, _idx);
       _idx = 0;
     }
 
-    size_t availableForWrite() const
+    virtual int availableForWrite()
     {
-      //return _stream->availableForWrite();
+      //return _dev->availableForWrite();
       return SIZE - _idx;
     }
 
-    size_t isTxFifoEmpty() const
+    virtual bool isTxFifoEmpty()
     {
-      //return _stream->isTxFifoEmpty();
+      //return _dev->isTxFifoEmpty();
       return _idx == 0;
     }
 
+    virtual int available() { return _dev->available(); }
+    virtual int read() { return _dev->read(); }
+    virtual size_t readMany(uint8_t * c, size_t l) {
+#ifdef TARGET_RP2040
+      size_t count = std::min(l, (size_t)available());
+      for(size_t i = 0; i < count; i++)
+      {
+        c[i] = read();
+      }
+      return count;
+#else
+      return _dev->readMany(c, l);
+#endif
+    }
+    virtual int peek() { return _dev->peek(); }
+
+    virtual size_t write(const uint8_t * c, size_t l)
+    {
+      for(size_t i = 0; i < l; i++)
+      {
+        write(c[i]);
+      }
+      return l;
+    }
+    virtual bool isSoft() const { return false; };
+    virtual operator bool() const { return (bool)(*_dev); }
+
     static const size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
 
-    Espfc::Device::SerialDevice * _stream;
+    Espfc::Device::SerialDevice * _dev;
     size_t _idx;
     uint8_t _data[SIZE];
 };
 
-static BlackboxBuffer * blackboxSerial = nullptr;
 static Espfc::Model * _model_ptr = nullptr;
-
-void serialWrite(serialPort_t * instance, uint8_t ch)
-{
-  UNUSED(instance);
-  if(blackboxSerial) blackboxSerial->write(ch);
-}
-
-void serialWriteInit(BlackboxBuffer * serial)
-{
-  blackboxSerial = serial;
-}
-
-uint32_t serialTxBytesFree(const serialPort_t * instance)
-{
-  UNUSED(instance);
-  if(!blackboxSerial) return 0;
-  return blackboxSerial->availableForWrite();
-}
-
-bool isSerialTransmitBufferEmpty(const serialPort_t * instance)
-{
-  UNUSED(instance);
-  if(!blackboxSerial) return false;
-  return blackboxSerial->isTxFifoEmpty();
-}
 
 void initBlackboxModel(Espfc::Model * m)
 {
@@ -161,6 +169,11 @@ bool areMotorsRunning(void)
   return _model_ptr->areMotorsRunning();
 }
 
+uint16_t getDshotErpm(uint8_t i)
+{
+  return _model_ptr->state.outputTelemetryErpm[i];
+}
+
 namespace Espfc {
 
 class Blackbox
@@ -174,11 +187,12 @@ class Blackbox
 
       if(!_model.blackboxEnabled()) return 0;
 
-      Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
-      if(!serial) return 0;
+      _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+      if(!_serial) return 0;
 
-      _buffer.begin(serial);
-      serialWriteInit(&_buffer);
+      _buffer.wrap(_serial);
+      serialDeviceInit(&_buffer, 0);
+      //serialDeviceInit(_serial, 0);
 
       systemConfigMutable()->activeRateProfile = 0;
       systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
@@ -198,7 +212,7 @@ class Blackbox
       rp->rates_type = _model.config.input.rateType;
 
       pidProfile_s * cp = currentPidProfile = &_pidProfile;
-      for(size_t i = 0; i < PID_ITEM_COUNT; i++)
+      for(size_t i = 0; i < FC_PID_ITEM_COUNT; i++)
       {
         cp->pid[i].P = _model.config.pid[i].P;
         cp->pid[i].I = _model.config.pid[i].I;
@@ -243,6 +257,12 @@ class Blackbox
       cp->iterm_relax = _model.config.itermRelax;
       cp->iterm_relax_type = 1;
       cp->iterm_relax_cutoff = _model.config.itermRelaxCutoff;
+      cp->dterm_lpf1_dyn_expo = 5;
+      cp->tpa_low_rate = 20;
+      cp->tpa_low_breakpoint = 1050;
+      cp->tpa_low_always = 0;
+      cp->ez_landing_threshold = 25;
+      cp->ez_landing_limit = 5;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
@@ -252,12 +272,14 @@ class Blackbox
       gyroConfigMutable()->gyro_lpf1_static_hz = _model.config.gyroFilter.freq;
       gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyroDynLpfFilter.cutoff;
       gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyroDynLpfFilter.freq;
+      gyroConfigMutable()->gyro_lpf1_dyn_expo = 5;
       gyroConfigMutable()->gyro_lpf2_type = _model.config.gyroFilter2.type;
       gyroConfigMutable()->gyro_lpf2_static_hz = _model.config.gyroFilter2.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyroNotch1Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyroNotch2Filter.freq;
+      gyroConfigMutable()->gyro_sync_denom = 1;
 
       dynNotchConfigMutable()->dyn_notch_count = _model.config.dynamicFilter.width;
       dynNotchConfigMutable()->dyn_notch_q = _model.config.dynamicFilter.q;
@@ -276,9 +298,12 @@ class Blackbox
       motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
       motorConfigMutable()->minthrottle = _model.state.minThrottle;
       motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
+      motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;
+      motorConfigMutable()->motorPoleCount = _model.config.output.motorPoles;
 
-      gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
+
+      mixerConfigMutable()->mixer_type = 0;
 
       if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
       if(_model.magActive()) enabledSensors |= SENSOR_MAG;
@@ -314,6 +339,15 @@ class Blackbox
       rxConfigMutable()->airModeActivateThreshold = 40;
       rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
 
+      rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.rpmFilterHarmonics;
+      rpmFilterConfigMutable()->rpm_filter_q = _model.config.rpmFilterQ;
+      rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.rpmFilterMinFreq;
+      rpmFilterConfigMutable()->rpm_filter_fade_range_hz = _model.config.rpmFilterFade;
+      rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.rpmFilterFreqLpf;
+      rpmFilterConfigMutable()->rpm_filter_weights[0] = _model.config.rpmFilterWeights[0];
+      rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.rpmFilterWeights[1];
+      rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.rpmFilterWeights[2];
+
       blackboxInit();
 
       return 1;
@@ -322,7 +356,7 @@ class Blackbox
     int update()
     {
       if(!_model.blackboxEnabled()) return 0;
-      if(!blackboxSerial) return 0;
+      if(!_serial) return 0;
       Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
       uint32_t startTime = micros();
@@ -432,6 +466,7 @@ class Blackbox
 
     Model& _model;
     pidProfile_s _pidProfile;
+    Device::SerialDevice * _serial;
     BlackboxBuffer _buffer;
 };
 

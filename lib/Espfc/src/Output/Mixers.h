@@ -4,32 +4,32 @@
 namespace Espfc {
 
 enum MixerType {
-  MIXER_TRI = 1,
-  MIXER_QUADP = 2,
-  MIXER_QUADX = 3,
-  MIXER_BICOPTER = 4,
-  MIXER_GIMBAL = 5,
-  MIXER_Y6 = 6,
-  MIXER_HEX6 = 7,
-  MIXER_FLYING_WING = 8,
-  MIXER_Y4 = 9,
-  MIXER_HEX6X = 10,
-  MIXER_OCTOX8 = 11,
-  MIXER_OCTOFLATP = 12,
-  MIXER_OCTOFLATX = 13,
-  MIXER_AIRPLANE = 14,        // airplane / singlecopter / dualcopter (not yet properly supported)
-  MIXER_HELI_120_CCPM = 15,
-  MIXER_HELI_90_DEG = 16,
-  MIXER_VTAIL4 = 17,
-  MIXER_HEX6H = 18,
-  MIXER_PPM_TO_SERVO = 19,    // PPM -> servo relay
-  MIXER_DUALCOPTER = 20,
-  MIXER_SINGLECOPTER = 21,
-  MIXER_ATAIL4 = 22,
-  MIXER_CUSTOM = 23,
-  MIXER_CUSTOM_AIRPLANE = 24,
-  MIXER_CUSTOM_TRI = 25,
-  MIXER_QUADX_1234 = 26,
+  FC_MIXER_TRI = 1,
+  FC_MIXER_QUADP = 2,
+  FC_MIXER_QUADX = 3,
+  FC_MIXER_BICOPTER = 4,
+  FC_MIXER_GIMBAL = 5,
+  FC_MIXER_Y6 = 6,
+  FC_MIXER_HEX6 = 7,
+  FC_MIXER_FLYING_WING = 8,
+  FC_MIXER_Y4 = 9,
+  FC_MIXER_HEX6X = 10,
+  FC_MIXER_OCTOX8 = 11,
+  FC_MIXER_OCTOFLATP = 12,
+  FC_MIXER_OCTOFLATX = 13,
+  FC_MIXER_AIRPLANE = 14,        // airplane / singlecopter / dualcopter (not yet properly supported)
+  FC_MIXER_HELI_120_CCPM = 15,
+  FC_MIXER_HELI_90_DEG = 16,
+  FC_MIXER_VTAIL4 = 17,
+  FC_MIXER_HEX6H = 18,
+  FC_MIXER_PPM_TO_SERVO = 19,    // PPM -> servo relay
+  FC_MIXER_DUALCOPTER = 20,
+  FC_MIXER_SINGLECOPTER = 21,
+  FC_MIXER_ATAIL4 = 22,
+  FC_MIXER_CUSTOM = 23,
+  FC_MIXER_CUSTOM_AIRPLANE = 24,
+  FC_MIXER_CUSTOM_TRI = 25,
+  FC_MIXER_QUADX_1234 = 26,
 };
 
 enum MixerSource {
@@ -128,21 +128,21 @@ class Mixers
 
       switch(mixer)
       {
-        case MIXER_QUADX:
+        case FC_MIXER_QUADX:
           return MixerConfig(4, mixesQuadX);
 
-        case MIXER_QUADX_1234:
+        case FC_MIXER_QUADX_1234:
           return MixerConfig(4, mixesQuadX1234);
 
-        case MIXER_TRI:
+        case FC_MIXER_TRI:
           return MixerConfig(4, mixesTricopter);
 
-        case MIXER_GIMBAL:
+        case FC_MIXER_GIMBAL:
           return MixerConfig(2, mixesGimbal);
 
-        case MIXER_CUSTOM:
-        case MIXER_CUSTOM_TRI:
-        case MIXER_CUSTOM_AIRPLANE:
+        case FC_MIXER_CUSTOM:
+        case FC_MIXER_CUSTOM_TRI:
+        case FC_MIXER_CUSTOM_AIRPLANE:
           return custom;
 
         default:

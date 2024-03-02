@@ -11,6 +11,7 @@ inline float invSqrt(float x)
   //return 1.f / sqrt(x);
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+  #pragma GCC diagnostic ignored "-Wuninitialized"
   float halfx = 0.5f * x;
   float y = x;
   long i = *(long*)&y;

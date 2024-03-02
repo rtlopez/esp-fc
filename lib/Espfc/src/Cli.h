@@ -356,7 +356,7 @@ class Cli
                                                   PSTR("DSHOT_RPM_TELEMETRY"), PSTR("RPM_FILTER"), PSTR("D_MIN"), PSTR("AC_CORRECTION"), PSTR("AC_ERROR"), PSTR("DUAL_GYRO_SCALED"), PSTR("DSHOT_RPM_ERRORS"), 
                                                   PSTR("CRSF_LINK_STATISTICS_UPLINK"), PSTR("CRSF_LINK_STATISTICS_PWR"), PSTR("CRSF_LINK_STATISTICS_DOWN"), PSTR("BARO"), PSTR("GPS_RESCUE_THROTTLE_PID"), 
                                                   PSTR("DYN_IDLE"), PSTR("FF_LIMIT"), PSTR("FF_INTERPOLATED"), PSTR("BLACKBOX_OUTPUT"), PSTR("GYRO_SAMPLE"), PSTR("RX_TIMING"), NULL };
-      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT2"), PSTR("PT3"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
+      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT2"), PSTR("PT3"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FO"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), PSTR("CUSTOM"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
                                                  PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
@@ -407,6 +407,14 @@ class Cli
         Param(PSTR("gyro_dyn_notch_count"), &c.dynamicFilter.width),
         Param(PSTR("gyro_dyn_notch_min"), &c.dynamicFilter.min_freq),
         Param(PSTR("gyro_dyn_notch_max"), &c.dynamicFilter.max_freq),
+        Param(PSTR("gyro_rpm_harmonics"), &c.rpmFilterHarmonics),
+        Param(PSTR("gyro_rpm_q"), &c.rpmFilterQ),
+        Param(PSTR("gyro_rpm_min_freq"), &c.rpmFilterMinFreq),
+        Param(PSTR("gyro_rpm_fade"), &c.rpmFilterFade),
+        Param(PSTR("gyro_rpm_weight_1"), &c.rpmFilterWeights[0]),
+        Param(PSTR("gyro_rpm_weight_2"), &c.rpmFilterWeights[1]),
+        Param(PSTR("gyro_rpm_weight_3"), &c.rpmFilterWeights[2]),
+        Param(PSTR("gyro_rpm_tlm_lpf_freq"), &c.rpmFilterFreqLpf),
         Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
@@ -534,24 +542,24 @@ class Cli
 
         Param(PSTR("pid_sync"), &c.loopSync),
 
-        Param(PSTR("pid_roll_p"), &c.pid[PID_ROLL].P),
-        Param(PSTR("pid_roll_i"), &c.pid[PID_ROLL].I),
-        Param(PSTR("pid_roll_d"), &c.pid[PID_ROLL].D),
-        Param(PSTR("pid_roll_f"), &c.pid[PID_ROLL].F),
+        Param(PSTR("pid_roll_p"), &c.pid[FC_PID_ROLL].P),
+        Param(PSTR("pid_roll_i"), &c.pid[FC_PID_ROLL].I),
+        Param(PSTR("pid_roll_d"), &c.pid[FC_PID_ROLL].D),
+        Param(PSTR("pid_roll_f"), &c.pid[FC_PID_ROLL].F),
 
-        Param(PSTR("pid_pitch_p"), &c.pid[PID_PITCH].P),
-        Param(PSTR("pid_pitch_i"), &c.pid[PID_PITCH].I),
-        Param(PSTR("pid_pitch_d"), &c.pid[PID_PITCH].D),
-        Param(PSTR("pid_pitch_f"), &c.pid[PID_PITCH].F),
+        Param(PSTR("pid_pitch_p"), &c.pid[FC_PID_PITCH].P),
+        Param(PSTR("pid_pitch_i"), &c.pid[FC_PID_PITCH].I),
+        Param(PSTR("pid_pitch_d"), &c.pid[FC_PID_PITCH].D),
+        Param(PSTR("pid_pitch_f"), &c.pid[FC_PID_PITCH].F),
 
-        Param(PSTR("pid_yaw_p"), &c.pid[PID_YAW].P),
-        Param(PSTR("pid_yaw_i"), &c.pid[PID_YAW].I),
-        Param(PSTR("pid_yaw_d"), &c.pid[PID_YAW].D),
-        Param(PSTR("pid_yaw_f"), &c.pid[PID_YAW].F),
+        Param(PSTR("pid_yaw_p"), &c.pid[FC_PID_YAW].P),
+        Param(PSTR("pid_yaw_i"), &c.pid[FC_PID_YAW].I),
+        Param(PSTR("pid_yaw_d"), &c.pid[FC_PID_YAW].D),
+        Param(PSTR("pid_yaw_f"), &c.pid[FC_PID_YAW].F),
 
-        Param(PSTR("pid_level_p"), &c.pid[PID_LEVEL].P),
-        Param(PSTR("pid_level_i"), &c.pid[PID_LEVEL].I),
-        Param(PSTR("pid_level_d"), &c.pid[PID_LEVEL].D),
+        Param(PSTR("pid_level_p"), &c.pid[FC_PID_LEVEL].P),
+        Param(PSTR("pid_level_i"), &c.pid[FC_PID_LEVEL].I),
+        Param(PSTR("pid_level_d"), &c.pid[FC_PID_LEVEL].D),
 
         Param(PSTR("pid_level_angle_limit"), &c.angleLimit),
         Param(PSTR("pid_level_rate_limit"), &c.angleRateLimit),
@@ -588,13 +596,18 @@ class Cli
         Param(PSTR("output_motor_protocol"), &c.output.protocol, protocolChoices),
         Param(PSTR("output_motor_async"), &c.output.async),
         Param(PSTR("output_motor_rate"), &c.output.rate),
+#ifdef ESPFC_DSHOT_TELEMETRY
+        Param(PSTR("output_motor_poles"), &c.output.motorPoles),
+#endif
         Param(PSTR("output_servo_rate"), &c.output.servoRate),
 
         Param(PSTR("output_min_command"), &c.output.minCommand),
         Param(PSTR("output_min_throttle"), &c.output.minThrottle),
         Param(PSTR("output_max_throttle"), &c.output.maxThrottle),
         Param(PSTR("output_dshot_idle"), &c.output.dshotIdle),
-
+#ifdef ESPFC_DSHOT_TELEMETRY
+        Param(PSTR("output_dshot_telemetry"), &c.output.dshotTelemetry),
+#endif
         Param(PSTR("output_0"), &c.output.channel[0]),
         Param(PSTR("output_1"), &c.output.channel[1]),
         Param(PSTR("output_2"), &c.output.channel[2]),
@@ -833,9 +846,9 @@ class Cli
           PSTR("available commands:"),
           PSTR(" help"), PSTR(" dump"), PSTR(" get param"), PSTR(" set param value ..."), PSTR(" cal [gyro]"),
           PSTR(" defaults"), PSTR(" save"), PSTR(" reboot"), PSTR(" scaler"), PSTR(" mixer"),
-          PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"),
+          PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"), PSTR(" logs"),
           //PSTR(" load"), PSTR(" eeprom"),
-          //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" logs"),  PSTR(" log"),
+          //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" log"),
           NULL
         };
         for(const char ** ptr = helps; *ptr; ptr++)
@@ -1190,9 +1203,27 @@ class Cli
         s.print(F(", "));
         s.println(_model.state.inputAutoFactor);
 
+        static const char* armingDisableNames[] = {
+          PSTR("NO_GYRO"), PSTR("FAILSAFE"), PSTR("RX_FAILSAFE"), PSTR("BAD_RX_RECOVERY"),
+          PSTR("BOXFAILSAFE"), PSTR("RUNAWAY_TAKEOFF"), PSTR("CRASH_DETECTED"), PSTR("THROTTLE"),
+          PSTR("ANGLE"), PSTR("BOOT_GRACE_TIME"), PSTR("NOPREARM"), PSTR("LOAD"),
+          PSTR("CALIBRATING"), PSTR("CLI"), PSTR("CMS_MENU"), PSTR("BST"),
+          PSTR("MSP"), PSTR("PARALYZE"), PSTR("GPS"), PSTR("RESC"),
+          PSTR("RPMFILTER"), PSTR("REBOOT_REQUIRED"), PSTR("DSHOT_BITBANG"), PSTR("ACC_CALIBRATION"),
+          PSTR("MOTOR_PROTOCOL"), PSTR("ARM_SWITCH")
+        };
+        const size_t armingDisableNamesLength = sizeof(armingDisableNames) / sizeof(armingDisableNames[0]);
+
         s.println();
-        s.print(F(" arming disabled: "));
-        s.println(_model.state.armingDisabledFlags);
+        s.print(F(" arming disabled:"));
+        for(size_t i = 0; i < armingDisableNamesLength; i++)
+        {
+          if(_model.state.armingDisabledFlags & (1 << i)) {
+            s.print(' ');
+            s.print(armingDisableNames[i]);
+          }
+        }
+        s.println();
       }
       else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
       {
@@ -1206,6 +1237,8 @@ class Cli
           int time = lrintf(_model.state.stats.getTime(c));
           float load = _model.state.stats.getLoad(c);
           int freq = lrintf(_model.state.stats.getFreq(c));
+          int real = lrintf(_model.state.stats.getReal(c));
+          if(freq == 0) continue;
 
           s.print(FPSTR(_model.state.stats.getName(c)));
           s.print(": ");
@@ -1213,6 +1246,11 @@ class Cli
           if(time < 10) s.print(' ');
           s.print(time);
           s.print("us,  ");
+
+          if(real < 100) s.print(' ');
+          if(real < 10) s.print(' ');
+          s.print(real);
+          s.print("us/i,  ");
 
           if(load < 10) s.print(' ');
           s.print(load, 1);
@@ -1232,36 +1270,6 @@ class Cli
         s.print(F("%"));
         s.println();
       }
-      else if(strcmp_P(cmd.args[0], PSTR("fsinfo")) == 0)
-      {
-        _model.logger.info(&s);
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("fsformat")) == 0)
-      {
-        s.print(F("wait... "));
-        _model.logger.format();
-        s.println(F("OK"));
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
-      {
-        _model.logger.list(&s);
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("log")) == 0)
-      {
-        if(!cmd.args[1])
-        {
-          _model.logger.show(&s);
-          return;
-        }
-        int id = String(cmd.args[1]).toInt();
-        if(!id)
-        {
-          s.println(F("invalid log id"));
-          s.println();
-          return;
-        }
-        _model.logger.show(&s, id);
-      }
       else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0)
       {
         Hardware::restart(_model);
@@ -1273,6 +1281,32 @@ class Cli
       else if(strcmp_P(cmd.args[0], PSTR("exit")) == 0)
       {
         _active = false;
+      }
+      else if(strcmp_P(cmd.args[0], PSTR("motors")) == 0)
+      {
+        s.print(PSTR("count: "));
+        s.println(getMotorCount());
+        for (size_t i = 0; i < 8; i++)
+        {
+          s.print(i);
+          s.print(PSTR(": "));
+          if (i >= OUTPUT_CHANNELS || _model.config.pin[i + PIN_OUTPUT_0] == -1)
+          {
+            s.print(-1);
+            s.print(' ');
+            s.println(0);
+          } else {
+            s.print(_model.config.pin[i + PIN_OUTPUT_0]);
+            s.print(' ');
+            s.println(_model.state.outputUs[i]);
+          }
+        }
+      }
+      else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
+      {
+        s.print(_model.logger.c_str());
+        s.print(PSTR("total: "));
+        s.println(_model.logger.length());
       }
       else
       {

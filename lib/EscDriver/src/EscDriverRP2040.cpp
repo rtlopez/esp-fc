@@ -77,6 +77,17 @@ int EscDriverRP2040::attach(size_t channel, int pin, int pulse)
   return 1;
 }
 
+int EscDriverRP2040::pin(size_t channel) const
+{
+  if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return -1;
+  return _slots[channel].pin;
+}
+
+uint32_t EscDriverRP2040::telemetry(size_t channel) const
+{
+  return 0;
+}
+
 bool EscDriverRP2040::isSliceDriven(int slice)
 {
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i) {
@@ -154,12 +165,12 @@ EscDriverRP2040::EscDriverRP2040(): _protocol(ESC_PROTOCOL_PWM), _async(true), _
   for(size_t i = 0; i < ESC_CHANNEL_COUNT; ++i) _slots[i] = Slot();
 }
 
-int EscDriverRP2040::begin(EscProtocol protocol, bool async, int16_t rate, EscDriverTimer timer)
+int EscDriverRP2040::begin(const EscConfig& conf)
 {
-  _timer = timer;
-  _protocol = ESC_PROTOCOL_SANITIZE(protocol);
-  _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // force async for brushed
-  _rate = constrain(rate, 50, 8000);
+  _timer = (EscDriverTimer)conf.timer;
+  _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
+  _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
+  _rate = constrain(conf.rate, 50, 8000);
   _interval = usToTicksReal(1000000ul / _rate);
 
   _dl = nsToDshotTicks(DSHOT150_T0H);

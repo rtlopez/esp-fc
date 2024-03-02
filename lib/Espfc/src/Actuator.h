@@ -87,7 +87,7 @@ class Actuator
       _model.state.i2cErrorDelta = 0;
 
       _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,       !_model.state.gyroPresent || errors);
-      _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,       _model.state.failsafe.phase != FAILSAFE_IDLE);
+      _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,       _model.state.failsafe.phase != FC_FAILSAFE_IDLE);
       _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,    _model.state.inputRxLoss || _model.state.inputRxFailSafe);
       _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
       _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
@@ -116,11 +116,11 @@ class Actuator
 
       _model.updateSwitchActive(newMask);
 
-      _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,    _model.state.failsafe.phase != FAILSAFE_IDLE);
+      _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,    _model.state.failsafe.phase != FC_FAILSAFE_IDLE);
       _model.setArmingDisabled(ARMING_DISABLED_BOXFAILSAFE, _model.isSwitchActive(MODE_FAILSAFE));
       _model.setArmingDisabled(ARMING_DISABLED_ARM_SWITCH,  _model.armingDisabled() && _model.isSwitchActive(MODE_ARMED));
 
-      if(_model.state.failsafe.phase != FAILSAFE_IDLE)
+      if(_model.state.failsafe.phase != FC_FAILSAFE_IDLE)
       {
         newMask |= (1 << MODE_FAILSAFE);
       }

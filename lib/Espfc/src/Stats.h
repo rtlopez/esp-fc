@@ -10,6 +10,7 @@ enum StatCounter : int8_t {
   COUNTER_GYRO_READ,
   COUNTER_GYRO_FILTER,
   COUNTER_GYRO_FFT,
+  COUNTER_RPM_UPDATE,
   COUNTER_ACCEL_READ,
   COUNTER_ACCEL_FILTER,
   COUNTER_MAG_READ,
@@ -25,6 +26,7 @@ enum StatCounter : int8_t {
   COUNTER_INNER_PID,
   COUNTER_MIXER,
   COUNTER_MIXER_WRITE,
+  COUNTER_MIXER_READ,
   COUNTER_BLACKBOX,
   COUNTER_TELEMETRY,
   COUNTER_SERIAL,
@@ -82,8 +84,8 @@ class Stats
     {
       uint32_t now = micros();
       uint32_t diff = now - _loop_last;
-      _loop_time = diff;
-      //_loop_time += (((int32_t)diff - _loop_time + 8) >> 4);
+      //_loop_time = diff;
+      _loop_time += (((int32_t)diff - _loop_time + 8) >> 4);
       _loop_last = now;
     }
 
@@ -97,9 +99,10 @@ class Stats
       if(!timer.check()) return;
       for(size_t i = 0; i < COUNTER_COUNT; i++)
       {
-        _avg[i] = (float)_sum[i] / timer.delta;
-        _sum[i] = 0;
+        _avg[i] = (float)(_sum[i] + (_count[i] >> 1)) / timer.delta;
         _freq[i] = (float)_count[i] * 1e6 / timer.delta;
+        _real[i] = _count[i] > 0 ? ((float)(_sum[i] + (_count[i] >> 1)) / _count[i]) : 0.0f;
+        _sum[i] = 0;
         _count[i] = 0;
       }
     }
@@ -110,11 +113,16 @@ class Stats
     }
 
     /**
-     * @brief Get the Time of counter normalized to one ms
+     * @brief Get the Time of counter normalized to 1 ms
      */
     float getTime(StatCounter c) const
     {
-      return _avg[c] * timer.interval * 0.001f;
+      return _avg[c] * 1000.0f;
+    }
+
+    float getReal(StatCounter c) const
+    {
+      return _real[c];
     }
 
     float getFreq(StatCounter c) const
@@ -162,6 +170,7 @@ class Stats
         case COUNTER_GYRO_READ:    return PSTR(" gyro_r");
         case COUNTER_GYRO_FILTER:  return PSTR(" gyro_f");
         case COUNTER_GYRO_FFT:     return PSTR(" gyro_a");
+        case COUNTER_RPM_UPDATE:   return PSTR("  rpm_u");
         case COUNTER_ACCEL_READ:   return PSTR("  acc_r");
         case COUNTER_ACCEL_FILTER: return PSTR("  acc_f");
         case COUNTER_MAG_READ:     return PSTR("  mag_r");
@@ -177,6 +186,7 @@ class Stats
         case COUNTER_INNER_PID:    return PSTR("  pid_i");
         case COUNTER_MIXER:        return PSTR("mixer_p");
         case COUNTER_MIXER_WRITE:  return PSTR("mixer_w");
+        case COUNTER_MIXER_READ:   return PSTR("mixer_r");
         case COUNTER_BLACKBOX:     return PSTR("  bblog");
         case COUNTER_TELEMETRY:    return PSTR("    tlm");
         case COUNTER_SERIAL:       return PSTR(" serial");
@@ -196,6 +206,7 @@ class Stats
     uint32_t _count[COUNTER_COUNT];
     float _avg[COUNTER_COUNT];
     float _freq[COUNTER_COUNT];
+    float _real[COUNTER_COUNT];
     uint32_t _loop_last;
     int32_t _loop_time;
 };

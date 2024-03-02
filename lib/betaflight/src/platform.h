@@ -8,6 +8,8 @@
 #define USE_D_MIN
 #define USE_DYN_NOTCH_FILTER
 #define USE_ITERM_RELAX
+#define USE_DSHOT_TELEMETRY
+#define USE_RPM_FILTER
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -16,7 +18,11 @@
 
 #if defined(ESP8266)
 #define ESPFC_TARGET "ESP8266"
-#elif defined(ESP32C3) //where is this defined???
+#elif defined(ESP32S3)
+#define ESPFC_TARGET "ESP32S3"
+#elif defined(ESP32S2)
+#define ESPFC_TARGET "ESP32S2"
+#elif defined(ESP32C3)
 #define ESPFC_TARGET "ESP32C3"
 #elif defined(ESP32)
 #define ESPFC_TARGET "ESP32"
@@ -28,7 +34,7 @@
   #error "Unsupported platform"
 #endif
 
-#define MAX_SUPPORTED_MOTORS 4
+#define MAX_SUPPORTED_MOTORS 8
 #define MAX_SUPPORTED_SERVOS 8
 #define PID_PROCESS_DENOM_DEFAULT       1
 
@@ -241,6 +247,7 @@ typedef struct serialPort_s {
     uint32_t txBufferTail;
 
     serialReceiveCallbackPtr rxCallback;
+    void * espfcDevice;
 } serialPort_t;
 
 typedef enum {
@@ -320,17 +327,24 @@ PG_DECLARE(serialConfig_t, serialConfig);
 
 extern const uint32_t baudRates[];
 
+void mspSerialAllocatePorts(void);
+void mspSerialReleasePortIfAllocated(serialPort_t *serialPort);
 serialPort_t *findSharedSerialPort(uint16_t functionMask, serialPortFunction_e sharedWithFunction);
-void mspSerialReleasePortIfAllocated(struct serialPort_s *serialPort);
 serialPortConfig_t *findSerialPortConfig(serialPortFunction_e function);
 serialPort_t *openSerialPort(serialPortIdentifier_e identifier, serialPortFunction_e function, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudrate, portMode_e mode, portOptions_e options);
+serialPort_t *getSerialPort();
 void closeSerialPort(serialPort_t *serialPort);
-void mspSerialAllocatePorts(void);
+uint32_t serialRxBytesWaiting(serialPort_t * instance);
 uint32_t serialTxBytesFree(const serialPort_t *instance);
 bool isSerialTransmitBufferEmpty(const serialPort_t *instance);
 portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function);
 
+void serialDeviceInit(void * serial, size_t index);
+
+void serialBeginWrite(serialPort_t * instance);
+void serialEndWrite(serialPort_t * instance);
 void serialWrite(serialPort_t *instance, uint8_t ch);
+int serialRead(serialPort_t *instance);
 /* SERIAL END */
 
 /* MIXER START */
@@ -367,7 +381,10 @@ typedef enum mixerMode
 typedef struct mixerConfig_s {
     uint8_t mixerMode;
     bool yaw_motors_reversed;
+    uint8_t mixer_type;
 } mixerConfig_t;
+
+extern const char * const lookupTableMixerType[];
 
 PG_DECLARE(mixerConfig_t, mixerConfig);
 
@@ -376,6 +393,7 @@ typedef struct motorDevConfig_s {
     uint8_t  motorPwmProtocol;              // Pwm Protocol
     uint8_t  motorPwmInversion;             // Active-High vs Active-Low. Useful for brushed FCs converted for brushless operation
     uint8_t  useUnsyncedPwm;
+    uint8_t  useDshotTelemetry;
 //    ioTag_t  ioTags[MAX_SUPPORTED_MOTORS];
 } motorDevConfig_t;
 
@@ -385,9 +403,23 @@ typedef struct motorConfig_s {
     uint16_t minthrottle;                   // Set the minimum throttle command sent to the ESC (Electronic Speed Controller). This is the minimum value that allow motors to run at a idle speed.
     uint16_t maxthrottle;                   // This is the maximum value for the ESCs at full power this value can be increased up to 2000
     uint16_t mincommand;                    // This is the value for the ESCs when they are not armed. In some cases, this value must be lowered down to 900 for some specific ESCs
+    uint8_t motorPoleCount;
 } motorConfig_t;
 
 PG_DECLARE(motorConfig_t, motorConfig);
+
+#define RPM_FILTER_HARMONICS_MAX 3
+
+typedef struct rpmFilterConfig_s {
+    uint8_t  rpm_filter_harmonics;     // how many harmonics should be covered with notches? 0 means filter off
+    uint8_t  rpm_filter_weights[RPM_FILTER_HARMONICS_MAX];  // effect or "weight" (0% - 100%) of each RPM filter harmonic
+    uint8_t  rpm_filter_min_hz;        // minimum frequency of the notches
+    uint16_t rpm_filter_fade_range_hz; // range in which to gradually turn off notches down to minHz
+    uint16_t rpm_filter_q;             // q of the notches
+    uint16_t rpm_filter_lpf_hz;        // the cutoff of the lpf on reported motor rpm
+} rpmFilterConfig_t;
+
+PG_DECLARE(rpmFilterConfig_t, rpmFilterConfig);
 
 extern float motor[MAX_SUPPORTED_MOTORS];
 extern float motor_disarmed[MAX_SUPPORTED_MOTORS];
@@ -609,6 +641,7 @@ typedef struct pidProfile_s {
     uint16_t dterm_lpf1_static_hz;          // Static Dterm lowpass 1 filter cutoff value in hz
     uint16_t dterm_lpf1_dyn_min_hz;         // Dterm lowpass filter 1 min hz when in dynamic mode
     uint16_t dterm_lpf1_dyn_max_hz;         // Dterm lowpass filter 1 max hz when in dynamic mode
+    uint8_t dterm_lpf1_dyn_expo;            // set the curve for dynamic dterm lowpass filter
     uint8_t itermWindupPointPercent;        // Experimental ITerm windup threshold, percent motor saturation
     uint16_t pidSumLimit;
     uint16_t pidSumLimitYaw;
@@ -646,6 +679,11 @@ typedef struct pidProfile_s {
     uint8_t iterm_relax_type;               // Specifies type of relax algorithm
     uint8_t iterm_relax_cutoff;             // This cutoff frequency specifies a low pass filter which predicts average response of the quad to setpoint
     uint8_t iterm_relax;                    // Enable iterm suppression during stick input
+    uint8_t tpa_low_rate;                   // Percent reduction in P or D at zero throttle
+    uint16_t tpa_low_breakpoint;            // Breakpoint where lower TPA is deactivated
+    uint8_t tpa_low_always;                 // off, on - if OFF then low TPA is only active until tpa_low_breakpoint is reached the first time
+    uint8_t ez_landing_threshold;           // Threshold stick position below which motor output is limited
+    uint8_t ez_landing_limit;               // Maximum motor output when all sticks centred and throttle zero
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -878,6 +916,7 @@ typedef struct gyroConfig_s {
     uint16_t gyro_lpf1_static_hz;
     uint16_t gyro_lpf1_dyn_min_hz;
     uint16_t gyro_lpf1_dyn_max_hz;
+    uint8_t gyro_lpf1_dyn_expo; // set the curve for dynamic gyro lowpass filter
     uint8_t gyro_lpf2_type;
     uint16_t gyro_lpf2_static_hz;
 } gyroConfig_t;
@@ -940,6 +979,7 @@ float mixerGetThrottle(void);
 bool isRssiConfigured(void);
 int16_t getMotorOutputLow();
 int16_t getMotorOutputHigh();
+uint16_t getDshotErpm(uint8_t i);
 /* FAILSAFE END */
 
 #define PARAM_NAME_GYRO_HARDWARE_LPF "gyro_hardware_lpf"
@@ -976,7 +1016,13 @@ int16_t getMotorOutputHigh();
 #define PARAM_NAME_RATES_TYPE "rates_type"
 #define PARAM_NAME_TPA_RATE "tpa_rate"
 #define PARAM_NAME_TPA_BREAKPOINT "tpa_breakpoint"
+#define PARAM_NAME_TPA_LOW_RATE "tpa_low_rate"
+#define PARAM_NAME_TPA_LOW_BREAKPOINT "tpa_low_breakpoint"
+#define PARAM_NAME_TPA_LOW_ALWAYS "tpa_low_always"
 #define PARAM_NAME_TPA_MODE "tpa_mode"
+#define PARAM_NAME_MIXER_TYPE "mixer_type"
+#define PARAM_NAME_EZ_LANDING_THRESHOLD "ez_landing_threshold"
+#define PARAM_NAME_EZ_LANDING_LIMIT "ez_landing_limit"
 #define PARAM_NAME_THROTTLE_LIMIT_TYPE "throttle_limit_type"
 #define PARAM_NAME_THROTTLE_LIMIT_PERCENT "throttle_limit_percent"
 #define PARAM_NAME_GYRO_CAL_ON_FIRST_ARM "gyro_cal_on_first_arm"
@@ -1038,6 +1084,7 @@ int16_t getMotorOutputHigh();
 #define PARAM_NAME_SIMPLIFIED_GYRO_FILTER_MULTIPLIER "simplified_gyro_filter_multiplier"
 #define PARAM_NAME_DEBUG_MODE "debug_mode"
 #define PARAM_NAME_RPM_FILTER_HARMONICS "rpm_filter_harmonics"
+#define PARAM_NAME_RPM_FILTER_WEIGHTS "rpm_filter_weights"
 #define PARAM_NAME_RPM_FILTER_Q "rpm_filter_q"
 #define PARAM_NAME_RPM_FILTER_MIN_HZ "rpm_filter_min_hz"
 #define PARAM_NAME_RPM_FILTER_FADE_RANGE_HZ "rpm_filter_fade_range_hz"
@@ -1118,6 +1165,48 @@ int16_t getMotorOutputHigh();
 #define PARAM_NAME_GPS_LAP_TIMER_GATE_TOLERANCE "gps_lap_timer_gate_tolerance_m"
 #endif // USE_GPS_LAP_TIMER
 #endif
+
+// ESC 4-Way IF
+
+#define USE_SERIAL_4WAY_BLHELI_INTERFACE
+#define USE_SERIAL_4WAY_BLHELI_BOOTLOADER
+#define USE_SERIAL_4WAY_SK_BOOTLOADER
+
+typedef int8_t IO_t;
+
+typedef struct {
+    bool enabled;
+    IO_t io;
+} pwmOutputPort_t;
+
+pwmOutputPort_t * pwmGetMotors(void);
+void motorDisable(void);
+void motorEnable(void);
+void motorInitEscDevice(void * driver);
+
+#if defined(UNIT_TEST) || defined(ESP8266) || defined(ARCH_RP2040)
+void delay(unsigned long ms);
+void delayMicroseconds(unsigned int us);
+#else
+void delay(uint32_t ms);
+void delayMicroseconds(uint32_t us);
+#endif
+
+#define IOCFG_IPU    0x00 // INPUT_PULLUP
+#define IOCFG_OUT_PP 0x01 // OUTPUT
+#define IOCFG_AF_PP  0x02 // OUTPUT
+#define Bit_RESET    0x00 // LOW
+#define IO_NONE      -1
+
+int IORead(IO_t pin);
+void IOConfigGPIO(IO_t pin, uint8_t mode);
+void IOHi(IO_t pin);
+void IOLo(IO_t pin);
+
+#define LED0_ON do {} while(false)
+#define LED0_OFF do {} while(false)
+
+// end ESC 4-Way IF
 
 #ifdef __cplusplus
 }

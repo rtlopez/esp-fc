@@ -76,7 +76,7 @@ class SensorManager
 
     int postLoop()
     {
-      _gyro.dynNotchAnalyze();
+      _gyro.postLoop();
       return 1;
     }
 
@@ -102,7 +102,7 @@ class SensorManager
     // sub task
     int updateDelayed()
     {
-      _gyro.dynNotchAnalyze();
+      _gyro.postLoop();
       int status = _accel.update();
       if(_fusionUpdate)
       {
