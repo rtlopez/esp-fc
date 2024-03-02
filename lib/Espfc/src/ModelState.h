@@ -174,12 +174,14 @@ struct ModelState
   Filter gyroFilter3[3];
   Filter gyroNotch1Filter[3];
   Filter gyroNotch2Filter[3];
-  Filter gyroDynNotchFilter[3][6];
+  Filter gyroDynNotchFilter[6][3];
   Filter gyroImuFilter[3];
 
   Filter accelFilter[3];
   Filter magFilter[3];
   Filter inputFilter[4];
+  Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
+  Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][3];
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;
@@ -218,6 +220,20 @@ struct ModelState
   int16_t outputUs[OUTPUT_CHANNELS];
   int16_t outputDisarmed[OUTPUT_CHANNELS];
   bool outputSaturated;
+
+  int16_t outputTelemetryErrors[OUTPUT_CHANNELS];
+  int32_t outputTelemetryErrorsSum[OUTPUT_CHANNELS];
+  int32_t outputTelemetryErrorsCount[OUTPUT_CHANNELS];
+  uint32_t outputTelemetryErpm[OUTPUT_CHANNELS];
+  float outputTelemetryRpm[OUTPUT_CHANNELS];
+  float outputTelemetryFreq[OUTPUT_CHANNELS];
+  int8_t outputTelemetryTemperature[OUTPUT_CHANNELS];
+  int8_t outputTelemetryVoltage[OUTPUT_CHANNELS];
+  int8_t outputTelemetryCurrent[OUTPUT_CHANNELS];
+  int8_t outputTelemetryDebug1[OUTPUT_CHANNELS];
+  int8_t outputTelemetryDebug2[OUTPUT_CHANNELS];
+  int8_t outputTelemetryDebug3[OUTPUT_CHANNELS];
+  int8_t outputTelemetryEvents[OUTPUT_CHANNELS];
 
   // other state
   Kalman kalman[AXES];

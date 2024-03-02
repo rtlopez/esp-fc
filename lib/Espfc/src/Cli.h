@@ -356,7 +356,7 @@ class Cli
                                                   PSTR("DSHOT_RPM_TELEMETRY"), PSTR("RPM_FILTER"), PSTR("D_MIN"), PSTR("AC_CORRECTION"), PSTR("AC_ERROR"), PSTR("DUAL_GYRO_SCALED"), PSTR("DSHOT_RPM_ERRORS"), 
                                                   PSTR("CRSF_LINK_STATISTICS_UPLINK"), PSTR("CRSF_LINK_STATISTICS_PWR"), PSTR("CRSF_LINK_STATISTICS_DOWN"), PSTR("BARO"), PSTR("GPS_RESCUE_THROTTLE_PID"), 
                                                   PSTR("DYN_IDLE"), PSTR("FF_LIMIT"), PSTR("FF_INTERPOLATED"), PSTR("BLACKBOX_OUTPUT"), PSTR("GYRO_SAMPLE"), PSTR("RX_TIMING"), NULL };
-      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT2"), PSTR("PT3"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
+      static const char* filterTypeChoices[] = { PSTR("PT1"), PSTR("BIQUAD"), PSTR("PT2"), PSTR("PT3"), PSTR("NOTCH"), PSTR("NOTCH_DF1"), PSTR("BPF"), PSTR("FO"), PSTR("FIR2"), PSTR("MEDIAN3"), PSTR("NONE"), NULL };
       static const char* alignChoices[]      = { PSTR("DEFAULT"), PSTR("CW0"), PSTR("CW90"), PSTR("CW180"), PSTR("CW270"), PSTR("CW0_FLIP"), PSTR("CW90_FLIP"), PSTR("CW180_FLIP"), PSTR("CW270_FLIP"), PSTR("CUSTOM"), NULL };
       static const char* mixerTypeChoices[]  = { PSTR("NONE"), PSTR("TRI"), PSTR("QUADP"), PSTR("QUADX"), PSTR("BI"),
                                                  PSTR("GIMBAL"), PSTR("Y6"), PSTR("HEX6"), PSTR("FWING"), PSTR("Y4"),
@@ -407,6 +407,14 @@ class Cli
         Param(PSTR("gyro_dyn_notch_count"), &c.dynamicFilter.width),
         Param(PSTR("gyro_dyn_notch_min"), &c.dynamicFilter.min_freq),
         Param(PSTR("gyro_dyn_notch_max"), &c.dynamicFilter.max_freq),
+        Param(PSTR("gyro_rpm_harmonics"), &c.rpmFilterHarmonics),
+        Param(PSTR("gyro_rpm_q"), &c.rpmFilterQ),
+        Param(PSTR("gyro_rpm_min_freq"), &c.rpmFilterMinFreq),
+        Param(PSTR("gyro_rpm_fade"), &c.rpmFilterFade),
+        Param(PSTR("gyro_rpm_weight_1"), &c.rpmFilterWeights[0]),
+        Param(PSTR("gyro_rpm_weight_2"), &c.rpmFilterWeights[1]),
+        Param(PSTR("gyro_rpm_weight_3"), &c.rpmFilterWeights[2]),
+        Param(PSTR("gyro_rpm_tlm_lpf_freq"), &c.rpmFilterFreqLpf),
         Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
         Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
@@ -588,13 +596,18 @@ class Cli
         Param(PSTR("output_motor_protocol"), &c.output.protocol, protocolChoices),
         Param(PSTR("output_motor_async"), &c.output.async),
         Param(PSTR("output_motor_rate"), &c.output.rate),
+#ifdef ESPFC_DSHOT_TELEMETRY
+        Param(PSTR("output_motor_poles"), &c.output.motorPoles),
+#endif
         Param(PSTR("output_servo_rate"), &c.output.servoRate),
 
         Param(PSTR("output_min_command"), &c.output.minCommand),
         Param(PSTR("output_min_throttle"), &c.output.minThrottle),
         Param(PSTR("output_max_throttle"), &c.output.maxThrottle),
         Param(PSTR("output_dshot_idle"), &c.output.dshotIdle),
-
+#ifdef ESPFC_DSHOT_TELEMETRY
+        Param(PSTR("output_dshot_telemetry"), &c.output.dshotTelemetry),
+#endif
         Param(PSTR("output_0"), &c.output.channel[0]),
         Param(PSTR("output_1"), &c.output.channel[1]),
         Param(PSTR("output_2"), &c.output.channel[2]),
@@ -1225,6 +1238,7 @@ class Cli
           float load = _model.state.stats.getLoad(c);
           int freq = lrintf(_model.state.stats.getFreq(c));
           int real = lrintf(_model.state.stats.getReal(c));
+          if(freq == 0) continue;
 
           s.print(FPSTR(_model.state.stats.getName(c)));
           s.print(": ");

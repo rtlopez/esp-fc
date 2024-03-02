@@ -702,8 +702,8 @@ class MspProcessor
           r.writeU16(_model.config.output.minCommand);  // mincommand
           r.writeU8(_model.state.currentMixer.count);   // motor count
           // 1.42+
-          r.writeU8(14); // motor pole count
-          r.writeU8(0); // dshot telemtery
+          r.writeU8(_model.config.output.motorPoles); // motor pole count
+          r.writeU8(_model.config.output.dshotTelemetry); // dshot telemtery
           r.writeU8(0); // esc sensor
           break;
 
@@ -713,8 +713,13 @@ class MspProcessor
           _model.config.output.minCommand = m.readU16();  // mincommand
           if(m.remain() >= 2)
           {
+#ifdef ESPFC_DSHOT_TELEMETRY
+            _model.config.output.motorPoles = m.readU8();
+            _model.config.output.dshotTelemetry = m.readU8();
+#else
             m.readU8();
             m.readU8();
+#endif
           }
           _model.reload();
           break;
@@ -1047,11 +1052,10 @@ class MspProcessor
           r.writeU16(_model.config.dynamicFilter.q); // dyn_notch_q
           r.writeU16(_model.config.dynamicFilter.min_freq); // dyn_notch_min_hz
           // rpm filter
-          r.writeU8(0);  // gyro_rpm_notch_harmonics
-          r.writeU8(0);  // gyro_rpm_notch_min
+          r.writeU8(_model.config.rpmFilterHarmonics);  // gyro_rpm_notch_harmonics
+          r.writeU8(_model.config.rpmFilterMinFreq);  // gyro_rpm_notch_min
           // 1.43+
           r.writeU16(_model.config.dynamicFilter.max_freq); // dyn_notch_max_hz
-
           break;
 
         case MSP_SET_FILTER_CONFIG:
@@ -1093,8 +1097,8 @@ class MspProcessor
             _model.config.dynamicFilter.width = m.readU8();  // dyn_notch_width_percent
             _model.config.dynamicFilter.q = m.readU16(); // dyn_notch_q
             _model.config.dynamicFilter.min_freq = m.readU16(); // dyn_notch_min_hz
-            m.readU8();  // gyro_rpm_notch_harmonics
-            m.readU8();  // gyro_rpm_notch_min
+            _model.config.rpmFilterHarmonics = m.readU8();  // gyro_rpm_notch_harmonics
+            _model.config.rpmFilterMinFreq = m.readU8();  // gyro_rpm_notch_min
           }
           // 1.43+
           if (m.remain() >= 1) {
@@ -1173,7 +1177,6 @@ class MspProcessor
           r.writeU8(_model.config.output.motorLimit); // motor_output_limit
           r.writeU8(0); // auto_profile_cell_count
           r.writeU8(0); // idle_min_rpm
-
           break;
 
         case MSP_SET_PID_ADVANCED:
@@ -1260,6 +1263,35 @@ class MspProcessor
               continue;
             }
             r.writeU16(_model.state.outputUs[i]);
+          }
+          break;
+
+        case MSP_MOTOR_TELEMETRY:
+          r.writeU8(OUTPUT_CHANNELS);
+          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            int rpm = 0;
+            uint16_t invalidPct = 0;
+            uint8_t escTemperature = 0;  // degrees celcius
+            uint16_t escVoltage = 0;     // 0.01V per unit
+            uint16_t escCurrent = 0;     // 0.01A per unit
+            uint16_t escConsumption = 0; // mAh
+
+            if (_model.config.pin[i + PIN_OUTPUT_0] != -1)
+            {
+              rpm = lrintf(_model.state.outputTelemetryRpm[i]);
+              invalidPct = _model.state.outputTelemetryErrors[i];
+              escTemperature = _model.state.outputTelemetryTemperature[i];
+              escVoltage = _model.state.outputTelemetryVoltage[i];
+              escCurrent = _model.state.outputTelemetryCurrent[i];
+            }
+
+            r.writeU32(rpm);
+            r.writeU16(invalidPct);
+            r.writeU8(escTemperature);
+            r.writeU16(escVoltage);
+            r.writeU16(escCurrent);
+            r.writeU16(escConsumption);
           }
           break;
 

@@ -169,6 +169,11 @@ bool areMotorsRunning(void)
   return _model_ptr->areMotorsRunning();
 }
 
+uint16_t getDshotErpm(uint8_t i)
+{
+  return _model_ptr->state.outputTelemetryErpm[i];
+}
+
 namespace Espfc {
 
 class Blackbox
@@ -252,6 +257,12 @@ class Blackbox
       cp->iterm_relax = _model.config.itermRelax;
       cp->iterm_relax_type = 1;
       cp->iterm_relax_cutoff = _model.config.itermRelaxCutoff;
+      cp->dterm_lpf1_dyn_expo = 5;
+      cp->tpa_low_rate = 20;
+      cp->tpa_low_breakpoint = 1050;
+      cp->tpa_low_always = 0;
+      cp->ez_landing_threshold = 25;
+      cp->ez_landing_limit = 5;
 
       rcControlsConfigMutable()->deadband = _model.config.input.deadband;
       rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
@@ -261,12 +272,14 @@ class Blackbox
       gyroConfigMutable()->gyro_lpf1_static_hz = _model.config.gyroFilter.freq;
       gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyroDynLpfFilter.cutoff;
       gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyroDynLpfFilter.freq;
+      gyroConfigMutable()->gyro_lpf1_dyn_expo = 5;
       gyroConfigMutable()->gyro_lpf2_type = _model.config.gyroFilter2.type;
       gyroConfigMutable()->gyro_lpf2_static_hz = _model.config.gyroFilter2.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyroNotch1Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
       gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
       gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyroNotch2Filter.freq;
+      gyroConfigMutable()->gyro_sync_denom = 1;
 
       dynNotchConfigMutable()->dyn_notch_count = _model.config.dynamicFilter.width;
       dynNotchConfigMutable()->dyn_notch_q = _model.config.dynamicFilter.q;
@@ -285,9 +298,12 @@ class Blackbox
       motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
       motorConfigMutable()->minthrottle = _model.state.minThrottle;
       motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
+      motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;
+      motorConfigMutable()->motorPoleCount = _model.config.output.motorPoles;
 
-      gyroConfigMutable()->gyro_sync_denom = 1;
       pidConfigMutable()->pid_process_denom = _model.config.loopSync;
+
+      mixerConfigMutable()->mixer_type = 0;
 
       if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
       if(_model.magActive()) enabledSensors |= SENSOR_MAG;
@@ -322,6 +338,15 @@ class Blackbox
       rxConfigMutable()->rssi_channel = _model.config.input.rssiChannel;
       rxConfigMutable()->airModeActivateThreshold = 40;
       rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
+
+      rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.rpmFilterHarmonics;
+      rpmFilterConfigMutable()->rpm_filter_q = _model.config.rpmFilterQ;
+      rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.rpmFilterMinFreq;
+      rpmFilterConfigMutable()->rpm_filter_fade_range_hz = _model.config.rpmFilterFade;
+      rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.rpmFilterFreqLpf;
+      rpmFilterConfigMutable()->rpm_filter_weights[0] = _model.config.rpmFilterWeights[0];
+      rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.rpmFilterWeights[1];
+      rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.rpmFilterWeights[2];
 
       blackboxInit();
 

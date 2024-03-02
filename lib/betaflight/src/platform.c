@@ -19,6 +19,7 @@ const char * boardIdentifier = "ESPF";
 PG_RESET_TEMPLATE_DEF(serialConfig_t, serialConfig);
 PG_RESET_TEMPLATE_DEF(mixerConfig_t, mixerConfig);
 PG_RESET_TEMPLATE_DEF(motorConfig_t, motorConfig);
+PG_RESET_TEMPLATE_DEF(rpmFilterConfig_t, rpmFilterConfig);
 PG_RESET_TEMPLATE_DEF(featureConfig_t, featureConfig);
 PG_RESET_TEMPLATE_DEF(flight3DConfig_t, flight3DConfig);
 PG_RESET_TEMPLATE_DEF(armingConfig_t, armingConfig);
@@ -67,6 +68,10 @@ float motor[MAX_SUPPORTED_MOTORS];
 float motor_disarmed[MAX_SUPPORTED_MOTORS];
 uint32_t targetPidLooptime;
 float rcCommand[4];
+
+const char* const lookupTableMixerType[] = {
+    "LEGACY", "LINEAR", "DYNAMIC", "EZLANDING",
+};
 
 int gcd(int num, int denom)
 {

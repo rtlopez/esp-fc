@@ -88,6 +88,11 @@ int EscDriverEsp32c3::pin(size_t channel) const
   return _slots[channel].pin;
 }
 
+uint32_t EscDriverEsp32c3::telemetry(size_t channel) const
+{
+  return 0;
+}
+
 void EscDriverEsp32c3::apply()
 {
   if(_protocol == ESC_PROTOCOL_DISABLED) return;
@@ -248,12 +253,12 @@ EscDriverEsp32c3::EscDriverEsp32c3(): _busy(false), _async(true), _protocol(ESC_
   for(size_t i = 0; i < ESC_CHANNEL_COUNT * 2; ++i) _items[i] = Item();
 }
 
-int EscDriverEsp32c3::begin(EscProtocol protocol, bool async, int16_t rate, EscDriverTimer timer)
+int EscDriverEsp32c3::begin(const EscConfig& conf)
 {
-  _protocol = ESC_PROTOCOL_SANITIZE(protocol);
-  _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : async; // force async for brushed
-  _rate = constrain(rate, 50, 8000);
-  _timer = timer;
+  _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
+  _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
+  _rate = constrain(conf.rate, 50, 8000);
+  _timer = (EscDriverTimer)conf.timer;
   _interval = usToTicksReal(_timer, 1000000L / _rate)/* - 400*/; // small compensation to keep frequency
   _intervalMin = _interval / 500; // do not generate brushed pulses if duty < ~0.2%  (1002)
   _intervalMax = _interval - _intervalMin; // set brushed output hi if duty > ~99.8% (1998)

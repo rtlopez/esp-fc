@@ -43,12 +43,13 @@ class EscDriverEsp32c3: public EscDriverBase
 
     EscDriverEsp32c3();
 
-    int begin(EscProtocol protocol, bool async, int16_t rate, EscDriverTimer timer);
+    int begin(const EscConfig& conf);
     void end();
     int attach(size_t channel, int pin, int pulse) IRAM_ATTR;
     int write(size_t channel, int pulse) IRAM_ATTR;
     void apply() IRAM_ATTR;
     int pin(size_t channel) const;
+    uint32_t telemetry(size_t channel) const;
     static bool handle(void * p) IRAM_ATTR;
 
   private:

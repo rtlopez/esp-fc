@@ -226,9 +226,13 @@ enum InputFilterType : uint8_t {
 
 const size_t MODEL_NAME_LEN  = 16;
 const size_t AXES            = 4;
+const size_t AXES_RPY        = 3;
 const size_t INPUT_CHANNELS  = AXIS_COUNT;
 const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
+
+const size_t RPM_FILTER_MOTOR_MAX = 4;
+const size_t RPM_FILTER_HARMONICS_MAX = 3;
 
 enum PinFunction {
 #ifdef ESPFC_INPUT
@@ -428,7 +432,9 @@ class OutputConfig
 {
   public:
     int8_t protocol;
-    int16_t async;
+    int8_t async;
+    int8_t dshotTelemetry;
+    int8_t motorPoles;
     int16_t rate;
     int16_t servoRate;
 
@@ -642,6 +648,13 @@ class ModelConfig
 
     DynamicFilterConfig dynamicFilter;
 
+    uint8_t rpmFilterHarmonics;
+    uint8_t rpmFilterMinFreq;
+    int16_t rpmFilterQ;
+    uint8_t rpmFilterFreqLpf;
+    uint8_t rpmFilterWeights[RPM_FILTER_HARMONICS_MAX];
+    uint8_t rpmFilterFade;
+
     ModelConfig()
     {
 #ifdef ESPFC_INPUT
@@ -743,7 +756,16 @@ class ModelConfig
       //dtermFilter = FilterConfig(FILTER_PT1, 113);
       //dtermFilter2 = FilterConfig(FILTER_PT1, 113);
 
-      gyroFilter3 = FilterConfig(FILTER_PT1, 150);
+      rpmFilterHarmonics = 3;
+      rpmFilterMinFreq = 100;
+      rpmFilterQ = 500;
+      rpmFilterFade = 30;
+      rpmFilterWeights[0] = 100;
+      rpmFilterWeights[1] = 100;
+      rpmFilterWeights[2] = 100;
+      rpmFilterFreqLpf = 150;
+
+      gyroFilter3 = FilterConfig(FILTER_FO, 150);
       gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
       dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0); // off
@@ -814,6 +836,8 @@ class ModelConfig
       //output.async = true;
       output.async = false;
       output.servoRate = 0; // default 50, 0 to disable
+      output.dshotTelemetry = false;
+      output.motorPoles = 14;
 
       // input config
       input.ppmMode = PPM_MODE_NORMAL;

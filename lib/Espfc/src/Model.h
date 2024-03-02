@@ -172,7 +172,11 @@ class Model
 
     bool armingDisabled() const /* IRAM_ATTR */
     {
+#if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
+      return false;
+#else
       return state.armingDisabledFlags != 0;
+#endif
     }
 
     void setArmingDisabled(ArmingDisabledFlags flag, bool value)
@@ -206,6 +210,13 @@ class Model
         //if(state.outputUs[i] != config.output.minCommand) return true;
       }
       return false;
+    }
+
+    void inline setDebug(DebugMode mode, size_t index, int16_t value)
+    {
+      if(index >= 8) return;
+      if(config.debugMode != mode) return;
+      state.debug[index] = value;
     }
 
     Device::SerialDevice * getSerialStream(SerialPort i)
@@ -438,7 +449,7 @@ class Model
       state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(2);
+      state.stats.timer.setRate(4);
 #if defined(ESPFC_MULTI_CORE)
       state.serialTimer.setRate(4000);
 #else
@@ -461,20 +472,32 @@ class Model
         {
           for(size_t p = 0; p < (size_t)config.dynamicFilter.width; p++)
           {
-            state.gyroDynNotchFilter[i][p].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
+            state.gyroDynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
           }
         }
         state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, gyroFilterRate);
         state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, gyroFilterRate);
-        if(config.gyroDynLpfFilter.cutoff > 0) {
+        if(config.gyroDynLpfFilter.cutoff > 0)
+        {
           state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), gyroFilterRate);
-        } else {
+        }
+        else
+        {
           state.gyroFilter[i].begin(config.gyroFilter, gyroFilterRate);
         }
         state.gyroFilter2[i].begin(config.gyroFilter2, gyroFilterRate);
         state.gyroFilter3[i].begin(config.gyroFilter3, gyroPreFilterRate);
         state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
-        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 2), gyroFilterRate);
+        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 3), gyroFilterRate);
+        for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
+        {
+          state.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.rpmFilterFreqLpf), gyroFilterRate);
+          for(size_t n = 0; n < config.rpmFilterHarmonics; n++)
+          {
+            int center = Math::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.rpmFilterHarmonics, config.rpmFilterMinFreq, gyroFilterRate / 2);
+            state.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
+          }
+        }
         if(magActive())
         {
           state.magFilter[i].begin(config.magFilter, state.magTimer.rate);
