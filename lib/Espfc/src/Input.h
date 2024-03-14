@@ -7,6 +7,7 @@
 #include "Device/InputPPM.h"
 #include "Device/InputSBUS.h"
 #include "Device/InputCRSF.h"
+#include "Device/InputESPNOW.h"
 
 namespace Espfc {
 
@@ -378,6 +379,12 @@ class Input
         _model.logger.info().log(F("RX PPM")).log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
         return &_ppm;
       }
+      else if(_model.config.input.serialRxProvider == SERIALRX_TARGET_CUSTOM)
+      {
+        _espnow.begin();
+        _model.logger.info().logln(F("RX ESPNOW"));
+        return &_espnow;
+      }
       return nullptr;
     }
 
@@ -394,6 +401,7 @@ class Input
     Device::InputPPM _ppm;
     Device::InputSBUS _sbus;
     Device::InputCRSF _crsf;
+    Device::InputESPNOW _espnow;
 
     static const uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
     static const uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms
