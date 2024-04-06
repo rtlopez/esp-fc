@@ -7,6 +7,9 @@
 #include "Device/InputPPM.h"
 #include "Device/InputSBUS.h"
 #include "Device/InputCRSF.h"
+#if defined(ESPFC_ESPNOW)
+#include "Device/InputEspNow.h"
+#endif
 
 namespace Espfc {
 
@@ -80,14 +83,14 @@ class Input
       }
     }
 
-    void setInput(Axis i, float v, bool newFrame, bool noDelta = false)
+    void setInput(Axis i, float v, bool newFrame, bool noFilter = false)
     {
       const InputChannelConfig& ich = _model.config.input.channel[i];
       if(i <= AXIS_THRUST)
       {
-        v = noDelta ? v : _model.state.inputFilter[i].update(v);
-        _model.state.inputUs[i] = v;
-        _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
+        const float nv = noFilter ? v : _model.state.inputFilter[i].update(v);
+        _model.state.inputUs[i] = nv;
+        _model.state.input[i] = Math::map(nv, ich.min, ich.max, -1.f, 1.f);
       }
       else if(newFrame)
       {
@@ -232,7 +235,7 @@ class Input
         return true;
       }
 
-      // stage 1 timeout
+      // stage 1 timeout (100ms)
       if(lossTime >= 1 * TENTH_TO_US)
       {
         failsafeStage1();
@@ -378,6 +381,14 @@ class Input
         _model.logger.info().log(F("RX PPM")).log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
         return &_ppm;
       }
+#if defined(ESPFC_ESPNOW)
+      else if(_model.isActive(FEATURE_RX_SPI))
+      {
+        int status = _espnow.begin();
+        _model.logger.info().log(F("RX ESPNOW")).logln(status);
+        return &_espnow;
+      }
+#endif
       return nullptr;
     }
 
@@ -394,6 +405,9 @@ class Input
     Device::InputPPM _ppm;
     Device::InputSBUS _sbus;
     Device::InputCRSF _crsf;
+#if defined(ESPFC_ESPNOW)
+    Device::InputEspNow _espnow;
+#endif
 
     static const uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
     static const uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms

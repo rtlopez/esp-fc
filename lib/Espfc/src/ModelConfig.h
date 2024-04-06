@@ -209,6 +209,7 @@ enum Feature {
   FEATURE_SOFTSERIAL = 1 << 6,
   FEATURE_TELEMETRY  = 1 << 10,
   FEATURE_AIRMODE    = 1 << 22,
+  FEATURE_RX_SPI     = 1 << 25,
   FEATURE_DYNAMIC_FILTER = 1 << 29,
 };
 
@@ -494,36 +495,13 @@ enum ArmingDisabledFlags {
 
 static const size_t ARMING_DISABLED_FLAGS_COUNT = 25;
 
-enum WirelessMode {
-  WIRELESS_MODE_NULL = 0,  /**< null mode */
-  WIRELESS_MODE_STA,       /**< WiFi station mode */
-  WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
-  WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
-  WIRELESS_MODE_MAX
-};
-
 class WirelessConfig
 {
   public:
     static const size_t MAX_LEN = 32;
-    int8_t mode;
     int16_t port;
     char ssid[MAX_LEN + 1];
     char pass[MAX_LEN + 1];
-    char ssidAp[MAX_LEN + 1];
-    char passAp[MAX_LEN + 1];
-
-    static const char * getModeName(WirelessMode mode)
-    {
-      if(mode >= WIRELESS_MODE_MAX) return PSTR("?");
-      return getModeNames()[mode];
-    }
-
-    static const char ** getModeNames()
-    {
-      static const char* modeChoices[] = { PSTR("OFF"), PSTR("STA"), PSTR("AP"), PSTR("AP_STA"), NULL };
-      return modeChoices;
-    }
 };
 
 class FailsafeConfig
@@ -636,8 +614,6 @@ class ModelConfig
 
     int8_t pin[PIN_COUNT];
     int16_t i2cSpeed;
-    bool softSerialGuard;
-    bool serialRxGuard;
     int8_t tpaScale;
     int16_t tpaBreakpoint;
 
@@ -654,6 +630,8 @@ class ModelConfig
     uint8_t rpmFilterFreqLpf;
     uint8_t rpmFilterWeights[RPM_FILTER_HARMONICS_MAX];
     uint8_t rpmFilterFade;
+
+    uint8_t rescueConfigDelay = 30;
 
     ModelConfig()
     {
@@ -746,16 +724,6 @@ class ModelConfig
       dtermFilter = FilterConfig(FILTER_PT1, 128);
       dtermFilter2 = FilterConfig(FILTER_PT1, 128);
 
-      // ESPFC defaults => BF x 0.75
-      //gyroDynLpfFilter = FilterConfig(FILTER_PT1, 375, 150);
-      //gyroFilter = FilterConfig(FILTER_PT1, 100);
-      //gyroFilter2 = FilterConfig(FILTER_PT1, 188);
-      //dynamicFilter = DynamicFilterConfig(5, 200, 80, 400); // 8%. q:2.0, 80-400 Hz
-
-      //dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
-      //dtermFilter = FilterConfig(FILTER_PT1, 113);
-      //dtermFilter2 = FilterConfig(FILTER_PT1, 113);
-
       rpmFilterHarmonics = 3;
       rpmFilterMinFreq = 100;
       rpmFilterQ = 500;
@@ -778,9 +746,6 @@ class ModelConfig
 
       telemetry = 0;
       telemetryInterval = 1000;
-
-      softSerialGuard = false;
-      serialRxGuard = false;
 
 #ifdef ESPFC_SERIAL_0
       serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
@@ -859,25 +824,6 @@ class ModelConfig
       // swap yaw and throttle for AETR
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
       input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
-
-      /*
-      input.rateType = 0; // betaflight
-
-      input.rate[AXIS_ROLL] = 70;
-      input.expo[AXIS_ROLL] = 0;
-      input.superRate[AXIS_ROLL] = 80;
-      input.rateLimit[AXIS_ROLL] = 1998;
-
-      input.rate[AXIS_PITCH] = 70;
-      input.expo[AXIS_PITCH] = 0;
-      input.superRate[AXIS_PITCH] = 80;
-      input.rateLimit[AXIS_PITCH] = 1998;
-
-      input.rate[AXIS_YAW] = 120;
-      input.expo[AXIS_YAW] = 0;
-      input.superRate[AXIS_YAW] = 50;
-      input.rateLimit[AXIS_YAW] = 1998;
-      */
 
       input.rateType = 3; // actual
 
@@ -994,11 +940,8 @@ class ModelConfig
 
       buzzer.inverted = true;
 
-      wireless.mode = WIRELESS_MODE_NULL;
       wireless.ssid[0] = 0;
       wireless.pass[0] = 0;
-      wireless.ssidAp[0] = 0;
-      wireless.passAp[0] = 0;
       wireless.port = 1111;
 
       modelName[0] = 0;

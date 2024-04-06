@@ -2,8 +2,12 @@
 #define _ESPFC_HARDWARE_H_
 
 #include <Arduino.h>
-#include "Target/Target.h"
 #include "Model.h"
+#if defined(ESPFC_WIFI_ALT)
+#include <ESP8266WiFi.h>
+#elif defined(ESPFC_WIFI)
+#include <WiFi.h>
+#endif
 #include "Device/BusDevice.h"
 #if defined(ESPFC_I2C_0)
 #include "Device/BusI2C.h"
@@ -89,7 +93,7 @@ class Hardware
     {
       if(_model.config.gyroDev == GYRO_NONE) return;
 
-      Espfc::Device::GyroDevice * detectedGyro = nullptr;
+      Device::GyroDevice * detectedGyro = nullptr;
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS0] != -1)
       {
@@ -128,7 +132,7 @@ class Hardware
     {
       if(_model.config.magDev == MAG_NONE) return;
 
-      Espfc::Device::MagDevice * detectedMag  = nullptr;
+      Device::MagDevice * detectedMag  = nullptr;
 #if defined(ESPFC_I2C_0)
       if(_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
       {
@@ -150,7 +154,7 @@ class Hardware
     {
       if(_model.config.baroDev == BARO_NONE) return;
 
-      Espfc::Device::BaroDevice * detectedBaro = nullptr;
+      Device::BaroDevice * detectedBaro = nullptr;
 #if defined(ESPFC_SPI_0)
       if(_model.config.pin[PIN_SPI_CS1] != -1)
       {
@@ -211,6 +215,11 @@ class Hardware
     {
       if(model.state.escMotor) model.state.escMotor->end();
       if(model.state.escServo) model.state.escServo->end();
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
+      WiFi.disconnect();
+      WiFi.softAPdisconnect();
+      delay(100);
+#endif
       targetReset();
     }
 

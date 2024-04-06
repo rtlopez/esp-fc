@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Esp.h"
+#include "Debug_Espfc.h"
+#include "Device/SerialDevice.h"
+
 #define SERIAL_UART_PARITY_NONE      0B00000000
 #define SERIAL_UART_PARITY_EVEN      0B00000010
 #define SERIAL_UART_PARITY_ODD       0B00000011
@@ -13,6 +17,9 @@
 #define SERIAL_UART_NB_STOP_BIT_1    0B00010000
 #define SERIAL_UART_NB_STOP_BIT_15   0B00100000
 #define SERIAL_UART_NB_STOP_BIT_2    0B00110000
+
+#define ESPFC_WIFI
+#define ESPFC_ESPNOW
 
 namespace Espfc {
 

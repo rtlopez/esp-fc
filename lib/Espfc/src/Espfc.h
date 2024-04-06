@@ -1,7 +1,6 @@
 #ifndef _ESPFC_ESPFC_H_
 #define _ESPFC_ESPFC_H_
 
-#include "Target/Target.h"
 #include "Model.h"
 #include "Hardware.h"
 #include "Controller.h"
@@ -66,8 +65,8 @@ class Espfc
       }
       Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
-      _sensor.read();
-      if(_model.state.inputTimer.check())
+      if(_sensor.read()) // Hazardous!! move after BB?
+      //if(_model.state.inputTimer.check())
       {
         _input.update();
       }
@@ -96,10 +95,7 @@ class Espfc
             _mixer.update();
           }
           _blackbox.update();
-          if(_model.state.inputTimer.check())
-          {
-            _input.update();
-          }
+          _input.update();
           if(_model.state.actuatorTimer.check())
           {
             _actuator.update();

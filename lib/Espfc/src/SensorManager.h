@@ -33,9 +33,11 @@ class SensorManager
 
     int read()
     {
+      int ret = 0;
       _gyro.read();
       if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
       {
+        ret = 1;
         _model.state.appQueue.send(Event(EVENT_GYRO_READ));
       }
 
@@ -60,7 +62,7 @@ class SensorManager
         status = _voltage.update();
       }
 
-      return 1;
+      return ret;
     }
 
     int preLoop()
