@@ -60,6 +60,16 @@ static void IRAM_ATTR _rmt_zero_mem(rmt_channel_t channel, size_t len)
   }
 }
 
+// using map() in isr cause crash
+static long IRAM_ATTR _map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  const long in_range = in_max - in_min;
+  if(in_range == 0) return out_min;
+  const long out_range = out_max - out_min;
+  const long delta = x - in_min;
+  return (delta * out_range) / in_range + out_min;
+}
+
 bool EscDriverEsp32::_tx_end_installed = false;
 
 EscDriverEsp32 *EscDriverEsp32::instances[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
@@ -324,40 +334,19 @@ void EscDriverEsp32::readTelemetry()
     if(!_digital || !_dshot_tlm) continue;
     if(!_channel[i].attached()) continue;
 
-    //HardwareSerial* s = (i == 0 && _timer.check()) ? &Serial : nullptr;
-
     RingbufHandle_t rb = NULL;
     if(ESP_OK != rmt_get_ringbuf_handle((rmt_channel_t)i, &rb)) continue;
 
     size_t rmt_len = 0;
     rmt_item32_t* data = (rmt_item32_t*)xRingbufferReceive(rb, &rmt_len, 0);
-    //if(s) { s->print((uint8_t)rmt_len); }
     if (data)
     {
-      /*for(size_t j = 0; j < rmt_len >> 2; j++)
-      {
-        if(!data[j].duration0) break;
-        if(s) s->print(' ');
-        if(s) s->print(data[j].level0);
-        if(s) s->print(':');
-        if(s) s->print(data[j].duration0);
-
-        if(!data[j].duration1) break;
-        if(s) s->print(' ');
-        if(s) s->print(data[j].level1);
-        if(s) s->print(':');
-        if(s) s->print(data[j].duration1);
-      }*/
       uint32_t value = extractTelemetryGcr((uint32_t*)data, rmt_len >> 2, _channel[i].dshot_tlm_bit_len);
 
-      //if(s) s->print(' ');
-      //if(s) s->print(value, HEX);
-      
       vRingbufferReturnItem(rb, (void *)data);
       
       _channel[i].telemetryValue = value;
     }
-    //if(s) s->print('\n');
   }
   //PIN_DEBUG(LOW);
 }
@@ -373,7 +362,7 @@ void EscDriverEsp32::writeAnalogCommand(uint8_t channel, int32_t pulse)
     maxPulse = 2000;
   }
   pulse = constrain(pulse, minPulse, maxPulse);
-  int duration = map(pulse, 1000, 2000, slot.pulse_min, slot.pulse_max);
+  int duration = _map(pulse, 1000, 2000, slot.pulse_min, slot.pulse_max);
 
   int count = 2;
   if (_async)

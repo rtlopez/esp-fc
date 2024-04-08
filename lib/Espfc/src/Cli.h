@@ -877,7 +877,7 @@ class Cli
       else if(strcmp_P(cmd.args[0], PSTR("wifi")) == 0)
       {
         s.print(F("ST IP4: tcp://"));
-        s.print(_model.state.localIp);
+        s.print(WiFi.localIP());
         s.print(F(":"));
         s.println(_model.config.wireless.port);
         s.print(F("ST MAC: "));

@@ -17,7 +17,6 @@ class Wireless
 {
   enum Status {
     STOPPED,
-    STARTING,
     STARTED,
   };
   public:
@@ -27,7 +26,7 @@ class Wireless
     {
       WiFi.persistent(false);
 #ifdef ESPFC_ESPNOW
-      if(_model.isActive(FEATURE_RX_SPI))
+      if(_model.isFeatureActive(FEATURE_RX_SPI))
       {
         startAp();
       }
@@ -38,7 +37,7 @@ class Wireless
     void startAp()
     {
       bool status = WiFi.softAP("ESP-FC");
-      _model.logger.info().log(F("WIFI AP")).logln(status);
+      _model.logger.info().log(F("WIFI AP START")).logln(status);
     }
 
     int connect()
@@ -65,41 +64,33 @@ class Wireless
       {
         startAp();
       }
-      //delay(200);
       _server.begin(_model.config.wireless.port);
       _server.setNoDelay(true);
-      _model.logger.info().log(F("WIFI PORT")).log(WiFi.status()).logln(_model.config.wireless.port);
+      _model.state.serial[SERIAL_SOFT_0].stream = &_adapter;
+      _model.logger.info().log(F("WIFI SERVER PORT")).log(WiFi.status()).logln(_model.config.wireless.port);
       return 1;
     }
 
     void wifiEventConnected(const String& ssid, int channel)
     {
-      _model.logger.info().log(F("WIFI CONNECTED")).log(ssid).logln(channel);
+      _model.logger.info().log(F("WIFI STA CONN")).log(ssid).logln(channel);
     }
 
     void wifiEventApConnected(const uint8_t* mac)
     {
       char buf[20];
       snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-      _model.logger.info().log(F("WIFI AP CONNECTED")).logln(buf);
-      //_server.begin(_model.config.wireless.port);
-      //_model.logger.info().log(F("WIFI PORT")).log(WiFi.status()).logln(_model.config.wireless.port);
+      _model.logger.info().log(F("WIFI AP CONNECT")).logln(buf);
     }
 
     void wifiEventGotIp(const IPAddress& ip)
     {
-      _model.state.localIp = ip;
-      //_status = STARTED;
-      _model.state.serial[SERIAL_SOFT_0].stream = &_adapter;
-      _model.logger.info().log(F("WIFI IP")).logln(_model.state.localIp.toString());
+      _model.logger.info().log(F("WIFI STA IP")).logln(ip.toString());
     }
 
     void wifiEventDisconnected()
     {
-      _model.state.serial[SERIAL_SOFT_0].stream = nullptr;
-      _model.state.localIp = IPAddress(0,0,0,0);
-      //_status = STOPPED;
-      _model.logger.info().logln(F("WIFI DISCONNECTED"));
+      _model.logger.info().logln(F("WIFI STA DISCONNECT"));
     }
 
     int update()
@@ -109,28 +100,19 @@ class Wireless
       switch(_status)
       {
         case STOPPED: 
-          if(_model.state.rescueConfigMode == RESCUE_CONFIG_ACTIVE)
+          if(_model.state.rescueConfigMode == RESCUE_CONFIG_ACTIVE && _model.isFeatureActive(FEATURE_SOFTSERIAL))
           {
-            _status = STARTING;
             connect();
+            _status = STARTED;
             return 1;
           }
           break;
-        case STARTING:
-          /*if(WiFi.status() == WL_CONNECTED)
-          {
-            _status = STARTED;
-            _server.begin(_model.config.wireless.port);
-            _model.logger.info().log(F("WIFI PORT")).log(WiFi.status()).logln(_model.config.wireless.port);
-          }*/
-          break;
         case STARTED:
+          if(_server.hasClient())
+          {
+            _client = _server.accept();
+          }
           break;
-      }
-
-      if(_server.hasClient())
-      {
-        _client = _server.accept();
       }
 
       return 1;

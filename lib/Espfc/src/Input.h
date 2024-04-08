@@ -363,26 +363,26 @@ class Input
     Device::InputDevice * getInputDevice()
     {
       Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
-      if(serial && _model.isActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_SBUS)
+      if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_SBUS)
       {
         _sbus.begin(serial);
         _model.logger.info().logln(F("RX SBUS"));
         return &_sbus;
       }
-      if(serial && _model.isActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
+      if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
       {
         _crsf.begin(serial);
         _model.logger.info().logln(F("RX CRSF"));
         return &_crsf;
       }
-      else if(_model.isActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
+      else if(_model.isFeatureActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
       {
         _ppm.begin(_model.config.pin[PIN_INPUT_RX], _model.config.input.ppmMode);
         _model.logger.info().log(F("RX PPM")).log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
         return &_ppm;
       }
 #if defined(ESPFC_ESPNOW)
-      else if(_model.isActive(FEATURE_RX_SPI))
+      else if(_model.isFeatureActive(FEATURE_RX_SPI))
       {
         int status = _espnow.begin();
         _model.logger.info().log(F("RX ESPNOW")).logln(status);

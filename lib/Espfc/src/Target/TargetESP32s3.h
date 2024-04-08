@@ -3,6 +3,11 @@
 #include "Esp.h"
 #include "Debug_Espfc.h"
 
+// pins to avoid:
+// strapping: 0, 3, 45, 46
+// flash/psram: 26-37 (reserved)
+// usb/jtag: 19, 20
+
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 6 // ppm
 
