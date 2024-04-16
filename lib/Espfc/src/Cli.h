@@ -792,8 +792,20 @@ class Cli
       {
         //FIXME: detect disconnection
         _active = true;
+        stream.println();
+        stream.println(F("Entering CLI Mode, type 'exit' to return, or 'help'"));
+        stream.print(F("# "));
         printVersion(stream);
-        stream.println(F(", CLI mode, type help"));
+        stream.println();
+        _model.setArmingDisabled(ARMING_DISABLED_CLI, true);
+        cmd = CliCmd();
+        return true;
+      }
+      if(_active && c == 4) // CTRL-D
+      {
+        stream.println();
+        stream.println(F(" #leaving CLI mode, unsaved changes lost"));
+        _active = false;
         cmd = CliCmd();
         return true;
       }
@@ -803,8 +815,6 @@ class Cli
       {
         parse(cmd);
         execute(cmd, stream);
-        //cmd.index = 0;
-        //cmd.buff[cmd.index] = '\0';
         cmd = CliCmd();
         return true;
       }
@@ -892,6 +902,8 @@ class Cli
         s.println(WiFi.status());
         s.print(F("  MODE: "));
         s.println(WiFi.getMode());
+        s.print(F("CHANNEL: "));
+        s.println(WiFi.channel());
         //WiFi.printDiag(s);
       }
 #endif
@@ -969,9 +981,9 @@ class Cli
       }
       else if(strcmp_P(cmd.args[0], PSTR("dump")) == 0)
       {
-        s.print('#');
-        printVersion(s);
-        s.println();
+        //s.print(F("# "));
+        //printVersion(s);
+        //s.println();
         for(size_t i = 0; _params[i].name; ++i)
         {
           print(_params[i], s);
@@ -1176,7 +1188,6 @@ class Cli
       }
       else if(strcmp_P(cmd.args[0], PSTR("status")) == 0)
       {
-
         printVersion(s);
         s.println();
         s.println(F("STATUS: "));
@@ -1303,17 +1314,14 @@ class Cli
         s.print(F("%"));
         s.println();
       }
-      else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0 || strcmp_P(cmd.args[0], PSTR("exit")) == 0)
       {
+        _active = false;
         Hardware::restart(_model);
       }
       else if(strcmp_P(cmd.args[0], PSTR("defaults")) == 0)
       {
         _model.reset();
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("exit")) == 0)
-      {
-        _active = false;
       }
       else if(strcmp_P(cmd.args[0], PSTR("motors")) == 0)
       {

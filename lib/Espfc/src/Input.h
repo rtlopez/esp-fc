@@ -147,7 +147,7 @@ class Input
         _model.state.debug[0] = !_model.state.inputRxLoss;
         _model.state.debug[1] = _model.state.inputRxFailSafe;
         _model.state.debug[2] = _model.state.inputChannelsValid;
-        _model.state.debug[3] = _model.state.inputRaw[AXIS_THRUST];
+        _model.state.debug[3] = _model.state.inputLossTime / (100 * 1000);
       }
 
       return status;
@@ -228,15 +228,15 @@ class Input
       }
 
       // stage 2 timeout
-      const uint32_t lossTime = micros() - _model.state.inputFrameTime;
-      if(lossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
+      _model.state.inputLossTime = micros() - _model.state.inputFrameTime;
+      if(_model.state.inputLossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
       {
         failsafeStage2();
         return true;
       }
 
       // stage 1 timeout (100ms)
-      if(lossTime >= 1 * TENTH_TO_US)
+      if(_model.state.inputLossTime >= 1 * TENTH_TO_US)
       {
         failsafeStage1();
         return true;
@@ -248,6 +248,7 @@ class Input
     void failsafeIdle()
     {
       _model.state.failsafe.phase = FC_FAILSAFE_IDLE;
+      _model.state.inputLossTime = 0;
     }
 
     void failsafeStage1()

@@ -209,6 +209,7 @@ struct ModelState
   uint32_t inputFrameDelta;
   uint32_t inputFrameRate;
   uint32_t inputFrameCount;
+  uint32_t inputLossTime;
   float inputInterpolationDelta;
   float inputInterpolationStep;
   float inputAutoFactor;
@@ -328,8 +329,6 @@ struct ModelState
   int32_t baroRate;
 
   uint32_t armingDisabledFlags;
-
-  IPAddress localIp;
 
   RescueConfigMode rescueConfigMode;
 
