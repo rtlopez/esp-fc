@@ -2,17 +2,18 @@
 
 #include "Filter.h"
 #include "helper_3dmath.h"
+#include "MemoryHelper.h"
 
 namespace Espfc {
 
 namespace Utils {
 
-float applyFilter(Filter& filter, float sample)
+float IRAM_ATTR_ALT applyFilter(Filter& filter, float sample)
 {
     return filter.update(sample);
 }
 
-VectorFloat applyFilter(Filter * filters, const VectorFloat& samples)
+VectorFloat IRAM_ATTR_ALT applyFilter(Filter * filters, const VectorFloat& samples)
 {
     VectorFloat result;
     result.x = filters[0].update(samples.x);

@@ -51,7 +51,7 @@ public:
     return value;
   }
 
-  int alignToClock(uint32_t clock, uint32_t maxFreq)
+  inline int alignToClock(uint32_t clock, uint32_t maxFreq)
   {
     uint32_t result = clock;
     uint32_t div = 1;
@@ -87,12 +87,12 @@ public:
     return rad * (180.0f * invPi());
   }
 
-  float toAltitude(float pressure, float seaLevelPressure = 101325.f)
+  inline float toAltitude(float pressure, float seaLevelPressure = 101325.f)
   {
     return 44330.f * (1.f - powf(pressure / seaLevelPressure, 0.1903));
   }
 
-  void peakDetect(float * samples, size_t begin_bin, size_t end_bin, float bin_width, Peak * peaks, size_t peak_count)
+  inline void peakDetect(float * samples, size_t begin_bin, size_t end_bin, float bin_width, Peak * peaks, size_t peak_count)
   {
     for(size_t b = begin_bin; b <= end_bin; b++)
     {
@@ -128,7 +128,7 @@ public:
   }
 
   // sort peaks by freq, move zero to end
-  void peakSort(Peak * peaks, size_t peak_count)
+  void inline peakSort(Peak * peaks, size_t peak_count)
   {
      std::sort(peaks, peaks + peak_count, [](const Peak& a, const Peak& b) -> bool {
       if (a.freq == 0.f) return false;

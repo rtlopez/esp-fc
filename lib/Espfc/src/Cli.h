@@ -1381,6 +1381,10 @@ class Cli
       s.print(' ');
       s.print(buildTime);
       s.print(' ');
+      s.print(API_VERSION_MAJOR);
+      s.print('.');
+      s.print(API_VERSION_MINOR);
+      s.print(' ');
       s.print(__VERSION__);
       s.print(' ');
       s.print(__cplusplus);

@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <EspGpio.h>
 #include <EscDriver.h>
 #include <Hal.h>
 

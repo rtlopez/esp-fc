@@ -11,7 +11,6 @@
 #if defined(SERIAL_SOFT_0_RX)
 #include <EspSoftSerial.h>
 #endif
-#include <EspGpio.h>
 #include <EscDriver.h>
 #include <EspWire.h>
 #if defined(ESPFC_ESPNOW)
@@ -59,11 +58,7 @@ Espfc::Espfc espfc;
     }
     void loop()
     {
-      //const uint32_t timeout = millis() + 200;
-      //while(millis() < timeout)
-      //{
-        espfc.update();
-      //}
+      espfc.update();
     }
 
   #elif defined(ESPFC_MULTI_CORE_RP2040)

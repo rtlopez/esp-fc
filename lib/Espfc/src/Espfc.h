@@ -123,11 +123,17 @@ class Espfc
       switch(e.type)
       {
         case EVENT_GYRO_READ:
+          PIN_DEBUG(HIGH);
           _sensor.preLoop();
+          //PIN_DEBUG(LOW);
           _controller.update();
+          //PIN_DEBUG(HIGH);
           _mixer.update();
+          //PIN_DEBUG(LOW);
           _blackbox.update();
+          //PIN_DEBUG(HIGH);
           _sensor.postLoop();
+          PIN_DEBUG(LOW);
           break;
         case EVENT_ACCEL_READ:
           _sensor.fusion();

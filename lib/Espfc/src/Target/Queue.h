@@ -4,6 +4,8 @@
 // https://techtutorialsx.com/2017/08/20/esp32-arduino-freertos-queues/
 // https://www.freertos.org/a00116.html
 
+#include "Utils/MemoryHelper.h"
+
 namespace Espfc {
 
 enum EventType
@@ -49,22 +51,14 @@ class Queue
 {
   public:
     void begin();
-    void send(const Event& e);
-    Event receive();
-    bool isEmpty() const;
-    bool isFull() const;
+    void send(const Event& e) IRAM_ATTR_ALT;
+    Event receive() IRAM_ATTR_ALT;
+    bool isEmpty() const IRAM_ATTR_ALT;
+    bool isFull() const IRAM_ATTR_ALT;
 
   private:
     TargetQueueHandle _q;
 };
-
-#if defined(UNIT_TEST) || !defined(ESPFC_MULTI_CORE)
-void Queue::begin() {}
-void Queue::send(const Event& e) { (void)e; }
-Event Queue::receive() { return Event(); }
-bool Queue::isEmpty() const { return true; }
-bool Queue::isFull() const { return false; }
-#endif
 
 }
 
