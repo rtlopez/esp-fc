@@ -82,10 +82,10 @@ class EscDriverEsp32: public EscDriverBase
     int begin(const EscConfig& conf);
     void end();
     int attach(size_t channel, int pin, int pulse);
-    int write(size_t channel, int pulse);
-    void apply();
+    int write(size_t channel, int pulse) IRAM_ATTR;
+    void apply() IRAM_ATTR;
     int pin(size_t channel) const;
-    uint32_t telemetry(size_t channel) const;
+    uint32_t telemetry(size_t channel) const IRAM_ATTR;
 
   private:
     void initChannel(int channel, gpio_num_t pin, int pulse);
@@ -97,8 +97,8 @@ class EscDriverEsp32: public EscDriverBase
     void disableRx(rmt_channel_t channel) IRAM_ATTR;
     static void txDoneCallback(rmt_channel_t channel, void *arg) IRAM_ATTR;
     void transmitOne(uint8_t i) IRAM_ATTR;
-    void transmitAll();
-    void readTelemetry();
+    void transmitAll() IRAM_ATTR;
+    void readTelemetry() IRAM_ATTR;
     void writeAnalogCommand(uint8_t channel, int32_t pulse) IRAM_ATTR;
     void writeDshotCommand(uint8_t channel, int32_t pulse) IRAM_ATTR;
     void transmitCommand(uint8_t channel) IRAM_ATTR;
