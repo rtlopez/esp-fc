@@ -275,7 +275,7 @@ struct ModelState
   float maxThrottle;
   bool digitalOutput;
 
-  //Timer inputTimer;
+  Timer inputTimer;
   Timer actuatorTimer;
 
   Timer magTimer;

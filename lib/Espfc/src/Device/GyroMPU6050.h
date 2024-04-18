@@ -8,6 +8,7 @@
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
+#include "Utils/MemoryHelper.h"
 
 #define MPU6050_ADDRESS_FIRST       0x68 // address pin low (GND), default for InvenSense evaluation board
 #define MPU6050_ADDRESS_SECOND      0x69 // address pin high (VCC)
@@ -189,7 +190,7 @@ class GyroMPU6050: public GyroDevice
       return GYRO_MPU6050;
     }
 
-    int readGyro(VectorInt16& v) override
+    int FAST_CODE_ATTR readGyro(VectorInt16& v) override
     {
       uint8_t buffer[6];
 

@@ -22,8 +22,7 @@ class GyroSensor: public BaseSensor
     GyroSensor(Model& model);
 
     int begin();
-
-    int update();
+    int update() FAST_CODE_ATTR;
     int read() FAST_CODE_ATTR;
     int filter() FAST_CODE_ATTR;
     void postLoop();

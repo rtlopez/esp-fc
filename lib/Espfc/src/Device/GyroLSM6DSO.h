@@ -5,6 +5,7 @@
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
+#include "Utils/MemoryHelper.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp
 #define LSM6DSOX_ADDRESS_FIRST     0x6A
@@ -111,7 +112,7 @@ class GyroLSM6DSO: public GyroDevice
       return GYRO_LSM6DSO;
     }
 
-    int readGyro(VectorInt16& v) override
+    int FAST_CODE_ATTR readGyro(VectorInt16& v) override
     {
       int16_t buffer[3];
 

@@ -5,6 +5,7 @@
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
+#include "Utils/MemoryHelper.h"
 
 #define BMI160_ADDRESS_FIRST        0x69
 #define BMI160_ADDRESS_SECOND       0x68
@@ -190,7 +191,7 @@ class GyroBMI160: public GyroDevice
       return GYRO_BMI160;
     }
 
-    int readGyro(VectorInt16& v) override
+    int FAST_CODE_ATTR readGyro(VectorInt16& v) override
     {
       uint8_t buffer[6];
 

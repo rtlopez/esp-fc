@@ -1,10 +1,10 @@
 #ifndef _ESPFC_SENSOR_BASE_SENSOR_H_
 #define _ESPFC_SENSOR_BASE_SENSOR_H_
 
+#include <cmath>
 #include "Model.h"
 #include "Hardware.h"
-
-#include <math.h>
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -13,7 +13,7 @@ namespace Sensor {
 class BaseSensor
 {
   public:
-    void align(VectorInt16& dest, uint8_t rotation) /* IRAM_ATTR */
+    void FAST_CODE_ATTR align(VectorInt16& dest, uint8_t rotation)
     {
       const int16_t x = dest.x;
       const int16_t y = dest.y;

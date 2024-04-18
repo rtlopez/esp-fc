@@ -433,7 +433,7 @@ class Model
       //state.accelTimer.setRate(state.gyroTimer.rate, 2);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
-      //state.inputTimer.setRate(1005);
+      state.inputTimer.setRate(1001);
       state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
@@ -450,7 +450,7 @@ class Model
 
       const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
-      const uint32_t inputFilterRate = state.loopTimer.rate;
+      const uint32_t inputFilterRate = state.inputTimer.rate;
       const uint32_t pidFilterRate = state.loopTimer.rate;
 
       // configure filters

@@ -65,8 +65,8 @@ class Espfc
       }
       Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
-      if(_sensor.read()) // Hazardous!! move after BB?
-      //if(_model.state.inputTimer.check())
+      _sensor.read();
+      if(_model.state.inputTimer.check())
       {
         _input.update();
       }
@@ -136,7 +136,9 @@ class Espfc
           PIN_DEBUG(LOW);
           break;
         case EVENT_ACCEL_READ:
+          PIN_DEBUG(HIGH);
           _sensor.fusion();
+          PIN_DEBUG(LOW);
           break;
         default:
           break;
