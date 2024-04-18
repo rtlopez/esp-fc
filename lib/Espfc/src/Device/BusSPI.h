@@ -25,12 +25,12 @@ class BusSPI: public BusDevice
 
     int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override;
 
-    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override IRAM_ATTR_ALT;
+    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override FAST_CODE_ATTR;
 
     bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) override;
 
   private:
-    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed) IRAM_ATTR_ALT;
+    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed) FAST_CODE_ATTR;
 
     ESPFC_SPI_0_DEV_T& _dev;
 };

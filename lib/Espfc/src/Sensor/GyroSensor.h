@@ -24,14 +24,14 @@ class GyroSensor: public BaseSensor
     int begin();
 
     int update();
-    int read() IRAM_ATTR_ALT;
-    int filter() IRAM_ATTR_ALT;
+    int read() FAST_CODE_ATTR;
+    int filter() FAST_CODE_ATTR;
     void postLoop();
     void rpmFilterUpdate();
     void dynNotchFilterUpdate();
 
   private:
-    void calibrate() IRAM_ATTR_ALT;
+    void calibrate() FAST_CODE_ATTR;
 
     Math::Sma<VectorFloat, 8> _sma;
     Math::Sma<VectorFloat, 8> _dyn_notch_sma;

@@ -51,10 +51,10 @@ class Queue
 {
   public:
     void begin();
-    void send(const Event& e) IRAM_ATTR_ALT;
-    Event receive() IRAM_ATTR_ALT;
-    bool isEmpty() const IRAM_ATTR_ALT;
-    bool isFull() const IRAM_ATTR_ALT;
+    void send(const Event& e) FAST_CODE_ATTR;
+    Event receive() FAST_CODE_ATTR;
+    bool isEmpty() const FAST_CODE_ATTR;
+    bool isFull() const FAST_CODE_ATTR;
 
   private:
     TargetQueueHandle _q;

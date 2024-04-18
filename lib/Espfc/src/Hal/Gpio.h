@@ -16,8 +16,8 @@ namespace Hal {
 class Gpio
 {
   public:
-    static void digitalWrite(uint8_t pin, pin_status_t val) IRAM_ATTR_ALT;
-    static pin_status_t digitalRead(uint8_t pin) IRAM_ATTR_ALT;
+    static void digitalWrite(uint8_t pin, pin_status_t val) FAST_CODE_ATTR;
+    static pin_status_t digitalRead(uint8_t pin) FAST_CODE_ATTR;
 };
 
 }

@@ -6,6 +6,7 @@
 #include <helper_3dmath.h>
 #include <Kalman.h>
 #include "msp/msp_protocol.h"
+#include <printf.h>
 
 using namespace Espfc;
 using namespace Espfc::Device;

@@ -1,6 +1,8 @@
 #ifndef _ESPFC_MATH_UTILS_H_
 #define _ESPFC_MATH_UTILS_H_
 
+#include <cstdint>
+#include <cmath>
 #include <algorithm>
 
 namespace Espfc {

@@ -2,7 +2,7 @@
 
 #ifdef ESP32
 #include <esp_attr.h>
-#define IRAM_ATTR_ALT IRAM_ATTR
+#define FAST_CODE_ATTR IRAM_ATTR
 #else
-#define IRAM_ATTR_ALT
+#define FAST_CODE_ATTR
 #endif
