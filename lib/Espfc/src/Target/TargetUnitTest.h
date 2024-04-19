@@ -17,6 +17,8 @@
 #define ESPFC_GYRO_I2C_RATE_MAX 2000
 #define ESPFC_GYRO_SPI_RATE_MAX 8000
 
+#define SERIAL_TX_FIFO_SIZE 0xFF
+
 inline void targetReset()
 {
 }
