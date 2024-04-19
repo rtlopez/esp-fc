@@ -26,10 +26,14 @@ int SensorManager::read()
     _model.state.appQueue.send(Event(EVENT_GYRO_READ));
   }
 
-  int status = _accel.update();
-  if(status)
+  int status = 0;
+  if(_model.state.accelTimer.syncTo(_model.state.gyroTimer))
   {
-    _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
+    status = _accel.update();
+    if(status)
+    {
+      _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
+    }
   }
 
   if (!status)

@@ -126,6 +126,14 @@ void test_math_bits_msb()
     TEST_ASSERT_EQUAL_UINT8(80, Math::setBitsMsb(0x00, 6, 4, 10));
 }
 
+void test_math_clock_align()
+{
+    TEST_ASSERT_EQUAL_INT( 333, Math::alignToClock(1000,  400));
+    TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(1000,  500));
+    TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(1000,  800));
+    TEST_ASSERT_EQUAL_INT(1000, Math::alignToClock(1000, 2000));
+}
+
 void test_math_peak_detect_full()
 {
     using Math::Peak;
@@ -1053,6 +1061,8 @@ int main(int argc, char **argv)
     RUN_TEST(test_math_bitmask_msb);
     RUN_TEST(test_math_bits_lsb);
     RUN_TEST(test_math_bits_msb);
+
+    RUN_TEST(test_math_clock_align);
 
     RUN_TEST(test_math_baro_altitude);
     RUN_TEST(test_math_peak_detect_full);

@@ -123,6 +123,7 @@ class Espfc
       switch(e.type)
       {
         case EVENT_GYRO_READ:
+          // TODO: skip if too quick
           PIN_DEBUG(HIGH);
           _sensor.preLoop();
           //PIN_DEBUG(LOW);

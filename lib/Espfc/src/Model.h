@@ -428,9 +428,11 @@ class Model
       // init timers
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
-      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
-      state.accelTimer.setInterval(state.accelTimer.interval - 5);
+      //state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
+      //state.accelTimer.setInterval(state.accelTimer.interval - 5);
       //state.accelTimer.setRate(state.gyroTimer.rate, 2);
+      int accelRate = Math::alignToClock(state.gyroRate, 500);
+      state.accelTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / accelRate);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
       state.inputTimer.setRate(1001);
