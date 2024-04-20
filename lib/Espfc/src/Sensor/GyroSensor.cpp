@@ -59,15 +59,6 @@ int GyroSensor::begin()
   return 1;
 }
 
-int GyroSensor::update()
-{
-  int status = read();
-
-  if (status) filter();
-
-  return status;
-}
-
 int GyroSensor::read()
 {
   if (!_model.gyroActive()) return 0;

@@ -1,5 +1,4 @@
-#ifndef _HAL_H_
-#define _HAL_H_
+#pragma once
 
 #ifdef UNIT_TEST
 
@@ -20,7 +19,6 @@
 
 #endif // UNIT_TEST
 
-#undef max
-#undef min
+//#undef max
+//#undef min
 
-#endif // _HAL_H_

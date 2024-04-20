@@ -18,40 +18,27 @@ int SensorManager::begin()
 
 int SensorManager::read()
 {
-  int ret = 0;
   _gyro.read();
+
   if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
   {
-    ret = 1;
     _model.state.appQueue.send(Event(EVENT_GYRO_READ));
   }
 
-  int status = 0;
   if(_model.state.accelTimer.syncTo(_model.state.gyroTimer))
   {
-    status = _accel.update();
-    if(status)
-    {
-      _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
-    }
+    _accel.update();
+    _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
+    return 1;
   }
 
-  if (!status)
-  {
-    status = _mag.update();
-  }
+  if(_mag.update()) return 1;
 
-  if(!status)
-  {
-    status = _baro.update();
-  }
+  if(_baro.update()) return 1;
 
-  if(!status)
-  {
-    status = _voltage.update();
-  }
+  if(_voltage.update()) return 1;
 
-  return ret;
+  return 0;
 }
 
 int SensorManager::preLoop()
@@ -79,45 +66,40 @@ int SensorManager::fusion()
 // main task
 int SensorManager::update()
 {
-  int status = _gyro.update();
-
-  if(_model.state.gyroBiasSamples == 0)
-  {
-    _model.state.gyroBiasSamples = -1;
-    _fusion.restoreGain();
-  }
-
-  return status;
+  _gyro.read();
+  return preLoop();
 }
 
 // sub task
 int SensorManager::updateDelayed()
 {
   _gyro.postLoop();
-  int status = _accel.update();
+
+  // update at most one sensor besides gyro
+  int status = 0;
+  if(_model.state.accelTimer.syncTo(_model.state.gyroTimer))
+  {
+    _accel.update();
+    status = 1;
+  }
+
+  // delay imu update to next cycle
   if(_fusionUpdate)
   {
     _fusionUpdate = false;
     _fusion.update();
   }
-  _fusionUpdate = status; // update in next loop cycle
+  _fusionUpdate = status;
 
-  if(!status)
-  {
-    status = _mag.update();
-  }
+  if(status) return 1;
 
-  if(!status)
-  {
-    status = _baro.update();
-  }
+  if(_mag.update()) return 1;
 
-  if(!status)
-  {
-    _voltage.update();
-  }
+  if(_baro.update()) return 1;
 
-  return status;
+  if(_voltage.update()) return 0;
+
+  return 0;
 }
 
 }

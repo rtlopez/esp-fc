@@ -9,6 +9,7 @@
 #include "Logger.h"
 #include "Device/GyroDevice.h"
 #include "platform.h"
+#include "Hal/Pgm.h"
 
 #if defined(ESPFC_WIFI_ALT)
 #include <ESP8266WiFi.h>

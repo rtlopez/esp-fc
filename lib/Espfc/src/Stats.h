@@ -154,8 +154,9 @@ class Stats
 
     float getCpuLoad() const
     {
-      float load = std::max(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
-      return load;
+      float maxLoad = std::max(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
+      float minLoad = std::min(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
+      return 0.7f * maxLoad + 0.3f * minLoad;
     }
 
     float getCpuTime() const

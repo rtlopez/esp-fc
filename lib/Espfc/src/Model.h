@@ -3,9 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
-
 #include <EscDriver.h>
-#include <Hal.h>
 
 #include "Debug_Espfc.h"
 #include "ModelConfig.h"

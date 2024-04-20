@@ -1,6 +1,5 @@
 #include <unity.h>
 #include <EscDriver.h>
-#include <Hal.h>
 #include <Kalman.h>
 #include <helper_3dmath.h>
 #include "msp/msp_protocol.h"
@@ -128,10 +127,15 @@ void test_math_bits_msb()
 
 void test_math_clock_align()
 {
+    TEST_ASSERT_EQUAL_INT( 250, Math::alignToClock(1000,  332));
+    TEST_ASSERT_EQUAL_INT( 333, Math::alignToClock(1000,  333));
+    TEST_ASSERT_EQUAL_INT( 333, Math::alignToClock(1000,  334));
     TEST_ASSERT_EQUAL_INT( 333, Math::alignToClock(1000,  400));
     TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(1000,  500));
     TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(1000,  800));
     TEST_ASSERT_EQUAL_INT(1000, Math::alignToClock(1000, 2000));
+    TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(8000,  500));
+    TEST_ASSERT_EQUAL_INT( 476, Math::alignToClock(6667,  500));
 }
 
 void test_math_peak_detect_full()
