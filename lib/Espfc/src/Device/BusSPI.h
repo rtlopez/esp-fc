@@ -2,7 +2,6 @@
 #define _ESPFC_DEVICE_BUSSPI_H_
 
 #include "BusDevice.h"
-#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -25,12 +24,12 @@ class BusSPI: public BusDevice
 
     int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override;
 
-    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override FAST_CODE_ATTR;
+    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override;
 
     bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) override;
 
   private:
-    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed) FAST_CODE_ATTR;
+    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed);
 
     ESPFC_SPI_0_DEV_T& _dev;
 };

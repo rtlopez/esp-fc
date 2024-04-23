@@ -12,7 +12,7 @@ int Controller::begin()
   return 1;
 }
 
-int Controller::update()
+int FAST_CODE_ATTR Controller::update()
 {
   uint32_t startTime = 0;
   if(_model.config.debugMode == DEBUG_PIDLOOP)
@@ -106,7 +106,7 @@ void Controller::innerLoopRobot()
   }
 }
 
-void Controller::outerLoop()
+void FAST_CODE_ATTR Controller::outerLoop()
 {
   if(_model.isActive(MODE_ANGLE))
   {
@@ -138,7 +138,7 @@ void Controller::outerLoop()
   }
 }
 
-void Controller::innerLoop()
+void FAST_CODE_ATTR Controller::innerLoop()
 {
   const float tpaFactor = getTpaFactor();
   for(size_t i = 0; i <= AXIS_YAW; ++i)

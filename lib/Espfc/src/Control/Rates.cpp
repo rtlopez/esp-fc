@@ -1,4 +1,5 @@
 #include "Rates.h"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -14,7 +15,7 @@ void Rates::begin(const InputConfig& config)
   }
 }
 
-float Rates::getSetpoint(const int axis, float input) const
+float FAST_CODE_ATTR Rates::getSetpoint(const int axis, float input) const
 {
   input = Math::clamp(input, -0.995f, 0.995f); // limit input
   const float inputAbs = fabsf(input);
@@ -35,7 +36,7 @@ float Rates::getSetpoint(const int axis, float input) const
   return Math::toRad(Math::clamp(result, -(float)rateLimit[axis], (float)rateLimit[axis]));
 }
 
-float Rates::betaflight(const int axis, float rcCommandf, const float rcCommandfAbs) const
+float FAST_CODE_ATTR Rates::betaflight(const int axis, float rcCommandf, const float rcCommandfAbs) const
 {
   if (this->rcExpo[axis])
   {
@@ -58,7 +59,7 @@ float Rates::betaflight(const int axis, float rcCommandf, const float rcCommandf
   return angleRate;
 }
 
-float Rates::raceflight(const int axis, float rcCommandf, const float rcCommandfAbs) const
+float FAST_CODE_ATTR Rates::raceflight(const int axis, float rcCommandf, const float rcCommandfAbs) const
 {
   // -1.0 to 1.0 ranged and curved
   rcCommandf = ((1.0f + 0.01f * this->rcExpo[axis] * (rcCommandf * rcCommandf - 1.0f)) * rcCommandf);
@@ -69,7 +70,7 @@ float Rates::raceflight(const int axis, float rcCommandf, const float rcCommandf
   return angleRate;
 }
 
-float Rates::kiss(const int axis, float rcCommandf, const float rcCommandfAbs) const
+float FAST_CODE_ATTR Rates::kiss(const int axis, float rcCommandf, const float rcCommandfAbs) const
 {
   const float rcCurvef = this->rcExpo[axis] / 100.0f;
 
@@ -80,7 +81,7 @@ float Rates::kiss(const int axis, float rcCommandf, const float rcCommandfAbs) c
   return kissAngle;
 }
 
-float Rates::actual(const int axis, float rcCommandf, const float rcCommandfAbs) const
+float FAST_CODE_ATTR Rates::actual(const int axis, float rcCommandf, const float rcCommandfAbs) const
 {
   float expof = this->rcExpo[axis] / 100.0f;
   expof = rcCommandfAbs * (power5(rcCommandf) * expof + rcCommandf * (1 - expof));
@@ -92,7 +93,7 @@ float Rates::actual(const int axis, float rcCommandf, const float rcCommandfAbs)
   return angleRate;
 }
 
-float Rates::quick(const int axis, float rcCommandf, const float rcCommandfAbs) const
+float FAST_CODE_ATTR Rates::quick(const int axis, float rcCommandf, const float rcCommandfAbs) const
 {
   const float rcRate = this->rcRates[axis] * 2;
   const float maxDPS = std::max(this->rates[axis] * 10.f, rcRate);

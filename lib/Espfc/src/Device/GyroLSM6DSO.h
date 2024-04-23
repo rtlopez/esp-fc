@@ -5,7 +5,6 @@
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
-#include "Utils/MemoryHelper.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp
 #define LSM6DSOX_ADDRESS_FIRST     0x6A

@@ -1,5 +1,6 @@
 #include "Pid.h"
 #include "Math/Utils.h"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -20,7 +21,7 @@ void Pid::begin()
   dt = 1.f / rate;
 }
 
-float Pid::update(float setpoint, float measurement)
+float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
 {
   error = setpoint - measurement;
   

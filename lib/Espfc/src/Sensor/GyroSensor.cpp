@@ -59,7 +59,7 @@ int GyroSensor::begin()
   return 1;
 }
 
-int GyroSensor::read()
+int FAST_CODE_ATTR GyroSensor::read()
 {
   if (!_model.gyroActive()) return 0;
 
@@ -83,7 +83,7 @@ int GyroSensor::read()
   return 1;
 }
 
-int GyroSensor::filter()
+int FAST_CODE_ATTR GyroSensor::filter()
 {
   if (!_model.gyroActive()) return 0;
 
@@ -275,7 +275,7 @@ void GyroSensor::dynNotchFilterUpdate()
   }
 }
 
-void GyroSensor::calibrate()
+void FAST_CODE_ATTR GyroSensor::calibrate()
 {
   switch (_model.state.gyroCalibrationState)
   {

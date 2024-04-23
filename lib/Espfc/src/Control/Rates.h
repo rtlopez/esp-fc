@@ -2,7 +2,6 @@
 
 #include "Math/Utils.h"
 #include "ModelConfig.h"
-#include "Utils/MemoryHelper.h"
 
 #define SETPOINT_RATE_LIMIT 1998.0f
 #define RC_RATE_INCREMENTAL 14.54f
@@ -22,14 +21,14 @@ class Rates
 {
   public:
     void begin(const InputConfig& config);
-    float getSetpoint(const int axis, float input) const FAST_CODE_ATTR;
+    float getSetpoint(const int axis, float input) const;
 
   private:
-    float betaflight(const int axis, float rcCommandf, const float rcCommandfAbs) const FAST_CODE_ATTR;
-    float raceflight(const int axis, float rcCommandf, const float rcCommandfAbs) const FAST_CODE_ATTR;
-    float kiss(const int axis, float rcCommandf, const float rcCommandfAbs) const FAST_CODE_ATTR;
-    float actual(const int axis, float rcCommandf, const float rcCommandfAbs) const FAST_CODE_ATTR;
-    float quick(const int axis, float rcCommandf, const float rcCommandfAbs) const FAST_CODE_ATTR;
+    float betaflight(const int axis, float rcCommandf, const float rcCommandfAbs) const;
+    float raceflight(const int axis, float rcCommandf, const float rcCommandfAbs) const;
+    float kiss(const int axis, float rcCommandf, const float rcCommandfAbs) const;
+    float actual(const int axis, float rcCommandf, const float rcCommandfAbs) const;
+    float quick(const int axis, float rcCommandf, const float rcCommandfAbs) const;
 
     inline float power3(float x) const
     {

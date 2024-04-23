@@ -3,7 +3,6 @@
 
 #include "Model.h"
 #include "Control/Rates.h"
-#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -12,12 +11,12 @@ class Controller
   public:
     Controller(Model& model);
     int begin();
-    int update() FAST_CODE_ATTR;
+    int update();
 
     void outerLoopRobot();
     void innerLoopRobot();
-    void outerLoop() FAST_CODE_ATTR;
-    void innerLoop() FAST_CODE_ATTR;
+    void outerLoop();
+    void innerLoop();
 
     inline float getTpaFactor() const;
     inline void resetIterm();

@@ -12,25 +12,25 @@ void Queue::begin()
 {
 }
 
-void Queue::send(const Event& e)
+void FAST_CODE_ATTR Queue::send(const Event& e)
 {
   if(isFull()) return;
   _q.push(e);
 }
 
-Event Queue::receive()
+Event FAST_CODE_ATTR Queue::receive()
 {
   Event e;
   _q.pop(e);
   return e;
 }
 
-bool Queue::isEmpty() const
+bool FAST_CODE_ATTR Queue::isEmpty() const
 {
   return _q.isEmpty();
 }
 
-bool Queue::isFull() const
+bool FAST_CODE_ATTR Queue::isFull() const
 {
   return _q.isFull();
 }

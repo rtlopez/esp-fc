@@ -1,5 +1,6 @@
 #include "Timer.h"
 #include <Arduino.h>
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -29,24 +30,24 @@ int Timer::setRate(uint32_t rate, uint32_t denom)
     return 1;
 }
 
-bool Timer::check()
+bool FAST_CODE_ATTR Timer::check()
 {
     return check(micros());
 }
 
-int Timer::update()
+int FAST_CODE_ATTR Timer::update()
 {
     return update(micros());
 }
 
-bool Timer::check(uint32_t now)
+bool FAST_CODE_ATTR Timer::check(uint32_t now)
 {
     if(interval == 0) return false;
     if(now < next) return false;
     return update(now);
 }
 
-int Timer::update(uint32_t now)
+int FAST_CODE_ATTR Timer::update(uint32_t now)
 {
     next = now + interval;
     delta = now - last;
@@ -55,7 +56,7 @@ int Timer::update(uint32_t now)
     return 1;
 }
 
-bool Timer::syncTo(const Timer& t)
+bool FAST_CODE_ATTR Timer::syncTo(const Timer& t)
 {
     if(t.iteration % denom != 0) return false;
     return update();

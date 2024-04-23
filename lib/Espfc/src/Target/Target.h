@@ -21,6 +21,7 @@
 #endif
 
 #include "Queue.h"
+#include "Utils/MemoryHelper.h"
 
 #if defined(ESPFC_I2C_0)
   #if defined(ESPFC_I2C_0_SOFT)

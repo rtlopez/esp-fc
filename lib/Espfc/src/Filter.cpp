@@ -1,6 +1,7 @@
+#include <cmath>
 #include "Filter.h"
 #include "Math/Utils.h"
-#include <cmath>
+#include "Utils/MemoryHelper.h"
 
 // Quick median filter implementation
 // (c) N. Devillard - 1998
@@ -51,7 +52,7 @@ void FilterStatePt1::init(float rate, float freq)
   k = pt1Gain(rate, freq);
 }
 
-float FilterStatePt1::update(float n)
+float FAST_CODE_ATTR FilterStatePt1::update(float n)
 {
   v += k * (n - v);
   return v;
@@ -70,7 +71,7 @@ void FilterStateFir2::reconfigure(const FilterStateFir2& from)
 {
 }
 
-float FilterStateFir2::update(float n)
+float FAST_CODE_ATTR FilterStateFir2::update(float n)
 {
   v[0] = (n + v[1]) * 0.5f;
   v[1] = n;
@@ -134,7 +135,7 @@ void FilterStateBiquad::reconfigure(const FilterStateBiquad& from)
   a2 = from.a2;
 }
 
-float FilterStateBiquad::update(float n)
+float FAST_CODE_ATTR FilterStateBiquad::update(float n)
 {
   // DF2
   const float result = b0 * n + x1;
@@ -143,7 +144,7 @@ float FilterStateBiquad::update(float n)
   return result;
 }
 
-float FilterStateBiquad::updateDF1(float n)
+float FAST_CODE_ATTR FilterStateBiquad::updateDF1(float n)
 {
   /* compute result */
   const float result = b0 * n + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
@@ -179,7 +180,7 @@ void FilterStateFirstOrder::reconfigure(const FilterStateFirstOrder& from)
   a1 = from.a1;
 }
 
-float FilterStateFirstOrder::update(float n)
+float FAST_CODE_ATTR FilterStateFirstOrder::update(float n)
 {
   // DF2
   const float result = b0 * n + x1;
@@ -215,7 +216,7 @@ void FilterStateMedian::reconfigure(const FilterStateMedian& from)
 {
 }
 
-float FilterStateMedian::update(float n)
+float FAST_CODE_ATTR FilterStateMedian::update(float n)
 {
   v[0] = v[1];
   v[1] = v[2];
@@ -244,7 +245,7 @@ void FilterStatePt2::reconfigure(const FilterStatePt2& from)
   k = from.k;
 }
 
-float FilterStatePt2::update(float n)
+float FAST_CODE_ATTR FilterStatePt2::update(float n)
 {
   v[0] += k * (n - v[0]);
   v[1] += k * (v[0] - v[1]);
@@ -267,7 +268,7 @@ void FilterStatePt3::reconfigure(const FilterStatePt3& from)
   k = from.k;
 }
 
-float FilterStatePt3::update(float n)
+float FAST_CODE_ATTR FilterStatePt3::update(float n)
 {
   v[0] += k * (n - v[0]);
   v[1] += k * (v[0] - v[1]);
@@ -288,7 +289,7 @@ void Filter::begin(const FilterConfig& config, int rate)
   reset();
 }
 
-float Filter::update(float v)
+float FAST_CODE_ATTR Filter::update(float v)
 {
   switch(_conf.type)
   {

@@ -7,7 +7,6 @@
 #ifdef ESPFC_DSP
 #include "Math/FFTAnalyzer.h"
 #endif
-#include "Utils/MemoryHelper.h"
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
 #define ESPFC_FUZZY_GYRO_ZERO  0.20
@@ -22,14 +21,14 @@ class GyroSensor: public BaseSensor
     GyroSensor(Model& model);
 
     int begin();
-    int read() FAST_CODE_ATTR;
-    int filter() FAST_CODE_ATTR;
+    int read();
+    int filter();
     void postLoop();
     void rpmFilterUpdate();
     void dynNotchFilterUpdate();
 
   private:
-    void calibrate() FAST_CODE_ATTR;
+    void calibrate();
 
     Math::Sma<VectorFloat, 8> _sma;
     Math::Sma<VectorFloat, 8> _dyn_notch_sma;

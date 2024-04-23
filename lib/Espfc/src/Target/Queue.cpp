@@ -10,13 +10,13 @@ namespace Target {
 
 void Queue::begin() {}
 
-void Queue::send(const Event& e) { (void)e; }
+void FAST_CODE_ATTR Queue::send(const Event& e) { (void)e; }
 
-Event Queue::receive() { return Event(); }
+Event FAST_CODE_ATTR Queue::receive() { return Event(); }
 
-bool Queue::isEmpty() const { return true; }
+bool FAST_CODE_ATTR Queue::isEmpty() const { return true; }
 
-bool Queue::isFull() const { return false; }
+bool FAST_CODE_ATTR Queue::isFull() const { return false; }
 
 }
 

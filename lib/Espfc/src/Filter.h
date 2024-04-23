@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -53,7 +52,7 @@ class FilterStatePt1 {
     void reset();
     void reconfigure(const FilterStatePt1& from);
     void init(float rate, float freq);
-    float update(float n) FAST_CODE_ATTR;
+    float update(float n);
 
     float k;
     float v;
@@ -64,7 +63,7 @@ class FilterStateFir2 {
     void reset();
     void init();
     void reconfigure(const FilterStateFir2& from);
-    float update(float n) FAST_CODE_ATTR;
+    float update(float n);
 
     float v[2];
 };
@@ -74,8 +73,8 @@ class FilterStateBiquad {
     void reset();
     void init(BiquadFilterType filterType, float rate, float freq, float q);
     void reconfigure(const FilterStateBiquad& from);
-    float update(float n) FAST_CODE_ATTR;
-    float updateDF1(float n) FAST_CODE_ATTR;
+    float update(float n);
+    float updateDF1(float n);
 
     float b0, b1, b2, a1, a2;
     float x1, x2, y1, y2;
@@ -86,8 +85,8 @@ class FilterStateFirstOrder {
     void reset();
     void init(float rate, float freq);
     void reconfigure(const FilterStateFirstOrder& from);
-    float update(float n) FAST_CODE_ATTR;
-    float updateDF1(float n) FAST_CODE_ATTR;
+    float update(float n);
+    float updateDF1(float n);
 
     float b0, b1, a1;
     float x1, y1;
@@ -98,7 +97,7 @@ class FilterStateMedian {
     void reset();
     void init();
     void reconfigure(const FilterStateMedian& from);
-    float update(float n) FAST_CODE_ATTR;
+    float update(float n);
 
     float v[3];
 };
@@ -108,7 +107,7 @@ class FilterStatePt2 {
     void reset();
     void init(float rate, float freq);
     void reconfigure(const FilterStatePt2& from);
-    float update(float n) FAST_CODE_ATTR;
+    float update(float n);
 
     float k;
     float v[2];
@@ -119,7 +118,7 @@ class FilterStatePt3 {
     void reset();
     void init(float rate, float freq);
     void reconfigure(const FilterStatePt3& from);
-    float update(float n) FAST_CODE_ATTR;
+    float update(float n);
 
     float k;
     float v[3];
@@ -131,7 +130,7 @@ class Filter
     Filter();
     void begin();
     void begin(const FilterConfig& config, int rate);
-    float update(float v) FAST_CODE_ATTR;
+    float update(float v);
     void reset();
 
     void reconfigure(int16_t freq, int16_t cutoff = 0);

@@ -3,7 +3,6 @@
 #include "Model.h"
 #include "Target/Target.h"
 #include "Device/SerialDevice.h"
-#include "Utils/MemoryHelper.h"
 extern "C" {
 #include <platform.h>
 }
@@ -89,12 +88,12 @@ class Blackbox
   public:
     Blackbox(Model& model);
     int begin();
-    int update() FAST_CODE_ATTR;
+    int update();
 
   private:
-    void updateData() FAST_CODE_ATTR;
-    void updateArmed() FAST_CODE_ATTR;
-    void updateMode() FAST_CODE_ATTR;
+    void updateData();
+    void updateArmed();
+    void updateMode();
 
     Model& _model;
     pidProfile_s _pidProfile;

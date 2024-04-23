@@ -5,7 +5,6 @@
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"
-#include "Utils/MemoryHelper.h"
 
 #define BMI160_ADDRESS_FIRST        0x69
 #define BMI160_ADDRESS_SECOND       0x68

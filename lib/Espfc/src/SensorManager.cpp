@@ -16,7 +16,7 @@ int SensorManager::begin()
   return 1;
 }
 
-int SensorManager::read()
+int FAST_CODE_ATTR SensorManager::read()
 {
   _gyro.read();
 
@@ -41,7 +41,7 @@ int SensorManager::read()
   return 0;
 }
 
-int SensorManager::preLoop()
+int FAST_CODE_ATTR SensorManager::preLoop()
 {
   _gyro.filter();
   if(_model.state.gyroBiasSamples == 0)
@@ -58,13 +58,13 @@ int SensorManager::postLoop()
   return 1;
 }
 
-int SensorManager::fusion()
+int FAST_CODE_ATTR SensorManager::fusion()
 {
   return _fusion.update();
 }
 
 // main task
-int SensorManager::update()
+int FAST_CODE_ATTR SensorManager::update()
 {
   _gyro.read();
   return preLoop();

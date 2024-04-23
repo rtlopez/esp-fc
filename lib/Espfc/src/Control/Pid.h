@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "Utils/MemoryHelper.h"
 #include "Filter.h"
 
 // bataflight scalers
@@ -38,7 +37,7 @@ class Pid
   public:
     Pid();
     void begin();
-    float update(float setpoint, float measure) FAST_CODE_ATTR;
+    float update(float setpoint, float measure);
 
     float rate;
     float dt;

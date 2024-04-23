@@ -7,7 +7,6 @@
 #include "Sensor/MagSensor.h"
 #include "Sensor/BaroSensor.h"
 #include "Sensor/VoltageSensor.h"
-#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -17,12 +16,12 @@ class SensorManager
     SensorManager(Model& model);
 
     int begin();
-    int read() FAST_CODE_ATTR;
-    int preLoop() FAST_CODE_ATTR;
+    int read();
+    int preLoop();
     int postLoop();
     int fusion();
     // main task
-    int update() FAST_CODE_ATTR;
+    int update();
     // sub task
     int updateDelayed();
 

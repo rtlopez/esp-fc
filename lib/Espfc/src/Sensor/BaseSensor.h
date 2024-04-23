@@ -4,7 +4,6 @@
 #include <cmath>
 #include "Model.h"
 #include "Hardware.h"
-#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 

@@ -79,7 +79,7 @@ int Mixer::begin()
   return 1;
 }
 
-int Mixer::update()
+int FAST_CODE_ATTR Mixer::update()
 {
   uint32_t startTime = micros();
 
@@ -106,7 +106,7 @@ int Mixer::update()
   return 1;
 }
 
-void Mixer::updateMixer(const MixerConfig& mixer, float * outputs)
+void FAST_CODE_ATTR Mixer::updateMixer(const MixerConfig& mixer, float * outputs)
 {
   Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER);
 
@@ -200,7 +200,7 @@ void Mixer::updateMixer(const MixerConfig& mixer, float * outputs)
   _model.setOutputSaturated(saturated);
 }
 
-float Mixer::limitThrust(float thrust, ThrottleLimitType type, int8_t limit)
+float FAST_CODE_ATTR Mixer::limitThrust(float thrust, ThrottleLimitType type, int8_t limit)
 {
   if(type == THROTTLE_LIMIT_TYPE_NONE || limit >= 100 || limit < 1) return thrust;
 
@@ -218,7 +218,7 @@ float Mixer::limitThrust(float thrust, ThrottleLimitType type, int8_t limit)
   return thrust;
 }
 
-float Mixer::limitOutput(float output, const OutputChannelConfig& occ, int limit)
+float FAST_CODE_ATTR Mixer::limitOutput(float output, const OutputChannelConfig& occ, int limit)
 {
   if(limit >= 100 || limit < 1) return output;
 
@@ -234,7 +234,7 @@ float Mixer::limitOutput(float output, const OutputChannelConfig& occ, int limit
   }
 }
 
-void Mixer::writeOutput(const MixerConfig& mixer, float * out)
+void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
 {
   Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
 
@@ -278,7 +278,7 @@ void Mixer::writeOutput(const MixerConfig& mixer, float * out)
   if(_servo) _servo->apply();
 }
 
-void Mixer::readTelemetry()
+void FAST_CODE_ATTR Mixer::readTelemetry()
 {
   Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_READ);
   if(!_model.config.output.dshotTelemetry || !_motor) return;

@@ -2,7 +2,6 @@
 
 #include "Model.h"
 #include "EscDriver.h"
-#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
@@ -13,13 +12,13 @@ class Mixer
   public:
     Mixer(Model& model);
     int begin();
-    int update() FAST_CODE_ATTR;
+    int update();
 
-    void updateMixer(const MixerConfig& mixer, float * outputs) FAST_CODE_ATTR;
-    float limitThrust(float thrust, ThrottleLimitType type, int8_t limit) FAST_CODE_ATTR;
-    float limitOutput(float output, const OutputChannelConfig& occ, int limit) FAST_CODE_ATTR;
-    void writeOutput(const MixerConfig& mixer, float * out) FAST_CODE_ATTR;
-    void readTelemetry() FAST_CODE_ATTR;
+    void updateMixer(const MixerConfig& mixer, float * outputs);
+    float limitThrust(float thrust, ThrottleLimitType type, int8_t limit);
+    float limitOutput(float output, const OutputChannelConfig& occ, int limit);
+    void writeOutput(const MixerConfig& mixer, float * out);
+    void readTelemetry();
     float inline erpmToHz(float erpm);
     float inline erpmToRpm(float erpm);
     bool inline _stop(void);

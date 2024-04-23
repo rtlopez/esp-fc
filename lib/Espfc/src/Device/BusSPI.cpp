@@ -29,7 +29,7 @@ int8_t BusSPI::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *d
     return length;
 }
 
-int8_t BusSPI::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data)
+int8_t FAST_CODE_ATTR BusSPI::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data)
 {
     //D("spi:r", regAddr, length);
     transfer(devAddr, regAddr | SPI_READ, length, NULL, data, SPI_SPEED_FAST);
@@ -43,7 +43,7 @@ bool BusSPI::write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8
     return true;
 }
 
-void BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed)
+void FAST_CODE_ATTR BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed)
 {
     _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
     Hal::Gpio::digitalWrite(devAddr, LOW);

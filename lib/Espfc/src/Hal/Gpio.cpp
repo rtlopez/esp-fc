@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "Gpio.h"
+#include "Utils/MemoryHelper.h"
 #if defined(ESP32)
 #include "hal/gpio_ll.h"
 #endif
@@ -8,7 +9,7 @@ namespace Espfc {
 
 namespace Hal {
 
-void Gpio::digitalWrite(uint8_t pin, pin_status_t val)
+void FAST_CODE_ATTR Gpio::digitalWrite(uint8_t pin, pin_status_t val)
 {
 #if defined(ESP8266)
   if (pin < 16)
@@ -35,7 +36,7 @@ void Gpio::digitalWrite(uint8_t pin, pin_status_t val)
 #endif
 }
 
-pin_status_t Gpio::digitalRead(uint8_t pin)
+pin_status_t FAST_CODE_ATTR Gpio::digitalRead(uint8_t pin)
 {
 #if defined(ESP8266)
   if (pin < 16)

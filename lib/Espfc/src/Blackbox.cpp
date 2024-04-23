@@ -271,7 +271,7 @@ int Blackbox::begin()
   return 1;
 }
 
-int Blackbox::update()
+int FAST_CODE_ATTR Blackbox::update()
 {
   if(!_model.blackboxEnabled()) return 0;
   if(!_serial) return 0;
@@ -292,7 +292,7 @@ int Blackbox::update()
   return 1;
 }
 
-void Blackbox::updateData()
+void FAST_CODE_ATTR Blackbox::updateData()
 {
   for(size_t i = 0; i < 3; i++)
   {
@@ -331,7 +331,7 @@ void Blackbox::updateData()
   }
 }
 
-void Blackbox::updateArmed()
+void FAST_CODE_ATTR Blackbox::updateArmed()
 {
   // log arming beep event
   static uint32_t beep = 0;
@@ -366,7 +366,7 @@ void Blackbox::updateArmed()
   }
 }
 
-void Blackbox::updateMode()
+void FAST_CODE_ATTR Blackbox::updateMode()
 {
   if(_model.isSwitchActive(MODE_ARMED)) bitArraySet(&rcModeActivationMask, BOXARM);
   else bitArrayClr(&rcModeActivationMask, BOXARM);
