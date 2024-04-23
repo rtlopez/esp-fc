@@ -8,10 +8,14 @@
 #include <Mahony.h>
 #include <printf.h>
 #include <blackbox/blackbox.h>
+#if defined(SERIAL_SOFT_0_RX)
 #include <EspSoftSerial.h>
-#include <EspGpio.h>
+#endif
 #include <EscDriver.h>
 #include <EspWire.h>
+#if defined(ESPFC_ESPNOW)
+#include <EspNowRcLink/Receiver.h>
+#endif
 #include "Debug_Espfc.h"
 
 #ifdef ESPFC_WIFI_ALT
@@ -54,11 +58,7 @@ Espfc::Espfc espfc;
     }
     void loop()
     {
-      //const uint32_t timeout = millis() + 200;
-      //while(millis() < timeout)
-      //{
-        espfc.update();
-      //}
+      espfc.update();
     }
 
   #elif defined(ESPFC_MULTI_CORE_RP2040)

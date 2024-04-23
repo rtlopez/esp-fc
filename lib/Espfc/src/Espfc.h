@@ -1,7 +1,6 @@
 #ifndef _ESPFC_ESPFC_H_
 #define _ESPFC_ESPFC_H_
 
-#include "Target/Target.h"
 #include "Model.h"
 #include "Hardware.h"
 #include "Controller.h"
@@ -96,10 +95,7 @@ class Espfc
             _mixer.update();
           }
           _blackbox.update();
-          if(_model.state.inputTimer.check())
-          {
-            _input.update();
-          }
+          _input.update();
           if(_model.state.actuatorTimer.check())
           {
             _actuator.update();
@@ -127,14 +123,23 @@ class Espfc
       switch(e.type)
       {
         case EVENT_GYRO_READ:
+          // TODO: skip if too quick
+          //PIN_DEBUG(HIGH);
           _sensor.preLoop();
+          //PIN_DEBUG(LOW);
           _controller.update();
+          //PIN_DEBUG(HIGH);
           _mixer.update();
+          //PIN_DEBUG(LOW);
           _blackbox.update();
+          //PIN_DEBUG(HIGH);
           _sensor.postLoop();
+          //PIN_DEBUG(LOW);
           break;
         case EVENT_ACCEL_READ:
+          //PIN_DEBUG(HIGH);
           _sensor.fusion();
+          //PIN_DEBUG(LOW);
           break;
         default:
           break;

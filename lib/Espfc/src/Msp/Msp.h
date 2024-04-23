@@ -1,8 +1,8 @@
 #ifndef _ESPFC_MSP_MSP_H_
 #define _ESPFC_MSP_MSP_H_
 
-#include <Arduino.h>
-#include <Hal.h>
+#include <cstdint>
+#include "Hal/Pgm.h"
 
 extern "C" {
 #include "msp/msp_protocol.h"

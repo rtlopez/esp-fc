@@ -3,12 +3,13 @@ The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller
 
 ## Features
 * Frames (Quad X)
-* Betaflight configuration tool compatible (v10.8 or v10.9)
+* Betaflight configuration tool compatible (v10.8-v10.10)
 * Receiver protocol (8 channel PPM)
-* SBUS and CRSF Serial Rx protocols on ESP32 and RP2040
+* SBUS and CRSF Serial Rx protocols
+* Builtin ESP-NOW receiver
 * ESC protocols (PWM, Oneshot125, Brushed, Dshot150, Dshot300, Dshot600)
-* Configurable Gyro Filters (LPF, Notch, dTerm)
-* Blackbox recording (OpenLog/Opelager serial)
+* Configurable Gyro Filters (LPF, Notch, dTerm, RPM)
+* Blackbox recording (OpenLog/OpenLager serial)
 * In flight PID Tuning
 * Flight modes (ACRO, ANGLE, AIRMODE, ARM)
 * Up to 8kHz gyro/loop on ESP32 with SPI gyro
@@ -17,17 +18,17 @@ The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller
 * Resorce/Pin mapping
 * Buzzer
 * Lipo voltage monitor
-* Failsafe
+* Failsafe mode
 
 ## Requirements
 Hardware:
-* ESP8266 Wemos D1 Mini or ESP32 mini board
-* MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar) or MPU9250 SPI on ESP32
+* ESP32 mini board or ESP8266 Wemos D1 mini or similar
+* MPU9250 SPI or MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar)
 * PDB with 5V BEC
 * Buzzer and some electronic components (optional).
 
 Software:
-* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.8 or v10.9)
+* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.10 or v10.9 or v10.8)
 * [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
 
 ## Flashing
@@ -37,6 +38,8 @@ Software:
 4. Add firmware file and set Flash Address to `0x00`
 5. Click "Program"
 6. After success power cycle board
+
+Note: only ESP32 and ESP8266 can be flashed in this way.
 
 ![ESP-FC Flashing](/docs/images/esptool-js-flash-connect.png)
 
@@ -75,9 +78,8 @@ Here are more details about [how to setup](/docs/setup.md).
 | MSP             | Yes     |   Yes |    Yes |
 | CLI             | Yes     |   Yes |    Yes |
 | PPM (IN)        | Yes     |   Yes |    Yes |
-| SBUS            | -       |   Yes |    Yes |
-| IBUS            | -       |     - |      - |
-| CRSF (ELRS)     | -       |   Yes |    Yes |
+| SBUS            | Yes     |   Yes |    Yes |
+| CRSF (ELRS)     | Yes     |   Yes |    Yes |
 | BLACKBOX        | Yes     |   Yes |    Yes |
 | PWM (OUT)       | Yes     |   Yes |    Yes |
 | ONESHOT125      | Yes     |   Yes |    Yes |
@@ -124,7 +126,6 @@ You can also join to our [Discord Channel](https://discord.gg/jhyPPM5UEH)
 * Serial Rx (IBUS)
 * ELRS telemetry
 * ESP32-S2/S3/C3 targets
-* BiDir Dshot
 * Baro (MS5611)
 * GPS navigation
 

@@ -1,11 +1,14 @@
 #include <unity.h>
-#include <EspGpio.h>
+#include <EscDriver.h>
+#include <Kalman.h>
+#include <helper_3dmath.h>
+#include "msp/msp_protocol.h"
 #include "Math/Utils.h"
 #include "Math/Bits.h"
-#include "helper_3dmath.h"
 #include "Filter.h"
 #include "Control/Pid.h"
 #include "Target/QueueAtomic.h"
+#include <printf.h>
 
 // void setUp(void) {
 // // set stuff up here
@@ -120,6 +123,19 @@ void test_math_bits_msb()
     TEST_ASSERT_EQUAL_UINT8(10, Math::setBitsMsb(0x00, 3, 4, 10));
     TEST_ASSERT_EQUAL_UINT8( 8, Math::setBitsMsb(0x00, 6, 4, 1));
     TEST_ASSERT_EQUAL_UINT8(80, Math::setBitsMsb(0x00, 6, 4, 10));
+}
+
+void test_math_clock_align()
+{
+    TEST_ASSERT_EQUAL_INT( 250, Math::alignToClock(1000,  332));
+    TEST_ASSERT_EQUAL_INT( 333, Math::alignToClock(1000,  333));
+    TEST_ASSERT_EQUAL_INT( 333, Math::alignToClock(1000,  334));
+    TEST_ASSERT_EQUAL_INT( 333, Math::alignToClock(1000,  400));
+    TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(1000,  500));
+    TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(1000,  800));
+    TEST_ASSERT_EQUAL_INT(1000, Math::alignToClock(1000, 2000));
+    TEST_ASSERT_EQUAL_INT( 500, Math::alignToClock(8000,  500));
+    TEST_ASSERT_EQUAL_INT( 476, Math::alignToClock(6667,  500));
 }
 
 void test_math_peak_detect_full()
@@ -720,7 +736,7 @@ void test_pid_init()
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.dTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.fTerm);
 
-    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.prevMeasurement);
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.prevError);
     TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.prevSetpoint);
 
@@ -775,7 +791,7 @@ void test_pid_update_i()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.error);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.prevSetpoint);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.prevError);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasurement);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.02f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
@@ -787,7 +803,7 @@ void test_pid_update_i()
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.error);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.prevSetpoint);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.2f, pid.prevError);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasurement);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.04f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
@@ -839,6 +855,8 @@ void test_pid_update_i_relax()
     pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, 15), pid.rate);
     pid.begin();
 
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, pid.iScale);
+
     float result0 = pid.update(0.0f, 0.f);
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, result0);
@@ -854,11 +872,11 @@ void test_pid_update_i_relax()
 
     float result1 = pid.update(1.f, 0.f);
 
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.026f, result1);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.000f, pid.error);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.262f, pid.iTermError);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.515f, pid.itermRelaxBase);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.262f, pid.itermRelaxFactor);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.026f, result1);
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.026f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.000f, pid.pTerm);
@@ -889,7 +907,7 @@ void test_pid_update_d()
     float result1 = pid.update(0.0f, -0.05f);
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.05f, pid.error);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.05f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.05f, pid.prevMeasurement);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, pid.dTerm);
@@ -899,7 +917,7 @@ void test_pid_update_d()
     float result2 = pid.update(0.0f, 0.0f);
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.error);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasurement);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, -0.5f, pid.dTerm);
@@ -927,7 +945,7 @@ void test_pid_update_f()
     float result2 = pid.update(0.0f, 0.0f);
 
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.error);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasure);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.prevMeasurement);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.pTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.iTerm);
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, pid.dTerm);
@@ -1047,6 +1065,8 @@ int main(int argc, char **argv)
     RUN_TEST(test_math_bitmask_msb);
     RUN_TEST(test_math_bits_lsb);
     RUN_TEST(test_math_bits_msb);
+
+    RUN_TEST(test_math_clock_align);
 
     RUN_TEST(test_math_baro_altitude);
     RUN_TEST(test_math_peak_detect_full);

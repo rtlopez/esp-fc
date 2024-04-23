@@ -44,6 +44,13 @@ If you want to use Serial based receiver (SBUS,CRSF), you need to allocate UART 
 
 Then go to the `Receiver` tab, and select `Receiver mode` and `Serial Receiver Provider`.
 
+To use Serial RX on ESP8266, you need to connect reciver to primary UART. In this case you lose ability to configure through UART.
+To deal with it activate "SOFTSERIAL" feature. In this case if board stay in failsafe mode for 30 seconds (transmitter is turned off), then automatically WiFi access point will be started.
+Default name is "ESP-FC". After connecting to this AP open configurator, select "manual" port and type port: `tcp://192.168.4.1:1111`.
+You can also configure board to automatically connect existing wifi network. In this case set `wifi_ssid` and `wifi_pass` parameters in CLI.
+
+To use ESP-NOW receiver, choose "SPI Rx (e.g. built-in Rx)" receiver mode in Receiver tab. You need compatible transmitter module.
+
 ## Motor setup
 
 In `Motors` tab you must configure
@@ -92,7 +99,7 @@ This option allows to separate PWM frequency. If your pid loop is set to 1k, but
 
 ## Flight modes
 
-Flight modes can be configured in modes tab
+Flight modes can be configured in `Modes` tab
 
 ### Arm
 
@@ -125,8 +132,7 @@ Logging using serial device is possible, like [D-ronin OpenLager](https://github
 
 Recommended settings
 
-- To log with 1k rate, you need device that is capable to receive data with 250kbps.
-- To log with 1k rate with debug, baro and mag data, 500kbps is recommended.
+- To log with 1k rate, you need device that is capable to receive data with 500kbps.
 - To log with 2k rate, you need 1Mbps
 
 OpenLager can handle it easily. If you plan to use OpenLog, you might need to flash [blackbox-firmware](https://github.com/cleanflight/blackbox-firmware) to be able to handle more than 115.2kbps. Either 250kbps and 500kbps works well with modern SD cards up to 32GB size.

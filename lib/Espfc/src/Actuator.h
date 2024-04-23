@@ -15,6 +15,7 @@ class Actuator
     {
       _model.state.modeMask = 0;
       _model.state.airmodeAllowed = false;
+      _model.state.rescueConfigMode = RESCUE_CONFIG_PENDING;
       return 1;
     }
 
@@ -29,6 +30,7 @@ class Actuator
       updateScaler();
       updateBuzzer();
       updateDynLpf();
+      updateRescueConfig();
 
       if(_model.config.debugMode == DEBUG_PIDLOOP)
       {
@@ -92,6 +94,7 @@ class Actuator
       _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
       _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
       _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
+      _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
     }
 
     void updateModeMask()
@@ -162,6 +165,7 @@ class Actuator
         if(armed)
         {
           _model.state.disarmReason = DISARM_REASON_SYSTEM;
+          _model.state.rescueConfigMode = RESCUE_CONFIG_DISABLED;
         }
         else if(!armed && _model.state.disarmReason == DISARM_REASON_SYSTEM)
         {
@@ -218,6 +222,28 @@ class Actuator
         for(size_t i = 0; i <= AXIS_YAW; i++) {
           _model.state.innerPid[i].dtermFilter.reconfigure(dtermFreq);
         }
+      }
+    }
+
+    void updateRescueConfig()
+    {
+      switch(_model.state.rescueConfigMode)
+      {
+        case RESCUE_CONFIG_PENDING:
+          // if some rc frames are received, disable to prevent activate later
+          if(_model.state.inputFrameCount > 100)
+          {
+            _model.state.rescueConfigMode = RESCUE_CONFIG_DISABLED;
+          }
+          if(_model.state.failsafe.phase != FC_FAILSAFE_IDLE && _model.config.rescueConfigDelay > 0 && millis() > _model.config.rescueConfigDelay * 1000)
+          {
+            _model.state.rescueConfigMode = RESCUE_CONFIG_ACTIVE;
+          }
+          break;
+        case RESCUE_CONFIG_ACTIVE:
+        case RESCUE_CONFIG_DISABLED:
+          // nothing to do here
+          break;
       }
     }
 

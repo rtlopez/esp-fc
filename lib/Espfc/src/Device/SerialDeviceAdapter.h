@@ -3,7 +3,7 @@
 
 #include "Device/SerialDevice.h"
 #ifdef ESPFC_SERIAL_SOFT_0_RX
-#include "EspSoftSerial.h"
+#include <EspSoftSerial.h>
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include <WiFiClient.h>

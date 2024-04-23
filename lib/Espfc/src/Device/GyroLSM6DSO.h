@@ -111,7 +111,7 @@ class GyroLSM6DSO: public GyroDevice
       return GYRO_LSM6DSO;
     }
 
-    int readGyro(VectorInt16& v) override
+    int FAST_CODE_ATTR readGyro(VectorInt16& v) override
     {
       int16_t buffer[3];
 

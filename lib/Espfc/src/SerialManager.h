@@ -4,10 +4,14 @@
 #include "Model.h"
 #include "Device/SerialDevice.h"
 #include "Device/SerialDeviceAdapter.h"
-#include "EspSoftSerial.h"
+#ifdef ESPFC_SERIAL_SOFT_0_RX
+#include <EspSoftSerial.h>
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
+#include "Wireless.h"
+#endif
 #include "Msp/MspProcessor.h"
 #include "Cli.h"
-#include "Wireless.h"
 #include "Telemetry.h"
 #include "Debug_Espfc.h"
 
@@ -41,14 +45,14 @@ namespace Espfc {
 class SerialManager
 {
   public:
-    SerialManager(Model& model): _model(model), _msp(model), _cli(model), _wireless(model), _telemetry(model), _current(SERIAL_UART_0) {}
+    SerialManager(Model& model): _model(model), _msp(model), _cli(model),
+  #ifdef ESPFC_SERIAL_SOFT_0_WIFI
+    _wireless(model),
+  #endif
+    _telemetry(model), _current(SERIAL_UART_0) {}
 
     int begin()
     {
-#ifdef ESPFC_SERIAL_SOFT_0_WIFI
-      _wireless.begin();
-#endif
-
       for(int i = 0; i < SERIAL_UART_COUNT; i++)
       {
         Device::SerialDevice * port = getSerialPortById((SerialPort)i);
@@ -150,6 +154,11 @@ class SerialManager
 
         _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
       }
+
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
+      _wireless.begin();
+#endif
+
       return 1;
     }
 
@@ -160,18 +169,15 @@ class SerialManager
       const SerialPortConfig& sc = _model.config.serial[_current];
       Device::SerialDevice * stream = ss.stream;
 
+      bool serialRx = sc.functionMask & SERIAL_FUNCTION_RX_SERIAL;
+      if(stream && !serialRx)
       {
         Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
-        if(!stream || sc.functionMask & SERIAL_FUNCTION_RX_SERIAL) {
-          next();
-          return 0;
-        }
-
         size_t len = stream->available();
         if(len > 0)
         {
           uint8_t buff[64] = {0};
-          len = std::min(len, sizeof(buff));
+          len = std::min(len, (size_t)sizeof(buff));
           stream->readMany(buff, len);
           char * c = (char*)&buff[0];
           while(len--)
@@ -188,6 +194,7 @@ class SerialManager
           }
         }
       }
+
       if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
       {
         _telemetry.process(*stream);
@@ -238,7 +245,9 @@ class SerialManager
     Model& _model;
     Msp::MspProcessor _msp;
     Cli _cli;
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
     Wireless _wireless;
+#endif
     Telemetry _telemetry;
     size_t _current;
 };

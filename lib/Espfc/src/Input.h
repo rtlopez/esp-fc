@@ -7,6 +7,9 @@
 #include "Device/InputPPM.h"
 #include "Device/InputSBUS.h"
 #include "Device/InputCRSF.h"
+#if defined(ESPFC_ESPNOW)
+#include "Device/InputEspNow.h"
+#endif
 
 namespace Espfc {
 
@@ -80,14 +83,14 @@ class Input
       }
     }
 
-    void setInput(Axis i, float v, bool newFrame, bool noDelta = false)
+    void setInput(Axis i, float v, bool newFrame, bool noFilter = false)
     {
       const InputChannelConfig& ich = _model.config.input.channel[i];
       if(i <= AXIS_THRUST)
       {
-        v = noDelta ? v : _model.state.inputFilter[i].update(v);
-        _model.state.inputUs[i] = v;
-        _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
+        const float nv = noFilter ? v : _model.state.inputFilter[i].update(v);
+        _model.state.inputUs[i] = nv;
+        _model.state.input[i] = Math::map(nv, ich.min, ich.max, -1.f, 1.f);
       }
       else if(newFrame)
       {
@@ -144,7 +147,7 @@ class Input
         _model.state.debug[0] = !_model.state.inputRxLoss;
         _model.state.debug[1] = _model.state.inputRxFailSafe;
         _model.state.debug[2] = _model.state.inputChannelsValid;
-        _model.state.debug[3] = _model.state.inputRaw[AXIS_THRUST];
+        _model.state.debug[3] = _model.state.inputLossTime / (100 * 1000);
       }
 
       return status;
@@ -225,15 +228,15 @@ class Input
       }
 
       // stage 2 timeout
-      const uint32_t lossTime = micros() - _model.state.inputFrameTime;
-      if(lossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
+      _model.state.inputLossTime = micros() - _model.state.inputFrameTime;
+      if(_model.state.inputLossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
       {
         failsafeStage2();
         return true;
       }
 
-      // stage 1 timeout
-      if(lossTime >= 1 * TENTH_TO_US)
+      // stage 1 timeout (100ms)
+      if(_model.state.inputLossTime >= 1 * TENTH_TO_US)
       {
         failsafeStage1();
         return true;
@@ -245,6 +248,7 @@ class Input
     void failsafeIdle()
     {
       _model.state.failsafe.phase = FC_FAILSAFE_IDLE;
+      _model.state.inputLossTime = 0;
     }
 
     void failsafeStage1()
@@ -360,24 +364,32 @@ class Input
     Device::InputDevice * getInputDevice()
     {
       Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
-      if(serial && _model.isActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_SBUS)
+      if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_SBUS)
       {
         _sbus.begin(serial);
         _model.logger.info().logln(F("RX SBUS"));
         return &_sbus;
       }
-      if(serial && _model.isActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
+      if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
       {
         _crsf.begin(serial);
         _model.logger.info().logln(F("RX CRSF"));
         return &_crsf;
       }
-      else if(_model.isActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
+      else if(_model.isFeatureActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
       {
         _ppm.begin(_model.config.pin[PIN_INPUT_RX], _model.config.input.ppmMode);
         _model.logger.info().log(F("RX PPM")).log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
         return &_ppm;
       }
+#if defined(ESPFC_ESPNOW)
+      else if(_model.isFeatureActive(FEATURE_RX_SPI))
+      {
+        int status = _espnow.begin();
+        _model.logger.info().log(F("RX ESPNOW")).logln(status);
+        return &_espnow;
+      }
+#endif
       return nullptr;
     }
 
@@ -394,6 +406,9 @@ class Input
     Device::InputPPM _ppm;
     Device::InputSBUS _sbus;
     Device::InputCRSF _crsf;
+#if defined(ESPFC_ESPNOW)
+    Device::InputEspNow _espnow;
+#endif
 
     static const uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
     static const uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms

@@ -18,16 +18,16 @@ enum StatCounter : int8_t {
   COUNTER_BARO,
   COUNTER_IMU_FUSION,
   COUNTER_IMU_FUSION2,
-  COUNTER_INPUT_READ,
-  COUNTER_INPUT_FILTER,
-  COUNTER_FAILSAFE,
-  COUNTER_ACTUATOR,
   COUNTER_OUTER_PID,
   COUNTER_INNER_PID,
   COUNTER_MIXER,
   COUNTER_MIXER_WRITE,
   COUNTER_MIXER_READ,
   COUNTER_BLACKBOX,
+  COUNTER_INPUT_READ,
+  COUNTER_INPUT_FILTER,
+  COUNTER_FAILSAFE,
+  COUNTER_ACTUATOR,
   COUNTER_TELEMETRY,
   COUNTER_SERIAL,
   COUNTER_WIFI,
@@ -154,8 +154,9 @@ class Stats
 
     float getCpuLoad() const
     {
-      float load = std::max(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
-      return load;
+      float maxLoad = std::max(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
+      float minLoad = std::min(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
+      return 0.7f * maxLoad + 0.3f * minLoad;
     }
 
     float getCpuTime() const
@@ -167,34 +168,34 @@ class Stats
     {
       switch(c)
       {
-        case COUNTER_GYRO_READ:    return PSTR(" gyro_r");
-        case COUNTER_GYRO_FILTER:  return PSTR(" gyro_f");
-        case COUNTER_GYRO_FFT:     return PSTR(" gyro_a");
-        case COUNTER_RPM_UPDATE:   return PSTR("  rpm_u");
-        case COUNTER_ACCEL_READ:   return PSTR("  acc_r");
-        case COUNTER_ACCEL_FILTER: return PSTR("  acc_f");
-        case COUNTER_MAG_READ:     return PSTR("  mag_r");
-        case COUNTER_MAG_FILTER:   return PSTR("  mag_f");
-        case COUNTER_BARO:         return PSTR(" baro_p");
-        case COUNTER_IMU_FUSION:   return PSTR("  imu_p");
-        case COUNTER_IMU_FUSION2:  return PSTR("  imu_c");
-        case COUNTER_INPUT_READ:   return PSTR("   rx_r");
-        case COUNTER_INPUT_FILTER: return PSTR("   rx_f");
-        case COUNTER_FAILSAFE:     return PSTR("   rx_s");
-        case COUNTER_ACTUATOR:     return PSTR("   rx_a");
-        case COUNTER_OUTER_PID:    return PSTR("  pid_o");
-        case COUNTER_INNER_PID:    return PSTR("  pid_i");
-        case COUNTER_MIXER:        return PSTR("mixer_p");
-        case COUNTER_MIXER_WRITE:  return PSTR("mixer_w");
-        case COUNTER_MIXER_READ:   return PSTR("mixer_r");
-        case COUNTER_BLACKBOX:     return PSTR("  bblog");
-        case COUNTER_TELEMETRY:    return PSTR("    tlm");
-        case COUNTER_SERIAL:       return PSTR(" serial");
-        case COUNTER_WIFI:         return PSTR("   wifi");
-        case COUNTER_BATTERY:      return PSTR("    bat");
-        case COUNTER_CPU_0:        return PSTR("  cpu_0");
-        case COUNTER_CPU_1:        return PSTR("  cpu_1");
-        default:                   return PSTR("unknown");
+        case COUNTER_GYRO_READ:    return PSTR("gyro_r");
+        case COUNTER_GYRO_FILTER:  return PSTR("gyro_f");
+        case COUNTER_GYRO_FFT:     return PSTR("gyro_a");
+        case COUNTER_RPM_UPDATE:   return PSTR(" rpm_u");
+        case COUNTER_ACCEL_READ:   return PSTR(" acc_r");
+        case COUNTER_ACCEL_FILTER: return PSTR(" acc_f");
+        case COUNTER_MAG_READ:     return PSTR(" mag_r");
+        case COUNTER_MAG_FILTER:   return PSTR(" mag_f");
+        case COUNTER_BARO:         return PSTR("baro_p");
+        case COUNTER_IMU_FUSION:   return PSTR(" imu_p");
+        case COUNTER_IMU_FUSION2:  return PSTR(" imu_c");
+        case COUNTER_OUTER_PID:    return PSTR(" pid_o");
+        case COUNTER_INNER_PID:    return PSTR(" pid_i");
+        case COUNTER_MIXER:        return PSTR(" mix_p");
+        case COUNTER_MIXER_WRITE:  return PSTR(" mix_w");
+        case COUNTER_MIXER_READ:   return PSTR(" mix_r");
+        case COUNTER_BLACKBOX:     return PSTR(" bblog");
+        case COUNTER_INPUT_READ:   return PSTR("  rx_r");
+        case COUNTER_INPUT_FILTER: return PSTR("  rx_f");
+        case COUNTER_FAILSAFE:     return PSTR("  rx_s");
+        case COUNTER_ACTUATOR:     return PSTR("  rx_a");
+        case COUNTER_SERIAL:       return PSTR("serial");
+        case COUNTER_WIFI:         return PSTR("  wifi");
+        case COUNTER_BATTERY:      return PSTR("   bat");
+        case COUNTER_TELEMETRY:    return PSTR("   tlm");
+        case COUNTER_CPU_0:        return PSTR(" cpu_0");
+        case COUNTER_CPU_1:        return PSTR(" cpu_1");
+        default:                   return PSTR("unknwn");
       }
     }
 

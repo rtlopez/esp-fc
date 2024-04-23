@@ -58,14 +58,6 @@ class Queue
     TargetQueueHandle _q;
 };
 
-#if defined(UNIT_TEST) || !defined(ESPFC_MULTI_CORE)
-void Queue::begin() {}
-void Queue::send(const Event& e) { (void)e; }
-Event Queue::receive() { return Event(); }
-bool Queue::isEmpty() const { return true; }
-bool Queue::isFull() const { return false; }
-#endif
-
 }
 
 }

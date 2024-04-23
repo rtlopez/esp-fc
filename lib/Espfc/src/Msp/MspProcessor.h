@@ -530,7 +530,7 @@ class MspProcessor
         case MSP_CF_SERIAL_CONFIG:
           for(int i = 0; i < SERIAL_UART_COUNT; i++)
           {
-            if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+            if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL)) continue;
             r.writeU8(_model.config.serial[i].id); // identifier
             r.writeU16(_model.config.serial[i].functionMask); // functionMask
             r.writeU8(toBaudIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
@@ -545,13 +545,13 @@ class MspProcessor
             uint8_t count = 0;
             for (int i = 0; i < SERIAL_UART_COUNT; i++)
             {
-              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL)) continue;
               count++;
             }
             r.writeU8(count);
             for (int i = 0; i < SERIAL_UART_COUNT; i++)
             {
-              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL)) continue;
               r.writeU8(_model.config.serial[i].id); // identifier
               r.writeU32(_model.config.serial[i].functionMask); // functionMask
               r.writeU8(toBaudIndex(_model.config.serial[i].baud)); // msp_baudrateIndex

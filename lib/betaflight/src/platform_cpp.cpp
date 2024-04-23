@@ -2,11 +2,11 @@
 #include "platform.h"
 #include "Device/SerialDevice.h"
 #include "EscDriver.h"
-#include "EspGpio.h"
+#include "Hal/Gpio.h"
 
 int IORead(IO_t pin)
 {
-    return EspGpio::digitalRead(pin);
+    return Espfc::Hal::Gpio::digitalRead(pin);
 }
 
 void IOConfigGPIO(IO_t pin, uint8_t mode)
@@ -24,12 +24,12 @@ void IOConfigGPIO(IO_t pin, uint8_t mode)
 
 void IOHi(IO_t pin)
 {
-    EspGpio::digitalWrite(pin, HIGH);
+    Espfc::Hal::Gpio::digitalWrite(pin, HIGH);
 }
 
 void IOLo(IO_t pin)
 {
-    EspGpio::digitalWrite(pin, LOW);
+    Espfc::Hal::Gpio::digitalWrite(pin, LOW);
 }
 
 static serialPort_t _sp[2] = {{

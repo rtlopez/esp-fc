@@ -21,7 +21,7 @@
 
 namespace Espfc {
 
-static const size_t CLI_BUFF_SIZE = 64;
+static const size_t CLI_BUFF_SIZE = 128;
 static const size_t CLI_ARGS_SIZE = 12;
 
 class CliCmd
@@ -134,6 +134,12 @@ class FailsafeState
 //#define ACCEL_G (1.f)
 //#define ACCEL_G_INV (1.f)
 
+enum RescueConfigMode {
+  RESCUE_CONFIG_PENDING,
+  RESCUE_CONFIG_ACTIVE,
+  RESCUE_CONFIG_DISABLED,
+};
+
 // working data
 struct ModelState
 {
@@ -203,6 +209,7 @@ struct ModelState
   uint32_t inputFrameDelta;
   uint32_t inputFrameRate;
   uint32_t inputFrameCount;
+  uint32_t inputLossTime;
   float inputInterpolationDelta;
   float inputInterpolationStep;
   float inputAutoFactor;
@@ -323,7 +330,7 @@ struct ModelState
 
   uint32_t armingDisabledFlags;
 
-  IPAddress localIp;
+  RescueConfigMode rescueConfigMode;
 
   SerialPortState serial[SERIAL_UART_COUNT];
   Timer serialTimer;

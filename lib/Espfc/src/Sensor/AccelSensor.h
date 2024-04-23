@@ -48,7 +48,7 @@ class AccelSensor: public BaseSensor
     {
       if(!_model.accelActive()) return 0;
 
-      if(!_model.state.accelTimer.check()) return 0;
+      //if(!_model.state.accelTimer.check()) return 0;
 
       Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
       _gyro->readAccel(_model.state.accelRaw);
