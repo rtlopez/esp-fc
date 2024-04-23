@@ -124,7 +124,7 @@ class Espfc
       {
         case EVENT_GYRO_READ:
           // TODO: skip if too quick
-          PIN_DEBUG(HIGH);
+          //PIN_DEBUG(HIGH);
           _sensor.preLoop();
           //PIN_DEBUG(LOW);
           _controller.update();
@@ -134,12 +134,12 @@ class Espfc
           _blackbox.update();
           //PIN_DEBUG(HIGH);
           _sensor.postLoop();
-          PIN_DEBUG(LOW);
+          //PIN_DEBUG(LOW);
           break;
         case EVENT_ACCEL_READ:
-          PIN_DEBUG(HIGH);
+          //PIN_DEBUG(HIGH);
           _sensor.fusion();
-          PIN_DEBUG(LOW);
+          //PIN_DEBUG(LOW);
           break;
         default:
           break;
