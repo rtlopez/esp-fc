@@ -4,9 +4,6 @@
 #include "Model.h"
 #include "Device/SerialDevice.h"
 #include "Device/SerialDeviceAdapter.h"
-#ifdef ESPFC_SERIAL_SOFT_0_RX
-#include <EspSoftSerial.h>
-#endif
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
 #endif
@@ -31,11 +28,6 @@ namespace {
 
 #ifdef ESPFC_SERIAL_USB
   static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_USB_DEV_T> _usb(ESPFC_SERIAL_USB_DEV);
-#endif
-
-#ifdef ESPFC_SERIAL_SOFT_0_RX
-  static EspSoftSerial softSerial;
-  static Espfc::Device::SerialDeviceAdapter<EspSoftSerial> _soft0(softSerial);
 #endif
 
 }
@@ -226,9 +218,6 @@ class SerialManager
 #endif
 #ifdef ESPFC_SERIAL_USB
         case SERIAL_USB: return &_usb;
-#endif
-#ifdef ESPFC_SERIAL_SOFT_0_RX
-        case SERIAL_SOFT_0: return &_soft0;
 #endif
         default: return nullptr;
       }

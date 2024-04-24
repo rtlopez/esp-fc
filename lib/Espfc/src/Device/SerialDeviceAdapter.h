@@ -2,9 +2,6 @@
 #define _ESPFC_SERIAL_DEVICE_ADAPTER_H_
 
 #include "Device/SerialDevice.h"
-#ifdef ESPFC_SERIAL_SOFT_0_RX
-#include <EspSoftSerial.h>
-#endif
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include <WiFiClient.h>
 #endif
@@ -66,27 +63,6 @@ int SerialDeviceAdapter<WiFiClient>::availableForWrite()
 
 template<>
 bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
-{
-  return true;
-}
-#endif
-
-#ifdef ESPFC_SERIAL_SOFT_0_RX
-template<>
-void SerialDeviceAdapter<EspSoftSerial>::begin(const SerialDeviceConfig& conf)
-{
-  EspSoftSerialConfig ec;
-  ec.baud = conf.baud;
-  ec.rx_pin = conf.rx_pin;
-  ec.inverted = conf.inverted;
-  ec.data_bits = conf.data_bits;
-  ec.parity_type = conf.parity;
-  ec.stop_bits = conf.stop_bits;
-  _dev.begin(ec);
-}
-
-template<>
-bool SerialDeviceAdapter<EspSoftSerial>::isSoft() const
 {
   return true;
 }

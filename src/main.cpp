@@ -8,21 +8,17 @@
 #include <Mahony.h>
 #include <printf.h>
 #include <blackbox/blackbox.h>
-#if defined(SERIAL_SOFT_0_RX)
-#include <EspSoftSerial.h>
-#endif
 #include <EscDriver.h>
 #include <EspWire.h>
 #if defined(ESPFC_ESPNOW)
 #include <EspNowRcLink/Receiver.h>
 #endif
-#include "Debug_Espfc.h"
-
 #ifdef ESPFC_WIFI_ALT
-  #include <ESP8266WiFi.h>
+#include <ESP8266WiFi.h>
 #else
-  #include <WiFi.h>
+#include <WiFi.h>
 #endif
+#include "Debug_Espfc.h"
 
 #ifdef ESP32
 void serialEventRun(void) {}
