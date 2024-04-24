@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <EscDriver.h>
-
 #include "Debug_Espfc.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
@@ -259,7 +258,7 @@ class Model
       size_t channel = config.input.rssiChannel;
       if(channel < 4 || channel > state.inputChannelCount) return 0;
       float value = state.input[channel - 1];
-      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0, 1023)), 0l, 1023l);
+      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
     }
 
     int load()

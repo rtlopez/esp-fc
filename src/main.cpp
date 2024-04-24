@@ -21,7 +21,7 @@
 #include "Debug_Espfc.h"
 
 #ifdef ESP32
-void serialEventRun(void) {}
+void IRAM_ATTR serialEventRun(void) {}
 #endif
 
 Espfc::Espfc espfc;

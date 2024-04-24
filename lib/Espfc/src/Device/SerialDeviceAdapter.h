@@ -15,7 +15,7 @@ class SerialDeviceAdapter: public SerialDevice
 {
   public:
     SerialDeviceAdapter(T& dev): _dev(dev) {}
-    virtual void begin(const SerialDeviceConfig& conf);
+    virtual void begin(const SerialDeviceConfig& conf) { targetSerialInit(_dev, conf); }
     virtual int available() { return _dev.available(); }
     virtual int read() { return _dev.read(); }
     virtual size_t readMany(uint8_t * c, size_t l) {
@@ -42,27 +42,21 @@ class SerialDeviceAdapter: public SerialDevice
     T& _dev;
 };
 
-template<typename T>
-void SerialDeviceAdapter<T>::begin(const SerialDeviceConfig& conf)
-{
-  targetSerialInit(_dev, conf);
-}
-
 // WiFiClient specializations
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 template<>
-void SerialDeviceAdapter<WiFiClient>::begin(const SerialDeviceConfig& conf)
+inline void SerialDeviceAdapter<WiFiClient>::begin(const SerialDeviceConfig& conf)
 {
 }
 
 template<>
-int SerialDeviceAdapter<WiFiClient>::availableForWrite()
+inline int SerialDeviceAdapter<WiFiClient>::availableForWrite()
 {
   return SERIAL_TX_FIFO_SIZE;
 }
 
 template<>
-bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
+inline bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 {
   return true;
 }
