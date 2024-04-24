@@ -24,7 +24,7 @@ SerialManager::SerialManager(Model& model): _model(model), _msp(model), _cli(mod
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 _wireless(model),
 #endif
-_telemetry(model), _current(SERIAL_UART_0) {}
+_telemetry(model), _current(0) {}
 
 int SerialManager::begin()
 {

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Device/InputDevice.h"
+#ifndef UNIT_TEST
 #include <EspNowRcLink/Receiver.h>
+#endif
 #include <cstdint>
 #include <cstddef>
 
@@ -20,9 +22,13 @@ public:
   bool needAverage() const override;
 
 private:
-  static const size_t CHANNELS = EspNowRcLink::RC_CHANNEL_MAX + 1;
-  uint16_t _channels[CHANNELS];
+#ifdef UNIT_TEST
+  static const size_t CHANNELS = 8;
+#else
   EspNowRcLink::Receiver _rx;
+  static const size_t CHANNELS = EspNowRcLink::RC_CHANNEL_MAX + 1;
+#endif
+  uint16_t _channels[CHANNELS];
 };
 
 }

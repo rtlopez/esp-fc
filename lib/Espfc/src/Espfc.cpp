@@ -4,7 +4,11 @@ namespace Espfc {
 
 Espfc::Espfc():
   _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
-  _mixer(_model), _blackbox(_model), _buzzer(_model), _serial(_model)
+  _mixer(_model), _blackbox(_model)
+#ifdef ESPFC_BUZER
+  , _buzzer(_model)
+#endif
+  , _serial(_model)
   {}
 
 int Espfc::load()
@@ -34,7 +38,9 @@ int Espfc::begin()
 int Espfc::beginOther()
 {
   _mixer.begin();
+#ifdef ESPFC_BUZER
   _buzzer.begin();
+#endif
   _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
   return 1;
 }
@@ -62,7 +68,9 @@ int FAST_CODE_ATTR Espfc::update()
   if(_model.state.serialTimer.check())
   {
     _serial.update();
+#ifdef ESPFC_BUZER
     _buzzer.update();
+#endif
     _model.state.stats.update();
   }
 
@@ -138,7 +146,9 @@ int FAST_CODE_ATTR Espfc::updateOther()
   {
     Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
     _serial.update();
+#ifdef ESPFC_BUZER
     _buzzer.update();
+#endif
     _model.state.stats.update();
   }
 #endif
