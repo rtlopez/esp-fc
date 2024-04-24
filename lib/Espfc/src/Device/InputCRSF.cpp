@@ -65,15 +65,10 @@ size_t InputCRSF::getChannelCount() const { return CHANNELS; }
 
 bool InputCRSF::needAverage() const { return false; }
 
-void InputCRSF::print(char c) const
-{
-  //Serial.write(c);
-}
 
 void FAST_CODE_ATTR InputCRSF::parse(CrsfFrame& frame, int d)
 {
   uint8_t c = (uint8_t)(d & 0xff);
-  //print(c);
   switch(_state)
   {
     case CRSF_ADDR:
