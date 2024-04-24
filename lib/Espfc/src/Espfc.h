@@ -66,9 +66,11 @@ class Espfc
       Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
       _sensor.read();
-      if(_model.state.inputTimer.check())
+      if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
       {
+        PIN_DEBUG(HIGH);
         _input.update();
+        PIN_DEBUG(LOW);
       }
       if(_model.state.actuatorTimer.check())
       {
@@ -95,7 +97,12 @@ class Espfc
             _mixer.update();
           }
           _blackbox.update();
-          _input.update();
+          if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+          {
+            PIN_DEBUG(HIGH);
+            _input.update();
+            PIN_DEBUG(LOW);
+          }
           if(_model.state.actuatorTimer.check())
           {
             _actuator.update();

@@ -146,13 +146,12 @@ class SerialManager
         port->begin(sdc);
 
         _model.state.serial[i].stream = port;
-
         if(i == ESPFC_SERIAL_DEBUG_PORT)
         {
           initDebugStream(port);
         }
 
-        _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(sdc.tx_pin).logln(sdc.rx_pin);
+        _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(i == ESPFC_SERIAL_DEBUG_PORT).log(sdc.tx_pin).logln(sdc.rx_pin);
       }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI

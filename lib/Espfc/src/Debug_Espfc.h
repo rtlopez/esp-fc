@@ -28,9 +28,9 @@ template <typename T>
 void D(T t)
 {
   if(!_debugStream) return;
-  _debugStream->print(t);
-  _debugStream->print('\r');
-  _debugStream->print('\n');
+  _debugStream->println(t);
+  //_debugStream->print('\r');
+  //_debugStream->print('\n');
 }
 
 template<typename T, typename... Args>
