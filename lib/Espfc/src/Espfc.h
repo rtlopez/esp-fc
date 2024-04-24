@@ -99,9 +99,7 @@ class Espfc
           _blackbox.update();
           if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
           {
-            PIN_DEBUG(HIGH);
             _input.update();
-            PIN_DEBUG(LOW);
           }
           if(_model.state.actuatorTimer.check())
           {

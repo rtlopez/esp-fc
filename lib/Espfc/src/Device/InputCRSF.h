@@ -1,5 +1,4 @@
-#ifndef _INPUT_DEVICE_INPUT_CRSF_H_
-#define _INPUT_DEVICE_INPUT_CRSF_H_
+#pragma once
 
 #include "Device/SerialDevice.h"
 #include "Device/InputDevice.h"
@@ -13,8 +12,6 @@ namespace Espfc {
 
 namespace Device {
 
-using namespace Espfc::Rc;
-
 class InputCRSF: public InputDevice
 {
   public:
@@ -26,154 +23,23 @@ class InputCRSF: public InputDevice
       CRSF_CRC
     };
 
-    InputCRSF(): _serial(NULL), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
+    InputCRSF();
 
-    int begin(Device::SerialDevice * serial)
-    {
-      _serial = serial;
-      for(size_t i = 0; i < CRSF_FRAME_SIZE_MAX; i++)
-      {
-        _frame.data[i] = 0;
-        if(i < CHANNELS) _channels[i] = 0;
-      }
-      return 1;
-    }
+    int begin(Device::SerialDevice * serial);
+    virtual InputStatus update() override;
+    virtual uint16_t get(uint8_t i) const override;
+    virtual void get(uint16_t * data, size_t len) const override;
+    virtual size_t getChannelCount() const override;
+    virtual bool needAverage() const override;
 
-    InputStatus update() override
-    {
-      if(!_serial) return INPUT_IDLE;
-
-      size_t len = _serial->available();
-      if(len)
-      {
-        uint8_t buff[64] = {0};
-        len = std::min(len, sizeof(buff));
-        _serial->readMany(buff, len);
-        size_t i = 0;
-        while(i < len)
-        {
-          parse(_frame, buff[i++]);
-        }
-      }
-
-      if(_new_data)
-      {
-        _new_data = false;
-        return INPUT_RECEIVED;
-      }
-
-      return INPUT_IDLE;
-    }
-
-    uint16_t get(uint8_t i) const override
-    {
-      return _channels[i];
-    }
-
-    void get(uint16_t * data, size_t len) const override
-    {
-      const uint16_t * src = _channels;
-      while(len--)
-      {
-        *data++ = *src++;
-      }
-    }
-
-    size_t getChannelCount() const override { return CHANNELS; }
-
-    bool needAverage() const override { return false; }
-
-    void print(char c) const
-    {
-      //Serial.write(c);
-    }
-
-    void parse(CrsfFrame& frame, int d)
-    {
-      uint8_t c = (uint8_t)(d & 0xff);
-      //print(c);
-      switch(_state)
-      {
-        case CRSF_ADDR:
-          if(c == CRSF_ADDRESS_FLIGHT_CONTROLLER)
-          {
-            frame.data[_idx++] = c;
-            _state = CRSF_SIZE;
-          }
-          break;
-        case CRSF_SIZE:
-          if(c > 3 && c <= CRSF_PAYLOAD_SIZE_MAX)
-          {
-            frame.data[_idx++] = c;
-            _state = CRSF_TYPE;
-          } else {
-            reset();
-          }
-          break;
-        case CRSF_TYPE:
-          if(c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED || c == CRSF_FRAMETYPE_LINK_STATISTICS)
-          {
-            frame.data[_idx++] = c;
-            _state = CRSF_DATA;
-          } else {
-            reset();
-          }
-          break;
-        case CRSF_DATA:
-          frame.data[_idx++] = c;
-          if(_idx > frame.message.size) // _idx is incremented here and operator > accounts as size - 2
-          {
-            _state = CRSF_CRC;
-          }
-          break;
-        case CRSF_CRC:
-          frame.data[_idx++] = c;
-          reset();
-          uint8_t crc = Crsf::crc(frame);
-          if(c == crc) {
-            apply(frame);
-          }
-          break;
-       }
-    }
+    void print(char c) const;
+    void parse(Rc::CrsfFrame& frame, int d);
 
   private:
-    void reset()
-    {
-      _state = CRSF_ADDR;
-      _idx = 0;
-    }
-
-    void apply(const CrsfFrame& frame)
-    {
-      switch (frame.message.type)
-      {
-        case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
-          applyChannels(frame);
-          break;
-
-        case CRSF_FRAMETYPE_LINK_STATISTICS:
-          applyLinkStats(frame);
-          break;
-
-        default:
-          break;
-      }
-    }
-
-    void applyLinkStats(const CrsfFrame f)
-    {
-      const CrsfLinkStats* frame = reinterpret_cast<const CrsfLinkStats*>(f.message.payload);
-      (void)frame;
-      // TODO:
-    }
-
-    void applyChannels(const CrsfFrame f)
-    {
-      const CrsfData* frame = reinterpret_cast<const CrsfData*>(f.message.payload);
-      Crsf::decodeRcDataShift8(_channels, frame);
-      _new_data = true;
-    }
+    void reset();
+    void apply(const Rc::CrsfFrame& frame);
+    void applyLinkStats(const Rc::CrsfFrame f);
+    void applyChannels(const Rc::CrsfFrame f);
 
     static const size_t CHANNELS = 16;
 
@@ -181,12 +47,10 @@ class InputCRSF: public InputDevice
     CrsfState _state;
     uint8_t _idx;
     bool _new_data;
-    CrsfFrame _frame;
+    Rc::CrsfFrame _frame;
     uint16_t _channels[CHANNELS];
 };
 
 }
 
 }
-
-#endif
