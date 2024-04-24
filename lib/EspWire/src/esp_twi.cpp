@@ -276,7 +276,7 @@ static IRAM_ATTR unsigned char esp_twi_read_byte(bool nack) {
   return byte;
 }
 
-unsigned char esp_twi_writeTo(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop){
+unsigned char IRAM_ATTR esp_twi_writeTo(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop){
   unsigned int i;
   if(!esp_twi_write_start()) return 4;//line busy
   if(!esp_twi_write_byte(((address << 1) | 0) & 0xFF)) {
@@ -300,7 +300,7 @@ unsigned char esp_twi_writeTo(unsigned char address, unsigned char * buf, unsign
   return 0;
 }
 
-unsigned char esp_twi_readFrom(unsigned char address, unsigned char* buf, unsigned int len, unsigned char sendStop){
+unsigned char IRAM_ATTR esp_twi_readFrom(unsigned char address, unsigned char* buf, unsigned int len, unsigned char sendStop){
   unsigned int i;
   if(!esp_twi_write_start()) return 4;//line busy
   if(!esp_twi_write_byte(((address << 1) | 1) & 0xFF)) {

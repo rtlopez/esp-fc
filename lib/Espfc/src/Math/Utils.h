@@ -91,7 +91,7 @@ public:
 
   inline float toAltitude(float pressure, float seaLevelPressure = 101325.f)
   {
-    return 44330.f * (1.f - powf(pressure / seaLevelPressure, 0.1903));
+    return 44330.f * (1.f - std::pow(pressure / seaLevelPressure, 0.1903f));
   }
 
   inline void peakDetect(float * samples, size_t begin_bin, size_t end_bin, float bin_width, Peak * peaks, size_t peak_count)
