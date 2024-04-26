@@ -24,7 +24,7 @@ namespace Espfc {
 FilterConfig::FilterConfig(): type(FILTER_NONE), freq(0), cutoff(0) {}
 FilterConfig::FilterConfig(FilterType t, int16_t f, int16_t c): type(t), freq(f), cutoff(c) {}
 
-FilterConfig FilterConfig::sanitize(int rate) const
+FilterConfig FAST_CODE_ATTR FilterConfig::sanitize(int rate) const
 {
   const int halfRate = rate * 0.49f;
   FilterType t = (FilterType)type;
@@ -42,7 +42,7 @@ void FilterStatePt1::reset()
   v = 0.f;
 }
 
-void FilterStatePt1::reconfigure(const FilterStatePt1& from)
+void FAST_CODE_ATTR FilterStatePt1::reconfigure(const FilterStatePt1& from)
 {
   k = from.k;
 }
@@ -67,7 +67,7 @@ void FilterStateFir2::init()
 {
 }
 
-void FilterStateFir2::reconfigure(const FilterStateFir2& from)
+void FAST_CODE_ATTR FilterStateFir2::reconfigure(const FilterStateFir2& from)
 {
 }
 
@@ -126,7 +126,7 @@ void FilterStateBiquad::init(BiquadFilterType filterType, float rate, float freq
   this->a2 = a2 / a0;
 }
 
-void FilterStateBiquad::reconfigure(const FilterStateBiquad& from)
+void FAST_CODE_ATTR FilterStateBiquad::reconfigure(const FilterStateBiquad& from)
 {
   b0 = from.b0;
   b1 = from.b1;
@@ -173,7 +173,7 @@ void FilterStateFirstOrder::init(float rate, float freq)
   b1 = b0 = W / (W + 1);
 }
 
-void FilterStateFirstOrder::reconfigure(const FilterStateFirstOrder& from)
+void FAST_CODE_ATTR FilterStateFirstOrder::reconfigure(const FilterStateFirstOrder& from)
 {
   b0 = from.b0;
   b1 = from.b1;
@@ -188,7 +188,7 @@ float FAST_CODE_ATTR FilterStateFirstOrder::update(float n)
   return result;
 }
 
-float FilterStateFirstOrder::updateDF1(float n)
+float FAST_CODE_ATTR FilterStateFirstOrder::updateDF1(float n)
 {
   /* compute result */
   const float result = b0 * n + b1 * x1 - a1 * y1;
@@ -202,7 +202,6 @@ float FilterStateFirstOrder::updateDF1(float n)
   return result;
 }
 
-
 void FilterStateMedian::reset()
 {
   v[0] = v[1] = v[2] = 0.f;
@@ -212,7 +211,7 @@ void FilterStateMedian::init()
 {
 }
 
-void FilterStateMedian::reconfigure(const FilterStateMedian& from)
+void FAST_CODE_ATTR FilterStateMedian::reconfigure(const FilterStateMedian& from)
 {
 }
 
@@ -240,7 +239,7 @@ void FilterStatePt2::init(float rate, float freq)
   k = pt1Gain(rate, freq * correction);
 }
 
-void FilterStatePt2::reconfigure(const FilterStatePt2& from)
+void FAST_CODE_ATTR FilterStatePt2::reconfigure(const FilterStatePt2& from)
 {
   k = from.k;
 }
@@ -263,7 +262,7 @@ void FilterStatePt3::init(float rate, float freq)
   k = pt1Gain(rate, freq * correction);
 }
 
-void FilterStatePt3::reconfigure(const FilterStatePt3& from)
+void FAST_CODE_ATTR FilterStatePt3::reconfigure(const FilterStatePt3& from)
 {
   k = from.k;
 }
@@ -348,17 +347,17 @@ void Filter::reset()
   }
 }
 
-void Filter::reconfigure(int16_t freq, int16_t cutoff)
+void FAST_CODE_ATTR Filter::reconfigure(int16_t freq, int16_t cutoff)
 {
   reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate);
 }
 
-void Filter::reconfigure(int16_t freq, int16_t cutoff, float q, float weight)
+void FAST_CODE_ATTR Filter::reconfigure(int16_t freq, int16_t cutoff, float q, float weight)
 {
   reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate, q, weight);
 }
 
-void Filter::reconfigure(const FilterConfig& config, int rate)
+void FAST_CODE_ATTR Filter::reconfigure(const FilterConfig& config, int rate)
 {
   _rate = rate;
   _conf = config.sanitize(_rate);
@@ -377,7 +376,7 @@ void Filter::reconfigure(const FilterConfig& config, int rate)
   }
 }
 
-void Filter::reconfigure(const FilterConfig& config, int rate, float q, float weight)
+void FAST_CODE_ATTR Filter::reconfigure(const FilterConfig& config, int rate, float q, float weight)
 {
   _rate = rate;
   _conf = config.sanitize(_rate);
@@ -418,7 +417,7 @@ void Filter::reconfigure(const FilterConfig& config, int rate, float q, float we
   }
 }
 
-void Filter::reconfigure(const Filter& filter)
+void FAST_CODE_ATTR Filter::reconfigure(const Filter& filter)
 {
   _rate = filter._rate;
   _conf = filter._conf;
@@ -455,18 +454,18 @@ void Filter::reconfigure(const Filter& filter)
   }
 }
 
-void Filter::setWeight(float weight)
+void FAST_CODE_ATTR Filter::setWeight(float weight)
 {
   _output_weight = std::max(0.0f, std::min(weight, 1.0f));
   _input_weight = 1.0f - _output_weight;
 }
 
-float Filter::getNotchQApprox(float freq, float cutoff)
+float FAST_CODE_ATTR Filter::getNotchQApprox(float freq, float cutoff)
 {
   return ((float)(cutoff * freq) / ((float)(freq - cutoff) * (float)(freq + cutoff)));
 }
 
-float Filter::getNotchQ(float freq, float cutoff)
+float FAST_CODE_ATTR Filter::getNotchQ(float freq, float cutoff)
 {
   float octaves = std::log2(freq / cutoff) * 2.f;
   return sqrtf(std::pow(2.f, octaves)) / (std::pow(2.f, octaves) - 1);

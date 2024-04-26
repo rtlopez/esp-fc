@@ -138,6 +138,8 @@ int SerialManager::begin()
 
 int FAST_CODE_ATTR SerialManager::update()
 {
+  Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
+
   //D("serial", _current);
   SerialPortState& ss = _model.state.serial[_current];
   const SerialPortConfig& sc = _model.config.serial[_current];
@@ -146,7 +148,6 @@ int FAST_CODE_ATTR SerialManager::update()
   bool serialRx = sc.functionMask & SERIAL_FUNCTION_RX_SERIAL;
   if(stream && !serialRx)
   {
-    Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
     size_t len = stream->available();
     if(len > 0)
     {

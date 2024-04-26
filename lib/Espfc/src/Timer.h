@@ -23,7 +23,7 @@ class Timer
 
     uint32_t last;
     uint32_t next;
-    uint32_t iteration;
+    volatile uint32_t iteration;
     uint32_t delta;
     float intervalf;
 };

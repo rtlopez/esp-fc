@@ -30,47 +30,87 @@ Espfc::Espfc espfc;
   #if defined(ESPFC_FREE_RTOS)
 
     // ESP32 multicore
-    #include "freertos/FreeRTOS.h"
-    #include "freertos/task.h"
-    TaskHandle_t otherTaskHandle = NULL;
-    extern TaskHandle_t loopTaskHandle;
+    #include <freertos/FreeRTOS.h>
+    #include <freertos/task.h>
+    #include <driver/timer.h>
 
-    void otherTask(void *pvParameters)
+    TaskHandle_t gyroTaskHandle = NULL;
+    TaskHandle_t pidTaskHandle = NULL;
+    static const timer_group_t TIMER_GROUP = TIMER_GROUP_0;
+    static const timer_idx_t TIMER_IDX = TIMER_0;
+
+    bool IRAM_ATTR gyroTimerIsr(void* args)
     {
-      espfc.beginOther();
-      xTaskNotifyGive(loopTaskHandle);
+      //PIN_DEBUG(HIGH);
+      BaseType_t xHigherPriorityTaskWoken;
+      vTaskNotifyGiveFromISR(gyroTaskHandle, &xHigherPriorityTaskWoken);
+      //PIN_DEBUG(LOW);
+      return xHigherPriorityTaskWoken == pdTRUE;
+    }
+
+    void gyroTimerInit(bool (*isrCb)(void* args), int interval)
+    {
+      timer_config_t config = {
+          .alarm_en = TIMER_ALARM_EN,
+          .counter_en = TIMER_PAUSE,
+          .intr_type = TIMER_INTR_LEVEL,
+          .counter_dir = TIMER_COUNT_UP,
+          .auto_reload = TIMER_AUTORELOAD_EN,
+          .divider = 80,
+      };
+      timer_init(TIMER_GROUP, TIMER_IDX, &config);
+      timer_set_counter_value(TIMER_GROUP, TIMER_IDX, 0);
+      timer_set_alarm_value(TIMER_GROUP, TIMER_IDX, interval);
+      timer_isr_callback_add(TIMER_GROUP, TIMER_IDX, isrCb, nullptr, ESP_INTR_FLAG_IRAM);
+      timer_enable_intr(TIMER_GROUP, TIMER_IDX);
+      timer_start(TIMER_GROUP, TIMER_IDX);
+    }
+
+    void gyroTask(void *pvParameters)
+    {
+      espfc.load();
+      espfc.begin();
+      gyroTimerInit(gyroTimerIsr, espfc.getGyroInterval());
+      while(true)
+      {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for timer notification
+        espfc.update(true);
+      }
+    }
+
+    void pidTask(void *pvParameters)
+    {
       while(true)
       {
         espfc.updateOther();
       }
     }
+
     void setup()
     {
-      espfc.load();
-      espfc.begin();
       disableCore0WDT();
-      xTaskCreateUniversal(otherTask, "otherTask", 8192, NULL, 1, &otherTaskHandle, 0); // run on PRO(0) core, loopTask is on APP(1)
-      ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for `otherTask` initialization
+      // internal task priorities
+      // PRO(0): hi-res timer(22), timer(1), event-loop(20), lwip(18/any), wifi(23), wpa(2/any), BT/vhci(23), NimBle(21), BT/other(19,20,22), Eth(15), Mqtt(5/any)
+      // APP(1): free
+      xTaskCreateUniversal(gyroTask, "gyroTask", 8192, NULL, 24, &gyroTaskHandle, 1);
+      xTaskCreateUniversal(pidTask,  "pidTask",  8192, NULL,  1, &pidTaskHandle,  0);
+      vTaskDelete(NULL); // delete arduino loop task
     }
+
     void loop()
     {
-      espfc.update();
     }
 
   #elif defined(ESPFC_MULTI_CORE_RP2040)
 
     // RP2040 multicore
-    volatile static bool setup1Done = false;
     void setup1()
     {
-      espfc.beginOther();
-      setup1Done = true;
     }
     void setup()
     {
       espfc.load();
       espfc.begin();
-      while(!setup1Done); //wait for setup1()
     }
     void loop()
     {
@@ -92,7 +132,6 @@ Espfc::Espfc espfc;
   {
     espfc.load();
     espfc.begin();
-    espfc.beginOther();
   }
   void loop()
   {

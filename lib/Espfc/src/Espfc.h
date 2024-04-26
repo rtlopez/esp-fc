@@ -22,9 +22,13 @@ class Espfc
 
     int load();
     int begin();
-    int beginOther();
-    int update();
+    int update(bool externalTrigger = false);
     int updateOther();
+
+    int getGyroInterval() const
+    {
+      return _model.state.gyroTimer.interval;
+    }
 
   private:
     Model _model;
@@ -39,6 +43,7 @@ class Espfc
     Buzzer _buzzer;
 #endif
     SerialManager _serial;
+    uint32_t _loop_next;
 };
 
 }

@@ -1,4 +1,5 @@
 #include "Espfc.h"
+#include "Debug_Espfc.h"
 
 namespace Espfc {
 
@@ -25,80 +26,77 @@ int Espfc::begin()
   _model.logStorageResult();
   _hardware.begin();
   _model.begin();
-  //_mixer.begin();
+  _mixer.begin();
   _sensor.begin();
   _input.begin();
   _actuator.begin();
   _controller.begin();
   _blackbox.begin();
-
-  return 1;
-}
-
-int Espfc::beginOther()
-{
-  _mixer.begin();
 #ifdef ESPFC_BUZER
   _buzzer.begin();
 #endif
   _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
+
   return 1;
 }
 
-int FAST_CODE_ATTR Espfc::update()
+int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 {
-#if defined(ESPFC_MULTI_CORE)
-  if(!_model.state.gyroTimer.check())
+  if(externalTrigger)
   {
-    return 0;
+    _model.state.gyroTimer.update();
+  }
+  else
+  {
+    if(!_model.state.gyroTimer.check()) return 0;
   }
   Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
+
+#if defined(ESPFC_MULTI_CORE)
 
   _sensor.read();
   if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
   {
-    PIN_DEBUG(HIGH);
     _input.update();
-    PIN_DEBUG(LOW);
   }
   if(_model.state.actuatorTimer.check())
   {
     _actuator.update();
   }
-  if(_model.state.serialTimer.check())
-  {
-    _serial.update();
-#ifdef ESPFC_BUZER
-    _buzzer.update();
-#endif
-    _model.state.stats.update();
-  }
 
-  return 1;
+  _serial.update();
+#ifdef ESPFC_BUZER
+  _buzzer.update();
+#endif
+  _model.state.stats.update();
+
 #else
-  if(_model.state.gyroTimer.check())
+
+  _sensor.update();
+  if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
   {
-    Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
-    _sensor.update();
-    if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
+    _controller.update();
+    if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
     {
-      _controller.update();
-      if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
-      {
-        _mixer.update();
-      }
-      _blackbox.update();
-      if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
-      {
-        _input.update();
-      }
-      if(_model.state.actuatorTimer.check())
-      {
-        _actuator.update();
-      }
+      _mixer.update();
     }
-    _sensor.updateDelayed();
+    _blackbox.update();
+    if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+    {
+      _input.update();
+    }
+    if(_model.state.actuatorTimer.check())
+    {
+      _actuator.update();
+    }
   }
+  _sensor.updateDelayed();
+
+  _serial.update();
+#ifdef ESPFC_BUZER
+  _buzzer.update();
+#endif
+  _model.state.stats.update();
 #endif
 
   return 1;
@@ -119,37 +117,24 @@ int FAST_CODE_ATTR Espfc::updateOther()
   switch(e.type)
   {
     case EVENT_GYRO_READ:
-      // TODO: skip if too quick
-      //PIN_DEBUG(HIGH);
       _sensor.preLoop();
-      //PIN_DEBUG(LOW);
       _controller.update();
-      //PIN_DEBUG(HIGH);
-      _mixer.update();
-      //PIN_DEBUG(LOW);
-      _blackbox.update();
-      //PIN_DEBUG(HIGH);
+      // skip mixer and bb if earlier than half cycle, possible delay in previous iteration, 
+      // to keep space to receive dshot erpm frame, but process rest
+      if(_loop_next < micros())
+      {
+        _loop_next = micros() + _model.state.loopTimer.interval / 2;
+        _mixer.update();
+        _blackbox.update();
+      }
       _sensor.postLoop();
-      //PIN_DEBUG(LOW);
       break;
     case EVENT_ACCEL_READ:
-      //PIN_DEBUG(HIGH);
       _sensor.fusion();
-      //PIN_DEBUG(LOW);
       break;
     default:
       break;
       // nothing
-  }
-#else
-  if(_model.state.serialTimer.check())
-  {
-    Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
-    _serial.update();
-#ifdef ESPFC_BUZER
-    _buzzer.update();
-#endif
-    _model.state.stats.update();
   }
 #endif
 

@@ -11,7 +11,7 @@ Timer::Timer(): interval(0), last(0), next(0), iteration(0), delta(0)
 int Timer::setInterval(uint32_t interval)
 {
   this->interval = interval;
-  this->rate = 1000000UL / interval;
+  this->rate = (1000000UL + interval / 2) / interval;
   this->denom = 1;
   this->delta = this->interval;
   this->intervalf = this->interval * 0.000001f;
@@ -21,8 +21,8 @@ int Timer::setInterval(uint32_t interval)
 
 int Timer::setRate(uint32_t rate, uint32_t denom)
 {
-  this->rate = rate / denom;
-  this->interval = 1000000UL / this->rate;
+  this->rate = (rate + denom / 2) / denom;
+  this->interval = (1000000UL + this->rate / 2) / this->rate;
   this->denom = denom;
   this->delta = this->interval;
   this->intervalf = this->interval * 0.000001f;

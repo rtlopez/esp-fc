@@ -4,16 +4,16 @@
 #include <Arduino.h>
 #include "Hal/Gpio.h"
 
-namespace Espfc
-{
-
 #ifdef ESPFC_DEBUG_PIN
-  #define PIN_DEBUG(v) Hal::Gpio::digitalWrite(ESPFC_DEBUG_PIN, v)
-  #define PIN_DEBUG_INIT() pinMode(ESPFC_DEBUG_PIN, OUTPUT)
+  #define PIN_DEBUG(v) ::Espfc::Hal::Gpio::digitalWrite(ESPFC_DEBUG_PIN, v)
+  #define PIN_DEBUG_INIT() ::pinMode(ESPFC_DEBUG_PIN, OUTPUT)
 #else
   #define PIN_DEBUG(v)
   #define PIN_DEBUG_INIT()
 #endif
+
+namespace Espfc
+{
 
 #ifdef ESPFC_DEBUG_SERIAL
 extern Stream * _debugStream;

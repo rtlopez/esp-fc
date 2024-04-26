@@ -218,8 +218,8 @@ class Hardware
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       WiFi.disconnect();
       WiFi.softAPdisconnect();
-      delay(100);
 #endif
+      delay(100);
       targetReset();
     }
 

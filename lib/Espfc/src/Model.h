@@ -434,12 +434,7 @@ class Model
       state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(4);
-#if defined(ESPFC_MULTI_CORE)
-      state.serialTimer.setRate(4000);
-#else
-      state.serialTimer.setRate(1000);
-#endif
+      state.stats.timer.setRate(3);
       if(magActive())
       {
         state.magTimer.setRate(state.magRate);
