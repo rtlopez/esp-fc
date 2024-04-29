@@ -5,6 +5,8 @@
 extern "C" {
 #include "blackbox/blackbox.h"
 #include "blackbox/blackbox_fielddefs.h"
+bool blackboxShouldLogPFrame(void);
+bool blackboxShouldLogIFrame(void);
 }
 
 static Espfc::Model * _model_ptr = nullptr;
@@ -280,7 +282,10 @@ int FAST_CODE_ATTR Blackbox::update()
   uint32_t startTime = micros();
   updateArmed();
   updateMode();
-  updateData();
+  if(blackboxShouldLogIFrame() || blackboxShouldLogPFrame())
+  {
+    updateData();
+  }
   blackboxUpdate(_model.state.loopTimer.last);
   _buffer.flush();
 

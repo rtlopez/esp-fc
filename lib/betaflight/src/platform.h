@@ -91,7 +91,7 @@ extern const char * boardIdentifier;
 #ifdef UNIT_TEST
 #define STATIC_UNIT_TESTED
 #else
-#define STATIC_UNIT_TESTED static
+#define STATIC_UNIT_TESTED
 #endif
 
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
