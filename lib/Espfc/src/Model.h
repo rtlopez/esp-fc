@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <EscDriver.h>
-
 #include "Debug_Espfc.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
@@ -259,7 +258,7 @@ class Model
       size_t channel = config.input.rssiChannel;
       if(channel < 4 || channel > state.inputChannelCount) return 0;
       float value = state.input[channel - 1];
-      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0, 1023)), 0l, 1023l);
+      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
     }
 
     int load()
@@ -426,23 +425,16 @@ class Model
       // init timers
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
-      //state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
-      //state.accelTimer.setInterval(state.accelTimer.interval - 5);
-      //state.accelTimer.setRate(state.gyroTimer.rate, 2);
-      int accelRate = Math::alignToClock(state.gyroRate, 500);
+      int accelRate = Math::alignToClock(state.gyroTimer.rate, 500);
       state.accelTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / accelRate);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
-      state.inputTimer.setRate(1001);
+      int inputRate = Math::alignToClock(state.gyroTimer.rate, 1000);
+      state.inputTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / inputRate);
       state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(4);
-#if defined(ESPFC_MULTI_CORE)
-      state.serialTimer.setRate(4000);
-#else
-      state.serialTimer.setRate(1000);
-#endif
+      state.stats.timer.setRate(3);
       if(magActive())
       {
         state.magTimer.setRate(state.magRate);

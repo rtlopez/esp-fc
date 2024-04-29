@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 0
 
@@ -19,6 +21,33 @@
 
 #define SERIAL_TX_FIFO_SIZE 0xFF
 
+#define ESPFC_SERIAL_DEBUG_PORT 0
+
 inline void targetReset()
 {
+}
+
+inline uint32_t getBoardId0()
+{
+  return 0;
+}
+
+inline uint32_t getBoardId1()
+{
+  return 0;
+}
+
+inline uint32_t getBoardId2()
+{
+  return 0;
+}
+
+inline uint32_t targetCpuFreq()
+{
+  return 1;
+}
+
+inline uint32_t targetFreeHeap()
+{
+  return 1;
 }

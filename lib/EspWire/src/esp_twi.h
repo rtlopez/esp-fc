@@ -36,8 +36,8 @@ void esp_twi_init(unsigned char sda, unsigned char scl);
 void esp_twi_stop(void);
 void esp_twi_setClock(unsigned int freq);
 void esp_twi_setClockStretchLimit(uint32_t limit);
-uint8_t esp_twi_writeTo(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop) IRAM_ATTR;
-uint8_t esp_twi_readFrom(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop) IRAM_ATTR;
+uint8_t esp_twi_writeTo(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop);
+uint8_t esp_twi_readFrom(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop);
 uint8_t esp_twi_status();
 
 #ifdef __cplusplus

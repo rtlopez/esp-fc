@@ -215,18 +215,14 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
 
 void EscDriverEsp32::modeTx(rmt_channel_t channel)
 {
-  //PIN_DEBUG(HIGH);
   disableRx(channel);
   enableTx(channel);
-  //PIN_DEBUG(LOW);
 }
 
 void EscDriverEsp32::modeRx(rmt_channel_t channel)
 {
-  //PIN_DEBUG(HIGH);
   disableTx(channel);
   enableRx(channel);
-  //PIN_DEBUG(LOW);
 }
 
 void EscDriverEsp32::enableTx(rmt_channel_t channel)
@@ -276,7 +272,6 @@ void EscDriverEsp32::disableRx(rmt_channel_t channel)
 
 void EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void *arg)
 {
-  //PIN_DEBUG(HIGH);
   auto instance = instances[channel];
   if(!instance) return;
   if(instance->_async)
@@ -287,7 +282,6 @@ void EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void *arg)
   {
     instance->modeRx(channel);
   }
-  //PIN_DEBUG(LOW);
 }
 
 void EscDriverEsp32::transmitOne(uint8_t i)
@@ -328,7 +322,6 @@ void EscDriverEsp32::transmitAll()
 
 void EscDriverEsp32::readTelemetry()
 {
-  //PIN_DEBUG(HIGH);
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
     if(!_digital || !_dshot_tlm) continue;
@@ -348,7 +341,6 @@ void EscDriverEsp32::readTelemetry()
       _channel[i].telemetryValue = value;
     }
   }
-  //PIN_DEBUG(LOW);
 }
 
 void EscDriverEsp32::writeAnalogCommand(uint8_t channel, int32_t pulse)

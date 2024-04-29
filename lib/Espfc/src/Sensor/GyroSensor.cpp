@@ -152,13 +152,13 @@ int FAST_CODE_ATTR GyroSensor::filter()
   return 1;
 }
 
-void GyroSensor::postLoop()
+void FAST_CODE_ATTR GyroSensor::postLoop()
 {
   rpmFilterUpdate();
   dynNotchFilterUpdate();
 }
 
-void GyroSensor::rpmFilterUpdate()
+void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
 {
   if (!_rpm_enabled) return;
 
@@ -191,7 +191,7 @@ void GyroSensor::rpmFilterUpdate()
   }
 }
 
-void GyroSensor::dynNotchFilterUpdate()
+void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
 {
   if (!_model.gyroActive()) return;
   if (_model.state.loopTimer.rate < DynamicFilterConfig::MIN_FREQ) return;

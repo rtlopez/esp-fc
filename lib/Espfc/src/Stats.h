@@ -85,7 +85,7 @@ class Stats
       uint32_t now = micros();
       uint32_t diff = now - _loop_last;
       //_loop_time = diff;
-      _loop_time += (((int32_t)diff - _loop_time + 8) >> 4);
+      _loop_time += (((int32_t)diff - _loop_time + 4) >> 3);
       _loop_last = now;
     }
 
@@ -154,9 +154,12 @@ class Stats
 
     float getCpuLoad() const
     {
-      float maxLoad = std::max(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
-      float minLoad = std::min(getLoad(COUNTER_CPU_0), getLoad(COUNTER_CPU_1));
-      return 0.7f * maxLoad + 0.3f * minLoad;
+      float cpu0 = getLoad(COUNTER_CPU_0);
+      float cpu1 = getLoad(COUNTER_CPU_1);
+      float maxLoad = std::max(cpu0, cpu1);
+      float minLoad = std::min(cpu0, cpu1);
+      float alpha = maxLoad / (minLoad + maxLoad);
+      return alpha * maxLoad + (1.f - alpha) * minLoad;
     }
 
     float getCpuTime() const
