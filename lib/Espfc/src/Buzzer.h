@@ -23,8 +23,8 @@ class Buzzer
 
     int begin()
     {
-      if(_model.config.pin[PIN_BUZZER] == -1) return 0;
 #ifndef UNIT_TEST
+      if(_model.config.pin[PIN_BUZZER] == -1) return 0;
       pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
       digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted);
 #endif
@@ -39,7 +39,9 @@ class Buzzer
       //_model.state.debug[1] = _status;
       //_model.state.debug[2] = (int16_t)(millis() - _wait);
 
+#ifndef UNIT_TEST
       if(_model.config.pin[PIN_BUZZER] == -1) return 0;
+#endif
       if(!_model.state.buzzer.timer.check()) return 0;
       if(_wait > millis()) return 0;
 
@@ -86,7 +88,9 @@ class Buzzer
 
     void _write(bool v)
     {
+#ifndef UNIT_TEST
       digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted ? !v : v);
+#endif
     }
 
     void _delay(int time)
