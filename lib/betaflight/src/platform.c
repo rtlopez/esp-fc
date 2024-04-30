@@ -73,11 +73,11 @@ const char* const lookupTableMixerType[] = {
     "LEGACY", "LINEAR", "DYNAMIC", "EZLANDING",
 };
 
-int gcd(int num, int denom)
+/*int gcd(int num, int denom)
 {
     if (denom == 0) return num;
     return gcd(denom, num % denom);
-}
+}*/
 
 bool bitArrayGet(const void *array, unsigned bit)
 {

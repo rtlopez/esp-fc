@@ -8,6 +8,7 @@
 #include "Hardware.h"
 #include "Logger.h"
 #include "Device/GyroDevice.h"
+#include "Device/FlashDevice.h"
 #include "platform.h"
 #include "Hal/Pgm.h"
 
@@ -1349,6 +1350,64 @@ class Cli
         s.print(_model.logger.c_str());
         s.print(PSTR("total: "));
         s.println(_model.logger.length());
+      }
+      else if(strcmp_P(cmd.args[0], PSTR("flash")) == 0)
+      {
+        if(!cmd.args[1])
+        {
+          size_t total = flashfsGetSize();
+          size_t used = flashfsGetOffset();
+          s.printf("total: %d\r\n", total);
+          s.printf(" used: %d\r\n", used);
+          s.printf(" free: %d\r\n", total - used);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("partitions")) == 0)
+        {
+          Device::FlashDevice::partitions(s);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("journal")) == 0)
+        {
+          const FlashfsRuntime* flashfs = flashfsGetRuntime();
+          FlashfsJournalItem journal[16];
+          flashfsJournalLoad(journal, 16);
+          for(size_t i = 0; i < 16; i++)
+          {
+            const auto& it = journal[i];
+            const auto& itr = flashfs->journal[i];
+            s.printf("%08X : %08X / %08X : %08X\r\n", it.logBegin, it.logEnd, itr.logBegin, itr.logEnd);
+          }
+          s.printf("current: %d\r\n", flashfs->journalIdx);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("erase")) == 0)
+        {
+          flashfsEraseCompletely();
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("test")) == 0)
+        {
+          const char * data = "flashfs-test";
+          flashfsWrite((const uint8_t*)data, strlen(data), true);
+          flashfsFlushAsync(true);
+          flashfsClose();
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("print")) == 0)
+        {
+          size_t addr = 0;
+          if(cmd.args[2])
+          {
+            addr = String(cmd.args[2]).toInt();
+          }
+          uint8_t data[16];
+          flashfsReadAbs(addr, data, sizeof(data));
+          for(size_t i = 0; i < sizeof(data); i++)
+          {
+            s.printf("%02x ", data[i]);
+          }
+          s.println();
+        }
+        else
+        {
+          s.println(F("wrong param!"));
+        }
       }
       else
       {

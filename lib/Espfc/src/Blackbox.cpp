@@ -105,14 +105,20 @@ int Blackbox::begin()
 {
   initBlackboxModel(&_model);
 
+  int res = flashfsInit();
+  _model.logger.info().log(F("FLASHFS")).log(res).logln(flashfsGetOffset());
+
   if(!_model.blackboxEnabled()) return 0;
 
-  _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
-  if(!_serial) return 0;
+  if(_model.config.blackboxDev == 3)
+  {
+    _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+    if(!_serial) return 0;
 
-  _buffer.wrap(_serial);
-  serialDeviceInit(&_buffer, 0);
-  //serialDeviceInit(_serial, 0);
+    _buffer.wrap(_serial);
+    serialDeviceInit(&_buffer, 0);
+    //serialDeviceInit(_serial, 0);
+  }
 
   systemConfigMutable()->activeRateProfile = 0;
   systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
@@ -276,7 +282,8 @@ int Blackbox::begin()
 int FAST_CODE_ATTR Blackbox::update()
 {
   if(!_model.blackboxEnabled()) return 0;
-  if(!_serial) return 0;
+  if(_model.config.blackboxDev == 3 && !_serial) return 0;
+
   Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
   uint32_t startTime = micros();
@@ -286,8 +293,13 @@ int FAST_CODE_ATTR Blackbox::update()
   {
     updateData();
   }
+  //PIN_DEBUG(HIGH);
   blackboxUpdate(_model.state.loopTimer.last);
-  _buffer.flush();
+  if(_model.config.blackboxDev == 3)
+  {
+    _buffer.flush();
+  }
+  //PIN_DEBUG(LOW);
 
   if(_model.config.debugMode == DEBUG_PIDLOOP)
   {

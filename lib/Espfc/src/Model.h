@@ -103,7 +103,8 @@ class Model
 
     bool blackboxEnabled() const
     {
-      return config.blackboxDev == 3 && config.blackboxPdenom > 0;
+      // serial or flash
+      return (config.blackboxDev == 3 || config.blackboxDev == 1) && config.blackboxPdenom > 0;
     }
 
     bool gyroActive() const /* IRAM_ATTR */
@@ -150,7 +151,7 @@ class Model
       if(state.gyroCalibrationState == CALIBRATION_SAVE)
       {
         //save();
-        state.buzzer.push(BEEPER_GYRO_CALIBRATED);
+        state.buzzer.push(BUZZER_GYRO_CALIBRATED);
         logger.info().log(F("GYRO BIAS")).log(degrees(state.gyroBias.x)).log(degrees(state.gyroBias.y)).logln(degrees(state.gyroBias.z));
       }
       if(state.accelCalibrationState == CALIBRATION_SAVE)
@@ -404,13 +405,13 @@ class Model
 
       // only few beeper modes allowed
       config.buzzer.beeperMask &=
-        1 << (BEEPER_GYRO_CALIBRATED - 1) |
-        1 << (BEEPER_SYSTEM_INIT - 1) |
-        1 << (BEEPER_RX_LOST - 1) |
-        1 << (BEEPER_RX_SET - 1) |
-        1 << (BEEPER_DISARMING - 1) |
-        1 << (BEEPER_ARMING - 1) |
-        1 << (BEEPER_BAT_LOW - 1);
+        1 << (BUZZER_GYRO_CALIBRATED - 1) |
+        1 << (BUZZER_SYSTEM_INIT - 1) |
+        1 << (BUZZER_RX_LOST - 1) |
+        1 << (BUZZER_RX_SET - 1) |
+        1 << (BUZZER_DISARMING - 1) |
+        1 << (BUZZER_ARMING - 1) |
+        1 << (BUZZER_BAT_LOW - 1);
 
         if(config.dynamicFilter.width > 6)
         {

@@ -10,11 +10,13 @@
 #define USE_ITERM_RELAX
 #define USE_DSHOT_TELEMETRY
 #define USE_RPM_FILTER
+#define USE_FLASHFS
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <printf.h>
 #include <stddef.h>
+#include "esp_partition.h"
 
 #if defined(ESP8266)
 #define ESPFC_TARGET "ESP8266"
@@ -104,7 +106,7 @@ void arraySubInt32(int32_t *dest, int32_t *array1, int32_t *array2, int count);
 uint32_t castFloatBytesToInt(float f);
 uint32_t zigzagEncode(int32_t value);
 
-int gcd(int num, int denom);
+//int gcd(int num, int denom);
 
 #ifndef constrain
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
@@ -1207,6 +1209,89 @@ void IOLo(IO_t pin);
 #define LED0_OFF do {} while(false)
 
 // end ESC 4-Way IF
+
+typedef enum {
+    // IMPORTANT: the order of the elements should be preserved for backwards compatibility with the configurator.
+    BEEPER_SILENCE = 0,             // Silence, see beeperSilence()
+
+    BEEPER_GYRO_CALIBRATED,
+    BEEPER_RX_LOST,                 // Beeps when TX is turned off or signal lost (repeat until TX is okay)
+    BEEPER_RX_LOST_LANDING,         // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
+    BEEPER_DISARMING,               // Beep when disarming the board
+    BEEPER_ARMING,                  // Beep when arming the board
+    BEEPER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
+    BEEPER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
+    BEEPER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
+    BEEPER_GPS_STATUS,              // Use the number of beeps to indicate how many GPS satellites were found
+    BEEPER_RX_SET,                  // Beeps when aux channel is set for beep
+    BEEPER_ACC_CALIBRATION,         // ACC inflight calibration completed confirmation
+    BEEPER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
+    BEEPER_READY_BEEP,              // Ring a tone when GPS is locked and ready
+    BEEPER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
+    BEEPER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position
+    BEEPER_ARMED,                   // Warning beeps when board is armed with motors off when idle (repeats until board is disarmed or throttle is increased)
+    BEEPER_SYSTEM_INIT,             // Initialisation beeps when board is powered on
+    BEEPER_USB,                     // Some boards have beeper powered USB connected
+    BEEPER_BLACKBOX_ERASE,          // Beep when blackbox erase completes
+    BEEPER_CRASH_FLIP_MODE,         // Crash flip mode is active
+    BEEPER_CAM_CONNECTION_OPEN,     // When the 5 key simulation stated
+    BEEPER_CAM_CONNECTION_CLOSE,    // When the 5 key simulation stop
+    BEEPER_RC_SMOOTHING_INIT_FAIL,  // Warning beep pattern when armed and rc smoothing has not initialized filters
+    BEEPER_ARMING_GPS_NO_FIX,       // Beep a special tone when arming the board and GPS has no fix
+    BEEPER_ALL,                     // Turn ON or OFF all beeper conditions
+    // BEEPER_ALL must remain at the bottom of this enum
+} beeperMode_e;
+
+void beeper(int mode);
+
+// FLASHFS START
+#define FLASHFS_WRITE_BUFFER_SIZE 128u
+#define FLASHFS_JOURNAL_ITEMS 32u
+
+typedef struct
+{
+    uint32_t logBegin;
+    uint32_t logEnd;
+} __attribute__((packed)) FlashfsJournalItem;
+
+typedef struct
+{
+    const esp_partition_t* partition;
+    uint8_t buffer[FLASHFS_WRITE_BUFFER_SIZE];
+    uint32_t bufferIdx;
+    uint32_t address;
+    FlashfsJournalItem journal[FLASHFS_JOURNAL_ITEMS];
+    uint32_t journalIdx;
+} FlashfsRuntime;
+
+#define FLASHFS_JOURNAL_SIZE (FLASHFS_JOURNAL_ITEMS * sizeof(FlashfsJournalItem))
+
+const FlashfsRuntime * flashfsGetRuntime();
+
+void flashfsJournalLoad(FlashfsJournalItem * data, size_t num);
+
+int flashfsInit(void);
+uint32_t flashfsGetSize(void);
+uint32_t flashfsGetOffset(void);
+uint32_t flashfsGetSectors(void);
+
+void flashfsWriteByte(uint8_t byte);
+void flashfsWrite(const uint8_t *data, unsigned int len, bool sync);
+
+void flashfsWriteAbs(uint32_t address, const uint8_t *data, unsigned int len);
+int flashfsReadAbs(uint32_t address, uint8_t *data, unsigned int len);
+
+bool flashfsFlushAsync(bool force);
+
+bool flashfsIsSupported(void);
+bool flashfsIsReady(void);
+bool flashfsIsEOF(void);
+
+void flashfsEraseCompletely(void);
+void flashfsClose(void);
+
+uint32_t flashfsGetWriteBufferFreeSpace(void);
+uint32_t flashfsGetWriteBufferSize(void);
 
 #ifdef __cplusplus
 }

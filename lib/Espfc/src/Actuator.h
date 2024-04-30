@@ -191,19 +191,19 @@ class Actuator
     {
       if(_model.isModeActive(MODE_FAILSAFE))
       {
-        _model.state.buzzer.play(BEEPER_RX_LOST);
+        _model.state.buzzer.play(BUZZER_RX_LOST);
       }
       if(_model.state.battery.warn(_model.config.vbatCellWarning))
       {
-        _model.state.buzzer.play(BEEPER_BAT_LOW);
+        _model.state.buzzer.play(BUZZER_BAT_LOW);
       }
       if(_model.isModeActive(MODE_BUZZER))
       {
-        _model.state.buzzer.play(BEEPER_RX_SET);
+        _model.state.buzzer.play(BUZZER_RX_SET);
       }
       if((_model.hasChanged(MODE_ARMED)))
       {
-        _model.state.buzzer.push(_model.isModeActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
+        _model.state.buzzer.push(_model.isModeActive(MODE_ARMED) ? BUZZER_ARMING : BUZZER_DISARMING);
       }
     }
 

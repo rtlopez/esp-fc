@@ -64,7 +64,7 @@ class BuzzerState
 
     BuzzerEvent pop()
     {
-      if(empty()) return BEEPER_SILENCE;
+      if(empty()) return BUZZER_SILENCE;
       return events[--idx];
     }
 

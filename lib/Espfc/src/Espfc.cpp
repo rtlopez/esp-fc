@@ -35,7 +35,7 @@ int Espfc::begin()
 #ifdef ESPFC_BUZER
   _buzzer.begin();
 #endif
-  _model.state.buzzer.push(BEEPER_SYSTEM_INIT);
+  _model.state.buzzer.push(BUZZER_SYSTEM_INIT);
 
   return 1;
 }
