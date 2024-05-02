@@ -10,13 +10,16 @@
 #define USE_ITERM_RELAX
 #define USE_DSHOT_TELEMETRY
 #define USE_RPM_FILTER
-#define USE_FLASHFS
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <printf.h>
 #include <stddef.h>
+
+#if defined(ESP32)
+#define USE_FLASHFS
 #include "esp_partition.h"
+#endif
 
 #if defined(ESP8266)
 #define ESPFC_TARGET "ESP8266"
@@ -36,6 +39,14 @@
   #error "Unsupported platform"
 #endif
 
+#ifndef ESPFC_REVISION
+#define ESPFC_REVISION 0000000
+#endif
+
+#ifndef ESPFC_VERSION
+#define ESPFC_VERSION v0.0.0
+#endif
+
 #define MAX_SUPPORTED_MOTORS 8
 #define MAX_SUPPORTED_SERVOS 8
 #define PID_PROCESS_DENOM_DEFAULT       1
@@ -48,8 +59,6 @@
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 #define FC_VERSION_STRING STR(FC_VERSION_MAJOR) "." STR(FC_VERSION_MINOR) "." STR(FC_VERSION_PATCH_LEVEL)
-
-#define MW_VERSION                1
 
 #ifdef __cplusplus
 extern "C" {
@@ -786,6 +795,7 @@ extern uint8_t activePidLoopDenom;
 
 /* SENSOR START */
 bool sensors(uint32_t mask);
+void sensorsSet(uint32_t mask);
 
 typedef enum {
     SENSOR_GYRO   = 1 << 0, // always present
@@ -1245,6 +1255,8 @@ typedef enum {
 void beeper(int mode);
 
 // FLASHFS START
+#ifdef USE_FLASHFS
+
 #define FLASHFS_WRITE_BUFFER_SIZE 128u
 #define FLASHFS_JOURNAL_ITEMS 32u
 
@@ -1292,6 +1304,8 @@ void flashfsClose(void);
 
 uint32_t flashfsGetWriteBufferFreeSpace(void);
 uint32_t flashfsGetWriteBufferSize(void);
+
+#endif
 
 #ifdef __cplusplus
 }

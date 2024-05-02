@@ -3,14 +3,17 @@
 
 #include <Arduino.h>
 #include <algorithm>
+#include <platform.h>
 
 #include "Model.h"
 #include "Hardware.h"
 #include "Logger.h"
 #include "Device/GyroDevice.h"
-#include "Device/FlashDevice.h"
-#include "platform.h"
 #include "Hal/Pgm.h"
+
+#ifdef USE_FLASHFS
+#include "Device/FlashDevice.h"
+#endif
 
 #if defined(ESPFC_WIFI_ALT)
 #include <ESP8266WiFi.h>
@@ -1351,6 +1354,7 @@ class Cli
         s.print(PSTR("total: "));
         s.println(_model.logger.length());
       }
+#ifdef USE_FLASHFS
       else if(strcmp_P(cmd.args[0], PSTR("flash")) == 0)
       {
         if(!cmd.args[1])
@@ -1409,6 +1413,7 @@ class Cli
           s.println(F("wrong param!"));
         }
       }
+#endif
       else
       {
         s.print(F("unknown command: "));

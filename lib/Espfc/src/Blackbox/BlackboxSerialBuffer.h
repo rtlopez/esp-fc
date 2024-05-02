@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Model.h"
 #include "Target/Target.h"
 #include "Device/SerialDevice.h"
-extern "C" {
-#include <platform.h>
-}
 
-class BlackboxBuffer: public Espfc::Device::SerialDevice
+namespace Espfc {
+
+namespace Blackbox {
+
+class BlackboxSerialBuffer: public Device::SerialDevice
 {
   public:
-    BlackboxBuffer(): _dev(nullptr), _idx(0) {}
+    BlackboxSerialBuffer(): _dev(nullptr), _idx(0) {}
 
     virtual void wrap(Espfc::Device::SerialDevice * s)
     {
@@ -76,29 +76,11 @@ class BlackboxBuffer: public Espfc::Device::SerialDevice
 
     static const size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
 
-    Espfc::Device::SerialDevice * _dev;
+    Device::SerialDevice * _dev;
     size_t _idx;
     uint8_t _data[SIZE];
 };
 
-namespace Espfc {
-
-class Blackbox
-{
-  public:
-    Blackbox(Model& model);
-    int begin();
-    int update();
-
-  private:
-    void updateData();
-    void updateArmed();
-    void updateMode();
-
-    Model& _model;
-    pidProfile_s _pidProfile;
-    Device::SerialDevice * _serial;
-    BlackboxBuffer _buffer;
-};
+}
 
 }

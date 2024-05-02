@@ -1,9 +1,9 @@
 #pragma once
 
-#include <algorithm>
 #include <Arduino.h>
+#include <platform.h>
+#include <algorithm>
 #include "esp_partition.h"
-#include "platform.h"
 
 namespace Espfc {
 
@@ -16,7 +16,7 @@ public:
 
   size_t read(uint32_t address, uint8_t * data, size_t len)
   {
-    len = std::min(len, _p->size - address);
+    len = std::min((uint32_t)len, _p->size - address);
     if(esp_partition_read_raw(_p, address, data, len) == ESP_OK)
     {
       return len;

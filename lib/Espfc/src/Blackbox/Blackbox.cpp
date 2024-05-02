@@ -2,102 +2,11 @@
 #include "Hardware.h"
 #include "EscDriver.h"
 #include "Math/Utils.h"
-extern "C" {
-#include "blackbox/blackbox.h"
-#include "blackbox/blackbox_fielddefs.h"
-bool blackboxShouldLogPFrame(void);
-bool blackboxShouldLogIFrame(void);
-}
-
-static Espfc::Model * _model_ptr = nullptr;
-
-void initBlackboxModel(Espfc::Model * m)
-{
-  _model_ptr = m;
-}
-
-uint16_t getBatteryVoltageLatest(void)
-{
-  if(!_model_ptr) return 0;
-  float v = (*_model_ptr).state.battery.voltageUnfiltered;
-  return constrain(lrintf(v * 100.0f), 0, 32000);
-}
-
-int32_t getAmperageLatest(void)
-{
-  if(!_model_ptr) return 0;
-  float v = (*_model_ptr).state.battery.currentUnfiltered;
-  return constrain(lrintf(v * 100.0f), 0, 32000);
-}
-
-bool rxIsReceivingSignal(void)
-{
-  if(!_model_ptr) return false;
-  return !((*_model_ptr).state.inputRxLoss || (*_model_ptr).state.inputRxFailSafe);
-}
-
-bool isRssiConfigured(void)
-{
-  if(!_model_ptr) return false;
-  return (*_model_ptr).config.input.rssiChannel > 0;
-}
-
-uint16_t getRssi(void)
-{
-  if(!_model_ptr) return 0;
-  return (*_model_ptr).getRssi();
-}
-
-failsafePhase_e failsafePhase()
-{
-  if(!_model_ptr) return ::FAILSAFE_IDLE;
-  return (failsafePhase_e)(*_model_ptr).state.failsafe.phase;
-}
-
-static uint32_t activeFeaturesLatch = 0;
-static uint32_t enabledSensors = 0;
-
-bool featureIsEnabled(uint32_t mask)
-{
-  return activeFeaturesLatch & mask;
-}
-
-bool sensors(uint32_t mask)
-{
-  return enabledSensors & mask;
-}
-
-float pidGetPreviousSetpoint(int axis)
-{
-  return Espfc::Math::toDeg(_model_ptr->state.desiredRate[axis]);
-}
-
-float mixerGetThrottle(void)
-{
-  return (_model_ptr->state.output[Espfc::AXIS_THRUST] + 1.0f) * 0.5f;
-}
-
-int16_t getMotorOutputLow()
-{
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
-}
-
-int16_t getMotorOutputHigh()
-{
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
-}
-
-bool areMotorsRunning(void)
-{
-  return _model_ptr->areMotorsRunning();
-}
-
-uint16_t getDshotErpm(uint8_t i)
-{
-  return _model_ptr->state.outputTelemetryErpm[i];
-}
+#include "BlackboxBridge.h"
 
 namespace Espfc {
+
+namespace Blackbox {
 
 Blackbox::Blackbox(Model& model): _model(model) {}
 
@@ -105,8 +14,10 @@ int Blackbox::begin()
 {
   initBlackboxModel(&_model);
 
+#ifdef USE_FLASHFS
   int res = flashfsInit();
   _model.logger.info().log(F("FLASHFS")).log(res).logln(flashfsGetOffset());
+#endif
 
   if(!_model.blackboxEnabled()) return 0;
 
@@ -231,9 +142,9 @@ int Blackbox::begin()
 
   mixerConfigMutable()->mixer_type = 0;
 
-  if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
-  if(_model.magActive()) enabledSensors |= SENSOR_MAG;
-  if(_model.baroActive()) enabledSensors |= SENSOR_BARO;
+  if(_model.accelActive()) sensorsSet(SENSOR_ACC);
+  if(_model.magActive()) sensorsSet(SENSOR_MAG);
+  if(_model.baroActive()) sensorsSet(SENSOR_BARO);
 
   gyro.sampleLooptime = _model.state.gyroTimer.interval;
   targetPidLooptime = _model.state.loopTimer.interval;
@@ -396,6 +307,8 @@ void FAST_CODE_ATTR Blackbox::updateMode()
 
   if(_model.isSwitchActive(MODE_FAILSAFE)) bitArraySet(&rcModeActivationMask, BOXFAILSAFE);
   else bitArrayClr(&rcModeActivationMask, BOXFAILSAFE);
+}
+
 }
 
 }

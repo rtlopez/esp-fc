@@ -467,6 +467,7 @@ class MspProcessor
           break;
 
         case MSP_DATAFLASH_SUMMARY:
+#ifdef USE_FLASHFS   
           {
             uint8_t flags = flashfsIsSupported() ? 2 : 0;
             flags |= flashfsIsReady() ? 1 : 0;
@@ -475,13 +476,22 @@ class MspProcessor
             r.writeU32(flashfsGetSize());
             r.writeU32(flashfsGetOffset());
           }
+#else
+          r.writeU8(0);
+          r.writeU32(0);
+          r.writeU32(0);
+          r.writeU32(0);
+#endif
           break;
 
         case MSP_DATAFLASH_ERASE:
+#ifdef USE_FLASHFS
           blackboxEraseAll();
+#endif
           break;
 
         case MSP_DATAFLASH_READ:
+#ifdef USE_FLASHFS
           {
             const unsigned int dataSize = m.remain();
             const uint32_t readAddress = m.readU32();
@@ -501,6 +511,7 @@ class MspProcessor
             }
             serializeFlashData(r, readAddress, readLength, useLegacyFormat, allowCompression);
           }
+#endif            
           break;
 
         case MSP_ACC_TRIM:
@@ -1485,6 +1496,7 @@ class MspProcessor
       Hardware::restart(_model);
     }
 
+#ifdef USE_FLASHFS
     void serializeFlashData(MspResponse& r, uint32_t address, const uint16_t size, bool useLegacyFormat, bool allowCompression)
     {
       (void)allowCompression; // not supported
@@ -1518,6 +1530,7 @@ class MspProcessor
         //for (int i = bytesRead; i < allowedToRead; i++) r.writeU8(0);
       }
     }
+#endif
 
     void sendResponse(MspResponse& r, Device::SerialDevice& s)
     {
