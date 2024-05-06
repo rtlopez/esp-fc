@@ -1373,12 +1373,12 @@ class Cli
         {
           const FlashfsRuntime* flashfs = flashfsGetRuntime();
           FlashfsJournalItem journal[16];
-          flashfsJournalLoad(journal, 16);
+          flashfsJournalLoad(journal, 0, 16);
           for(size_t i = 0; i < 16; i++)
           {
             const auto& it = journal[i];
             const auto& itr = flashfs->journal[i];
-            s.printf("%08X : %08X / %08X : %08X\r\n", it.logBegin, it.logEnd, itr.logBegin, itr.logEnd);
+            s.printf("%02d: %08X : %08X / %08X : %08X\r\n",i , it.logBegin, it.logEnd, itr.logBegin, itr.logEnd);
           }
           s.printf("current: %d\r\n", flashfs->journalIdx);
         }

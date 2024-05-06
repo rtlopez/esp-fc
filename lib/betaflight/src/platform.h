@@ -1258,6 +1258,7 @@ void beeper(int mode);
 #ifdef USE_FLASHFS
 
 #define FLASHFS_WRITE_BUFFER_SIZE 128u
+#define FLASHFS_FLUSH_BUFFER_SIZE 64u
 #define FLASHFS_JOURNAL_ITEMS 32u
 
 typedef struct
@@ -1268,9 +1269,8 @@ typedef struct
 
 typedef struct
 {
-    const esp_partition_t* partition;
-    uint8_t buffer[FLASHFS_WRITE_BUFFER_SIZE];
-    uint32_t bufferIdx;
+    const void* partition;
+    void* buffer;
     uint32_t address;
     FlashfsJournalItem journal[FLASHFS_JOURNAL_ITEMS];
     uint32_t journalIdx;
@@ -1280,7 +1280,7 @@ typedef struct
 
 const FlashfsRuntime * flashfsGetRuntime();
 
-void flashfsJournalLoad(FlashfsJournalItem * data, size_t num);
+void flashfsJournalLoad(FlashfsJournalItem * data, size_t start, size_t num);
 
 int flashfsInit(void);
 uint32_t flashfsGetSize(void);

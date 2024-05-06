@@ -61,7 +61,7 @@ public:
   static void journal(Stream& s)
   {
     FlashfsJournalItem journal[8];
-    flashfsJournalLoad(journal, 8);
+    flashfsJournalLoad(journal, 0, 8);
     for(size_t i = 0; i < 8; i++)
     {
       const auto& it = journal[i];

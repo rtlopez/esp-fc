@@ -1,7 +1,7 @@
-#ifndef _ESPFC_MATH_UTILS_H_
-#define _ESPFC_MATH_UTILS_H_
+#pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <cmath>
 #include <algorithm>
 
@@ -62,6 +62,11 @@ public:
       result = clock / ++div;
     }
     return result;
+  }
+
+  inline uint32_t alignAddressToWrite(uint32_t addr, size_t size, size_t alignment)
+  {
+    return ((addr + size) / alignment) * alignment;
   }
 
   constexpr float pi()
@@ -141,5 +146,3 @@ public:
 }
 
 }
-
-#endif
