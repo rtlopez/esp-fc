@@ -75,10 +75,10 @@ int Blackbox::begin()
   cp->dterm_notch_hz = _model.config.dtermNotchFilter.freq;
   cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
   cp->yaw_lowpass_hz = _model.config.yawFilter.freq;
-  cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
+  cp->itermWindupPointPercent = 80;
   cp->antiGravityMode = 0;
-  cp->pidSumLimit = 500;
-  cp->pidSumLimitYaw = 500;
+  cp->pidSumLimit = 660;
+  cp->pidSumLimitYaw = 660;
   cp->ff_boost = 0;
   cp->feedForwardTransition = 0;
   cp->tpa_mode = 0; // PD

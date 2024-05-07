@@ -521,8 +521,8 @@ class Model
         pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
         pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
         pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[i];
-        pid.iLimit = 0.15f;
-        pid.oLimit = 0.5f;
+        pid.iLimit = config.itermLimit * 0.01f;
+        pid.oLimit = 0.66f;
         pid.rate = state.loopTimer.rate;
         pid.dtermNotchFilter.begin(config.dtermNotchFilter, pidFilterRate);
         if(config.dtermDynLpfFilter.cutoff > 0) {

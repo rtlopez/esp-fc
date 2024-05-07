@@ -565,7 +565,7 @@ class ModelConfig
     FilterConfig levelPtermFilter;
 
     int16_t dtermSetpointWeight;
-    int8_t itermWindupPointPercent;
+    int8_t itermLimit;
     int8_t itermRelax;
     int8_t itermRelaxCutoff;
 
@@ -875,7 +875,7 @@ class ModelConfig
       pid[FC_PID_MAG]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
       pid[FC_PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
-      itermWindupPointPercent = 30;
+      itermLimit = 30;
       itermRelax = ITERM_RELAX_RP;
       itermRelaxCutoff = 15;
       dtermSetpointWeight = 30;
@@ -1022,7 +1022,7 @@ class ModelConfig
       //accelFilter.freq = 30;        // ROBOT
 
       lowThrottleZeroIterm = false; // ROBOT
-      itermWindupPointPercent = 10; // ROBOT
+      itermLimit = 10; // ROBOT
       dtermSetpointWeight = 0;      // ROBOT
       angleLimit = 10;       // deg // ROBOT
 

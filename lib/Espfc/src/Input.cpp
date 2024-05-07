@@ -205,14 +205,14 @@ bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 
   // stage 2 timeout
   _model.state.inputLossTime = micros() - _model.state.inputFrameTime;
-  if(_model.state.inputLossTime >= Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)1u, (uint32_t)200u) * TENTH_TO_US)
+  if(_model.state.inputLossTime > Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)2u, (uint32_t)200u) * TENTH_TO_US)
   {
     failsafeStage2();
     return true;
   }
 
   // stage 1 timeout (100ms)
-  if(_model.state.inputLossTime >= 1 * TENTH_TO_US)
+  if(_model.state.inputLossTime >= 2 * TENTH_TO_US)
   {
     failsafeStage1();
     return true;

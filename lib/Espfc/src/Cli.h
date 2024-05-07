@@ -599,7 +599,7 @@ class Cli
         Param(PSTR("pid_dterm_dyn_lpf_max"), &c.dtermDynLpfFilter.freq),
 
         Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
-        Param(PSTR("pid_iterm_limit"), &c.itermWindupPointPercent),
+        Param(PSTR("pid_iterm_limit"), &c.itermLimit),
         Param(PSTR("pid_iterm_zero"), &c.lowThrottleZeroIterm),
         Param(PSTR("pid_iterm_relax"), &c.itermRelax, inputItermRelaxChoices),
         Param(PSTR("pid_iterm_relax_cutoff"), &c.itermRelaxCutoff),
