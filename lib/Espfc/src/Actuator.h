@@ -14,6 +14,16 @@ class Actuator
     int begin()
     {
       _model.state.modeMask = 0;
+      _model.state.modeMaskPrev = 0;
+      _model.state.modeMaskPresent = 0;
+      _model.state.modeMaskSwitch = 0;
+      for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+      {
+        const auto &c = _model.config.conditions[i];
+        if(!(c.min < c.max)) continue; // inactive
+        if(c.ch < AXIS_AUX_1 || c.ch >= AXIS_COUNT) continue; // invalid channel
+        _model.state.modeMaskPresent |= 1 << c.id;
+      }
       _model.state.airmodeAllowed = false;
       _model.state.rescueConfigMode = RESCUE_CONFIG_PENDING;
       return 1;

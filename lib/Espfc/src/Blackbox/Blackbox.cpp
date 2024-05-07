@@ -8,6 +8,12 @@ namespace Espfc {
 
 namespace Blackbox {
 
+static void updateModeFlag(boxBitmask_t *mask, boxId_e id, bool value)
+{
+  if(value) bitArraySet(mask, id);
+  else bitArrayClr(mask, id);
+}
+
 Blackbox::Blackbox(Model& model): _model(model) {}
 
 int Blackbox::begin()
@@ -185,6 +191,13 @@ int Blackbox::begin()
   rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.rpmFilterWeights[1];
   rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.rpmFilterWeights[2];
 
+  updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.modeMaskPresent & 1 << MODE_ARMED);
+  updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.modeMaskPresent & 1 << MODE_ANGLE);
+  updateModeFlag(&rcModeActivationPresent, BOXAIRMODE, _model.state.modeMaskPresent & 1 << MODE_AIRMODE);
+  updateModeFlag(&rcModeActivationPresent, BOXFAILSAFE, _model.state.modeMaskPresent & 1 << MODE_FAILSAFE);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOX, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOXERASE, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX_ERASE);
+
   blackboxInit();
 
   return 1;
@@ -296,17 +309,12 @@ void FAST_CODE_ATTR Blackbox::updateArmed()
 
 void FAST_CODE_ATTR Blackbox::updateMode()
 {
-  if(_model.isSwitchActive(MODE_ARMED)) bitArraySet(&rcModeActivationMask, BOXARM);
-  else bitArrayClr(&rcModeActivationMask, BOXARM);
-
-  if(_model.isSwitchActive(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
-  else bitArrayClr(&rcModeActivationMask, BOXANGLE);
-
-  if(_model.isSwitchActive(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
-  else bitArrayClr(&rcModeActivationMask, BOXAIRMODE);
-
-  if(_model.isSwitchActive(MODE_FAILSAFE)) bitArraySet(&rcModeActivationMask, BOXFAILSAFE);
-  else bitArrayClr(&rcModeActivationMask, BOXFAILSAFE);
+  updateModeFlag(&rcModeActivationMask, BOXARM, _model.isSwitchActive(MODE_ARMED));
+  updateModeFlag(&rcModeActivationMask, BOXANGLE, _model.isSwitchActive(MODE_ANGLE));
+  updateModeFlag(&rcModeActivationMask, BOXAIRMODE, _model.isSwitchActive(MODE_AIRMODE));
+  updateModeFlag(&rcModeActivationMask, BOXFAILSAFE, _model.isSwitchActive(MODE_FAILSAFE));
+  updateModeFlag(&rcModeActivationMask, BOXBLACKBOX, _model.isSwitchActive(MODE_BLACKBOX));
+  updateModeFlag(&rcModeActivationMask, BOXBLACKBOXERASE, _model.isSwitchActive(MODE_BLACKBOX_ERASE));
 }
 
 }

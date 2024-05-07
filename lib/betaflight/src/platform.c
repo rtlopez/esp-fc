@@ -40,7 +40,7 @@ const uint32_t baudRates[] = {0, 9600, 19200, 38400, 57600, 115200, 230400, 2500
 
 pidProfile_t *currentPidProfile;
 boxBitmask_t rcModeActivationMask;
-uint16_t flightModeFlags;
+boxBitmask_t rcModeActivationPresent;
 uint8_t stateFlags;
 uint8_t armingFlags;
 uint8_t debugMode;
@@ -64,12 +64,6 @@ float rcCommand[4];
 const char* const lookupTableMixerType[] = {
     "LEGACY", "LINEAR", "DYNAMIC", "EZLANDING",
 };
-
-/*int gcd(int num, int denom)
-{
-    if (denom == 0) return num;
-    return gcd(denom, num % denom);
-}*/
 
 bool bitArrayGet(const void *array, unsigned bit)
 {
@@ -98,7 +92,7 @@ bool rxAreFlightChannelsValid(void)
 
 bool isModeActivationConditionPresent(boxId_e modeId)
 {
-    return false;
+    return bitArrayGet(&rcModeActivationPresent, modeId);
 }
 
 static uint32_t armingBeepTimeUs = 0;

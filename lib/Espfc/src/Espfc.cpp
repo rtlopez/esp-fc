@@ -24,14 +24,14 @@ int Espfc::begin()
 {
   _serial.begin();
   _model.logStorageResult();
-  _hardware.begin();
-  _model.begin();
+  _hardware.begin();    // requires _model.load()
+  _model.begin();       // requires _hardware.begin()
   _mixer.begin();
-  _sensor.begin();
-  _input.begin();
-  _actuator.begin();
+  _sensor.begin();      // requires _hardware.begin()
+  _input.begin();       // requires _serial.begin()
+  _actuator.begin();    // requires _model.begin()
   _controller.begin();
-  _blackbox.begin();
+  _blackbox.begin();    // requires _serial.begin(), _actuator.begin()
 #ifdef ESPFC_BUZER
   _buzzer.begin();
 #endif

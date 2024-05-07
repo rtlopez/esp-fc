@@ -289,7 +289,7 @@ class MspProcessor
           break;
 
         case MSP_BOXNAMES:
-          r.writeString(F("ARM;ANGLE;AIRMODE;BUZZER;FAILSAFE;"));
+          r.writeString(F("ARM;ANGLE;AIRMODE;BEEPER;FAILSAFE;BLACKBOX;BLACKBOXERASE;"));
           break;
 
         case MSP_BOXIDS:
@@ -298,6 +298,8 @@ class MspProcessor
           r.writeU8(MODE_AIRMODE);
           r.writeU8(MODE_BUZZER);
           r.writeU8(MODE_FAILSAFE);
+          r.writeU8(MODE_BLACKBOX);
+          r.writeU8(MODE_BLACKBOX_ERASE);
           break;
 
         case MSP_MODE_RANGES:

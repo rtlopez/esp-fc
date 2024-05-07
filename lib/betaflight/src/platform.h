@@ -115,8 +115,6 @@ void arraySubInt32(int32_t *dest, int32_t *array1, int32_t *array2, int count);
 uint32_t castFloatBytesToInt(float f);
 uint32_t zigzagEncode(int32_t value);
 
-//int gcd(int num, int denom);
-
 #ifndef constrain
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #endif
@@ -506,7 +504,6 @@ typedef enum {
     WAS_ARMED_WITH_PREARM       = (1 << 2)
 } armingFlag_e;
 
-extern uint16_t flightModeFlags;
 extern uint8_t stateFlags;
 extern uint8_t armingFlags;
 
@@ -578,6 +575,7 @@ PG_DECLARE(rcControlsConfig_t, rcControlsConfig);
 
 extern uint16_t rssi;
 extern boxBitmask_t rcModeActivationMask;
+extern boxBitmask_t rcModeActivationPresent;
 
 bool isModeActivationConditionPresent(boxId_e modeId);
 uint32_t getArmingBeepTimeMicros(void);
