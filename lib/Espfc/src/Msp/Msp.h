@@ -15,6 +15,7 @@ namespace Espfc {
 namespace Msp {
 
 static const size_t MSP_BUF_SIZE = 192;
+static const size_t MSP_BUF_OUT_SIZE = 240;
 
 enum MspState {
   MSP_STATE_IDLE,
@@ -70,7 +71,7 @@ class MspMessage
     uint8_t checksum2;
     uint8_t buffer[MSP_BUF_SIZE];
 
-    int remain()
+    int remain() const
     {
       return received - read;
     }
@@ -113,7 +114,17 @@ class MspResponse
     int8_t  result;
     uint8_t direction;
     uint16_t len;
-    uint8_t data[MSP_BUF_SIZE];
+    uint8_t data[MSP_BUF_OUT_SIZE];
+
+    int remain() const
+    {
+      return MSP_BUF_OUT_SIZE - len;
+    }
+
+    void advance(size_t size)
+    {
+      len += size;
+    }
 
     void writeData(const char * v, int size)
     {

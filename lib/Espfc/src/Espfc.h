@@ -8,7 +8,7 @@
 #include "SensorManager.h"
 #include "SerialManager.h"
 #include "Output/Mixer.h"
-#include "Blackbox.h"
+#include "Blackbox/Blackbox.h"
 #ifdef ESPFC_BUZER
 #include "Buzzer.h"
 #endif
@@ -38,7 +38,7 @@ class Espfc
     Actuator _actuator;
     SensorManager _sensor;
     Output::Mixer _mixer;
-    Blackbox _blackbox;
+    Blackbox::Blackbox _blackbox;
 #ifdef ESPFC_BUZER
     Buzzer _buzzer;
 #endif

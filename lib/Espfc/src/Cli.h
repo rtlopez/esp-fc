@@ -3,13 +3,17 @@
 
 #include <Arduino.h>
 #include <algorithm>
+#include <platform.h>
 
 #include "Model.h"
 #include "Hardware.h"
 #include "Logger.h"
 #include "Device/GyroDevice.h"
-#include "platform.h"
 #include "Hal/Pgm.h"
+
+#ifdef USE_FLASHFS
+#include "Device/FlashDevice.h"
+#endif
 
 #if defined(ESPFC_WIFI_ALT)
 #include <ESP8266WiFi.h>
@@ -595,7 +599,7 @@ class Cli
         Param(PSTR("pid_dterm_dyn_lpf_max"), &c.dtermDynLpfFilter.freq),
 
         Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
-        Param(PSTR("pid_iterm_limit"), &c.itermWindupPointPercent),
+        Param(PSTR("pid_iterm_limit"), &c.itermLimit),
         Param(PSTR("pid_iterm_zero"), &c.lowThrottleZeroIterm),
         Param(PSTR("pid_iterm_relax"), &c.itermRelax, inputItermRelaxChoices),
         Param(PSTR("pid_iterm_relax_cutoff"), &c.itermRelaxCutoff),
@@ -1350,6 +1354,66 @@ class Cli
         s.print(PSTR("total: "));
         s.println(_model.logger.length());
       }
+#ifdef USE_FLASHFS
+      else if(strcmp_P(cmd.args[0], PSTR("flash")) == 0)
+      {
+        if(!cmd.args[1])
+        {
+          size_t total = flashfsGetSize();
+          size_t used = flashfsGetOffset();
+          s.printf("total: %d\r\n", total);
+          s.printf(" used: %d\r\n", used);
+          s.printf(" free: %d\r\n", total - used);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("partitions")) == 0)
+        {
+          Device::FlashDevice::partitions(s);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("journal")) == 0)
+        {
+          const FlashfsRuntime* flashfs = flashfsGetRuntime();
+          FlashfsJournalItem journal[16];
+          flashfsJournalLoad(journal, 0, 16);
+          for(size_t i = 0; i < 16; i++)
+          {
+            const auto& it = journal[i];
+            const auto& itr = flashfs->journal[i];
+            s.printf("%02d: %08X : %08X / %08X : %08X\r\n",i , it.logBegin, it.logEnd, itr.logBegin, itr.logEnd);
+          }
+          s.printf("current: %d\r\n", flashfs->journalIdx);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("erase")) == 0)
+        {
+          flashfsEraseCompletely();
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("test")) == 0)
+        {
+          const char * data = "flashfs-test";
+          flashfsWrite((const uint8_t*)data, strlen(data), true);
+          flashfsFlushAsync(true);
+          flashfsClose();
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("print")) == 0)
+        {
+          size_t addr = 0;
+          if(cmd.args[2])
+          {
+            addr = String(cmd.args[2]).toInt();
+          }
+          uint8_t data[16];
+          flashfsReadAbs(addr, data, sizeof(data));
+          for(size_t i = 0; i < sizeof(data); i++)
+          {
+            s.printf("%02x ", data[i]);
+          }
+          s.println();
+        }
+        else
+        {
+          s.println(F("wrong param!"));
+        }
+      }
+#endif
       else
       {
         s.print(F("unknown command: "));

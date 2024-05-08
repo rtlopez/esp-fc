@@ -86,6 +86,8 @@ enum FlightMode {
   MODE_AIRMODE,
   MODE_BUZZER,
   MODE_FAILSAFE,
+  MODE_BLACKBOX,
+  MODE_BLACKBOX_ERASE,
   MODE_COUNT
 };
 
@@ -318,32 +320,32 @@ class SerialPortConfig
 #define BUZZER_MAX_EVENTS 8
 
 enum BuzzerEvent {
-  BEEPER_SILENCE = 0,             // Silence, see beeperSilence()
-  BEEPER_GYRO_CALIBRATED,
-  BEEPER_RX_LOST,                 // Beeps when TX is turned off or signal lost (repeat until TX is okay)
-  BEEPER_RX_LOST_LANDING,         // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
-  BEEPER_DISARMING,               // Beep when disarming the board
-  BEEPER_ARMING,                  // Beep when arming the board
-  BEEPER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
-  BEEPER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
-  BEEPER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
-  BEEPER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
-  BEEPER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
-  BEEPER_ACC_CALIBRATION,         // ACC inflight calibration completed confirmation
-  BEEPER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
-  BEEPER_READY_BEEP,              // Ring a tone when GPS is locked and ready
-  BEEPER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
-  BEEPER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position
-  BEEPER_ARMED,                   // Warning beeps when board is armed (repeats until board is disarmed or throttle is increased)
-  BEEPER_SYSTEM_INIT,             // Initialisation beeps when board is powered on
-  BEEPER_USB,                     // Some boards have beeper powered USB connected
-  BEEPER_BLACKBOX_ERASE,          // Beep when blackbox erase completes
-  BEEPER_CRASH_FLIP_MODE,         // Crash flip mode is active
-  BEEPER_CAM_CONNECTION_OPEN,     // When the 5 key simulation stated
-  BEEPER_CAM_CONNECTION_CLOSE,    // When the 5 key simulation stop
-  BEEPER_ALL,                     // Turn ON or OFF all beeper conditions
-  BEEPER_PREFERENCE,              // Save preferred beeper configuration
-  // BEEPER_ALL and BEEPER_PREFERENCE must remain at the bottom of this enum
+  BUZZER_SILENCE = 0,             // Silence, see beeperSilence()
+  BUZZER_GYRO_CALIBRATED,
+  BUZZER_RX_LOST,                 // Beeps when TX is turned off or signal lost (repeat until TX is okay)
+  BUZZER_RX_LOST_LANDING,         // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
+  BUZZER_DISARMING,               // Beep when disarming the board
+  BUZZER_ARMING,                  // Beep when arming the board
+  BUZZER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
+  BUZZER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
+  BUZZER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
+  BUZZER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
+  BUZZER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
+  BUZZER_ACC_CALIBRATION,         // ACC inflight calibration completed confirmation
+  BUZZER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
+  BUZZER_READY_BEEP,              // Ring a tone when GPS is locked and ready
+  BUZZER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
+  BUZZER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position
+  BUZZER_ARMED,                   // Warning beeps when board is armed (repeats until board is disarmed or throttle is increased)
+  BUZZER_SYSTEM_INIT,             // Initialisation beeps when board is powered on
+  BUZZER_USB,                     // Some boards have beeper powered USB connected
+  BUZZER_BLACKBOX_ERASE,          // Beep when blackbox erase completes
+  BUZZER_CRASH_FLIP_MODE,         // Crash flip mode is active
+  BUZZER_CAM_CONNECTION_OPEN,     // When the 5 key simulation stated
+  BUZZER_CAM_CONNECTION_CLOSE,    // When the 5 key simulation stop
+  BUZZER_ALL,                     // Turn ON or OFF all beeper conditions
+  BUZZER_PREFERENCE,              // Save preferred beeper configuration
+  // BUZZER_ALL and BUZZER_PREFERENCE must remain at the bottom of this enum
 };
 
 class BuzzerConfig
@@ -563,7 +565,7 @@ class ModelConfig
     FilterConfig levelPtermFilter;
 
     int16_t dtermSetpointWeight;
-    int8_t itermWindupPointPercent;
+    int8_t itermLimit;
     int8_t itermRelax;
     int8_t itermRelaxCutoff;
 
@@ -873,7 +875,7 @@ class ModelConfig
       pid[FC_PID_MAG]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
       pid[FC_PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
-      itermWindupPointPercent = 30;
+      itermLimit = 30;
       itermRelax = ITERM_RELAX_RP;
       itermRelaxCutoff = 15;
       dtermSetpointWeight = 30;
@@ -1020,7 +1022,7 @@ class ModelConfig
       //accelFilter.freq = 30;        // ROBOT
 
       lowThrottleZeroIterm = false; // ROBOT
-      itermWindupPointPercent = 10; // ROBOT
+      itermLimit = 10; // ROBOT
       dtermSetpointWeight = 0;      // ROBOT
       angleLimit = 10;       // deg // ROBOT
 

@@ -1,8 +1,9 @@
 #include <Arduino.h>
-#include "platform.h"
+#include <platform.h>
 #include "Device/SerialDevice.h"
 #include "EscDriver.h"
 #include "Hal/Gpio.h"
+#include "Utils/MemoryHelper.h"
 
 int IORead(IO_t pin)
 {
@@ -96,34 +97,34 @@ void serialEndWrite(serialPort_t * instance)
 {
 }
 
-void serialWrite(serialPort_t * instance, uint8_t ch)
+void FAST_CODE_ATTR serialWrite(serialPort_t * instance, uint8_t ch)
 {
   Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
   if(dev) dev->write(ch);
 }
 
-uint32_t serialRxBytesWaiting(serialPort_t * instance)
+uint32_t FAST_CODE_ATTR serialRxBytesWaiting(serialPort_t * instance)
 {
   Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
   if(!dev) return 0;
   return dev->available();
 }
 
-int serialRead(serialPort_t * instance)
+int FAST_CODE_ATTR serialRead(serialPort_t * instance)
 {
   Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
   if(dev) return dev->read();
   return -1;
 }
 
-uint32_t serialTxBytesFree(const serialPort_t * instance)
+uint32_t FAST_CODE_ATTR serialTxBytesFree(const serialPort_t * instance)
 {
   Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
   if(!dev) return 0;
   return dev->availableForWrite();
 }
 
-bool isSerialTransmitBufferEmpty(const serialPort_t * instance)
+bool FAST_CODE_ATTR isSerialTransmitBufferEmpty(const serialPort_t * instance)
 {
   Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
   if(!dev) return 0;
@@ -168,4 +169,9 @@ void motorEnable(void)
 uint8_t getMotorCount()
 {
     return _motorCount;
+}
+
+void beeper(int mode)
+{
+
 }

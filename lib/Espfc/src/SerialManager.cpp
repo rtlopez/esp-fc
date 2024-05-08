@@ -168,6 +168,10 @@ int FAST_CODE_ATTR SerialManager::update()
         c++;
       }
     }
+    if(!stream->available())
+    {
+      _msp.postCommand();
+    }
   }
 
   if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())

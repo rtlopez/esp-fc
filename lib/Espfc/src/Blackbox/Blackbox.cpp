@@ -2,102 +2,17 @@
 #include "Hardware.h"
 #include "EscDriver.h"
 #include "Math/Utils.h"
-extern "C" {
-#include "blackbox/blackbox.h"
-#include "blackbox/blackbox_fielddefs.h"
-bool blackboxShouldLogPFrame(void);
-bool blackboxShouldLogIFrame(void);
-}
-
-static Espfc::Model * _model_ptr = nullptr;
-
-void initBlackboxModel(Espfc::Model * m)
-{
-  _model_ptr = m;
-}
-
-uint16_t getBatteryVoltageLatest(void)
-{
-  if(!_model_ptr) return 0;
-  float v = (*_model_ptr).state.battery.voltageUnfiltered;
-  return constrain(lrintf(v * 100.0f), 0, 32000);
-}
-
-int32_t getAmperageLatest(void)
-{
-  if(!_model_ptr) return 0;
-  float v = (*_model_ptr).state.battery.currentUnfiltered;
-  return constrain(lrintf(v * 100.0f), 0, 32000);
-}
-
-bool rxIsReceivingSignal(void)
-{
-  if(!_model_ptr) return false;
-  return !((*_model_ptr).state.inputRxLoss || (*_model_ptr).state.inputRxFailSafe);
-}
-
-bool isRssiConfigured(void)
-{
-  if(!_model_ptr) return false;
-  return (*_model_ptr).config.input.rssiChannel > 0;
-}
-
-uint16_t getRssi(void)
-{
-  if(!_model_ptr) return 0;
-  return (*_model_ptr).getRssi();
-}
-
-failsafePhase_e failsafePhase()
-{
-  if(!_model_ptr) return ::FAILSAFE_IDLE;
-  return (failsafePhase_e)(*_model_ptr).state.failsafe.phase;
-}
-
-static uint32_t activeFeaturesLatch = 0;
-static uint32_t enabledSensors = 0;
-
-bool featureIsEnabled(uint32_t mask)
-{
-  return activeFeaturesLatch & mask;
-}
-
-bool sensors(uint32_t mask)
-{
-  return enabledSensors & mask;
-}
-
-float pidGetPreviousSetpoint(int axis)
-{
-  return Espfc::Math::toDeg(_model_ptr->state.desiredRate[axis]);
-}
-
-float mixerGetThrottle(void)
-{
-  return (_model_ptr->state.output[Espfc::AXIS_THRUST] + 1.0f) * 0.5f;
-}
-
-int16_t getMotorOutputLow()
-{
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
-}
-
-int16_t getMotorOutputHigh()
-{
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
-}
-
-bool areMotorsRunning(void)
-{
-  return _model_ptr->areMotorsRunning();
-}
-
-uint16_t getDshotErpm(uint8_t i)
-{
-  return _model_ptr->state.outputTelemetryErpm[i];
-}
+#include "BlackboxBridge.h"
 
 namespace Espfc {
+
+namespace Blackbox {
+
+static void updateModeFlag(boxBitmask_t *mask, boxId_e id, bool value)
+{
+  if(value) bitArraySet(mask, id);
+  else bitArrayClr(mask, id);
+}
 
 Blackbox::Blackbox(Model& model): _model(model) {}
 
@@ -105,14 +20,22 @@ int Blackbox::begin()
 {
   initBlackboxModel(&_model);
 
+#ifdef USE_FLASHFS
+  int res = flashfsInit();
+  _model.logger.info().log(F("FLASHFS")).log(res).logln(flashfsGetOffset());
+#endif
+
   if(!_model.blackboxEnabled()) return 0;
 
-  _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
-  if(!_serial) return 0;
+  if(_model.config.blackboxDev == 3)
+  {
+    _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+    if(!_serial) return 0;
 
-  _buffer.wrap(_serial);
-  serialDeviceInit(&_buffer, 0);
-  //serialDeviceInit(_serial, 0);
+    _buffer.wrap(_serial);
+    serialDeviceInit(&_buffer, 0);
+    //serialDeviceInit(_serial, 0);
+  }
 
   systemConfigMutable()->activeRateProfile = 0;
   systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
@@ -152,10 +75,10 @@ int Blackbox::begin()
   cp->dterm_notch_hz = _model.config.dtermNotchFilter.freq;
   cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
   cp->yaw_lowpass_hz = _model.config.yawFilter.freq;
-  cp->itermWindupPointPercent = _model.config.itermWindupPointPercent;
+  cp->itermWindupPointPercent = 80;
   cp->antiGravityMode = 0;
-  cp->pidSumLimit = 500;
-  cp->pidSumLimitYaw = 500;
+  cp->pidSumLimit = 660;
+  cp->pidSumLimitYaw = 660;
   cp->ff_boost = 0;
   cp->feedForwardTransition = 0;
   cp->tpa_mode = 0; // PD
@@ -225,9 +148,9 @@ int Blackbox::begin()
 
   mixerConfigMutable()->mixer_type = 0;
 
-  if(_model.accelActive()) enabledSensors |= SENSOR_ACC;
-  if(_model.magActive()) enabledSensors |= SENSOR_MAG;
-  if(_model.baroActive()) enabledSensors |= SENSOR_BARO;
+  if(_model.accelActive()) sensorsSet(SENSOR_ACC);
+  if(_model.magActive()) sensorsSet(SENSOR_MAG);
+  if(_model.baroActive()) sensorsSet(SENSOR_BARO);
 
   gyro.sampleLooptime = _model.state.gyroTimer.interval;
   targetPidLooptime = _model.state.loopTimer.interval;
@@ -268,6 +191,13 @@ int Blackbox::begin()
   rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.rpmFilterWeights[1];
   rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.rpmFilterWeights[2];
 
+  updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.modeMaskPresent & 1 << MODE_ARMED);
+  updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.modeMaskPresent & 1 << MODE_ANGLE);
+  updateModeFlag(&rcModeActivationPresent, BOXAIRMODE, _model.state.modeMaskPresent & 1 << MODE_AIRMODE);
+  updateModeFlag(&rcModeActivationPresent, BOXFAILSAFE, _model.state.modeMaskPresent & 1 << MODE_FAILSAFE);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOX, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOXERASE, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX_ERASE);
+
   blackboxInit();
 
   return 1;
@@ -276,7 +206,8 @@ int Blackbox::begin()
 int FAST_CODE_ATTR Blackbox::update()
 {
   if(!_model.blackboxEnabled()) return 0;
-  if(!_serial) return 0;
+  if(_model.config.blackboxDev == 3 && !_serial) return 0;
+
   Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
   uint32_t startTime = micros();
@@ -286,8 +217,13 @@ int FAST_CODE_ATTR Blackbox::update()
   {
     updateData();
   }
+  //PIN_DEBUG(HIGH);
   blackboxUpdate(_model.state.loopTimer.last);
-  _buffer.flush();
+  if(_model.config.blackboxDev == 3)
+  {
+    _buffer.flush();
+  }
+  //PIN_DEBUG(LOW);
 
   if(_model.config.debugMode == DEBUG_PIDLOOP)
   {
@@ -373,17 +309,14 @@ void FAST_CODE_ATTR Blackbox::updateArmed()
 
 void FAST_CODE_ATTR Blackbox::updateMode()
 {
-  if(_model.isSwitchActive(MODE_ARMED)) bitArraySet(&rcModeActivationMask, BOXARM);
-  else bitArrayClr(&rcModeActivationMask, BOXARM);
+  updateModeFlag(&rcModeActivationMask, BOXARM, _model.isSwitchActive(MODE_ARMED));
+  updateModeFlag(&rcModeActivationMask, BOXANGLE, _model.isSwitchActive(MODE_ANGLE));
+  updateModeFlag(&rcModeActivationMask, BOXAIRMODE, _model.isSwitchActive(MODE_AIRMODE));
+  updateModeFlag(&rcModeActivationMask, BOXFAILSAFE, _model.isSwitchActive(MODE_FAILSAFE));
+  updateModeFlag(&rcModeActivationMask, BOXBLACKBOX, _model.isSwitchActive(MODE_BLACKBOX));
+  updateModeFlag(&rcModeActivationMask, BOXBLACKBOXERASE, _model.isSwitchActive(MODE_BLACKBOX_ERASE));
+}
 
-  if(_model.isSwitchActive(MODE_ANGLE)) bitArraySet(&rcModeActivationMask, BOXANGLE);
-  else bitArrayClr(&rcModeActivationMask, BOXANGLE);
-
-  if(_model.isSwitchActive(MODE_AIRMODE)) bitArraySet(&rcModeActivationMask, BOXAIRMODE);
-  else bitArrayClr(&rcModeActivationMask, BOXAIRMODE);
-
-  if(_model.isSwitchActive(MODE_FAILSAFE)) bitArraySet(&rcModeActivationMask, BOXFAILSAFE);
-  else bitArrayClr(&rcModeActivationMask, BOXFAILSAFE);
 }
 
 }

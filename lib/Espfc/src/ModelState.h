@@ -64,7 +64,7 @@ class BuzzerState
 
     BuzzerEvent pop()
     {
-      if(empty()) return BEEPER_SILENCE;
+      if(empty()) return BUZZER_SILENCE;
       return events[--idx];
     }
 
@@ -297,6 +297,7 @@ struct ModelState
   uint32_t modeMask;
   uint32_t modeMaskPrev;
   uint32_t modeMaskSwitch;
+  uint32_t modeMaskPresent;
   uint32_t disarmReason;
 
   bool airmodeAllowed;

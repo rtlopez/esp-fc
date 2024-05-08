@@ -2,6 +2,7 @@
 
 #if defined(ESPFC_ATOMIC_QUEUE) || defined(UNIT_TEST)
 
+#include <cstddef>
 #include <atomic>
 
 namespace Espfc {
@@ -30,7 +31,7 @@ public:
 
   bool pop(Element& item)
   {
-    const auto current_head = _head.load();  
+    const auto current_head = _head.load();
     if(current_head == _tail.load()) return false;   // empty queue
 
     item = _array[current_head]; 
@@ -50,8 +51,8 @@ public:
 private:
   size_t increment(size_t idx) const { return (idx + 1) % Capacity; } 
 
-  std::atomic<size_t>  _tail;  
-  std::atomic<size_t>  _head; 
+  std::atomic<size_t> _tail;
+  std::atomic<size_t> _head;
   Element _array[Capacity];
 };
 
