@@ -49,7 +49,7 @@ To deal with it activate "SOFTSERIAL" feature. In this case if board stay in fai
 Default name is "ESP-FC". After connecting to this AP open configurator, select "manual" port and type port: `tcp://192.168.4.1:1111`.
 You can also configure board to automatically connect existing wifi network. In this case set `wifi_ssid` and `wifi_pass` parameters in CLI.
 
-To use ESP-NOW receiver, choose "SPI Rx (e.g. built-in Rx)" receiver mode in Receiver tab. You need compatible transmitter module.
+To use ESP-NOW receiver, choose "SPI Rx (e.g. built-in Rx)" receiver mode in Receiver tab. You need compatible transmitter module. Read more about [ESP-FC Wireless Functions](/docs/wireless.md)
 
 ## Motor setup
 

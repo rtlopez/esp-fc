@@ -2,20 +2,21 @@
 The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller.
 
 ## Features
+* Espressif targets (ESP32, ESP8266, ESP32-S3, ESP32-S2, ESP32-C3)
+* ESC protocols (PWM, Oneshot125/42, Multishot, Brushed, Dshot150/300/600 bidirectional)
+* PPM, SBUS and CRSF Receivers
+* Builtin ESP-NOW receiver and WiFi configuration [read more...](/docs/wireless.md)
+* SPI and I2C gyro modules support (MPU6050, MPU9250, ICM20602, BMI160)
+* Flight modes (ACRO, ANGLE, AIRMODE)
 * Frames (Quad X)
 * Betaflight configuration tool compatible (v10.8-v10.10)
-* Receiver protocol (8 channel PPM)
-* SBUS and CRSF Serial Rx protocols
-* Builtin ESP-NOW receiver
-* ESC protocols (PWM, Oneshot125, Brushed, Dshot150, Dshot300, Dshot600)
 * Configurable Gyro Filters (LPF, Notch, dTerm, RPM)
-* Blackbox recording (OpenLog/OpenLager serial)
-* In flight PID Tuning
-* Flight modes (ACRO, ANGLE, AIRMODE, ARM)
-* Up to 8kHz gyro/loop on ESP32 with SPI gyro
+* Blackbox recording (OpenLog/OpenLager/Flash)
+* Up to 4kHz gyro/loop on ESP32 with SPI gyro
 * MSP protocol interface
 * CLI Interface
 * Resorce/Pin mapping
+* In flight PID Tuning
 * Buzzer
 * Lipo voltage monitor
 * Failsafe mode
