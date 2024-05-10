@@ -1,7 +1,7 @@
 #ifndef _ESPFC_DEVICE_GYRO_DEVICE_H_
 #define _ESPFC_DEVICE_GYRO_DEVICE_H_
 
-#include "helper_3dmath.h"
+#include <helper_3dmath.h>
 #include "BusDevice.h"
 #include "BusAwareDevice.h"
 

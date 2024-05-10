@@ -2,7 +2,7 @@
 #define _ESPFC_DEVICE_BUSDEVICE_H_
 
 #include <functional>
-#include <Arduino.h>
+#include <cstdint>
 #include "Math/Bits.h"
 
 #define ESPFC_BUS_TIMEOUT 100

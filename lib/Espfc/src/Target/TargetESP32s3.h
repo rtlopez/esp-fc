@@ -3,6 +3,11 @@
 #include "Esp.h"
 #include "Debug_Espfc.h"
 
+// pins to avoid:
+// strapping: 0, 3, 45, 46
+// flash/psram: 26-37 (reserved)
+// usb/jtag: 19, 20
+
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 6 // ppm
 
@@ -49,7 +54,7 @@
 #define ESPFC_SERIAL_SOFT_0_WIFI
 
 #define ESPFC_SERIAL_REMAP_PINS
-#define ESPFC_SERIAL_DEBUG_PORT SERIAL_UART_0
+#define ESPFC_SERIAL_DEBUG_PORT SERIAL_USB
 #define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
@@ -82,7 +87,7 @@
 #define ESPFC_GUARD 0
 
 #define ESPFC_GYRO_I2C_RATE_MAX 2000
-#define ESPFC_GYRO_SPI_RATE_MAX 8000
+#define ESPFC_GYRO_SPI_RATE_MAX 4000
 
 #define ESPFC_DSHOT_TELEMETRY
 
@@ -93,7 +98,6 @@
 
 //#define ESPFC_FREE_RTOS_QUEUE
 #define ESPFC_ATOMIC_QUEUE
-
 
 #define ESPFC_DSP
 

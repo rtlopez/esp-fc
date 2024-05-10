@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Esp.h"
-#include "Debug_Espfc.h"
-
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 35 // ppm
 
@@ -78,10 +75,8 @@
 
 #define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL | FEATURE_DYNAMIC_FILTER)
 
-#define ESPFC_GUARD 0
-
 #define ESPFC_GYRO_I2C_RATE_MAX 2000
-#define ESPFC_GYRO_SPI_RATE_MAX 8000
+#define ESPFC_GYRO_SPI_RATE_MAX 4000
 
 #define ESPFC_DSHOT_TELEMETRY
 
@@ -93,9 +88,6 @@
 //#define ESPFC_FREE_RTOS_QUEUE
 #define ESPFC_ATOMIC_QUEUE
 
-
 #define ESPFC_DSP
-
-#include "Device/SerialDevice.h"
 
 #include "Target/TargetEsp32Common.h"

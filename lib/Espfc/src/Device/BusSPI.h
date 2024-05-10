@@ -10,7 +10,7 @@ namespace Device {
 class BusSPI: public BusDevice
 {
   public:
-    BusSPI(ESPFC_SPI_0_DEV_T& spi): _dev(spi) {}
+    BusSPI(ESPFC_SPI_0_DEV_T& spi);
 
     static const uint8_t  SPI_READ  = 0x80;
     static const uint8_t  SPI_WRITE = 0x7f;
@@ -18,53 +18,19 @@ class BusSPI: public BusDevice
     static const uint32_t SPI_SPEED_NORMAL = 1000000;
     static const uint32_t SPI_SPEED_FAST  = 16000000;
 
-    BusType getType() const override { return BUS_SPI; }
+    BusType getType() const override;
 
-    int begin(int8_t sck = -1, int8_t mosi = -1, int8_t miso = -1, int8_t ss = -1)
-    {
-      if(sck == -1 || miso == -1 || mosi == -1) return 0;
+    int begin(int8_t sck = -1, int8_t mosi = -1, int8_t miso = -1, int8_t ss = -1);
 
-      targetSPIInit(_dev, sck, mosi, miso, ss);
+    int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override;
 
-      return 1;
-    }
+    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override;
 
-    int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override
-    {
-      //D("spi:r", regAddr, length);
-      transfer(devAddr, regAddr | SPI_READ, length, NULL, data, SPI_SPEED_NORMAL);
-      return length;
-    }
-
-    int8_t readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) override
-    {
-      //D("spi:r", regAddr, length);
-      transfer(devAddr, regAddr | SPI_READ, length, NULL, data, SPI_SPEED_FAST);
-      return length;
-    }
-
-    bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) override
-    {
-      //D("spi:w", regAddr, length, *data);
-      transfer(devAddr, regAddr & SPI_WRITE, length, data, NULL, SPI_SPEED_NORMAL);
-      return true;
-    }
+    bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) override;
 
   private:
-    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed)
-    {
-      _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
-      EspGpio::digitalWrite(devAddr, LOW);
-#if defined (ARCH_RP2040)
-      _dev.transfer(regAddr);
-      _dev.transfer(in, out, length);
-#else
-      _dev.transfer(regAddr);
-      _dev.transferBytes(in, out, length);
-#endif
-      EspGpio::digitalWrite(devAddr, HIGH);
-      _dev.endTransaction();
-    }
+    void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t *in, uint8_t *out, uint32_t speed);
+
     ESPFC_SPI_0_DEV_T& _dev;
 };
 

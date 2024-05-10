@@ -1,6 +1,8 @@
 #include <unity.h>
 #include <ArduinoFake.h>
-#include <EspGpio.h>
+#include <Hal/Gpio.h>
+#include <helper_3dmath.h>
+#include <Kalman.h>
 #include <EscDriver.h>
 #include <printf.h>
 #include "Msp/Msp.h"

@@ -3,12 +3,23 @@
 
 #include <Arduino.h>
 #include <algorithm>
+#include <platform.h>
 
 #include "Model.h"
 #include "Hardware.h"
 #include "Logger.h"
 #include "Device/GyroDevice.h"
-#include "platform.h"
+#include "Hal/Pgm.h"
+
+#ifdef USE_FLASHFS
+#include "Device/FlashDevice.h"
+#endif
+
+#if defined(ESPFC_WIFI_ALT)
+#include <ESP8266WiFi.h>
+#elif defined(ESPFC_WIFI)
+#include <WiFi.h>
+#endif
 
 #ifdef ESPFC_FREE_RTOS
 #include <freertos/task.h>
@@ -42,7 +53,7 @@ class Cli
         Param(): Param(NULL, PARAM_NONE, NULL, NULL) {}
         Param(const Param& p): Param(p.name, p.type, p.addr, p.choices) {}
 
-        Param(const char * n, ParamType t, char * a, const char ** c): name(n), type(t), addr(a), choices(c) {}
+        Param(const char * n, ParamType t, char * a, const char ** c, size_t l = 16): name(n), type(t), addr(a), choices(c), maxLen(l) {}
 
         Param(const char * n, bool    * a): Param(n, PARAM_BOOL,   reinterpret_cast<char*>(a), NULL) {}
         Param(const char * n, int8_t  * a): Param(n, PARAM_BYTE,   reinterpret_cast<char*>(a), NULL) {}
@@ -203,47 +214,59 @@ class Cli
         void update(const char ** args) const
         {
           const char * v = args[2];
-          if(!addr || !v) return;
+          if(!addr) return;
           switch(type)
           {
             case PARAM_BOOL:
+              if(!v) return;
               if(*v == '0') *addr = 0;
               if(*v == '1') *addr = 1;
               break;
             case PARAM_BYTE:
+              if(!v) return;
               write((int8_t)parse(v));
               break;
             case PARAM_BYTE_U:
+              if(!v) return;
               write((uint8_t)parse(v));
               break;
             case PARAM_SHORT:
+              if(!v) return;
               write((int16_t)parse(v));
               break;
             case PARAM_INT:
+              if(!v) return;
               write((int32_t)parse(v));
               break;
             case PARAM_FLOAT:
+              if(!v) return;
               write(String(v).toFloat());
               break;
             case PARAM_STRING:
-              write(String(v));
+              write(String(v ? v : ""));
               break;
             case PARAM_OUTPUT_CHANNEL:
+              if(!v) return;
               write(*reinterpret_cast<OutputChannelConfig*>(addr), args);
               break;
             case PARAM_INPUT_CHANNEL:
+              if(!v) return;
               write(*reinterpret_cast<InputChannelConfig*>(addr), args);
               break;
             case PARAM_SCALER:
+              if(!v) return;
               write(*reinterpret_cast<ScalerConfig*>(addr), args);
               break;
             case PARAM_MODE:
+              if(!v) return;
               write(*reinterpret_cast<ActuatorCondition*>(addr), args);
               break;
             case PARAM_MIXER:
+              if(!v) return;
               write(*reinterpret_cast<MixerEntry*>(addr), args);
               break;
             case PARAM_SERIAL:
+              if(!v) return;
               write(*reinterpret_cast<SerialPortConfig*>(addr), args);
               break;
             case PARAM_NONE:
@@ -311,7 +334,7 @@ class Cli
         void write(const String& v) const
         {
           *addr = 0;
-          strncat(addr, v.c_str(), 16);
+          strncat(addr, v.c_str(), maxLen);
         }
 
         int32_t parse(const char * v) const
@@ -331,6 +354,7 @@ class Cli
         ParamType type;
         char * addr;
         const char ** choices;
+        size_t maxLen;
     };
 
     Cli(Model& model): _model(model), _ignore(false), _active(false)
@@ -375,10 +399,6 @@ class Cli
       static const char* voltageSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
       static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
       static const char* blackboxModeChoices[] = { PSTR("NORMAL"), PSTR("TEST"), PSTR("ALWAYS"), NULL };
-
-#ifdef ESPFC_SERIAL_SOFT_0_WIFI
-      const char ** wifiModeChoices            = WirelessConfig::getModeNames();
-#endif
 
       size_t i = 0;
       static const Param params[] = {
@@ -488,9 +508,9 @@ class Cli
         Param(PSTR("input_filter_type"), &c.input.filterType, inputFilterChoices),
         Param(PSTR("input_lpf_type"), &c.input.filter.type, filterTypeChoices),
         Param(PSTR("input_lpf_freq"), &c.input.filter.freq),
+        Param(PSTR("input_lpf_factor"), &c.input.filterAutoFactor),
         Param(PSTR("input_ff_lpf_type"), &c.input.filterDerivative.type, filterTypeChoices),
         Param(PSTR("input_ff_lpf_freq"), &c.input.filterDerivative.freq),
-        Param(PSTR("input_lpf_factor"), &c.input.filterAutoFactor),
 
         Param(PSTR("input_rssi_channel"), &c.input.rssiChannel),
 
@@ -579,7 +599,7 @@ class Cli
         Param(PSTR("pid_dterm_dyn_lpf_max"), &c.dtermDynLpfFilter.freq),
 
         Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
-        Param(PSTR("pid_iterm_limit"), &c.itermWindupPointPercent),
+        Param(PSTR("pid_iterm_limit"), &c.itermLimit),
         Param(PSTR("pid_iterm_zero"), &c.lowThrottleZeroIterm),
         Param(PSTR("pid_iterm_relax"), &c.itermRelax, inputItermRelaxChoices),
         Param(PSTR("pid_iterm_relax_cutoff"), &c.itermRelaxCutoff),
@@ -683,10 +703,10 @@ class Cli
 #ifdef ESPFC_I2C_0
         Param(PSTR("i2c_speed"), &c.i2cSpeed),
 #endif
+        Param(PSTR("rescue_config_delay"), &c.rescueConfigDelay),
+
         //Param(PSTR("telemetry"), &c.telemetry),
         Param(PSTR("telemetry_interval"), &c.telemetryInterval),
-        //Param(PSTR("soft_serial_guard"), &c.softSerialGuard),
-        //Param(PSTR("serial_rx_guard"), &c.serialRxGuard),
 
         Param(PSTR("blackbox_dev"), &c.blackboxDev),
         Param(PSTR("blackbox_mode"), &c.blackboxMode, blackboxModeChoices),
@@ -694,11 +714,8 @@ class Cli
         Param(PSTR("blackbox_mask"), &c.blackboxFieldsDisabledMask),
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
-        Param(PSTR("wifi_mode"), &c.wireless.mode, wifiModeChoices),
-        Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL),
-        Param(PSTR("wifi_pass"), PARAM_STRING, &c.wireless.pass[0], NULL),
-        Param(PSTR("wifi_ssid_ap"), PARAM_STRING, &c.wireless.ssidAp[0], NULL),
-        Param(PSTR("wifi_pass_ap"), PARAM_STRING, &c.wireless.passAp[0], NULL),
+        Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL, 32),
+        Param(PSTR("wifi_pass"), PARAM_STRING, &c.wireless.pass[0], NULL, 32),
         Param(PSTR("wifi_tcp_port"), &c.wireless.port),
 #endif
 
@@ -780,8 +797,20 @@ class Cli
       {
         //FIXME: detect disconnection
         _active = true;
+        stream.println();
+        stream.println(F("Entering CLI Mode, type 'exit' to return, or 'help'"));
+        stream.print(F("# "));
         printVersion(stream);
-        stream.println(F(", CLI mode, type help"));
+        stream.println();
+        _model.setArmingDisabled(ARMING_DISABLED_CLI, true);
+        cmd = CliCmd();
+        return true;
+      }
+      if(_active && c == 4) // CTRL-D
+      {
+        stream.println();
+        stream.println(F(" #leaving CLI mode, unsaved changes lost"));
+        _active = false;
         cmd = CliCmd();
         return true;
       }
@@ -791,8 +820,6 @@ class Cli
       {
         parse(cmd);
         execute(cmd, stream);
-        //cmd.index = 0;
-        //cmd.buff[cmd.index] = '\0';
         cmd = CliCmd();
         return true;
       }
@@ -861,14 +888,31 @@ class Cli
         printVersion(s);
         s.println();
       }
+#if defined(ESPFC_WIFI) || defined(ESPFC_WIFI_ALT)
       else if(strcmp_P(cmd.args[0], PSTR("wifi")) == 0)
       {
-        s.print(F("IPv4  : tcp://"));
-        s.print(_model.state.localIp);
+        s.print(F("ST IP4: tcp://"));
+        s.print(WiFi.localIP());
         s.print(F(":"));
         s.println(_model.config.wireless.port);
+        s.print(F("ST MAC: "));
+        s.println(WiFi.macAddress());
+        s.print(F("AP IP4: tcp://"));
+        s.print(WiFi.softAPIP());
+        s.print(F(":"));
+        s.println(_model.config.wireless.port);
+        s.print(F("AP MAC: "));
+        s.println(WiFi.softAPmacAddress());
+        s.print(F("STATUS: "));
+        s.println(WiFi.status());
+        s.print(F("  MODE: "));
+        s.println(WiFi.getMode());
+        s.print(F("CHANNEL: "));
+        s.println(WiFi.channel());
+        //WiFi.printDiag(s);
       }
-      #if defined(ESPFC_FREE_RTOS)
+#endif
+#if defined(ESPFC_FREE_RTOS)
       else if(strcmp_P(cmd.args[0], PSTR("tasks")) == 0)
       {
         printVersion(s);
@@ -880,7 +924,7 @@ class Cli
         s.print(numTasks);
         s.println();
       }
-      #endif
+#endif
       else if(strcmp_P(cmd.args[0], PSTR("devinfo")) == 0)
       {
         printVersion(s);
@@ -942,9 +986,9 @@ class Cli
       }
       else if(strcmp_P(cmd.args[0], PSTR("dump")) == 0)
       {
-        s.print('#');
-        printVersion(s);
-        s.println();
+        //s.print(F("# "));
+        //printVersion(s);
+        //s.println();
         for(size_t i = 0; _params[i].name; ++i)
         {
           print(_params[i], s);
@@ -1149,7 +1193,6 @@ class Cli
       }
       else if(strcmp_P(cmd.args[0], PSTR("status")) == 0)
       {
-
         printVersion(s);
         s.println();
         s.println(F("STATUS: "));
@@ -1159,48 +1202,48 @@ class Cli
         Device::GyroDevice * gyro = _model.state.gyroDev;
         Device::BaroDevice * baro = _model.state.baroDev;
         Device::MagDevice  * mag  = _model.state.magDev;
+        s.print(F("     devices: "));
         if(gyro)
         {
-          s.print(F(" gyro device: "));
           s.print(FPSTR(Device::GyroDevice::getName(gyro->getType())));
           s.print('/');
-          s.println(FPSTR(Device::BusDevice::getName(gyro->getBus()->getType())));
+          s.print(FPSTR(Device::BusDevice::getName(gyro->getBus()->getType())));
         }
         else
         {
-          s.println(F(" gyro device: NONE"));
+          s.print(F("NO_GYRO"));
         }
 
         if(baro)
         {
-          s.print(F(" baro device: "));
+          s.print(F(", "));
           s.print(FPSTR(Device::BaroDevice::getName(baro->getType())));
           s.print('/');
-          s.println(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
+          s.print(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
         }
         else
         {
-          s.println(F(" baro device: NONE"));
+          s.print(F(", NO_BARO"));
         }
 
         if(mag)
         {
-          s.print(F("  mag device: "));
+          s.print(F(", "));
           s.print(FPSTR(Device::MagDevice::getName(mag->getType())));
           s.print('/');
-          s.println(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
+          s.print(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
         }
         else
         {
-          s.println(F("  mag device: NONE"));
+          s.print(F(", NO_MAG"));
         }
+        s.println();
 
-        s.print(F("     rx rate: "));
-        s.println(_model.state.inputFrameRate);
-
-        s.print(F("     rx lpfs: "));
+        s.print(F("       input: "));
+        s.print(_model.state.inputFrameRate);
+        s.print(F(" Hz, "));
         s.print(_model.state.inputAutoFreq);
-        s.print(F(", "));
+        s.print(F(" Hz, "));
         s.println(_model.state.inputAutoFactor);
 
         static const char* armingDisableNames[] = {
@@ -1214,8 +1257,7 @@ class Cli
         };
         const size_t armingDisableNamesLength = sizeof(armingDisableNames) / sizeof(armingDisableNames[0]);
 
-        s.println();
-        s.print(F(" arming disabled:"));
+        s.print(F("arming flags:"));
         for(size_t i = 0; i < armingDisableNamesLength; i++)
         {
           if(_model.state.armingDisabledFlags & (1 << i)) {
@@ -1223,6 +1265,13 @@ class Cli
             s.print(armingDisableNames[i]);
           }
         }
+        s.println();
+        s.print(F(" rescue mode: "));
+        s.print(_model.state.rescueConfigMode);
+        s.println();
+
+        s.print(F("      uptime: "));
+        s.print(millis() * 0.001, 1);
         s.println();
       }
       else if(strcmp_P(cmd.args[0], PSTR("stats")) == 0)
@@ -1270,17 +1319,14 @@ class Cli
         s.print(F("%"));
         s.println();
       }
-      else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0)
+      else if(strcmp_P(cmd.args[0], PSTR("reboot")) == 0 || strcmp_P(cmd.args[0], PSTR("exit")) == 0)
       {
+        _active = false;
         Hardware::restart(_model);
       }
       else if(strcmp_P(cmd.args[0], PSTR("defaults")) == 0)
       {
         _model.reset();
-      }
-      else if(strcmp_P(cmd.args[0], PSTR("exit")) == 0)
-      {
-        _active = false;
       }
       else if(strcmp_P(cmd.args[0], PSTR("motors")) == 0)
       {
@@ -1308,6 +1354,66 @@ class Cli
         s.print(PSTR("total: "));
         s.println(_model.logger.length());
       }
+#ifdef USE_FLASHFS
+      else if(strcmp_P(cmd.args[0], PSTR("flash")) == 0)
+      {
+        if(!cmd.args[1])
+        {
+          size_t total = flashfsGetSize();
+          size_t used = flashfsGetOffset();
+          s.printf("total: %d\r\n", total);
+          s.printf(" used: %d\r\n", used);
+          s.printf(" free: %d\r\n", total - used);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("partitions")) == 0)
+        {
+          Device::FlashDevice::partitions(s);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("journal")) == 0)
+        {
+          const FlashfsRuntime* flashfs = flashfsGetRuntime();
+          FlashfsJournalItem journal[16];
+          flashfsJournalLoad(journal, 0, 16);
+          for(size_t i = 0; i < 16; i++)
+          {
+            const auto& it = journal[i];
+            const auto& itr = flashfs->journal[i];
+            s.printf("%02d: %08X : %08X / %08X : %08X\r\n",i , it.logBegin, it.logEnd, itr.logBegin, itr.logEnd);
+          }
+          s.printf("current: %d\r\n", flashfs->journalIdx);
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("erase")) == 0)
+        {
+          flashfsEraseCompletely();
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("test")) == 0)
+        {
+          const char * data = "flashfs-test";
+          flashfsWrite((const uint8_t*)data, strlen(data), true);
+          flashfsFlushAsync(true);
+          flashfsClose();
+        }
+        else if(strcmp_P(cmd.args[1], PSTR("print")) == 0)
+        {
+          size_t addr = 0;
+          if(cmd.args[2])
+          {
+            addr = String(cmd.args[2]).toInt();
+          }
+          uint8_t data[16];
+          flashfsReadAbs(addr, data, sizeof(data));
+          for(size_t i = 0; i < sizeof(data); i++)
+          {
+            s.printf("%02x ", data[i]);
+          }
+          s.println();
+        }
+        else
+        {
+          s.println(F("wrong param!"));
+        }
+      }
+#endif
       else
       {
         s.print(F("unknown command: "));
@@ -1339,6 +1445,10 @@ class Cli
       s.print(buildDate);
       s.print(' ');
       s.print(buildTime);
+      s.print(' ');
+      s.print(API_VERSION_MAJOR);
+      s.print('.');
+      s.print(API_VERSION_MINOR);
       s.print(' ');
       s.print(__VERSION__);
       s.print(' ');

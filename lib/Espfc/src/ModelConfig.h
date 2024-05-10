@@ -86,6 +86,8 @@ enum FlightMode {
   MODE_AIRMODE,
   MODE_BUZZER,
   MODE_FAILSAFE,
+  MODE_BLACKBOX,
+  MODE_BLACKBOX_ERASE,
   MODE_COUNT
 };
 
@@ -209,6 +211,7 @@ enum Feature {
   FEATURE_SOFTSERIAL = 1 << 6,
   FEATURE_TELEMETRY  = 1 << 10,
   FEATURE_AIRMODE    = 1 << 22,
+  FEATURE_RX_SPI     = 1 << 25,
   FEATURE_DYNAMIC_FILTER = 1 << 29,
 };
 
@@ -317,32 +320,32 @@ class SerialPortConfig
 #define BUZZER_MAX_EVENTS 8
 
 enum BuzzerEvent {
-  BEEPER_SILENCE = 0,             // Silence, see beeperSilence()
-  BEEPER_GYRO_CALIBRATED,
-  BEEPER_RX_LOST,                 // Beeps when TX is turned off or signal lost (repeat until TX is okay)
-  BEEPER_RX_LOST_LANDING,         // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
-  BEEPER_DISARMING,               // Beep when disarming the board
-  BEEPER_ARMING,                  // Beep when arming the board
-  BEEPER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
-  BEEPER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
-  BEEPER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
-  BEEPER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
-  BEEPER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
-  BEEPER_ACC_CALIBRATION,         // ACC inflight calibration completed confirmation
-  BEEPER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
-  BEEPER_READY_BEEP,              // Ring a tone when GPS is locked and ready
-  BEEPER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
-  BEEPER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position
-  BEEPER_ARMED,                   // Warning beeps when board is armed (repeats until board is disarmed or throttle is increased)
-  BEEPER_SYSTEM_INIT,             // Initialisation beeps when board is powered on
-  BEEPER_USB,                     // Some boards have beeper powered USB connected
-  BEEPER_BLACKBOX_ERASE,          // Beep when blackbox erase completes
-  BEEPER_CRASH_FLIP_MODE,         // Crash flip mode is active
-  BEEPER_CAM_CONNECTION_OPEN,     // When the 5 key simulation stated
-  BEEPER_CAM_CONNECTION_CLOSE,    // When the 5 key simulation stop
-  BEEPER_ALL,                     // Turn ON or OFF all beeper conditions
-  BEEPER_PREFERENCE,              // Save preferred beeper configuration
-  // BEEPER_ALL and BEEPER_PREFERENCE must remain at the bottom of this enum
+  BUZZER_SILENCE = 0,             // Silence, see beeperSilence()
+  BUZZER_GYRO_CALIBRATED,
+  BUZZER_RX_LOST,                 // Beeps when TX is turned off or signal lost (repeat until TX is okay)
+  BUZZER_RX_LOST_LANDING,         // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
+  BUZZER_DISARMING,               // Beep when disarming the board
+  BUZZER_ARMING,                  // Beep when arming the board
+  BUZZER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
+  BUZZER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
+  BUZZER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
+  BUZZER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
+  BUZZER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
+  BUZZER_ACC_CALIBRATION,         // ACC inflight calibration completed confirmation
+  BUZZER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
+  BUZZER_READY_BEEP,              // Ring a tone when GPS is locked and ready
+  BUZZER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
+  BUZZER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position
+  BUZZER_ARMED,                   // Warning beeps when board is armed (repeats until board is disarmed or throttle is increased)
+  BUZZER_SYSTEM_INIT,             // Initialisation beeps when board is powered on
+  BUZZER_USB,                     // Some boards have beeper powered USB connected
+  BUZZER_BLACKBOX_ERASE,          // Beep when blackbox erase completes
+  BUZZER_CRASH_FLIP_MODE,         // Crash flip mode is active
+  BUZZER_CAM_CONNECTION_OPEN,     // When the 5 key simulation stated
+  BUZZER_CAM_CONNECTION_CLOSE,    // When the 5 key simulation stop
+  BUZZER_ALL,                     // Turn ON or OFF all beeper conditions
+  BUZZER_PREFERENCE,              // Save preferred beeper configuration
+  // BUZZER_ALL and BUZZER_PREFERENCE must remain at the bottom of this enum
 };
 
 class BuzzerConfig
@@ -494,36 +497,13 @@ enum ArmingDisabledFlags {
 
 static const size_t ARMING_DISABLED_FLAGS_COUNT = 25;
 
-enum WirelessMode {
-  WIRELESS_MODE_NULL = 0,  /**< null mode */
-  WIRELESS_MODE_STA,       /**< WiFi station mode */
-  WIRELESS_MODE_AP,        /**< WiFi soft-AP mode */
-  WIRELESS_MODE_APSTA,     /**< WiFi station + soft-AP mode */
-  WIRELESS_MODE_MAX
-};
-
 class WirelessConfig
 {
   public:
     static const size_t MAX_LEN = 32;
-    int8_t mode;
     int16_t port;
     char ssid[MAX_LEN + 1];
     char pass[MAX_LEN + 1];
-    char ssidAp[MAX_LEN + 1];
-    char passAp[MAX_LEN + 1];
-
-    static const char * getModeName(WirelessMode mode)
-    {
-      if(mode >= WIRELESS_MODE_MAX) return PSTR("?");
-      return getModeNames()[mode];
-    }
-
-    static const char ** getModeNames()
-    {
-      static const char* modeChoices[] = { PSTR("OFF"), PSTR("STA"), PSTR("AP"), PSTR("AP_STA"), NULL };
-      return modeChoices;
-    }
 };
 
 class FailsafeConfig
@@ -585,7 +565,7 @@ class ModelConfig
     FilterConfig levelPtermFilter;
 
     int16_t dtermSetpointWeight;
-    int8_t itermWindupPointPercent;
+    int8_t itermLimit;
     int8_t itermRelax;
     int8_t itermRelaxCutoff;
 
@@ -636,8 +616,6 @@ class ModelConfig
 
     int8_t pin[PIN_COUNT];
     int16_t i2cSpeed;
-    bool softSerialGuard;
-    bool serialRxGuard;
     int8_t tpaScale;
     int16_t tpaBreakpoint;
 
@@ -654,6 +632,8 @@ class ModelConfig
     uint8_t rpmFilterFreqLpf;
     uint8_t rpmFilterWeights[RPM_FILTER_HARMONICS_MAX];
     uint8_t rpmFilterFade;
+
+    uint8_t rescueConfigDelay = 30;
 
     ModelConfig()
     {
@@ -746,16 +726,6 @@ class ModelConfig
       dtermFilter = FilterConfig(FILTER_PT1, 128);
       dtermFilter2 = FilterConfig(FILTER_PT1, 128);
 
-      // ESPFC defaults => BF x 0.75
-      //gyroDynLpfFilter = FilterConfig(FILTER_PT1, 375, 150);
-      //gyroFilter = FilterConfig(FILTER_PT1, 100);
-      //gyroFilter2 = FilterConfig(FILTER_PT1, 188);
-      //dynamicFilter = DynamicFilterConfig(5, 200, 80, 400); // 8%. q:2.0, 80-400 Hz
-
-      //dtermDynLpfFilter = FilterConfig(FILTER_PT1, 128, 53);
-      //dtermFilter = FilterConfig(FILTER_PT1, 113);
-      //dtermFilter2 = FilterConfig(FILTER_PT1, 113);
-
       rpmFilterHarmonics = 3;
       rpmFilterMinFreq = 100;
       rpmFilterQ = 500;
@@ -778,9 +748,6 @@ class ModelConfig
 
       telemetry = 0;
       telemetryInterval = 1000;
-
-      softSerialGuard = false;
-      serialRxGuard = false;
 
 #ifdef ESPFC_SERIAL_0
       serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
@@ -860,25 +827,6 @@ class ModelConfig
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
       input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
 
-      /*
-      input.rateType = 0; // betaflight
-
-      input.rate[AXIS_ROLL] = 70;
-      input.expo[AXIS_ROLL] = 0;
-      input.superRate[AXIS_ROLL] = 80;
-      input.rateLimit[AXIS_ROLL] = 1998;
-
-      input.rate[AXIS_PITCH] = 70;
-      input.expo[AXIS_PITCH] = 0;
-      input.superRate[AXIS_PITCH] = 80;
-      input.rateLimit[AXIS_PITCH] = 1998;
-
-      input.rate[AXIS_YAW] = 120;
-      input.expo[AXIS_YAW] = 0;
-      input.superRate[AXIS_YAW] = 50;
-      input.rateLimit[AXIS_YAW] = 1998;
-      */
-
       input.rateType = 3; // actual
 
       input.rate[AXIS_ROLL] = 20;
@@ -927,7 +875,7 @@ class ModelConfig
       pid[FC_PID_MAG]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
       pid[FC_PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
 
-      itermWindupPointPercent = 30;
+      itermLimit = 30;
       itermRelax = ITERM_RELAX_RP;
       itermRelaxCutoff = 15;
       dtermSetpointWeight = 30;
@@ -994,11 +942,8 @@ class ModelConfig
 
       buzzer.inverted = true;
 
-      wireless.mode = WIRELESS_MODE_NULL;
       wireless.ssid[0] = 0;
       wireless.pass[0] = 0;
-      wireless.ssidAp[0] = 0;
-      wireless.passAp[0] = 0;
       wireless.port = 1111;
 
       modelName[0] = 0;
@@ -1077,7 +1022,7 @@ class ModelConfig
       //accelFilter.freq = 30;        // ROBOT
 
       lowThrottleZeroIterm = false; // ROBOT
-      itermWindupPointPercent = 10; // ROBOT
+      itermLimit = 10; // ROBOT
       dtermSetpointWeight = 0;      // ROBOT
       angleLimit = 10;       // deg // ROBOT
 

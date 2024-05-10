@@ -3,11 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
-
-#include <EspGpio.h>
 #include <EscDriver.h>
-#include <Hal.h>
-
 #include "Debug_Espfc.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
@@ -107,7 +103,8 @@ class Model
 
     bool blackboxEnabled() const
     {
-      return config.blackboxDev == 3 && config.blackboxPdenom > 0;
+      // serial or flash
+      return (config.blackboxDev == 3 || config.blackboxDev == 1) && config.blackboxPdenom > 0;
     }
 
     bool gyroActive() const /* IRAM_ATTR */
@@ -154,7 +151,7 @@ class Model
       if(state.gyroCalibrationState == CALIBRATION_SAVE)
       {
         //save();
-        state.buzzer.push(BEEPER_GYRO_CALIBRATED);
+        state.buzzer.push(BUZZER_GYRO_CALIBRATED);
         logger.info().log(F("GYRO BIAS")).log(degrees(state.gyroBias.x)).log(degrees(state.gyroBias.y)).logln(degrees(state.gyroBias.z));
       }
       if(state.accelCalibrationState == CALIBRATION_SAVE)
@@ -262,7 +259,7 @@ class Model
       size_t channel = config.input.rssiChannel;
       if(channel < 4 || channel > state.inputChannelCount) return 0;
       float value = state.input[channel - 1];
-      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0, 1023)), 0l, 1023l);
+      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
     }
 
     int load()
@@ -391,8 +388,8 @@ class Model
       }
 
       // configure serial ports
-      uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
-      uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;// | FEATURE_AIRMODE;
+      uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT;
+      uint32_t featureAllowMask = FEATURE_RX_SERIAL | FEATURE_RX_PPM | FEATURE_RX_SPI | FEATURE_SOFTSERIAL | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;// | FEATURE_AIRMODE;
 
       // allow dynamic filter only above 1k sampling rate
       if(state.loopRate >= DynamicFilterConfig::MIN_FREQ)
@@ -400,32 +397,21 @@ class Model
         featureAllowMask |= FEATURE_DYNAMIC_FILTER;
       }
 
-      if(config.softSerialGuard || !ESPFC_GUARD)
-      {
-        featureAllowMask |= FEATURE_SOFTSERIAL;
-      }
-      if(config.serialRxGuard || !ESPFC_GUARD)
-      {
-        featureAllowMask |= FEATURE_RX_SERIAL;
-        serialFunctionAllowedMask |= SERIAL_FUNCTION_RX_SERIAL;
-      }
       config.featureMask &= featureAllowMask;
 
       for(int i = 0; i < SERIAL_UART_COUNT; i++) {
         config.serial[i].functionMask &= serialFunctionAllowedMask;
       }
-      //config.featureMask |= FEATURE_RX_PPM; // force ppm
-      //config.featureMask &= ~FEATURE_RX_PPM; // disallow ppm
 
       // only few beeper modes allowed
       config.buzzer.beeperMask &=
-        1 << (BEEPER_GYRO_CALIBRATED - 1) |
-        1 << (BEEPER_SYSTEM_INIT - 1) |
-        1 << (BEEPER_RX_LOST - 1) |
-        1 << (BEEPER_RX_SET - 1) |
-        1 << (BEEPER_DISARMING - 1) |
-        1 << (BEEPER_ARMING - 1) |
-        1 << (BEEPER_BAT_LOW - 1);
+        1 << (BUZZER_GYRO_CALIBRATED - 1) |
+        1 << (BUZZER_SYSTEM_INIT - 1) |
+        1 << (BUZZER_RX_LOST - 1) |
+        1 << (BUZZER_RX_SET - 1) |
+        1 << (BUZZER_DISARMING - 1) |
+        1 << (BUZZER_ARMING - 1) |
+        1 << (BUZZER_BAT_LOW - 1);
 
         if(config.dynamicFilter.width > 6)
         {
@@ -440,21 +426,16 @@ class Model
       // init timers
       // sample rate = clock / ( divider + 1)
       state.gyroTimer.setRate(state.gyroRate);
-      state.accelTimer.setRate(constrain(state.gyroTimer.rate, 100, 500));
-      state.accelTimer.setInterval(state.accelTimer.interval - 5);
-      //state.accelTimer.setRate(state.gyroTimer.rate, 2);
+      int accelRate = Math::alignToClock(state.gyroTimer.rate, 500);
+      state.accelTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / accelRate);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
       state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
-      state.inputTimer.setRate(1000);
+      int inputRate = Math::alignToClock(state.gyroTimer.rate, 1000);
+      state.inputTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / inputRate);
       state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(4);
-#if defined(ESPFC_MULTI_CORE)
-      state.serialTimer.setRate(4000);
-#else
-      state.serialTimer.setRate(1000);
-#endif
+      state.stats.timer.setRate(3);
       if(magActive())
       {
         state.magTimer.setRate(state.magRate);
@@ -462,7 +443,7 @@ class Model
 
       const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
-      const uint32_t inputFilterRate = state.loopTimer.rate;
+      const uint32_t inputFilterRate = state.inputTimer.rate;
       const uint32_t pidFilterRate = state.loopTimer.rate;
 
       // configure filters
@@ -540,8 +521,8 @@ class Model
         pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
         pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
         pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[i];
-        pid.iLimit = 0.15f;
-        pid.oLimit = 0.5f;
+        pid.iLimit = config.itermLimit * 0.01f;
+        pid.oLimit = 0.66f;
         pid.rate = state.loopTimer.rate;
         pid.dtermNotchFilter.begin(config.dtermNotchFilter, pidFilterRate);
         if(config.dtermDynLpfFilter.cutoff > 0) {

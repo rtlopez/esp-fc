@@ -1,10 +1,13 @@
-#ifndef _HAL_H_
-#define _HAL_H_
+#pragma once
 
 #ifdef UNIT_TEST
 
 #ifndef PSTR
 #define PSTR(s) (s)
+#endif
+
+#ifndef FPSTR
+#define FPSTR(s) (s)
 #endif
 
 #ifndef F
@@ -16,7 +19,6 @@
 
 #endif // UNIT_TEST
 
-#undef max
-#undef min
+//#undef max
+//#undef min
 
-#endif // _HAL_H_

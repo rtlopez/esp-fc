@@ -2,18 +2,18 @@
 #define _ESPFC_DEBUG_H_
 
 #include <Arduino.h>
-#include <EspGpio.h>
-
-namespace Espfc
-{
+#include "Hal/Gpio.h"
 
 #ifdef ESPFC_DEBUG_PIN
-  #define PIN_DEBUG(v) EspGpio::digitalWrite(ESPFC_DEBUG_PIN, v)
-  #define PIN_DEBUG_INIT() pinMode(ESPFC_DEBUG_PIN, OUTPUT)
+  #define PIN_DEBUG(v) ::Espfc::Hal::Gpio::digitalWrite(ESPFC_DEBUG_PIN, v)
+  #define PIN_DEBUG_INIT() ::pinMode(ESPFC_DEBUG_PIN, OUTPUT)
 #else
   #define PIN_DEBUG(v)
   #define PIN_DEBUG_INIT()
 #endif
+
+namespace Espfc
+{
 
 #ifdef ESPFC_DEBUG_SERIAL
 extern Stream * _debugStream;
@@ -28,9 +28,9 @@ template <typename T>
 void D(T t)
 {
   if(!_debugStream) return;
-  _debugStream->print(t);
-  _debugStream->print('\r');
-  _debugStream->print('\n');
+  _debugStream->println(t);
+  //_debugStream->print('\r');
+  //_debugStream->print('\n');
 }
 
 template<typename T, typename... Args>

@@ -95,21 +95,21 @@ void EspTwoWire::setClockStretchLimit(uint32_t limit){
   esp_twi_setClockStretchLimit(limit);
 }
 
-size_t EspTwoWire::requestFrom(uint8_t address, size_t size, bool sendStop){
+size_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, size_t size, bool sendStop){
   if(size > ESPWIRE_BUFFER_LENGTH){
     size = ESPWIRE_BUFFER_LENGTH;
   }
-  size_t read = (esp_twi_readFrom(address, rxBuffer, size, sendStop) == 0)?size:0;
+  size_t read = (esp_twi_readFrom(address, rxBuffer, size, sendStop) == 0) ? size : 0;
   rxBufferIndex = 0;
   rxBufferLength = read;
   return read;
 }
 
-uint8_t EspTwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop){
+uint8_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop){
   return requestFrom(address, static_cast<size_t>(quantity), static_cast<bool>(sendStop));
 }
 
-uint8_t EspTwoWire::requestFrom(uint8_t address, uint8_t quantity){
+uint8_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, uint8_t quantity){
   return requestFrom(address, static_cast<size_t>(quantity), true);
 }
 
@@ -121,18 +121,18 @@ uint8_t EspTwoWire::requestFrom(int address, int quantity, int sendStop){
   return requestFrom(static_cast<uint8_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
 }
 
-void EspTwoWire::beginTransmission(uint8_t address){
+void IRAM_ATTR EspTwoWire::beginTransmission(uint8_t address){
   transmitting = 1;
   txAddress = address;
   txBufferIndex = 0;
   txBufferLength = 0;
 }
 
-void EspTwoWire::beginTransmission(int address){
+void IRAM_ATTR EspTwoWire::beginTransmission(int address){
   beginTransmission((uint8_t)address);
 }
 
-uint8_t EspTwoWire::endTransmission(uint8_t sendStop){
+uint8_t IRAM_ATTR EspTwoWire::endTransmission(uint8_t sendStop){
   int8_t ret = esp_twi_writeTo(txAddress, txBuffer, txBufferLength, sendStop);
   txBufferIndex = 0;
   txBufferLength = 0;
@@ -140,11 +140,11 @@ uint8_t EspTwoWire::endTransmission(uint8_t sendStop){
   return ret;
 }
 
-uint8_t EspTwoWire::endTransmission(void){
+uint8_t IRAM_ATTR EspTwoWire::endTransmission(void){
   return endTransmission(true);
 }
 
-size_t EspTwoWire::write(uint8_t data){
+size_t IRAM_ATTR EspTwoWire::write(uint8_t data){
   if(transmitting){
     if(txBufferLength >= ESPWIRE_BUFFER_LENGTH){
       setWriteError();
@@ -159,7 +159,7 @@ size_t EspTwoWire::write(uint8_t data){
   return 1;
 }
 
-size_t EspTwoWire::write(const uint8_t *data, size_t quantity){
+size_t IRAM_ATTR EspTwoWire::write(const uint8_t *data, size_t quantity){
   if(transmitting){
     for(size_t i = 0; i < quantity; ++i){
       if(!write(data[i])) return i;

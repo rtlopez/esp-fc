@@ -14,7 +14,18 @@ class Actuator
     int begin()
     {
       _model.state.modeMask = 0;
+      _model.state.modeMaskPrev = 0;
+      _model.state.modeMaskPresent = 0;
+      _model.state.modeMaskSwitch = 0;
+      for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+      {
+        const auto &c = _model.config.conditions[i];
+        if(!(c.min < c.max)) continue; // inactive
+        if(c.ch < AXIS_AUX_1 || c.ch >= AXIS_COUNT) continue; // invalid channel
+        _model.state.modeMaskPresent |= 1 << c.id;
+      }
       _model.state.airmodeAllowed = false;
+      _model.state.rescueConfigMode = RESCUE_CONFIG_PENDING;
       return 1;
     }
 
@@ -29,6 +40,7 @@ class Actuator
       updateScaler();
       updateBuzzer();
       updateDynLpf();
+      updateRescueConfig();
 
       if(_model.config.debugMode == DEBUG_PIDLOOP)
       {
@@ -92,6 +104,7 @@ class Actuator
       _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
       _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
       _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
+      _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
     }
 
     void updateModeMask()
@@ -162,6 +175,7 @@ class Actuator
         if(armed)
         {
           _model.state.disarmReason = DISARM_REASON_SYSTEM;
+          _model.state.rescueConfigMode = RESCUE_CONFIG_DISABLED;
         }
         else if(!armed && _model.state.disarmReason == DISARM_REASON_SYSTEM)
         {
@@ -187,19 +201,19 @@ class Actuator
     {
       if(_model.isModeActive(MODE_FAILSAFE))
       {
-        _model.state.buzzer.play(BEEPER_RX_LOST);
+        _model.state.buzzer.play(BUZZER_RX_LOST);
       }
       if(_model.state.battery.warn(_model.config.vbatCellWarning))
       {
-        _model.state.buzzer.play(BEEPER_BAT_LOW);
+        _model.state.buzzer.play(BUZZER_BAT_LOW);
       }
       if(_model.isModeActive(MODE_BUZZER))
       {
-        _model.state.buzzer.play(BEEPER_RX_SET);
+        _model.state.buzzer.play(BUZZER_RX_SET);
       }
       if((_model.hasChanged(MODE_ARMED)))
       {
-        _model.state.buzzer.push(_model.isModeActive(MODE_ARMED) ? BEEPER_ARMING : BEEPER_DISARMING);
+        _model.state.buzzer.push(_model.isModeActive(MODE_ARMED) ? BUZZER_ARMING : BUZZER_DISARMING);
       }
     }
 
@@ -218,6 +232,28 @@ class Actuator
         for(size_t i = 0; i <= AXIS_YAW; i++) {
           _model.state.innerPid[i].dtermFilter.reconfigure(dtermFreq);
         }
+      }
+    }
+
+    void updateRescueConfig()
+    {
+      switch(_model.state.rescueConfigMode)
+      {
+        case RESCUE_CONFIG_PENDING:
+          // if some rc frames are received, disable to prevent activate later
+          if(_model.state.inputFrameCount > 100)
+          {
+            _model.state.rescueConfigMode = RESCUE_CONFIG_DISABLED;
+          }
+          if(_model.state.failsafe.phase != FC_FAILSAFE_IDLE && _model.config.rescueConfigDelay > 0 && millis() > _model.config.rescueConfigDelay * 1000)
+          {
+            _model.state.rescueConfigMode = RESCUE_CONFIG_ACTIVE;
+          }
+          break;
+        case RESCUE_CONFIG_ACTIVE:
+        case RESCUE_CONFIG_DISABLED:
+          // nothing to do here
+          break;
       }
     }
 

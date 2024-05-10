@@ -190,7 +190,7 @@ class GyroBMI160: public GyroDevice
       return GYRO_BMI160;
     }
 
-    int readGyro(VectorInt16& v) override
+    int FAST_CODE_ATTR readGyro(VectorInt16& v) override
     {
       uint8_t buffer[6];
 

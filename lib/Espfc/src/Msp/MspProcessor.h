@@ -9,6 +9,7 @@
 
 extern "C" {
   #include "io/serial_4way.h"
+  #include "blackbox/blackbox_io.h"
   int blackboxCalculatePDenom(int rateNum, int rateDenom);
   uint8_t blackboxCalculateSampleRate(uint16_t pRatio);
   uint8_t blackboxGetRateDenom(void);
@@ -288,7 +289,7 @@ class MspProcessor
           break;
 
         case MSP_BOXNAMES:
-          r.writeString(F("ARM;ANGLE;AIRMODE;BUZZER;FAILSAFE;"));
+          r.writeString(F("ARM;ANGLE;AIRMODE;BEEPER;FAILSAFE;BLACKBOX;BLACKBOXERASE;"));
           break;
 
         case MSP_BOXIDS:
@@ -297,6 +298,8 @@ class MspProcessor
           r.writeU8(MODE_AIRMODE);
           r.writeU8(MODE_BUZZER);
           r.writeU8(MODE_FAILSAFE);
+          r.writeU8(MODE_BLACKBOX);
+          r.writeU8(MODE_BLACKBOX_ERASE);
           break;
 
         case MSP_MODE_RANGES:
@@ -466,10 +469,51 @@ class MspProcessor
           break;
 
         case MSP_DATAFLASH_SUMMARY:
-          r.writeU8(0); // FlashFS is neither ready nor supported
+#ifdef USE_FLASHFS   
+          {
+            uint8_t flags = flashfsIsSupported() ? 2 : 0;
+            flags |= flashfsIsReady() ? 1 : 0;
+            r.writeU8(flags);
+            r.writeU32(flashfsGetSectors());
+            r.writeU32(flashfsGetSize());
+            r.writeU32(flashfsGetOffset());
+          }
+#else
+          r.writeU8(0);
           r.writeU32(0);
           r.writeU32(0);
           r.writeU32(0);
+#endif
+          break;
+
+        case MSP_DATAFLASH_ERASE:
+#ifdef USE_FLASHFS
+          blackboxEraseAll();
+#endif
+          break;
+
+        case MSP_DATAFLASH_READ:
+#ifdef USE_FLASHFS
+          {
+            const unsigned int dataSize = m.remain();
+            const uint32_t readAddress = m.readU32();
+            uint16_t readLength;
+            bool allowCompression = false;
+            bool useLegacyFormat;
+
+            if (dataSize >= sizeof(uint32_t) + sizeof(uint16_t)) {
+                readLength = m.readU16();
+                if (m.remain()) {
+                    allowCompression = m.readU8();
+                }
+                useLegacyFormat = false;
+            } else {
+                readLength = 128;
+                useLegacyFormat = true;
+            }
+            serializeFlashData(r, readAddress, readLength, useLegacyFormat, allowCompression);
+          }
+#endif            
           break;
 
         case MSP_ACC_TRIM:
@@ -530,7 +574,7 @@ class MspProcessor
         case MSP_CF_SERIAL_CONFIG:
           for(int i = 0; i < SERIAL_UART_COUNT; i++)
           {
-            if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+            if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL)) continue;
             r.writeU8(_model.config.serial[i].id); // identifier
             r.writeU16(_model.config.serial[i].functionMask); // functionMask
             r.writeU8(toBaudIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
@@ -545,13 +589,13 @@ class MspProcessor
             uint8_t count = 0;
             for (int i = 0; i < SERIAL_UART_COUNT; i++)
             {
-              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL)) continue;
               count++;
             }
             r.writeU8(count);
             for (int i = 0; i < SERIAL_UART_COUNT; i++)
             {
-              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isActive(FEATURE_SOFTSERIAL)) continue;
+              if(_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL)) continue;
               r.writeU8(_model.config.serial[i].id); // identifier
               r.writeU32(_model.config.serial[i].functionMask); // functionMask
               r.writeU8(toBaudIndex(_model.config.serial[i].baud)); // msp_baudrateIndex
@@ -1433,6 +1477,7 @@ class MspProcessor
           break;
 
         case MSP_REBOOT:
+          r.writeU8(0); // reboot to firmware
           _postCommand = std::bind(&MspProcessor::processRestart, this);
           break;
 
@@ -1453,6 +1498,42 @@ class MspProcessor
       Hardware::restart(_model);
     }
 
+#ifdef USE_FLASHFS
+    void serializeFlashData(MspResponse& r, uint32_t address, const uint16_t size, bool useLegacyFormat, bool allowCompression)
+    {
+      (void)allowCompression; // not supported
+
+      const uint32_t allowedToRead = r.remain() - 16;
+      const uint32_t flashfsSize = flashfsGetSize();
+
+      uint16_t readLen = std::min(std::min((uint32_t)size, allowedToRead), flashfsSize - address);
+
+      r.writeU32(address);
+
+      uint16_t *readLenPtr = (uint16_t*)&r.data[r.len];
+      if (!useLegacyFormat)
+      {
+        // new format supports variable read lengths
+        r.writeU16(readLen);
+        r.writeU8(0); // NO_COMPRESSION
+      }
+
+      const size_t bytesRead = flashfsReadAbs(address, &r.data[r.len], readLen);
+      r.advance(bytesRead);
+
+      if (!useLegacyFormat)
+      {
+        // update the 'read length' with the actual amount read from flash.
+        *readLenPtr = bytesRead;
+      }
+      else
+      {
+        // pad the buffer with zeros
+        //for (int i = bytesRead; i < allowedToRead; i++) r.writeU8(0);
+      }
+    }
+#endif
+
     void sendResponse(MspResponse& r, Device::SerialDevice& s)
     {
       debugResponse(r);
@@ -1465,7 +1546,7 @@ class MspProcessor
           sendResponseV2(r, s);
           break;
       }
-      postCommand();
+      //postCommand();
     }
 
     void sendResponseV1(MspResponse& r, Device::SerialDevice& s)
@@ -1543,12 +1624,12 @@ class MspProcessor
       Device::SerialDevice * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
-      s->print(m.dir == MSP_TYPE_REPLY ? '>' : '<'); s->print(' ');
-      s->print(m.cmd); s->print(' ');
+      s->print(m.dir == MSP_TYPE_REPLY ? '>' : '<');
+      s->print(m.cmd); s->print('.');
       s->print(m.expected); s->print(' ');
       for(size_t i = 0; i < m.expected; i++)
       {
-        s->print(m.buffer[i]); s->print(' ');
+        s->print(m.buffer[i], HEX); s->print(' ');
       }
       s->println();
     }
@@ -1559,12 +1640,12 @@ class MspProcessor
       Device::SerialDevice * s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
       if(!s) return;
 
-      s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@')); s->print(' ');
-      s->print(r.cmd); s->print(' ');
+      s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@'));
+      s->print(r.cmd); s->print('.');
       s->print(r.len); s->print(' ');
       for(size_t i = 0; i < r.len; i++)
       {
-        s->print(r.data[i]); s->print(' ');
+        s->print(r.data[i], HEX); s->print(' ');
       }
       s->println();
     }

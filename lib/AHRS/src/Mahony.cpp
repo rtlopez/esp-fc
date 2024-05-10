@@ -22,6 +22,13 @@
 // Header files
 
 #include "Mahony.h"
+#include <Arduino.h>
+
+#ifdef ESP32
+#define FAST_CODE_IMU_ATTR IRAM_ATTR
+#else
+#define FAST_CODE_IMU_ATTR
+#endif
 
 //-------------------------------------------------------------------------------------------
 // Definitions
@@ -165,7 +172,7 @@ void Mahony::update(float gx, float gy, float gz, float ax, float ay, float az, 
 //-------------------------------------------------------------------------------------------
 // IMU algorithm update
 
-void Mahony::update(float gx, float gy, float gz, float ax, float ay, float az)
+void FAST_CODE_IMU_ATTR Mahony::update(float gx, float gy, float gz, float ax, float ay, float az)
 {
 	float recipNorm;
 	float halfvx, halfvy, halfvz;
