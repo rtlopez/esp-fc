@@ -83,6 +83,7 @@ class EscDriverEsp8266: public EscDriverBase
     int32_t _intervalMax; // for brushed
 
     int _dh;
+    int _dm;
     int _dl;
 
     Slot _slots[ESC_CHANNEL_COUNT];
@@ -90,11 +91,6 @@ class EscDriverEsp8266: public EscDriverBase
 
     volatile Item * _it;
     const Item * _end;
-
-    mask_t dshotSetMask[DSHOT_BIT_COUNT];
-    mask_t dshotClrMask[DSHOT_BIT_COUNT * 2];
-
-    //static EscDriverEsp8266 * _instance;
 };
 
 #endif // ESP8266
