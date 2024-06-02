@@ -26,7 +26,7 @@ void IRAM_ATTR serialEventRun(void) {}
 
 Espfc::Espfc espfc;
 
-#ifdef ESPFC_MULTI_CORE
+#if defined(ESPFC_MULTI_CORE)
   #if defined(ESPFC_FREE_RTOS)
 
     // ESP32 multicore
