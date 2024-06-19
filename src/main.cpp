@@ -41,22 +41,20 @@ Espfc::Espfc espfc;
 
     bool IRAM_ATTR gyroTimerIsr(void* args)
     {
-      //PIN_DEBUG(HIGH);
       BaseType_t xHigherPriorityTaskWoken;
       vTaskNotifyGiveFromISR(gyroTaskHandle, &xHigherPriorityTaskWoken);
-      //PIN_DEBUG(LOW);
       return xHigherPriorityTaskWoken == pdTRUE;
     }
 
     void gyroTimerInit(bool (*isrCb)(void* args), int interval)
     {
       timer_config_t config = {
-          .alarm_en = TIMER_ALARM_EN,
-          .counter_en = TIMER_PAUSE,
-          .intr_type = TIMER_INTR_LEVEL,
-          .counter_dir = TIMER_COUNT_UP,
-          .auto_reload = TIMER_AUTORELOAD_EN,
-          .divider = 80,
+        .alarm_en = TIMER_ALARM_EN,
+        .counter_en = TIMER_PAUSE,
+        .intr_type = TIMER_INTR_LEVEL,
+        .counter_dir = TIMER_COUNT_UP,
+        .auto_reload = TIMER_AUTORELOAD_EN,
+        .divider = 80,
       };
       timer_init(TIMER_GROUP, TIMER_IDX, &config);
       timer_set_counter_value(TIMER_GROUP, TIMER_IDX, 0);
@@ -68,12 +66,11 @@ Espfc::Espfc espfc;
 
     void gyroTask(void *pvParameters)
     {
-      espfc.load();
       espfc.begin();
       gyroTimerInit(gyroTimerIsr, espfc.getGyroInterval());
       while(true)
       {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for timer notification
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for timer isr notification
         espfc.update(true);
       }
     }
@@ -92,6 +89,7 @@ Espfc::Espfc espfc;
       // internal task priorities
       // PRO(0): hi-res timer(22), timer(1), event-loop(20), lwip(18/any), wifi(23), wpa(2/any), BT/vhci(23), NimBle(21), BT/other(19,20,22), Eth(15), Mqtt(5/any)
       // APP(1): free
+      espfc.load();
       xTaskCreateUniversal(gyroTask, "gyroTask", 8192, NULL, 24, &gyroTaskHandle, 1);
       xTaskCreateUniversal(pidTask,  "pidTask",  8192, NULL,  1, &pidTaskHandle,  0);
       vTaskDelete(NULL); // delete arduino loop task

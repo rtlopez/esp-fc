@@ -129,12 +129,12 @@ class EscDriverBase
     static constexpr int SECONDS_PER_MINUTE = 60;
     static constexpr float ERPM_PER_LSB = 100.0f;
 
-    static inline float getErpmToHzRatio(int poles)
+    static float IRAM_ATTR getErpmToHzRatio(int poles)
     {
       return ERPM_PER_LSB / SECONDS_PER_MINUTE / (poles / 2.0f);
     }
 
-    static inline uint32_t convertToErpm(uint32_t value)
+    static uint32_t IRAM_ATTR convertToErpm(uint32_t value)
     {
       if(!value) return 0;
 
@@ -147,7 +147,7 @@ class EscDriverBase
       return (1000000 * 60 / 100 + value / 2) / value;
     }
 
-    static inline uint32_t convertToValue(uint32_t value)
+    static uint32_t IRAM_ATTR convertToValue(uint32_t value)
     {
       // eRPM range
       if(value == 0x0fff)
@@ -159,7 +159,7 @@ class EscDriverBase
       return (value & 0x01ff) << ((value & 0xfe00) >> 9);
     }
 
-    static uint32_t gcrToRawValue(uint32_t value)
+    static uint32_t IRAM_ATTR gcrToRawValue(uint32_t value)
     {
       value = value ^ (value >> 1); // extract gcr
 

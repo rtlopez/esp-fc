@@ -389,7 +389,7 @@ void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse
 
   pulse = constrain(pulse, 0, 2000);
   // scale to dshot commands (0 or 48-2047)
-  int value = pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;
+  int value = dshotConvert(pulse);
   uint16_t frame = dshotEncode(value, _dshot_tlm);
 
   Slot& slot = _channel[channel];
