@@ -167,6 +167,8 @@ class BaroSPL06: public BaroDevice
       float qua2, qua3;
       float fPCompensate;
 
+      readMesurment();
+
       fTsc = _raw_temp / (float)kt;
       fPsc = _raw_pressure / (float)kp;
       qua2 = _cal.c10 + fPsc * (_cal.c20 + fPsc* _cal.c30);
@@ -210,8 +212,12 @@ class BaroSPL06: public BaroDevice
     {
       uint8_t buffer[6] = {0, 0, 0, 0, 0, 0};
       _bus->readFast(_addr, SPL06_PRESSURE_REG, 6, buffer);
+
       _raw_pressure = buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
+      _raw_pressure = (_raw_pressure & 0x800000) ? (0xFF000000 | _raw_pressure) : _raw_pressure;
+
       _raw_temp = buffer[5] | (buffer[4] << 8) | (buffer[3] << 16);
+      _raw_temp = (_raw_temp & 0x800000) ? (0xFF000000 | _raw_temp) : _raw_temp;
     }
 
     int8_t writeReg(uint8_t reg, uint8_t val)
