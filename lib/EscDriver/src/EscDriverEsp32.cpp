@@ -12,19 +12,13 @@ static const size_t DURATION_CLOCK = 25; // [ns] doubled value to increase preci
 #define TO_INTERVAL_US(v) (1 * 1000 * 1000 / (v)) // [us]
 
 #define RMT_RX_CHANNEL_ENCODING_START (SOC_RMT_CHANNELS_PER_GROUP - SOC_RMT_TX_CANDIDATES_PER_GROUP)
-#define RMT_TX_CHANNEL_ENCODING_END   (SOC_RMT_TX_CANDIDATES_PER_GROUP - 1)
-
-#define RMT_IS_RX_CHANNEL(channel) ((channel) >= RMT_RX_CHANNEL_ENCODING_START)
-#define RMT_IS_TX_CHANNEL(channel) ((channel) <= RMT_TX_CHANNEL_ENCODING_END)
 #define RMT_ENCODE_RX_CHANNEL(encode_chan) ((encode_chan + RMT_RX_CHANNEL_ENCODING_START))
+
+#define ESPFC_RMT_RX_BUFFER_SIZE 128
 
 // faster esc response, but unsafe (no task synchronisation)
 // set to 0 in case of issues
-#if defined(ESP32S3) || defined(ESP32S2)
 #define ESPFC_RMT_BYPASS_WRITE_SYNC 1
-#else
-#define ESPFC_RMT_BYPASS_WRITE_SYNC 1
-#endif
 
 #if ESPFC_RMT_BYPASS_WRITE_SYNC
 IRAM_ATTR static esp_err_t _rmt_fill_tx_items(rmt_channel_t channel, const rmt_item32_t* item, uint16_t item_num, uint16_t mem_offset)
@@ -51,9 +45,9 @@ IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
 #define _rmt_fill_tx_items rmt_fill_tx_items
 #endif
 
-static void IRAM_ATTR _rmt_zero_mem(rmt_channel_t channel, size_t len)
+static void IRAM_ATTR _rmt_rx_zero_mem(rmt_channel_t channel, size_t len)
 {
-  volatile rmt_item32_t *data = (rmt_item32_t *)RMTMEM.chan[channel].data32;
+  volatile rmt_item32_t *data = (rmt_item32_t *)RMTMEM.chan[RMT_ENCODE_RX_CHANNEL(channel)].data32;
   for (size_t idx = 0; idx < len; idx++)
   {
     data[idx].val = 0;
@@ -112,14 +106,14 @@ int EscDriverEsp32::attach(size_t channel, int pin, int pulse)
   return 1;
 }
 
-int EscDriverEsp32::write(size_t channel, int pulse)
+int IRAM_ATTR EscDriverEsp32::write(size_t channel, int pulse)
 {
   if (channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
   _channel[channel].pulse = pulse;
   return 1;
 }
 
-void EscDriverEsp32::apply()
+void IRAM_ATTR EscDriverEsp32::apply()
 {
   if (_protocol == ESC_PROTOCOL_DISABLED) return;
   if (_async) return;
@@ -132,7 +126,7 @@ int EscDriverEsp32::pin(size_t channel) const
   return _channel[channel].pin;
 }
 
-uint32_t EscDriverEsp32::telemetry(size_t channel) const
+uint32_t IRAM_ATTR EscDriverEsp32::telemetry(size_t channel) const
 {
   if (channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
   return _channel[channel].telemetryValue;
@@ -144,7 +138,6 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
 
   pinMode(pin, OUTPUT);
   digitalWrite(pin, _dshot_tlm ? HIGH : LOW);
-  if(_dshot_tlm) gpio_pullup_en((gpio_num_t)pin); // ?
 
   _channel[i].pin = pin;
   _channel[i].protocol = _protocol;
@@ -169,18 +162,32 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
 
   instances[i] = this;
 
-  // init as TX
-  rmt_config_t conf = RMT_DEFAULT_CONFIG_TX(pin, (rmt_channel_t)i);
-  conf.clk_div = _channel[i].divider;
-  conf.tx_config.idle_level = _dshot_tlm ? RMT_IDLE_LEVEL_HIGH : RMT_IDLE_LEVEL_LOW;
-  rmt_config(&conf);
+  rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(i);
+  bool splitted = i != rx_ch; // rx and tx are separated
 
-  // add RX specifics
-  int rx_ch = RMT_ENCODE_RX_CHANNEL(i);
-  rmt_ll_rx_set_idle_thres(&RMT, rx_ch, nsToTicks(30000)); // max bit len, (30us)
-  rmt_ll_rx_set_filter_thres(&RMT, rx_ch, 40); // min bit len, 80 ticks = 1us for div = 1, max value = 255
-  rmt_ll_rx_enable_filter(&RMT, rx_ch, true);
-  _rmt_zero_mem((rmt_channel_t)rx_ch, RMT_MEM_ITEM_NUM);
+  if(_digital && _dshot_tlm)
+  {
+    // setup RX
+    rmt_config_t rxconf = RMT_DEFAULT_CONFIG_RX(pin, rx_ch);
+    rxconf.clk_div = _channel[i].divider;
+    rxconf.rx_config.filter_en = true;
+    rxconf.rx_config.idle_threshold = nsToTicks(30000); // max bit len, (30us)
+    rxconf.rx_config.filter_ticks_thresh = 40; // min bit len, 80 ticks = 1us for div = 1, max value = 255
+    rmt_config(&rxconf);
+    gpio_pullup_en((gpio_num_t)pin); // needed ?
+
+    if(splitted)
+    {
+      rmt_driver_install((rmt_channel_t)rx_ch, ESPFC_RMT_RX_BUFFER_SIZE, ESP_INTR_FLAG_IRAM);
+    }
+  }
+
+  // setup TX
+  rmt_config_t txconf = RMT_DEFAULT_CONFIG_TX(pin, (rmt_channel_t)i);
+  txconf.clk_div = _channel[i].divider;
+  txconf.tx_config.idle_level = _dshot_tlm ? RMT_IDLE_LEVEL_HIGH : RMT_IDLE_LEVEL_LOW;
+  rmt_config(&txconf);
+  rmt_driver_install((rmt_channel_t)i, splitted ? 0 : ESPFC_RMT_RX_BUFFER_SIZE, ESP_INTR_FLAG_IRAM);
 
 #if 0 && SOC_RMT_SUPPORT_TX_SYNCHRO
   // sync all channels
@@ -192,9 +199,6 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
     rmt_ll_tx_reset_channels_clock_div(&RMT, _channel_mask);
   }
 #endif
-
-  // install driver
-  rmt_driver_install((rmt_channel_t)i, 256, ESP_INTR_FLAG_IRAM);
 
   // install tx_end callback if async pwm or bidir dshot
   if(_async || (_digital && _dshot_tlm))
@@ -213,35 +217,35 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   }
 }
 
-void EscDriverEsp32::modeTx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverEsp32::modeTx(rmt_channel_t channel)
 {
   disableRx(channel);
   enableTx(channel);
 }
 
-void EscDriverEsp32::modeRx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverEsp32::modeRx(rmt_channel_t channel)
 {
   disableTx(channel);
   enableRx(channel);
 }
 
-void EscDriverEsp32::enableTx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverEsp32::enableTx(rmt_channel_t channel)
 {
   gpio_num_t gpio_num = (gpio_num_t)_channel[(size_t)channel].pin;
 
   //gpio_set_direction(gpio_num, GPIO_MODE_OUTPUT);
   gpio_ll_input_disable(&GPIO, gpio_num);
   gpio_ll_output_enable(&GPIO, gpio_num);
-  esp_rom_gpio_connect_out_signal(gpio_num, rmt_periph_signals.groups[0].channels[channel].tx_sig, false, 0);
+  esp_rom_gpio_connect_out_signal(gpio_num, rmt_periph_signals.groups[0].channels[channel].tx_sig, false, false);
   rmt_ll_enable_tx_end_interrupt(&RMT, channel, true);
 }
 
-void EscDriverEsp32::disableTx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverEsp32::disableTx(rmt_channel_t channel)
 {
   rmt_ll_tx_stop(&RMT, channel);
 }
 
-void EscDriverEsp32::enableRx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverEsp32::enableRx(rmt_channel_t channel)
 {
   // NOTE: time critical function, execution must not exceed 5-6us
   rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(channel);
@@ -253,24 +257,24 @@ void EscDriverEsp32::enableRx(rmt_channel_t channel)
   esp_rom_gpio_connect_in_signal(gpio_num, rmt_periph_signals.groups[0].channels[rx_ch].rx_sig, false);
 
   //rmt_rx_start((rmt_channel_t)i, true);
-  rmt_ll_rx_set_mem_owner(&RMT, rx_ch, RMT_MEM_OWNER_RX);
-  rmt_ll_rx_reset_pointer(&RMT, rx_ch);
-  rmt_ll_clear_rx_end_interrupt(&RMT, rx_ch);
-  rmt_ll_enable_rx_end_interrupt(&RMT, rx_ch, true);
-  _rmt_zero_mem(rx_ch, 2); // clear first item of rx buffer to avoid reading tx items
-  rmt_ll_rx_enable(&RMT, rx_ch, true);
+  rmt_ll_rx_set_mem_owner(&RMT, channel, RMT_MEM_OWNER_RX);
+  rmt_ll_rx_reset_pointer(&RMT, channel);
+  rmt_ll_clear_rx_end_interrupt(&RMT, channel);
+  rmt_ll_enable_rx_end_interrupt(&RMT, channel, true);
+  _rmt_rx_zero_mem(channel, 2); // clear first item of rx buffer to avoid reading tx items
+  rmt_ll_rx_enable(&RMT, channel, true);
 }
 
-void EscDriverEsp32::disableRx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverEsp32::disableRx(rmt_channel_t channel)
 {
-  rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(channel);
+  //rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(channel);
 
   //rmt_rx_stop((rmt_channel_t)channel);
-  rmt_ll_enable_rx_end_interrupt(&RMT, rx_ch, false);
-  rmt_ll_rx_enable(&RMT, rx_ch, false);
+  rmt_ll_enable_rx_end_interrupt(&RMT, channel, false);
+  rmt_ll_rx_enable(&RMT, channel, false);
 }
 
-void EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void *arg)
+void IRAM_ATTR EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void *arg)
 {
   auto instance = instances[channel];
   if(!instance) return;
@@ -284,7 +288,7 @@ void EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void *arg)
   }
 }
 
-void EscDriverEsp32::transmitOne(uint8_t i)
+void IRAM_ATTR EscDriverEsp32::transmitOne(uint32_t i)
 {
   if (!_channel[i].attached()) return;
   if (_digital)
@@ -298,7 +302,7 @@ void EscDriverEsp32::transmitOne(uint8_t i)
   transmitCommand(i);
 }
 
-void EscDriverEsp32::transmitAll()
+void IRAM_ATTR EscDriverEsp32::transmitAll()
 {
   readTelemetry();
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
@@ -320,15 +324,17 @@ void EscDriverEsp32::transmitAll()
   }
 }
 
-void EscDriverEsp32::readTelemetry()
+void IRAM_ATTR EscDriverEsp32::readTelemetry()
 {
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
     if(!_digital || !_dshot_tlm) continue;
     if(!_channel[i].attached()) continue;
 
+    rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(i);
+
     RingbufHandle_t rb = NULL;
-    if(ESP_OK != rmt_get_ringbuf_handle((rmt_channel_t)i, &rb)) continue;
+    if(ESP_OK != rmt_get_ringbuf_handle((rmt_channel_t)rx_ch, &rb)) continue;
 
     size_t rmt_len = 0;
     rmt_item32_t* data = (rmt_item32_t*)xRingbufferReceive(rb, &rmt_len, 0);
@@ -343,7 +349,7 @@ void EscDriverEsp32::readTelemetry()
   }
 }
 
-void EscDriverEsp32::writeAnalogCommand(uint8_t channel, int32_t pulse)
+void IRAM_ATTR EscDriverEsp32::writeAnalogCommand(uint32_t channel, int32_t pulse)
 {
   Slot &slot = _channel[channel];
   int minPulse = 800;
@@ -374,7 +380,7 @@ void EscDriverEsp32::writeAnalogCommand(uint8_t channel, int32_t pulse)
   _rmt_fill_tx_items((rmt_channel_t)channel, _channel[channel].items, count, 0);
 }
 
-void EscDriverEsp32::writeDshotCommand(uint8_t channel, int32_t pulse)
+void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse)
 {
   if(_digital && _dshot_tlm)
   {
@@ -383,7 +389,7 @@ void EscDriverEsp32::writeDshotCommand(uint8_t channel, int32_t pulse)
 
   pulse = constrain(pulse, 0, 2000);
   // scale to dshot commands (0 or 48-2047)
-  int value = pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;
+  int value = dshotConvert(pulse);
   uint16_t frame = dshotEncode(value, _dshot_tlm);
 
   Slot& slot = _channel[channel];
@@ -397,7 +403,7 @@ void EscDriverEsp32::writeDshotCommand(uint8_t channel, int32_t pulse)
   _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
 }
 
-void EscDriverEsp32::transmitCommand(uint8_t channel)
+void IRAM_ATTR EscDriverEsp32::transmitCommand(uint32_t channel)
 {
   _rmt_tx_start((rmt_channel_t)channel, true);
 }

@@ -429,12 +429,8 @@ void EscDriverEsp8266::dshotWrite()
     if(_slots[c].pin > 15 || _slots[c].pin < 0) continue;
     mask_t mask = (1U << _slots[c].pin);
     int pulse = constrain(_slots[c].pulse, 0, 2000);
-    int value = 0; // disarmed
     // scale to dshot commands (0 or 48-2047)
-    if(pulse > 1000)
-    {
-      value =  PWM_TO_DSHOT(pulse);
-    }
+    int value = dshotConvert(pulse);
     uint16_t frame = dshotEncode(value);
     for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
     {
