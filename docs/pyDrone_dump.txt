@@ -1,0 +1,280 @@
+# dump
+set features 536870920
+set debug_mode USB
+set debug_axis 1
+set gyro_bus AUTO
+set gyro_dev AUTO
+set gyro_dlpf 256Hz
+set gyro_align DEFAULT
+set gyro_lpf_type PT1
+set gyro_lpf_freq 100
+set gyro_lpf2_type PT1
+set gyro_lpf2_freq 213
+set gyro_lpf3_type FO
+set gyro_lpf3_freq 150
+set gyro_notch1_freq 0
+set gyro_notch1_cutoff 0
+set gyro_notch2_freq 0
+set gyro_notch2_cutoff 0
+set gyro_dyn_lpf_min 170
+set gyro_dyn_lpf_max 425
+set gyro_dyn_notch_q 300
+set gyro_dyn_notch_count 4
+set gyro_dyn_notch_min 80
+set gyro_dyn_notch_max 400
+set gyro_rpm_harmonics 3
+set gyro_rpm_q 500
+set gyro_rpm_min_freq 100
+set gyro_rpm_fade 30
+set gyro_rpm_weight_1 100
+set gyro_rpm_weight_2 100
+set gyro_rpm_weight_3 100
+set gyro_rpm_tlm_lpf_freq 150
+set gyro_offset_x -39
+set gyro_offset_y -17
+set gyro_offset_z -28
+set accel_bus AUTO
+set accel_dev AUTO
+set accel_lpf_type BIQUAD
+set accel_lpf_freq 15
+set accel_offset_x 261
+set accel_offset_y -44
+set accel_offset_z -1736
+set mag_bus AUTO
+set mag_dev AUTO
+set mag_align DEFAULT
+set mag_filter_type BIQUAD
+set mag_filter_lpf 10
+set mag_offset_x 0
+set mag_offset_y 0
+set mag_offset_z 0
+set mag_scale_x 1000
+set mag_scale_y 1000
+set mag_scale_z 1000
+set baro_bus AUTO
+set baro_dev AUTO
+set baro_lpf_type BIQUAD
+set baro_lpf_freq 10
+set vbat_source NONE
+set vbat_scale 100
+set vbat_mul 1
+set vbat_div 10
+set vbat_cell_warn 350
+set ibat_source NONE
+set ibat_scale 100
+set ibat_offset 0
+set fusion_mode MAHONY
+set fusion_gain_p 50
+set fusion_gain_i 5
+set input_rate_type ACTUAL
+set input_roll_rate 20
+set input_roll_srate 40
+set input_roll_expo 0
+set input_roll_limit 1998
+set input_pitch_rate 20
+set input_pitch_srate 40
+set input_pitch_expo 0
+set input_pitch_limit 1998
+set input_yaw_rate 30
+set input_yaw_srate 36
+set input_yaw_expo 0
+set input_yaw_limit 1998
+set input_deadband 3
+set input_min 885
+set input_mid 1500
+set input_max 2115
+set input_interpolation AUTO
+set input_interpolation_interval 26
+set input_filter_type FILTER
+set input_lpf_type PT3
+set input_lpf_freq 0
+set input_lpf_factor 50
+set input_ff_lpf_type PT3
+set input_ff_lpf_freq 0
+set input_rssi_channel 0
+set input_0 0 1000 1500 2000 A 1500
+set input_1 1 1000 1500 2000 A 1500
+set input_2 3 1000 1500 2000 A 1500
+set input_3 2 1000 1500 2000 A 1000
+set input_4 4 1000 1500 2000 H 1500
+set input_5 5 1000 1500 2000 H 1500
+set input_6 6 1000 1500 2000 H 1500
+set input_7 7 1000 1500 2000 H 1500
+set input_8 8 1000 1500 2000 H 1500
+set input_9 9 1000 1500 2000 H 1500
+set input_10 10 1000 1500 2000 H 1500
+set input_11 11 1000 1500 2000 H 1500
+set input_12 12 1000 1500 2000 H 1500
+set input_13 13 1000 1500 2000 H 1500
+set input_14 14 1000 1500 2000 H 1500
+set input_15 15 1000 1500 2000 H 1500
+set failsafe_delay 4
+set failsafe_kill_switch 0
+set serial_0 1 115200 0
+set serial_soft_0 1 115200 0
+set scaler_0 0 0 20 400
+set scaler_1 0 0 20 400
+set scaler_2 0 0 20 200
+set mode_0 0 4 900 900 70 71
+set mode_1 0 4 900 900 98 248
+set mode_2 0 4 900 900 31 212
+set mode_3 0 4 900 900 185 233
+set mode_4 0 4 900 900 70 62
+set mode_5 0 4 900 900 218 199
+set mode_6 0 4 900 900 169 103
+set mode_7 0 4 900 900 113 64
+set pid_sync 1
+set pid_roll_p 42
+set pid_roll_i 85
+set pid_roll_d 24
+set pid_roll_f 72
+set pid_pitch_p 46
+set pid_pitch_i 90
+set pid_pitch_d 26
+set pid_pitch_f 76
+set pid_yaw_p 45
+set pid_yaw_i 90
+set pid_yaw_d 0
+set pid_yaw_f 72
+set pid_level_p 55
+set pid_level_i 0
+set pid_level_d 0
+set pid_level_angle_limit 55
+set pid_level_rate_limit 300
+set pid_level_lpf_type PT1
+set pid_level_lpf_freq 90
+set pid_yaw_lpf_type PT1
+set pid_yaw_lpf_freq 90
+set pid_dterm_lpf_type PT1
+set pid_dterm_lpf_freq 128
+set pid_dterm_lpf2_type PT1
+set pid_dterm_lpf2_freq 128
+set pid_dterm_notch_freq 0
+set pid_dterm_notch_cutoff 0
+set pid_dterm_dyn_lpf_min 60
+set pid_dterm_dyn_lpf_max 145
+set pid_dterm_weight 30
+set pid_iterm_limit 30
+set pid_iterm_zero 1
+set pid_iterm_relax RP
+set pid_iterm_relax_cutoff 15
+set pid_tpa_scale 10
+set pid_tpa_breakpoint 1650
+set mixer_sync 1
+set mixer_type QUADX
+set mixer_yaw_reverse 1
+set mixer_throttle_limit_type NONE
+set mixer_throttle_limit_percent 100
+set mixer_output_limit 100
+set output_motor_protocol BRUSHED
+set output_motor_async 1
+set output_motor_rate 480
+set output_motor_poles 14
+set output_servo_rate 0
+set output_min_command 1000
+set output_min_throttle 1070
+set output_max_throttle 2000
+set output_dshot_idle 550
+set output_dshot_telemetry 0
+set output_0 M N 1000 1500 2000
+set output_1 M N 1000 1500 2000
+set output_2 M N 1000 1500 2000
+set output_3 M N 1000 1500 2000
+set pin_input_rx -1
+set pin_output_0 5
+set pin_output_1 4
+set pin_output_2 40
+set pin_output_3 41
+set pin_buzzer -1
+set pin_serial_0_tx 43
+set pin_serial_0_rx 44
+set pin_serial_1_tx -1
+set pin_serial_1_rx -1
+set pin_serial_2_tx -1
+set pin_serial_2_rx -1
+set pin_i2c_scl 15
+set pin_i2c_sda 16
+set pin_input_adc_0 2
+set pin_input_adc_1 -1
+set pin_spi_0_sck -1
+set pin_spi_0_mosi -1
+set pin_spi_0_miso -1
+set pin_spi_cs_0 -1
+set pin_spi_cs_1 -1
+set pin_spi_cs_2 -1
+set pin_buzzer_invert 1
+set i2c_speed 800
+set rescue_config_delay 30
+set telemetry_interval 1000
+set blackbox_dev 1
+set blackbox_mode NORMAL
+set blackbox_rate 32
+set blackbox_mask 0
+set wifi_ssid
+set wifi_pass
+set wifi_tcp_port 1111
+set mix_outputs 52
+set mix_0 0 0 0
+set mix_1 0 0 0
+set mix_2 0 0 0
+set mix_3 0 0 0
+set mix_4 0 0 0
+set mix_5 0 0 0
+set mix_6 0 0 0
+set mix_7 0 0 0
+set mix_8 0 0 0
+set mix_9 0 0 0
+set mix_10 0 0 0
+set mix_11 0 0 0
+set mix_12 0 0 0
+set mix_13 0 0 0
+set mix_14 0 0 0
+set mix_15 0 0 0
+set mix_16 0 0 0
+set mix_17 0 0 0
+set mix_18 0 0 0
+set mix_19 0 0 0
+set mix_20 0 0 0
+set mix_21 0 0 0
+set mix_22 0 0 0
+set mix_23 0 0 0
+set mix_24 0 0 0
+set mix_25 0 0 0
+set mix_26 0 0 0
+set mix_27 0 0 0
+set mix_28 0 0 0
+set mix_29 0 0 0
+set mix_30 0 0 0
+set mix_31 0 0 0
+set mix_32 0 0 0
+set mix_33 0 0 0
+set mix_34 0 0 0
+set mix_35 0 0 0
+set mix_36 0 0 0
+set mix_37 0 0 0
+set mix_38 0 0 0
+set mix_39 0 0 0
+set mix_40 0 0 0
+set mix_41 0 0 0
+set mix_42 0 0 0
+set mix_43 0 0 0
+set mix_44 0 0 0
+set mix_45 0 0 0
+set mix_46 0 0 0
+set mix_47 0 0 0
+set mix_48 0 0 0
+set mix_49 0 0 0
+set mix_50 0 0 0
+set mix_51 0 0 0
+set mix_52 0 0 0
+set mix_53 0 0 0
+set mix_54 0 0 0
+set mix_55 0 0 0
+set mix_56 0 0 0
+set mix_57 0 0 0
+set mix_58 0 0 0
+set mix_59 0 0 0
+set mix_60 0 0 0
+set mix_61 0 0 0
+set mix_62 0 0 0
+set mix_63 0 0 0

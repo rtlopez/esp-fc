@@ -24,10 +24,13 @@
 #include "Device/GyroICM20602.h"
 #include "Device/GyroBMI160.h"
 #include "Device/MagHMC5338L.h"
+#include "Device/MagQMC5338L.h"
 #include "Device/MagAK8963.h"
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
 #include "Device/BaroBMP280.h"
+#include "Device/BaroSPL06.h"
+
 
 namespace {
 #if defined(ESPFC_SPI_0)
@@ -49,9 +52,11 @@ namespace {
   static Espfc::Device::GyroICM20602 icm20602;
   static Espfc::Device::GyroBMI160 bmi160;
   static Espfc::Device::MagHMC5338L hmc5883l;
+  static Espfc::Device::MagQMC5338L qmc5883l;
   static Espfc::Device::MagAK8963 ak8963;
   static Espfc::Device::BaroBMP085 bmp085;
   static Espfc::Device::BaroBMP280 bmp280;
+  static Espfc::Device::BaroSPL06 spl06;
 }
 
 namespace Espfc {
@@ -138,12 +143,15 @@ class Hardware
       {
         if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
         if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
+        if(!detectedMag && detectDevice(qmc5883l, i2cBus)) detectedMag = &qmc5883l;
       }
 #endif
       if(gyroSlaveBus.getBus())
       {
         if(!detectedMag && detectDevice(ak8963, gyroSlaveBus)) detectedMag = &ak8963;
         if(!detectedMag && detectDevice(hmc5883l, gyroSlaveBus)) detectedMag = &hmc5883l;
+        if(!detectedMag && detectDevice(qmc5883l, gyroSlaveBus)) detectedMag = &qmc5883l;
+        
       }
       _model.state.magDev = detectedMag;
       _model.state.magPresent = (bool)detectedMag;
@@ -162,6 +170,7 @@ class Hardware
         pinMode(_model.config.pin[PIN_SPI_CS1], OUTPUT);
         if(!detectedBaro && detectDevice(bmp280, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp280;
         if(!detectedBaro && detectDevice(bmp085, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
+        if(!detectedBaro && detectDevice(spl06, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &spl06;
       }
 #endif
 #if defined(ESPFC_I2C_0)
@@ -169,8 +178,16 @@ class Hardware
       {
         if(!detectedBaro && detectDevice(bmp280, i2cBus)) detectedBaro = &bmp280;
         if(!detectedBaro && detectDevice(bmp085, i2cBus)) detectedBaro = &bmp085;
+        if(!detectedBaro && detectDevice(spl06, i2cBus)) detectedBaro = &spl06;
       }
 #endif
+      if(gyroSlaveBus.getBus())
+      {
+        if(!detectedBaro && detectDevice(bmp280, gyroSlaveBus)) detectedBaro = &bmp280;
+        if(!detectedBaro && detectDevice(bmp085, gyroSlaveBus)) detectedBaro = &bmp085;
+        if(!detectedBaro && detectDevice(spl06, gyroSlaveBus)) detectedBaro = &spl06;
+      }
+
       _model.state.baroDev = detectedBaro;
       _model.state.baroPresent = (bool)detectedBaro;
     }
