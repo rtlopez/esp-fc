@@ -12,6 +12,7 @@ enum MagDeviceType {
   MAG_HMC5883 = 2,
   MAG_AK8975  = 3,
   MAG_AK8963  = 4,
+  MAG_QMC5883 = 5,
   MAG_MAX
 };
 
@@ -35,7 +36,7 @@ class MagDevice: public BusAwareDevice
 
     static const char ** getNames()
     {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883L"), PSTR("AK8975"), PSTR("AK8963"), NULL };
+      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883L"), PSTR("AK8975"), PSTR("AK8963"), PSTR("QMC5883L"),NULL };
       return devChoices;
     }
 

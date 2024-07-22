@@ -1400,13 +1400,30 @@ class Cli
           {
             addr = String(cmd.args[2]).toInt();
           }
-          uint8_t data[16];
-          flashfsReadAbs(addr, data, sizeof(data));
-          for(size_t i = 0; i < sizeof(data); i++)
+          size_t size = 0;
+          if(cmd.args[3])
           {
-            s.printf("%02x ", data[i]);
+            size = String(cmd.args[3]).toInt();
+          }
+          size = Math::clamp(size, 8u, 128 * 1024u);
+          size_t chunk_size = 256;
+
+          uint8_t* data = new uint8_t[chunk_size];
+          while(size)
+          {
+            size_t len = std::min(size, chunk_size);
+            flashfsReadAbs(addr, data, len);
+            s.write(data, len);
+
+            if(size > chunk_size)
+            {
+              size -= chunk_size;
+              addr += chunk_size;
+            }
+            else break;
           }
           s.println();
+          delete[] data;
         }
         else
         {

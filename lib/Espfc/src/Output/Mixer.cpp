@@ -20,7 +20,7 @@ int Mixer::begin()
   };
   escMotor.begin(motorConf);
   _model.state.escMotor = _motor = &escMotor;
-  _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).logln(ESC_DRIVER_MOTOR_TIMER);
+  _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).log(_model.config.output.dshotTelemetry).logln(ESC_DRIVER_MOTOR_TIMER);
 
   if(_model.config.output.servoRate)
   {

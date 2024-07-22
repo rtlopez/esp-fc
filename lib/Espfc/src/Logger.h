@@ -22,6 +22,7 @@ class Logger
     {
       LOG_SERIAL_DEBUG("I")
       append('I');
+      log(String{(float)millis() * 0.001f, 2});
       return *this;
     }
 
@@ -29,6 +30,7 @@ class Logger
     {
       LOG_SERIAL_DEBUG("E")
       append('E');
+      log(String{(float)millis() * 0.001f, 2});
       return *this;
     }
 

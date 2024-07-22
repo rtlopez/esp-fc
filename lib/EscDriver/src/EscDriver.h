@@ -42,12 +42,12 @@ class EscDriverBase
     uint32_t telemetry(size_t channel) const { return 0; }
 #endif
 
-    static inline uint16_t dshotConvert(uint16_t pulse)
+    static uint16_t IRAM_ATTR dshotConvert(uint16_t pulse)
     {
       return pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;
     }
 
-    static inline uint16_t dshotEncode(uint16_t value, bool inverted = false)
+    static uint16_t IRAM_ATTR dshotEncode(uint16_t value, bool inverted = false)
     {
       value <<= 1;
 
@@ -68,12 +68,12 @@ class EscDriverBase
       return (value << 4) | csum;
     }
     
-    static inline uint32_t durationToBitLen(uint32_t duration, uint32_t len)
+    static uint32_t IRAM_ATTR durationToBitLen(uint32_t duration, uint32_t len)
     {
       return (duration + (len >> 1)) / len;
     }
 
-    static inline uint32_t pushBits(uint32_t value, uint32_t bitVal, size_t bitLen)
+    static uint32_t IRAM_ATTR pushBits(uint32_t value, uint32_t bitVal, size_t bitLen)
     {
       while(bitLen--)
       {
@@ -89,7 +89,7 @@ class EscDriverBase
      * @param bitLen duration of single bit
      * @return uint32_t raw gcr value
      */
-    static inline uint32_t extractTelemetryGcr(uint32_t* data, size_t len, uint32_t bitLen)
+    static uint32_t IRAM_ATTR extractTelemetryGcr(uint32_t* data, size_t len, uint32_t bitLen)
     {
       int bitCount = 0;
       uint32_t value = 0;
@@ -129,12 +129,12 @@ class EscDriverBase
     static constexpr int SECONDS_PER_MINUTE = 60;
     static constexpr float ERPM_PER_LSB = 100.0f;
 
-    static inline float getErpmToHzRatio(int poles)
+    static float IRAM_ATTR getErpmToHzRatio(int poles)
     {
       return ERPM_PER_LSB / SECONDS_PER_MINUTE / (poles / 2.0f);
     }
 
-    static inline uint32_t convertToErpm(uint32_t value)
+    static uint32_t IRAM_ATTR convertToErpm(uint32_t value)
     {
       if(!value) return 0;
 
@@ -147,7 +147,7 @@ class EscDriverBase
       return (1000000 * 60 / 100 + value / 2) / value;
     }
 
-    static inline uint32_t convertToValue(uint32_t value)
+    static uint32_t IRAM_ATTR convertToValue(uint32_t value)
     {
       // eRPM range
       if(value == 0x0fff)
@@ -159,7 +159,7 @@ class EscDriverBase
       return (value & 0x01ff) << ((value & 0xfe00) >> 9);
     }
 
-    static uint32_t gcrToRawValue(uint32_t value)
+    static uint32_t IRAM_ATTR gcrToRawValue(uint32_t value)
     {
       value = value ^ (value >> 1); // extract gcr
 

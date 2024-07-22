@@ -6,6 +6,9 @@
 #include "Hardware.h"
 #include "Msp/MspParser.h"
 #include "platform.h"
+#if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
+#include <driver/timer.h>
+#endif
 
 extern "C" {
   #include "io/serial_4way.h"
@@ -1489,6 +1492,9 @@ class MspProcessor
 
     void processEsc4way()
     {
+#if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
+      timer_pause(TIMER_GROUP_0, TIMER_0);
+#endif
       esc4wayProcess(getSerialPort());
       processRestart();
     }

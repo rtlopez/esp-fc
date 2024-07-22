@@ -12,6 +12,7 @@ enum BaroDeviceType {
   BARO_BMP085  = 2,
   BARO_MS5611  = 3,
   BARO_BMP280  = 4,
+  BARO_SPL06   = 5,
   BARO_MAX
 };
 
@@ -41,7 +42,7 @@ class BaroDevice: public BusAwareDevice
 
     static const char ** getNames()
     {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("BMP085"), PSTR("MS5611"), PSTR("BMP280"), NULL };
+      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("BMP085"), PSTR("MS5611"), PSTR("BMP280"), PSTR("SPL06-001"), NULL };
       return devChoices;
     }
 

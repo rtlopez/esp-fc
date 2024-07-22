@@ -212,14 +212,10 @@ void EscDriverEsp8266::handle(void * p, void * x)
     uint32_t ticks = instance->_it->ticks;
     if(instance->_it->clr_mask)
     {
-      //if(it->clr_mask & 0xffff)   GPOC = (it->clr_mask & 0xffff);
-      //if(it->clr_mask & 0x10000) GP16O = 0;
       GPOC = instance->_it->clr_mask;
     }
     if(instance->_it->set_mask)
     {
-      //if(it->set_mask & 0xffff)   GPOS = (it->set_mask & 0xffff);
-      //if(it->set_mask & 0x10000) GP16O = 1;
       GPOS = instance->_it->set_mask;
     }
 
@@ -371,24 +367,24 @@ int EscDriverEsp8266::begin(const EscConfig& conf)
     // pulse delays experimentally selected
     case ESC_PROTOCOL_DSHOT150:
       {
-        //const float base = 175;
-        _dh = 61;//lrintf(base * 0.36f);
-        _dl = 44;//lrintf(base * 0.28f);
+        _dh = 60;
+        _dm = 61;
+        _dl = 44;
       }
       break;
     case ESC_PROTOCOL_DSHOT300:
       {
-        //const float base = 85;
-        _dh = 30;//lrintf(base * 0.36f);
-        _dl = 22;//lrintf(base * 0.28f);
+        _dh = 30;
+        _dm = 29;
+        _dl = 21;
       }
       break;
     case ESC_PROTOCOL_DSHOT600:
     case ESC_PROTOCOL_PROSHOT:
       {
-        //const float base = 35;
-        _dh = 14;//lrintf(base * 0.36f);
-        _dl = 10;//lrintf(base * 0.28f);
+        _dh = 14;
+        _dm = 14;
+        _dl = 10;
       }
       break;
     case ESC_PROTOCOL_DISABLED:
@@ -414,7 +410,7 @@ void EscDriverEsp8266::end()
   }
 }
 
-static inline void dshotDelay(int delay)
+static IRAM_ATTR void dshotDelay(int delay)
 {
   while(delay--) __asm__ __volatile__ ("nop");
 }
@@ -422,44 +418,38 @@ static inline void dshotDelay(int delay)
 void EscDriverEsp8266::dshotWrite()
 {
   // zero mask arrays
-  mask_t * sm = dshotSetMask;
-  mask_t * cm = dshotClrMask;
-  for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
-  {
-    *sm = 0; sm++;
-    *cm = 0; cm++;
-    *cm = 0; cm++;
-  }
+  mask_t smask[DSHOT_BIT_COUNT];
+  mask_t cmask[DSHOT_BIT_COUNT];
+  std::fill_n(smask, DSHOT_BIT_COUNT, 0);
+  std::fill_n(cmask, DSHOT_BIT_COUNT, 0);
 
   // compute bits
   for(size_t c = 0; c < ESC_CHANNEL_COUNT; c++)
   {
-    if(_slots[c].pin > 16 || _slots[c].pin < 0) continue;
+    if(_slots[c].pin > 15 || _slots[c].pin < 0) continue;
     mask_t mask = (1U << _slots[c].pin);
     int pulse = constrain(_slots[c].pulse, 0, 2000);
-    int value = 0; // disarmed
     // scale to dshot commands (0 or 48-2047)
-    if(pulse > 1000)
-    {
-      value =  PWM_TO_DSHOT(pulse);
-    }
+    int value = dshotConvert(pulse);
     uint16_t frame = dshotEncode(value);
     for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
     {
       int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
-      dshotSetMask[i] |= mask;
-      dshotClrMask[(i << 1) + val] |= mask;
+      smask[i] |= mask;
+      cmask[i] |= val ? 0 : mask;
     }
   }
 
   // write output
-  sm = dshotSetMask;
-  cm = dshotClrMask;
+  mask_t * sm = smask;
+  mask_t * cm = cmask;
   for(size_t i = 0; i < DSHOT_BIT_COUNT; i++)
   {
-    GPOS = *sm; sm++; dshotDelay(_dh);
-    GPOC = *cm; cm++; dshotDelay(_dh);
-    GPOC = *cm; cm++; dshotDelay(_dl);
+    GPOS = *sm; dshotDelay(_dh);
+    GPOC = *cm; dshotDelay(_dm);
+    GPOC = *sm; dshotDelay(_dl);
+    sm++;
+    cm++;
   }
 }
 
