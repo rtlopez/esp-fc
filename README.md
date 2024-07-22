@@ -1,5 +1,5 @@
 # ESP-FC Flight Controller
-The mini, DIY, ~$5 cost, ESP8266/ESP32 based, high performance flight controller.
+The mini, DIY, Low cost, ESP32 based, high performance flight controller for hobbyists.
 
 ## Features
 * Espressif targets (ESP32, ESP8266, ESP32-S3, ESP32-S2, ESP32-C3)
@@ -29,7 +29,7 @@ Hardware:
 * Buzzer and some electronic components (optional).
 
 Software:
-* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.10 or v10.9 or v10.8)
+* [Betaflight Configurator](https://github.com/betaflight/betaflight-configurator/releases) (v10.8 to v10.10)
 * [CH340 usb-serial converter driver](https://sparks.gogo.co.nz/ch340.html)
 
 ## Flashing
@@ -65,24 +65,32 @@ Here are more details about [how to setup](/docs/setup.md).
  - **ESP32** - recommended
  - **ESP32-S2** - experimantal
  - **ESP32-S3** - experimantal
- - **ESP32-C3** - experimantal
- - **RP2040** - experimantal
+ - **ESP32-C3** - experimantal, lack of performance, no FPU
+ - **RP2040** - experimantal, lack of performance, no FPU
  - **ESP8266** - deprecated, may stop being developed
 
-## Supported protocols
+## Supported Interfaces
 
-| Protocol        | ESP8266 | ESP32 | RP2040 |
+| Interface       | ESP8266 | ESP32 | RP2040 |
 |----------------:|--------:|------:|-------:|
 | UART            | Yes     |   Yes |    Yes |
 | I2C             | Yes     |   Yes |    Yes |
 | SPI             | -       |   Yes |    Yes |
-| MSP             | Yes     |   Yes |    Yes |
-| CLI             | Yes     |   Yes |    Yes |
-| PPM (IN)        | Yes     |   Yes |    Yes |
+
+## Supported Receiver Protocols
+
+| Protocol        | ESP8266 | ESP32 | RP2040 |
+|----------------:|--------:|------:|-------:|
+| PPM             | Yes     |   Yes |    Yes |
 | SBUS            | Yes     |   Yes |    Yes |
 | CRSF (ELRS)     | Yes     |   Yes |    Yes |
-| BLACKBOX        | Yes     |   Yes |    Yes |
-| PWM (OUT)       | Yes     |   Yes |    Yes |
+
+## Supported Motor Protocols
+
+| Protocol        | ESP8266 | ESP32 | RP2040 |
+|----------------:|--------:|------:|-------:|
+| PWM             | Yes     |   Yes |    Yes |
+| BRUSHED         | Yes     |   Yes |    Yes |
 | ONESHOT125      | Yes     |   Yes |    Yes |
 | ONESHOT42       | -       |   Yes |    Yes |
 | MULTISHOT       | -       |   Yes |    Yes |
@@ -90,27 +98,41 @@ Here are more details about [how to setup](/docs/setup.md).
 | DSHOT300        | Yes     |   Yes |    Yes |
 | DSHOT600        | -       |   Yes |    Yes |
 
-## Supported devices
+# Other Protocols
 
-| Device          | ESP8266 | ESP32 | RP2040 |
+| Protocol        | ESP8266 | ESP32 | RP2040 |
 |----------------:|--------:|------:|-------:|
-| MPU6050/I2C     | Yes     |   Yes |    Yes |
-| MPU6000/SPI     | -       |     ? |      ? |
-| MPU6500/I2C     | ?       |   Yes |      ? |
-| MPU6500/SPI     | -       |   Yes |    Yes |
-| MPU9250/I2C     | Yes     |   Yes |    Yes |
-| MPU9250/SPI     | -       |   Yes |    Yes |
-| BMP280/I2C      | Yes     |   Yes |    Yes |
-| BMP280/SPI      | -       |   Yes |    Yes |
-| HMC5883/I2C     | Yes     |   Yes |    Yes |
-| HMC5883/SPI     | -       |     ? |      ? |
-| AK8963/I2C      | -       |   Yes |    Yes |
-| ICM20602/I2C    | ?       |     ? |      ? |
-| ICM20602/SPI    | -       |   Yes |    Yes |
-| BMI160/I2C      | ?       |   Yes |      ? |
-| BMI160/SPI      | -       |   Yes |    Yes |
+| MSP             | Yes     |   Yes |    Yes |
+| CLI             | Yes     |   Yes |    Yes |
+| BLACKBOX        | Yes     |   Yes |    Yes |
+| ESPNOW          | Yes     |   Yes |      - |
 
-? - not tested, but should work
+## Supported Gyro devices
+
+| Device      | ESP8266 | ESP32 | RP2040 |
+|------------:|--------:|------:|-------:|
+| MPU6050     | Yes     |   Yes |    Yes |
+| MPU6000     | -       |   Yes |    Yes |
+| MPU6500     | Yes     |   Yes |    Yes |
+| MPU9250     | Yes     |   Yes |    Yes |
+| ICM20602    | Yes     |   Yes |    Yes |
+| BMI160      | Yes     |   Yes |    Yes |
+
+## Supported Baro devices
+
+| Device      | ESP8266 | ESP32 | RP2040 |
+|------------:|--------:|------:|-------:|
+| BMP180      | Yes     |   Yes |    Yes |
+| BMP280      | Yes     |   Yes |    Yes |
+| SPL06       | Yes     |   Yes |    Yes |
+
+## Supported Gyro devices
+
+| Device      | ESP8266 | ESP32 | RP2040 |
+|------------:|--------:|------:|-------:|
+| HMC5883     | Yes     |   Yes |    Yes |
+| QMC5883     | Yes     |   Yes |    Yes |
+| AK8963      | Yes     |   Yes |    Yes |
 
 ## Issues
 You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues)
@@ -122,7 +144,6 @@ You can also join to our [Discord Channel](https://discord.gg/jhyPPM5UEH)
 * Git
 
 ## Todo
-* Update documentation
 * Balancing robot
 * Serial Rx (IBUS)
 * ELRS telemetry
