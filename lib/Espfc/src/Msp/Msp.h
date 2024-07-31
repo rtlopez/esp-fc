@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "Hal/Pgm.h"
+#include "Math/Crc.h"
 
 extern "C" {
 #include "msp/msp_protocol.h"
@@ -70,6 +71,21 @@ class MspMessage
     uint8_t checksum;
     uint8_t checksum2;
     uint8_t buffer[MSP_BUF_SIZE];
+
+    bool isReady() const
+    {
+      return state == MSP_STATE_RECEIVED;
+    }
+
+    bool isCmd() const
+    {
+      return dir == MSP_TYPE_CMD;
+    }
+
+    bool isIdle() const
+    {
+      return state == MSP_STATE_IDLE;
+    }
 
     int remain() const
     {
@@ -164,6 +180,69 @@ class MspResponse
       writeU8(v >> 8);
       writeU8(v >> 16);
       writeU8(v >> 24);
+    }
+
+    size_t serialize(uint8_t * buff, size_t len_max) const
+    {
+      switch(version)
+      {
+        case MSP_V1:
+          return serializeV1(buff, len_max);
+          break;
+        case MSP_V2:
+          return serializeV2(buff, len_max);
+          break;
+      }
+      return 0;
+    }
+
+    size_t serializeV1(uint8_t * buff, size_t len_max) const
+    {
+      // not enough space in target buffer
+      if(len + 5 > len_max) return 0;
+
+      buff[0] = '$';
+      buff[1] = 'M';
+      buff[2] = result == -1 ? '!' : '>';
+      buff[3] = len;
+      buff[4] = cmd;
+
+      uint8_t checksum = Math::crc8_xor(0, &buff[3], 2);
+      size_t i = 5;
+      for(size_t j = 0; j < len; j++)
+      {
+        checksum = Math::crc8_xor(checksum, data[j]);
+        buff[i++] = data[j];
+      }
+      buff[i] = checksum;
+
+      return i + 1;
+    }
+
+    size_t serializeV2(uint8_t * buff, size_t len_max) const
+    {
+      // not enough space in target buffer
+      if(len + 8 > len_max) return 0;
+
+      buff[0] = '$';
+      buff[1] = 'X';
+      buff[2] = result == -1 ? '!' : '>';
+      buff[3] = 0;
+      buff[4] = cmd & 0xff;
+      buff[5] = (cmd >> 8) & 0xff;
+      buff[6] = len & 0xff;
+      buff[7] = (len >> 8) & 0xff;
+
+      uint8_t checksum = Math::crc8_dvb_s2(0, &buff[3], 5);
+      size_t i = 8;
+      for(size_t j = 0; j < len; j++)
+      {
+        checksum = Math::crc8_dvb_s2(checksum, data[j]);
+        buff[i++] = data[j];
+      }
+      buff[i] = checksum;
+
+      return i + 1;
     }
 };
 

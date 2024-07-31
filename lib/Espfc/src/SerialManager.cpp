@@ -20,11 +20,11 @@
 
 namespace Espfc {
 
-SerialManager::SerialManager(Model& model): _model(model), _msp(model), _cli(model),
+SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _msp(model), _cli(model),
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 _wireless(model),
 #endif
-_telemetry(model), _current(0) {}
+_telemetry(telemetry), _current(0) {}
 
 int SerialManager::begin()
 {
@@ -138,45 +138,52 @@ int SerialManager::begin()
 
 int FAST_CODE_ATTR SerialManager::update()
 {
-  Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
-
-  //D("serial", _current);
   SerialPortState& ss = _model.state.serial[_current];
   const SerialPortConfig& sc = _model.config.serial[_current];
   Device::SerialDevice * stream = ss.stream;
 
   bool serialRx = sc.functionMask & SERIAL_FUNCTION_RX_SERIAL;
-  if(stream && !serialRx)
+  if(stream)
   {
-    size_t len = stream->available();
-    if(len > 0)
+    if(!serialRx)
     {
-      uint8_t buff[64] = {0};
-      len = std::min(len, (size_t)sizeof(buff));
-      stream->readMany(buff, len);
-      char * c = (char*)&buff[0];
-      while(len--)
+      Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
+      size_t len = stream->available();
+      if(len > 0)
       {
-        if(sc.functionMask & SERIAL_FUNCTION_MSP)
+        uint8_t buff[64] = {0};
+        len = std::min(len, (size_t)sizeof(buff));
+        stream->readMany(buff, len);
+        char * c = (char*)&buff[0];
+        while(len--)
         {
-          bool consumed = _msp.process(*c, ss.mspRequest, ss.mspResponse, *stream);
-          if(!consumed)
+          if(sc.functionMask & SERIAL_FUNCTION_MSP)
           {
-            _cli.process(*c, ss.cliCmd, *stream);
+            bool consumed = _msp.parse(*c, ss.mspRequest);
+            if(consumed)
+            {
+              if(ss.mspRequest.isReady() && ss.mspRequest.isCmd())
+              {
+                _msp.processCommand(ss.mspRequest, ss.mspResponse, *stream);
+                _msp.sendResponse(ss.mspResponse, *stream);
+                _msp.postCommand();
+                ss.mspRequest = Msp::MspMessage();
+                ss.mspResponse = Msp::MspResponse();
+              }
+            }
+            else
+            {
+              _cli.process(*c, ss.cliCmd, *stream);
+            }
           }
+          c++;
         }
-        c++;
       }
     }
-    if(!stream->available())
+    if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
     {
-      _msp.postCommand();
+      _telemetry.process(*stream, TELEMETRY_PROTOCOL_TEXT);
     }
-  }
-
-  if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
-  {
-    _telemetry.process(*stream);
   }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI

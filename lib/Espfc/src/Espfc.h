@@ -6,6 +6,7 @@
 #include "Input.h"
 #include "Actuator.h"
 #include "SensorManager.h"
+#include "TelemetryManager.h"
 #include "SerialManager.h"
 #include "Output/Mixer.h"
 #include "Blackbox/Blackbox.h"
@@ -34,6 +35,7 @@ class Espfc
     Model _model;
     Hardware _hardware;
     Controller _controller;
+    TelemetryManager _telemetry;
     Input _input;
     Actuator _actuator;
     SensorManager _sensor;

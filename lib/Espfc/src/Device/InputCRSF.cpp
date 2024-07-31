@@ -1,4 +1,3 @@
-
 #include "InputCRSF.h"
 #include "Utils/MemoryHelper.h"
 
@@ -8,11 +7,13 @@ namespace Device {
 
 using namespace Espfc::Rc;
 
-InputCRSF::InputCRSF(): _serial(NULL), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
+InputCRSF::InputCRSF(): _serial(NULL), _telemetry(NULL), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
 
-int InputCRSF::begin(Device::SerialDevice * serial)
+int InputCRSF::begin(Device::SerialDevice * serial, TelemetryManager * telemetry)
 {
   _serial = serial;
+  _telemetry = telemetry;
+  _telemetry_next = micros() + TELEMETRY_INTERVAL;
   for(size_t i = 0; i < CRSF_FRAME_SIZE_MAX; i++)
   {
     _frame.data[i] = 0;
@@ -36,6 +37,12 @@ InputStatus FAST_CODE_ATTR InputCRSF::update()
     {
       parse(_frame, buff[i++]);
     }
+  }
+
+  if(_telemetry && micros() > _telemetry_next)
+  {
+    _telemetry_next = micros() + TELEMETRY_INTERVAL;
+    _telemetry->process(*_serial, TELEMETRY_PROTOCOL_CRSF);
   }
 
   if(_new_data)
@@ -64,7 +71,6 @@ void FAST_CODE_ATTR InputCRSF::get(uint16_t * data, size_t len) const
 size_t InputCRSF::getChannelCount() const { return CHANNELS; }
 
 bool InputCRSF::needAverage() const { return false; }
-
 
 void FAST_CODE_ATTR InputCRSF::parse(CrsfFrame& frame, int d)
 {
@@ -132,24 +138,37 @@ void FAST_CODE_ATTR InputCRSF::apply(const CrsfFrame& frame)
       applyLinkStats(frame);
       break;
 
+    case CRSF_FRAMETYPE_MSP_REQ:
+      applyMspReq(frame);
+      break;
+
     default:
       break;
   }
 }
 
-void FAST_CODE_ATTR InputCRSF::applyLinkStats(const CrsfFrame f)
+void FAST_CODE_ATTR InputCRSF::applyLinkStats(const CrsfFrame& f)
 {
   const CrsfLinkStats* frame = reinterpret_cast<const CrsfLinkStats*>(f.message.payload);
   (void)frame;
   // TODO:
 }
 
-void FAST_CODE_ATTR InputCRSF::applyChannels(const CrsfFrame f)
+void FAST_CODE_ATTR InputCRSF::applyChannels(const CrsfFrame& f)
 {
   const CrsfData* frame = reinterpret_cast<const CrsfData*>(f.message.payload);
   Crsf::decodeRcDataShift8(_channels, frame);
   //Crsf::decodeRcData(_channels, frame);
   _new_data = true;
+}
+
+void FAST_CODE_ATTR InputCRSF::applyMspReq(const CrsfFrame& f)
+{
+  if(_telemetry)
+  {
+    _telemetry_next = micros() + TELEMETRY_INTERVAL;
+    _telemetry->processMsp(*_serial, TELEMETRY_PROTOCOL_CRSF, f.message.payload, CRSF_PAYLOAD_SIZE_MAX);
+  }
 }
 
 }

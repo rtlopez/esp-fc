@@ -10,6 +10,7 @@
 using namespace Espfc;
 using namespace Espfc::Device;
 using namespace Espfc::Rc;
+using namespace fakeit;
 
 void test_input_crsf_rc_valid()
 {
@@ -17,7 +18,9 @@ void test_input_crsf_rc_valid()
   CrsfFrame frame;
   memset(&frame, 0, sizeof(frame));
 
-  input.begin(nullptr);
+  When(Method(ArduinoFake(), micros)).Return(0);
+
+  input.begin(nullptr, nullptr);
 
   const uint8_t data[] = {
     0xC8, 0x18, 0x16, 0xE0, 0x03, 0xDF, 0xD9, 0xC0, 0xF7, 0x8B, 0x5F, 0x94, 0xAF,
@@ -52,7 +55,9 @@ void test_input_crsf_rc_prefix()
   CrsfFrame frame;
   memset(&frame, 0, sizeof(frame));
 
-  input.begin(nullptr);
+  When(Method(ArduinoFake(), micros)).Return(0);
+
+  input.begin(nullptr, nullptr);
 
   // prefix with few random bytes
   const uint8_t data[] = {
