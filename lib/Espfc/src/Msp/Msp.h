@@ -188,10 +188,8 @@ class MspResponse
       {
         case MSP_V1:
           return serializeV1(buff, len_max);
-          break;
         case MSP_V2:
           return serializeV2(buff, len_max);
-          break;
       }
       return 0;
     }
@@ -199,7 +197,7 @@ class MspResponse
     size_t serializeV1(uint8_t * buff, size_t len_max) const
     {
       // not enough space in target buffer
-      if(len + 5 > len_max) return 0;
+      if(len + 6 > len_max) return 0;
 
       buff[0] = '$';
       buff[1] = 'M';
@@ -222,7 +220,7 @@ class MspResponse
     size_t serializeV2(uint8_t * buff, size_t len_max) const
     {
       // not enough space in target buffer
-      if(len + 8 > len_max) return 0;
+      if(len + 9 > len_max) return 0;
 
       buff[0] = '$';
       buff[1] = 'X';

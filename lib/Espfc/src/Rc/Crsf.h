@@ -28,6 +28,7 @@ enum {
 
 enum {
     CRSF_FRAMETYPE_GPS = 0x02,
+    CRSF_FRAMETYPE_VARIO_SENSOR = 0x07,
     CRSF_FRAMETYPE_BATTERY_SENSOR = 0x08,
     CRSF_FRAMETYPE_HEARTBEAT = 0x0B,
     CRSF_FRAMETYPE_LINK_STATISTICS = 0x14,
@@ -104,8 +105,9 @@ struct CrsfData
  * Every frame has the structure:
  * <Device address><Frame length><Type><Payload><CRC>
  * Device address: (uint8_t)
- * Frame length:   length in  bytes including Type (uint8_t)
+ * Frame length:   length in bytes including Type and CRC (uint8_t)
  * Type:           (uint8_t)
+ * Payload:        (....)
  * CRC:            (uint8_t)
  */
 struct CrsfMessage
@@ -114,6 +116,36 @@ struct CrsfMessage
   uint8_t size; // counts size after this byte, so it must be the payload size + 2 (type and crc)
   uint8_t type; // CrsfFrameType
   uint8_t payload[CRSF_PAYLOAD_SIZE_MAX + 1];
+
+  void writeU8(uint8_t v)
+  {
+    payload[size++] = v;
+  }
+
+  void writeU16(uint16_t v)
+  {
+    writeU8(v >> 0);
+    writeU8(v >> 8);
+  }
+
+  void writeU32(uint32_t v)
+  {
+    writeU8(v >> 0);
+    writeU8(v >> 8);
+    writeU8(v >> 16);
+    writeU8(v >> 24);
+  }
+
+  void writeString(const char * v, bool terminate = false)
+  {
+    while(*v) writeU8(*v++);
+    if(terminate) writeU8(0);
+  }
+
+  void writeCRC(uint8_t v)
+  {
+    payload[size - 2] = v;
+  }
 } __attribute__ ((__packed__));
 
 union CrsfFrame

@@ -74,6 +74,11 @@ public:
     return 3.14159265358979f;
   }
 
+  constexpr float twoPi()
+  {
+    return 3.14159265358979f * 2.0f;
+  }
+
   constexpr float invPi()
   {
     return 1.0f / pi();
@@ -84,14 +89,32 @@ public:
     return 1.0f / 180.0f;
   }
 
-  inline float toRad(float deg)
+  constexpr float toRad(float deg)
   {
     return deg * (pi() * inv180());
   }
 
-  inline float toDeg(float rad)
+  constexpr float toDeg(float rad)
   {
     return rad * (180.0f * invPi());
+  }
+
+  constexpr uint16_t toBigEndian16(uint16_t v)
+  {
+#if BYTE_ORDER == BIG_ENDIAN
+    return v;
+#else
+    return __builtin_bswap16(v);
+#endif
+  }
+
+  constexpr uint32_t toBigEndian32(uint32_t v)
+  {
+#if BYTE_ORDER == BIG_ENDIAN
+    return v;
+#else
+    return __builtin_bswap32(v);
+#endif
   }
 
   inline float toAltitude(float pressure, float seaLevelPressure = 101325.f)
