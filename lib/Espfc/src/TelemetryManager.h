@@ -35,14 +35,9 @@ public:
     return 1;
   }
 
-  int processMsp(Device::SerialDevice& s, TelemetryProtocol protocol, const uint8_t * payload, size_t max_len)
+  int processMsp(Device::SerialDevice& s, TelemetryProtocol protocol, Msp::MspMessage m, uint8_t origin)
   {
-    Msp::MspMessage m;
     Msp::MspResponse r;
-    for(size_t i = 0; i < max_len; i++)
-    {
-      if(!_msp.parse(payload[i], m)) break;
-    }
 
     // not valid msp message, stop processing
     if(!m.isReady() || !m.isCmd()) return 0;
@@ -52,7 +47,7 @@ public:
     switch(protocol)
     {
       case TELEMETRY_PROTOCOL_CRSF:
-        _crsf.sendMsp(s, r);
+        _crsf.sendMsp(s, r, origin);
         break;
       default:
         break;

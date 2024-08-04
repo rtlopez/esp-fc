@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
+#include "Math/Crc.h"
+#include "Msp/Msp.h"
 
 namespace Espfc {
 
@@ -117,6 +120,19 @@ struct CrsfMessage
   uint8_t type; // CrsfFrameType
   uint8_t payload[CRSF_PAYLOAD_SIZE_MAX + 1];
 
+  void prepare(uint8_t t)
+  {
+    addr = Rc::CRSF_SYNC_BYTE;
+    type = t;
+    size = 0;
+  }
+
+  void finalize()
+  {
+    size += 2;
+    writeCRC(crc());
+  }
+
   void writeU8(uint8_t v)
   {
     payload[size++] = v;
@@ -136,6 +152,11 @@ struct CrsfMessage
     writeU8(v >> 24);
   }
 
+  void write(const uint8_t * v, size_t len)
+  {
+    while(len--) writeU8(*v++);
+  }
+
   void writeString(const char * v, bool terminate = false)
   {
     while(*v) writeU8(*v++);
@@ -146,13 +167,13 @@ struct CrsfMessage
   {
     payload[size - 2] = v;
   }
-} __attribute__ ((__packed__));
 
-union CrsfFrame
-{
-  CrsfMessage message;
-  uint8_t data[CRSF_FRAME_SIZE_MAX];
-};
+  uint8_t crc() const
+  {
+    uint8_t crc = Math::crc8_dvb_s2(0, type);
+    return Math::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
+  }
+} __attribute__ ((__packed__));
 
 class Crsf
 {
@@ -160,9 +181,11 @@ public:
   static void decodeRcData(uint16_t* channels, const CrsfData* frame);
   static void decodeRcDataShift8(uint16_t* channels, const CrsfData* frame);
   //static void decodeRcDataShift32(uint16_t* channels, const CrsfData* frame);
-  static void encodeRcData(CrsfFrame& frame, const CrsfData& data);
+  static void encodeRcData(CrsfMessage& frame, const CrsfData& data);
+  static int encodeMsp(CrsfMessage& msg, const Msp::MspResponse& res, uint8_t origin);
+  static int decodeMsp(const CrsfMessage& msg, Msp::MspMessage& m, uint8_t& origin);
   static uint16_t convert(int v);
-  static uint8_t crc(const CrsfFrame& frame);
+  static uint8_t crc(const CrsfMessage& frame);
 };
 
 }

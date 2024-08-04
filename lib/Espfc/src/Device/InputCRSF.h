@@ -34,14 +34,14 @@ class InputCRSF: public InputDevice
     virtual bool needAverage() const override;
 
     void print(char c) const;
-    void parse(Rc::CrsfFrame& frame, int d);
+    void parse(Rc::CrsfMessage& frame, int d);
 
   private:
     void reset();
-    void apply(const Rc::CrsfFrame& frame);
-    void applyLinkStats(const Rc::CrsfFrame& f);
-    void applyChannels(const Rc::CrsfFrame& f);
-    void applyMspReq(const Rc::CrsfFrame& f);
+    void apply(const Rc::CrsfMessage& msg);
+    void applyLinkStats(const Rc::CrsfMessage& msg);
+    void applyChannels(const Rc::CrsfMessage& msg);
+    void applyMspReq(const Rc::CrsfMessage& msg);
 
     static const size_t CHANNELS = 16;
     static const size_t TELEMETRY_INTERVAL = 20000;
@@ -51,7 +51,7 @@ class InputCRSF: public InputDevice
     CrsfState _state;
     uint8_t _idx;
     bool _new_data;
-    Rc::CrsfFrame _frame;
+    Rc::CrsfMessage _frame;
     uint16_t _channels[CHANNELS];
     uint32_t _telemetry_next;
 };

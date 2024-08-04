@@ -5,6 +5,10 @@
 #include "Rc/Crsf.h"
 #include "Math/Utils.h"
 
+// https://github.com/crsf-wg/crsf/wiki/CRSF_FRAMETYPE_MSP_REQ - not correct
+// https://github.com/betaflight/betaflight/blob/2525be9a3369fa666d8ce1485ec5ad344326b085/src/main/telemetry/crsf.c#L664
+// https://github.com/betaflight/betaflight/blob/2525be9a3369fa666d8ce1485ec5ad344326b085/src/main/telemetry/msp_shared.c#L46
+
 namespace Espfc {
 
 namespace Telemetry {
@@ -30,7 +34,7 @@ public:
 
   int process(Device::SerialDevice& s) const
   {
-    Rc::CrsfFrame f;
+    Rc::CrsfMessage f;
     switch(_current)
     {
       case CRSF_TELEMETRY_STATE_ATTI:
@@ -46,7 +50,8 @@ public:
       case CRSF_TELEMETRY_STATE_FM:
         flightMode(f);
         send(f, s);
-        _current = CRSF_TELEMETRY_STATE_GPS;
+        //_current = CRSF_TELEMETRY_STATE_GPS;
+        _current = CRSF_TELEMETRY_STATE_VARIO;
         break;
       case CRSF_TELEMETRY_STATE_GPS:
         //gps(f);
@@ -68,15 +73,20 @@ public:
     return 1;
   }
 
-  int sendMsp(Device::SerialDevice& s, Msp::MspResponse r) const
+  int sendMsp(Device::SerialDevice& s, Msp::MspResponse r, uint8_t origin) const
   {
+    Rc::CrsfMessage msg;
+
+    Rc::Crsf::encodeMsp(msg, r, origin);
+
+    send(msg, s);
 
     return 1;
   }
 
-  void send(const Rc::CrsfFrame& f, Device::SerialDevice& s) const
+  void send(const Rc::CrsfMessage& msg, Device::SerialDevice& s) const
   {
-    s.write(f.data, f.message.size + 2);
+    s.write((uint8_t*)&msg, msg.size + 2);
   }
 
   int16_t toAngle(float angle) const
@@ -86,83 +96,70 @@ public:
     return lrintf(angle * 1000);
   }
 
-  void attitude(Rc::CrsfFrame& f) const
+  void attitude(Rc::CrsfMessage& msg) const
   {
-    prepare(f, Rc::CRSF_FRAMETYPE_ATTITUDE);
+    msg.prepare(Rc::CRSF_FRAMETYPE_ATTITUDE);
 
     int16_t r = toAngle(_model.state.angle.x);
     int16_t p = toAngle(_model.state.angle.y);
     int16_t y = toAngle(_model.state.angle.z);
 
-    f.message.writeU16(Math::toBigEndian16(r));
-    f.message.writeU16(Math::toBigEndian16(p));
-    f.message.writeU16(Math::toBigEndian16(y));
+    msg.writeU16(Math::toBigEndian16(r));
+    msg.writeU16(Math::toBigEndian16(p));
+    msg.writeU16(Math::toBigEndian16(y));
 
-    finalize(f);
+    msg.finalize();
   }
 
-  void battery(Rc::CrsfFrame& f) const
+  void battery(Rc::CrsfMessage& msg) const
   {
-    prepare(f, Rc::CRSF_FRAMETYPE_BATTERY_SENSOR);
+    msg.prepare(Rc::CRSF_FRAMETYPE_BATTERY_SENSOR);
 
     uint16_t voltage = Math::clamp(lrintf(_model.state.battery.voltage * 10.0f), 0l, 32000l);
     uint16_t current = Math::clamp(lrintf(_model.state.battery.current * 10.0f), 0l, 32000l);
     uint32_t mahDrawn = 0;
     uint8_t remainPerc = 100;
 
-    f.message.writeU16(Math::toBigEndian16(voltage));
-    f.message.writeU16(Math::toBigEndian16(current));
-    f.message.writeU8(mahDrawn >> 16);
-    f.message.writeU8(mahDrawn >> 8);
-    f.message.writeU8(mahDrawn);
-    f.message.writeU8(remainPerc);
+    msg.writeU16(Math::toBigEndian16(voltage));
+    msg.writeU16(Math::toBigEndian16(current));
+    msg.writeU8(mahDrawn >> 16);
+    msg.writeU8(mahDrawn >> 8);
+    msg.writeU8(mahDrawn);
+    msg.writeU8(remainPerc);
 
-    finalize(f);
+    msg.finalize();
   }
 
-  void flightMode(Rc::CrsfFrame& f) const
+  void flightMode(Rc::CrsfMessage& msg) const
   {
-    prepare(f, Rc::CRSF_FRAMETYPE_FLIGHT_MODE);
+    msg.prepare(Rc::CRSF_FRAMETYPE_FLIGHT_MODE);
 
-    if(_model.armingDisabled()) f.message.writeString("!DIS");
-    if(_model.isModeActive(MODE_FAILSAFE)) f.message.writeString("!FS,");
-    if(_model.isModeActive(MODE_ARMED)) f.message.writeString("ARM,");
-    if(_model.isModeActive(MODE_AIRMODE)) f.message.writeString("AIR,");
-    if(_model.isModeActive(MODE_ANGLE)) f.message.writeString("STAB,");
-    f.message.writeU8(0);
+    if(_model.armingDisabled()) msg.writeString("!DIS");
+    if(_model.isModeActive(MODE_FAILSAFE)) msg.writeString("!FS,");
+    if(_model.isModeActive(MODE_ARMED)) msg.writeString("ARM,");
+    if(_model.isModeActive(MODE_AIRMODE)) msg.writeString("AIR,");
+    if(_model.isModeActive(MODE_ANGLE)) msg.writeString("STAB,");
+    msg.writeU8(0);
 
-    finalize(f);
+    msg.finalize();
   }
 
-  void vario(Rc::CrsfFrame& f) const
+  void vario(Rc::CrsfMessage& msg) const
   {
-    prepare(f, Rc::CRSF_FRAMETYPE_VARIO_SENSOR);
+    msg.prepare(Rc::CRSF_FRAMETYPE_VARIO_SENSOR);
 
-    f.message.writeU16(Math::toBigEndian16(0));
+    msg.writeU16(Math::toBigEndian16(0));
 
-    finalize(f);
+    msg.finalize();
   }
 
-  void heartbeat(Rc::CrsfFrame& f) const
+  void heartbeat(Rc::CrsfMessage& msg) const
   {
-    prepare(f, Rc::CRSF_FRAMETYPE_HEARTBEAT);
+    msg.prepare(Rc::CRSF_FRAMETYPE_HEARTBEAT);
 
-    f.message.writeU16(Math::toBigEndian16(Rc::CRSF_ADDRESS_FLIGHT_CONTROLLER));
+    msg.writeU16(Math::toBigEndian16(Rc::CRSF_ADDRESS_FLIGHT_CONTROLLER));
 
-    finalize(f);
-  }
-
-  void prepare(Rc::CrsfFrame& f, uint8_t type) const
-  {
-    f.message.addr = Rc::CRSF_SYNC_BYTE;
-    f.message.type = type;
-    f.message.size = 0;
-  }
-
-  void finalize(Rc::CrsfFrame& f) const
-  {
-    f.message.size += 2;
-    f.message.writeCRC(Rc::Crsf::crc(f));
+    msg.finalize();
   }
 
 private:
