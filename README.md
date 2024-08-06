@@ -126,7 +126,7 @@ Here are more details about [how to setup](/docs/setup.md).
 | BMP280      | Yes     |   Yes |    Yes |
 | SPL06       | Yes     |   Yes |    Yes |
 
-## Supported Gyro devices
+## Supported Compass devices
 
 | Device      | ESP8266 | ESP32 | RP2040 |
 |------------:|--------:|------:|-------:|
