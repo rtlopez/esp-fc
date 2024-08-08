@@ -663,7 +663,7 @@ class MspProcessor
           r.writeU8(1); // blackboxGetRateDenom());
           r.writeU16(_model.config.blackboxPdenom);//blackboxGetPRatio()); // p_denom
           //r.writeU8(_model.config.blackboxPdenom); // sample_rate
-          //r.writeU32(_model.config.blackboxFieldsDisabledMask);
+          //r.writeU32(~_model.config.blackboxFieldsMask);
           break;
 
         case MSP_SET_BLACKBOX_CONFIG:
@@ -689,7 +689,7 @@ class MspProcessor
                 //_model.config.blackboxPdenom = pRatio;
             }
             if (m.remain() >= 4) {
-              _model.config.blackboxFieldsDisabledMask = m.readU32();
+              _model.config.blackboxFieldsMask = ~m.readU32();
             }*/
           }
           break;

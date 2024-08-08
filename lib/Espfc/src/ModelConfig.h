@@ -369,6 +369,24 @@ enum PidIndex {
   FC_PID_ITEM_COUNT
 };
 
+enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
+  BLACKBOX_FIELD_PID = 0,
+  BLACKBOX_FIELD_RC_COMMANDS,
+  BLACKBOX_FIELD_SETPOINT,
+  BLACKBOX_FIELD_BATTERY,
+  BLACKBOX_FIELD_MAG,
+  BLACKBOX_FIELD_ALTITUDE,
+  BLACKBOX_FIELD_RSSI,
+  BLACKBOX_FIELD_GYRO,
+  BLACKBOX_FIELD_ACC,
+  BLACKBOX_FIELD_DEBUG_LOG,
+  BLACKBOX_FIELD_MOTOR,
+  BLACKBOX_FIELD_GPS,
+  BLACKBOX_FIELD_RPM,
+  BLACKBOX_FIELD_GYROUNFILT,
+  BLACKBOX_FIELD_COUNT
+};
+
 class PidConfig
 {
   public:
@@ -585,7 +603,7 @@ class ModelConfig
 
     int8_t blackboxDev;
     int16_t blackboxPdenom;
-    int32_t blackboxFieldsDisabledMask;
+    int32_t blackboxFieldsMask;
     int8_t blackboxMode;
 
     SerialPortConfig serial[SERIAL_UART_COUNT];
@@ -952,7 +970,7 @@ class ModelConfig
       debugAxis = 1;
       blackboxDev = 0;
       blackboxPdenom = 32; // 1kHz
-      blackboxFieldsDisabledMask = 0;
+      blackboxFieldsMask = 0xffff;
       blackboxMode = 0;
 
 // development settings
