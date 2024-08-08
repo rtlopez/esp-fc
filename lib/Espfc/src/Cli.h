@@ -45,6 +45,7 @@ class Cli
       PARAM_MIXER,   // mixer config
       PARAM_SERIAL,  // mixer config
       PARAM_STRING,  // string
+      PARAM_BITMASK, // set or clear bit
     };
 
     class Param
@@ -62,6 +63,8 @@ class Cli
         Param(const char * n, int32_t * a): Param(n, PARAM_INT,    reinterpret_cast<char*>(a), NULL) {}
 
         Param(const char * n, int8_t * a, const char ** c): Param(n, PARAM_BYTE, reinterpret_cast<char*>(a), c) {}
+        Param(const char * n, int32_t * a, uint8_t b):  Param(n, PARAM_BITMASK,  reinterpret_cast<char*>(a), NULL, b) {}
+
         Param(const char * n, InputChannelConfig * a):  Param(n, PARAM_INPUT_CHANNEL,  reinterpret_cast<char*>(a), NULL) {}
         Param(const char * n, OutputChannelConfig * a): Param(n, PARAM_OUTPUT_CHANNEL, reinterpret_cast<char*>(a), NULL) {}
         Param(const char * n, ScalerConfig * a):        Param(n, PARAM_SCALER, reinterpret_cast<char*>(a), NULL) {}
@@ -101,6 +104,9 @@ class Cli
               break;
             case PARAM_STRING:
               stream.print(addr);
+              break;
+            case PARAM_BITMASK:
+              stream.print((*reinterpret_cast<int32_t*>(addr) & (1ul << maxLen)) ? 1 : 0);
               break;
             case PARAM_INPUT_CHANNEL:
               print(stream, *reinterpret_cast<InputChannelConfig*>(addr));
@@ -244,6 +250,17 @@ class Cli
               break;
             case PARAM_STRING:
               write(String(v ? v : ""));
+              break;
+            case PARAM_BITMASK:
+              if(!v) return;
+              if(*v == '0')
+              {
+                *reinterpret_cast<int32_t*>(addr) &= ~(1ul << maxLen);
+              }
+              if(*v == '1')
+              {
+                *reinterpret_cast<int32_t*>(addr) |= (1ul << maxLen);
+              }
               break;
             case PARAM_OUTPUT_CHANNEL:
               if(!v) return;
@@ -711,7 +728,20 @@ class Cli
         Param(PSTR("blackbox_dev"), &c.blackboxDev),
         Param(PSTR("blackbox_mode"), &c.blackboxMode, blackboxModeChoices),
         Param(PSTR("blackbox_rate"), &c.blackboxPdenom),
-        Param(PSTR("blackbox_mask"), &c.blackboxFieldsDisabledMask),
+        Param(PSTR("blackbox_log_acc"), &c.blackboxFieldsMask, BLACKBOX_FIELD_ACC),
+        Param(PSTR("blackbox_log_alt"), &c.blackboxFieldsMask, BLACKBOX_FIELD_ALTITUDE),
+        Param(PSTR("blackbox_log_bat"), &c.blackboxFieldsMask, BLACKBOX_FIELD_BATTERY),
+        Param(PSTR("blackbox_log_debug"), &c.blackboxFieldsMask, BLACKBOX_FIELD_DEBUG_LOG),
+        Param(PSTR("blackbox_log_gps"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GPS),
+        Param(PSTR("blackbox_log_gyro"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GYRO),
+        Param(PSTR("blackbox_log_gyro_raw"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GYROUNFILT),
+        Param(PSTR("blackbox_log_mag"), &c.blackboxFieldsMask, BLACKBOX_FIELD_MAG),
+        Param(PSTR("blackbox_log_motor"), &c.blackboxFieldsMask, BLACKBOX_FIELD_MOTOR),
+        Param(PSTR("blackbox_log_pid"), &c.blackboxFieldsMask, BLACKBOX_FIELD_PID),
+        Param(PSTR("blackbox_log_rc"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RC_COMMANDS),
+        Param(PSTR("blackbox_log_rpm"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RPM),
+        Param(PSTR("blackbox_log_rssi"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RSSI),
+        Param(PSTR("blackbox_log_sp"), &c.blackboxFieldsMask, BLACKBOX_FIELD_SETPOINT),
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
         Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL, 32),
