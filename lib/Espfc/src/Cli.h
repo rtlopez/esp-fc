@@ -420,7 +420,14 @@ class Cli
       size_t i = 0;
       static const Param params[] = {
 
-        Param(PSTR("features"), &c.featureMask),
+        Param(PSTR("feature_dyn_notch"), &c.featureMask, 29),
+        Param(PSTR("feature_motor_stop"), &c.featureMask, 4),
+        Param(PSTR("feature_rx_ppm"), &c.featureMask, 0),
+        Param(PSTR("feature_rx_serial"), &c.featureMask, 3),
+        Param(PSTR("feature_rx_spi"), &c.featureMask, 25),
+        Param(PSTR("feature_soft_serial"), &c.featureMask, 6),
+        Param(PSTR("feature_telemetry"), &c.featureMask, 10),
+
         Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
         Param(PSTR("debug_axis"), &c.debugAxis),
 
