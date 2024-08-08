@@ -1,5 +1,4 @@
-#ifndef _ESPFC_DEVICE_SERIAL_DEVICE_H_
-#define _ESPFC_DEVICE_SERIAL_DEVICE_H_
+#pragma once
 
 #include <cstdint>
 #include <cstddef>
@@ -24,25 +23,6 @@ enum SerialSpeed {
   SERIAL_SPEED_1500000 = 1500000,
   SERIAL_SPEED_2000000 = 2000000,
   SERIAL_SPEED_2470000 = 2470000,
-};
-
-enum SerialPort {
-#ifdef ESPFC_SERIAL_USB
-  SERIAL_USB,
-#endif
-#ifdef ESPFC_SERIAL_0
-  SERIAL_UART_0,
-#endif
-#ifdef ESPFC_SERIAL_1
-  SERIAL_UART_1,
-#endif
-#ifdef ESPFC_SERIAL_2
-  SERIAL_UART_2,
-#endif
-#ifdef ESPFC_SERIAL_SOFT_0
-  SERIAL_SOFT_0,
-#endif
-  SERIAL_UART_COUNT
 };
 
 enum SerialPortId {
@@ -148,5 +128,3 @@ class SerialDevice: public Stream
 }
 
 }
-
-#endif // _ESPFC_SERIAL_DEVICE_H_

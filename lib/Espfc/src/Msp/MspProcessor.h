@@ -162,29 +162,13 @@ class MspProcessor
   public:
     MspProcessor(Model& model): _model(model) {}
 
-    bool process(char c, MspMessage& msg, MspResponse& res, Device::SerialDevice& s)
+    bool parse(char c, MspMessage& msg)
     {
       _parser.parse(c, msg);
 
-      if(msg.state == MSP_STATE_RECEIVED)
-      {
-        debugMessage(msg);
-        switch(msg.dir)
-        {
-          case MSP_TYPE_CMD:
-            processCommand(msg, res, s);
-            sendResponse(res, s);
-            msg = MspMessage();
-            res = MspResponse();
-            break;
-          case MSP_TYPE_REPLY:
-            //processCommand(msg, s);
-            break;
-        }
-        return true;
-      }
+      if(msg.isReady()) debugMessage(msg);
 
-      return msg.state != MSP_STATE_IDLE;
+      return !msg.isIdle();
     }
 
     void processCommand(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
@@ -1543,57 +1527,8 @@ class MspProcessor
     void sendResponse(MspResponse& r, Device::SerialDevice& s)
     {
       debugResponse(r);
-      switch(r.version)
-      {
-        case MSP_V1:
-          sendResponseV1(r, s);
-          break;
-        case MSP_V2:
-          sendResponseV2(r, s);
-          break;
-      }
-      //postCommand();
-    }
-
-    void sendResponseV1(MspResponse& r, Device::SerialDevice& s)
-    {
-      // TODO: optimize to write at once
-      uint8_t hdr[5] = { '$', 'M', '>' };
-      if(r.result == -1)
-      {
-        hdr[2] = '!'; // error ??
-      }
-      hdr[3] = r.len;
-      hdr[4] = r.cmd;
-      uint8_t checksum = Math::crc8_xor(0, &hdr[3], 2);
-      s.write(hdr, 5);
-      if(r.len > 0)
-      {
-        s.write(r.data, r.len);
-        checksum = Math::crc8_xor(checksum, r.data, r.len);
-      }
-      s.write(checksum);
-    }
-
-    void sendResponseV2(MspResponse& r, Device::SerialDevice& s)
-    {
-      uint8_t hdr[8] = { '$', 'X', '>', 0 };
-      if(r.result == -1)
-      {
-        hdr[2] = '!'; // error ??
-      }
-      hdr[4] = r.cmd & 0xff;
-      hdr[5] = (r.cmd >> 8) & 0xff;
-      hdr[6] = r.len & 0xff;
-      hdr[7] = (r.len >> 8) & 0xff;
-      uint8_t checksum = Math::crc8_dvb_s2(0, &hdr[3], 5);
-      s.write(hdr, 8);
-      if(r.len > 0)
-      {
-        s.write(r.data, r.len);
-        checksum = Math::crc8_dvb_s2(checksum, r.data, r.len);
-      }
-      s.write(checksum);
+      size_t len = r.serialize(_buff, 256);
+      s.write(_buff, len);
     }
 
     void postCommand()
@@ -1660,6 +1595,7 @@ class MspProcessor
     Model& _model;
     MspParser _parser;
     std::function<void(void)> _postCommand;
+    uint8_t _buff[256];
 };
 
 }
