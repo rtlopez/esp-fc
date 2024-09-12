@@ -8,6 +8,7 @@ enum StorageResult
   STORAGE_NONE,
   STORAGE_LOAD_SUCCESS,
   STORAGE_SAVE_SUCCESS,
+  STORAGE_SAVE_ERROR,
   STORAGE_ERR_BAD_MAGIC,
   STORAGE_ERR_BAD_VERSION,
   STORAGE_ERR_BAD_SIZE,
@@ -82,8 +83,11 @@ class Storage
       {
         EEPROM.write(addr++, *it);
       }
-      EEPROM.commit();
-      return STORAGE_SAVE_SUCCESS;
+      if(EEPROM.commit())
+      {
+        return STORAGE_SAVE_SUCCESS;
+      }
+      return STORAGE_SAVE_ERROR;
     }
 
   private:

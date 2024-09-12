@@ -69,11 +69,15 @@
 
 #define ESPFC_GUARD 0
 
+#if defined(ARCH_RP2350)
+#define ESPFC_GYRO_I2C_RATE_MAX 1000
+#define ESPFC_GYRO_SPI_RATE_MAX 4000
+#else
 #define ESPFC_GYRO_I2C_RATE_MAX 1000
 #define ESPFC_GYRO_SPI_RATE_MAX 1000
-
 #define ESPFC_MULTI_CORE
 #define ESPFC_MULTI_CORE_RP2040
+#endif
 
 #include "Device/SerialDevice.h"
 #include "Debug_Espfc.h"
