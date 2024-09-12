@@ -118,7 +118,7 @@ public:
     uint16_t voltage = Math::clamp(lrintf(_model.state.battery.voltage * 10.0f), 0l, 32000l);
     uint16_t current = Math::clamp(lrintf(_model.state.battery.current * 10.0f), 0l, 32000l);
     uint32_t mahDrawn = 0;
-    uint8_t remainPerc = 100;
+    uint8_t remainPerc = lrintf(_model.state.battery.percentage);
 
     msg.writeU16(Math::toBigEndian16(voltage));
     msg.writeU16(Math::toBigEndian16(current));

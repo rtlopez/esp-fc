@@ -197,7 +197,7 @@ class MspResponse
     size_t serializeV1(uint8_t * buff, size_t len_max) const
     {
       // not enough space in target buffer
-      if(len + 6 > len_max) return 0;
+      if(len + 6ul > len_max) return 0;
 
       buff[0] = '$';
       buff[1] = 'M';
@@ -220,7 +220,7 @@ class MspResponse
     size_t serializeV2(uint8_t * buff, size_t len_max) const
     {
       // not enough space in target buffer
-      if(len + 9 > len_max) return 0;
+      if(len + 9ul > len_max) return 0;
 
       buff[0] = '$';
       buff[1] = 'X';

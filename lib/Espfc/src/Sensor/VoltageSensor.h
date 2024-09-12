@@ -76,7 +76,9 @@ class VoltageSensor: public BaseSensor
         _model.state.battery.cells = std::ceil(_model.state.battery.voltage / 4.2f);
         _model.state.battery.samples--;
       }
+
       _model.state.battery.cellVoltage = _model.state.battery.voltage / constrain(_model.state.battery.cells, 1, 6);
+      _model.state.battery.percentage = Math::clamp(Math::map(_model.state.battery.cellVoltage, 3.4f, 4.2f, 0.0f, 100.0f), 0.0f, 100.0f);
 
       if(_model.config.debugMode == DEBUG_BATTERY)
       {
