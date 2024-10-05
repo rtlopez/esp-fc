@@ -1,6 +1,5 @@
 
 #include "GyroSensor.h"
-#include "Model.h"
 #include "Utils/FilterHelper.h"
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
@@ -22,7 +21,7 @@ int GyroSensor::begin()
 
   _gyro->setDLPFMode(_model.config.gyroDlpf);
   _gyro->setRate(_gyro->getRate());
-  _model.state.gyroScale = radians(2000.f) / 32768.f;
+  _model.state.gyroScale = Math::toRad(2000.f) / 32768.f;
 
   _model.state.gyroCalibrationState = CALIBRATION_START; // calibrate gyro on start
   _model.state.gyroCalibrationRate = _model.state.loopTimer.rate;
