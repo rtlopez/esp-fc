@@ -12,11 +12,11 @@ namespace Sensor {
 class BaseSensor
 {
   public:
-    void FAST_CODE_ATTR align(VectorInt16& dest, uint8_t rotation)
+    void FAST_CODE_ATTR align(VectorFloat& dest, uint8_t rotation)
     {
-      const int16_t x = dest.x;
-      const int16_t y = dest.y;
-      const int16_t z = dest.z;
+      const float x = dest.x;
+      const float y = dest.y;
+      const float z = dest.z;
 
       switch(rotation)
       {

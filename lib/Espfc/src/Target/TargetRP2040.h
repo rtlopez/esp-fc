@@ -51,8 +51,8 @@
 #define ESPFC_SPI_CS_BARO 11
 
 #define ESPFC_I2C_0
-#define ESPFC_I2C_0_SDA -1 //12 //8
-#define ESPFC_I2C_0_SCL -1 //13 //9
+#define ESPFC_I2C_0_SDA 16
+#define ESPFC_I2C_0_SCL 17
 
 #define ESPFC_BUZZER
 #define ESPFC_BUZZER_PIN -1

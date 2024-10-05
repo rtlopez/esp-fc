@@ -716,9 +716,15 @@ class MspProcessor
           break;
 
         case MSP_BOARD_ALIGNMENT_CONFIG:
-          r.writeU16(0); // roll
-          r.writeU16(0); // pitch
-          r.writeU16(0); // yaw
+          r.writeU16(_model.config.boardAlignment[0]); // roll
+          r.writeU16(_model.config.boardAlignment[1]); // pitch
+          r.writeU16(_model.config.boardAlignment[2]); // yaw
+          break;
+
+        case MSP_SET_BOARD_ALIGNMENT_CONFIG:
+          _model.config.boardAlignment[0] = m.readU16();
+          _model.config.boardAlignment[1] = m.readU16();
+          _model.config.boardAlignment[2] = m.readU16();
           break;
 
         case MSP_RX_MAP:
@@ -1289,7 +1295,7 @@ class MspProcessor
         case MSP_RAW_IMU:
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(_model.state.accel[i] * ACCEL_G_INV * 512.f));
+            r.writeU16(lrintf(_model.state.accel[i] * ACCEL_G_INV * 2048.f));
           }
           for (int i = 0; i < 3; i++)
           {

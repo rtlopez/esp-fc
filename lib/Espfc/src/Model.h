@@ -441,6 +441,8 @@ class Model
         state.magTimer.setRate(state.magRate);
       }
 
+      state.boardAlignment.init(VectorFloat(Math::toRad(config.boardAlignment[0]), Math::toRad(config.boardAlignment[1]), Math::toRad(config.boardAlignment[2])));
+
       const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
       const uint32_t inputFilterRate = state.inputTimer.rate;

@@ -58,8 +58,10 @@ class MagSensor: public BaseSensor
 
       Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
 
-      align(_model.state.magRaw, _model.config.magAlign);
       _model.state.mag = _mag->convert(_model.state.magRaw);
+
+      align(_model.state.mag, _model.config.magAlign);
+      _model.state.mag = _model.state.boardAlignment.apply(_model.state.mag);
 
       for(size_t i = 0; i < 3; i++)
       {
