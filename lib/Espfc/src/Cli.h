@@ -489,6 +489,10 @@ class Cli
         Param(PSTR("baro_lpf_type"), &c.baroFilter.type, filterTypeChoices),
         Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
 
+        Param(PSTR("board_align_roll"), &c.boardAlignment[0]),
+        Param(PSTR("board_align_pitch"), &c.boardAlignment[1]),
+        Param(PSTR("board_align_yaw"), &c.boardAlignment[2]),
+
         Param(PSTR("vbat_source"), &c.vbatSource, voltageSourceChoices),
         Param(PSTR("vbat_scale"), &c.vbatScale),
         Param(PSTR("vbat_mul"), &c.vbatResMult),
@@ -1039,9 +1043,9 @@ class Cli
           s.print(_model.config.gyroBias[0]); s.print(' ');
           s.print(_model.config.gyroBias[1]); s.print(' ');
           s.print(_model.config.gyroBias[2]); s.print(F(" ["));
-          s.print(_model.state.gyroBias[0]); s.print(' ');
-          s.print(_model.state.gyroBias[1]); s.print(' ');
-          s.print(_model.state.gyroBias[2]); s.println(F("]"));
+          s.print(Math::toDeg(_model.state.gyroBias[0])); s.print(' ');
+          s.print(Math::toDeg(_model.state.gyroBias[1])); s.print(' ');
+          s.print(Math::toDeg(_model.state.gyroBias[2])); s.println(F("]"));
 
           s.print(F("accel offset: "));
           s.print(_model.config.accelBias[0]); s.print(' ');
@@ -1051,7 +1055,7 @@ class Cli
           s.print(_model.state.accelBias[1]); s.print(' ');
           s.print(_model.state.accelBias[2]); s.println(F("]"));
 
-          s.print(F(" mag offset: "));
+          s.print(F("  mag offset: "));
           s.print(_model.config.magCalibrationOffset[0]); s.print(' ');
           s.print(_model.config.magCalibrationOffset[1]); s.print(' ');
           s.print(_model.config.magCalibrationOffset[2]); s.print(F(" ["));
@@ -1059,7 +1063,7 @@ class Cli
           s.print(_model.state.magCalibrationOffset[1]); s.print(' ');
           s.print(_model.state.magCalibrationOffset[2]); s.println(F("]"));
 
-          s.print(F("  mag scale: "));
+          s.print(F("   mag scale: "));
           s.print(_model.config.magCalibrationScale[0]); s.print(' ');
           s.print(_model.config.magCalibrationScale[1]); s.print(' ');
           s.print(_model.config.magCalibrationScale[2]); s.print(F(" ["));

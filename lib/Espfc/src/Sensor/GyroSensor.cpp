@@ -67,9 +67,10 @@ int FAST_CODE_ATTR GyroSensor::read()
 
   _gyro->readGyro(_model.state.gyroRaw);
 
-  align(_model.state.gyroRaw, _model.config.gyroAlign);
-
   VectorFloat input = static_cast<VectorFloat>(_model.state.gyroRaw) * _model.state.gyroScale;
+
+  align(input, _model.config.gyroAlign);
+  input = _model.state.boardAlignment.apply(input);
 
   if (_model.config.gyroFilter3.freq)
   {

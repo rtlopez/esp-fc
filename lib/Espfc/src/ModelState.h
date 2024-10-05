@@ -176,6 +176,8 @@ struct ModelState
   VectorFloat angle;
   Quaternion angleQ;
 
+  RotationMatrixFloat boardAlignment;
+
   Filter gyroFilter[3];
   Filter gyroFilter2[3];
   Filter gyroFilter3[3];
