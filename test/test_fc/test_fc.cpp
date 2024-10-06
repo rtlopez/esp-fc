@@ -648,7 +648,6 @@ int main(int argc, char **argv)
   RUN_TEST(test_mixer_throttle_limit_clip);
   RUN_TEST(test_mixer_output_limit_motor);
   RUN_TEST(test_mixer_output_limit_servo);
-  UNITY_END();
 
-  return 0;
+  return UNITY_END();
 }

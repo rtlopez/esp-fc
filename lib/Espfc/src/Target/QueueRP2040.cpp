@@ -1,6 +1,6 @@
 #include "Target.h"
 
-#ifdef ARCH_RP2040
+#if defined(ARCH_RP2040)
 
 #include "Queue.h"
 

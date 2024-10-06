@@ -1,11 +1,13 @@
 #pragma once
 
 #include "BaseSensor.h"
+#include "Model.h"
 #include "Device/GyroDevice.h"
 #include "Math/Sma.h"
-#include "Math/FreqAnalyzer.h"
 #ifdef ESPFC_DSP
 #include "Math/FFTAnalyzer.h"
+#else
+#include "Math/FreqAnalyzer.h"
 #endif
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05

@@ -19,7 +19,7 @@ class SerialDeviceAdapter: public SerialDevice
     virtual int available() { return _dev.available(); }
     virtual int read() { return _dev.read(); }
     virtual size_t readMany(uint8_t * c, size_t l) {
-#ifdef TARGET_RP2040
+#if defined(ARCH_RP2040)
       size_t count = std::min(l, (size_t)available());
       for(size_t i = 0; i < count; i++)
       {

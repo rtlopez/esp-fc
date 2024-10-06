@@ -62,9 +62,11 @@ class AccelSensor: public BaseSensor
 
       Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
-      align(_model.state.accelRaw, _model.config.gyroAlign);
-
       _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
+
+      align(_model.state.accel, _model.config.gyroAlign);
+      _model.state.accel = _model.state.boardAlignment.apply(_model.state.accel);
+
       for(size_t i = 0; i < 3; i++)
       {
         if(_model.config.debugMode == DEBUG_ACCELEROMETER)

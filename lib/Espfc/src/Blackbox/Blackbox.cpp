@@ -165,7 +165,7 @@ int Blackbox::begin()
     blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackboxPdenom);
   }
   blackboxConfigMutable()->device = _model.config.blackboxDev;
-  blackboxConfigMutable()->fields_disabled_mask = _model.config.blackboxFieldsDisabledMask;
+  blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackboxFieldsMask;
   blackboxConfigMutable()->mode = _model.config.blackboxMode;
 
   featureConfigMutable()->enabledFeatures = _model.config.featureMask;

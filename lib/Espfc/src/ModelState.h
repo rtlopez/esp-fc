@@ -100,6 +100,7 @@ class BatteryState
     float current;
     float currentUnfiltered;
     float cellVoltage;
+    float percentage;
     int8_t cells;
     int8_t samples;
     Timer timer;
@@ -174,6 +175,8 @@ struct ModelState
 
   VectorFloat angle;
   Quaternion angleQ;
+
+  RotationMatrixFloat boardAlignment;
 
   Filter gyroFilter[3];
   Filter gyroFilter2[3];
