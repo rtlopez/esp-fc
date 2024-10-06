@@ -90,7 +90,7 @@ mixer_w: 123us, 12.3%
  - **get parameter_name** - get paramter value, list matching patameters with current values
  - **set paramter value1 [value2] [value3]** - set parameter to new value (some parameters store multiple values, ex. input)
 
-Many parameters have similar name and meeaning like Betaflight.
+Many parameters have similar name and meaning like Betaflight.
 
 ### Configuration examples
 
