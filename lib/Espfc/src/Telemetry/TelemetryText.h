@@ -1,21 +1,18 @@
-#ifndef _ESPFC_TELEMETRY_H_
-#define _ESPFC_TELEMETRY_H_
+#pragma once
 
 #include "Model.h"
-#include "Hardware.h"
-#include "Rc/Crsf.h"
 
 namespace Espfc {
 
-class Telemetry
+namespace Telemetry {
+
+class TelemetryText
 {
   public:
-    Telemetry(Model& model): _model(model), _value(172), _up(1) {}
+    TelemetryText(Model& model): _model(model) {}
 
     int process(Stream& s) const
     {
-      Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
-
       //print(s, _model.state.gyro.x, 3);
       //println(s);
 
@@ -70,10 +67,8 @@ class Telemetry
     }
 
     Model& _model;
-    mutable int _value;
-    mutable bool _up;
 };
 
 }
 
-#endif
+}

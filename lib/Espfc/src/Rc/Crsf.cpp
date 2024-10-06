@@ -1,4 +1,4 @@
-
+#include <Arduino.h>
 #include "Crsf.h"
 #include "Math/Utils.h"
 #include "Math/Crc.h"
@@ -83,13 +83,86 @@ void FAST_CODE_ATTR Crsf::decodeRcDataShift8(uint16_t* channels, const CrsfData*
   channels[15] = convert((crsfData[5] >> 5) & 0x07FF);
 }*/
 
-void Crsf::encodeRcData(CrsfFrame& frame, const CrsfData& data)
+void Crsf::encodeRcData(CrsfMessage& msg, const CrsfData& data)
 {
-  frame.message.addr = CRSF_ADDRESS_FLIGHT_CONTROLLER;
-  frame.message.type = CRSF_FRAMETYPE_RC_CHANNELS_PACKED;
-  frame.message.size = sizeof(data) + 2;
-  std::memcpy(frame.message.payload, (void*)&data, sizeof(data));
-  frame.message.payload[sizeof(data)] = crc(frame);
+  msg.addr = CRSF_ADDRESS_FLIGHT_CONTROLLER;
+  msg.type = CRSF_FRAMETYPE_RC_CHANNELS_PACKED;
+  msg.size = sizeof(data) + 2;
+  std::memcpy(msg.payload, (void*)&data, sizeof(data));
+  msg.payload[sizeof(data)] = crc(msg);
+}
+
+int Crsf::encodeMsp(CrsfMessage& msg, const Msp::MspResponse& resp, uint8_t origin)
+{
+  uint8_t buff[CRSF_PAYLOAD_SIZE_MAX];
+  size_t size = resp.serialize(buff, CRSF_PAYLOAD_SIZE_MAX);
+
+  if(size < 4) return 0; // unable to serialize
+
+  uint8_t status = 0;
+  status |= (1 << 4); // start bit
+  status |= ((resp.version == Msp::MSP_V1 ? 1 : 2) << 5);
+
+  msg.prepare(Rc::CRSF_FRAMETYPE_MSP_RESP);
+  msg.writeU8(origin);
+  msg.writeU8(Rc::CRSF_ADDRESS_FLIGHT_CONTROLLER);
+  msg.writeU8(status);
+  msg.write(buff + 3, size - 4); // skip sync bytes and crc
+  msg.finalize();
+
+  return msg.size;
+}
+
+int Crsf::decodeMsp(const CrsfMessage& msg, Msp::MspMessage& m, uint8_t& origin)
+{
+  //uint8_t dst = msg.payload[0];
+  origin = msg.payload[1];
+  uint8_t status = msg.payload[2];
+
+  //uint8_t sequence = (status & 0x0f);      // 00001111
+  uint8_t start    = (status & 0x10) >> 4;   // 00010000
+  uint8_t version  = (status & 0x60) >> 5;   // 01100000
+  //uint8_t error    = (status & 0x80) >> 7; // 10000000
+
+  if(start)
+  {
+    if(version == 1)
+    {
+      const Msp::MspHeaderV1 * hdr = reinterpret_cast<const Msp::MspHeaderV1*>(msg.payload + 3);
+      size_t framePayloadSize = msg.size - 5 - sizeof(Msp::MspHeaderV1);
+      if(framePayloadSize >= hdr->size)
+      {
+        m.expected = hdr->size;
+        m.received = hdr->size;
+        m.cmd = hdr->cmd;
+        m.state = Msp::MSP_STATE_RECEIVED;
+        m.dir = Msp::MSP_TYPE_CMD;
+        m.version = Msp::MSP_V1;
+        std::copy_n(msg.payload + 3 + sizeof(Msp::MspHeaderV1), m.received, m.buffer);
+      }
+    }
+    else if(version == 2)
+    {
+      const Msp::MspHeaderV2 * hdr = reinterpret_cast<const Msp::MspHeaderV2*>(msg.payload + 3);
+      size_t framePayloadSize = msg.size - 5 - sizeof(Msp::MspHeaderV2);
+      if(framePayloadSize >= hdr->size)
+      {
+        m.expected = hdr->size;
+        m.received = hdr->size;
+        m.cmd = hdr->cmd;
+        m.state = Msp::MSP_STATE_RECEIVED;
+        m.dir = Msp::MSP_TYPE_CMD;
+        m.version = Msp::MSP_V1;
+        std::copy_n(msg.payload + 3 + sizeof(Msp::MspHeaderV2), m.received, m.buffer);
+      }
+    }
+  }
+  else
+  {
+    // next chunk
+  }
+
+  return 0;
 }
 
 uint16_t Crsf::convert(int v)
@@ -109,12 +182,12 @@ uint16_t Crsf::convert(int v)
   //return Math::mapi(v, 172, 1811, 988, 2012);
 }
 
-uint8_t Crsf::crc(const CrsfFrame& frame)
+uint8_t Crsf::crc(const CrsfMessage& msg)
 {
   // CRC includes type and payload
-  uint8_t crc = Math::crc8_dvb_s2(0, frame.message.type);
-  for (int i = 0; i < frame.message.size - 2; i++) { // size includes type and crc
-      crc = Math::crc8_dvb_s2(crc, frame.message.payload[i]);
+  uint8_t crc = Math::crc8_dvb_s2(0, msg.type);
+  for (int i = 0; i < msg.size - 2; i++) { // size includes type and crc
+      crc = Math::crc8_dvb_s2(crc, msg.payload[i]);
   }
   return crc;
 }

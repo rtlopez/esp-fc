@@ -15,7 +15,7 @@
 #endif
 #ifdef ESPFC_WIFI_ALT
 #include <ESP8266WiFi.h>
-#else
+#elif defined(ESPFC_WIFI)
 #include <WiFi.h>
 #endif
 #include "Debug_Espfc.h"

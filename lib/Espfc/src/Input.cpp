@@ -5,7 +5,7 @@
 
 namespace Espfc {
 
-Input::Input(Model& model): _model(model) {}
+Input::Input(Model& model, TelemetryManager& telemetry): _model(model), _telemetry(telemetry) {}
 
 int Input::begin()
 {
@@ -348,7 +348,7 @@ Device::InputDevice * Input::getInputDevice()
   }
   if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
   {
-    _crsf.begin(serial);
+    _crsf.begin(serial, _model.isFeatureActive(FEATURE_TELEMETRY) ? &_telemetry : nullptr);
     _model.logger.info().logln(F("RX CRSF"));
     return &_crsf;
   }

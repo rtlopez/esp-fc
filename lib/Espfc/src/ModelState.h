@@ -100,6 +100,7 @@ class BatteryState
     float current;
     float currentUnfiltered;
     float cellVoltage;
+    float percentage;
     int8_t cells;
     int8_t samples;
     Timer timer;

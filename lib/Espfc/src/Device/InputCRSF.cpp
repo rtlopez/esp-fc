@@ -1,4 +1,4 @@
-
+#include <algorithm>
 #include "InputCRSF.h"
 #include "Utils/MemoryHelper.h"
 
@@ -8,16 +8,15 @@ namespace Device {
 
 using namespace Espfc::Rc;
 
-InputCRSF::InputCRSF(): _serial(NULL), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
+InputCRSF::InputCRSF(): _serial(NULL), _telemetry(NULL), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
 
-int InputCRSF::begin(Device::SerialDevice * serial)
+int InputCRSF::begin(Device::SerialDevice * serial, TelemetryManager * telemetry)
 {
   _serial = serial;
-  for(size_t i = 0; i < CRSF_FRAME_SIZE_MAX; i++)
-  {
-    _frame.data[i] = 0;
-    if(i < CHANNELS) _channels[i] = 0;
-  }
+  _telemetry = telemetry;
+  _telemetry_next = micros() + TELEMETRY_INTERVAL;
+  std::fill_n((uint8_t*)&_frame, sizeof(_frame), 0);
+  std::fill_n(_channels, CHANNELS, 0);
   return 1;
 }
 
@@ -36,6 +35,12 @@ InputStatus FAST_CODE_ATTR InputCRSF::update()
     {
       parse(_frame, buff[i++]);
     }
+  }
+
+  if(_telemetry && micros() > _telemetry_next)
+  {
+    _telemetry_next = micros() + TELEMETRY_INTERVAL;
+    _telemetry->process(*_serial, TELEMETRY_PROTOCOL_CRSF);
   }
 
   if(_new_data)
@@ -65,50 +70,50 @@ size_t InputCRSF::getChannelCount() const { return CHANNELS; }
 
 bool InputCRSF::needAverage() const { return false; }
 
-
-void FAST_CODE_ATTR InputCRSF::parse(CrsfFrame& frame, int d)
+void FAST_CODE_ATTR InputCRSF::parse(CrsfMessage& msg, int d)
 {
+  uint8_t *data = reinterpret_cast<uint8_t*>(&msg);
   uint8_t c = (uint8_t)(d & 0xff);
   switch(_state)
   {
     case CRSF_ADDR:
-      if(c == CRSF_ADDRESS_FLIGHT_CONTROLLER)
+      if(c == CRSF_SYNC_BYTE)
       {
-        frame.data[_idx++] = c;
+        data[_idx++] = c;
         _state = CRSF_SIZE;
       }
       break;
     case CRSF_SIZE:
       if(c > 3 && c <= CRSF_PAYLOAD_SIZE_MAX)
       {
-        frame.data[_idx++] = c;
+        data[_idx++] = c;
         _state = CRSF_TYPE;
       } else {
         reset();
       }
       break;
     case CRSF_TYPE:
-      if(c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED || c == CRSF_FRAMETYPE_LINK_STATISTICS)
+      if(c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED || c == CRSF_FRAMETYPE_LINK_STATISTICS || c == CRSF_FRAMETYPE_MSP_REQ)
       {
-        frame.data[_idx++] = c;
+        data[_idx++] = c;
         _state = CRSF_DATA;
       } else {
         reset();
       }
       break;
     case CRSF_DATA:
-      frame.data[_idx++] = c;
-      if(_idx > frame.message.size) // _idx is incremented here and operator > accounts as size - 2
+      data[_idx++] = c;
+      if(_idx > msg.size) // _idx is incremented here and operator > accounts as size - 2
       {
         _state = CRSF_CRC;
       }
       break;
     case CRSF_CRC:
-      frame.data[_idx++] = c;
+      data[_idx++] = c;
       reset();
-      uint8_t crc = Crsf::crc(frame);
+      uint8_t crc = msg.crc();
       if(c == crc) {
-        apply(frame);
+        apply(msg);
       }
       break;
     }
@@ -120,16 +125,20 @@ void FAST_CODE_ATTR InputCRSF::reset()
   _idx = 0;
 }
 
-void FAST_CODE_ATTR InputCRSF::apply(const CrsfFrame& frame)
+void FAST_CODE_ATTR InputCRSF::apply(const CrsfMessage& msg)
 {
-  switch (frame.message.type)
+  switch (msg.type)
   {
     case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
-      applyChannels(frame);
+      applyChannels(msg);
       break;
 
     case CRSF_FRAMETYPE_LINK_STATISTICS:
-      applyLinkStats(frame);
+      applyLinkStats(msg);
+      break;
+
+    case CRSF_FRAMETYPE_MSP_REQ:
+      applyMspReq(msg);
       break;
 
     default:
@@ -137,19 +146,36 @@ void FAST_CODE_ATTR InputCRSF::apply(const CrsfFrame& frame)
   }
 }
 
-void FAST_CODE_ATTR InputCRSF::applyLinkStats(const CrsfFrame f)
+void FAST_CODE_ATTR InputCRSF::applyLinkStats(const CrsfMessage& msg)
 {
-  const CrsfLinkStats* frame = reinterpret_cast<const CrsfLinkStats*>(f.message.payload);
-  (void)frame;
+  const CrsfLinkStats* stats = reinterpret_cast<const CrsfLinkStats*>(msg.payload);
+  (void)stats;
   // TODO:
 }
 
-void FAST_CODE_ATTR InputCRSF::applyChannels(const CrsfFrame f)
+void FAST_CODE_ATTR InputCRSF::applyChannels(const CrsfMessage& msg)
 {
-  const CrsfData* frame = reinterpret_cast<const CrsfData*>(f.message.payload);
-  Crsf::decodeRcDataShift8(_channels, frame);
+  const CrsfData* data = reinterpret_cast<const CrsfData*>(msg.payload);
+  Crsf::decodeRcDataShift8(_channels, data);
   //Crsf::decodeRcData(_channels, frame);
   _new_data = true;
+}
+
+void FAST_CODE_ATTR InputCRSF::applyMspReq(const CrsfMessage& msg)
+{
+  if(!_telemetry) return;
+
+  uint8_t origin;
+  Msp::MspMessage m;
+
+  Crsf::decodeMsp(msg, m, origin);
+
+  if(m.isCmd() && m.isReady())
+  {
+    _telemetry->processMsp(*_serial, TELEMETRY_PROTOCOL_CRSF, m, origin);
+  }
+
+  _telemetry_next = micros() + TELEMETRY_INTERVAL;
 }
 
 }
