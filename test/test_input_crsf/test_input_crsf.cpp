@@ -424,5 +424,6 @@ int main(int argc, char **argv)
   RUN_TEST(test_crsf_encode_msp_v1);
   RUN_TEST(test_crsf_encode_msp_v2);
   RUN_TEST(test_crsf_decode_msp_v1);
+
   return UNITY_END();
 }

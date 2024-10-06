@@ -127,7 +127,6 @@ int main(int argc, char **argv)
   RUN_TEST(test_msp_v2_parse_header);
   RUN_TEST(test_msp_v2_parse_no_payload);
   RUN_TEST(test_msp_v2_parse_payload);
-  UNITY_END();
 
-  return 0;
+  return UNITY_END();
 }

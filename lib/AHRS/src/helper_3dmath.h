@@ -28,12 +28,12 @@ class VectorBase;
 class Quaternion
 {
 public:
-  float w;
-  float x;
-  float y;
-  float z;
+  float w = 1.f;
+  float x = 0.f;
+  float y = 0.f;
+  float z = 0.f;
 
-  Quaternion() : w(1.f), x(0.f), y(0.f), z(0.f) {}
+  Quaternion() = default;
 
   Quaternion(float nw, float nx, float ny, float nz) : w(nw), x(nx), y(ny), z(nz) {}
 
@@ -217,13 +217,13 @@ template<typename T>
 class VectorBase
 {
 public:
-  T x;
-  T y;
-  T z;
+  T x = T{};
+  T y = T{};
+  T z = T{};
 
   VectorBase() = default;
   VectorBase(const VectorBase& o) = default;
-  VectorBase(T nx, T ny, T nz) : x(nx), y(ny), z(nz) {}
+  VectorBase(T nx, T ny, T nz) : x{nx}, y{ny}, z{nz} {}
 
   VectorBase& operator=(const VectorBase& o)
   {
