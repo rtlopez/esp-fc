@@ -23,7 +23,7 @@ int Espfc::load()
 int Espfc::begin()
 {
   _serial.begin();      // requires _model.load()
-  _model.logStorageResult();
+  //_model.logStorageResult();
   _hardware.begin();    // requires _model.load()
   _model.begin();       // requires _hardware.begin()
   _mixer.begin();

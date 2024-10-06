@@ -653,6 +653,8 @@ class ModelConfig
 
     uint8_t rescueConfigDelay = 30;
 
+    int16_t boardAlignment[3] = {0, 0, 0};
+
     ModelConfig()
     {
 #ifdef ESPFC_INPUT

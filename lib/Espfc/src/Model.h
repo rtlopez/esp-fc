@@ -267,7 +267,9 @@ class Model
       logger.begin();
       #ifndef UNIT_TEST
       _storage.begin();
+      logger.info().log(F("F_CPU")).logln(F_CPU);
       _storageResult = _storage.load(config);
+      logStorageResult();
       #endif
       postLoad();
       return 1;
@@ -278,6 +280,7 @@ class Model
       preSave();
       #ifndef UNIT_TEST
       _storageResult = _storage.write(config);
+      logStorageResult();
       #endif
     }
 
@@ -441,6 +444,8 @@ class Model
         state.magTimer.setRate(state.magRate);
       }
 
+      state.boardAlignment.init(VectorFloat(Math::toRad(config.boardAlignment[0]), Math::toRad(config.boardAlignment[1]), Math::toRad(config.boardAlignment[2])));
+
       const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
       const uint32_t inputFilterRate = state.inputTimer.rate;
@@ -595,17 +600,17 @@ class Model
     void logStorageResult()
     {
 #ifndef UNIT_TEST
-      logger.info().log(F("F_CPU")).logln(F_CPU);
       switch(_storageResult)
       {
-        case STORAGE_LOAD_SUCCESS:    logger.info().logln(F("EEPROM loaded")); break;
-        case STORAGE_SAVE_SUCCESS:    logger.info().logln(F("EEPROM saved")); break;
+        case STORAGE_LOAD_SUCCESS:    logger.info().logln(F("EEPROM load ok")); break;
+        case STORAGE_SAVE_SUCCESS:    logger.info().logln(F("EEPROM save ok")); break;
+        case STORAGE_SAVE_ERROR:      logger.err().logln(F("EEPROM save failed")); break;
         case STORAGE_ERR_BAD_MAGIC:   logger.err().logln(F("EEPROM wrong magic")); break;
         case STORAGE_ERR_BAD_VERSION: logger.err().logln(F("EEPROM wrong version")); break;
         case STORAGE_ERR_BAD_SIZE:    logger.err().logln(F("EEPROM wrong size")); break;
         case STORAGE_NONE:
         default:
-          logger.err().logln(F("EEPROM unknown")); break;
+          logger.err().logln(F("EEPROM unknown result")); break;
       }
 #endif
     }
