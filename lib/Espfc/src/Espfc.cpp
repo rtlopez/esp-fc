@@ -5,11 +5,7 @@ namespace Espfc {
 
 Espfc::Espfc():
   _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
-  _mixer(_model), _blackbox(_model)
-#ifdef ESPFC_BUZER
-  , _buzzer(_model)
-#endif
-  , _serial(_model)
+  _mixer(_model), _blackbox(_model), _buzzer(_model), _serial(_model)
   {}
 
 int Espfc::load()
@@ -32,9 +28,7 @@ int Espfc::begin()
   _actuator.begin();    // requires _model.begin()
   _controller.begin();
   _blackbox.begin();    // requires _serial.begin(), _actuator.begin()
-#ifdef ESPFC_BUZER
   _buzzer.begin();
-#endif
   _model.state.buzzer.push(BUZZER_SYSTEM_INIT);
 
   return 1;
@@ -65,9 +59,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   }
 
   _serial.update();
-#ifdef ESPFC_BUZER
   _buzzer.update();
-#endif
   _model.state.stats.update();
 
 #else
@@ -93,9 +85,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   _sensor.updateDelayed();
 
   _serial.update();
-#ifdef ESPFC_BUZER
   _buzzer.update();
-#endif
   _model.state.stats.update();
 #endif
 

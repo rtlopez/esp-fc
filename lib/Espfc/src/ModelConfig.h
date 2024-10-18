@@ -257,9 +257,7 @@ enum PinFunction {
 #if ESPFC_OUTPUT_COUNT > 7
   PIN_OUTPUT_7,
 #endif
-#ifdef ESPFC_BUZZER
   PIN_BUZZER,
-#endif
 #ifdef ESPFC_SERIAL_0
   PIN_SERIAL_0_TX,
   PIN_SERIAL_0_RX,
@@ -658,9 +656,7 @@ class ModelConfig
 #if ESPFC_OUTPUT_COUNT > 7
       pin[PIN_OUTPUT_7] = ESPFC_OUTPUT_7;
 #endif
-#ifdef ESPFC_BUZZER
       pin[PIN_BUZZER] = ESPFC_BUZZER_PIN;
-#endif
 #ifdef ESPFC_SERIAL_0
       pin[PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX;
       pin[PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX;
