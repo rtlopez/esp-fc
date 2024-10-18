@@ -71,7 +71,6 @@
 #define ESPFC_I2C_0_SDA 9
 #define ESPFC_I2C_0_SOFT
 
-#define ESPFC_BUZZER
 #define ESPFC_BUZZER_PIN 5
 
 #define ESPFC_ADC_0

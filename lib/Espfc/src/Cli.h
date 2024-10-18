@@ -691,9 +691,7 @@ class Cli
 #if ESPFC_OUTPUT_COUNT > 7
         Param(PSTR("pin_output_7"), &c.pin[PIN_OUTPUT_7]),
 #endif
-#ifdef ESPFC_BUZZER
         Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
-#endif
 #if defined(ESPFC_SERIAL_0) && defined(ESPFC_SERIAL_REMAP_PINS)
         Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
         Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
@@ -724,9 +722,7 @@ class Cli
         Param(PSTR("pin_spi_cs_1"), &c.pin[PIN_SPI_CS1]),
         Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
 #endif
-#ifdef ESPFC_BUZZER
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
-#endif
 
 #ifdef ESPFC_I2C_0
         Param(PSTR("i2c_speed"), &c.i2cSpeed),
