@@ -532,6 +532,16 @@ struct BlackboxConfig
   int8_t mode = 0;
 };
 
+struct RpmFilterConfig
+{
+  uint8_t harmonics = 3;
+  uint8_t minFreq = 100;
+  int16_t q = 500;
+  uint8_t freqLpf = 150;
+  uint8_t weights[RPM_FILTER_HARMONICS_MAX] = {100, 100, 100};
+  uint8_t fade = 30;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -654,12 +664,7 @@ class ModelConfig
 
     DynamicFilterConfig dynamicFilter{4, 300, 80, 400};
 
-    uint8_t rpmFilterHarmonics = 3;
-    uint8_t rpmFilterMinFreq = 100;
-    int16_t rpmFilterQ = 500;
-    uint8_t rpmFilterFreqLpf = 150;
-    uint8_t rpmFilterWeights[RPM_FILTER_HARMONICS_MAX] = {100, 100, 100};
-    uint8_t rpmFilterFade = 30;
+    RpmFilterConfig rpmFilter;
 
     uint8_t rescueConfigDelay = 30;
 

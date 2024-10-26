@@ -33,16 +33,16 @@ int GyroSensor::begin()
   _dyn_notch_enabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
   _dyn_notch_debug = _model.config.debugMode == DEBUG_FFT_FREQ || _model.config.debugMode == DEBUG_FFT_TIME;
 
-  _rpm_enabled = _model.config.rpmFilterHarmonics > 0 && _model.config.output.dshotTelemetry;
+  _rpm_enabled = _model.config.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;
   _rpm_motor_index = 0;
-  _rpm_fade_inv = 1.0f / _model.config.rpmFilterFade;
-  _rpm_min_freq = _model.config.rpmFilterMinFreq;
+  _rpm_fade_inv = 1.0f / _model.config.rpmFilter.fade;
+  _rpm_min_freq = _model.config.rpmFilter.minFreq;
   _rpm_max_freq = 0.48f * _model.state.loopTimer.rate;
-  _rpm_q = _model.config.rpmFilterQ * 0.01f;
+  _rpm_q = _model.config.rpmFilter.q * 0.01f;
 
   for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
   {
-    _rpm_weights[i] = Math::clamp(0.01f * _model.config.rpmFilterWeights[i], 0.0f, 1.0f);
+    _rpm_weights[i] = Math::clamp(0.01f * _model.config.rpmFilter.weights[i], 0.0f, 1.0f);
   }
   for (size_t i = 0; i < 3; i++)
   {
@@ -111,7 +111,7 @@ int FAST_CODE_ATTR GyroSensor::filter()
   {
     for (size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
     {
-      for (size_t n = 0; n < _model.config.rpmFilterHarmonics; n++)
+      for (size_t n = 0; n < _model.config.rpmFilter.harmonics; n++)
       {
         _model.state.gyro = Utils::applyFilter(_model.state.rpmFilter[m][n], _model.state.gyro);
       }
@@ -165,12 +165,12 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
   Stats::Measure measure(_model.state.stats, COUNTER_RPM_UPDATE);
 
   const float motorFreq = _model.state.outputTelemetryFreq[_rpm_motor_index];
-  for (size_t n = 0; n < _model.config.rpmFilterHarmonics; n++)
+  for (size_t n = 0; n < _model.config.rpmFilter.harmonics; n++)
   {
     const float freq = Math::clamp(motorFreq * (n + 1), _rpm_min_freq, _rpm_max_freq);
     const float freqMargin = freq - _rpm_min_freq;
     float weight = _rpm_weights[n];
-    if (freqMargin < _model.config.rpmFilterFade)
+    if (freqMargin < _model.config.rpmFilter.fade)
     {
       weight *= freqMargin * _rpm_fade_inv;
     }

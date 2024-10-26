@@ -477,10 +477,10 @@ class Model
         state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 3), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
         {
-          state.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.rpmFilterFreqLpf), gyroFilterRate);
-          for(size_t n = 0; n < config.rpmFilterHarmonics; n++)
+          state.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.rpmFilter.freqLpf), gyroFilterRate);
+          for(size_t n = 0; n < config.rpmFilter.harmonics; n++)
           {
-            int center = Math::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.rpmFilterHarmonics, config.rpmFilterMinFreq, gyroFilterRate / 2);
+            int center = Math::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.rpmFilter.harmonics, config.rpmFilter.minFreq, gyroFilterRate / 2);
             state.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
           }
         }

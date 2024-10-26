@@ -1089,8 +1089,8 @@ class MspProcessor
           r.writeU16(_model.config.dynamicFilter.q); // dyn_notch_q
           r.writeU16(_model.config.dynamicFilter.min_freq); // dyn_notch_min_hz
           // rpm filter
-          r.writeU8(_model.config.rpmFilterHarmonics);  // gyro_rpm_notch_harmonics
-          r.writeU8(_model.config.rpmFilterMinFreq);  // gyro_rpm_notch_min
+          r.writeU8(_model.config.rpmFilter.harmonics);  // gyro_rpm_notch_harmonics
+          r.writeU8(_model.config.rpmFilter.minFreq);  // gyro_rpm_notch_min
           // 1.43+
           r.writeU16(_model.config.dynamicFilter.max_freq); // dyn_notch_max_hz
           break;
@@ -1134,8 +1134,8 @@ class MspProcessor
             _model.config.dynamicFilter.width = m.readU8();  // dyn_notch_width_percent
             _model.config.dynamicFilter.q = m.readU16(); // dyn_notch_q
             _model.config.dynamicFilter.min_freq = m.readU16(); // dyn_notch_min_hz
-            _model.config.rpmFilterHarmonics = m.readU8();  // gyro_rpm_notch_harmonics
-            _model.config.rpmFilterMinFreq = m.readU8();  // gyro_rpm_notch_min
+            _model.config.rpmFilter.harmonics = m.readU8();  // gyro_rpm_notch_harmonics
+            _model.config.rpmFilter.minFreq = m.readU8();  // gyro_rpm_notch_min
           }
           // 1.43+
           if (m.remain() >= 1) {
