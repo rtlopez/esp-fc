@@ -3,6 +3,9 @@
 
 namespace Espfc {
 
+constexpr float SETPOINT_RATE_LIMIT = 1998.0f;
+constexpr float RC_RATE_INCREMENTAL = 14.54f;
+
 void Rates::begin(const InputConfig& config)
 {
   rateType = (RateType)config.rateType;

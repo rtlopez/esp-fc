@@ -130,10 +130,8 @@ class FailsafeState
     uint32_t timeout;
 };
 
-#define ACCEL_G (9.80665f)
-#define ACCEL_G_INV (1.f / ACCEL_G)
-//#define ACCEL_G (1.f)
-//#define ACCEL_G_INV (1.f)
+constexpr float ACCEL_G = 9.80665f;
+constexpr float ACCEL_G_INV = 1.f / ACCEL_G;
 
 enum RescueConfigMode {
   RESCUE_CONFIG_PENDING,
