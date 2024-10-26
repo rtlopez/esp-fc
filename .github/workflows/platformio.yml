@@ -9,35 +9,28 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Cache pip
+      - name: Cache Pio
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Cache PlatformIO
-        uses: actions/cache@v4
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install platformio
+        run: pip install --upgrade platformio
       - name: Run PlatformIO Test
         run: platformio test -e native
 
   build:
     needs: test
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         target: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp8266', 'rp2040', 'rp2350']
@@ -61,26 +54,19 @@ jobs:
           echo NAME:    ${{ env.build_name }}
           echo DEVEL:   ${{ env.build_file_devel }}
           echo RELEASE: ${{ env.build_file_release }}
-      - name: Cache pip
+      - name: Cache Pio
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Cache PlatformIO
-        uses: actions/cache@v4
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install platformio
+        run: pip install --upgrade platformio
 
 
       - name: Build Development Target
