@@ -4,10 +4,8 @@
 namespace Espfc {
 
 Espfc::Espfc():
-  _hardware(_model), _controller(_model), _telemetry(_model), _input(_model, _telemetry), _actuator(_model), _sensor(_model),
-  _mixer(_model), _blackbox(_model)
-  , _buzzer(_model)
-  , _serial(_model, _telemetry)
+  _hardware{_model}, _controller{_model}, _telemetry{_model}, _input{_model, _telemetry}, _actuator{_model}, _sensor{_model},
+  _mixer{_model}, _blackbox{_model}, _buzzer{_model}, _serial{_model, _telemetry}
   {}
 
 int Espfc::load()
