@@ -494,15 +494,15 @@ class Cli
         Param(PSTR("board_align_pitch"), &c.boardAlignment[1]),
         Param(PSTR("board_align_yaw"), &c.boardAlignment[2]),
 
-        Param(PSTR("vbat_source"), &c.vbatSource, voltageSourceChoices),
-        Param(PSTR("vbat_scale"), &c.vbatScale),
-        Param(PSTR("vbat_mul"), &c.vbatResMult),
-        Param(PSTR("vbat_div"), &c.vbatResDiv),
-        Param(PSTR("vbat_cell_warn"), &c.vbatCellWarning),
+        Param(PSTR("vbat_source"), &c.vbat.source, voltageSourceChoices),
+        Param(PSTR("vbat_scale"), &c.vbat.scale),
+        Param(PSTR("vbat_mul"), &c.vbat.resMult),
+        Param(PSTR("vbat_div"), &c.vbat.resDiv),
+        Param(PSTR("vbat_cell_warn"), &c.vbat.cellWarning),
 
-        Param(PSTR("ibat_source"), &c.ibatSource, currentSourceChoices),
-        Param(PSTR("ibat_scale"), &c.ibatScale),
-        Param(PSTR("ibat_offset"), &c.ibatOffset),
+        Param(PSTR("ibat_source"), &c.ibat.source, currentSourceChoices),
+        Param(PSTR("ibat_scale"), &c.ibat.scale),
+        Param(PSTR("ibat_offset"), &c.ibat.offset),
 
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
         Param(PSTR("fusion_gain_p"), &c.fusion.gain),

@@ -542,6 +542,22 @@ struct RpmFilterConfig
   uint8_t fade = 30;
 };
 
+struct VBatConfig
+{
+  int16_t cellWarning = 350;
+  uint8_t scale = 100;
+  uint8_t resDiv = 10;
+  uint8_t resMult = 1;
+  int8_t source = 0;
+};
+
+struct IBatConfig
+{
+  int8_t source = 0;
+  int16_t scale = 100;
+  int16_t offset = 0;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -637,15 +653,8 @@ class ModelConfig
 
     char modelName[MODEL_NAME_LEN + 1];
 
-    int16_t vbatCellWarning = 350;
-    uint8_t vbatScale = 100;
-    uint8_t vbatResDiv = 10;
-    uint8_t vbatResMult = 1;
-    int8_t vbatSource = 0;
-
-    int8_t ibatSource = 0;
-    int16_t ibatScale = 100;
-    int16_t ibatOffset = 0;
+    VBatConfig vbat;
+    IBatConfig ibat;
 
     int8_t debugMode = DEBUG_NONE;
     uint8_t debugAxis = 1;

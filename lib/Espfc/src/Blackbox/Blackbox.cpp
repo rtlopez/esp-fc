@@ -170,9 +170,9 @@ int Blackbox::begin()
 
   featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
-  batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibatSource;
-  batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbatSource;
-  batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbatCellWarning;
+  batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibat.source;
+  batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbat.source;
+  batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbat.cellWarning;
   batteryConfigMutable()->vbatmaxcellvoltage = 420;
   batteryConfigMutable()->vbatmincellvoltage = 340;
 

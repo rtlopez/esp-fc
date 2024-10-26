@@ -55,7 +55,7 @@ class VoltageSensor: public BaseSensor
     int readVbat()
     {
 #ifdef ESPFC_ADC_0
-      if(_model.config.vbatSource != 1 || _model.config.pin[PIN_INPUT_ADC_0] == -1) return 0;
+      if(_model.config.vbat.source != 1 || _model.config.pin[PIN_INPUT_ADC_0] == -1) return 0;
       // wemos d1 mini has divider 3.2:1 (220k:100k)
       // additionaly I've used divider 5.7:1 (4k7:1k)
       // total should equals ~18.24:1, 73:4 resDiv:resMult should be ideal,
@@ -63,9 +63,9 @@ class VoltageSensor: public BaseSensor
       _model.state.battery.rawVoltage = analogRead(_model.config.pin[PIN_INPUT_ADC_0]);
       float volts = _vFilterFast.update(_model.state.battery.rawVoltage * ESPFC_ADC_SCALE);
 
-      volts *= _model.config.vbatScale * 0.1f;
-      volts *= _model.config.vbatResMult;
-      volts /= _model.config.vbatResDiv;
+      volts *= _model.config.vbat.scale * 0.1f;
+      volts *= _model.config.vbat.resMult;
+      volts /= _model.config.vbat.resDiv;
 
       _model.state.battery.voltageUnfiltered = volts;
       _model.state.battery.voltage = _vFilter.update(_model.state.battery.voltageUnfiltered);
@@ -94,14 +94,14 @@ class VoltageSensor: public BaseSensor
     int readIbat()
     {
 #ifdef ESPFC_ADC_1
-      if(_model.config.ibatSource != 1 && _model.config.pin[PIN_INPUT_ADC_1] == -1) return 0;
+      if(_model.config.ibat.source != 1 && _model.config.pin[PIN_INPUT_ADC_1] == -1) return 0;
 
       _model.state.battery.rawCurrent = analogRead(_model.config.pin[PIN_INPUT_ADC_1]);
       float volts = _iFilterFast.update(_model.state.battery.rawCurrent * ESPFC_ADC_SCALE);
       float milivolts = volts * 1000.0f;
 
-      volts += _model.config.ibatOffset * 0.001f;
-      volts *= _model.config.ibatScale * 0.1f;
+      volts += _model.config.ibat.offset * 0.001f;
+      volts *= _model.config.ibat.scale * 0.1f;
 
       _model.state.battery.currentUnfiltered = volts;
       _model.state.battery.current = _iFilter.update(_model.state.battery.currentUnfiltered);

@@ -351,27 +351,27 @@ class MspProcessor
         case MSP_BATTERY_CONFIG:
           r.writeU8(34);  // vbatmincellvoltage
           r.writeU8(42);  // vbatmaxcellvoltage
-          r.writeU8((_model.config.vbatCellWarning + 5) / 10);  // vbatwarningcellvoltage
+          r.writeU8((_model.config.vbat.cellWarning + 5) / 10);  // vbatwarningcellvoltage
           r.writeU16(0); // batteryCapacity
-          r.writeU8(_model.config.vbatSource);  // voltageMeterSource
-          r.writeU8(_model.config.ibatSource);  // currentMeterSource
+          r.writeU8(_model.config.vbat.source);  // voltageMeterSource
+          r.writeU8(_model.config.ibat.source);  // currentMeterSource
           r.writeU16(340); // vbatmincellvoltage
           r.writeU16(420); // vbatmaxcellvoltage
-          r.writeU16(_model.config.vbatCellWarning); // vbatwarningcellvoltage
+          r.writeU16(_model.config.vbat.cellWarning); // vbatwarningcellvoltage
           break;
 
         case MSP_SET_BATTERY_CONFIG:
           m.readU8();  // vbatmincellvoltage
           m.readU8();  // vbatmaxcellvoltage
-          _model.config.vbatCellWarning = m.readU8() * 10;  // vbatwarningcellvoltage
+          _model.config.vbat.cellWarning = m.readU8() * 10;  // vbatwarningcellvoltage
           m.readU16(); // batteryCapacity
-          _model.config.vbatSource = toVbatSource(m.readU8());  // voltageMeterSource
-          _model.config.ibatSource = toIbatSource(m.readU8());  // currentMeterSource
+          _model.config.vbat.source = toVbatSource(m.readU8());  // voltageMeterSource
+          _model.config.ibat.source = toIbatSource(m.readU8());  // currentMeterSource
           if(m.remain() >= 6)
           {
             m.readU16(); // vbatmincellvoltage
             m.readU16(); // vbatmaxcellvoltage
-            _model.config.vbatCellWarning = m.readU16();
+            _model.config.vbat.cellWarning = m.readU16();
           }
           break;
 
@@ -414,9 +414,9 @@ class MspProcessor
             r.writeU8(5); // frame size (5)
             r.writeU8(i + 10); // id (10-19 vbat adc)
             r.writeU8(0); // type resistor divider
-            r.writeU8(_model.config.vbatScale); // scale
-            r.writeU8(_model.config.vbatResDiv);  // resdivval
-            r.writeU8(_model.config.vbatResMult);  // resdivmultiplier
+            r.writeU8(_model.config.vbat.scale); // scale
+            r.writeU8(_model.config.vbat.resDiv);  // resdivval
+            r.writeU8(_model.config.vbat.resMult);  // resdivmultiplier
           }
           break;
 
@@ -425,9 +425,9 @@ class MspProcessor
             int id = m.readU8();
             if(id == 10 + 0) // id (10-19 vbat adc, allow only 10)
             {
-              _model.config.vbatScale = m.readU8();
-              _model.config.vbatResDiv = m.readU8();
-              _model.config.vbatResMult = m.readU8();
+              _model.config.vbat.scale = m.readU8();
+              _model.config.vbat.resDiv = m.readU8();
+              _model.config.vbat.resMult = m.readU8();
             }
           }
           break;
@@ -439,8 +439,8 @@ class MspProcessor
             r.writeU8(6); // frame size (6)
             r.writeU8(i + 10); // id (10-19 ibat adc)
             r.writeU8(1); // type adc
-            r.writeU16(_model.config.ibatScale); // scale
-            r.writeU16(_model.config.ibatOffset);  // offset
+            r.writeU16(_model.config.ibat.scale); // scale
+            r.writeU16(_model.config.ibat.offset);  // offset
           }
           break;
 
@@ -449,8 +449,8 @@ class MspProcessor
             int id = m.readU8();
             if(id == 10 + 0) // id (10-19 ibat adc, allow only 10)
             {
-              _model.config.ibatScale = m.readU16();
-              _model.config.ibatOffset = m.readU16();
+              _model.config.ibat.scale = m.readU16();
+              _model.config.ibat.offset = m.readU16();
             }
           }
           break;

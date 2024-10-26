@@ -203,7 +203,7 @@ class Actuator
       {
         _model.state.buzzer.play(BUZZER_RX_LOST);
       }
-      if(_model.state.battery.warn(_model.config.vbatCellWarning))
+      if(_model.state.battery.warn(_model.config.vbat.cellWarning))
       {
         _model.state.buzzer.play(BUZZER_BAT_LOW);
       }
