@@ -87,7 +87,7 @@ enum FlightMode {
   MODE_FAILSAFE,
   MODE_BLACKBOX,
   MODE_BLACKBOX_ERASE,
-  MODE_COUNT
+  MODE_COUNT,
 };
 
 enum ScalerDimension {
@@ -103,10 +103,10 @@ enum ScalerDimension {
   ACT_AXIS_PITCH  = 1 << 9,  // 512
   ACT_AXIS_YAW    = 1 << 10, // 1024
   ACT_AXIS_THRUST = 1 << 11, // 2048
-  ACT_GYRO_THRUST = 1 << 12  // 4096
+  ACT_GYRO_THRUST = 1 << 12, // 4096
 };
 
-const size_t SCALER_COUNT = 3;
+constexpr size_t SCALER_COUNT = 3;
 
 struct ScalerConfig {
   uint32_t dimension = 0;
@@ -179,7 +179,7 @@ enum DebugMode {
   DEBUG_BLACKBOX_OUTPUT,
   DEBUG_GYRO_SAMPLE,
   DEBUG_RX_TIMING,
-  DEBUG_COUNT
+  DEBUG_COUNT,
 };
 
 enum Axis {
@@ -199,7 +199,7 @@ enum Axis {
   AXIS_AUX_10,
   AXIS_AUX_11,
   AXIS_AUX_12,
-  AXIS_COUNT
+  AXIS_COUNT,
 };
 
 enum Feature {
@@ -222,18 +222,18 @@ enum InputInterpolation {
 
 enum InputFilterType : uint8_t {
   INPUT_INTERPOLATION,
-  INPUT_FILTER
+  INPUT_FILTER,
 };
 
-const size_t MODEL_NAME_LEN  = 16;
-const size_t AXES            = 4;
-const size_t AXES_RPY        = 3;
-const size_t INPUT_CHANNELS  = AXIS_COUNT;
-const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
+constexpr size_t MODEL_NAME_LEN  = 16;
+constexpr size_t AXES            = 4;
+constexpr size_t AXES_RPY        = 3;
+constexpr size_t INPUT_CHANNELS  = AXIS_COUNT;
+constexpr size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
 
-const size_t RPM_FILTER_MOTOR_MAX = 4;
-const size_t RPM_FILTER_HARMONICS_MAX = 3;
+constexpr size_t RPM_FILTER_MOTOR_MAX = 4;
+constexpr size_t RPM_FILTER_HARMONICS_MAX = 3;
 
 enum PinFunction {
 #ifdef ESPFC_INPUT
@@ -288,10 +288,10 @@ enum PinFunction {
   PIN_SPI_CS1,
   PIN_SPI_CS2,
 #endif
-  PIN_COUNT
+  PIN_COUNT,
 };
 
-#define ACTUATOR_CONDITIONS 8
+constexpr size_t ACTUATOR_CONDITIONS = 8;
 
 struct ActuatorCondition
 {
@@ -311,7 +311,7 @@ struct SerialPortConfig
   int32_t blackboxBaud;
 };
 
-#define BUZZER_MAX_EVENTS 8
+constexpr size_t BUZZER_MAX_EVENTS = 8;
 
 enum BuzzerEvent {
   BUZZER_SILENCE = 0,             // Silence, see beeperSilence()
@@ -359,7 +359,7 @@ enum PidIndex {
   FC_PID_LEVEL,
   FC_PID_MAG,
   FC_PID_VEL,
-  FC_PID_ITEM_COUNT
+  FC_PID_ITEM_COUNT,
 };
 
 enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
@@ -377,7 +377,14 @@ enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
   BLACKBOX_FIELD_GPS,
   BLACKBOX_FIELD_RPM,
   BLACKBOX_FIELD_GYROUNFILT,
-  BLACKBOX_FIELD_COUNT
+  BLACKBOX_FIELD_COUNT,
+};
+
+enum BlackboxLogDevice {
+  BLACKBOX_DEV_NONE = 0,
+  BLACKBOX_DEV_FLASH = 1,
+  BLACKBOX_DEV_SDCARD = 2,
+  BLACKBOX_DEV_SERIAL = 3,
 };
 
 struct PidConfig
@@ -517,6 +524,14 @@ struct FailsafeConfig
   uint8_t killSwitch = 0;
 };
 
+struct BlackboxConfig
+{
+  int8_t dev = 0;
+  int16_t pDenom = 32; // 1k
+  int32_t fieldsMask = 0xffff;
+  int8_t mode = 0;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -599,10 +614,7 @@ class ModelConfig
     int32_t telemetryInterval = 1000;
     int8_t telemetryPort; // unused
 
-    int8_t blackboxDev = 0;
-    int16_t blackboxPdenom = 32; // 1k
-    int32_t blackboxFieldsMask = 0xffff;
-    int8_t blackboxMode = 0;
+    BlackboxConfig blackbox;
 
     SerialPortConfig serial[SERIAL_UART_COUNT];
 
@@ -769,7 +781,7 @@ class ModelConfig
     void devPreset()
     {
 #ifdef ESPFC_DEV_PRESET_BLACKBOX
-      blackboxDev = 3; // serial
+      blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
       debugMode = DEBUG_GYRO_SCALED;
       serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
       serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;

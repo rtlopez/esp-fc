@@ -415,6 +415,7 @@ class Cli
 
       static const char* voltageSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
       static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
+      static const char* blackboxDevChoices[] = { PSTR("NONE"), PSTR("FLASH"), PSTR("SD_CARD"), PSTR("SERIAL"), NULL };
       static const char* blackboxModeChoices[] = { PSTR("NORMAL"), PSTR("TEST"), PSTR("ALWAYS"), NULL };
 
       size_t i = 0;
@@ -732,23 +733,23 @@ class Cli
         //Param(PSTR("telemetry"), &c.telemetry),
         Param(PSTR("telemetry_interval"), &c.telemetryInterval),
 
-        Param(PSTR("blackbox_dev"), &c.blackboxDev),
-        Param(PSTR("blackbox_mode"), &c.blackboxMode, blackboxModeChoices),
-        Param(PSTR("blackbox_rate"), &c.blackboxPdenom),
-        Param(PSTR("blackbox_log_acc"), &c.blackboxFieldsMask, BLACKBOX_FIELD_ACC),
-        Param(PSTR("blackbox_log_alt"), &c.blackboxFieldsMask, BLACKBOX_FIELD_ALTITUDE),
-        Param(PSTR("blackbox_log_bat"), &c.blackboxFieldsMask, BLACKBOX_FIELD_BATTERY),
-        Param(PSTR("blackbox_log_debug"), &c.blackboxFieldsMask, BLACKBOX_FIELD_DEBUG_LOG),
-        Param(PSTR("blackbox_log_gps"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GPS),
-        Param(PSTR("blackbox_log_gyro"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GYRO),
-        Param(PSTR("blackbox_log_gyro_raw"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GYROUNFILT),
-        Param(PSTR("blackbox_log_mag"), &c.blackboxFieldsMask, BLACKBOX_FIELD_MAG),
-        Param(PSTR("blackbox_log_motor"), &c.blackboxFieldsMask, BLACKBOX_FIELD_MOTOR),
-        Param(PSTR("blackbox_log_pid"), &c.blackboxFieldsMask, BLACKBOX_FIELD_PID),
-        Param(PSTR("blackbox_log_rc"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RC_COMMANDS),
-        Param(PSTR("blackbox_log_rpm"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RPM),
-        Param(PSTR("blackbox_log_rssi"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RSSI),
-        Param(PSTR("blackbox_log_sp"), &c.blackboxFieldsMask, BLACKBOX_FIELD_SETPOINT),
+        Param(PSTR("blackbox_dev"), &c.blackbox.dev, blackboxDevChoices),
+        Param(PSTR("blackbox_mode"), &c.blackbox.mode, blackboxModeChoices),
+        Param(PSTR("blackbox_rate"), &c.blackbox.pDenom),
+        Param(PSTR("blackbox_log_acc"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_ACC),
+        Param(PSTR("blackbox_log_alt"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_ALTITUDE),
+        Param(PSTR("blackbox_log_bat"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_BATTERY),
+        Param(PSTR("blackbox_log_debug"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_DEBUG_LOG),
+        Param(PSTR("blackbox_log_gps"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_GPS),
+        Param(PSTR("blackbox_log_gyro"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_GYRO),
+        Param(PSTR("blackbox_log_gyro_raw"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_GYROUNFILT),
+        Param(PSTR("blackbox_log_mag"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_MAG),
+        Param(PSTR("blackbox_log_motor"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_MOTOR),
+        Param(PSTR("blackbox_log_pid"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_PID),
+        Param(PSTR("blackbox_log_rc"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_RC_COMMANDS),
+        Param(PSTR("blackbox_log_rpm"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_RPM),
+        Param(PSTR("blackbox_log_rssi"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_RSSI),
+        Param(PSTR("blackbox_log_sp"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_SETPOINT),
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
         Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL, 32),

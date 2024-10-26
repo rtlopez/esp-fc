@@ -642,18 +642,18 @@ class MspProcessor
 
         case MSP_BLACKBOX_CONFIG:
           r.writeU8(1); // Blackbox supported
-          r.writeU8(_model.config.blackboxDev); // device serial or none
+          r.writeU8(_model.config.blackbox.dev); // device serial or none
           r.writeU8(1); // blackboxGetRateNum()); // unused
           r.writeU8(1); // blackboxGetRateDenom());
-          r.writeU16(_model.config.blackboxPdenom);//blackboxGetPRatio()); // p_denom
-          //r.writeU8(_model.config.blackboxPdenom); // sample_rate
-          //r.writeU32(~_model.config.blackboxFieldsMask);
+          r.writeU16(_model.config.blackbox.pDenom);//blackboxGetPRatio()); // p_denom
+          //r.writeU8(_model.config.blackbox.pDenom); // sample_rate
+          //r.writeU32(~_model.config.blackbox.fieldsMask);
           break;
 
         case MSP_SET_BLACKBOX_CONFIG:
           // Don't allow config to be updated while Blackbox is logging
           if (true) {
-            _model.config.blackboxDev = m.readU8();
+            _model.config.blackbox.dev = m.readU8();
             const int rateNum = m.readU8(); // was rate_num
             const int rateDenom = m.readU8(); // was rate_denom
             uint16_t pRatio = 0;
@@ -664,16 +664,16 @@ class MspProcessor
                 //pRatio = blackboxCalculatePDenom(rateNum, rateDenom);
                 (void)(rateNum + rateDenom);
             }
-            _model.config.blackboxPdenom = pRatio;
+            _model.config.blackbox.pDenom = pRatio;
 
             /*if (m.remain() >= 1) {
-                _model.config.blackboxPdenom = m.readU8();
+                _model.config.blackbox.pDenom = m.readU8();
             } else if(pRatio > 0) {
-                _model.config.blackboxPdenom = blackboxCalculateSampleRate(pRatio);
-                //_model.config.blackboxPdenom = pRatio;
+                _model.config.blackbox.pDenom = blackboxCalculateSampleRate(pRatio);
+                //_model.config.blackbox.pDenom = pRatio;
             }
             if (m.remain() >= 4) {
-              _model.config.blackboxFieldsMask = ~m.readU32();
+              _model.config.blackbox.fieldsMask = ~m.readU32();
             }*/
           }
           break;

@@ -104,7 +104,7 @@ class Model
     bool blackboxEnabled() const
     {
       // serial or flash
-      return (config.blackboxDev == 3 || config.blackboxDev == 1) && config.blackboxPdenom > 0;
+      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH) && config.blackbox.pDenom > 0;
     }
 
     bool gyroActive() const /* IRAM_ATTR */

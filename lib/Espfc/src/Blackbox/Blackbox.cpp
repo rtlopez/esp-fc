@@ -27,7 +27,7 @@ int Blackbox::begin()
 
   if(!_model.blackboxEnabled()) return 0;
 
-  if(_model.config.blackboxDev == 3)
+  if(_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
     _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
     if(!_serial) return 0;
@@ -156,17 +156,17 @@ int Blackbox::begin()
   targetPidLooptime = _model.state.loopTimer.interval;
   activePidLoopDenom = _model.config.loopSync;
 
-  if(_model.config.blackboxPdenom >= 0 && _model.config.blackboxPdenom <= 4)
+  if(_model.config.blackbox.pDenom >= 0 && _model.config.blackbox.pDenom <= 4)
   {
-    blackboxConfigMutable()->sample_rate = _model.config.blackboxPdenom;
+    blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
   }
   else
   {
-    blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackboxPdenom);
+    blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackbox.pDenom);
   }
-  blackboxConfigMutable()->device = _model.config.blackboxDev;
-  blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackboxFieldsMask;
-  blackboxConfigMutable()->mode = _model.config.blackboxMode;
+  blackboxConfigMutable()->device = _model.config.blackbox.dev;
+  blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
+  blackboxConfigMutable()->mode = _model.config.blackbox.mode;
 
   featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
@@ -206,7 +206,7 @@ int Blackbox::begin()
 int FAST_CODE_ATTR Blackbox::update()
 {
   if(!_model.blackboxEnabled()) return 0;
-  if(_model.config.blackboxDev == 3 && !_serial) return 0;
+  if(_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL && !_serial) return 0;
 
   Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
@@ -219,7 +219,7 @@ int FAST_CODE_ATTR Blackbox::update()
   }
   //PIN_DEBUG(HIGH);
   blackboxUpdate(_model.state.loopTimer.last);
-  if(_model.config.blackboxDev == 3)
+  if(_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
     _buffer.flush();
   }
