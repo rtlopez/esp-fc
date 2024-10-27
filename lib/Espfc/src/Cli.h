@@ -464,31 +464,30 @@ class Cli
         Param(PSTR("gyro_offset_y"), &c.gyro.bias[1]),
         Param(PSTR("gyro_offset_z"), &c.gyro.bias[2]),
 
-        Param(PSTR("accel_bus"), &c.accelBus, busDevChoices),
-        Param(PSTR("accel_dev"), &c.accelDev, gyroDevChoices),
-        //Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
-        Param(PSTR("accel_lpf_type"), &c.accelFilter.type, filterTypeChoices),
-        Param(PSTR("accel_lpf_freq"), &c.accelFilter.freq),
-        Param(PSTR("accel_offset_x"), &c.accelBias[0]),
-        Param(PSTR("accel_offset_y"), &c.accelBias[1]),
-        Param(PSTR("accel_offset_z"), &c.accelBias[2]),
+        Param(PSTR("accel_bus"), &c.accel.bus, busDevChoices),
+        Param(PSTR("accel_dev"), &c.accel.dev, gyroDevChoices),
+        Param(PSTR("accel_lpf_type"), &c.accel.filter.type, filterTypeChoices),
+        Param(PSTR("accel_lpf_freq"), &c.accel.filter.freq),
+        Param(PSTR("accel_offset_x"), &c.accel.bias[0]),
+        Param(PSTR("accel_offset_y"), &c.accel.bias[1]),
+        Param(PSTR("accel_offset_z"), &c.accel.bias[2]),
 
-        Param(PSTR("mag_bus"), &c.magBus, busDevChoices),
-        Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
-        Param(PSTR("mag_align"), &c.magAlign, alignChoices),
-        Param(PSTR("mag_filter_type"), &c.magFilter.type, filterTypeChoices),
-        Param(PSTR("mag_filter_lpf"), &c.magFilter.freq),
-        Param(PSTR("mag_offset_x"), &c.magCalibrationOffset[0]),
-        Param(PSTR("mag_offset_y"), &c.magCalibrationOffset[1]),
-        Param(PSTR("mag_offset_z"), &c.magCalibrationOffset[2]),
-        Param(PSTR("mag_scale_x"), &c.magCalibrationScale[0]),
-        Param(PSTR("mag_scale_y"), &c.magCalibrationScale[1]),
-        Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
+        Param(PSTR("mag_bus"), &c.mag.bus, busDevChoices),
+        Param(PSTR("mag_dev"), &c.mag.dev, magDevChoices),
+        Param(PSTR("mag_align"), &c.mag.align, alignChoices),
+        Param(PSTR("mag_filter_type"), &c.mag.filter.type, filterTypeChoices),
+        Param(PSTR("mag_filter_lpf"), &c.mag.filter.freq),
+        Param(PSTR("mag_offset_x"), &c.mag.offset[0]),
+        Param(PSTR("mag_offset_y"), &c.mag.offset[1]),
+        Param(PSTR("mag_offset_z"), &c.mag.offset[2]),
+        Param(PSTR("mag_scale_x"), &c.mag.scale[0]),
+        Param(PSTR("mag_scale_y"), &c.mag.scale[1]),
+        Param(PSTR("mag_scale_z"), &c.mag.scale[2]),
 
-        Param(PSTR("baro_bus"), &c.baroBus, busDevChoices),
-        Param(PSTR("baro_dev"), &c.baroDev, baroDevChoices),
-        Param(PSTR("baro_lpf_type"), &c.baroFilter.type, filterTypeChoices),
-        Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
+        Param(PSTR("baro_bus"), &c.baro.bus, busDevChoices),
+        Param(PSTR("baro_dev"), &c.baro.dev, baroDevChoices),
+        Param(PSTR("baro_lpf_type"), &c.baro.filter.type, filterTypeChoices),
+        Param(PSTR("baro_lpf_freq"), &c.baro.filter.freq),
 
         Param(PSTR("board_align_roll"), &c.boardAlignment[0]),
         Param(PSTR("board_align_pitch"), &c.boardAlignment[1]),
@@ -1045,25 +1044,25 @@ class Cli
           s.print(Math::toDeg(_model.state.gyroBias[2])); s.println(F("]"));
 
           s.print(F("accel offset: "));
-          s.print(_model.config.accelBias[0]); s.print(' ');
-          s.print(_model.config.accelBias[1]); s.print(' ');
-          s.print(_model.config.accelBias[2]); s.print(F(" ["));
+          s.print(_model.config.accel.bias[0]); s.print(' ');
+          s.print(_model.config.accel.bias[1]); s.print(' ');
+          s.print(_model.config.accel.bias[2]); s.print(F(" ["));
           s.print(_model.state.accelBias[0]); s.print(' ');
           s.print(_model.state.accelBias[1]); s.print(' ');
           s.print(_model.state.accelBias[2]); s.println(F("]"));
 
           s.print(F("  mag offset: "));
-          s.print(_model.config.magCalibrationOffset[0]); s.print(' ');
-          s.print(_model.config.magCalibrationOffset[1]); s.print(' ');
-          s.print(_model.config.magCalibrationOffset[2]); s.print(F(" ["));
+          s.print(_model.config.mag.offset[0]); s.print(' ');
+          s.print(_model.config.mag.offset[1]); s.print(' ');
+          s.print(_model.config.mag.offset[2]); s.print(F(" ["));
           s.print(_model.state.magCalibrationOffset[0]); s.print(' ');
           s.print(_model.state.magCalibrationOffset[1]); s.print(' ');
           s.print(_model.state.magCalibrationOffset[2]); s.println(F("]"));
 
           s.print(F("   mag scale: "));
-          s.print(_model.config.magCalibrationScale[0]); s.print(' ');
-          s.print(_model.config.magCalibrationScale[1]); s.print(' ');
-          s.print(_model.config.magCalibrationScale[2]); s.print(F(" ["));
+          s.print(_model.config.mag.scale[0]); s.print(' ');
+          s.print(_model.config.mag.scale[1]); s.print(' ');
+          s.print(_model.config.mag.scale[2]); s.print(F(" ["));
           s.print(_model.state.magCalibrationScale[0]); s.print(' ');
           s.print(_model.state.magCalibrationScale[1]); s.print(' ');
           s.print(_model.state.magCalibrationScale[2]); s.println(F("]"));

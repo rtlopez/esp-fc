@@ -129,13 +129,13 @@ class Hardware
       detectedGyro->setDLPFMode(_model.config.gyro.dlpf);
       _model.state.gyroDev = detectedGyro;
       _model.state.gyroPresent = (bool)detectedGyro;
-      _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != GYRO_NONE;
+      _model.state.accelPresent = _model.state.gyroPresent && _model.config.accel.dev != GYRO_NONE;
       _model.state.gyroClock = detectedGyro->getRate();
     }
 
     void detectMag()
     {
-      if(_model.config.magDev == MAG_NONE) return;
+      if(_model.config.mag.dev == MAG_NONE) return;
 
       Device::MagDevice * detectedMag  = nullptr;
 #if defined(ESPFC_I2C_0)
@@ -160,7 +160,7 @@ class Hardware
 
     void detectBaro()
     {
-      if(_model.config.baroDev == BARO_NONE) return;
+      if(_model.config.baro.dev == BARO_NONE) return;
 
       Device::BaroDevice * detectedBaro = nullptr;
 #if defined(ESPFC_SPI_0)

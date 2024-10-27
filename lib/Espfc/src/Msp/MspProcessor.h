@@ -519,22 +519,22 @@ class MspProcessor
           break;
 
         case MSP_SENSOR_CONFIG:
-          r.writeU8(_model.config.accelDev); // 3 acc mpu6050
-          r.writeU8(_model.config.baroDev);  // 2 baro bmp085
-          r.writeU8(_model.config.magDev);   // 3 mag hmc5883l
+          r.writeU8(_model.config.accel.dev); // 3 acc mpu6050
+          r.writeU8(_model.config.baro.dev);  // 2 baro bmp085
+          r.writeU8(_model.config.mag.dev);   // 3 mag hmc5883l
           break;
 
         case MSP_SET_SENSOR_CONFIG:
-          _model.config.accelDev = m.readU8(); // 3 acc mpu6050
-          _model.config.baroDev = m.readU8();  // 2 baro bmp085
-          _model.config.magDev = m.readU8();   // 3 mag hmc5883l
+          _model.config.accel.dev = m.readU8(); // 3 acc mpu6050
+          _model.config.baro.dev = m.readU8();  // 2 baro bmp085
+          _model.config.mag.dev = m.readU8();   // 3 mag hmc5883l
           _model.reload();
           break;
 
         case MSP_SENSOR_ALIGNMENT:
           r.writeU8(_model.config.gyro.align); // gyro align
           r.writeU8(_model.config.gyro.align); // acc align, Starting with 4.0 gyro and acc alignment are the same
-          r.writeU8(_model.config.magAlign);  // mag align
+          r.writeU8(_model.config.mag.align);  // mag align
           //1.41+
           r.writeU8(_model.state.gyroPresent ? 1 : 0); // gyro detection mask GYRO_1_MASK
           r.writeU8(0); // gyro_to_use
@@ -546,7 +546,7 @@ class MspProcessor
           {
             uint8_t gyroAlign = m.readU8(); // gyro align
             m.readU8(); // discard deprecated acc align
-            _model.config.magAlign = m.readU8(); // mag align
+            _model.config.mag.align = m.readU8(); // mag align
             // API >= 1.41 - support the gyro_to_use and alignment for gyros 1 & 2
             if(m.remain() >= 3)
             {

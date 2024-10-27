@@ -129,10 +129,10 @@ int Blackbox::begin()
   dynNotchConfigMutable()->dyn_notch_min_hz = _model.config.dynamicFilter.min_freq;
   dynNotchConfigMutable()->dyn_notch_max_hz = _model.config.dynamicFilter.max_freq;
 
-  accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
-  accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
-  barometerConfigMutable()->baro_hardware = _model.config.baroDev;
-  compassConfigMutable()->mag_hardware = _model.config.magDev;
+  accelerometerConfigMutable()->acc_lpf_hz = _model.config.accel.filter.freq;
+  accelerometerConfigMutable()->acc_hardware = _model.config.accel.dev;
+  barometerConfigMutable()->baro_hardware = _model.config.baro.dev;
+  compassConfigMutable()->mag_hardware = _model.config.mag.dev;
 
   motorConfigMutable()->dev.useUnsyncedPwm = _model.config.output.async;
   motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;

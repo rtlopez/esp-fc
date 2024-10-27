@@ -114,17 +114,17 @@ class Model
 
     bool accelActive() const
     {
-      return state.accelPresent && config.accelDev != GYRO_NONE;
+      return state.accelPresent && config.accel.dev != GYRO_NONE;
     }
 
     bool magActive() const
     {
-      return state.magPresent && config.magDev != MAG_NONE;
+      return state.magPresent && config.mag.dev != MAG_NONE;
     }
 
     bool baroActive() const
     {
-      return state.baroPresent && config.baroDev != BARO_NONE;
+      return state.baroPresent && config.baro.dev != BARO_NONE;
     }
 
     bool calibrationActive() const
@@ -314,7 +314,7 @@ class Model
       }
 
       int loopSyncMax = 1;
-      //if(config.magDev != MAG_NONE || config.baroDev != BARO_NONE) loopSyncMax /= 2;
+      //if(config.mag.dev != MAG_NONE || config.baro.dev != BARO_NONE) loopSyncMax /= 2;
 
       config.loopSync = std::max((int)config.loopSync, loopSyncMax);
       state.loopRate = state.gyroRate / config.loopSync;
@@ -473,7 +473,7 @@ class Model
         }
         state.gyroFilter2[i].begin(config.gyro.filter2, gyroFilterRate);
         state.gyroFilter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
+        state.accelFilter[i].begin(config.accel.filter, gyroFilterRate);
         state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 3), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
         {
@@ -486,7 +486,7 @@ class Model
         }
         if(magActive())
         {
-          state.magFilter[i].begin(config.magFilter, state.magTimer.rate);
+          state.magFilter[i].begin(config.mag.filter, state.magTimer.rate);
         }
       }
 
@@ -575,9 +575,9 @@ class Model
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
         state.gyroBias.set(i, config.gyro.bias[i] / 1000.0f);
-        state.accelBias.set(i, config.accelBias[i] / 1000.0f);
-        state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 10.0f);
-        state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
+        state.accelBias.set(i, config.accel.bias[i] / 1000.0f);
+        state.magCalibrationOffset.set(i, config.mag.offset[i] / 10.0f);
+        state.magCalibrationScale.set(i, config.mag.scale[i] / 1000.0f);
       }
     }
 
@@ -587,9 +587,9 @@ class Model
       for(size_t i = 0; i < 3; i++)
       {
         config.gyro.bias[i] = lrintf(state.gyroBias[i] * 1000.0f);
-        config.accelBias[i] = lrintf(state.accelBias[i] * 1000.0f);
-        config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 10.0f);
-        config.magCalibrationScale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
+        config.accel.bias[i] = lrintf(state.accelBias[i] * 1000.0f);
+        config.mag.offset[i] = lrintf(state.magCalibrationOffset[i] * 10.0f);
+        config.mag.scale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
       }
     }
 

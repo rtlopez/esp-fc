@@ -564,15 +564,38 @@ struct GyroConfig
   int8_t dev = GYRO_AUTO;
   int8_t dlpf = GYRO_DLPF_256;
   int8_t align = ALIGN_DEFAULT;
-
   FilterConfig filter{FILTER_PT1, 100};
   FilterConfig filter2{FILTER_PT1, 213};
   FilterConfig filter3{FILTER_FO, 150};
   FilterConfig notch1Filter{FILTER_NOTCH, 0, 0};
   FilterConfig notch2Filter{FILTER_NOTCH, 0, 0};
   FilterConfig dynLpfFilter{FILTER_PT1, 425, 170};
-
   int16_t bias[3] = { 0, 0, 0 };
+};
+
+struct AccelConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = GYRO_AUTO;
+  FilterConfig filter{FILTER_BIQUAD, 15};
+  int16_t bias[3] = { 0, 0, 0 };
+};
+
+struct BaroConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = BARO_NONE;
+  FilterConfig filter{FILTER_BIQUAD, 5};
+};
+
+struct MagConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = MAG_NONE;
+  int8_t align = ALIGN_DEFAULT;
+  FilterConfig filter{FILTER_BIQUAD, 10};
+  int16_t scale[3] = { 0, 0, 0 };
+  int16_t offset[3] = { 1000, 1000, 1000 };
 };
 
 // persistent data
@@ -580,26 +603,14 @@ class ModelConfig
 {
   public:
     GyroConfig gyro;
-
-    int8_t accelBus = BUS_AUTO;
-    int8_t accelDev = GYRO_AUTO;
-    int8_t accelAlign = ALIGN_DEFAULT;
-    FilterConfig accelFilter{FILTER_BIQUAD, 15};
-
-    int8_t magBus = BUS_AUTO;
-    int8_t magDev = MAG_NONE;
-    int8_t magAlign = ALIGN_DEFAULT;
-    FilterConfig magFilter{FILTER_BIQUAD, 10};
-
-    int8_t baroBus = BUS_AUTO;
-    int8_t baroDev = BARO_NONE;
-    FilterConfig baroFilter{FILTER_BIQUAD, 10};
+    AccelConfig accel;
+    BaroConfig baro;
+    MagConfig mag;
 
     InputConfig input;
     FailsafeConfig failsafe;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
-
     ScalerConfig scaler[SCALER_COUNT];
 
     OutputConfig output;
@@ -652,10 +663,6 @@ class ModelConfig
     SerialPortConfig serial[SERIAL_UART_COUNT];
 
     FusionConfig fusion;
-
-    int16_t accelBias[3] = { 0, 0, 0 };
-    int16_t magCalibrationScale[3] = { 0, 0, 0 };
-    int16_t magCalibrationOffset[3] = { 1000, 1000, 1000 };
 
     char modelName[MODEL_NAME_LEN + 1];
 
