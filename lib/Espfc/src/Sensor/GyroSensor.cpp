@@ -19,7 +19,7 @@ int GyroSensor::begin()
   _gyro = _model.state.gyroDev;
   if (!_gyro) return 0;
 
-  _gyro->setDLPFMode(_model.config.gyroDlpf);
+  _gyro->setDLPFMode(_model.config.gyro.dlpf);
   _gyro->setRate(_gyro->getRate());
   _model.state.gyroScale = Math::toRad(2000.f) / 32768.f;
 
@@ -53,7 +53,7 @@ int GyroSensor::begin()
 #endif
   }
 
-  _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.config.gyroDlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
+  _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.config.gyro.dlpf).log(_gyro->getRate()).log(_model.state.gyroTimer.rate).logln(_model.state.gyroTimer.interval);
 
   return 1;
 }
@@ -68,10 +68,10 @@ int FAST_CODE_ATTR GyroSensor::read()
 
   VectorFloat input = static_cast<VectorFloat>(_model.state.gyroRaw) * _model.state.gyroScale;
 
-  align(input, _model.config.gyroAlign);
+  align(input, _model.config.gyro.align);
   input = _model.state.boardAlignment.apply(input);
 
-  if (_model.config.gyroFilter3.freq)
+  if (_model.config.gyro.filter3.freq)
   {
     _model.state.gyroSampled = Utils::applyFilter(_model.state.gyroFilter3, input);
   }

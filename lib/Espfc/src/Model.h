@@ -109,7 +109,7 @@ class Model
 
     bool gyroActive() const /* IRAM_ATTR */
     {
-      return state.gyroPresent && config.gyroDev != GYRO_NONE;
+      return state.gyroPresent && config.gyro.dev != GYRO_NONE;
     }
 
     bool accelActive() const
@@ -461,18 +461,18 @@ class Model
             state.gyroDynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
           }
         }
-        state.gyroNotch1Filter[i].begin(config.gyroNotch1Filter, gyroFilterRate);
-        state.gyroNotch2Filter[i].begin(config.gyroNotch2Filter, gyroFilterRate);
-        if(config.gyroDynLpfFilter.cutoff > 0)
+        state.gyroNotch1Filter[i].begin(config.gyro.notch1Filter, gyroFilterRate);
+        state.gyroNotch2Filter[i].begin(config.gyro.notch2Filter, gyroFilterRate);
+        if(config.gyro.dynLpfFilter.cutoff > 0)
         {
-          state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyroFilter.type, config.gyroDynLpfFilter.cutoff), gyroFilterRate);
+          state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyro.filter.type, config.gyro.dynLpfFilter.cutoff), gyroFilterRate);
         }
         else
         {
-          state.gyroFilter[i].begin(config.gyroFilter, gyroFilterRate);
+          state.gyroFilter[i].begin(config.gyro.filter, gyroFilterRate);
         }
-        state.gyroFilter2[i].begin(config.gyroFilter2, gyroFilterRate);
-        state.gyroFilter3[i].begin(config.gyroFilter3, gyroPreFilterRate);
+        state.gyroFilter2[i].begin(config.gyro.filter2, gyroFilterRate);
+        state.gyroFilter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
         state.accelFilter[i].begin(config.accelFilter, gyroFilterRate);
         state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 3), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
@@ -574,7 +574,7 @@ class Model
       // load current sensor calibration
       for(size_t i = 0; i <= AXIS_YAW; i++)
       {
-        state.gyroBias.set(i, config.gyroBias[i] / 1000.0f);
+        state.gyroBias.set(i, config.gyro.bias[i] / 1000.0f);
         state.accelBias.set(i, config.accelBias[i] / 1000.0f);
         state.magCalibrationOffset.set(i, config.magCalibrationOffset[i] / 10.0f);
         state.magCalibrationScale.set(i, config.magCalibrationScale[i] / 1000.0f);
@@ -586,7 +586,7 @@ class Model
       // store current sensor calibration
       for(size_t i = 0; i < 3; i++)
       {
-        config.gyroBias[i] = lrintf(state.gyroBias[i] * 1000.0f);
+        config.gyro.bias[i] = lrintf(state.gyroBias[i] * 1000.0f);
         config.accelBias[i] = lrintf(state.accelBias[i] * 1000.0f);
         config.magCalibrationOffset[i] = lrintf(state.magCalibrationOffset[i] * 10.0f);
         config.magCalibrationScale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);

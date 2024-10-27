@@ -106,7 +106,7 @@ void test_model_gyro_init_1k_256dlpf()
 {
   Model model;
   model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
   model.begin();
@@ -123,7 +123,7 @@ void test_model_gyro_init_1k_188dlpf()
 {
   Model model;
   model.state.gyroClock = 1000;
-  model.config.gyroDlpf = GYRO_DLPF_188;
+  model.config.gyro.dlpf = GYRO_DLPF_188;
   model.config.loopSync = 2;
   model.config.mixerSync = 2;
   model.begin();
@@ -140,7 +140,7 @@ void test_model_inner_pid_init()
 {
   Model model;
   model.state.gyroClock = 1000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
   model.config.mixerType = FC_MIXER_QUADX;
@@ -172,7 +172,7 @@ void test_model_outer_pid_init()
 {
   Model model;
   model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
   model.config.mixerType = FC_MIXER_QUADX;
@@ -196,7 +196,7 @@ void test_controller_rates()
 {
   Model model;
   model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
   model.config.mixerType = FC_MIXER_QUADX;
@@ -246,7 +246,7 @@ void test_controller_rates_limit()
 {
   Model model;
   model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
   model.config.mixerType = FC_MIXER_QUADX;

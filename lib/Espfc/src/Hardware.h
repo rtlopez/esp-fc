@@ -96,7 +96,7 @@ class Hardware
 
     void detectGyro()
     {
-      if(_model.config.gyroDev == GYRO_NONE) return;
+      if(_model.config.gyro.dev == GYRO_NONE) return;
 
       Device::GyroDevice * detectedGyro = nullptr;
 #if defined(ESPFC_SPI_0)
@@ -126,7 +126,7 @@ class Hardware
 #endif
       if(!detectedGyro) return;
 
-      detectedGyro->setDLPFMode(_model.config.gyroDlpf);
+      detectedGyro->setDLPFMode(_model.config.gyro.dlpf);
       _model.state.gyroDev = detectedGyro;
       _model.state.gyroPresent = (bool)detectedGyro;
       _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != GYRO_NONE;

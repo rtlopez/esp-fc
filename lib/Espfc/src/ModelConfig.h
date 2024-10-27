@@ -558,21 +558,28 @@ struct IBatConfig
   int16_t offset = 0;
 };
 
+struct GyroConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = GYRO_AUTO;
+  int8_t dlpf = GYRO_DLPF_256;
+  int8_t align = ALIGN_DEFAULT;
+
+  FilterConfig filter{FILTER_PT1, 100};
+  FilterConfig filter2{FILTER_PT1, 213};
+  FilterConfig filter3{FILTER_FO, 150};
+  FilterConfig notch1Filter{FILTER_NOTCH, 0, 0};
+  FilterConfig notch2Filter{FILTER_NOTCH, 0, 0};
+  FilterConfig dynLpfFilter{FILTER_PT1, 425, 170};
+
+  int16_t bias[3] = { 0, 0, 0 };
+};
+
 // persistent data
 class ModelConfig
 {
   public:
-    int8_t gyroBus = BUS_AUTO;
-    int8_t gyroDev = GYRO_AUTO;
-    int8_t gyroDlpf = GYRO_DLPF_256;
-    int8_t gyroAlign = ALIGN_DEFAULT;
-
-    FilterConfig gyroFilter{FILTER_PT1, 100};
-    FilterConfig gyroFilter2{FILTER_PT1, 213};
-    FilterConfig gyroFilter3{FILTER_FO, 150};
-    FilterConfig gyroNotch1Filter{FILTER_NOTCH, 0, 0};
-    FilterConfig gyroNotch2Filter{FILTER_NOTCH, 0, 0};
-    FilterConfig gyroDynLpfFilter{FILTER_PT1, 425, 170};
+    GyroConfig gyro;
 
     int8_t accelBus = BUS_AUTO;
     int8_t accelDev = GYRO_AUTO;
@@ -646,7 +653,6 @@ class ModelConfig
 
     FusionConfig fusion;
 
-    int16_t gyroBias[3] = { 0, 0, 0 };
     int16_t accelBias[3] = { 0, 0, 0 };
     int16_t magCalibrationScale[3] = { 0, 0, 0 };
     int16_t magCalibrationOffset[3] = { 1000, 1000, 1000 };

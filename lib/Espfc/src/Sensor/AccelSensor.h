@@ -64,7 +64,7 @@ class AccelSensor: public BaseSensor
 
       _model.state.accel = (VectorFloat)_model.state.accelRaw * _model.state.accelScale;
 
-      align(_model.state.accel, _model.config.gyroAlign);
+      align(_model.state.accel, _model.config.gyro.align);
       _model.state.accel = _model.state.boardAlignment.apply(_model.state.accel);
 
       for(size_t i = 0; i < 3; i++)

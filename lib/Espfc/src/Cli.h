@@ -432,22 +432,22 @@ class Cli
         Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
         Param(PSTR("debug_axis"), &c.debugAxis),
 
-        Param(PSTR("gyro_bus"), &c.gyroBus, busDevChoices),
-        Param(PSTR("gyro_dev"), &c.gyroDev, gyroDevChoices),
-        Param(PSTR("gyro_dlpf"), &c.gyroDlpf, gyroDlpfChoices),
-        Param(PSTR("gyro_align"), &c.gyroAlign, alignChoices),
-        Param(PSTR("gyro_lpf_type"), &c.gyroFilter.type, filterTypeChoices),
-        Param(PSTR("gyro_lpf_freq"), &c.gyroFilter.freq),
-        Param(PSTR("gyro_lpf2_type"), &c.gyroFilter2.type, filterTypeChoices),
-        Param(PSTR("gyro_lpf2_freq"), &c.gyroFilter2.freq),
-        Param(PSTR("gyro_lpf3_type"), &c.gyroFilter3.type, filterTypeChoices),
-        Param(PSTR("gyro_lpf3_freq"), &c.gyroFilter3.freq),
-        Param(PSTR("gyro_notch1_freq"), &c.gyroNotch1Filter.freq),
-        Param(PSTR("gyro_notch1_cutoff"), &c.gyroNotch1Filter.cutoff),
-        Param(PSTR("gyro_notch2_freq"), &c.gyroNotch2Filter.freq),
-        Param(PSTR("gyro_notch2_cutoff"), &c.gyroNotch2Filter.cutoff),
-        Param(PSTR("gyro_dyn_lpf_min"), &c.gyroDynLpfFilter.cutoff),
-        Param(PSTR("gyro_dyn_lpf_max"), &c.gyroDynLpfFilter.freq),
+        Param(PSTR("gyro_bus"), &c.gyro.bus, busDevChoices),
+        Param(PSTR("gyro_dev"), &c.gyro.dev, gyroDevChoices),
+        Param(PSTR("gyro_dlpf"), &c.gyro.dlpf, gyroDlpfChoices),
+        Param(PSTR("gyro_align"), &c.gyro.align, alignChoices),
+        Param(PSTR("gyro_lpf_type"), &c.gyro.filter.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf_freq"), &c.gyro.filter.freq),
+        Param(PSTR("gyro_lpf2_type"), &c.gyro.filter2.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf2_freq"), &c.gyro.filter2.freq),
+        Param(PSTR("gyro_lpf3_type"), &c.gyro.filter3.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf3_freq"), &c.gyro.filter3.freq),
+        Param(PSTR("gyro_notch1_freq"), &c.gyro.notch1Filter.freq),
+        Param(PSTR("gyro_notch1_cutoff"), &c.gyro.notch1Filter.cutoff),
+        Param(PSTR("gyro_notch2_freq"), &c.gyro.notch2Filter.freq),
+        Param(PSTR("gyro_notch2_cutoff"), &c.gyro.notch2Filter.cutoff),
+        Param(PSTR("gyro_dyn_lpf_min"), &c.gyro.dynLpfFilter.cutoff),
+        Param(PSTR("gyro_dyn_lpf_max"), &c.gyro.dynLpfFilter.freq),
         Param(PSTR("gyro_dyn_notch_q"), &c.dynamicFilter.q),
         Param(PSTR("gyro_dyn_notch_count"), &c.dynamicFilter.width),
         Param(PSTR("gyro_dyn_notch_min"), &c.dynamicFilter.min_freq),
@@ -460,9 +460,9 @@ class Cli
         Param(PSTR("gyro_rpm_weight_2"), &c.rpmFilter.weights[1]),
         Param(PSTR("gyro_rpm_weight_3"), &c.rpmFilter.weights[2]),
         Param(PSTR("gyro_rpm_tlm_lpf_freq"), &c.rpmFilter.freqLpf),
-        Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
-        Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
-        Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
+        Param(PSTR("gyro_offset_x"), &c.gyro.bias[0]),
+        Param(PSTR("gyro_offset_y"), &c.gyro.bias[1]),
+        Param(PSTR("gyro_offset_z"), &c.gyro.bias[2]),
 
         Param(PSTR("accel_bus"), &c.accelBus, busDevChoices),
         Param(PSTR("accel_dev"), &c.accelDev, gyroDevChoices),
@@ -1037,9 +1037,9 @@ class Cli
         if(!cmd.args[1])
         {
           s.print(F(" gyro offset: "));
-          s.print(_model.config.gyroBias[0]); s.print(' ');
-          s.print(_model.config.gyroBias[1]); s.print(' ');
-          s.print(_model.config.gyroBias[2]); s.print(F(" ["));
+          s.print(_model.config.gyro.bias[0]); s.print(' ');
+          s.print(_model.config.gyro.bias[1]); s.print(' ');
+          s.print(_model.config.gyro.bias[2]); s.print(F(" ["));
           s.print(Math::toDeg(_model.state.gyroBias[0])); s.print(' ');
           s.print(Math::toDeg(_model.state.gyroBias[1])); s.print(' ');
           s.print(Math::toDeg(_model.state.gyroBias[2])); s.println(F("]"));

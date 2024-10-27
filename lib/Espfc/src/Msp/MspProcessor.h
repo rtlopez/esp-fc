@@ -532,13 +532,13 @@ class MspProcessor
           break;
 
         case MSP_SENSOR_ALIGNMENT:
-          r.writeU8(_model.config.gyroAlign); // gyro align
-          r.writeU8(_model.config.gyroAlign); // acc align, Starting with 4.0 gyro and acc alignment are the same
+          r.writeU8(_model.config.gyro.align); // gyro align
+          r.writeU8(_model.config.gyro.align); // acc align, Starting with 4.0 gyro and acc alignment are the same
           r.writeU8(_model.config.magAlign);  // mag align
           //1.41+
           r.writeU8(_model.state.gyroPresent ? 1 : 0); // gyro detection mask GYRO_1_MASK
           r.writeU8(0); // gyro_to_use
-          r.writeU8(_model.config.gyroAlign); // gyro 1
+          r.writeU8(_model.config.gyro.align); // gyro 1
           r.writeU8(0); // gyro 2
           break;
 
@@ -554,7 +554,7 @@ class MspProcessor
               gyroAlign = m.readU8(); // gyro 1 align
               m.readU8(); // gyro 2 align
             }
-            _model.config.gyroAlign = gyroAlign;
+            _model.config.gyro.align = gyroAlign;
           }
           break;
 
@@ -1060,29 +1060,29 @@ class MspProcessor
         //  break;
 
         case MSP_FILTER_CONFIG:
-          r.writeU8(_model.config.gyroFilter.freq);           // gyro lpf
-          r.writeU16(_model.config.dtermFilter.freq);         // dterm lpf
-          r.writeU16(_model.config.yawFilter.freq);           // yaw lpf
-          r.writeU16(_model.config.gyroNotch1Filter.freq);    // gyro notch 1 hz
-          r.writeU16(_model.config.gyroNotch1Filter.cutoff);  // gyro notch 1 cutoff
-          r.writeU16(_model.config.dtermNotchFilter.freq);    // dterm notch hz
-          r.writeU16(_model.config.dtermNotchFilter.cutoff);  // dterm notch cutoff
-          r.writeU16(_model.config.gyroNotch2Filter.freq);    // gyro notch 2 hz
-          r.writeU16(_model.config.gyroNotch2Filter.cutoff);  // gyro notch 2 cutoff
-          r.writeU8(_model.config.dtermFilter.type);          // dterm type
-          r.writeU8(fromGyroDlpf(_model.config.gyroDlpf));
-          r.writeU8(0);                                       // dlfp 32khz type
-          r.writeU16(_model.config.gyroFilter.freq);          // lowpass1 freq
-          r.writeU16(_model.config.gyroFilter2.freq);         // lowpass2 freq
-          r.writeU8(_model.config.gyroFilter.type);           // lowpass1 type
-          r.writeU8(_model.config.gyroFilter2.type);          // lowpass2 type
-          r.writeU16(_model.config.dtermFilter2.freq);        // dterm lopwass2 freq
+          r.writeU8(_model.config.gyro.filter.freq);           // gyro lpf
+          r.writeU16(_model.config.dtermFilter.freq);          // dterm lpf
+          r.writeU16(_model.config.yawFilter.freq);            // yaw lpf
+          r.writeU16(_model.config.gyro.notch1Filter.freq);    // gyro notch 1 hz
+          r.writeU16(_model.config.gyro.notch1Filter.cutoff);  // gyro notch 1 cutoff
+          r.writeU16(_model.config.dtermNotchFilter.freq);     // dterm notch hz
+          r.writeU16(_model.config.dtermNotchFilter.cutoff);   // dterm notch cutoff
+          r.writeU16(_model.config.gyro.notch2Filter.freq);    // gyro notch 2 hz
+          r.writeU16(_model.config.gyro.notch2Filter.cutoff);  // gyro notch 2 cutoff
+          r.writeU8(_model.config.dtermFilter.type);           // dterm type
+          r.writeU8(fromGyroDlpf(_model.config.gyro.dlpf));
+          r.writeU8(0);                                        // dlfp 32khz type
+          r.writeU16(_model.config.gyro.filter.freq);          // lowpass1 freq
+          r.writeU16(_model.config.gyro.filter2.freq);         // lowpass2 freq
+          r.writeU8(_model.config.gyro.filter.type);           // lowpass1 type
+          r.writeU8(_model.config.gyro.filter2.type);          // lowpass2 type
+          r.writeU16(_model.config.dtermFilter2.freq);         // dterm lopwass2 freq
           // 1.41+
-          r.writeU8(_model.config.dtermFilter2.type);         // dterm lopwass2 type
-          r.writeU16(_model.config.gyroDynLpfFilter.cutoff);  // dyn lpf gyro min
-          r.writeU16(_model.config.gyroDynLpfFilter.freq);    // dyn lpf gyro max
-          r.writeU16(_model.config.dtermDynLpfFilter.cutoff); // dyn lpf dterm min
-          r.writeU16(_model.config.dtermDynLpfFilter.freq);   // dyn lpf dterm max
+          r.writeU8(_model.config.dtermFilter2.type);          // dterm lopwass2 type
+          r.writeU16(_model.config.gyro.dynLpfFilter.cutoff);  // dyn lpf gyro min
+          r.writeU16(_model.config.gyro.dynLpfFilter.freq);    // dyn lpf gyro max
+          r.writeU16(_model.config.dtermDynLpfFilter.cutoff);  // dyn lpf dterm min
+          r.writeU16(_model.config.dtermDynLpfFilter.freq);    // dyn lpf dterm max
           // gyro analyse
           r.writeU8(3);  // deprecated dyn notch range
           r.writeU8(_model.config.dynamicFilter.width);  // dyn_notch_width_percent
@@ -1096,18 +1096,18 @@ class MspProcessor
           break;
 
         case MSP_SET_FILTER_CONFIG:
-          _model.config.gyroFilter.freq = m.readU8();
+          _model.config.gyro.filter.freq = m.readU8();
           _model.config.dtermFilter.freq = m.readU16();
           _model.config.yawFilter.freq = m.readU16();
           if (m.remain() >= 8) {
-              _model.config.gyroNotch1Filter.freq = m.readU16();
-              _model.config.gyroNotch1Filter.cutoff = m.readU16();
+              _model.config.gyro.notch1Filter.freq = m.readU16();
+              _model.config.gyro.notch1Filter.cutoff = m.readU16();
               _model.config.dtermNotchFilter.freq = m.readU16();
               _model.config.dtermNotchFilter.cutoff = m.readU16();
           }
           if (m.remain() >= 4) {
-              _model.config.gyroNotch2Filter.freq = m.readU16();
-              _model.config.gyroNotch2Filter.cutoff = m.readU16();
+              _model.config.gyro.notch2Filter.freq = m.readU16();
+              _model.config.gyro.notch2Filter.cutoff = m.readU16();
           }
           if (m.remain() >= 1) {
               _model.config.dtermFilter.type = (FilterType)m.readU8();
@@ -1115,17 +1115,17 @@ class MspProcessor
           if (m.remain() >= 10) {
             m.readU8(); // dlfp type
             m.readU8(); // 32k dlfp type
-            _model.config.gyroFilter.freq = m.readU16();
-            _model.config.gyroFilter2.freq = m.readU16();
-            _model.config.gyroFilter.type = m.readU8();
-            _model.config.gyroFilter2.type = m.readU8();
+            _model.config.gyro.filter.freq = m.readU16();
+            _model.config.gyro.filter2.freq = m.readU16();
+            _model.config.gyro.filter.type = m.readU8();
+            _model.config.gyro.filter2.type = m.readU8();
             _model.config.dtermFilter2.freq = m.readU16();
           }
           // 1.41+
           if (m.remain() >= 9) {
             _model.config.dtermFilter2.type = m.readU8();
-            _model.config.gyroDynLpfFilter.cutoff = m.readU16();  // dyn gyro lpf min
-            _model.config.gyroDynLpfFilter.freq = m.readU16();    // dyn gyro lpf max
+            _model.config.gyro.dynLpfFilter.cutoff = m.readU16(); // dyn gyro lpf min
+            _model.config.gyro.dynLpfFilter.freq = m.readU16();   // dyn gyro lpf max
             _model.config.dtermDynLpfFilter.cutoff = m.readU16(); // dyn dterm lpf min
             _model.config.dtermDynLpfFilter.freq = m.readU16();   // dyn dterm lpf min
           }

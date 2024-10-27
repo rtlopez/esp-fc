@@ -110,18 +110,18 @@ int Blackbox::begin()
   rcControlsConfigMutable()->deadband = _model.config.input.deadband;
   rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
 
-  gyroConfigMutable()->gyro_hardware_lpf = _model.config.gyroDlpf;
-  gyroConfigMutable()->gyro_lpf1_type = _model.config.gyroFilter.type;
-  gyroConfigMutable()->gyro_lpf1_static_hz = _model.config.gyroFilter.freq;
-  gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyroDynLpfFilter.cutoff;
-  gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyroDynLpfFilter.freq;
+  gyroConfigMutable()->gyro_hardware_lpf = _model.config.gyro.dlpf;
+  gyroConfigMutable()->gyro_lpf1_type = _model.config.gyro.filter.type;
+  gyroConfigMutable()->gyro_lpf1_static_hz = _model.config.gyro.filter.freq;
+  gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyro.dynLpfFilter.cutoff;
+  gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyro.dynLpfFilter.freq;
   gyroConfigMutable()->gyro_lpf1_dyn_expo = 5;
-  gyroConfigMutable()->gyro_lpf2_type = _model.config.gyroFilter2.type;
-  gyroConfigMutable()->gyro_lpf2_static_hz = _model.config.gyroFilter2.freq;
-  gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyroNotch1Filter.cutoff;
-  gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
-  gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
-  gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyroNotch2Filter.freq;
+  gyroConfigMutable()->gyro_lpf2_type = _model.config.gyro.filter2.type;
+  gyroConfigMutable()->gyro_lpf2_static_hz = _model.config.gyro.filter2.freq;
+  gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyro.notch1Filter.cutoff;
+  gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyro.notch1Filter.freq;
+  gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyro.notch2Filter.cutoff;
+  gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyro.notch2Filter.freq;
   gyroConfigMutable()->gyro_sync_denom = 1;
 
   dynNotchConfigMutable()->dyn_notch_count = _model.config.dynamicFilter.width;

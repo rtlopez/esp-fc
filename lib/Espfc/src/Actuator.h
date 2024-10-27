@@ -221,8 +221,8 @@ class Actuator
     {
       return; // temporary disable
       int scale = Math::clamp((int)_model.state.inputUs[AXIS_THRUST], 1000, 2000);
-      if(_model.config.gyroDynLpfFilter.cutoff > 0) {
-        int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyroDynLpfFilter.cutoff, _model.config.gyroDynLpfFilter.freq);
+      if(_model.config.gyro.dynLpfFilter.cutoff > 0) {
+        int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyro.dynLpfFilter.cutoff, _model.config.gyro.dynLpfFilter.freq);
         for(size_t i = 0; i <= AXIS_YAW; i++) {
           _model.state.gyroFilter[i].reconfigure(gyroFreq);
         }
