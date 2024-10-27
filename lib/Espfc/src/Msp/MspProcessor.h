@@ -509,13 +509,13 @@ class MspProcessor
           break;
 
         case MSP_MIXER_CONFIG:
-          r.writeU8(_model.config.mixerType); // mixerMode, QUAD_X
-          r.writeU8(_model.config.yawReverse); // yaw_motors_reversed
+          r.writeU8(_model.config.mixer.type); // mixerMode, QUAD_X
+          r.writeU8(_model.config.mixer.yawReverse); // yaw_motors_reversed
           break;
 
         case MSP_SET_MIXER_CONFIG:
-          _model.config.mixerType = m.readU8(); // mixerMode, QUAD_X
-          _model.config.yawReverse = m.readU8(); // yaw_motors_reversed
+          _model.config.mixer.type = m.readU8(); // mixerMode, QUAD_X
+          _model.config.mixer.yawReverse = m.readU8(); // yaw_motors_reversed
           break;
 
         case MSP_SENSOR_CONFIG:
@@ -1061,28 +1061,28 @@ class MspProcessor
 
         case MSP_FILTER_CONFIG:
           r.writeU8(_model.config.gyro.filter.freq);           // gyro lpf
-          r.writeU16(_model.config.dtermFilter.freq);          // dterm lpf
-          r.writeU16(_model.config.yawFilter.freq);            // yaw lpf
+          r.writeU16(_model.config.dterm.filter.freq);         // dterm lpf
+          r.writeU16(_model.config.yaw.filter.freq);           // yaw lpf
           r.writeU16(_model.config.gyro.notch1Filter.freq);    // gyro notch 1 hz
           r.writeU16(_model.config.gyro.notch1Filter.cutoff);  // gyro notch 1 cutoff
-          r.writeU16(_model.config.dtermNotchFilter.freq);     // dterm notch hz
-          r.writeU16(_model.config.dtermNotchFilter.cutoff);   // dterm notch cutoff
+          r.writeU16(_model.config.dterm.notchFilter.freq);    // dterm notch hz
+          r.writeU16(_model.config.dterm.notchFilter.cutoff);  // dterm notch cutoff
           r.writeU16(_model.config.gyro.notch2Filter.freq);    // gyro notch 2 hz
           r.writeU16(_model.config.gyro.notch2Filter.cutoff);  // gyro notch 2 cutoff
-          r.writeU8(_model.config.dtermFilter.type);           // dterm type
+          r.writeU8(_model.config.dterm.filter.type);          // dterm type
           r.writeU8(fromGyroDlpf(_model.config.gyro.dlpf));
           r.writeU8(0);                                        // dlfp 32khz type
           r.writeU16(_model.config.gyro.filter.freq);          // lowpass1 freq
           r.writeU16(_model.config.gyro.filter2.freq);         // lowpass2 freq
           r.writeU8(_model.config.gyro.filter.type);           // lowpass1 type
           r.writeU8(_model.config.gyro.filter2.type);          // lowpass2 type
-          r.writeU16(_model.config.dtermFilter2.freq);         // dterm lopwass2 freq
+          r.writeU16(_model.config.dterm.filter2.freq);        // dterm lopwass2 freq
           // 1.41+
-          r.writeU8(_model.config.dtermFilter2.type);          // dterm lopwass2 type
+          r.writeU8(_model.config.dterm.filter2.type);         // dterm lopwass2 type
           r.writeU16(_model.config.gyro.dynLpfFilter.cutoff);  // dyn lpf gyro min
           r.writeU16(_model.config.gyro.dynLpfFilter.freq);    // dyn lpf gyro max
-          r.writeU16(_model.config.dtermDynLpfFilter.cutoff);  // dyn lpf dterm min
-          r.writeU16(_model.config.dtermDynLpfFilter.freq);    // dyn lpf dterm max
+          r.writeU16(_model.config.dterm.dynLpfFilter.cutoff); // dyn lpf dterm min
+          r.writeU16(_model.config.dterm.dynLpfFilter.freq);   // dyn lpf dterm max
           // gyro analyse
           r.writeU8(3);  // deprecated dyn notch range
           r.writeU8(_model.config.dynamicFilter.width);  // dyn_notch_width_percent
@@ -1097,20 +1097,20 @@ class MspProcessor
 
         case MSP_SET_FILTER_CONFIG:
           _model.config.gyro.filter.freq = m.readU8();
-          _model.config.dtermFilter.freq = m.readU16();
-          _model.config.yawFilter.freq = m.readU16();
+          _model.config.dterm.filter.freq = m.readU16();
+          _model.config.yaw.filter.freq = m.readU16();
           if (m.remain() >= 8) {
               _model.config.gyro.notch1Filter.freq = m.readU16();
               _model.config.gyro.notch1Filter.cutoff = m.readU16();
-              _model.config.dtermNotchFilter.freq = m.readU16();
-              _model.config.dtermNotchFilter.cutoff = m.readU16();
+              _model.config.dterm.notchFilter.freq = m.readU16();
+              _model.config.dterm.notchFilter.cutoff = m.readU16();
           }
           if (m.remain() >= 4) {
               _model.config.gyro.notch2Filter.freq = m.readU16();
               _model.config.gyro.notch2Filter.cutoff = m.readU16();
           }
           if (m.remain() >= 1) {
-              _model.config.dtermFilter.type = (FilterType)m.readU8();
+              _model.config.dterm.filter.type = (FilterType)m.readU8();
           }
           if (m.remain() >= 10) {
             m.readU8(); // dlfp type
@@ -1119,15 +1119,15 @@ class MspProcessor
             _model.config.gyro.filter2.freq = m.readU16();
             _model.config.gyro.filter.type = m.readU8();
             _model.config.gyro.filter2.type = m.readU8();
-            _model.config.dtermFilter2.freq = m.readU16();
+            _model.config.dterm.filter2.freq = m.readU16();
           }
           // 1.41+
           if (m.remain() >= 9) {
-            _model.config.dtermFilter2.type = m.readU8();
+            _model.config.dterm.filter2.type = m.readU8();
             _model.config.gyro.dynLpfFilter.cutoff = m.readU16(); // dyn gyro lpf min
             _model.config.gyro.dynLpfFilter.freq = m.readU16();   // dyn gyro lpf max
-            _model.config.dtermDynLpfFilter.cutoff = m.readU16(); // dyn dterm lpf min
-            _model.config.dtermDynLpfFilter.freq = m.readU16();   // dyn dterm lpf min
+            _model.config.dterm.dynLpfFilter.cutoff = m.readU16(); // dyn dterm lpf min
+            _model.config.dterm.dynLpfFilter.freq = m.readU16();   // dyn dterm lpf min
           }
           if (m.remain() >= 8) {
             m.readU8();  // deprecated dyn_notch_range
@@ -1178,20 +1178,20 @@ class MspProcessor
           r.writeU8(0); // reserved
           r.writeU8(0); // vbatPidCompensation;
           r.writeU8(0); // feedForwardTransition;
-          r.writeU8((uint8_t)std::min(_model.config.dtermSetpointWeight, (int16_t)255)); // was low byte of dtermSetpointWeight
+          r.writeU8((uint8_t)std::min(_model.config.dterm.setpointWeight, (int16_t)255)); // was low byte of dtermSetpointWeight
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
           r.writeU8(0); // reserved
           r.writeU16(0); // rateAccelLimit;
           r.writeU16(0); // yawRateAccelLimit;
-          r.writeU8(_model.config.angleLimit); // levelAngleLimit;
+          r.writeU8(_model.config.level.angleLimit); // levelAngleLimit;
           r.writeU8(0); // was pidProfile.levelSensitivity
           r.writeU16(0); // itermThrottleThreshold;
           r.writeU16(1000); // itermAcceleratorGain; anti_gravity_gain, 0 in 1.45+
-          r.writeU16(_model.config.dtermSetpointWeight);
+          r.writeU16(_model.config.dterm.setpointWeight);
           r.writeU8(0); // iterm rotation
           r.writeU8(0); // smart feed forward
-          r.writeU8(_model.config.itermRelax); // iterm relax
+          r.writeU8(_model.config.iterm.relax); // iterm relax
           r.writeU8(1); // iterm relax type (setpoint only)
           r.writeU8(0); // abs control gain
           r.writeU8(0); // throttle boost
@@ -1209,7 +1209,7 @@ class MspProcessor
           r.writeU8(0); // use_integrated_yaw
           r.writeU8(0); // integrated_yaw_relax
           // 1.42+
-          r.writeU8(_model.config.itermRelaxCutoff); // iterm_relax_cutoff
+          r.writeU8(_model.config.iterm.relaxCutoff); // iterm_relax_cutoff
           // 1.43+
           r.writeU8(_model.config.output.motorLimit); // motor_output_limit
           r.writeU8(0); // auto_profile_cell_count
@@ -1223,14 +1223,14 @@ class MspProcessor
           m.readU8(); // reserved
           m.readU8();
           m.readU8();
-          _model.config.dtermSetpointWeight = m.readU8();
+          _model.config.dterm.setpointWeight = m.readU8();
           m.readU8(); // reserved
           m.readU8(); // reserved
           m.readU8(); // reserved
           m.readU16();
           m.readU16();
           if (m.remain() >= 2) {
-              _model.config.angleLimit = m.readU8();
+              _model.config.level.angleLimit = m.readU8();
               m.readU8(); // was pidProfile.levelSensitivity
           }
           if (m.remain() >= 4) {
@@ -1238,12 +1238,12 @@ class MspProcessor
               m.readU16(); // itermAcceleratorGain; anti_gravity_gain
           }
           if (m.remain() >= 2) {
-            _model.config.dtermSetpointWeight = m.readU16();
+            _model.config.dterm.setpointWeight = m.readU16();
           }
           if (m.remain() >= 14) {
             m.readU8(); //iterm rotation
             m.readU8(); //smart feed forward
-            _model.config.itermRelax = m.readU8(); //iterm relax
+            _model.config.iterm.relax = m.readU8(); //iterm relax
             m.readU8(); //iterm relax type
             m.readU8(); //abs control gain
             m.readU8(); //throttle boost
@@ -1265,7 +1265,7 @@ class MspProcessor
           }
           // 1.42+
           if (m.remain() >= 1) {
-            _model.config.itermRelaxCutoff = m.readU8(); // iterm_relax_cutoff
+            _model.config.iterm.relaxCutoff = m.readU8(); // iterm_relax_cutoff
           }
           // 1.43+
           if (m.remain() >= 3) {

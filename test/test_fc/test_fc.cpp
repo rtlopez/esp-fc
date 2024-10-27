@@ -143,7 +143,7 @@ void test_model_inner_pid_init()
   model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
   model.config.pid[FC_PID_ROLL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.config.pid[FC_PID_PITCH] = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.config.pid[FC_PID_YAW]   = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
@@ -175,7 +175,7 @@ void test_model_outer_pid_init()
   model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
   model.config.pid[FC_PID_LEVEL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.begin();
 
@@ -199,7 +199,7 @@ void test_controller_rates()
   model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
 
   model.config.input.rateType = RATES_TYPE_BETAFLIGHT;
   model.config.input.rate[AXIS_ROLL] = 70;
@@ -249,7 +249,7 @@ void test_controller_rates_limit()
   model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
 
   model.config.input.rateType = RATES_TYPE_BETAFLIGHT;
   model.config.input.rate[AXIS_ROLL] = 70;

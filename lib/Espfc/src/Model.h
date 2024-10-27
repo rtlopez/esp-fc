@@ -512,7 +512,7 @@ class Model
 
       // configure PIDs
       float pidScale[] = { 1.f, 1.f, 1.f };
-      if(config.mixerType == FC_MIXER_GIMBAL)
+      if(config.mixer.type == FC_MIXER_GIMBAL)
       {
         pidScale[AXIS_YAW] = 0.2f; // ROBOT
         pidScale[AXIS_PITCH] = 20.f; // ROBOT
@@ -526,23 +526,23 @@ class Model
         pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
         pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
         pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[i];
-        pid.iLimit = config.itermLimit * 0.01f;
+        pid.iLimit = config.iterm.limit * 0.01f;
         pid.oLimit = 0.66f;
         pid.rate = state.loopTimer.rate;
-        pid.dtermNotchFilter.begin(config.dtermNotchFilter, pidFilterRate);
-        if(config.dtermDynLpfFilter.cutoff > 0) {
-          pid.dtermFilter.begin(FilterConfig((FilterType)config.dtermFilter.type, config.dtermDynLpfFilter.cutoff), pidFilterRate);
+        pid.dtermNotchFilter.begin(config.dterm.notchFilter, pidFilterRate);
+        if(config.dterm.dynLpfFilter.cutoff > 0) {
+          pid.dtermFilter.begin(FilterConfig((FilterType)config.dterm.filter.type, config.dterm.dynLpfFilter.cutoff), pidFilterRate);
         } else {
-          pid.dtermFilter.begin(config.dtermFilter, pidFilterRate);
+          pid.dtermFilter.begin(config.dterm.filter, pidFilterRate);
         }
-        pid.dtermFilter2.begin(config.dtermFilter2, pidFilterRate);
+        pid.dtermFilter2.begin(config.dterm.filter2, pidFilterRate);
         pid.ftermFilter.begin(config.input.filterDerivative, pidFilterRate);
-        pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, config.itermRelaxCutoff), pidFilterRate);
+        pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, config.iterm.relaxCutoff), pidFilterRate);
         if(i == AXIS_YAW) {
-          pid.itermRelax = config.itermRelax == ITERM_RELAX_RPY || config.itermRelax == ITERM_RELAX_RPY_INC ? config.itermRelax : ITERM_RELAX_OFF;
-          pid.ptermFilter.begin(config.yawFilter, pidFilterRate);
+          pid.itermRelax = config.iterm.relax == ITERM_RELAX_RPY || config.iterm.relax == ITERM_RELAX_RPY_INC ? config.iterm.relax : ITERM_RELAX_OFF;
+          pid.ptermFilter.begin(config.yaw.filter, pidFilterRate);
         } else {
-          pid.itermRelax = config.itermRelax;
+          pid.itermRelax = config.iterm.relax;
         }
         pid.begin();
       }
@@ -555,10 +555,10 @@ class Model
         pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
         pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
         pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
-        pid.iLimit = Math::toRad(config.angleRateLimit) * 0.1f;
-        pid.oLimit = Math::toRad(config.angleRateLimit);
+        pid.iLimit = Math::toRad(config.level.rateLimit) * 0.1f;
+        pid.oLimit = Math::toRad(config.level.rateLimit);
         pid.rate = state.loopTimer.rate;
-        pid.ptermFilter.begin(config.levelPtermFilter, pidFilterRate);
+        pid.ptermFilter.begin(config.level.ptermFilter, pidFilterRate);
         //pid.iLimit = 0.3f; // ROBOT
         //pid.oLimit = 1.f;  // ROBOT
         pid.begin();

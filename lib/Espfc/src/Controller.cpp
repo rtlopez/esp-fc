@@ -24,7 +24,7 @@ int FAST_CODE_ATTR Controller::update()
   {
     Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
     resetIterm();
-    if(_model.config.mixerType == FC_MIXER_GIMBAL)
+    if(_model.config.mixer.type == FC_MIXER_GIMBAL)
     {
       outerLoopRobot();
     }
@@ -36,7 +36,7 @@ int FAST_CODE_ATTR Controller::update()
 
   {
     Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
-    if(_model.config.mixerType == FC_MIXER_GIMBAL)
+    if(_model.config.mixer.type == FC_MIXER_GIMBAL)
     {
       innerLoopRobot();
     }
@@ -63,14 +63,14 @@ void Controller::outerLoopRobot()
 
   if(true || _model.isActive(MODE_ANGLE))
   {
-    angle = _model.state.input[AXIS_PITCH] * radians(_model.config.angleLimit);
+    angle = _model.state.input[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit);
   }
   else
   {
-    angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input[AXIS_PITCH], speed) * radians(_model.config.angleRateLimit);
+    angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input[AXIS_PITCH], speed) * Math::toRad(_model.config.level.rateLimit);
   }
   _model.state.desiredAngle.set(AXIS_PITCH, angle);
-  _model.state.desiredRate[AXIS_YAW] = _model.state.input[AXIS_YAW] * radians(_model.config.angleRateLimit);
+  _model.state.desiredRate[AXIS_YAW] = _model.state.input[AXIS_YAW] * Math::toRad(_model.config.level.rateLimit);
 
   if(_model.config.debugMode == DEBUG_ANGLERATE)
   {
@@ -86,7 +86,7 @@ void Controller::innerLoopRobot()
   //const float angle = acos(v.z);
   const float angle = std::max(abs(_model.state.angle[AXIS_PITCH]), abs(_model.state.angle[AXIS_ROLL]));
 
-  const bool stabilize = angle < radians(_model.config.angleLimit);
+  const bool stabilize = angle < Math::toRad(_model.config.level.angleLimit);
   if(stabilize)
   {
     _model.state.output[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
@@ -111,8 +111,8 @@ void FAST_CODE_ATTR Controller::outerLoop()
   if(_model.isActive(MODE_ANGLE))
   {
     _model.state.desiredAngle = VectorFloat(
-      _model.state.input[AXIS_ROLL] * radians(_model.config.angleLimit),
-      _model.state.input[AXIS_PITCH] * radians(_model.config.angleLimit),
+      _model.state.input[AXIS_ROLL] * Math::toRad(_model.config.level.angleLimit),
+      _model.state.input[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit),
       _model.state.angle[AXIS_YAW]
     );
     _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL]);
@@ -167,7 +167,7 @@ float Controller::getTpaFactor() const
 void Controller::resetIterm()
 {
   if(!_model.isActive(MODE_ARMED)   // when not armed
-    || (!_model.isAirModeActive() && _model.config.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
+    || (!_model.isAirModeActive() && _model.config.iterm.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
   )
   {
     for(size_t i = 0; i < AXES; i++)

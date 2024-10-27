@@ -66,15 +66,15 @@ int Blackbox::begin()
     }
   }
   cp->pidAtMinThrottle = 1;
-  cp->dterm_lpf1_type = _model.config.dtermFilter.type;
-  cp->dterm_lpf1_static_hz = _model.config.dtermFilter.freq;
-  cp->dterm_lpf1_dyn_min_hz = _model.config.dtermDynLpfFilter.cutoff;
-  cp->dterm_lpf1_dyn_max_hz = _model.config.dtermDynLpfFilter.freq;
-  cp->dterm_lpf2_type = _model.config.dtermFilter2.type;
-  cp->dterm_lpf2_static_hz = _model.config.dtermFilter2.freq;
-  cp->dterm_notch_hz = _model.config.dtermNotchFilter.freq;
-  cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
-  cp->yaw_lowpass_hz = _model.config.yawFilter.freq;
+  cp->dterm_lpf1_type = _model.config.dterm.filter.type;
+  cp->dterm_lpf1_static_hz = _model.config.dterm.filter.freq;
+  cp->dterm_lpf1_dyn_min_hz = _model.config.dterm.dynLpfFilter.cutoff;
+  cp->dterm_lpf1_dyn_max_hz = _model.config.dterm.dynLpfFilter.freq;
+  cp->dterm_lpf2_type = _model.config.dterm.filter2.type;
+  cp->dterm_lpf2_static_hz = _model.config.dterm.filter2.freq;
+  cp->dterm_notch_hz = _model.config.dterm.notchFilter.freq;
+  cp->dterm_notch_cutoff = _model.config.dterm.notchFilter.cutoff;
+  cp->yaw_lowpass_hz = _model.config.yaw.filter.freq;
   cp->itermWindupPointPercent = 80;
   cp->antiGravityMode = 0;
   cp->pidSumLimit = 660;
@@ -92,14 +92,14 @@ int Blackbox::begin()
   cp->anti_gravity_cutoff_hz = 100;
   cp->d_min_gain = 0;
   cp->d_min_advance = 0;
-  cp->angle_limit = _model.config.angleLimit;
+  cp->angle_limit = _model.config.level.angleLimit;
   cp->angle_earth_ref = 100;
   cp->horizon_limit_degrees = 135;
   cp->horizon_delay_ms = 500;
   cp->thrustLinearization = 0;
-  cp->iterm_relax = _model.config.itermRelax;
+  cp->iterm_relax = _model.config.iterm.relax;
   cp->iterm_relax_type = 1;
-  cp->iterm_relax_cutoff = _model.config.itermRelaxCutoff;
+  cp->iterm_relax_cutoff = _model.config.iterm.relaxCutoff;
   cp->dterm_lpf1_dyn_expo = 5;
   cp->tpa_low_rate = 20;
   cp->tpa_low_breakpoint = 1050;

@@ -598,6 +598,41 @@ struct MagConfig
   int16_t offset[3] = { 1000, 1000, 1000 };
 };
 
+struct YawConfig
+{
+  FilterConfig filter{FILTER_PT1, 90};
+};
+
+struct DtermConfig
+{
+  FilterConfig filter{FILTER_PT1, 128};
+  FilterConfig filter2{FILTER_PT1, 128};
+  FilterConfig notchFilter{FILTER_NOTCH, 0, 0};
+  FilterConfig dynLpfFilter{FILTER_PT1, 145, 60};
+  int16_t setpointWeight = 30;
+};
+
+struct ItermConfig
+{
+  int8_t limit = 30;
+  int8_t relax = ITERM_RELAX_RP;
+  int8_t relaxCutoff = 15;
+  bool lowThrottleZeroIterm = true;
+};
+
+struct LevelConfig
+{
+  FilterConfig ptermFilter{FILTER_PT1, 90};
+  int8_t angleLimit = 55;
+  int16_t rateLimit = 300;
+};
+
+struct MixerConfiguration
+{
+  int8_t type = FC_MIXER_QUADX;
+  bool yawReverse = 0;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -615,9 +650,6 @@ class ModelConfig
 
     OutputConfig output;
 
-    int8_t mixerType = FC_MIXER_QUADX;
-    bool yawReverse = 0;
-
     PidConfig pid[FC_PID_ITEM_COUNT] = {
       [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
       [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
@@ -631,32 +663,18 @@ class ModelConfig
       [FC_PID_VEL]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // VEL
     };
 
-    FilterConfig yawFilter{FILTER_PT1, 90};
-
-    FilterConfig dtermFilter{FILTER_PT1, 128};
-    FilterConfig dtermFilter2{FILTER_PT1, 128};
-    FilterConfig dtermNotchFilter{FILTER_NOTCH, 0, 0};
-    FilterConfig dtermDynLpfFilter{FILTER_PT1, 145, 60};
-    FilterConfig levelPtermFilter{FILTER_PT1, 90};
-
-    int16_t dtermSetpointWeight = 30;
-    int8_t itermLimit = 30;
-    int8_t itermRelax = ITERM_RELAX_RP;
-    int8_t itermRelaxCutoff = 15;
-
-    int8_t angleLimit = 55;
-    int16_t angleRateLimit = 300;
+    MixerConfiguration mixer;
+    YawConfig yaw;
+    LevelConfig level;
+    DtermConfig dterm;
+    ItermConfig iterm;
 
     int8_t loopSync = 8; // MPU 1000Hz
     int8_t mixerSync = 1;
 
     int32_t featureMask = ESPFC_FEATURE_MASK;
-
-    bool lowThrottleZeroIterm = true;
-
     bool telemetry = 0;
     int32_t telemetryInterval = 1000;
-    int8_t telemetryPort; // unused
 
     BlackboxConfig blackbox;
 
@@ -854,7 +872,7 @@ class ModelConfig
 
     void brobot()
     {
-      mixerType = FC_MIXER_GIMBAL;
+      mixer.type = FC_MIXER_GIMBAL;
 
       pin[PIN_OUTPUT_0] = 14;    // D5 // ROBOT
       pin[PIN_OUTPUT_1] = 12;    // D6 // ROBOT
@@ -865,10 +883,10 @@ class ModelConfig
       //fusionMode = FUSION_COMPLEMENTARY; // ROBOT
       //accelFilter.freq = 30;        // ROBOT
 
-      lowThrottleZeroIterm = false; // ROBOT
-      itermLimit = 10; // ROBOT
-      dtermSetpointWeight = 0;      // ROBOT
-      angleLimit = 10;       // deg // ROBOT
+      iterm.lowThrottleZeroIterm = false; // ROBOT
+      iterm.limit = 10; // ROBOT
+      dterm.setpointWeight = 0;      // ROBOT
+      level.angleLimit = 10;       // deg // ROBOT
 
       output.protocol = ESC_PROTOCOL_PWM; // ROBOT
       output.rate = 100;    // ROBOT

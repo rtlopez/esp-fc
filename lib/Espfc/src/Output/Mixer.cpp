@@ -75,7 +75,7 @@ int Mixer::begin()
     _model.state.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
     _model.state.maxThrottle = 2000.f;
   }
-  _model.state.currentMixer = Mixers::getMixer((MixerType)_model.config.mixerType, _model.state.customMixer);
+  _model.state.currentMixer = Mixers::getMixer((MixerType)_model.config.mixer.type, _model.state.customMixer);
   return 1;
 }
 
@@ -115,7 +115,7 @@ void FAST_CODE_ATTR Mixer::updateMixer(const MixerConfig& mixer, float * outputs
 
   sources[MIXER_SOURCE_ROLL]   = _model.state.output[AXIS_ROLL];
   sources[MIXER_SOURCE_PITCH]  = _model.state.output[AXIS_PITCH];
-  sources[MIXER_SOURCE_YAW]    = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? 1.f : -1.f);
+  sources[MIXER_SOURCE_YAW]    = _model.state.output[AXIS_YAW] * (_model.config.mixer.yawReverse ? 1.f : -1.f);
   sources[MIXER_SOURCE_THRUST] = _model.state.output[AXIS_THRUST];
 
   sources[MIXER_SOURCE_RC_ROLL]   = _model.state.input[AXIS_ROLL];

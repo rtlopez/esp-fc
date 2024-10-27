@@ -227,8 +227,8 @@ class Actuator
           _model.state.gyroFilter[i].reconfigure(gyroFreq);
         }
       }
-      if(_model.config.dtermDynLpfFilter.cutoff > 0) {
-        int dtermFreq = Math::map(scale, 1000, 2000, _model.config.dtermDynLpfFilter.cutoff, _model.config.dtermDynLpfFilter.freq);
+      if(_model.config.dterm.dynLpfFilter.cutoff > 0) {
+        int dtermFreq = Math::map(scale, 1000, 2000, _model.config.dterm.dynLpfFilter.cutoff, _model.config.dterm.dynLpfFilter.freq);
         for(size_t i = 0; i <= AXIS_YAW; i++) {
           _model.state.innerPid[i].dtermFilter.reconfigure(dtermFreq);
         }
