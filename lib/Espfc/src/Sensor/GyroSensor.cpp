@@ -30,26 +30,26 @@ int GyroSensor::begin()
   _sma.begin(_model.config.loopSync);
   _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
   _dyn_notch_sma.begin(_dyn_notch_denom);
-  _dyn_notch_enabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
+  _dyn_notch_enabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.gyro.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
   _dyn_notch_debug = _model.config.debugMode == DEBUG_FFT_FREQ || _model.config.debugMode == DEBUG_FFT_TIME;
 
-  _rpm_enabled = _model.config.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;
+  _rpm_enabled = _model.config.gyro.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;
   _rpm_motor_index = 0;
-  _rpm_fade_inv = 1.0f / _model.config.rpmFilter.fade;
-  _rpm_min_freq = _model.config.rpmFilter.minFreq;
+  _rpm_fade_inv = 1.0f / _model.config.gyro.rpmFilter.fade;
+  _rpm_min_freq = _model.config.gyro.rpmFilter.minFreq;
   _rpm_max_freq = 0.48f * _model.state.loopTimer.rate;
-  _rpm_q = _model.config.rpmFilter.q * 0.01f;
+  _rpm_q = _model.config.gyro.rpmFilter.q * 0.01f;
 
   for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
   {
-    _rpm_weights[i] = Math::clamp(0.01f * _model.config.rpmFilter.weights[i], 0.0f, 1.0f);
+    _rpm_weights[i] = Math::clamp(0.01f * _model.config.gyro.rpmFilter.weights[i], 0.0f, 1.0f);
   }
   for (size_t i = 0; i < 3; i++)
   {
 #ifdef ESPFC_DSP
-    _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.dynamicFilter, i);
+    _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter, i);
 #else
-    _freqAnalyzer[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.dynamicFilter);
+    _freqAnalyzer[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter);
 #endif
   }
 
@@ -111,7 +111,7 @@ int FAST_CODE_ATTR GyroSensor::filter()
   {
     for (size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
     {
-      for (size_t n = 0; n < _model.config.rpmFilter.harmonics; n++)
+      for (size_t n = 0; n < _model.config.gyro.rpmFilter.harmonics; n++)
       {
         _model.state.gyro = Utils::applyFilter(_model.state.rpmFilter[m][n], _model.state.gyro);
       }
@@ -133,7 +133,7 @@ int FAST_CODE_ATTR GyroSensor::filter()
 
   if (_dyn_notch_enabled)
   {
-    for (size_t p = 0; p < (size_t)_model.config.dynamicFilter.width; p++)
+    for (size_t p = 0; p < (size_t)_model.config.gyro.dynamicFilter.width; p++)
     {
       _model.state.gyro = Utils::applyFilter(_model.state.gyroDynNotchFilter[p], _model.state.gyro);
     }
@@ -165,12 +165,12 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
   Stats::Measure measure(_model.state.stats, COUNTER_RPM_UPDATE);
 
   const float motorFreq = _model.state.outputTelemetryFreq[_rpm_motor_index];
-  for (size_t n = 0; n < _model.config.rpmFilter.harmonics; n++)
+  for (size_t n = 0; n < _model.config.gyro.rpmFilter.harmonics; n++)
   {
     const float freq = Math::clamp(motorFreq * (n + 1), _rpm_min_freq, _rpm_max_freq);
     const float freqMargin = freq - _rpm_min_freq;
     float weight = _rpm_weights[n];
-    if (freqMargin < _model.config.rpmFilter.fade)
+    if (freqMargin < _model.config.gyro.rpmFilter.fade)
     {
       weight *= freqMargin * _rpm_fade_inv;
     }
@@ -200,7 +200,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
   {
     Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FFT);
 
-    const float q = _model.config.dynamicFilter.q * 0.01;
+    const float q = _model.config.gyro.dynamicFilter.q * 0.01;
     bool feed = _model.state.loopTimer.iteration % _dyn_notch_denom == 0;
     bool update = _model.state.dynamicFilterTimer.check();
 
@@ -227,10 +227,10 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
         }
         if (_dyn_notch_enabled && status)
         {
-          for (size_t p = 0; p < (size_t)_model.config.dynamicFilter.width; p++)
+          for (size_t p = 0; p < (size_t)_model.config.gyro.dynamicFilter.width; p++)
           {
             float freq = _fft[i].peaks[p].freq;
-            if (freq >= _model.config.dynamicFilter.min_freq && freq <= _model.config.dynamicFilter.max_freq)
+            if (freq >= _model.config.gyro.dynamicFilter.min_freq && freq <= _model.config.gyro.dynamicFilter.max_freq)
             {
               _model.state.gyroDynNotchFilter[p][i].reconfigure(freq, freq, q);
             }
@@ -258,13 +258,13 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
         }
         if (_dyn_notch_enabled && update)
         {
-          if (freq >= _model.config.dynamicFilter.min_freq && freq <= _model.config.dynamicFilter.max_freq)
+          if (freq >= _model.config.gyro.dynamicFilter.min_freq && freq <= _model.config.gyro.dynamicFilter.max_freq)
           {
-            for (size_t p = 0; p < (size_t)_model.config.dynamicFilter.width; p++)
+            for (size_t p = 0; p < (size_t)_model.config.gyro.dynamicFilter.width; p++)
             {
               size_t x = (p + i) % 3;
               int harmonic = (p / 3) + 1;
-              int16_t f = Math::clamp((int16_t)lrintf(freq * harmonic), _model.config.dynamicFilter.min_freq, _model.config.dynamicFilter.max_freq);
+              int16_t f = Math::clamp((int16_t)lrintf(freq * harmonic), _model.config.gyro.dynamicFilter.min_freq, _model.config.gyro.dynamicFilter.max_freq);
               _model.state.gyroDynNotchFilter[p][x].reconfigure(f, f, q);
             }
           }

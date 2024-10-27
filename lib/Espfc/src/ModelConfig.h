@@ -564,21 +564,23 @@ struct GyroConfig
   int8_t dev = GYRO_AUTO;
   int8_t dlpf = GYRO_DLPF_256;
   int8_t align = ALIGN_DEFAULT;
+  int16_t bias[3] = { 0, 0, 0 };
   FilterConfig filter{FILTER_PT1, 100};
   FilterConfig filter2{FILTER_PT1, 213};
   FilterConfig filter3{FILTER_FO, 150};
   FilterConfig notch1Filter{FILTER_NOTCH, 0, 0};
   FilterConfig notch2Filter{FILTER_NOTCH, 0, 0};
   FilterConfig dynLpfFilter{FILTER_PT1, 425, 170};
-  int16_t bias[3] = { 0, 0, 0 };
+  DynamicFilterConfig dynamicFilter{4, 300, 80, 400};
+  RpmFilterConfig rpmFilter;
 };
 
 struct AccelConfig
 {
   int8_t bus = BUS_AUTO;
   int8_t dev = GYRO_AUTO;
-  FilterConfig filter{FILTER_BIQUAD, 15};
   int16_t bias[3] = { 0, 0, 0 };
+  FilterConfig filter{FILTER_BIQUAD, 15};
 };
 
 struct BaroConfig
@@ -593,9 +595,9 @@ struct MagConfig
   int8_t bus = BUS_AUTO;
   int8_t dev = MAG_NONE;
   int8_t align = ALIGN_DEFAULT;
-  FilterConfig filter{FILTER_BIQUAD, 10};
   int16_t scale[3] = { 0, 0, 0 };
   int16_t offset[3] = { 1000, 1000, 1000 };
+  FilterConfig filter{FILTER_BIQUAD, 10};
 };
 
 struct YawConfig
@@ -694,6 +696,7 @@ class ModelConfig
 
     int8_t pin[PIN_COUNT];
     int16_t i2cSpeed = 800;
+
     int8_t tpaScale = 10;
     int16_t tpaBreakpoint = 1650;
 
@@ -701,10 +704,6 @@ class ModelConfig
     MixerEntry customMixes[MIXER_RULE_MAX];
 
     WirelessConfig wireless;
-
-    DynamicFilterConfig dynamicFilter{4, 300, 80, 400};
-
-    RpmFilterConfig rpmFilter;
 
     uint8_t rescueConfigDelay = 30;
 

@@ -124,10 +124,10 @@ int Blackbox::begin()
   gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyro.notch2Filter.freq;
   gyroConfigMutable()->gyro_sync_denom = 1;
 
-  dynNotchConfigMutable()->dyn_notch_count = _model.config.dynamicFilter.width;
-  dynNotchConfigMutable()->dyn_notch_q = _model.config.dynamicFilter.q;
-  dynNotchConfigMutable()->dyn_notch_min_hz = _model.config.dynamicFilter.min_freq;
-  dynNotchConfigMutable()->dyn_notch_max_hz = _model.config.dynamicFilter.max_freq;
+  dynNotchConfigMutable()->dyn_notch_count = _model.config.gyro.dynamicFilter.width;
+  dynNotchConfigMutable()->dyn_notch_q = _model.config.gyro.dynamicFilter.q;
+  dynNotchConfigMutable()->dyn_notch_min_hz = _model.config.gyro.dynamicFilter.min_freq;
+  dynNotchConfigMutable()->dyn_notch_max_hz = _model.config.gyro.dynamicFilter.max_freq;
 
   accelerometerConfigMutable()->acc_lpf_hz = _model.config.accel.filter.freq;
   accelerometerConfigMutable()->acc_hardware = _model.config.accel.dev;
@@ -182,14 +182,14 @@ int Blackbox::begin()
   rxConfigMutable()->airModeActivateThreshold = 40;
   rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
 
-  rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.rpmFilter.harmonics;
-  rpmFilterConfigMutable()->rpm_filter_q = _model.config.rpmFilter.q;
-  rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.rpmFilter.minFreq;
-  rpmFilterConfigMutable()->rpm_filter_fade_range_hz = _model.config.rpmFilter.fade;
-  rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.rpmFilter.freqLpf;
-  rpmFilterConfigMutable()->rpm_filter_weights[0] = _model.config.rpmFilter.weights[0];
-  rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.rpmFilter.weights[1];
-  rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.rpmFilter.weights[2];
+  rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.gyro.rpmFilter.harmonics;
+  rpmFilterConfigMutable()->rpm_filter_q = _model.config.gyro.rpmFilter.q;
+  rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.gyro.rpmFilter.minFreq;
+  rpmFilterConfigMutable()->rpm_filter_fade_range_hz = _model.config.gyro.rpmFilter.fade;
+  rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.gyro.rpmFilter.freqLpf;
+  rpmFilterConfigMutable()->rpm_filter_weights[0] = _model.config.gyro.rpmFilter.weights[0];
+  rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.gyro.rpmFilter.weights[1];
+  rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.gyro.rpmFilter.weights[2];
 
   updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.modeMaskPresent & 1 << MODE_ARMED);
   updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.modeMaskPresent & 1 << MODE_ANGLE);
