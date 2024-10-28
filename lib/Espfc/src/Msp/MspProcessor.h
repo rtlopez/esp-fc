@@ -685,7 +685,7 @@ class MspProcessor
           break;
 
         case MSP_ALTITUDE:
-          r.writeU32(lrintf(_model.state.baroAltitude * 100.f));    // alt [cm]
+          r.writeU32(lrintf(_model.state.baro.altitude * 100.f));    // alt [cm]
           r.writeU16(0); // vario
           break;
 

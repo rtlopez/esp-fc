@@ -188,8 +188,8 @@ class Hardware
         if(!detectedBaro && detectDevice(spl06, gyroSlaveBus)) detectedBaro = &spl06;
       }
 
-      _model.state.baroDev = detectedBaro;
-      _model.state.baroPresent = (bool)detectedBaro;
+      _model.state.baro.dev = detectedBaro;
+      _model.state.baro.present = (bool)detectedBaro;
     }
 
 #if defined(ESPFC_SPI_0)

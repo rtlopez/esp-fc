@@ -230,23 +230,37 @@ struct MagState
   VectorFloat pose;
 };
 
+struct BaroState
+{
+  Device::BaroDevice* dev;
+  bool present;
+  int32_t rate;
+
+  float temperatureRaw;
+  float temperature;
+  float pressureRaw;
+  float pressure;
+  float altitudeRaw;
+  float altitude;
+  float altitudeBias;
+  int32_t altitudeBiasSamples;
+};
+
 // working data
 struct ModelState
 {
   MagState mag;
+  BaroState baro;
 
   Device::GyroDevice* gyroDev;
-  Device::BaroDevice* baroDev;
-
   VectorInt16 gyroRaw;
+  VectorFloat gyro;
   VectorFloat gyroSampled;
   VectorFloat gyroScaled;
   VectorFloat gyroDynNotch;
   VectorFloat gyroImu;
 
   VectorInt16 accelRaw;
-
-  VectorFloat gyro;
   VectorFloat accel;
 
   VectorFloat gyroPose;
@@ -349,17 +363,6 @@ struct ModelState
 
   bool gyroPresent;
   bool accelPresent;
-  bool baroPresent;
-  
-  float baroTemperatureRaw;
-  float baroTemperature;
-  float baroPressureRaw;
-  float baroPressure;
-  float baroAltitudeRaw;
-  float baroAltitude;
-  float baroAltitudeBias;
-  int32_t baroAltitudeBiasSamples;
-  int32_t baroRate;
 
   uint32_t armingDisabledFlags;
 

@@ -1240,7 +1240,7 @@ class Cli
         s.println();
 
         Device::GyroDevice * gyro = _model.state.gyroDev;
-        Device::BaroDevice * baro = _model.state.baroDev;
+        Device::BaroDevice * baro = _model.state.baro.dev;
         Device::MagDevice  * mag  = _model.state.mag.dev;
         s.print(F("     devices: "));
         if(gyro)
@@ -1539,7 +1539,7 @@ class Cli
       s.println(F(" Hz"));
 
       s.print(F("   baro rate: "));
-      s.print(_model.state.baroRate);
+      s.print(_model.state.baro.rate);
       s.println(F(" Hz"));
 
       s.print(F("    mag rate: "));

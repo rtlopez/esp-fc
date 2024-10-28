@@ -71,13 +71,6 @@ class MagSensor: public BaseSensor
 
       calibrate();
 
-      /*Serial.print(_model.state.mag.adc.x);
-      Serial.print(' ');
-      Serial.print(_model.state.mag.adc.y);
-      Serial.print(' ');
-      Serial.print(_model.state.mag.adc.z);
-      Serial.print('\n');*/
-
       return 1;
     }
 

@@ -124,7 +124,7 @@ class Model
 
     bool baroActive() const
     {
-      return state.baroPresent && config.baro.dev != BARO_NONE;
+      return state.baro.present && config.baro.dev != BARO_NONE;
     }
 
     bool calibrationActive() const

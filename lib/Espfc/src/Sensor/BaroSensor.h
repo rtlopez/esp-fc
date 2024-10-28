@@ -23,24 +23,25 @@ class BaroSensor: public BaseSensor
 
     int begin()
     {
-      _model.state.baroRate = 0;
+      _model.state.baro.rate = 0;
       if(!_model.baroActive()) return 0;
-      _baro = _model.state.baroDev;
+      _baro = _model.state.baro.dev;
       if(!_baro) return 0;
 
       _baro->setMode(BARO_MODE_TEMP);
       int delay = _baro->getDelay(BARO_MODE_TEMP) + _baro->getDelay(BARO_MODE_PRESS);
       int toGyroRate = (delay / _model.state.gyroTimer.interval) + 1; // number of gyro readings per cycle
       int interval = _model.state.gyroTimer.interval * toGyroRate;
-      _model.state.baroRate = 1000000 / interval;
+      _model.state.baro.rate = 1000000 / interval;
 
-      _model.state.baroAltitudeBiasSamples = 2 * _model.state.baroRate;
+      _model.state.baro.altitudeBiasSamples = 2 * _model.state.baro.rate;
 
-      _temperatureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baroRate * 0.1f), _model.state.baroRate);
-      _pressureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baroRate * 0.1f), _model.state.baroRate);
-      _altitudeFilter.begin(_model.config.baro.filter, _model.state.baroRate);
+      // TODO: move filters to BaroState
+      _temperatureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baro.rate * 0.1f), _model.state.baro.rate);
+      _pressureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baro.rate * 0.1f), _model.state.baro.rate);
+      _altitudeFilter.begin(_model.config.baro.filter, _model.state.baro.rate);
 
-      _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(_baro->getAddress()).log(toGyroRate).log(_model.state.baroRate).logln(_model.config.baro.filter.freq);
+      _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(_baro->getAddress()).log(toGyroRate).log(_model.state.baro.rate).logln(_model.config.baro.filter.freq);
 
       return 1;
     }
@@ -107,31 +108,31 @@ class BaroSensor: public BaseSensor
   private:
     void readTemperature()
     {
-      _model.state.baroTemperatureRaw = _baro->readTemperature();
-      _model.state.baroTemperature = _temperatureFilter.update(_model.state.baroTemperatureRaw);
+      _model.state.baro.temperatureRaw = _baro->readTemperature();
+      _model.state.baro.temperature = _temperatureFilter.update(_model.state.baro.temperatureRaw);
     }
 
     void readPressure()
     {
-      _model.state.baroPressureRaw = _baro->readPressure();
-      _model.state.baroPressure = _pressureFilter.update(_model.state.baroPressureRaw);
+      _model.state.baro.pressureRaw = _baro->readPressure();
+      _model.state.baro.pressure = _pressureFilter.update(_model.state.baro.pressureRaw);
     }
 
     void updateAltitude()
     {
-      _model.state.baroAltitudeRaw = _altitudeFilter.update(Math::toAltitude(_model.state.baroPressure));
-      if(_model.state.baroAltitudeBiasSamples > 0)
+      _model.state.baro.altitudeRaw = _altitudeFilter.update(Math::toAltitude(_model.state.baro.pressure));
+      if(_model.state.baro.altitudeBiasSamples > 0)
       {
-        _model.state.baroAltitudeBiasSamples--;
-        _model.state.baroAltitudeBias += (_model.state.baroAltitudeRaw - _model.state.baroAltitudeBias) * 0.2f;
+        _model.state.baro.altitudeBiasSamples--;
+        _model.state.baro.altitudeBias += (_model.state.baro.altitudeRaw - _model.state.baro.altitudeBias) * 0.2f;
       }
-      _model.state.baroAltitude = _model.state.baroAltitudeRaw - _model.state.baroAltitudeBias;
+      _model.state.baro.altitude = _model.state.baro.altitudeRaw - _model.state.baro.altitudeBias;
 
       if(_model.config.debug.mode == DEBUG_BARO)
       {
-        _model.state.debug[1] = lrintf(_model.state.baroPressureRaw * 0.1f); // hPa x 10
-        _model.state.debug[2] = lrintf(_model.state.baroTemperatureRaw * 100.f); // deg C x 100
-        _model.state.debug[3] = lrintf(_model.state.baroAltitudeRaw * 10.f);
+        _model.state.debug[1] = lrintf(_model.state.baro.pressureRaw * 0.1f); // hPa x 10
+        _model.state.debug[2] = lrintf(_model.state.baro.temperatureRaw * 100.f); // deg C x 100
+        _model.state.debug[3] = lrintf(_model.state.baro.altitudeRaw * 10.f);
       }
     }
 
