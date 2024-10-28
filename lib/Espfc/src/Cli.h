@@ -429,8 +429,8 @@ class Cli
         Param(PSTR("feature_soft_serial"), &c.featureMask, 6),
         Param(PSTR("feature_telemetry"), &c.featureMask, 10),
 
-        Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
-        Param(PSTR("debug_axis"), &c.debugAxis),
+        Param(PSTR("debug_mode"), &c.debug.mode, debugModeChoices),
+        Param(PSTR("debug_axis"), &c.debug.axis),
 
         Param(PSTR("gyro_bus"), &c.gyro.bus, busDevChoices),
         Param(PSTR("gyro_dev"), &c.gyro.dev, gyroDevChoices),
@@ -631,8 +631,8 @@ class Cli
         Param(PSTR("pid_iterm_zero"), &c.iterm.lowThrottleZeroIterm),
         Param(PSTR("pid_iterm_relax"), &c.iterm.relax, inputItermRelaxChoices),
         Param(PSTR("pid_iterm_relax_cutoff"), &c.iterm.relaxCutoff),
-        Param(PSTR("pid_tpa_scale"), &c.tpaScale),
-        Param(PSTR("pid_tpa_breakpoint"), &c.tpaBreakpoint),
+        Param(PSTR("pid_tpa_scale"), &c.controller.tpaScale),
+        Param(PSTR("pid_tpa_breakpoint"), &c.controller.tpaBreakpoint),
 
         Param(PSTR("mixer_sync"), &c.mixerSync),
         Param(PSTR("mixer_type"), &c.mixer.type, mixerTypeChoices),

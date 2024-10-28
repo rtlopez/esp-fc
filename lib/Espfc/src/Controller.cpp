@@ -15,7 +15,7 @@ int Controller::begin()
 int FAST_CODE_ATTR Controller::update()
 {
   uint32_t startTime = 0;
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     startTime = micros();
     _model.state.debug[0] = startTime - _model.state.loopTimer.last;
@@ -46,7 +46,7 @@ int FAST_CODE_ATTR Controller::update()
     }
   }
 
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     _model.state.debug[2] = micros() - startTime;
   }
@@ -72,7 +72,7 @@ void Controller::outerLoopRobot()
   _model.state.desiredAngle.set(AXIS_PITCH, angle);
   _model.state.desiredRate[AXIS_YAW] = _model.state.input[AXIS_YAW] * Math::toRad(_model.config.level.rateLimit);
 
-  if(_model.config.debugMode == DEBUG_ANGLERATE)
+  if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     _model.state.debug[0] = speed * 1000;
     _model.state.debug[1] = lrintf(degrees(angle) * 10);
@@ -99,7 +99,7 @@ void Controller::innerLoopRobot()
     _model.state.output[AXIS_YAW] = 0.f;
   }
 
-  if(_model.config.debugMode == DEBUG_ANGLERATE)
+  if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     _model.state.debug[2] = lrintf(degrees(_model.state.angle[AXIS_PITCH]) * 10);
     _model.state.debug[3] = lrintf(_model.state.output[AXIS_PITCH] * 1000);
@@ -129,7 +129,7 @@ void FAST_CODE_ATTR Controller::outerLoop()
   _model.state.desiredRate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input[AXIS_YAW]);
   _model.state.desiredRate[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
 
-  if(_model.config.debugMode == DEBUG_ANGLERATE)
+  if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     for(size_t i = 0; i < 3; ++i)
     {
@@ -148,7 +148,7 @@ void FAST_CODE_ATTR Controller::innerLoop()
   }
   _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
 
-  if(_model.config.debugMode == DEBUG_ITERM_RELAX)
+  if(_model.config.debug.mode == DEBUG_ITERM_RELAX)
   {
     _model.state.debug[0] = lrintf(Math::toDeg(_model.state.innerPid[0].itermRelaxBase));
     _model.state.debug[1] = lrintf(_model.state.innerPid[0].itermRelaxFactor * 100.0f);
@@ -159,9 +159,9 @@ void FAST_CODE_ATTR Controller::innerLoop()
 
 float Controller::getTpaFactor() const
 {
-  if(_model.config.tpaScale == 0) return 1.f;
-  float t = Math::clamp(_model.state.inputUs[AXIS_THRUST], (float)_model.config.tpaBreakpoint, 2000.f);
-  return Math::map(t, (float)_model.config.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.tpaScale * 0.01f));
+  if(_model.config.controller.tpaScale == 0) return 1.f;
+  float t = Math::clamp(_model.state.inputUs[AXIS_THRUST], (float)_model.config.controller.tpaBreakpoint, 2000.f);
+  return Math::map(t, (float)_model.config.controller.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.controller.tpaScale * 0.01f));
 }
 
 void Controller::resetIterm()

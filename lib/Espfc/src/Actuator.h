@@ -42,7 +42,7 @@ class Actuator
       updateDynLpf();
       updateRescueConfig();
 
-      if(_model.config.debugMode == DEBUG_PIDLOOP)
+      if(_model.config.debug.mode == DEBUG_PIDLOOP)
       {
         _model.state.debug[4] = micros() - startTime;
       }

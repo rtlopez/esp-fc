@@ -90,14 +90,14 @@ int FAST_CODE_ATTR Mixer::update()
   updateMixer(mixer, outputs);
   writeOutput(mixer, outputs);
 
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     _model.state.debug[3] = micros() - startTime;
   }
 
   _model.state.stats.loopTick();
 
-  if(_model.config.debugMode == DEBUG_CYCLETIME)
+  if(_model.config.debug.mode == DEBUG_CYCLETIME)
   {
     _model.state.debug[0] = _model.state.stats.loopTime();
     _model.state.debug[1] = lrintf(_model.state.stats.getCpuLoad());
@@ -350,7 +350,7 @@ void FAST_CODE_ATTR Mixer::readTelemetry()
       if(_model.state.outputTelemetryErrorsCount[i])
       {
         _model.state.outputTelemetryErrors[i] = _model.state.outputTelemetryErrorsSum[i] * 10000 / _model.state.outputTelemetryErrorsCount[i];
-        if(_model.config.debugMode == DEBUG_DSHOT_RPM_ERRORS)
+        if(_model.config.debug.mode == DEBUG_DSHOT_RPM_ERRORS)
         {
           _model.state.debug[i] = _model.state.outputTelemetryErrors[i];
         }

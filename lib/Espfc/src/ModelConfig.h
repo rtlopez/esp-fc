@@ -532,6 +532,12 @@ struct BlackboxConfig
   int8_t mode = 0;
 };
 
+struct DebugConfig
+{
+  int8_t mode = DEBUG_NONE;
+  uint8_t axis = 1;
+};
+
 struct RpmFilterConfig
 {
   uint8_t harmonics = 3;
@@ -635,23 +641,31 @@ struct MixerConfiguration
   bool yawReverse = 0;
 };
 
+struct ControllerConfig
+{
+  int8_t tpaScale = 10;
+  int16_t tpaBreakpoint = 1650;
+};
+
 // persistent data
 class ModelConfig
 {
   public:
+    // inputs and sensors
     GyroConfig gyro;
     AccelConfig accel;
     BaroConfig baro;
     MagConfig mag;
-
     InputConfig input;
     FailsafeConfig failsafe;
+    FusionConfig fusion;
+    VBatConfig vbat;
+    IBatConfig ibat;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
     ScalerConfig scaler[SCALER_COUNT];
 
-    OutputConfig output;
-
+    // pid controller
     PidConfig pid[FC_PID_ITEM_COUNT] = {
       [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
       [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
@@ -664,137 +678,108 @@ class ModelConfig
       [FC_PID_MAG]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // MAG
       [FC_PID_VEL]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // VEL
     };
-
-    MixerConfiguration mixer;
     YawConfig yaw;
     LevelConfig level;
     DtermConfig dterm;
     ItermConfig iterm;
+    ControllerConfig controller;
 
+    // hardware
+    int8_t pin[PIN_COUNT] = {
+#ifdef ESPFC_INPUT
+      [PIN_INPUT_RX] = ESPFC_INPUT_PIN,
+#endif
+      [PIN_OUTPUT_0] = ESPFC_OUTPUT_0,
+      [PIN_OUTPUT_1] = ESPFC_OUTPUT_1,
+      [PIN_OUTPUT_2] = ESPFC_OUTPUT_2,
+      [PIN_OUTPUT_3] = ESPFC_OUTPUT_3,
+#if ESPFC_OUTPUT_COUNT > 4
+      [PIN_OUTPUT_4] = ESPFC_OUTPUT_4,
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
+      [PIN_OUTPUT_5] = ESPFC_OUTPUT_5,
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
+      [PIN_OUTPUT_6] = ESPFC_OUTPUT_6,
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
+      [PIN_OUTPUT_7] = ESPFC_OUTPUT_7,
+#endif
+      [PIN_BUZZER] = ESPFC_BUZZER_PIN,
+#ifdef ESPFC_SERIAL_0
+      [PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX,
+      [PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX,
+#endif
+#ifdef ESPFC_SERIAL_1
+      [PIN_SERIAL_1_TX] = ESPFC_SERIAL_1_TX,
+      [PIN_SERIAL_1_RX] = ESPFC_SERIAL_1_RX,
+#endif
+#ifdef ESPFC_SERIAL_2
+      [PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX,
+      [PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_RX,
+#endif
+#ifdef ESPFC_I2C_0
+      [PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL,
+      [PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA,
+#endif
+#ifdef ESPFC_ADC_0
+      [PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN,
+#endif
+#ifdef ESPFC_ADC_1
+      [PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN,
+#endif
+#ifdef ESPFC_SPI_0
+      [PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK,
+      [PIN_SPI_0_MOSI] = ESPFC_SPI_0_MOSI,
+      [PIN_SPI_0_MISO] = ESPFC_SPI_0_MISO,
+#endif
+#ifdef ESPFC_SPI_0
+      [PIN_SPI_CS0] = ESPFC_SPI_CS_GYRO,
+      [PIN_SPI_CS1] = ESPFC_SPI_CS_BARO,
+      [PIN_SPI_CS2] = -1,
+#endif
+    };
+    SerialPortConfig serial[SERIAL_UART_COUNT] = {
+#ifdef ESPFC_SERIAL_USB
+      [SERIAL_USB]    = { .id = SERIAL_ID_USB_VCP, .functionMask = ESPFC_SERIAL_USB_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
+#endif
+#ifdef ESPFC_SERIAL_0
+      [SERIAL_UART_0] = { .id = SERIAL_ID_UART_1, .functionMask = ESPFC_SERIAL_0_FN, .baud = ESPFC_SERIAL_0_BAUD, .blackboxBaud = ESPFC_SERIAL_0_BBAUD },
+#endif
+#ifdef ESPFC_SERIAL_1
+      [SERIAL_UART_1] = { .id = SERIAL_ID_UART_2, .functionMask = ESPFC_SERIAL_1_FN, .baud = ESPFC_SERIAL_1_BAUD, .blackboxBaud = ESPFC_SERIAL_1_BBAUD },
+#endif
+#ifdef ESPFC_SERIAL_2
+      [SERIAL_UART_2] = { .id = SERIAL_ID_UART_3, .functionMask = ESPFC_SERIAL_2_FN, .baud = ESPFC_SERIAL_2_BAUD, .blackboxBaud = ESPFC_SERIAL_2_BBAUD },
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
+      [SERIAL_SOFT_0] = { .id = SERIAL_ID_SOFTSERIAL_1, .functionMask = ESPFC_SERIAL_SOFT_0_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
+#endif
+    };
+    BuzzerConfig buzzer;
+    WirelessConfig wireless;
+
+    // mixer and outputs
+    int8_t customMixerCount = 0;
+    MixerEntry customMixes[MIXER_RULE_MAX];
+    MixerConfiguration mixer;
+    OutputConfig output;
+    BlackboxConfig blackbox;
+    DebugConfig debug;
+
+    // not classified yet
+    int16_t i2cSpeed = 800;
     int8_t loopSync = 8; // MPU 1000Hz
     int8_t mixerSync = 1;
-
     int32_t featureMask = ESPFC_FEATURE_MASK;
     bool telemetry = 0;
     int32_t telemetryInterval = 1000;
-
-    BlackboxConfig blackbox;
-
-    SerialPortConfig serial[SERIAL_UART_COUNT];
-
-    FusionConfig fusion;
-
-    char modelName[MODEL_NAME_LEN + 1];
-
-    VBatConfig vbat;
-    IBatConfig ibat;
-
-    int8_t debugMode = DEBUG_NONE;
-    uint8_t debugAxis = 1;
-
-    BuzzerConfig buzzer;
-
-    int8_t pin[PIN_COUNT];
-    int16_t i2cSpeed = 800;
-
-    int8_t tpaScale = 10;
-    int16_t tpaBreakpoint = 1650;
-
-    int8_t customMixerCount = 0;
-    MixerEntry customMixes[MIXER_RULE_MAX];
-
-    WirelessConfig wireless;
-
     uint8_t rescueConfigDelay = 30;
-
     int16_t boardAlignment[3] = {0, 0, 0};
+    char modelName[MODEL_NAME_LEN + 1];
 
     ModelConfig()
     {
-#ifdef ESPFC_INPUT
-      pin[PIN_INPUT_RX] = ESPFC_INPUT_PIN;
-#endif
-      pin[PIN_OUTPUT_0] = ESPFC_OUTPUT_0;
-      pin[PIN_OUTPUT_1] = ESPFC_OUTPUT_1;
-      pin[PIN_OUTPUT_2] = ESPFC_OUTPUT_2;
-      pin[PIN_OUTPUT_3] = ESPFC_OUTPUT_3;
-#if ESPFC_OUTPUT_COUNT > 4
-      pin[PIN_OUTPUT_4] = ESPFC_OUTPUT_4;
-#endif
-#if ESPFC_OUTPUT_COUNT > 5
-      pin[PIN_OUTPUT_5] = ESPFC_OUTPUT_5;
-#endif
-#if ESPFC_OUTPUT_COUNT > 6
-      pin[PIN_OUTPUT_6] = ESPFC_OUTPUT_6;
-#endif
-#if ESPFC_OUTPUT_COUNT > 7
-      pin[PIN_OUTPUT_7] = ESPFC_OUTPUT_7;
-#endif
-      pin[PIN_BUZZER] = ESPFC_BUZZER_PIN;
-#ifdef ESPFC_SERIAL_0
-      pin[PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX;
-      pin[PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX;
-#endif
-#ifdef ESPFC_SERIAL_1
-      pin[PIN_SERIAL_1_TX] = ESPFC_SERIAL_1_TX;
-      pin[PIN_SERIAL_1_RX] = ESPFC_SERIAL_1_RX;
-#endif
-#ifdef ESPFC_SERIAL_2
-      pin[PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX;
-      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_RX;
-#endif
-#ifdef ESPFC_I2C_0
-      pin[PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL;
-      pin[PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA;
-#endif
-#ifdef ESPFC_ADC_0
-      pin[PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN;
-#endif
-#ifdef ESPFC_ADC_1
-      pin[PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN;
-#endif
-#ifdef ESPFC_SPI_0
-      pin[PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK;
-      pin[PIN_SPI_0_MOSI] = ESPFC_SPI_0_MOSI;
-      pin[PIN_SPI_0_MISO] = ESPFC_SPI_0_MISO;
-#endif
-#ifdef ESPFC_SPI_0
-      pin[PIN_SPI_CS0] = ESPFC_SPI_CS_GYRO;
-      pin[PIN_SPI_CS1] = ESPFC_SPI_CS_BARO;
-      pin[PIN_SPI_CS2] = -1;
-#endif
-
-#ifdef ESPFC_SERIAL_0
-      serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
-      serial[SERIAL_UART_0].functionMask = ESPFC_SERIAL_0_FN;
-      serial[SERIAL_UART_0].baud = ESPFC_SERIAL_0_BAUD;
-      serial[SERIAL_UART_0].blackboxBaud = ESPFC_SERIAL_0_BBAUD;
-#endif
-#ifdef ESPFC_SERIAL_1
-      serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
-      serial[SERIAL_UART_1].functionMask = ESPFC_SERIAL_1_FN;
-      serial[SERIAL_UART_1].baud = ESPFC_SERIAL_1_BAUD;
-      serial[SERIAL_UART_1].blackboxBaud = ESPFC_SERIAL_1_BBAUD;
-#endif
-#ifdef ESPFC_SERIAL_2
-      serial[SERIAL_UART_2].id = SERIAL_ID_UART_3;
-      serial[SERIAL_UART_2].functionMask = ESPFC_SERIAL_2_FN;
-      serial[SERIAL_UART_2].baud = ESPFC_SERIAL_2_BAUD;
-      serial[SERIAL_UART_2].blackboxBaud = ESPFC_SERIAL_2_BBAUD;
-#endif
-#ifdef ESPFC_SERIAL_USB
-      serial[SERIAL_USB].id = SERIAL_ID_USB_VCP;
-      serial[SERIAL_USB].functionMask = ESPFC_SERIAL_USB_FN;
-      serial[SERIAL_USB].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_USB].blackboxBaud = SERIAL_SPEED_NONE;
-#endif
-#ifdef ESPFC_SERIAL_SOFT_0
-      serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1;
-      serial[SERIAL_SOFT_0].functionMask = ESPFC_SERIAL_SOFT_0_FN;
-      serial[SERIAL_SOFT_0].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_SOFT_0].blackboxBaud = SERIAL_SPEED_NONE;
-#endif
-
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
         input.channel[i].map = i;
@@ -826,7 +811,7 @@ class ModelConfig
     {
 #ifdef ESPFC_DEV_PRESET_BLACKBOX
       blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
-      debugMode = DEBUG_GYRO_SCALED;
+      debug.mode = DEBUG_GYRO_SCALED;
       serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
       serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;
       serial[ESPFC_DEV_PRESET_BLACKBOX].baud = SERIAL_SPEED_250000;

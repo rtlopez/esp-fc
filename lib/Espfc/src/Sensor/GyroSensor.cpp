@@ -31,7 +31,7 @@ int GyroSensor::begin()
   _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
   _dyn_notch_sma.begin(_dyn_notch_denom);
   _dyn_notch_enabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _model.config.gyro.dynamicFilter.width > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
-  _dyn_notch_debug = _model.config.debugMode == DEBUG_FFT_FREQ || _model.config.debugMode == DEBUG_FFT_TIME;
+  _dyn_notch_debug = _model.config.debug.mode == DEBUG_FFT_FREQ || _model.config.debug.mode == DEBUG_FFT_TIME;
 
   _rpm_enabled = _model.config.gyro.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;
   _rpm_motor_index = 0;
@@ -101,11 +101,11 @@ int FAST_CODE_ATTR GyroSensor::filter()
     _model.setDebug(DEBUG_GYRO_SCALED, i, lrintf(degrees(_model.state.gyroScaled[i])));
   }
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 0, lrintf(degrees(_model.state.gyro[_model.config.debugAxis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 0, lrintf(degrees(_model.state.gyro[_model.config.debug.axis])));
 
   _model.state.gyro = Utils::applyFilter(_model.state.gyroFilter2, _model.state.gyro);
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 1, lrintf(degrees(_model.state.gyro[_model.config.debugAxis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 1, lrintf(degrees(_model.state.gyro[_model.config.debug.axis])));
 
   if (_rpm_enabled)
   {
@@ -118,13 +118,13 @@ int FAST_CODE_ATTR GyroSensor::filter()
     }
   }
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 2, lrintf(degrees(_model.state.gyro[_model.config.debugAxis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 2, lrintf(degrees(_model.state.gyro[_model.config.debug.axis])));
 
   _model.state.gyro = Utils::applyFilter(_model.state.gyroNotch1Filter, _model.state.gyro);
   _model.state.gyro = Utils::applyFilter(_model.state.gyroNotch2Filter, _model.state.gyro);
   _model.state.gyro = Utils::applyFilter(_model.state.gyroFilter, _model.state.gyro);
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 3, lrintf(degrees(_model.state.gyro[_model.config.debugAxis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 3, lrintf(degrees(_model.state.gyro[_model.config.debug.axis])));
 
   if (_dyn_notch_enabled || _dyn_notch_debug)
   {
@@ -212,13 +212,13 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
       {
         uint32_t startTime = micros();
         int status = _fft[i].update(_model.state.gyroDynNotch[i]);
-        if (_model.config.debugMode == DEBUG_FFT_TIME)
+        if (_model.config.debug.mode == DEBUG_FFT_TIME)
         {
           if (i == 0)
             _model.state.debug[0] = status;
           _model.state.debug[i + 1] = micros() - startTime;
         }
-        if (_model.config.debugMode == DEBUG_FFT_FREQ && i == _model.config.debugAxis)
+        if (_model.config.debug.mode == DEBUG_FFT_FREQ && i == _model.config.debug.axis)
         {
           _model.state.debug[0] = lrintf(_fft[i].peaks[0].freq);
           _model.state.debug[1] = lrintf(_fft[i].peaks[1].freq);
@@ -243,17 +243,17 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
         uint32_t startTime = micros();
         _freqAnalyzer[i].update(_model.state.gyroDynNotch[i]);
         float freq = _freqAnalyzer[i].freq;
-        if (_model.config.debugMode == DEBUG_FFT_TIME)
+        if (_model.config.debug.mode == DEBUG_FFT_TIME)
         {
           if (i == 0)
             _model.state.debug[0] = update;
           _model.state.debug[i + 1] = micros() - startTime;
         }
-        if (_model.config.debugMode == DEBUG_FFT_FREQ)
+        if (_model.config.debug.mode == DEBUG_FFT_FREQ)
         {
           if (update)
             _model.state.debug[i] = lrintf(freq);
-          if (i == _model.config.debugAxis)
+          if (i == _model.config.debug.axis)
             _model.state.debug[3] = lrintf(degrees(_model.state.gyroDynNotch[i]));
         }
         if (_dyn_notch_enabled && update)

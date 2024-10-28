@@ -80,7 +80,7 @@ class VoltageSensor: public BaseSensor
       _model.state.battery.cellVoltage = _model.state.battery.voltage / constrain(_model.state.battery.cells, 1, 6);
       _model.state.battery.percentage = Math::clamp(Math::map(_model.state.battery.cellVoltage, 3.4f, 4.2f, 0.0f, 100.0f), 0.0f, 100.0f);
 
-      if(_model.config.debugMode == DEBUG_BATTERY)
+      if(_model.config.debug.mode == DEBUG_BATTERY)
       {
         _model.state.debug[0] = constrain(lrintf(_model.state.battery.voltageUnfiltered * 100.0f), 0, 32000);
         _model.state.debug[1] = constrain(lrintf(_model.state.battery.voltage * 100.0f), 0, 32000);
@@ -106,7 +106,7 @@ class VoltageSensor: public BaseSensor
       _model.state.battery.currentUnfiltered = volts;
       _model.state.battery.current = _iFilter.update(_model.state.battery.currentUnfiltered);
 
-      if(_model.config.debugMode == DEBUG_CURRENT_SENSOR)
+      if(_model.config.debug.mode == DEBUG_CURRENT_SENSOR)
       {
         _model.state.debug[0] = lrintf(milivolts);
         _model.state.debug[1] = constrain(lrintf(_model.state.battery.currentUnfiltered * 100.0f), 0, 32000);

@@ -70,7 +70,7 @@ int FAST_CODE_ATTR Fusion::update()
     }
     //else madgwickFusion1();
 
-    if(_model.config.debugMode == DEBUG_ALTITUDE)
+    if(_model.config.debug.mode == DEBUG_ALTITUDE)
     {
       _model.state.debug[0] = lrintf(degrees(_model.state.angle[0]) * 10);
       _model.state.debug[1] = lrintf(degrees(_model.state.angle[1]) * 10);

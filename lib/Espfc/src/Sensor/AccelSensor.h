@@ -69,7 +69,7 @@ class AccelSensor: public BaseSensor
 
       for(size_t i = 0; i < 3; i++)
       {
-        if(_model.config.debugMode == DEBUG_ACCELEROMETER)
+        if(_model.config.debug.mode == DEBUG_ACCELEROMETER)
         {
           _model.state.debug[i] = _model.state.accelRaw[i];
         }

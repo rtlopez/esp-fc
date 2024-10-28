@@ -38,7 +38,7 @@ int Blackbox::begin()
   }
 
   systemConfigMutable()->activeRateProfile = 0;
-  systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
+  systemConfigMutable()->debug_mode = debugMode = _model.config.debug.mode;
 
   controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
   for(int i = 0; i <= AXIS_YAW; i++)
@@ -50,8 +50,8 @@ int Blackbox::begin()
   }
   rp->thrMid8 = 50;
   rp->thrExpo8 = 0;
-  rp->dynThrPID = _model.config.tpaScale;
-  rp->tpa_breakpoint = _model.config.tpaBreakpoint;
+  rp->dynThrPID = _model.config.controller.tpaScale;
+  rp->tpa_breakpoint = _model.config.controller.tpaBreakpoint;
   rp->rates_type = _model.config.input.rateType;
 
   pidProfile_s * cp = currentPidProfile = &_pidProfile;
@@ -82,8 +82,8 @@ int Blackbox::begin()
   cp->ff_boost = 0;
   cp->feedForwardTransition = 0;
   cp->tpa_mode = 0; // PD
-  cp->tpa_rate = _model.config.tpaScale;
-  cp->tpa_breakpoint = _model.config.tpaBreakpoint;
+  cp->tpa_rate = _model.config.controller.tpaScale;
+  cp->tpa_breakpoint = _model.config.controller.tpaBreakpoint;
   cp->motor_output_limit = _model.config.output.motorLimit;
   cp->throttle_boost = 0;
   cp->throttle_boost_cutoff = 100;
@@ -225,7 +225,7 @@ int FAST_CODE_ATTR Blackbox::update()
   }
   //PIN_DEBUG(LOW);
 
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     _model.state.debug[5] = micros() - startTime;
   }
@@ -263,7 +263,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
       motor[i] = PWM_TO_DSHOT(motor[i]);
     }
   }
-  if(_model.config.debugMode != DEBUG_NONE && _model.config.debugMode != DEBUG_BLACKBOX_OUTPUT)
+  if(_model.config.debug.mode != DEBUG_NONE && _model.config.debug.mode != DEBUG_BLACKBOX_OUTPUT)
   {
     for(size_t i = 0; i < 8; i++)
     {

@@ -60,7 +60,7 @@ class BaroSensor: public BaseSensor
 
       Stats::Measure measure(_model.state.stats, COUNTER_BARO);
 
-      if(_model.config.debugMode == DEBUG_BARO)
+      if(_model.config.debug.mode == DEBUG_BARO)
       {
         _model.state.debug[0] = _state;
       }
@@ -127,7 +127,7 @@ class BaroSensor: public BaseSensor
       }
       _model.state.baroAltitude = _model.state.baroAltitudeRaw - _model.state.baroAltitudeBias;
 
-      if(_model.config.debugMode == DEBUG_BARO)
+      if(_model.config.debug.mode == DEBUG_BARO)
       {
         _model.state.debug[1] = lrintf(_model.state.baroPressureRaw * 0.1f); // hPa x 10
         _model.state.debug[2] = lrintf(_model.state.baroTemperatureRaw * 100.f); // deg C x 100

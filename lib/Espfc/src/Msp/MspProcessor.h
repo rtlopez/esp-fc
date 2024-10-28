@@ -910,10 +910,10 @@ class MspProcessor
           {
             r.writeU8(_model.config.input.superRate[i]);
           }
-          r.writeU8(_model.config.tpaScale); // dyn thr pid
+          r.writeU8(_model.config.controller.tpaScale); // dyn thr pid
           r.writeU8(50); // thrMid8
           r.writeU8(0);  // thr expo
-          r.writeU16(_model.config.tpaBreakpoint); // tpa breakpoint
+          r.writeU16(_model.config.controller.tpaBreakpoint); // tpa breakpoint
           r.writeU8(_model.config.input.expo[AXIS_YAW]); // yaw expo
           r.writeU8(_model.config.input.rate[AXIS_YAW]); // yaw rate
           r.writeU8(_model.config.input.rate[AXIS_PITCH]); // pitch rate
@@ -951,10 +951,10 @@ class MspProcessor
             {
               _model.config.input.superRate[i] = m.readU8();
             }
-            _model.config.tpaScale = Math::clamp(m.readU8(), (uint8_t)0, (uint8_t)90); // dyn thr pid
+            _model.config.controller.tpaScale = Math::clamp(m.readU8(), (uint8_t)0, (uint8_t)90); // dyn thr pid
             m.readU8(); // thrMid8
             m.readU8();  // thr expo
-            _model.config.tpaBreakpoint = Math::clamp(m.readU16(), (uint16_t)1000, (uint16_t)2000); // tpa breakpoint
+            _model.config.controller.tpaBreakpoint = Math::clamp(m.readU16(), (uint16_t)1000, (uint16_t)2000); // tpa breakpoint
             if(m.remain() >= 1)
             {
               _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo
@@ -1012,7 +1012,7 @@ class MspProcessor
           r.writeU16(125); // gyro cal duration (1.25s)
           r.writeU16(0);   // gyro offset yaw
           r.writeU8(0);    // check overflow
-          r.writeU8(_model.config.debugMode);
+          r.writeU8(_model.config.debug.mode);
           r.writeU8(DEBUG_COUNT);
           break;
 
@@ -1040,7 +1040,7 @@ class MspProcessor
             m.readU8();  // check overflow
           }
           if(m.remain()) {
-            _model.config.debugMode = m.readU8();
+            _model.config.debug.mode = m.readU8();
           }
           _model.reload();
           break;

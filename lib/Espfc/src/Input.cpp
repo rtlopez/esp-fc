@@ -88,7 +88,7 @@ int FAST_CODE_ATTR Input::update()
     filterInputs(status);
   }
 
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     _model.state.debug[1] = micros() - startTime;
   }
@@ -103,7 +103,7 @@ InputStatus FAST_CODE_ATTR Input::readInputs()
 
   InputStatus status = _device->update();
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[0] = micros() - startTime;
   }
@@ -118,7 +118,7 @@ InputStatus FAST_CODE_ATTR Input::readInputs()
 
   processInputs();
 
-  if(_model.config.debugMode == DEBUG_RX_SIGNAL_LOSS)
+  if(_model.config.debug.mode == DEBUG_RX_SIGNAL_LOSS)
   {
     _model.state.debug[0] = !_model.state.inputRxLoss;
     _model.state.debug[1] = _model.state.inputRxFailSafe;
@@ -175,7 +175,7 @@ void FAST_CODE_ATTR Input::processInputs()
     _model.state.inputBuffer[c] = v;
   }
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[2] = micros() - startTime;
   }
@@ -279,7 +279,7 @@ void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
     setInput((Axis)c, v, newFrame);
   }
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[3] = micros() - startTime;
   }
@@ -300,7 +300,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
     _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;
   }
 
-  if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
+  if(_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
   {
     _model.state.debug[0] = _model.state.inputFrameDelta / 10;
     _model.state.debug[1] = _model.state.inputFrameRate;
@@ -311,7 +311,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
   if(freq > _model.state.inputAutoFreq * 1.1f || freq < _model.state.inputAutoFreq * 0.9f)
   {
     _model.state.inputAutoFreq += 0.25f * (freq - _model.state.inputAutoFreq);
-    if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
+    if(_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
     {
       _model.state.debug[2] = lrintf(freq);
       _model.state.debug[3] = lrintf(_model.state.inputAutoFreq);
@@ -331,7 +331,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
     }
   }
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[1] = micros() - now;
   }

@@ -212,7 +212,7 @@ class Model
     void inline setDebug(DebugMode mode, size_t index, int16_t value)
     {
       if(index >= 8) return;
-      if(config.debugMode != mode) return;
+      if(config.debug.mode != mode) return;
       state.debug[index] = value;
     }
 
