@@ -41,7 +41,7 @@ int Blackbox::begin()
   systemConfigMutable()->debug_mode = debugMode = _model.config.debug.mode;
 
   controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
-  for(int i = 0; i <= AXIS_YAW; i++)
+  for(int i = 0; i < AXIS_COUNT_RPY; i++)
   {
     rp->rcRates[i] = _model.config.input.rate[i];
     rp->rcExpo[i] = _model.config.input.expo[i];
@@ -139,8 +139,8 @@ int Blackbox::begin()
   motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
   motorConfigMutable()->mincommand = _model.config.output.minCommand;
   motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
-  motorConfigMutable()->minthrottle = _model.state.minThrottle;
-  motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
+  motorConfigMutable()->minthrottle = _model.state.mixer.minThrottle;
+  motorConfigMutable()->maxthrottle = _model.state.mixer.maxThrottle;
   motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;
   motorConfigMutable()->motorPoleCount = _model.config.output.motorPoles;
 
@@ -258,7 +258,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
   for(size_t i = 0; i < 4; i++)
   {
     motor[i] = Math::clamp(_model.state.output.us[i], (int16_t)1000, (int16_t)2000);
-    if(_model.state.digitalOutput)
+    if(_model.state.mixer.digitalOutput)
     {
       motor[i] = PWM_TO_DSHOT(motor[i]);
     }

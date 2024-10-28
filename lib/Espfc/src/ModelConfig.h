@@ -200,6 +200,9 @@ enum Axis {
   AXIS_AUX_11,
   AXIS_AUX_12,
   AXIS_COUNT,
+  AXIS_COUNT_RP = AXIS_YAW,      // RP axis count
+  AXIS_COUNT_RPY = AXIS_THRUST,  // RPY axis count
+  AXIS_COUNT_RPYT = AXIS_AUX_1,  // RPYT axis count
 };
 
 enum Feature {

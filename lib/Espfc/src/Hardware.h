@@ -230,8 +230,8 @@ class Hardware
 
     static void restart(const Model& model)
     {
-      if(model.state.escMotor) model.state.escMotor->end();
-      if(model.state.escServo) model.state.escServo->end();
+      if(model.state.mixer.escMotor) model.state.mixer.escMotor->end();
+      if(model.state.mixer.escServo) model.state.mixer.escServo->end();
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       WiFi.disconnect();
       WiFi.softAPdisconnect();

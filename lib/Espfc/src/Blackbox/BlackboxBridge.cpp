@@ -75,12 +75,12 @@ float mixerGetThrottle(void)
 
 int16_t getMotorOutputLow()
 {
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
+  return _model_ptr->state.mixer.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
 }
 
 int16_t getMotorOutputHigh()
 {
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
+  return _model_ptr->state.mixer.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
 }
 
 bool areMotorsRunning(void)

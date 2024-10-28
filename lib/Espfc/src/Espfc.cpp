@@ -49,7 +49,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 #if defined(ESPFC_MULTI_CORE)
 
   _sensor.read();
-  if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+  if(_model.state.input.timer.syncTo(_model.state.gyroTimer, 1u))
   {
     _input.update();
   }
@@ -68,12 +68,12 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
   {
     _controller.update();
-    if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
+    if(_model.state.mixer.timer.syncTo(_model.state.loopTimer))
     {
       _mixer.update();
     }
     _blackbox.update();
-    if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+    if(_model.state.input.timer.syncTo(_model.state.gyroTimer, 1u))
     {
       _input.update();
     }

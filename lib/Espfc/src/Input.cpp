@@ -64,7 +64,7 @@ void FAST_CODE_ATTR Input::setInput(Axis i, float v, bool newFrame, bool noFilte
   const InputChannelConfig& ich = _model.config.input.channel[i];
   if(i <= AXIS_THRUST)
   {
-    const float nv = noFilter ? v : _model.state.inputFilter[i].update(v);
+    const float nv = noFilter ? v : _model.state.input.filter[i].update(v);
     _model.state.input.us[i] = nv;
     _model.state.input.ch[i] = Math::map(nv, ich.min, ich.max, -1.f, 1.f);
   }
@@ -318,11 +318,11 @@ void FAST_CODE_ATTR Input::updateFrameRate()
     }
     FilterConfig conf((FilterType)_model.config.input.filter.type, _model.state.input.autoFreq);
     FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, _model.state.input.autoFreq);
-    for(size_t i = 0; i <= AXIS_THRUST; i++)
+    for(size_t i = 0; i < AXIS_COUNT_RPYT; i++)
     {
       if(_model.config.input.filter.freq == 0)
       {
-        _model.state.inputFilter[i].reconfigure(conf, _model.state.loopTimer.rate);
+        _model.state.input.filter[i].reconfigure(conf, _model.state.loopTimer.rate);
       }
       if(_model.config.input.filterDerivative.freq == 0)
       {

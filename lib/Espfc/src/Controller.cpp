@@ -141,7 +141,7 @@ void FAST_CODE_ATTR Controller::outerLoop()
 void FAST_CODE_ATTR Controller::innerLoop()
 {
   const float tpaFactor = getTpaFactor();
-  for(size_t i = 0; i <= AXIS_YAW; ++i)
+  for(size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
     _model.state.output.ch[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i]) * tpaFactor;
     //_model.state.debug[i] = lrintf(_model.state.innerPid[i].fTerm * 1000);

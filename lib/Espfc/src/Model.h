@@ -432,9 +432,9 @@ class Model
       int accelRate = Math::alignToClock(state.gyroTimer.rate, 500);
       state.accelTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / accelRate);
       state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
-      state.mixerTimer.setRate(state.loopTimer.rate, config.mixerSync);
+      state.mixer.timer.setRate(state.loopTimer.rate, config.mixerSync);
       int inputRate = Math::alignToClock(state.gyroTimer.rate, 1000);
-      state.inputTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / inputRate);
+      state.input.timer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / inputRate);
       state.actuatorTimer.setRate(50);
       state.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
@@ -448,11 +448,11 @@ class Model
 
       const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
-      const uint32_t inputFilterRate = state.inputTimer.rate;
+      const uint32_t inputFilterRate = state.input.timer.rate;
       const uint32_t pidFilterRate = state.loopTimer.rate;
 
       // configure filters
-      for(size_t i = 0; i <= AXIS_YAW; i++)
+      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
         if(isActive(FEATURE_DYNAMIC_FILTER))
         {
@@ -494,11 +494,11 @@ class Model
       {
         if (config.input.filterType == INPUT_FILTER)
         {
-          state.inputFilter[i].begin(config.input.filter, inputFilterRate);
+          state.input.filter[i].begin(config.input.filter, inputFilterRate);
         }
         else
         {
-          state.inputFilter[i].begin(FilterConfig(FILTER_PT3, 25), inputFilterRate);
+          state.input.filter[i].begin(FilterConfig(FILTER_PT3, 25), inputFilterRate);
         }
       }
 
@@ -518,7 +518,7 @@ class Model
         pidScale[AXIS_PITCH] = 20.f; // ROBOT
       }
 
-      for(size_t i = 0; i <= AXIS_YAW; i++) // rpy
+      for(size_t i = 0; i < AXIS_COUNT_RPY; i++) // rpy
       {
         const PidConfig& pc = config.pid[i];
         Control::Pid& pid = state.innerPid[i];
@@ -547,7 +547,7 @@ class Model
         pid.begin();
       }
 
-      for(size_t i = 0; i < AXIS_YAW; i++)
+      for(size_t i = 0; i < AXIS_COUNT_RP; i++)
       {
         PidConfig& pc = config.pid[FC_PID_LEVEL];
         Control::Pid& pid = state.outerPid[i];
@@ -572,7 +572,7 @@ class Model
     void postLoad()
     {
       // load current sensor calibration
-      for(size_t i = 0; i <= AXIS_YAW; i++)
+      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
         state.gyroBias.set(i, config.gyro.bias[i] / 1000.0f);
         state.accelBias.set(i, config.accel.bias[i] / 1000.0f);
@@ -584,7 +584,7 @@ class Model
     void preSave()
     {
       // store current sensor calibration
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
         config.gyro.bias[i] = lrintf(state.gyroBias[i] * 1000.0f);
         config.accel.bias[i] = lrintf(state.accelBias[i] * 1000.0f);

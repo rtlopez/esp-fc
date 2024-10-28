@@ -116,7 +116,7 @@ void test_model_gyro_init_1k_256dlpf()
   TEST_ASSERT_EQUAL_INT32(2000, model.state.gyroTimer.rate);
   TEST_ASSERT_EQUAL_INT32(2000, model.state.loopRate);
   TEST_ASSERT_EQUAL_INT32(2000, model.state.loopTimer.rate);
-  TEST_ASSERT_EQUAL_INT32(2000, model.state.mixerTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.mixer.timer.rate);
 }
 
 void test_model_gyro_init_1k_188dlpf()
@@ -133,7 +133,7 @@ void test_model_gyro_init_1k_188dlpf()
   TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroTimer.rate);
   TEST_ASSERT_EQUAL_INT32( 500, model.state.loopRate);
   TEST_ASSERT_EQUAL_INT32( 500, model.state.loopTimer.rate);
-  TEST_ASSERT_EQUAL_INT32( 250, model.state.mixerTimer.rate);
+  TEST_ASSERT_EQUAL_INT32( 250, model.state.mixer.timer.rate);
 }
 
 void test_model_inner_pid_init()

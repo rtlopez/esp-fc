@@ -1531,7 +1531,7 @@ class Cli
       s.println(F(" Hz"));
 
       s.print(F("  mixer rate: "));
-      s.print(_model.state.mixerTimer.rate);
+      s.print(_model.state.mixer.timer.rate);
       s.println(F(" Hz"));
 
       s.print(F("  accel rate: "));

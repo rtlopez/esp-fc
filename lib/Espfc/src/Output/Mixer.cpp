@@ -19,7 +19,7 @@ int Mixer::begin()
     .dshotTelemetry = !!_model.config.output.dshotTelemetry,
   };
   escMotor.begin(motorConf);
-  _model.state.escMotor = _motor = &escMotor;
+  _model.state.mixer.escMotor = _motor = &escMotor;
   _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).log(_model.config.output.dshotTelemetry).logln(ESC_DRIVER_MOTOR_TIMER);
 
   if(_model.config.output.servoRate)
@@ -32,11 +32,11 @@ int Mixer::begin()
       .dshotTelemetry = false,
     };
     escServo.begin(servoConf);
-    _model.state.escServo = _servo = &escServo;
+    _model.state.mixer.escServo = _servo = &escServo;
     _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
   }
   _erpmToHz = EscDriver::getErpmToHzRatio(_model.config.output.motorPoles);
-  _statsCounterMax = _model.state.mixerTimer.rate / 2;
+  _statsCounterMax = _model.state.mixer.timer.rate / 2;
   _statsCounter = 0;
 
   for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
@@ -67,13 +67,13 @@ int Mixer::begin()
   }
   motorInitEscDevice(_motor);
 
-  _model.state.minThrottle = _model.config.output.minThrottle;
-  _model.state.maxThrottle = _model.config.output.maxThrottle;
-  _model.state.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
-  if(_model.state.digitalOutput)
+  _model.state.mixer.minThrottle = _model.config.output.minThrottle;
+  _model.state.mixer.maxThrottle = _model.config.output.maxThrottle;
+  _model.state.mixer.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
+  if(_model.state.mixer.digitalOutput)
   {
-    _model.state.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
-    _model.state.maxThrottle = 2000.f;
+    _model.state.mixer.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
+    _model.state.mixer.maxThrottle = 2000.f;
   }
   _model.state.currentMixer = Mixers::getMixer((MixerType)_model.config.mixer.type, _model.state.customMixer);
   return 1;
@@ -256,7 +256,7 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
       else
       {
         float v = Math::clamp(out[i], -1.f, 1.f);
-        _model.state.output.us[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
+        _model.state.output.us[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.mixer.minThrottle, _model.state.mixer.maxThrottle));
       }
     }
   }

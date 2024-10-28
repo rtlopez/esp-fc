@@ -191,6 +191,21 @@ struct InputState
 
   float us[INPUT_CHANNELS];
   float ch[INPUT_CHANNELS];
+
+  Filter filter[AXIS_COUNT_RPYT];
+
+  Timer timer;
+};
+
+struct MixerState
+{
+  Timer timer;
+  float minThrottle;
+  float maxThrottle;
+  bool digitalOutput;
+
+  EscDriver * escMotor;
+  EscDriver * escServo;
 };
 
 // working data
@@ -240,7 +255,6 @@ struct ModelState
 
   Filter accelFilter[3];
   Filter magFilter[3];
-  Filter inputFilter[4];
   Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
   Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][3];
 
@@ -258,6 +272,7 @@ struct ModelState
   InputState input;
   FailsafeState failsafe;
 
+  MixerState mixer;
   OutputState output;
 
   // other state
@@ -288,12 +303,6 @@ struct ModelState
   int32_t loopRate;
   Timer loopTimer;
 
-  Timer mixerTimer;
-  float minThrottle;
-  float maxThrottle;
-  bool digitalOutput;
-
-  Timer inputTimer;
   Timer actuatorTimer;
 
   Timer magTimer;
@@ -355,8 +364,6 @@ struct ModelState
   Timer serialTimer;
 
   Target::Queue appQueue;
-  EscDriver * escMotor;
-  EscDriver * escServo;
 };
 
 }
