@@ -218,8 +218,8 @@ void Fusion::updatePoseFromAccelMag()
     q.y =  cosX2 * sinY2;
     q.z = -sinX2 * sinY2;
 
-    VectorFloat m = _model.state.mag.getRotated(q);
-    _model.state.magPose = m;
+    VectorFloat m = _model.state.mag.adc.getRotated(q);
+    _model.state.mag.pose = m;
     _model.state.pose.z = -atan2(m.y, m.x);
   }
   else
@@ -265,7 +265,7 @@ void Fusion::lerpFusion()
   if(_model.magActive())
   {
     // use yaw from mag
-    VectorFloat mag = _model.state.mag.getRotated(_model.state.accelPoseQ);
+    VectorFloat mag = _model.state.mag.adc.getRotated(_model.state.accelPoseQ);
     _model.state.accelPose.z = -atan2(mag.y, mag.x);
   }
   else
@@ -294,7 +294,7 @@ void Fusion::madgwickFusion()
     _madgwick.update(
       _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
       _model.state.accel.x, _model.state.accel.y, _model.state.accel.z,
-      _model.state.mag.x,   _model.state.mag.y,   _model.state.mag.z
+      _model.state.mag.adc.x,   _model.state.mag.adc.y,   _model.state.mag.adc.z
     );
   }
   else
@@ -315,7 +315,7 @@ void FAST_CODE_ATTR Fusion::mahonyFusion()
     _mahony.update(
       _model.state.gyroImu.x, _model.state.gyroImu.y, _model.state.gyroImu.z,
       _model.state.accel.x, _model.state.accel.y, _model.state.accel.z,
-      _model.state.mag.x,   _model.state.mag.y,   _model.state.mag.z
+      _model.state.mag.adc.x,   _model.state.mag.adc.y,   _model.state.mag.adc.z
     );
   }
   else

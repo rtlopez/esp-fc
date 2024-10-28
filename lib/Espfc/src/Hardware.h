@@ -153,9 +153,9 @@ class Hardware
         if(!detectedMag && detectDevice(qmc5883l, gyroSlaveBus)) detectedMag = &qmc5883l;
         
       }
-      _model.state.magDev = detectedMag;
-      _model.state.magPresent = (bool)detectedMag;
-      _model.state.magRate = detectedMag ? detectedMag->getRate() : 0;
+      _model.state.mag.dev = detectedMag;
+      _model.state.mag.present = (bool)detectedMag;
+      _model.state.mag.rate = detectedMag ? detectedMag->getRate() : 0;
     }
 
     void detectBaro()

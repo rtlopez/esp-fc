@@ -1287,7 +1287,7 @@ class MspProcessor
           }
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(_model.state.mag[i] * 1090));
+            r.writeU16(lrintf(_model.state.mag.adc[i] * 1090));
           }
           break;
 

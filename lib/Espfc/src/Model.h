@@ -119,7 +119,7 @@ class Model
 
     bool magActive() const
     {
-      return state.magPresent && config.mag.dev != MAG_NONE;
+      return state.mag.present && config.mag.dev != MAG_NONE;
     }
 
     bool baroActive() const
@@ -129,7 +129,7 @@ class Model
 
     bool calibrationActive() const
     {
-      return state.accelCalibrationState != CALIBRATION_IDLE || state.gyroCalibrationState != CALIBRATION_IDLE || state.magCalibrationState != CALIBRATION_IDLE;
+      return state.accelCalibrationState != CALIBRATION_IDLE || state.gyroCalibrationState != CALIBRATION_IDLE || state.mag.calibrationState != CALIBRATION_IDLE;
     }
 
     void calibrateGyro()
@@ -143,7 +143,7 @@ class Model
 
     void calibrateMag()
     {
-      state.magCalibrationState = CALIBRATION_START;
+      state.mag.calibrationState = CALIBRATION_START;
     }
 
     void finishCalibration()
@@ -159,11 +159,11 @@ class Model
         save();
         logger.info().log(F("ACCEL BIAS")).log(state.accelBias.x).log(state.accelBias.y).logln(state.accelBias.z);
       }
-      if(state.magCalibrationState == CALIBRATION_SAVE)
+      if(state.mag.calibrationState == CALIBRATION_SAVE)
       {
         save();
-        logger.info().log(F("MAG BIAS")).log(state.magCalibrationOffset.x).log(state.magCalibrationOffset.y).logln(state.magCalibrationOffset.z);
-        logger.info().log(F("MAG SCALE")).log(state.magCalibrationScale.x).log(state.magCalibrationScale.y).logln(state.magCalibrationScale.z);
+        logger.info().log(F("MAG BIAS")).log(state.mag.calibrationOffset.x).log(state.mag.calibrationOffset.y).logln(state.mag.calibrationOffset.z);
+        logger.info().log(F("MAG SCALE")).log(state.mag.calibrationScale.x).log(state.mag.calibrationScale.y).logln(state.mag.calibrationScale.z);
       }
     }
 
@@ -441,7 +441,7 @@ class Model
       state.stats.timer.setRate(3);
       if(magActive())
       {
-        state.magTimer.setRate(state.magRate);
+        state.mag.timer.setRate(state.mag.rate);
       }
 
       state.boardAlignment.init(VectorFloat(Math::toRad(config.boardAlignment[0]), Math::toRad(config.boardAlignment[1]), Math::toRad(config.boardAlignment[2])));
@@ -486,7 +486,7 @@ class Model
         }
         if(magActive())
         {
-          state.magFilter[i].begin(config.mag.filter, state.magTimer.rate);
+          state.mag.filter[i].begin(config.mag.filter, state.mag.timer.rate);
         }
       }
 
@@ -576,8 +576,8 @@ class Model
       {
         state.gyroBias.set(i, config.gyro.bias[i] / 1000.0f);
         state.accelBias.set(i, config.accel.bias[i] / 1000.0f);
-        state.magCalibrationOffset.set(i, config.mag.offset[i] / 10.0f);
-        state.magCalibrationScale.set(i, config.mag.scale[i] / 1000.0f);
+        state.mag.calibrationOffset.set(i, config.mag.offset[i] / 10.0f);
+        state.mag.calibrationScale.set(i, config.mag.scale[i] / 1000.0f);
       }
     }
 
@@ -588,8 +588,8 @@ class Model
       {
         config.gyro.bias[i] = lrintf(state.gyroBias[i] * 1000.0f);
         config.accel.bias[i] = lrintf(state.accelBias[i] * 1000.0f);
-        config.mag.offset[i] = lrintf(state.magCalibrationOffset[i] * 10.0f);
-        config.mag.scale[i] = lrintf(state.magCalibrationScale[i] * 1000.0f);
+        config.mag.offset[i] = lrintf(state.mag.calibrationOffset[i] * 10.0f);
+        config.mag.scale[i] = lrintf(state.mag.calibrationScale[i] * 1000.0f);
       }
     }
 

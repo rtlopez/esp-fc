@@ -208,11 +208,34 @@ struct MixerState
   EscDriver * escServo;
 };
 
+struct MagState
+{
+  Device::MagDevice* dev;
+  bool present;
+  int rate;
+
+  VectorInt16 raw;
+  VectorFloat adc;
+  Filter filter[3];
+  Timer timer;
+
+  int calibrationSamples;
+  int calibrationState;
+  bool calibrationValid;
+  VectorFloat calibrationMin;
+  VectorFloat calibrationMax;
+  VectorFloat calibrationScale;
+  VectorFloat calibrationOffset;
+
+  VectorFloat pose;
+};
+
 // working data
 struct ModelState
 {
+  MagState mag;
+
   Device::GyroDevice* gyroDev;
-  Device::MagDevice* magDev;
   Device::BaroDevice* baroDev;
 
   VectorInt16 gyroRaw;
@@ -222,18 +245,15 @@ struct ModelState
   VectorFloat gyroImu;
 
   VectorInt16 accelRaw;
-  VectorInt16 magRaw;
 
   VectorFloat gyro;
   VectorFloat accel;
-  VectorFloat mag;
 
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;
   VectorFloat accelPose;
   VectorFloat accelPose2;
   Quaternion accelPoseQ;
-  VectorFloat magPose;
 
   bool imuUpdate;
   bool loopUpdate;
@@ -254,7 +274,6 @@ struct ModelState
   Filter gyroImuFilter[3];
 
   Filter accelFilter[3];
-  Filter magFilter[3];
   Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
   Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][3];
 
@@ -304,19 +323,6 @@ struct ModelState
   Timer loopTimer;
 
   Timer actuatorTimer;
-
-  Timer magTimer;
-  int magRate;
-
-  int magCalibrationSamples;
-  int magCalibrationState;
-  bool magCalibrationValid;
-
-  VectorFloat magCalibrationMin;
-  VectorFloat magCalibrationMax;
-  VectorFloat magCalibrationScale;
-  VectorFloat magCalibrationOffset;
-  
   Timer telemetryTimer;
 
   Stats stats;
@@ -343,7 +349,6 @@ struct ModelState
 
   bool gyroPresent;
   bool accelPresent;
-  bool magPresent;
   bool baroPresent;
   
   float baroTemperatureRaw;

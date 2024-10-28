@@ -1058,17 +1058,17 @@ class Cli
           s.print(_model.config.mag.offset[0]); s.print(' ');
           s.print(_model.config.mag.offset[1]); s.print(' ');
           s.print(_model.config.mag.offset[2]); s.print(F(" ["));
-          s.print(_model.state.magCalibrationOffset[0]); s.print(' ');
-          s.print(_model.state.magCalibrationOffset[1]); s.print(' ');
-          s.print(_model.state.magCalibrationOffset[2]); s.println(F("]"));
+          s.print(_model.state.mag.calibrationOffset[0]); s.print(' ');
+          s.print(_model.state.mag.calibrationOffset[1]); s.print(' ');
+          s.print(_model.state.mag.calibrationOffset[2]); s.println(F("]"));
 
           s.print(F("   mag scale: "));
           s.print(_model.config.mag.scale[0]); s.print(' ');
           s.print(_model.config.mag.scale[1]); s.print(' ');
           s.print(_model.config.mag.scale[2]); s.print(F(" ["));
-          s.print(_model.state.magCalibrationScale[0]); s.print(' ');
-          s.print(_model.state.magCalibrationScale[1]); s.print(' ');
-          s.print(_model.state.magCalibrationScale[2]); s.println(F("]"));
+          s.print(_model.state.mag.calibrationScale[0]); s.print(' ');
+          s.print(_model.state.mag.calibrationScale[1]); s.print(' ');
+          s.print(_model.state.mag.calibrationScale[2]); s.println(F("]"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("gyro")) == 0)
         {
@@ -1092,8 +1092,8 @@ class Cli
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_mag")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
         {
-          _model.state.magCalibrationOffset = VectorFloat();
-          _model.state.magCalibrationScale = VectorFloat(1.f, 1.f, 1.f);
+          _model.state.mag.calibrationOffset = VectorFloat();
+          _model.state.mag.calibrationScale = VectorFloat(1.f, 1.f, 1.f);
           s.println(F("OK"));
         }
       }
@@ -1241,7 +1241,7 @@ class Cli
 
         Device::GyroDevice * gyro = _model.state.gyroDev;
         Device::BaroDevice * baro = _model.state.baroDev;
-        Device::MagDevice  * mag  = _model.state.magDev;
+        Device::MagDevice  * mag  = _model.state.mag.dev;
         s.print(F("     devices: "));
         if(gyro)
         {
@@ -1543,7 +1543,7 @@ class Cli
       s.println(F(" Hz"));
 
       s.print(F("    mag rate: "));
-      s.print(_model.state.magTimer.rate);
+      s.print(_model.state.mag.timer.rate);
       s.println(F(" Hz"));
     }
 

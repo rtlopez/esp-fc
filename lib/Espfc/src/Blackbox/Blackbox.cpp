@@ -248,7 +248,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
       acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
     }
     if(_model.magActive()) {
-      mag.magADC[i] = _model.state.mag[i] * 1090;
+      mag.magADC[i] = _model.state.mag.adc[i] * 1090;
     }
     if(_model.baroActive()) {
       baro.altitude = lrintf(_model.state.baroAltitude * 100.f); // cm
