@@ -874,7 +874,7 @@ class MspProcessor
           break;
 
         case MSP_RXFAIL_CONFIG:
-          for (size_t i = 0; i < _model.state.inputChannelCount; i++)
+          for (size_t i = 0; i < _model.state.input.channelCount; i++)
           {
             r.writeU8(_model.config.input.channel[i].fsMode);
             r.writeU16(_model.config.input.channel[i].fsValue);
@@ -897,9 +897,9 @@ class MspProcessor
           break;
 
         case MSP_RC:
-          for(size_t i = 0; i < _model.state.inputChannelCount; i++)
+          for(size_t i = 0; i < _model.state.input.channelCount; i++)
           {
-            r.writeU16(lrintf(_model.state.inputUs[i]));
+            r.writeU16(lrintf(_model.state.input.us[i]));
           }
           break;
 
@@ -1299,7 +1299,7 @@ class MspProcessor
               r.writeU16(0);
               continue;
             }
-            r.writeU16(_model.state.outputUs[i]);
+            r.writeU16(_model.state.output.us[i]);
           }
           break;
 
@@ -1316,11 +1316,11 @@ class MspProcessor
 
             if (_model.config.pin[i + PIN_OUTPUT_0] != -1)
             {
-              rpm = lrintf(_model.state.outputTelemetryRpm[i]);
-              invalidPct = _model.state.outputTelemetryErrors[i];
-              escTemperature = _model.state.outputTelemetryTemperature[i];
-              escVoltage = _model.state.outputTelemetryVoltage[i];
-              escCurrent = _model.state.outputTelemetryCurrent[i];
+              rpm = lrintf(_model.state.output.telemetry.rpm[i]);
+              invalidPct = _model.state.output.telemetry.errors[i];
+              escTemperature = _model.state.output.telemetry.temperature[i];
+              escVoltage = _model.state.output.telemetry.voltage[i];
+              escCurrent = _model.state.output.telemetry.current[i];
             }
 
             r.writeU32(rpm);
@@ -1335,7 +1335,7 @@ class MspProcessor
         case MSP_SET_MOTOR:
           for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
           {
-            _model.state.outputDisarmed[i] = m.readU16();
+            _model.state.output.disarmed[i] = m.readU16();
           }
           break;
 
@@ -1347,7 +1347,7 @@ class MspProcessor
               r.writeU16(1500);
               continue;
             }
-            r.writeU16(_model.state.outputUs[i]);
+            r.writeU16(_model.state.output.us[i]);
           }
           break;
 

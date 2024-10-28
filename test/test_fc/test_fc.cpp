@@ -468,8 +468,8 @@ void test_actuator_arming_failsafe()
   model.config.output.protocol = ESC_PROTOCOL_DSHOT150;
   model.state.failsafe.phase = FC_FAILSAFE_RX_LOSS_DETECTED;
   model.state.gyroCalibrationState = CALIBRATION_UPDATE;
-  model.state.inputRxFailSafe = true;
-  model.state.inputRxLoss = true;
+  model.state.input.rxFailSafe = true;
+  model.state.input.rxLoss = true;
 
   //model.begin();
 
@@ -488,7 +488,7 @@ void test_actuator_arming_throttle()
   Model model;
   model.config.output.protocol = ESC_PROTOCOL_DSHOT150;
   model.config.input.minCheck = 1050;
-  model.state.inputUs[AXIS_THRUST] = 1100;
+  model.state.input.us[AXIS_THRUST] = 1100;
   model.state.gyroPresent = true;
 
   //model.begin();

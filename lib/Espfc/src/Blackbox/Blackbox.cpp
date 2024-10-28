@@ -243,7 +243,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
     pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
     pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
     pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
-    rcCommand[i] = (_model.state.inputBuffer[i] - 1500) * (i == AXIS_YAW ? -1 : 1);
+    rcCommand[i] = (_model.state.input.buffer[i] - 1500) * (i == AXIS_YAW ? -1 : 1);
     if(_model.accelActive()) {
       acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
     }
@@ -254,10 +254,10 @@ void FAST_CODE_ATTR Blackbox::updateData()
       baro.altitude = lrintf(_model.state.baroAltitude * 100.f); // cm
     }
   }
-  rcCommand[AXIS_THRUST] = _model.state.inputBuffer[AXIS_THRUST];
+  rcCommand[AXIS_THRUST] = _model.state.input.buffer[AXIS_THRUST];
   for(size_t i = 0; i < 4; i++)
   {
-    motor[i] = Math::clamp(_model.state.outputUs[i], (int16_t)1000, (int16_t)2000);
+    motor[i] = Math::clamp(_model.state.output.us[i], (int16_t)1000, (int16_t)2000);
     if(_model.state.digitalOutput)
     {
       motor[i] = PWM_TO_DSHOT(motor[i]);

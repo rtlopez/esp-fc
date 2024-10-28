@@ -24,7 +24,7 @@ int32_t getAmperageLatest(void)
 bool rxIsReceivingSignal(void)
 {
   if(!_model_ptr) return false;
-  return !((*_model_ptr).state.inputRxLoss || (*_model_ptr).state.inputRxFailSafe);
+  return !((*_model_ptr).state.input.rxLoss || (*_model_ptr).state.input.rxFailSafe);
 }
 
 bool isRssiConfigured(void)
@@ -70,7 +70,7 @@ float pidGetPreviousSetpoint(int axis)
 
 float mixerGetThrottle(void)
 {
-  return (_model_ptr->state.output[Espfc::AXIS_THRUST] + 1.0f) * 0.5f;
+  return (_model_ptr->state.output.ch[Espfc::AXIS_THRUST] + 1.0f) * 0.5f;
 }
 
 int16_t getMotorOutputLow()
@@ -90,5 +90,5 @@ bool areMotorsRunning(void)
 
 uint16_t getDshotErpm(uint8_t i)
 {
-  return _model_ptr->state.outputTelemetryErpm[i];
+  return _model_ptr->state.output.telemetry.erpm[i];
 }

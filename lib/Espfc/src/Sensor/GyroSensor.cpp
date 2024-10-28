@@ -164,7 +164,7 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
 
   Stats::Measure measure(_model.state.stats, COUNTER_RPM_UPDATE);
 
-  const float motorFreq = _model.state.outputTelemetryFreq[_rpm_motor_index];
+  const float motorFreq = _model.state.output.telemetry.freq[_rpm_motor_index];
   for (size_t n = 0; n < _model.config.gyro.rpmFilter.harmonics; n++)
   {
     const float freq = Math::clamp(motorFreq * (n + 1), _rpm_min_freq, _rpm_max_freq);
@@ -182,7 +182,7 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
     }
   }
 
-  _model.setDebug(DEBUG_RPM_FILTER, _rpm_motor_index, lrintf(_model.state.outputTelemetryFreq[_rpm_motor_index]));
+  _model.setDebug(DEBUG_RPM_FILTER, _rpm_motor_index, lrintf(_model.state.output.telemetry.freq[_rpm_motor_index]));
 
   _rpm_motor_index++;
   if (_rpm_motor_index >= RPM_FILTER_MOTOR_MAX)

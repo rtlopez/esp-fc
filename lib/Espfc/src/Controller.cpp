@@ -58,19 +58,19 @@ void Controller::outerLoopRobot()
 {
   const float speedScale = 2.f;
   const float gyroScale = 0.1f;
-  const float speed = _speedFilter.update(_model.state.output[AXIS_PITCH] * speedScale + _model.state.gyro[AXIS_PITCH] * gyroScale);
+  const float speed = _speedFilter.update(_model.state.output.ch[AXIS_PITCH] * speedScale + _model.state.gyro[AXIS_PITCH] * gyroScale);
   float angle = 0;
 
   if(true || _model.isActive(MODE_ANGLE))
   {
-    angle = _model.state.input[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit);
+    angle = _model.state.input.ch[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit);
   }
   else
   {
-    angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input[AXIS_PITCH], speed) * Math::toRad(_model.config.level.rateLimit);
+    angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input.ch[AXIS_PITCH], speed) * Math::toRad(_model.config.level.rateLimit);
   }
   _model.state.desiredAngle.set(AXIS_PITCH, angle);
-  _model.state.desiredRate[AXIS_YAW] = _model.state.input[AXIS_YAW] * Math::toRad(_model.config.level.rateLimit);
+  _model.state.desiredRate[AXIS_YAW] = _model.state.input.ch[AXIS_YAW] * Math::toRad(_model.config.level.rateLimit);
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
@@ -89,20 +89,20 @@ void Controller::innerLoopRobot()
   const bool stabilize = angle < Math::toRad(_model.config.level.angleLimit);
   if(stabilize)
   {
-    _model.state.output[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
-    _model.state.output[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro[AXIS_YAW]);
+    _model.state.output.ch[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
+    _model.state.output.ch[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro[AXIS_YAW]);
   }
   else
   {
     resetIterm();
-    _model.state.output[AXIS_PITCH] = 0.f;
-    _model.state.output[AXIS_YAW] = 0.f;
+    _model.state.output.ch[AXIS_PITCH] = 0.f;
+    _model.state.output.ch[AXIS_YAW] = 0.f;
   }
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     _model.state.debug[2] = lrintf(degrees(_model.state.angle[AXIS_PITCH]) * 10);
-    _model.state.debug[3] = lrintf(_model.state.output[AXIS_PITCH] * 1000);
+    _model.state.debug[3] = lrintf(_model.state.output.ch[AXIS_PITCH] * 1000);
   }
 }
 
@@ -111,8 +111,8 @@ void FAST_CODE_ATTR Controller::outerLoop()
   if(_model.isActive(MODE_ANGLE))
   {
     _model.state.desiredAngle = VectorFloat(
-      _model.state.input[AXIS_ROLL] * Math::toRad(_model.config.level.angleLimit),
-      _model.state.input[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit),
+      _model.state.input.ch[AXIS_ROLL] * Math::toRad(_model.config.level.angleLimit),
+      _model.state.input.ch[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit),
       _model.state.angle[AXIS_YAW]
     );
     _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL]);
@@ -123,11 +123,11 @@ void FAST_CODE_ATTR Controller::outerLoop()
   }
   else
   {
-    _model.state.desiredRate[AXIS_ROLL] = calculateSetpointRate(AXIS_ROLL, _model.state.input[AXIS_ROLL]);
-    _model.state.desiredRate[AXIS_PITCH] = calculateSetpointRate(AXIS_PITCH, _model.state.input[AXIS_PITCH]);
+    _model.state.desiredRate[AXIS_ROLL] = calculateSetpointRate(AXIS_ROLL, _model.state.input.ch[AXIS_ROLL]);
+    _model.state.desiredRate[AXIS_PITCH] = calculateSetpointRate(AXIS_PITCH, _model.state.input.ch[AXIS_PITCH]);
   }
-  _model.state.desiredRate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input[AXIS_YAW]);
-  _model.state.desiredRate[AXIS_THRUST] = _model.state.input[AXIS_THRUST];
+  _model.state.desiredRate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input.ch[AXIS_YAW]);
+  _model.state.desiredRate[AXIS_THRUST] = _model.state.input.ch[AXIS_THRUST];
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
@@ -143,10 +143,10 @@ void FAST_CODE_ATTR Controller::innerLoop()
   const float tpaFactor = getTpaFactor();
   for(size_t i = 0; i <= AXIS_YAW; ++i)
   {
-    _model.state.output[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i]) * tpaFactor;
+    _model.state.output.ch[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i]) * tpaFactor;
     //_model.state.debug[i] = lrintf(_model.state.innerPid[i].fTerm * 1000);
   }
-  _model.state.output[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
+  _model.state.output.ch[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
 
   if(_model.config.debug.mode == DEBUG_ITERM_RELAX)
   {
@@ -160,7 +160,7 @@ void FAST_CODE_ATTR Controller::innerLoop()
 float Controller::getTpaFactor() const
 {
   if(_model.config.controller.tpaScale == 0) return 1.f;
-  float t = Math::clamp(_model.state.inputUs[AXIS_THRUST], (float)_model.config.controller.tpaBreakpoint, 2000.f);
+  float t = Math::clamp(_model.state.input.us[AXIS_THRUST], (float)_model.config.controller.tpaBreakpoint, 2000.f);
   return Math::map(t, (float)_model.config.controller.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.controller.tpaScale * 0.01f));
 }
 

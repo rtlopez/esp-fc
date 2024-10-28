@@ -98,7 +98,7 @@ class Model
 
     bool isThrottleLow() const
     {
-      return state.inputUs[AXIS_THRUST] < config.input.minCheck;
+      return state.input.us[AXIS_THRUST] < config.input.minCheck;
     }
 
     bool blackboxEnabled() const
@@ -189,7 +189,7 @@ class Model
 
     void setOutputSaturated(bool val)
     {
-      state.outputSaturated = val;
+      state.output.saturated = val;
       for(size_t i = 0; i < 3; i++)
       {
         state.innerPid[i].outputSaturated = val;
@@ -203,8 +203,8 @@ class Model
       for(size_t i = 0; i < count; i++)
       {
         if(config.output.channel[i].servo) continue;
-        if(state.outputDisarmed[i] != config.output.minCommand) return true;
-        //if(state.outputUs[i] != config.output.minCommand) return true;
+        if(state.output.disarmed[i] != config.output.minCommand) return true;
+        //if(state.output.us[i] != config.output.minCommand) return true;
       }
       return false;
     }
@@ -257,8 +257,8 @@ class Model
     uint16_t getRssi() const
     {
       size_t channel = config.input.rssiChannel;
-      if(channel < 4 || channel > state.inputChannelCount) return 0;
-      float value = state.input[channel - 1];
+      if(channel < 4 || channel > state.input.channelCount) return 0;
+      float value = state.input.ch[channel - 1];
       return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
     }
 
@@ -505,7 +505,7 @@ class Model
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
-        state.outputDisarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
+        state.output.disarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
       }
 
       state.buzzer.beeperMask = config.buzzer.beeperMask;

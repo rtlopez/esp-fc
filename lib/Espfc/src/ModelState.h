@@ -139,6 +139,60 @@ enum RescueConfigMode {
   RESCUE_CONFIG_DISABLED,
 };
 
+struct OutputTelemetryState
+{
+  int16_t errors[OUTPUT_CHANNELS];
+  int32_t errorsSum[OUTPUT_CHANNELS];
+  int32_t errorsCount[OUTPUT_CHANNELS];
+
+  uint32_t erpm[OUTPUT_CHANNELS];
+  float rpm[OUTPUT_CHANNELS];
+  float freq[OUTPUT_CHANNELS];
+
+  int8_t temperature[OUTPUT_CHANNELS];
+  int8_t voltage[OUTPUT_CHANNELS];
+  int8_t current[OUTPUT_CHANNELS];
+  int8_t debug1[OUTPUT_CHANNELS];
+  int8_t debug2[OUTPUT_CHANNELS];
+  int8_t debug3[OUTPUT_CHANNELS];
+  int8_t events[OUTPUT_CHANNELS];
+};
+
+struct OutputState
+{
+  float ch[OUTPUT_CHANNELS];
+  int16_t us[OUTPUT_CHANNELS];
+  int16_t disarmed[OUTPUT_CHANNELS];
+  bool saturated;
+  OutputTelemetryState telemetry;
+};
+
+struct InputState
+{
+  size_t channelCount;
+  bool channelsValid;
+  bool rxLoss;
+  bool rxFailSafe;
+
+  uint32_t frameTime;
+  uint32_t frameDelta;
+  uint32_t frameRate;
+  uint32_t frameCount;
+  uint32_t lossTime;
+
+  float interpolationDelta;
+  float interpolationStep;
+  float autoFactor;
+  float autoFreq;
+
+  int16_t raw[INPUT_CHANNELS];
+  int16_t buffer[INPUT_CHANNELS];
+  int16_t bufferPrevious[INPUT_CHANNELS];
+
+  float us[INPUT_CHANNELS];
+  float ch[INPUT_CHANNELS];
+};
+
 // working data
 struct ModelState
 {
@@ -201,47 +255,10 @@ struct ModelState
   Control::Pid innerPid[AXES];
   Control::Pid outerPid[AXES];
 
-  size_t inputChannelCount;
-  bool inputChannelsValid;
-  bool inputRxLoss;
-  bool inputRxFailSafe;
-
-  uint32_t inputFrameTime;
-  uint32_t inputFrameDelta;
-  uint32_t inputFrameRate;
-  uint32_t inputFrameCount;
-  uint32_t inputLossTime;
-  float inputInterpolationDelta;
-  float inputInterpolationStep;
-  float inputAutoFactor;
-  float inputAutoFreq;
-
-  int16_t inputRaw[INPUT_CHANNELS];
-  int16_t inputBuffer[INPUT_CHANNELS];
-  int16_t inputBufferPrevious[INPUT_CHANNELS];
-
-  float inputUs[INPUT_CHANNELS];
-  float input[INPUT_CHANNELS];
+  InputState input;
   FailsafeState failsafe;
 
-  float output[OUTPUT_CHANNELS];
-  int16_t outputUs[OUTPUT_CHANNELS];
-  int16_t outputDisarmed[OUTPUT_CHANNELS];
-  bool outputSaturated;
-
-  int16_t outputTelemetryErrors[OUTPUT_CHANNELS];
-  int32_t outputTelemetryErrorsSum[OUTPUT_CHANNELS];
-  int32_t outputTelemetryErrorsCount[OUTPUT_CHANNELS];
-  uint32_t outputTelemetryErpm[OUTPUT_CHANNELS];
-  float outputTelemetryRpm[OUTPUT_CHANNELS];
-  float outputTelemetryFreq[OUTPUT_CHANNELS];
-  int8_t outputTelemetryTemperature[OUTPUT_CHANNELS];
-  int8_t outputTelemetryVoltage[OUTPUT_CHANNELS];
-  int8_t outputTelemetryCurrent[OUTPUT_CHANNELS];
-  int8_t outputTelemetryDebug1[OUTPUT_CHANNELS];
-  int8_t outputTelemetryDebug2[OUTPUT_CHANNELS];
-  int8_t outputTelemetryDebug3[OUTPUT_CHANNELS];
-  int8_t outputTelemetryEvents[OUTPUT_CHANNELS];
+  OutputState output;
 
   // other state
   Kalman kalman[AXES];

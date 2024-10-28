@@ -1197,7 +1197,7 @@ class Cli
           uint32_t mode = _model.config.scaler[i].dimension;
           if(!mode) continue;
           short c = _model.config.scaler[i].channel;
-          float v = _model.state.input[c];
+          float v = _model.state.input.ch[c];
           float min = _model.config.scaler[i].minScale * 0.01f;
           float max = _model.config.scaler[i].maxScale * 0.01f;
           float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
@@ -1280,11 +1280,11 @@ class Cli
         s.println();
 
         s.print(F("       input: "));
-        s.print(_model.state.inputFrameRate);
+        s.print(_model.state.input.frameRate);
         s.print(F(" Hz, "));
-        s.print(_model.state.inputAutoFreq);
+        s.print(_model.state.input.autoFreq);
         s.print(F(" Hz, "));
-        s.println(_model.state.inputAutoFactor);
+        s.println(_model.state.input.autoFactor);
 
         static const char* armingDisableNames[] = {
           PSTR("NO_GYRO"), PSTR("FAILSAFE"), PSTR("RX_FAILSAFE"), PSTR("BAD_RX_RECOVERY"),
@@ -1384,7 +1384,7 @@ class Cli
           } else {
             s.print(_model.config.pin[i + PIN_OUTPUT_0]);
             s.print(' ');
-            s.println(_model.state.outputUs[i]);
+            s.println(_model.state.output.us[i]);
           }
         }
       }

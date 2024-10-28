@@ -64,7 +64,7 @@ class Actuator
         short c = _model.config.scaler[i].channel;
         if(c < AXIS_AUX_1) continue;
 
-        float v = _model.state.input[c];
+        float v = _model.state.input.ch[c];
         float min = _model.config.scaler[i].minScale * 0.01f;
         float max = _model.config.scaler[i].maxScale * 0.01f;
         float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
@@ -100,7 +100,7 @@ class Actuator
 
       _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,       !_model.state.gyroPresent || errors);
       _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,       _model.state.failsafe.phase != FC_FAILSAFE_IDLE);
-      _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,    _model.state.inputRxLoss || _model.state.inputRxFailSafe);
+      _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,    _model.state.input.rxLoss || _model.state.input.rxFailSafe);
       _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
       _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
       _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
@@ -120,7 +120,7 @@ class Actuator
         size_t ch = c->ch;    // + AXIS_AUX_1;
         if(ch < AXIS_AUX_1 || ch >= AXIS_COUNT) continue; // invalid channel
 
-        int16_t val = _model.state.inputUs[ch];
+        int16_t val = _model.state.input.us[ch];
         if(val > min && val < max)
         {
           newMask |= 1 << c->id;
@@ -191,7 +191,7 @@ class Actuator
       {
         _model.state.airmodeAllowed = false;
       }
-      if(armed && !_model.state.airmodeAllowed && _model.state.inputUs[AXIS_THRUST] > 1400) // activate airmode in the air
+      if(armed && !_model.state.airmodeAllowed && _model.state.input.us[AXIS_THRUST] > 1400) // activate airmode in the air
       {
         _model.state.airmodeAllowed = true;
       }
@@ -220,7 +220,7 @@ class Actuator
     void updateDynLpf()
     {
       return; // temporary disable
-      int scale = Math::clamp((int)_model.state.inputUs[AXIS_THRUST], 1000, 2000);
+      int scale = Math::clamp((int)_model.state.input.us[AXIS_THRUST], 1000, 2000);
       if(_model.config.gyro.dynLpfFilter.cutoff > 0) {
         int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyro.dynLpfFilter.cutoff, _model.config.gyro.dynLpfFilter.freq);
         for(size_t i = 0; i <= AXIS_YAW; i++) {
@@ -241,7 +241,7 @@ class Actuator
       {
         case RESCUE_CONFIG_PENDING:
           // if some rc frames are received, disable to prevent activate later
-          if(_model.state.inputFrameCount > 100)
+          if(_model.state.input.frameCount > 100)
           {
             _model.state.rescueConfigMode = RESCUE_CONFIG_DISABLED;
           }
