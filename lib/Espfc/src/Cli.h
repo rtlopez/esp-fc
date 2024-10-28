@@ -574,6 +574,9 @@ class Cli
 #ifdef ESPFC_SERIAL_SOFT_0
         Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
 #endif
+#ifdef ESPFC_SERIAL_USB
+        Param(PSTR("serial_usb"), &c.serial[SERIAL_USB]),
+#endif
 
         Param(PSTR("scaler_0"), &c.scaler[0]),
         Param(PSTR("scaler_1"), &c.scaler[1]),
