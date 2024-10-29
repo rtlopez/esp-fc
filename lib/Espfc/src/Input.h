@@ -6,6 +6,7 @@
 #include "Device/InputPPM.h"
 #include "Device/InputSBUS.h"
 #include "Device/InputCRSF.h"
+#include "TelemetryManager.h"
 #if defined(ESPFC_ESPNOW)
 #include "Device/InputEspNow.h"
 #endif
@@ -28,7 +29,7 @@ enum InputPwmRange {
 class Input
 {
   public:
-    Input(Model& model);
+    Input(Model& model, TelemetryManager& telemetry);
 
     int begin();
     int update();
@@ -55,6 +56,7 @@ class Input
     }
 
     Model& _model;
+    TelemetryManager& _telemetry;
     Device::InputDevice * _device;
     Filter _filter[INPUT_CHANNELS];
     float _step;

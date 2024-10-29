@@ -6,12 +6,11 @@
 #include "Input.h"
 #include "Actuator.h"
 #include "SensorManager.h"
+#include "TelemetryManager.h"
 #include "SerialManager.h"
 #include "Output/Mixer.h"
 #include "Blackbox/Blackbox.h"
-#ifdef ESPFC_BUZER
 #include "Buzzer.h"
-#endif
 
 namespace Espfc {
 
@@ -27,21 +26,20 @@ class Espfc
 
     int getGyroInterval() const
     {
-      return _model.state.gyroTimer.interval;
+      return _model.state.gyro.timer.interval;
     }
 
   private:
     Model _model;
     Hardware _hardware;
     Controller _controller;
+    TelemetryManager _telemetry;
     Input _input;
     Actuator _actuator;
     SensorManager _sensor;
     Output::Mixer _mixer;
     Blackbox::Blackbox _blackbox;
-#ifdef ESPFC_BUZER
     Buzzer _buzzer;
-#endif
     SerialManager _serial;
     uint32_t _loop_next;
 };

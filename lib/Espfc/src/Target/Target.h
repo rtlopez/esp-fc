@@ -12,8 +12,6 @@
   #include "TargetESP8266.h"
 #elif defined(ARCH_RP2040)
   #include "TargetRP2040.h"
-#elif defined(ARCH_NRF52840)
-  #include "TargetNRF52840.h"
 #elif defined(UNIT_TEST)
   #include "TargetUnitTest.h"
 #else
@@ -53,3 +51,26 @@
     #endif
   #endif
 #endif
+
+namespace Espfc {
+
+enum SerialPort {
+#ifdef ESPFC_SERIAL_USB
+  SERIAL_USB,
+#endif
+#ifdef ESPFC_SERIAL_0
+  SERIAL_UART_0,
+#endif
+#ifdef ESPFC_SERIAL_1
+  SERIAL_UART_1,
+#endif
+#ifdef ESPFC_SERIAL_2
+  SERIAL_UART_2,
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
+  SERIAL_SOFT_0,
+#endif
+  SERIAL_UART_COUNT
+};
+
+}

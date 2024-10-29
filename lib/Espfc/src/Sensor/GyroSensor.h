@@ -1,11 +1,13 @@
 #pragma once
 
 #include "BaseSensor.h"
+#include "Model.h"
 #include "Device/GyroDevice.h"
 #include "Math/Sma.h"
-#include "Math/FreqAnalyzer.h"
 #ifdef ESPFC_DSP
 #include "Math/FFTAnalyzer.h"
+#else
+#include "Math/FreqAnalyzer.h"
 #endif
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
@@ -33,6 +35,7 @@ class GyroSensor: public BaseSensor
     Math::Sma<VectorFloat, 8> _sma;
     Math::Sma<VectorFloat, 8> _dyn_notch_sma;
     size_t _dyn_notch_denom;
+    size_t _dyn_notch_count;
     bool _dyn_notch_enabled;
     bool _dyn_notch_debug;
     bool _rpm_enabled;

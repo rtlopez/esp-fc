@@ -1,12 +1,11 @@
 #ifndef _ESPFC_STATS_H_
 #define _ESPFC_STATS_H_
 
-#include "Arduino.h"
 #include "Timer.h"
 
 namespace Espfc {
 
-enum StatCounter : int8_t {
+enum StatCounter {
   COUNTER_GYRO_READ,
   COUNTER_GYRO_FILTER,
   COUNTER_GYRO_FFT,

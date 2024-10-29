@@ -31,6 +31,8 @@
 #define ESPFC_TARGET "ESP32C3"
 #elif defined(ESP32)
 #define ESPFC_TARGET "ESP32"
+#elif defined(ARCH_RP2350)
+#define ESPFC_TARGET "RP2350"
 #elif defined(ARCH_RP2040)
 #define ESPFC_TARGET "RP2040"
 #elif defined(UNIT_TEST)

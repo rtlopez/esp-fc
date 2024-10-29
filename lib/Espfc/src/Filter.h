@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 namespace Espfc {
 
@@ -36,14 +37,16 @@ class FilterConfig
     int16_t cutoff;
 };
 
+constexpr size_t DYN_NOTCH_COUNT_MAX = 6;
+
 class DynamicFilterConfig {
   public:
     DynamicFilterConfig() {}
-    DynamicFilterConfig(int8_t w, int16_t qf, int16_t lf, int16_t hf): width(w), q(qf), min_freq(lf), max_freq(hf) {}
-    int8_t width;
-    int16_t q;
-    int16_t min_freq;
-    int16_t max_freq;
+    DynamicFilterConfig(int8_t c, int16_t qf, int16_t lf, int16_t hf): count(c), q(qf), min_freq(lf), max_freq(hf) {}
+    uint8_t count = 4;
+    int16_t q = 300;
+    int16_t min_freq = 80;
+    int16_t max_freq = 400;
     static const int MIN_FREQ = 1000;
 };
 

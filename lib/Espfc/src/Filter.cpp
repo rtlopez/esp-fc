@@ -3,16 +3,7 @@
 #include "Math/Utils.h"
 #include "Utils/MemoryHelper.h"
 
-// Quick median filter implementation
-// (c) N. Devillard - 1998
-// http://ndevilla.free.fr/median/median.pdf
-#define QMF_SORT(a,b) { if ((a)>(b)) QMF_SWAP((a),(b)); }
-#define QMF_SWAP(a,b) { int32_t temp=(a);(a)=(b);(b)=temp; }
-#define QMF_COPY(p,v,n) { for (size_t i=0; i<n; i++) p[i]=v[i]; }
-#define QMF_SORTF(a,b) { if ((a)>(b)) QMF_SWAPF((a),(b)); }
-#define QMF_SWAPF(a,b) { float temp=(a);(a)=(b);(b)=temp; }
-
-static float pt1Gain(float rate, float freq)
+static inline float pt1Gain(float rate, float freq)
 {
   float rc = 1.f / (2.f * Espfc::Math::pi() * freq);
   float dt = 1.f / rate;
@@ -214,6 +205,23 @@ void FilterStateMedian::init()
 void FAST_CODE_ATTR FilterStateMedian::reconfigure(const FilterStateMedian& from)
 {
 }
+
+// Quick median filter implementation
+// (c) N. Devillard - 1998
+// http://ndevilla.free.fr/median/median.pdf
+//#define QMF_SORT(a,b) { if ((a)>(b)) QMF_SWAP((a),(b)); }
+//#define QMF_SWAP(a,b) { int32_t temp=(a);(a)=(b);(b)=temp; }
+//#define QMF_COPY(p,v,n) { for (size_t i=0; i<n; i++) p[i]=v[i]; }
+//#define QMF_SORTF(a,b) { if ((a)>(b)) QMF_SWAPF((a),(b)); }
+//#define QMF_SWAPF(a,b) { float temp=(a);(a)=(b);(b)=temp; }
+
+template<typename T>
+static inline void QMF_SORT(T& a, T& b) { if (a > b) std::swap(a, b); }
+
+template<typename T>
+static inline void QMF_COPY(T* p, T* v, size_t n) { for(size_t i = 0; i < n; i++) p[i] = v[i]; }
+
+static inline void QMF_SORTF(float& a, float& b) { QMF_SORT(a, b); }
 
 float FAST_CODE_ATTR FilterStateMedian::update(float n)
 {

@@ -15,7 +15,7 @@
 #endif
 #ifdef ESPFC_WIFI_ALT
 #include <ESP8266WiFi.h>
-#else
+#elif defined(ESPFC_WIFI)
 #include <WiFi.h>
 #endif
 #include "Debug_Espfc.h"
@@ -101,18 +101,24 @@ Espfc::Espfc espfc;
 
   #elif defined(ESPFC_MULTI_CORE_RP2040)
 
+    bool core1_separate_stack = true;
+    volatile bool setup_done = false;
+
     // RP2040 multicore
-    void setup1()
-    {
-    }
+    // TODO: https://emalliab.wordpress.com/2021/04/18/raspberry-pi-pico-arduino-core-and-timers/
     void setup()
     {
       espfc.load();
       espfc.begin();
+      setup_done = true;
     }
     void loop()
     {
       espfc.update();
+    }
+    void setup1()
+    {
+      while(!setup_done);
     }
     void loop1()
     {

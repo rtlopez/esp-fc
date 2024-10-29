@@ -1234,6 +1234,69 @@ void test_align_addr_to_write()
   TEST_ASSERT_EQUAL_UINT32(128, Math::alignAddressToWrite(100, 32, 16));
 }
 
+void test_rotation_matrix_no_rotation()
+{
+  VectorFloat v{1.f, 2.f, 3.f};
+  RotationMatrixFloat rm;
+
+  VectorFloat r = rm.apply(v);
+
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 1.f, r.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 2.f, r.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 3.f, r.z);
+}
+
+void test_rotation_matrix_90_roll()
+{
+  VectorFloat v{0.f, 0.f, 1.f};
+  RotationMatrixFloat rm;
+  rm.init(VectorFloat{
+    Math::toRad(90),
+    Math::toRad(0),
+    Math::toRad(0),
+  });
+
+  VectorFloat r = rm.apply(v);
+
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  1.f, r.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.z);
+}
+
+void test_rotation_matrix_90_pitch()
+{
+  VectorFloat v{0.f, 0.f, 1.f};
+  RotationMatrixFloat rm;
+  rm.init(VectorFloat{
+    Math::toRad(0),
+    Math::toRad(90),
+    Math::toRad(0),
+  });
+
+  VectorFloat r = rm.apply(v);
+
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -1.f, r.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.z);
+}
+
+void test_rotation_matrix_90_yaw()
+{
+  VectorFloat v{1.f, 2.f, 3.f};
+  RotationMatrixFloat rm;
+  rm.init(VectorFloat{
+    Math::toRad(0),
+    Math::toRad(0),
+    Math::toRad(90),
+  });
+
+  VectorFloat r = rm.apply(v);
+
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  2.f, r.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -1.f, r.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  3.f, r.z);
+}
+
 int main(int argc, char **argv)
 {
   UNITY_BEGIN();
@@ -1305,6 +1368,11 @@ int main(int argc, char **argv)
   RUN_TEST(test_ring_buf);
   RUN_TEST(test_ring_buf2);
   RUN_TEST(test_align_addr_to_write);
+
+  RUN_TEST(test_rotation_matrix_no_rotation);
+  RUN_TEST(test_rotation_matrix_90_roll);
+  RUN_TEST(test_rotation_matrix_90_pitch);
+  RUN_TEST(test_rotation_matrix_90_yaw);
 
   return UNITY_END();
 }
