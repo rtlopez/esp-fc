@@ -69,8 +69,8 @@ void Controller::outerLoopRobot()
   {
     angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input.ch[AXIS_PITCH], speed) * Math::toRad(_model.config.level.rateLimit);
   }
-  _model.state.desiredAngle.set(AXIS_PITCH, angle);
-  _model.state.desiredRate[AXIS_YAW] = _model.state.input.ch[AXIS_YAW] * Math::toRad(_model.config.level.rateLimit);
+  _model.state.setpoint.angle.set(AXIS_PITCH, angle);
+  _model.state.setpoint.rate[AXIS_YAW] = _model.state.input.ch[AXIS_YAW] * Math::toRad(_model.config.level.rateLimit);
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
@@ -89,8 +89,8 @@ void Controller::innerLoopRobot()
   const bool stabilize = angle < Math::toRad(_model.config.level.angleLimit);
   if(stabilize)
   {
-    _model.state.output.ch[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
-    _model.state.output.ch[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro.adc[AXIS_YAW]);
+    _model.state.output.ch[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.setpoint.angle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
+    _model.state.output.ch[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.setpoint.rate[AXIS_YAW], _model.state.gyro.adc[AXIS_YAW]);
   }
   else
   {
@@ -110,30 +110,30 @@ void FAST_CODE_ATTR Controller::outerLoop()
 {
   if(_model.isActive(MODE_ANGLE))
   {
-    _model.state.desiredAngle = VectorFloat(
+    _model.state.setpoint.angle = VectorFloat(
       _model.state.input.ch[AXIS_ROLL] * Math::toRad(_model.config.level.angleLimit),
       _model.state.input.ch[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit),
       _model.state.attitude.euler[AXIS_YAW]
     );
-    _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.attitude.euler[AXIS_ROLL]);
-    _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
+    _model.state.setpoint.rate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.setpoint.angle[AXIS_ROLL], _model.state.attitude.euler[AXIS_ROLL]);
+    _model.state.setpoint.rate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.setpoint.angle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
     // disable fterm in angle mode
     _model.state.innerPid[AXIS_ROLL].fScale = 0.f;
     _model.state.innerPid[AXIS_PITCH].fScale = 0.f;
   }
   else
   {
-    _model.state.desiredRate[AXIS_ROLL] = calculateSetpointRate(AXIS_ROLL, _model.state.input.ch[AXIS_ROLL]);
-    _model.state.desiredRate[AXIS_PITCH] = calculateSetpointRate(AXIS_PITCH, _model.state.input.ch[AXIS_PITCH]);
+    _model.state.setpoint.rate[AXIS_ROLL] = calculateSetpointRate(AXIS_ROLL, _model.state.input.ch[AXIS_ROLL]);
+    _model.state.setpoint.rate[AXIS_PITCH] = calculateSetpointRate(AXIS_PITCH, _model.state.input.ch[AXIS_PITCH]);
   }
-  _model.state.desiredRate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input.ch[AXIS_YAW]);
-  _model.state.desiredRate[AXIS_THRUST] = _model.state.input.ch[AXIS_THRUST];
+  _model.state.setpoint.rate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input.ch[AXIS_YAW]);
+  _model.state.setpoint.rate[AXIS_THRUST] = _model.state.input.ch[AXIS_THRUST];
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     for(size_t i = 0; i < 3; ++i)
     {
-      _model.state.debug[i] = lrintf(Math::toDeg(_model.state.desiredRate[i]));
+      _model.state.debug[i] = lrintf(Math::toDeg(_model.state.setpoint.rate[i]));
     }
   }
 }
@@ -143,10 +143,10 @@ void FAST_CODE_ATTR Controller::innerLoop()
   const float tpaFactor = getTpaFactor();
   for(size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
-    _model.state.output.ch[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro.adc[i]) * tpaFactor;
+    _model.state.output.ch[i] = _model.state.innerPid[i].update(_model.state.setpoint.rate[i], _model.state.gyro.adc[i]) * tpaFactor;
     //_model.state.debug[i] = lrintf(_model.state.innerPid[i].fTerm * 1000);
   }
-  _model.state.output.ch[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];
+  _model.state.output.ch[AXIS_THRUST] = _model.state.setpoint.rate[AXIS_THRUST];
 
   if(_model.config.debug.mode == DEBUG_ITERM_RELAX)
   {

@@ -304,6 +304,12 @@ struct AttitudeState
   Quaternion quaternion;
 };
 
+struct SetpointState
+{
+  VectorFloat angle;
+  float rate[AXES];
+};
+
 // working data
 struct ModelState
 {
@@ -312,37 +318,18 @@ struct ModelState
   MagState mag;
   BaroState baro;
 
-  AttitudeState attitude;
-
-  VectorFloat gyroPose;
-  Quaternion gyroPoseQ;
-  VectorFloat accelPose;
-  VectorFloat accelPose2;
-  Quaternion accelPoseQ;
-  VectorFloat pose;
-  Quaternion poseQ;
-
-  RotationMatrixFloat boardAlignment;
-
-  VectorFloat velocity;
-  VectorFloat desiredVelocity;
-
-  VectorFloat desiredAngle;
-  Quaternion desiredAngleQ;
-
-  float desiredRate[AXES];
-
-  Control::Pid innerPid[AXES];
-  Control::Pid outerPid[AXES];
-
   InputState input;
   FailsafeState failsafe;
 
+  AttitudeState attitude;
+  RotationMatrixFloat boardAlignment;
+
+  SetpointState setpoint;
+  Control::Pid innerPid[AXES];
+  Control::Pid outerPid[AXES];
+
   MixerState mixer;
   OutputState output;
-
-  // other state
-  Kalman kalman[AXES];
 
   int32_t loopRate;
   Timer loopTimer;
@@ -380,6 +367,16 @@ struct ModelState
   Timer serialTimer;
 
   Target::Queue appQueue;
+
+  // other state
+  Kalman kalman[AXES];
+  VectorFloat gyroPose;
+  Quaternion gyroPoseQ;
+  VectorFloat accelPose;
+  VectorFloat accelPose2;
+  Quaternion accelPoseQ;
+  VectorFloat pose;
+  Quaternion poseQ;
 };
 
 }
