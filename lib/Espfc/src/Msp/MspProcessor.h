@@ -208,10 +208,10 @@ class MspProcessor
           // 1.42
           r.writeU8(2);  // configuration state: configured
           // 1.43
-          r.writeU16(_model.state.gyroPresent ? _model.state.gyroTimer.rate : 0); // sample rate
+          r.writeU16(_model.state.gyro.present ? _model.state.gyro.timer.rate : 0); // sample rate
           {
             uint32_t problems = 0;
-            if(_model.state.accelBias.x == 0 && _model.state.accelBias.y == 0 && _model.state.accelBias.z == 0) {
+            if(_model.state.accel.bias.x == 0 && _model.state.accel.bias.y == 0 && _model.state.accel.bias.z == 0) {
               problems |= 1 << 0; // acc calibration required
             }
             if(_model.config.output.protocol == ESC_PROTOCOL_DISABLED) {
@@ -250,7 +250,7 @@ class MspProcessor
             r.writeU8(1); // max profile count
             r.writeU8(0); // current rate profile index
           } else {  // MSP_STATUS
-            //r.writeU16(_model.state.gyroTimer.interval); // gyro cycle time
+            //r.writeU16(_model.state.gyro.timer.interval); // gyro cycle time
             r.writeU16(0);
           }
 
@@ -536,7 +536,7 @@ class MspProcessor
           r.writeU8(_model.config.gyro.align); // acc align, Starting with 4.0 gyro and acc alignment are the same
           r.writeU8(_model.config.mag.align);  // mag align
           //1.41+
-          r.writeU8(_model.state.gyroPresent ? 1 : 0); // gyro detection mask GYRO_1_MASK
+          r.writeU8(_model.state.gyro.present ? 1 : 0); // gyro detection mask GYRO_1_MASK
           r.writeU8(0); // gyro_to_use
           r.writeU8(_model.config.gyro.align); // gyro 1
           r.writeU8(0); // gyro 2
@@ -679,9 +679,9 @@ class MspProcessor
           break;
 
         case MSP_ATTITUDE:
-          r.writeU16(lrintf(degrees(_model.state.angle.x) * 10.f)); // roll  [decidegrees]
-          r.writeU16(lrintf(degrees(_model.state.angle.y) * 10.f)); // pitch [decidegrees]
-          r.writeU16(lrintf(degrees(-_model.state.angle.z)));       // yaw   [degrees]
+          r.writeU16(lrintf(Math::toDeg(_model.state.angle.x) * 10.f)); // roll  [decidegrees]
+          r.writeU16(lrintf(Math::toDeg(_model.state.angle.y) * 10.f)); // pitch [decidegrees]
+          r.writeU16(lrintf(Math::toDeg(-_model.state.angle.z)));       // yaw   [degrees]
           break;
 
         case MSP_ALTITUDE:
@@ -1279,11 +1279,11 @@ class MspProcessor
         case MSP_RAW_IMU:
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(_model.state.accel[i] * ACCEL_G_INV * 2048.f));
+            r.writeU16(lrintf(_model.state.accel.adc[i] * ACCEL_G_INV * 2048.f));
           }
           for (int i = 0; i < 3; i++)
           {
-            r.writeU16(lrintf(Math::toDeg(_model.state.gyro[i])));
+            r.writeU16(lrintf(Math::toDeg(_model.state.gyro.adc[i])));
           }
           for (int i = 0; i < 3; i++)
           {

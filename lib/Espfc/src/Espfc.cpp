@@ -38,18 +38,18 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 {
   if(externalTrigger)
   {
-    _model.state.gyroTimer.update();
+    _model.state.gyro.timer.update();
   }
   else
   {
-    if(!_model.state.gyroTimer.check()) return 0;
+    if(!_model.state.gyro.timer.check()) return 0;
   }
   Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
 #if defined(ESPFC_MULTI_CORE)
 
   _sensor.read();
-  if(_model.state.input.timer.syncTo(_model.state.gyroTimer, 1u))
+  if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
   {
     _input.update();
   }
@@ -65,7 +65,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 #else
 
   _sensor.update();
-  if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
+  if(_model.state.loopTimer.syncTo(_model.state.gyro.timer))
   {
     _controller.update();
     if(_model.state.mixer.timer.syncTo(_model.state.loopTimer))
@@ -73,7 +73,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
       _mixer.update();
     }
     _blackbox.update();
-    if(_model.state.input.timer.syncTo(_model.state.gyroTimer, 1u))
+    if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
     {
       _input.update();
     }

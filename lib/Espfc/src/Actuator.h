@@ -98,7 +98,7 @@ class Actuator
       int errors = _model.state.i2cErrorDelta;
       _model.state.i2cErrorDelta = 0;
 
-      _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,       !_model.state.gyroPresent || errors);
+      _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,       !_model.state.gyro.present || errors);
       _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,       _model.state.failsafe.phase != FC_FAILSAFE_IDLE);
       _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,    _model.state.input.rxLoss || _model.state.input.rxFailSafe);
       _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
@@ -224,7 +224,7 @@ class Actuator
       if(_model.config.gyro.dynLpfFilter.cutoff > 0) {
         int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyro.dynLpfFilter.cutoff, _model.config.gyro.dynLpfFilter.freq);
         for(size_t i = 0; i < AXIS_COUNT_RPY; i++) {
-          _model.state.gyroFilter[i].reconfigure(gyroFreq);
+          _model.state.gyro.filter[i].reconfigure(gyroFreq);
         }
       }
       if(_model.config.dterm.dynLpfFilter.cutoff > 0) {

@@ -26,7 +26,7 @@ class Espfc
 
     int getGyroInterval() const
     {
-      return _model.state.gyroTimer.interval;
+      return _model.state.gyro.timer.interval;
     }
 
   private:

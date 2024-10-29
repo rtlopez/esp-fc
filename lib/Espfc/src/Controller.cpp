@@ -58,7 +58,7 @@ void Controller::outerLoopRobot()
 {
   const float speedScale = 2.f;
   const float gyroScale = 0.1f;
-  const float speed = _speedFilter.update(_model.state.output.ch[AXIS_PITCH] * speedScale + _model.state.gyro[AXIS_PITCH] * gyroScale);
+  const float speed = _speedFilter.update(_model.state.output.ch[AXIS_PITCH] * speedScale + _model.state.gyro.adc[AXIS_PITCH] * gyroScale);
   float angle = 0;
 
   if(true || _model.isActive(MODE_ANGLE))
@@ -75,7 +75,7 @@ void Controller::outerLoopRobot()
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     _model.state.debug[0] = speed * 1000;
-    _model.state.debug[1] = lrintf(degrees(angle) * 10);
+    _model.state.debug[1] = lrintf(Math::toDeg(angle) * 10);
   }
 }
 
@@ -90,7 +90,7 @@ void Controller::innerLoopRobot()
   if(stabilize)
   {
     _model.state.output.ch[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
-    _model.state.output.ch[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro[AXIS_YAW]);
+    _model.state.output.ch[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro.adc[AXIS_YAW]);
   }
   else
   {
@@ -101,7 +101,7 @@ void Controller::innerLoopRobot()
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
-    _model.state.debug[2] = lrintf(degrees(_model.state.angle[AXIS_PITCH]) * 10);
+    _model.state.debug[2] = lrintf(Math::toDeg(_model.state.angle[AXIS_PITCH]) * 10);
     _model.state.debug[3] = lrintf(_model.state.output.ch[AXIS_PITCH] * 1000);
   }
 }
@@ -133,7 +133,7 @@ void FAST_CODE_ATTR Controller::outerLoop()
   {
     for(size_t i = 0; i < 3; ++i)
     {
-      _model.state.debug[i] = lrintf(degrees(_model.state.desiredRate[i]));
+      _model.state.debug[i] = lrintf(Math::toDeg(_model.state.desiredRate[i]));
     }
   }
 }
@@ -143,7 +143,7 @@ void FAST_CODE_ATTR Controller::innerLoop()
   const float tpaFactor = getTpaFactor();
   for(size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
-    _model.state.output.ch[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro[i]) * tpaFactor;
+    _model.state.output.ch[i] = _model.state.innerPid[i].update(_model.state.desiredRate[i], _model.state.gyro.adc[i]) * tpaFactor;
     //_model.state.debug[i] = lrintf(_model.state.innerPid[i].fTerm * 1000);
   }
   _model.state.output.ch[AXIS_THRUST] = _model.state.desiredRate[AXIS_THRUST];

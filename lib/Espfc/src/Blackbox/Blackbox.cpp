@@ -152,7 +152,7 @@ int Blackbox::begin()
   if(_model.magActive()) sensorsSet(SENSOR_MAG);
   if(_model.baroActive()) sensorsSet(SENSOR_BARO);
 
-  gyro.sampleLooptime = _model.state.gyroTimer.interval;
+  gyro.sampleLooptime = _model.state.gyro.timer.interval;
   targetPidLooptime = _model.state.loopTimer.interval;
   activePidLoopDenom = _model.config.loopSync;
 
@@ -237,15 +237,15 @@ void FAST_CODE_ATTR Blackbox::updateData()
 {
   for(size_t i = 0; i < 3; i++)
   {
-    gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
-    gyro.gyroADC[i] = degrees(_model.state.gyroScaled[i]);
+    gyro.gyroADCf[i] = Math::toDeg(_model.state.gyro.adc[i]);
+    gyro.gyroADC[i] = Math::toDeg(_model.state.gyro.scaled[i]);
     pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
     pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
     pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
     pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
     rcCommand[i] = (_model.state.input.buffer[i] - 1500) * (i == AXIS_YAW ? -1 : 1);
     if(_model.accelActive()) {
-      acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
+      acc.accADC[i] = _model.state.accel.adc[i] * ACCEL_G_INV * acc.dev.acc_1G;
     }
     if(_model.magActive()) {
       mag.magADC[i] = _model.state.mag.adc[i] * 1090;

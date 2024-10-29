@@ -109,12 +109,12 @@ class Model
 
     bool gyroActive() const /* IRAM_ATTR */
     {
-      return state.gyroPresent && config.gyro.dev != GYRO_NONE;
+      return state.gyro.present && config.gyro.dev != GYRO_NONE;
     }
 
     bool accelActive() const
     {
-      return state.accelPresent && config.accel.dev != GYRO_NONE;
+      return state.accel.present && config.accel.dev != GYRO_NONE;
     }
 
     bool magActive() const
@@ -129,15 +129,15 @@ class Model
 
     bool calibrationActive() const
     {
-      return state.accelCalibrationState != CALIBRATION_IDLE || state.gyroCalibrationState != CALIBRATION_IDLE || state.mag.calibrationState != CALIBRATION_IDLE;
+      return state.accel.calibrationState != CALIBRATION_IDLE || state.gyro.calibrationState != CALIBRATION_IDLE || state.mag.calibrationState != CALIBRATION_IDLE;
     }
 
     void calibrateGyro()
     {
-      state.gyroCalibrationState = CALIBRATION_START;
+      state.gyro.calibrationState = CALIBRATION_START;
       if(accelActive())
       {
-        state.accelCalibrationState = CALIBRATION_START;
+        state.accel.calibrationState = CALIBRATION_START;
       }
     }
 
@@ -148,16 +148,16 @@ class Model
 
     void finishCalibration()
     {
-      if(state.gyroCalibrationState == CALIBRATION_SAVE)
+      if(state.gyro.calibrationState == CALIBRATION_SAVE)
       {
         //save();
         state.buzzer.push(BUZZER_GYRO_CALIBRATED);
-        logger.info().log(F("GYRO BIAS")).log(degrees(state.gyroBias.x)).log(degrees(state.gyroBias.y)).logln(degrees(state.gyroBias.z));
+        logger.info().log(F("GYRO BIAS")).log(Math::toDeg(state.gyro.bias.x)).log(Math::toDeg(state.gyro.bias.y)).logln(Math::toDeg(state.gyro.bias.z));
       }
-      if(state.accelCalibrationState == CALIBRATION_SAVE)
+      if(state.accel.calibrationState == CALIBRATION_SAVE)
       {
         save();
-        logger.info().log(F("ACCEL BIAS")).log(state.accelBias.x).log(state.accelBias.y).logln(state.accelBias.z);
+        logger.info().log(F("ACCEL BIAS")).log(state.accel.bias.x).log(state.accel.bias.y).logln(state.accel.bias.z);
       }
       if(state.mag.calibrationState == CALIBRATION_SAVE)
       {
@@ -299,13 +299,13 @@ class Model
     void sanitize()
     {
       // for spi gyro allow full speed mode
-      if (state.gyroDev && state.gyroDev->getBus()->isSPI())
+      if (state.gyro.dev && state.gyro.dev->getBus()->isSPI())
       {
-        state.gyroRate = Math::alignToClock(state.gyroClock, ESPFC_GYRO_SPI_RATE_MAX);
+        state.gyro.rate = Math::alignToClock(state.gyro.clock, ESPFC_GYRO_SPI_RATE_MAX);
       }
       else
       {
-        state.gyroRate = Math::alignToClock(state.gyroClock, ESPFC_GYRO_I2C_RATE_MAX);
+        state.gyro.rate = Math::alignToClock(state.gyro.clock, ESPFC_GYRO_I2C_RATE_MAX);
         // first usage
         if(_storageResult == STORAGE_ERR_BAD_MAGIC || _storageResult == STORAGE_ERR_BAD_SIZE || _storageResult == STORAGE_ERR_BAD_VERSION)
         {
@@ -317,7 +317,7 @@ class Model
       //if(config.mag.dev != MAG_NONE || config.baro.dev != BARO_NONE) loopSyncMax /= 2;
 
       config.loopSync = std::max((int)config.loopSync, loopSyncMax);
-      state.loopRate = state.gyroRate / config.loopSync;
+      state.loopRate = state.gyro.rate / config.loopSync;
 
       config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
 
@@ -363,7 +363,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 499) / 500)); // align loop rate to lower than 500Hz
-          state.loopRate = state.gyroRate / config.loopSync;
+          state.loopRate = state.gyro.rate / config.loopSync;
           if(state.loopRate > 480 && config.output.maxThrottle > 1940)
           {
             config.output.maxThrottle = 1940;
@@ -373,7 +373,7 @@ class Model
         if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
         {
           config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
-          state.loopRate = state.gyroRate / config.loopSync;
+          state.loopRate = state.gyro.rate / config.loopSync;
         }
       }
 
@@ -428,15 +428,15 @@ class Model
 
       // init timers
       // sample rate = clock / ( divider + 1)
-      state.gyroTimer.setRate(state.gyroRate);
-      int accelRate = Math::alignToClock(state.gyroTimer.rate, 500);
-      state.accelTimer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / accelRate);
-      state.loopTimer.setRate(state.gyroTimer.rate, config.loopSync);
+      state.gyro.timer.setRate(state.gyro.rate);
+      int accelRate = Math::alignToClock(state.gyro.timer.rate, 500);
+      state.accel.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / accelRate);
+      state.loopTimer.setRate(state.gyro.timer.rate, config.loopSync);
       state.mixer.timer.setRate(state.loopTimer.rate, config.mixerSync);
-      int inputRate = Math::alignToClock(state.gyroTimer.rate, 1000);
-      state.input.timer.setRate(state.gyroTimer.rate, state.gyroTimer.rate / inputRate);
+      int inputRate = Math::alignToClock(state.gyro.timer.rate, 1000);
+      state.input.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / inputRate);
       state.actuatorTimer.setRate(50);
-      state.dynamicFilterTimer.setRate(50);
+      state.gyro.dynamicFilterTimer.setRate(50);
       state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
       state.stats.timer.setRate(3);
       if(magActive())
@@ -446,7 +446,7 @@ class Model
 
       state.boardAlignment.init(VectorFloat(Math::toRad(config.boardAlignment[0]), Math::toRad(config.boardAlignment[1]), Math::toRad(config.boardAlignment[2])));
 
-      const uint32_t gyroPreFilterRate = state.gyroTimer.rate;
+      const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
       const uint32_t inputFilterRate = state.input.timer.rate;
       const uint32_t pidFilterRate = state.loopTimer.rate;
@@ -458,30 +458,30 @@ class Model
         {
           for(size_t p = 0; p < (size_t)config.gyro.dynamicFilter.width; p++)
           {
-            state.gyroDynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
+            state.gyro.dynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
           }
         }
-        state.gyroNotch1Filter[i].begin(config.gyro.notch1Filter, gyroFilterRate);
-        state.gyroNotch2Filter[i].begin(config.gyro.notch2Filter, gyroFilterRate);
+        state.gyro.notch1Filter[i].begin(config.gyro.notch1Filter, gyroFilterRate);
+        state.gyro.notch2Filter[i].begin(config.gyro.notch2Filter, gyroFilterRate);
         if(config.gyro.dynLpfFilter.cutoff > 0)
         {
-          state.gyroFilter[i].begin(FilterConfig((FilterType)config.gyro.filter.type, config.gyro.dynLpfFilter.cutoff), gyroFilterRate);
+          state.gyro.filter[i].begin(FilterConfig((FilterType)config.gyro.filter.type, config.gyro.dynLpfFilter.cutoff), gyroFilterRate);
         }
         else
         {
-          state.gyroFilter[i].begin(config.gyro.filter, gyroFilterRate);
+          state.gyro.filter[i].begin(config.gyro.filter, gyroFilterRate);
         }
-        state.gyroFilter2[i].begin(config.gyro.filter2, gyroFilterRate);
-        state.gyroFilter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.accelFilter[i].begin(config.accel.filter, gyroFilterRate);
-        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accelTimer.rate / 3), gyroFilterRate);
+        state.gyro.filter2[i].begin(config.gyro.filter2, gyroFilterRate);
+        state.gyro.filter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
+        state.accel.filter[i].begin(config.accel.filter, gyroFilterRate);
+        state.gyroImuFilter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / 3), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
         {
-          state.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.gyro.rpmFilter.freqLpf), gyroFilterRate);
+          state.gyro.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.gyro.rpmFilter.freqLpf), gyroFilterRate);
           for(size_t n = 0; n < config.gyro.rpmFilter.harmonics; n++)
           {
             int center = Math::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.gyro.rpmFilter.harmonics, config.gyro.rpmFilter.minFreq, gyroFilterRate / 2);
-            state.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
+            state.gyro.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
           }
         }
         if(magActive())
@@ -574,8 +574,8 @@ class Model
       // load current sensor calibration
       for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
-        state.gyroBias.set(i, config.gyro.bias[i] / 1000.0f);
-        state.accelBias.set(i, config.accel.bias[i] / 1000.0f);
+        state.gyro.bias.set(i, config.gyro.bias[i] / 1000.0f);
+        state.accel.bias.set(i, config.accel.bias[i] / 1000.0f);
         state.mag.calibrationOffset.set(i, config.mag.offset[i] / 10.0f);
         state.mag.calibrationScale.set(i, config.mag.scale[i] / 1000.0f);
       }
@@ -586,8 +586,8 @@ class Model
       // store current sensor calibration
       for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
-        config.gyro.bias[i] = lrintf(state.gyroBias[i] * 1000.0f);
-        config.accel.bias[i] = lrintf(state.accelBias[i] * 1000.0f);
+        config.gyro.bias[i] = lrintf(state.gyro.bias[i] * 1000.0f);
+        config.accel.bias[i] = lrintf(state.accel.bias[i] * 1000.0f);
         config.mag.offset[i] = lrintf(state.mag.calibrationOffset[i] * 10.0f);
         config.mag.scale[i] = lrintf(state.mag.calibrationScale[i] * 1000.0f);
       }

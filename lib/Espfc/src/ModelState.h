@@ -8,7 +8,6 @@
 #endif
 
 #include "ModelConfig.h"
-#include "Stats.h"
 #include "helper_3dmath.h"
 #include "Control/Pid.h"
 #include "Kalman.h"
@@ -21,13 +20,15 @@
 
 namespace Espfc {
 
-static const size_t CLI_BUFF_SIZE = 128;
-static const size_t CLI_ARGS_SIZE = 12;
+constexpr size_t CLI_BUFF_SIZE = 128;
+constexpr size_t CLI_ARGS_SIZE = 12;
 
 class CliCmd
 {
   public:
-    CliCmd(): buff{0}, index(0) { for(size_t i = 0; i < CLI_ARGS_SIZE; ++i) args[i] = nullptr; }
+    CliCmd(): buff{0}, index{0} {
+      std::fill_n(args, CLI_ARGS_SIZE, nullptr);
+    }
     const char * args[CLI_ARGS_SIZE];
     char buff[CLI_BUFF_SIZE];
     size_t index;
@@ -246,22 +247,62 @@ struct BaroState
   int32_t altitudeBiasSamples;
 };
 
+struct GyroState
+{
+  Device::GyroDevice* dev;
+  bool present;
+  int32_t rate;
+  int32_t clock = 1000;
+
+  VectorInt16 raw;
+  VectorFloat adc;
+  VectorFloat sampled;
+  VectorFloat scaled;
+  VectorFloat dynNotch;
+
+  float scale;
+  VectorFloat bias;
+  float biasAlpha;
+  int biasSamples;
+  int calibrationState;
+  int calibrationRate;
+
+  Filter filter[AXIS_COUNT_RPY];
+  Filter filter2[AXIS_COUNT_RPY];
+  Filter filter3[AXIS_COUNT_RPY];
+  Filter notch1Filter[AXIS_COUNT_RPY];
+  Filter notch2Filter[AXIS_COUNT_RPY];
+  Filter dynNotchFilter[6][AXIS_COUNT_RPY];
+  Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
+  Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
+
+  Timer timer;
+  Timer dynamicFilterTimer;
+};
+
+struct AccelState
+{
+  bool present;
+  VectorInt16 raw;
+  VectorFloat adc;
+  VectorFloat prev;
+  Filter filter[3];
+  Timer timer;
+
+  float scale;
+  VectorFloat bias;
+  float biasAlpha;
+  int biasSamples;
+  int calibrationState;
+};
+
 // working data
 struct ModelState
 {
+  GyroState gyro;
+  AccelState accel;
   MagState mag;
   BaroState baro;
-
-  Device::GyroDevice* gyroDev;
-  VectorInt16 gyroRaw;
-  VectorFloat gyro;
-  VectorFloat gyroSampled;
-  VectorFloat gyroScaled;
-  VectorFloat gyroDynNotch;
-  VectorFloat gyroImu;
-
-  VectorInt16 accelRaw;
-  VectorFloat accel;
 
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;
@@ -269,27 +310,17 @@ struct ModelState
   VectorFloat accelPose2;
   Quaternion accelPoseQ;
 
-  bool imuUpdate;
   bool loopUpdate;
   VectorFloat pose;
   Quaternion poseQ;
-
   VectorFloat angle;
   Quaternion angleQ;
 
   RotationMatrixFloat boardAlignment;
 
-  Filter gyroFilter[3];
-  Filter gyroFilter2[3];
-  Filter gyroFilter3[3];
-  Filter gyroNotch1Filter[3];
-  Filter gyroNotch2Filter[3];
-  Filter gyroDynNotchFilter[6][3];
+  bool imuUpdate;
+  VectorFloat gyroImu;
   Filter gyroImuFilter[3];
-
-  Filter accelFilter[3];
-  Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
-  Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][3];
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;
@@ -310,28 +341,6 @@ struct ModelState
 
   // other state
   Kalman kalman[AXES];
-  VectorFloat accelPrev;
-
-  float accelScale;
-  VectorFloat accelBias;
-  float accelBiasAlpha;
-  int accelBiasSamples;
-  int accelCalibrationState;
-
-  float gyroScale;
-  VectorFloat gyroBias;
-  float gyroBiasAlpha;
-  int gyroBiasSamples;
-  int gyroCalibrationState;
-  int gyroCalibrationRate;
-
-  int32_t gyroClock = 1000;
-  int32_t gyroRate;
-
-  Timer gyroTimer;
-  Timer dynamicFilterTimer;
-
-  Timer accelTimer;
 
   int32_t loopRate;
   Timer loopTimer;
@@ -360,9 +369,6 @@ struct ModelState
 
   int16_t i2cErrorCount;
   int16_t i2cErrorDelta;
-
-  bool gyroPresent;
-  bool accelPresent;
 
   uint32_t armingDisabledFlags;
 

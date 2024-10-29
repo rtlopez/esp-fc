@@ -339,7 +339,7 @@ void FAST_CODE_ATTR Mixer::readTelemetry()
 
   for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
   {
-    _model.state.output.telemetry.freq[i] = _model.state.rpmFreqFilter[i].update(erpmToHz(_model.state.output.telemetry.erpm[i]));
+    _model.state.output.telemetry.freq[i] = _model.state.gyro.rpmFreqFilter[i].update(erpmToHz(_model.state.output.telemetry.erpm[i]));
   }
 
   _statsCounter++;

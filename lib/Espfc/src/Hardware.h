@@ -127,10 +127,10 @@ class Hardware
       if(!detectedGyro) return;
 
       detectedGyro->setDLPFMode(_model.config.gyro.dlpf);
-      _model.state.gyroDev = detectedGyro;
-      _model.state.gyroPresent = (bool)detectedGyro;
-      _model.state.accelPresent = _model.state.gyroPresent && _model.config.accel.dev != GYRO_NONE;
-      _model.state.gyroClock = detectedGyro->getRate();
+      _model.state.gyro.dev = detectedGyro;
+      _model.state.gyro.present = (bool)detectedGyro;
+      _model.state.accel.present = _model.state.gyro.present && _model.config.accel.dev != GYRO_NONE;
+      _model.state.gyro.clock = detectedGyro->getRate();
     }
 
     void detectMag()

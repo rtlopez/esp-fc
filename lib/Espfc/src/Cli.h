@@ -1042,17 +1042,17 @@ class Cli
           s.print(_model.config.gyro.bias[0]); s.print(' ');
           s.print(_model.config.gyro.bias[1]); s.print(' ');
           s.print(_model.config.gyro.bias[2]); s.print(F(" ["));
-          s.print(Math::toDeg(_model.state.gyroBias[0])); s.print(' ');
-          s.print(Math::toDeg(_model.state.gyroBias[1])); s.print(' ');
-          s.print(Math::toDeg(_model.state.gyroBias[2])); s.println(F("]"));
+          s.print(Math::toDeg(_model.state.gyro.bias[0])); s.print(' ');
+          s.print(Math::toDeg(_model.state.gyro.bias[1])); s.print(' ');
+          s.print(Math::toDeg(_model.state.gyro.bias[2])); s.println(F("]"));
 
           s.print(F("accel offset: "));
           s.print(_model.config.accel.bias[0]); s.print(' ');
           s.print(_model.config.accel.bias[1]); s.print(' ');
           s.print(_model.config.accel.bias[2]); s.print(F(" ["));
-          s.print(_model.state.accelBias[0]); s.print(' ');
-          s.print(_model.state.accelBias[1]); s.print(' ');
-          s.print(_model.state.accelBias[2]); s.println(F("]"));
+          s.print(_model.state.accel.bias[0]); s.print(' ');
+          s.print(_model.state.accel.bias[1]); s.print(' ');
+          s.print(_model.state.accel.bias[2]); s.println(F("]"));
 
           s.print(F("  mag offset: "));
           s.print(_model.config.mag.offset[0]); s.print(' ');
@@ -1082,12 +1082,12 @@ class Cli
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_accel")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
         {
-          _model.state.accelBias = VectorFloat();
+          _model.state.accel.bias = VectorFloat();
           s.println(F("OK"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_gyro")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
         {
-          _model.state.gyroBias = VectorFloat();
+          _model.state.gyro.bias = VectorFloat();
           s.println(F("OK"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_mag")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
@@ -1239,7 +1239,7 @@ class Cli
         printStats(s);
         s.println();
 
-        Device::GyroDevice * gyro = _model.state.gyroDev;
+        Device::GyroDevice * gyro = _model.state.gyro.dev;
         Device::BaroDevice * baro = _model.state.baro.dev;
         Device::MagDevice  * mag  = _model.state.mag.dev;
         s.print(F("     devices: "));
@@ -1519,11 +1519,11 @@ class Cli
       s.println(F(" MHz"));
 
       s.print(F("  gyro clock: "));
-      s.print(_model.state.gyroClock);
+      s.print(_model.state.gyro.clock);
       s.println(F(" Hz"));
 
       s.print(F("   gyro rate: "));
-      s.print(_model.state.gyroTimer.rate);
+      s.print(_model.state.gyro.timer.rate);
       s.println(F(" Hz"));
 
       s.print(F("   loop rate: "));
@@ -1535,7 +1535,7 @@ class Cli
       s.println(F(" Hz"));
 
       s.print(F("  accel rate: "));
-      s.print(_model.state.accelTimer.rate);
+      s.print(_model.state.accel.timer.rate);
       s.println(F(" Hz"));
 
       s.print(F("   baro rate: "));

@@ -30,8 +30,8 @@ class BaroSensor: public BaseSensor
 
       _baro->setMode(BARO_MODE_TEMP);
       int delay = _baro->getDelay(BARO_MODE_TEMP) + _baro->getDelay(BARO_MODE_PRESS);
-      int toGyroRate = (delay / _model.state.gyroTimer.interval) + 1; // number of gyro readings per cycle
-      int interval = _model.state.gyroTimer.interval * toGyroRate;
+      int toGyroRate = (delay / _model.state.gyro.timer.interval) + 1; // number of gyro readings per cycle
+      int interval = _model.state.gyro.timer.interval * toGyroRate;
       _model.state.baro.rate = 1000000 / interval;
 
       _model.state.baro.altitudeBiasSamples = 2 * _model.state.baro.rate;
