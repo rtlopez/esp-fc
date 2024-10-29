@@ -96,7 +96,7 @@ class Hardware
 
     void detectGyro()
     {
-      if(_model.config.gyroDev == GYRO_NONE) return;
+      if(_model.config.gyro.dev == GYRO_NONE) return;
 
       Device::GyroDevice * detectedGyro = nullptr;
 #if defined(ESPFC_SPI_0)
@@ -126,16 +126,16 @@ class Hardware
 #endif
       if(!detectedGyro) return;
 
-      detectedGyro->setDLPFMode(_model.config.gyroDlpf);
-      _model.state.gyroDev = detectedGyro;
-      _model.state.gyroPresent = (bool)detectedGyro;
-      _model.state.accelPresent = _model.state.gyroPresent && _model.config.accelDev != GYRO_NONE;
-      _model.state.gyroClock = detectedGyro->getRate();
+      detectedGyro->setDLPFMode(_model.config.gyro.dlpf);
+      _model.state.gyro.dev = detectedGyro;
+      _model.state.gyro.present = (bool)detectedGyro;
+      _model.state.accel.present = _model.state.gyro.present && _model.config.accel.dev != GYRO_NONE;
+      _model.state.gyro.clock = detectedGyro->getRate();
     }
 
     void detectMag()
     {
-      if(_model.config.magDev == MAG_NONE) return;
+      if(_model.config.mag.dev == MAG_NONE) return;
 
       Device::MagDevice * detectedMag  = nullptr;
 #if defined(ESPFC_I2C_0)
@@ -153,14 +153,14 @@ class Hardware
         if(!detectedMag && detectDevice(qmc5883l, gyroSlaveBus)) detectedMag = &qmc5883l;
         
       }
-      _model.state.magDev = detectedMag;
-      _model.state.magPresent = (bool)detectedMag;
-      _model.state.magRate = detectedMag ? detectedMag->getRate() : 0;
+      _model.state.mag.dev = detectedMag;
+      _model.state.mag.present = (bool)detectedMag;
+      _model.state.mag.rate = detectedMag ? detectedMag->getRate() : 0;
     }
 
     void detectBaro()
     {
-      if(_model.config.baroDev == BARO_NONE) return;
+      if(_model.config.baro.dev == BARO_NONE) return;
 
       Device::BaroDevice * detectedBaro = nullptr;
 #if defined(ESPFC_SPI_0)
@@ -188,8 +188,8 @@ class Hardware
         if(!detectedBaro && detectDevice(spl06, gyroSlaveBus)) detectedBaro = &spl06;
       }
 
-      _model.state.baroDev = detectedBaro;
-      _model.state.baroPresent = (bool)detectedBaro;
+      _model.state.baro.dev = detectedBaro;
+      _model.state.baro.present = (bool)detectedBaro;
     }
 
 #if defined(ESPFC_SPI_0)
@@ -230,8 +230,8 @@ class Hardware
 
     static void restart(const Model& model)
     {
-      if(model.state.escMotor) model.state.escMotor->end();
-      if(model.state.escServo) model.state.escServo->end();
+      if(model.state.mixer.escMotor) model.state.mixer.escMotor->end();
+      if(model.state.mixer.escServo) model.state.mixer.escServo->end();
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       WiFi.disconnect();
       WiFi.softAPdisconnect();

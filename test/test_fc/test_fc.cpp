@@ -105,45 +105,45 @@ void test_timer_check_micros()
 void test_model_gyro_init_1k_256dlpf()
 {
   Model model;
-  model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.state.gyro.clock = 8000;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
   model.begin();
 
-  TEST_ASSERT_EQUAL_INT32(8000, model.state.gyroClock);
-  TEST_ASSERT_EQUAL_INT32(2000, model.state.gyroRate);
-  TEST_ASSERT_EQUAL_INT32(2000, model.state.gyroTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(8000, model.state.gyro.clock);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.gyro.rate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.gyro.timer.rate);
   TEST_ASSERT_EQUAL_INT32(2000, model.state.loopRate);
   TEST_ASSERT_EQUAL_INT32(2000, model.state.loopTimer.rate);
-  TEST_ASSERT_EQUAL_INT32(2000, model.state.mixerTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(2000, model.state.mixer.timer.rate);
 }
 
 void test_model_gyro_init_1k_188dlpf()
 {
   Model model;
-  model.state.gyroClock = 1000;
-  model.config.gyroDlpf = GYRO_DLPF_188;
+  model.state.gyro.clock = 1000;
+  model.config.gyro.dlpf = GYRO_DLPF_188;
   model.config.loopSync = 2;
   model.config.mixerSync = 2;
   model.begin();
 
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroClock);
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroRate);
-  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyroTimer.rate);
+  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyro.clock);
+  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyro.rate);
+  TEST_ASSERT_EQUAL_INT32(1000, model.state.gyro.timer.rate);
   TEST_ASSERT_EQUAL_INT32( 500, model.state.loopRate);
   TEST_ASSERT_EQUAL_INT32( 500, model.state.loopTimer.rate);
-  TEST_ASSERT_EQUAL_INT32( 250, model.state.mixerTimer.rate);
+  TEST_ASSERT_EQUAL_INT32( 250, model.state.mixer.timer.rate);
 }
 
 void test_model_inner_pid_init()
 {
   Model model;
-  model.state.gyroClock = 1000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.state.gyro.clock = 1000;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
   model.config.pid[FC_PID_ROLL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.config.pid[FC_PID_PITCH] = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.config.pid[FC_PID_YAW]   = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
@@ -171,11 +171,11 @@ void test_model_inner_pid_init()
 void test_model_outer_pid_init()
 {
   Model model;
-  model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.state.gyro.clock = 8000;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 1;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
   model.config.pid[FC_PID_LEVEL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.begin();
 
@@ -195,11 +195,11 @@ void test_model_outer_pid_init()
 void test_controller_rates()
 {
   Model model;
-  model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.state.gyro.clock = 8000;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
 
   model.config.input.rateType = RATES_TYPE_BETAFLIGHT;
   model.config.input.rate[AXIS_ROLL] = 70;
@@ -245,11 +245,11 @@ void test_controller_rates()
 void test_controller_rates_limit()
 {
   Model model;
-  model.state.gyroClock = 8000;
-  model.config.gyroDlpf = GYRO_DLPF_256;
+  model.state.gyro.clock = 8000;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
   model.config.loopSync = 8;
   model.config.mixerSync = 1;
-  model.config.mixerType = FC_MIXER_QUADX;
+  model.config.mixer.type = FC_MIXER_QUADX;
 
   model.config.input.rateType = RATES_TYPE_BETAFLIGHT;
   model.config.input.rate[AXIS_ROLL] = 70;
@@ -454,33 +454,33 @@ void test_actuator_arming_gyro_motor_calbration()
   Actuator actuator(model);
   actuator.begin();
 
-  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.mode.armingDisabledFlags);
 
   actuator.updateArmingDisabled();
 
-  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_NO_GYRO | ARMING_DISABLED_MOTOR_PROTOCOL, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_NO_GYRO | ARMING_DISABLED_MOTOR_PROTOCOL, model.state.mode.armingDisabledFlags);
 }
 
 void test_actuator_arming_failsafe()
 {
   Model model;
-  model.state.gyroPresent = true;
+  model.state.gyro.present = true;
   model.config.output.protocol = ESC_PROTOCOL_DSHOT150;
   model.state.failsafe.phase = FC_FAILSAFE_RX_LOSS_DETECTED;
-  model.state.gyroCalibrationState = CALIBRATION_UPDATE;
-  model.state.inputRxFailSafe = true;
-  model.state.inputRxLoss = true;
+  model.state.gyro.calibrationState = CALIBRATION_UPDATE;
+  model.state.input.rxFailSafe = true;
+  model.state.input.rxLoss = true;
 
   //model.begin();
 
   Actuator actuator(model);
   actuator.begin();
 
-  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.mode.armingDisabledFlags);
 
   actuator.updateArmingDisabled();
 
-  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_RX_FAILSAFE | ARMING_DISABLED_FAILSAFE | ARMING_DISABLED_CALIBRATING, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_RX_FAILSAFE | ARMING_DISABLED_FAILSAFE | ARMING_DISABLED_CALIBRATING, model.state.mode.armingDisabledFlags);
 }
 
 void test_actuator_arming_throttle()
@@ -488,19 +488,19 @@ void test_actuator_arming_throttle()
   Model model;
   model.config.output.protocol = ESC_PROTOCOL_DSHOT150;
   model.config.input.minCheck = 1050;
-  model.state.inputUs[AXIS_THRUST] = 1100;
-  model.state.gyroPresent = true;
+  model.state.input.us[AXIS_THRUST] = 1100;
+  model.state.gyro.present = true;
 
   //model.begin();
 
   Actuator actuator(model);
   actuator.begin();
 
-  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.mode.armingDisabledFlags);
 
   actuator.updateArmingDisabled();
 
-  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.mode.armingDisabledFlags);
 }
 
 void test_mixer_throttle_limit_none()

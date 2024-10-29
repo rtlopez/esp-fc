@@ -100,9 +100,9 @@ public:
   {
     msg.prepare(Rc::CRSF_FRAMETYPE_ATTITUDE);
 
-    int16_t r = toAngle(_model.state.angle.x);
-    int16_t p = toAngle(_model.state.angle.y);
-    int16_t y = toAngle(_model.state.angle.z);
+    int16_t r = toAngle(_model.state.attitude.euler.x);
+    int16_t p = toAngle(_model.state.attitude.euler.y);
+    int16_t y = toAngle(_model.state.attitude.euler.z);
 
     msg.writeU16(Math::toBigEndian16(r));
     msg.writeU16(Math::toBigEndian16(p));

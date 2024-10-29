@@ -57,27 +57,26 @@ enum FusionMode {
   FUSION_MAX,
 };
 
-class FusionConfig
+struct FusionConfig
 {
-  public:
-    int8_t mode;
-    uint8_t gain;
-    uint8_t gainI;
+  int8_t mode = FUSION_MAHONY;
+  uint8_t gain = 50;
+  uint8_t gainI = 5;
 
-    static const char * getModeName(FusionMode mode)
-    {
-      if(mode >= FUSION_MAX) return PSTR("?");
-      return getModeNames()[mode];
-    }
+  static const char * getModeName(FusionMode mode)
+  {
+    if(mode >= FUSION_MAX) return PSTR("?");
+    return getModeNames()[mode];
+  }
 
-    static const char ** getModeNames()
-    {
-      static const char* modeChoices[] = {
-        PSTR("NONE"), PSTR("MADGWICK"), PSTR("MAHONY"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
-        PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"),
-        NULL };
-      return modeChoices;
-    }
+  static const char ** getModeNames()
+  {
+    static const char* modeChoices[] = {
+      PSTR("NONE"), PSTR("MADGWICK"), PSTR("MAHONY"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
+      PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"),
+      NULL };
+    return modeChoices;
+  }
 };
 
 enum FlightMode {
@@ -88,7 +87,7 @@ enum FlightMode {
   MODE_FAILSAFE,
   MODE_BLACKBOX,
   MODE_BLACKBOX_ERASE,
-  MODE_COUNT
+  MODE_COUNT,
 };
 
 enum ScalerDimension {
@@ -104,17 +103,16 @@ enum ScalerDimension {
   ACT_AXIS_PITCH  = 1 << 9,  // 512
   ACT_AXIS_YAW    = 1 << 10, // 1024
   ACT_AXIS_THRUST = 1 << 11, // 2048
-  ACT_GYRO_THRUST = 1 << 12  // 4096
+  ACT_GYRO_THRUST = 1 << 12, // 4096
 };
 
-const size_t SCALER_COUNT = 3;
+constexpr size_t SCALER_COUNT = 3;
 
-class ScalerConfig {
-  public:
-    ScalerDimension dimension;
-    int16_t minScale;
-    int16_t maxScale;
-    int8_t channel;
+struct ScalerConfig {
+  uint32_t dimension = 0;
+  int16_t minScale = 20;
+  int16_t maxScale = 400;
+  int8_t channel = 0;
 };
 
 enum DebugMode {
@@ -181,7 +179,7 @@ enum DebugMode {
   DEBUG_BLACKBOX_OUTPUT,
   DEBUG_GYRO_SAMPLE,
   DEBUG_RX_TIMING,
-  DEBUG_COUNT
+  DEBUG_COUNT,
 };
 
 enum Axis {
@@ -201,7 +199,10 @@ enum Axis {
   AXIS_AUX_10,
   AXIS_AUX_11,
   AXIS_AUX_12,
-  AXIS_COUNT
+  AXIS_COUNT,
+  AXIS_COUNT_RP = AXIS_YAW,      // RP axis count
+  AXIS_COUNT_RPY = AXIS_THRUST,  // RPY axis count
+  AXIS_COUNT_RPYT = AXIS_AUX_1,  // RPYT axis count
 };
 
 enum Feature {
@@ -224,18 +225,16 @@ enum InputInterpolation {
 
 enum InputFilterType : uint8_t {
   INPUT_INTERPOLATION,
-  INPUT_FILTER
+  INPUT_FILTER,
 };
 
-const size_t MODEL_NAME_LEN  = 16;
-const size_t AXES            = 4;
-const size_t AXES_RPY        = 3;
-const size_t INPUT_CHANNELS  = AXIS_COUNT;
-const size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
+constexpr size_t MODEL_NAME_LEN  = 16;
+constexpr size_t INPUT_CHANNELS  = AXIS_COUNT;
+constexpr size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
 
-const size_t RPM_FILTER_MOTOR_MAX = 4;
-const size_t RPM_FILTER_HARMONICS_MAX = 3;
+constexpr size_t RPM_FILTER_MOTOR_MAX = 4;
+constexpr size_t RPM_FILTER_HARMONICS_MAX = 3;
 
 enum PinFunction {
 #ifdef ESPFC_INPUT
@@ -257,9 +256,7 @@ enum PinFunction {
 #if ESPFC_OUTPUT_COUNT > 7
   PIN_OUTPUT_7,
 #endif
-#ifdef ESPFC_BUZZER
   PIN_BUZZER,
-#endif
 #ifdef ESPFC_SERIAL_0
   PIN_SERIAL_0_TX,
   PIN_SERIAL_0_RX,
@@ -292,32 +289,30 @@ enum PinFunction {
   PIN_SPI_CS1,
   PIN_SPI_CS2,
 #endif
-  PIN_COUNT
+  PIN_COUNT,
 };
 
-#define ACTUATOR_CONDITIONS 8
+constexpr size_t ACTUATOR_CONDITIONS = 8;
 
-class ActuatorCondition
+struct ActuatorCondition
 {
-  public:
-    uint8_t id;
-    uint8_t ch;
-    int16_t min;
-    int16_t max;
-    uint8_t logicMode;
-    uint8_t linkId;
+  uint8_t id = 0;
+  uint8_t ch = AXIS_AUX_1;
+  int16_t min = 900;
+  int16_t max = 900;
+  uint8_t logicMode = 0;
+  uint8_t linkId = 0;
 };
 
-class SerialPortConfig
+struct SerialPortConfig
 {
-  public:
-    int8_t id;
-    int32_t functionMask;
-    int32_t baud;
-    int32_t blackboxBaud;
+  int8_t id;
+  int32_t functionMask;
+  int32_t baud;
+  int32_t blackboxBaud;
 };
 
-#define BUZZER_MAX_EVENTS 8
+constexpr size_t BUZZER_MAX_EVENTS = 8;
 
 enum BuzzerEvent {
   BUZZER_SILENCE = 0,             // Silence, see beeperSilence()
@@ -348,11 +343,10 @@ enum BuzzerEvent {
   // BUZZER_ALL and BUZZER_PREFERENCE must remain at the bottom of this enum
 };
 
-class BuzzerConfig
+struct BuzzerConfig
 {
-  public:
-    int8_t inverted;
-    int32_t beeperMask;
+  int8_t inverted = true;
+  int32_t beeperMask;
 };
 
 enum PidIndex {
@@ -366,7 +360,7 @@ enum PidIndex {
   FC_PID_LEVEL,
   FC_PID_MAG,
   FC_PID_VEL,
-  FC_PID_ITEM_COUNT
+  FC_PID_ITEM_COUNT,
 };
 
 enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
@@ -384,91 +378,93 @@ enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
   BLACKBOX_FIELD_GPS,
   BLACKBOX_FIELD_RPM,
   BLACKBOX_FIELD_GYROUNFILT,
-  BLACKBOX_FIELD_COUNT
+  BLACKBOX_FIELD_COUNT,
 };
 
-class PidConfig
-{
-  public:
-    uint8_t P;
-    uint8_t I;
-    uint8_t D;
-    int16_t F;
+enum BlackboxLogDevice {
+  BLACKBOX_DEV_NONE = 0,
+  BLACKBOX_DEV_FLASH = 1,
+  BLACKBOX_DEV_SDCARD = 2,
+  BLACKBOX_DEV_SERIAL = 3,
 };
 
-class InputChannelConfig
+struct PidConfig
 {
-  public:
-    int16_t min;
-    int16_t neutral;
-    int16_t max;
-    int8_t map;
-    int8_t fsMode;
-    int16_t fsValue;
+  uint8_t P;
+  uint8_t I;
+  uint8_t D;
+  int16_t F;
 };
 
-class InputConfig
+struct InputChannelConfig
 {
-  public:
-    int8_t ppmMode;
-    uint8_t serialRxProvider;
-
-    int16_t maxCheck;
-    int16_t minCheck;
-    int16_t minRc;
-    int16_t midRc;
-    int16_t maxRc;
-
-    int8_t interpolationMode;
-    int8_t interpolationInterval;
-    int8_t deadband;
-
-    int8_t filterType;
-    int8_t filterAutoFactor;
-    FilterConfig filter;
-    FilterConfig filterDerivative;
-
-    uint8_t expo[3];
-    uint8_t rate[3];
-    uint8_t superRate[3];
-    int16_t rateLimit[3];
-    int8_t rateType;
-
-    uint8_t rssiChannel;
-
-    InputChannelConfig channel[INPUT_CHANNELS];
+  int16_t min = 1000;
+  int16_t neutral = 1500;
+  int16_t max = 2000;
+  int8_t map = 0;
+  int8_t fsMode = 0;
+  int16_t fsValue = 1500;
 };
 
-class OutputChannelConfig
+struct InputConfig
 {
-  public:
-    int16_t min;
-    int16_t neutral;
-    int16_t max;
-    bool reverse;
-    bool servo;
+  int8_t ppmMode = PPM_MODE_NORMAL;
+  uint8_t serialRxProvider = SERIALRX_SBUS;
+
+  int16_t maxCheck = 1050;
+  int16_t minCheck = 1900;
+  int16_t minRc = 885;
+  int16_t midRc = 1500;
+  int16_t maxRc = 2115;
+
+  int8_t interpolationMode = INPUT_INTERPOLATION_AUTO;
+  int8_t interpolationInterval = 26;
+  int8_t deadband = 3;
+
+  int8_t filterType = INPUT_FILTER;
+  int8_t filterAutoFactor = 50;
+  FilterConfig filter{FILTER_PT3, 0};
+  FilterConfig filterDerivative{FILTER_PT3, 0};
+
+  uint8_t expo[3] = { 0, 0, 0 };
+  uint8_t rate[3] = { 20, 20, 30 };
+  uint8_t superRate[3] = { 40, 40,  36 };
+  int16_t rateLimit[3] = { 1998, 1998, 1998 };
+  int8_t rateType = 3;
+
+  uint8_t rssiChannel = 0;
+
+  InputChannelConfig channel[INPUT_CHANNELS];
 };
 
-class OutputConfig
+struct OutputChannelConfig
 {
-  public:
-    int8_t protocol;
-    int8_t async;
-    int8_t dshotTelemetry;
-    int8_t motorPoles;
-    int16_t rate;
-    int16_t servoRate;
+  int16_t min = 1000;
+  int16_t neutral = 1500;
+  int16_t max = 2000;
+  bool reverse = false;
+  bool servo = false;
+};
 
-    int16_t minCommand;
-    int16_t minThrottle;
-    int16_t maxThrottle;
-    int16_t dshotIdle;
+struct OutputConfig
+{
+  int8_t protocol = ESC_PROTOCOL_DISABLED;
+  int8_t async = false;
+  int8_t dshotTelemetry = false;
+  int8_t motorPoles = 14;
+  int16_t rate = 480;
+  int16_t servoRate = 0;
 
-    int8_t throttleLimitType = 0;
-    int8_t throttleLimitPercent = 100;
-    int8_t motorLimit = 100;
+  int16_t minCommand = 1000;
+  int16_t minThrottle = 1070;
+  int16_t maxThrottle = 2000;
+  int16_t dshotIdle = 550;
 
-    OutputChannelConfig channel[ESPFC_OUTPUT_COUNT];
+  int8_t throttleLimitType = 0;
+  int8_t throttleLimitPercent = 100;
+  int8_t motorLimit = 100;
+
+  OutputChannelConfig channel[ESPFC_OUTPUT_COUNT];
 };
 
 enum DisarmReason {
@@ -515,331 +511,280 @@ enum ArmingDisabledFlags {
 
 static const size_t ARMING_DISABLED_FLAGS_COUNT = 25;
 
-class WirelessConfig
+struct WirelessConfig
 {
-  public:
-    static const size_t MAX_LEN = 32;
-    int16_t port;
-    char ssid[MAX_LEN + 1];
-    char pass[MAX_LEN + 1];
+  static const size_t MAX_LEN = 32;
+  int16_t port = 1111;
+  char ssid[MAX_LEN + 1];
+  char pass[MAX_LEN + 1];
 };
 
-class FailsafeConfig
+struct FailsafeConfig
 {
-  public:
-    uint8_t delay;
-    uint8_t killSwitch;
+  uint8_t delay = 4;
+  uint8_t killSwitch = 0;
+};
+
+struct BlackboxConfig
+{
+  int8_t dev = 0;
+  int16_t pDenom = 32; // 1k
+  int32_t fieldsMask = 0xffff;
+  int8_t mode = 0;
+};
+
+struct DebugConfig
+{
+  int8_t mode = DEBUG_NONE;
+  uint8_t axis = 1;
+};
+
+struct RpmFilterConfig
+{
+  uint8_t harmonics = 3;
+  uint8_t minFreq = 100;
+  int16_t q = 500;
+  uint8_t freqLpf = 150;
+  uint8_t weights[RPM_FILTER_HARMONICS_MAX] = {100, 100, 100};
+  uint8_t fade = 30;
+};
+
+struct VBatConfig
+{
+  int16_t cellWarning = 350;
+  uint8_t scale = 100;
+  uint8_t resDiv = 10;
+  uint8_t resMult = 1;
+  int8_t source = 0;
+};
+
+struct IBatConfig
+{
+  int8_t source = 0;
+  int16_t scale = 100;
+  int16_t offset = 0;
+};
+
+struct GyroConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = GYRO_AUTO;
+  int8_t dlpf = GYRO_DLPF_256;
+  int8_t align = ALIGN_DEFAULT;
+  int16_t bias[3] = { 0, 0, 0 };
+  FilterConfig filter{FILTER_PT1, 100};
+  FilterConfig filter2{FILTER_PT1, 213};
+  FilterConfig filter3{FILTER_FO, 150};
+  FilterConfig notch1Filter{FILTER_NOTCH, 0, 0};
+  FilterConfig notch2Filter{FILTER_NOTCH, 0, 0};
+  FilterConfig dynLpfFilter{FILTER_PT1, 425, 170};
+  DynamicFilterConfig dynamicFilter;
+  RpmFilterConfig rpmFilter;
+};
+
+struct AccelConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = GYRO_AUTO;
+  int16_t bias[3] = { 0, 0, 0 };
+  FilterConfig filter{FILTER_BIQUAD, 15};
+};
+
+struct BaroConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = BARO_NONE;
+  FilterConfig filter{FILTER_BIQUAD, 5};
+};
+
+struct MagConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = MAG_NONE;
+  int8_t align = ALIGN_DEFAULT;
+  int16_t offset[3] = { 0, 0, 0 };
+  int16_t scale[3] = { 1000, 1000, 1000 };
+  FilterConfig filter{FILTER_BIQUAD, 10};
+};
+
+struct YawConfig
+{
+  FilterConfig filter{FILTER_PT1, 90};
+};
+
+struct DtermConfig
+{
+  FilterConfig filter{FILTER_PT1, 128};
+  FilterConfig filter2{FILTER_PT1, 128};
+  FilterConfig notchFilter{FILTER_NOTCH, 0, 0};
+  FilterConfig dynLpfFilter{FILTER_PT1, 145, 60};
+  int16_t setpointWeight = 30;
+};
+
+struct ItermConfig
+{
+  int8_t limit = 30;
+  int8_t relax = ITERM_RELAX_RP;
+  int8_t relaxCutoff = 15;
+  bool lowThrottleZeroIterm = true;
+};
+
+struct LevelConfig
+{
+  FilterConfig ptermFilter{FILTER_PT1, 90};
+  int8_t angleLimit = 55;
+  int16_t rateLimit = 300;
+};
+
+struct MixerConfiguration
+{
+  int8_t type = FC_MIXER_QUADX;
+  bool yawReverse = 0;
+};
+
+struct ControllerConfig
+{
+  int8_t tpaScale = 10;
+  int16_t tpaBreakpoint = 1650;
 };
 
 // persistent data
 class ModelConfig
 {
   public:
-    int8_t gyroBus;
-    int8_t gyroDev;
-    int8_t gyroDlpf;
-    int8_t gyroAlign;
-    FilterConfig gyroFilter;
-    FilterConfig gyroFilter2;
-    FilterConfig gyroFilter3;
-    FilterConfig gyroNotch1Filter;
-    FilterConfig gyroNotch2Filter;
-    FilterConfig gyroDynLpfFilter;
-
-    int8_t accelBus;
-    int8_t accelDev;
-    int8_t accelAlign;
-    FilterConfig accelFilter;
-
-    int8_t magBus;
-    int8_t magDev;
-    int8_t magAlign;
-    FilterConfig magFilter;
-
-    int8_t baroBus;
-    int8_t baroDev;
-    FilterConfig baroFilter;
-
+    // inputs and sensors
+    GyroConfig gyro;
+    AccelConfig accel;
+    BaroConfig baro;
+    MagConfig mag;
     InputConfig input;
     FailsafeConfig failsafe;
+    FusionConfig fusion;
+    VBatConfig vbat;
+    IBatConfig ibat;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
-
     ScalerConfig scaler[SCALER_COUNT];
 
-    OutputConfig output;
+    // pid controller
+    PidConfig pid[FC_PID_ITEM_COUNT] = {
+      [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
+      [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
+      [FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 },  // YAW
+      [FC_PID_ALT]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // ALT
+      [FC_PID_POS]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_P * 100, POSHOLD_I * 100,
+      [FC_PID_POSR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
+      [FC_PID_NAVR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
+      [FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F =  0 },  // LEVEL
+      [FC_PID_MAG]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // MAG
+      [FC_PID_VEL]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // VEL
+    };
+    YawConfig yaw;
+    LevelConfig level;
+    DtermConfig dterm;
+    ItermConfig iterm;
+    ControllerConfig controller;
 
-    int8_t mixerType;
-    bool yawReverse;
-
-    PidConfig pid[FC_PID_ITEM_COUNT];
-
-    FilterConfig yawFilter;
-
-    FilterConfig dtermFilter;
-    FilterConfig dtermFilter2;
-    FilterConfig dtermNotchFilter;
-    FilterConfig dtermDynLpfFilter;
-    FilterConfig levelPtermFilter;
-
-    int16_t dtermSetpointWeight;
-    int8_t itermLimit;
-    int8_t itermRelax;
-    int8_t itermRelaxCutoff;
-
-    int8_t angleLimit;
-    int16_t angleRateLimit;
-
-    int8_t loopSync;
-    int8_t mixerSync;
-
-    int32_t featureMask;
-
-    bool lowThrottleZeroIterm;
-
-    bool telemetry;
-    int32_t telemetryInterval;
-    int8_t telemetryPort;
-
-    int8_t blackboxDev;
-    int16_t blackboxPdenom;
-    int32_t blackboxFieldsMask;
-    int8_t blackboxMode;
-
-    SerialPortConfig serial[SERIAL_UART_COUNT];
-
-    FusionConfig fusion;
-
-    int16_t gyroBias[3];
-    int16_t accelBias[3];
-    int16_t magCalibrationScale[3];
-    int16_t magCalibrationOffset[3];
-
-    char modelName[MODEL_NAME_LEN + 1];
-
-    int16_t vbatCellWarning;
-    uint8_t vbatScale;
-    uint8_t vbatResDiv;
-    uint8_t vbatResMult;
-    int8_t vbatSource;
-
-    int8_t ibatSource;
-    int16_t ibatScale;
-    int16_t ibatOffset;
-
-    int8_t debugMode;
-    uint8_t debugAxis;
-
+    // hardware
+    int8_t pin[PIN_COUNT] = {
+#ifdef ESPFC_INPUT
+      [PIN_INPUT_RX] = ESPFC_INPUT_PIN,
+#endif
+      [PIN_OUTPUT_0] = ESPFC_OUTPUT_0,
+      [PIN_OUTPUT_1] = ESPFC_OUTPUT_1,
+      [PIN_OUTPUT_2] = ESPFC_OUTPUT_2,
+      [PIN_OUTPUT_3] = ESPFC_OUTPUT_3,
+#if ESPFC_OUTPUT_COUNT > 4
+      [PIN_OUTPUT_4] = ESPFC_OUTPUT_4,
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
+      [PIN_OUTPUT_5] = ESPFC_OUTPUT_5,
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
+      [PIN_OUTPUT_6] = ESPFC_OUTPUT_6,
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
+      [PIN_OUTPUT_7] = ESPFC_OUTPUT_7,
+#endif
+      [PIN_BUZZER] = ESPFC_BUZZER_PIN,
+#ifdef ESPFC_SERIAL_0
+      [PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX,
+      [PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX,
+#endif
+#ifdef ESPFC_SERIAL_1
+      [PIN_SERIAL_1_TX] = ESPFC_SERIAL_1_TX,
+      [PIN_SERIAL_1_RX] = ESPFC_SERIAL_1_RX,
+#endif
+#ifdef ESPFC_SERIAL_2
+      [PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX,
+      [PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_RX,
+#endif
+#ifdef ESPFC_I2C_0
+      [PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL,
+      [PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA,
+#endif
+#ifdef ESPFC_ADC_0
+      [PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN,
+#endif
+#ifdef ESPFC_ADC_1
+      [PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN,
+#endif
+#ifdef ESPFC_SPI_0
+      [PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK,
+      [PIN_SPI_0_MOSI] = ESPFC_SPI_0_MOSI,
+      [PIN_SPI_0_MISO] = ESPFC_SPI_0_MISO,
+#endif
+#ifdef ESPFC_SPI_0
+      [PIN_SPI_CS0] = ESPFC_SPI_CS_GYRO,
+      [PIN_SPI_CS1] = ESPFC_SPI_CS_BARO,
+      [PIN_SPI_CS2] = -1,
+#endif
+    };
+    SerialPortConfig serial[SERIAL_UART_COUNT] = {
+#ifdef ESPFC_SERIAL_USB
+      [SERIAL_USB]    = { .id = SERIAL_ID_USB_VCP, .functionMask = ESPFC_SERIAL_USB_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
+#endif
+#ifdef ESPFC_SERIAL_0
+      [SERIAL_UART_0] = { .id = SERIAL_ID_UART_1, .functionMask = ESPFC_SERIAL_0_FN, .baud = ESPFC_SERIAL_0_BAUD, .blackboxBaud = ESPFC_SERIAL_0_BBAUD },
+#endif
+#ifdef ESPFC_SERIAL_1
+      [SERIAL_UART_1] = { .id = SERIAL_ID_UART_2, .functionMask = ESPFC_SERIAL_1_FN, .baud = ESPFC_SERIAL_1_BAUD, .blackboxBaud = ESPFC_SERIAL_1_BBAUD },
+#endif
+#ifdef ESPFC_SERIAL_2
+      [SERIAL_UART_2] = { .id = SERIAL_ID_UART_3, .functionMask = ESPFC_SERIAL_2_FN, .baud = ESPFC_SERIAL_2_BAUD, .blackboxBaud = ESPFC_SERIAL_2_BBAUD },
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
+      [SERIAL_SOFT_0] = { .id = SERIAL_ID_SOFTSERIAL_1, .functionMask = ESPFC_SERIAL_SOFT_0_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
+#endif
+    };
     BuzzerConfig buzzer;
-
-    int8_t pin[PIN_COUNT];
-    int16_t i2cSpeed;
-    int8_t tpaScale;
-    int16_t tpaBreakpoint;
-
-    int8_t customMixerCount;
-    MixerEntry customMixes[MIXER_RULE_MAX];
-
     WirelessConfig wireless;
 
-    DynamicFilterConfig dynamicFilter;
+    // mixer and outputs
+    int8_t customMixerCount = 0;
+    MixerEntry customMixes[MIXER_RULE_MAX];
+    MixerConfiguration mixer;
+    OutputConfig output;
+    BlackboxConfig blackbox;
+    DebugConfig debug;
 
-    uint8_t rpmFilterHarmonics;
-    uint8_t rpmFilterMinFreq;
-    int16_t rpmFilterQ;
-    uint8_t rpmFilterFreqLpf;
-    uint8_t rpmFilterWeights[RPM_FILTER_HARMONICS_MAX];
-    uint8_t rpmFilterFade;
-
+    // not classified yet
+    int16_t i2cSpeed = 800;
+    int8_t loopSync = 8; // MPU 1000Hz
+    int8_t mixerSync = 1;
+    int32_t featureMask = ESPFC_FEATURE_MASK;
+    bool telemetry = 0;
+    int32_t telemetryInterval = 1000;
     uint8_t rescueConfigDelay = 30;
-
     int16_t boardAlignment[3] = {0, 0, 0};
+    char modelName[MODEL_NAME_LEN + 1];
 
     ModelConfig()
     {
-#ifdef ESPFC_INPUT
-      pin[PIN_INPUT_RX] = ESPFC_INPUT_PIN;
-#endif
-      pin[PIN_OUTPUT_0] = ESPFC_OUTPUT_0;
-      pin[PIN_OUTPUT_1] = ESPFC_OUTPUT_1;
-      pin[PIN_OUTPUT_2] = ESPFC_OUTPUT_2;
-      pin[PIN_OUTPUT_3] = ESPFC_OUTPUT_3;
-#if ESPFC_OUTPUT_COUNT > 4
-      pin[PIN_OUTPUT_4] = ESPFC_OUTPUT_4;
-#endif
-#if ESPFC_OUTPUT_COUNT > 5
-      pin[PIN_OUTPUT_5] = ESPFC_OUTPUT_5;
-#endif
-#if ESPFC_OUTPUT_COUNT > 6
-      pin[PIN_OUTPUT_6] = ESPFC_OUTPUT_6;
-#endif
-#if ESPFC_OUTPUT_COUNT > 7
-      pin[PIN_OUTPUT_7] = ESPFC_OUTPUT_7;
-#endif
-#ifdef ESPFC_BUZZER
-      pin[PIN_BUZZER] = ESPFC_BUZZER_PIN;
-#endif
-#ifdef ESPFC_SERIAL_0
-      pin[PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX;
-      pin[PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX;
-#endif
-#ifdef ESPFC_SERIAL_1
-      pin[PIN_SERIAL_1_TX] = ESPFC_SERIAL_1_TX;
-      pin[PIN_SERIAL_1_RX] = ESPFC_SERIAL_1_RX;
-#endif
-#ifdef ESPFC_SERIAL_2
-      pin[PIN_SERIAL_2_TX] = ESPFC_SERIAL_2_TX;
-      pin[PIN_SERIAL_2_RX] = ESPFC_SERIAL_2_RX;
-#endif
-#ifdef ESPFC_I2C_0
-      pin[PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL;
-      pin[PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA;
-#endif
-#ifdef ESPFC_ADC_0
-      pin[PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN;
-#endif
-#ifdef ESPFC_ADC_1
-      pin[PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN;
-#endif
-#ifdef ESPFC_SPI_0
-      pin[PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK;
-      pin[PIN_SPI_0_MOSI] = ESPFC_SPI_0_MOSI;
-      pin[PIN_SPI_0_MISO] = ESPFC_SPI_0_MISO;
-#endif
-#ifdef ESPFC_SPI_0
-      pin[PIN_SPI_CS0] = ESPFC_SPI_CS_GYRO;
-      pin[PIN_SPI_CS1] = ESPFC_SPI_CS_BARO;
-      pin[PIN_SPI_CS2] = -1;
-#endif
-      i2cSpeed = 800;
-
-      gyroBus = BUS_AUTO;
-      gyroDev = GYRO_AUTO;
-      gyroAlign = ALIGN_DEFAULT;
-      gyroDlpf = GYRO_DLPF_256;
-
-      loopSync = 8; // MPU 1000Hz
-      mixerSync = 1;
-
-      accelBus = BUS_AUTO;
-      accelDev = GYRO_AUTO;
-      accelAlign = ALIGN_DEFAULT;
-
-      magBus = BUS_AUTO;
-      magDev = MAG_NONE;
-      magAlign = ALIGN_DEFAULT;
-
-      baroBus = BUS_AUTO;
-      baroDev = BARO_NONE;
-
-      fusion.mode = FUSION_MAHONY;
-      fusion.gain = 50;
-      fusion.gainI = 5;
-
-      // BF x 0.85
-      gyroDynLpfFilter = FilterConfig(FILTER_PT1, 425, 170);
-      gyroFilter = FilterConfig(FILTER_PT1, 100);
-      gyroFilter2 = FilterConfig(FILTER_PT1, 213);
-      dynamicFilter = DynamicFilterConfig(4, 300, 80, 400); // 8%. q:3.0, 80-400 Hz
-
-      dtermDynLpfFilter = FilterConfig(FILTER_PT1, 145, 60);
-      dtermFilter = FilterConfig(FILTER_PT1, 128);
-      dtermFilter2 = FilterConfig(FILTER_PT1, 128);
-
-      rpmFilterHarmonics = 3;
-      rpmFilterMinFreq = 100;
-      rpmFilterQ = 500;
-      rpmFilterFade = 30;
-      rpmFilterWeights[0] = 100;
-      rpmFilterWeights[1] = 100;
-      rpmFilterWeights[2] = 100;
-      rpmFilterFreqLpf = 150;
-
-      gyroFilter3 = FilterConfig(FILTER_FO, 150);
-      gyroNotch1Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
-      gyroNotch2Filter = FilterConfig(FILTER_NOTCH, 0, 0); // off
-      dtermNotchFilter = FilterConfig(FILTER_NOTCH, 0, 0); // off
-
-      accelFilter = FilterConfig(FILTER_BIQUAD, 15);
-      magFilter = FilterConfig(FILTER_BIQUAD, 10);
-      yawFilter = FilterConfig(FILTER_PT1, 90);
-      levelPtermFilter = FilterConfig(FILTER_PT1, 90);
-      baroFilter = FilterConfig(FILTER_BIQUAD, 10);
-
-      telemetry = 0;
-      telemetryInterval = 1000;
-
-#ifdef ESPFC_SERIAL_0
-      serial[SERIAL_UART_0].id = SERIAL_ID_UART_1;
-      serial[SERIAL_UART_0].functionMask = ESPFC_SERIAL_0_FN;
-      serial[SERIAL_UART_0].baud = ESPFC_SERIAL_0_BAUD;
-      serial[SERIAL_UART_0].blackboxBaud = ESPFC_SERIAL_0_BBAUD;
-#endif
-#ifdef ESPFC_SERIAL_1
-      serial[SERIAL_UART_1].id = SERIAL_ID_UART_2;
-      serial[SERIAL_UART_1].functionMask = ESPFC_SERIAL_1_FN;
-      serial[SERIAL_UART_1].baud = ESPFC_SERIAL_1_BAUD;
-      serial[SERIAL_UART_1].blackboxBaud = ESPFC_SERIAL_1_BBAUD;
-#endif
-#ifdef ESPFC_SERIAL_2
-      serial[SERIAL_UART_2].id = SERIAL_ID_UART_3;
-      serial[SERIAL_UART_2].functionMask = ESPFC_SERIAL_2_FN;
-      serial[SERIAL_UART_2].baud = ESPFC_SERIAL_2_BAUD;
-      serial[SERIAL_UART_2].blackboxBaud = ESPFC_SERIAL_2_BBAUD;
-#endif
-#ifdef ESPFC_SERIAL_USB
-      serial[SERIAL_USB].id = SERIAL_ID_USB_VCP;
-      serial[SERIAL_USB].functionMask = ESPFC_SERIAL_USB_FN;
-      serial[SERIAL_USB].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_USB].blackboxBaud = SERIAL_SPEED_NONE;
-#endif
-#ifdef ESPFC_SERIAL_SOFT_0
-      serial[SERIAL_SOFT_0].id = SERIAL_ID_SOFTSERIAL_1;
-      serial[SERIAL_SOFT_0].functionMask = ESPFC_SERIAL_SOFT_0_FN;
-      serial[SERIAL_SOFT_0].baud = SERIAL_SPEED_115200;
-      serial[SERIAL_SOFT_0].blackboxBaud = SERIAL_SPEED_NONE;
-#endif
-
-      // output config
-      output.minCommand  = 1000;
-      output.minThrottle = 1070;
-      output.maxThrottle = 2000;
-      output.dshotIdle = 550;
-      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
-      {
-        output.channel[i].servo = false;
-        output.channel[i].reverse = false;
-        output.channel[i].min = 1000;
-        output.channel[i].max = 2000;
-        output.channel[i].neutral = 1500;
-      }
-
-      mixerType = FC_MIXER_QUADX;
-      yawReverse = 0;
-
-      output.protocol = ESC_PROTOCOL_DISABLED;
-      //output.rate = 2000; // max 500 for PWM, 2000 for Oneshot125
-      output.rate = 480;    // max 500 for PWM, 2000 for Oneshot125
-      //output.async = true;
-      output.async = false;
-      output.servoRate = 0; // default 50, 0 to disable
-      output.dshotTelemetry = false;
-      output.motorPoles = 14;
-
-      // input config
-      input.ppmMode = PPM_MODE_NORMAL;
-      input.minCheck = 1050;
-      input.maxCheck = 1900;
-      input.minRc = 885;
-      input.midRc = 1500;
-      input.maxRc = 2115;
-      input.rssiChannel = 0;
       for(size_t i = 0; i < INPUT_CHANNELS; i++)
       {
         input.channel[i].map = i;
-        input.channel[i].min = 1000;
         input.channel[i].neutral = input.midRc;
-        input.channel[i].max = 2000;
         input.channel[i].fsMode = i <= AXIS_THRUST ? 0 : 1; // auto, hold, set
         input.channel[i].fsValue = i != AXIS_THRUST ? input.midRc : 1000;
       }
@@ -847,133 +792,15 @@ class ModelConfig
       input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
       input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
 
-      input.rateType = 3; // actual
-
-      input.rate[AXIS_ROLL] = 20;
-      input.expo[AXIS_ROLL] = 0;
-      input.superRate[AXIS_ROLL] = 40;
-      input.rateLimit[AXIS_ROLL] = 1998;
-
-      input.rate[AXIS_PITCH] = 20;
-      input.expo[AXIS_PITCH] = 0;
-      input.superRate[AXIS_PITCH] = 40;
-      input.rateLimit[AXIS_PITCH] = 1998;
-
-      input.rate[AXIS_YAW] = 30;
-      input.expo[AXIS_YAW] = 0;
-      input.superRate[AXIS_YAW] = 36;
-      input.rateLimit[AXIS_YAW] = 1998;
-
-      input.filterType = INPUT_FILTER;
-      input.filterAutoFactor = 50;
-      input.filter = FilterConfig(FILTER_PT3, 0); // 0: auto
-      input.filterDerivative = FilterConfig(FILTER_PT3, 0); // 0: auto
-
-      input.interpolationMode = INPUT_INTERPOLATION_AUTO; // mode
-      input.interpolationInterval = 26;
-      input.deadband = 3; // us
-
-      failsafe.delay = 4;
-      failsafe.killSwitch = 0;
-
       // PID controller config (BF default)
       //pid[FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
       //pid[FC_PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
       //pid[FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
       //pid[FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
 
-      // PID controller config (ESPFC default)
-      pid[FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 };
-      pid[FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 };
-      pid[FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 };
-      pid[FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
-
-      pid[FC_PID_ALT]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
-      pid[FC_PID_POS]   = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
-      pid[FC_PID_POSR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
-      pid[FC_PID_NAVR]  = { .P = 0, .I =  0, .D =  0, .F = 0 };  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
-      pid[FC_PID_MAG]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
-      pid[FC_PID_VEL]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
-
-      itermLimit = 30;
-      itermRelax = ITERM_RELAX_RP;
-      itermRelaxCutoff = 15;
-      dtermSetpointWeight = 30;
-
-      angleLimit = 55;  // deg
-      angleRateLimit = 300;  // deg
-
-      featureMask = ESPFC_FEATURE_MASK;
-
-      input.serialRxProvider = SERIALRX_SBUS;
-
-      lowThrottleZeroIterm = true;
-
-      tpaScale = 10;
-      tpaBreakpoint = 1650;
-
-      for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
-      {
-        conditions[i].id = 0;
-        conditions[i].ch = AXIS_AUX_1 + 0;
-        conditions[i].min = 900;
-        conditions[i].max = 900;
-      }
-
-      // actuator config - pid scaling
-      scaler[0].dimension = (ScalerDimension)(0);
-      scaler[0].channel = 0;
-      scaler[0].minScale = 20; //%
-      scaler[0].maxScale = 400;
-
-      scaler[1].dimension = (ScalerDimension)(0);
-      scaler[1].channel = 0;
-      scaler[1].minScale = 20; //%
-      scaler[1].maxScale = 400;
-
-      scaler[2].dimension = (ScalerDimension)(0);
-      scaler[2].channel = 0;
-      scaler[2].minScale = 20; //%
-      scaler[2].maxScale = 200;
-
-      // default callibration values
-      gyroBias[0] = 0;
-      gyroBias[1] = 0;
-      gyroBias[2] = 0;
-      accelBias[0] = 0;
-      accelBias[1] = 0;
-      accelBias[2] = 0;
-      magCalibrationOffset[0] = 0;
-      magCalibrationOffset[1] = 0;
-      magCalibrationOffset[2] = 0;
-      magCalibrationScale[0] = 1000;
-      magCalibrationScale[1] = 1000;
-      magCalibrationScale[2] = 1000;
-
-      vbatSource = 0;
-      vbatScale = 100;
-      vbatResDiv = 10;
-      vbatResMult = 1;
-      vbatCellWarning = 350;
-
-      ibatSource = 0;
-      ibatScale = 100;
-      ibatOffset = 0;
-
-      buzzer.inverted = true;
-
       wireless.ssid[0] = 0;
       wireless.pass[0] = 0;
-      wireless.port = 1111;
-
       modelName[0] = 0;
-
-      debugMode = DEBUG_NONE;
-      debugAxis = 1;
-      blackboxDev = 0;
-      blackboxPdenom = 32; // 1kHz
-      blackboxFieldsMask = 0xffff;
-      blackboxMode = 0;
 
 // development settings
 #if !defined(ESPFC_REVISION)
@@ -984,8 +811,8 @@ class ModelConfig
     void devPreset()
     {
 #ifdef ESPFC_DEV_PRESET_BLACKBOX
-      blackboxDev = 3; // serial
-      debugMode = DEBUG_GYRO_SCALED;
+      blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
+      debug.mode = DEBUG_GYRO_SCALED;
       serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
       serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;
       serial[ESPFC_DEV_PRESET_BLACKBOX].baud = SERIAL_SPEED_250000;
@@ -1015,11 +842,11 @@ class ModelConfig
 #endif
 
 #ifdef ESPFC_DEV_PRESET_SCALER
-      scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[0].dimension = (ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[0].channel = AXIS_AUX_1 + 1;
-      scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[1].dimension = (ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[1].channel = AXIS_AUX_1 + 2;
-      scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+      scaler[2].dimension = (ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
       scaler[2].channel = AXIS_AUX_1 + 3;
 #endif
 
@@ -1030,7 +857,7 @@ class ModelConfig
 
     void brobot()
     {
-      mixerType = FC_MIXER_GIMBAL;
+      mixer.type = FC_MIXER_GIMBAL;
 
       pin[PIN_OUTPUT_0] = 14;    // D5 // ROBOT
       pin[PIN_OUTPUT_1] = 12;    // D6 // ROBOT
@@ -1041,10 +868,10 @@ class ModelConfig
       //fusionMode = FUSION_COMPLEMENTARY; // ROBOT
       //accelFilter.freq = 30;        // ROBOT
 
-      lowThrottleZeroIterm = false; // ROBOT
-      itermLimit = 10; // ROBOT
-      dtermSetpointWeight = 0;      // ROBOT
-      angleLimit = 10;       // deg // ROBOT
+      iterm.lowThrottleZeroIterm = false; // ROBOT
+      iterm.limit = 10; // ROBOT
+      dterm.setpointWeight = 0;      // ROBOT
+      level.angleLimit = 10;       // deg // ROBOT
 
       output.protocol = ESC_PROTOCOL_PWM; // ROBOT
       output.rate = 100;    // ROBOT
@@ -1054,10 +881,10 @@ class ModelConfig
       output.channel[1].servo = true;   // ROBOT
       output.channel[0].reverse = true; // ROBOT
 
-      scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
-      //scaler[1].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_YAW); // ROBOT
-      scaler[1].dimension = (ScalerDimension)(ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
-      scaler[2].dimension = (ScalerDimension)(ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
+      scaler[0].dimension = (ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
+      //scaler[1].dimension = (ACT_INNER_P | ACT_AXIS_YAW); // ROBOT
+      scaler[1].dimension = (ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
+      scaler[2].dimension = (ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
     }
 };
 

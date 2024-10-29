@@ -27,7 +27,7 @@ int Blackbox::begin()
 
   if(!_model.blackboxEnabled()) return 0;
 
-  if(_model.config.blackboxDev == 3)
+  if(_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
     _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
     if(!_serial) return 0;
@@ -38,10 +38,10 @@ int Blackbox::begin()
   }
 
   systemConfigMutable()->activeRateProfile = 0;
-  systemConfigMutable()->debug_mode = debugMode = _model.config.debugMode;
+  systemConfigMutable()->debug_mode = debugMode = _model.config.debug.mode;
 
   controlRateConfig_t *rp = controlRateProfilesMutable(systemConfig()->activeRateProfile);
-  for(int i = 0; i <= AXIS_YAW; i++)
+  for(int i = 0; i < AXIS_COUNT_RPY; i++)
   {
     rp->rcRates[i] = _model.config.input.rate[i];
     rp->rcExpo[i] = _model.config.input.expo[i];
@@ -50,8 +50,8 @@ int Blackbox::begin()
   }
   rp->thrMid8 = 50;
   rp->thrExpo8 = 0;
-  rp->dynThrPID = _model.config.tpaScale;
-  rp->tpa_breakpoint = _model.config.tpaBreakpoint;
+  rp->dynThrPID = _model.config.controller.tpaScale;
+  rp->tpa_breakpoint = _model.config.controller.tpaBreakpoint;
   rp->rates_type = _model.config.input.rateType;
 
   pidProfile_s * cp = currentPidProfile = &_pidProfile;
@@ -66,15 +66,15 @@ int Blackbox::begin()
     }
   }
   cp->pidAtMinThrottle = 1;
-  cp->dterm_lpf1_type = _model.config.dtermFilter.type;
-  cp->dterm_lpf1_static_hz = _model.config.dtermFilter.freq;
-  cp->dterm_lpf1_dyn_min_hz = _model.config.dtermDynLpfFilter.cutoff;
-  cp->dterm_lpf1_dyn_max_hz = _model.config.dtermDynLpfFilter.freq;
-  cp->dterm_lpf2_type = _model.config.dtermFilter2.type;
-  cp->dterm_lpf2_static_hz = _model.config.dtermFilter2.freq;
-  cp->dterm_notch_hz = _model.config.dtermNotchFilter.freq;
-  cp->dterm_notch_cutoff = _model.config.dtermNotchFilter.cutoff;
-  cp->yaw_lowpass_hz = _model.config.yawFilter.freq;
+  cp->dterm_lpf1_type = _model.config.dterm.filter.type;
+  cp->dterm_lpf1_static_hz = _model.config.dterm.filter.freq;
+  cp->dterm_lpf1_dyn_min_hz = _model.config.dterm.dynLpfFilter.cutoff;
+  cp->dterm_lpf1_dyn_max_hz = _model.config.dterm.dynLpfFilter.freq;
+  cp->dterm_lpf2_type = _model.config.dterm.filter2.type;
+  cp->dterm_lpf2_static_hz = _model.config.dterm.filter2.freq;
+  cp->dterm_notch_hz = _model.config.dterm.notchFilter.freq;
+  cp->dterm_notch_cutoff = _model.config.dterm.notchFilter.cutoff;
+  cp->yaw_lowpass_hz = _model.config.yaw.filter.freq;
   cp->itermWindupPointPercent = 80;
   cp->antiGravityMode = 0;
   cp->pidSumLimit = 660;
@@ -82,8 +82,8 @@ int Blackbox::begin()
   cp->ff_boost = 0;
   cp->feedForwardTransition = 0;
   cp->tpa_mode = 0; // PD
-  cp->tpa_rate = _model.config.tpaScale;
-  cp->tpa_breakpoint = _model.config.tpaBreakpoint;
+  cp->tpa_rate = _model.config.controller.tpaScale;
+  cp->tpa_breakpoint = _model.config.controller.tpaBreakpoint;
   cp->motor_output_limit = _model.config.output.motorLimit;
   cp->throttle_boost = 0;
   cp->throttle_boost_cutoff = 100;
@@ -92,14 +92,14 @@ int Blackbox::begin()
   cp->anti_gravity_cutoff_hz = 100;
   cp->d_min_gain = 0;
   cp->d_min_advance = 0;
-  cp->angle_limit = _model.config.angleLimit;
+  cp->angle_limit = _model.config.level.angleLimit;
   cp->angle_earth_ref = 100;
   cp->horizon_limit_degrees = 135;
   cp->horizon_delay_ms = 500;
   cp->thrustLinearization = 0;
-  cp->iterm_relax = _model.config.itermRelax;
+  cp->iterm_relax = _model.config.iterm.relax;
   cp->iterm_relax_type = 1;
-  cp->iterm_relax_cutoff = _model.config.itermRelaxCutoff;
+  cp->iterm_relax_cutoff = _model.config.iterm.relaxCutoff;
   cp->dterm_lpf1_dyn_expo = 5;
   cp->tpa_low_rate = 20;
   cp->tpa_low_breakpoint = 1050;
@@ -110,37 +110,37 @@ int Blackbox::begin()
   rcControlsConfigMutable()->deadband = _model.config.input.deadband;
   rcControlsConfigMutable()->yaw_deadband = _model.config.input.deadband;
 
-  gyroConfigMutable()->gyro_hardware_lpf = _model.config.gyroDlpf;
-  gyroConfigMutable()->gyro_lpf1_type = _model.config.gyroFilter.type;
-  gyroConfigMutable()->gyro_lpf1_static_hz = _model.config.gyroFilter.freq;
-  gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyroDynLpfFilter.cutoff;
-  gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyroDynLpfFilter.freq;
+  gyroConfigMutable()->gyro_hardware_lpf = _model.config.gyro.dlpf;
+  gyroConfigMutable()->gyro_lpf1_type = _model.config.gyro.filter.type;
+  gyroConfigMutable()->gyro_lpf1_static_hz = _model.config.gyro.filter.freq;
+  gyroConfigMutable()->gyro_lpf1_dyn_min_hz = _model.config.gyro.dynLpfFilter.cutoff;
+  gyroConfigMutable()->gyro_lpf1_dyn_max_hz = _model.config.gyro.dynLpfFilter.freq;
   gyroConfigMutable()->gyro_lpf1_dyn_expo = 5;
-  gyroConfigMutable()->gyro_lpf2_type = _model.config.gyroFilter2.type;
-  gyroConfigMutable()->gyro_lpf2_static_hz = _model.config.gyroFilter2.freq;
-  gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyroNotch1Filter.cutoff;
-  gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyroNotch1Filter.freq;
-  gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyroNotch2Filter.cutoff;
-  gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyroNotch2Filter.freq;
+  gyroConfigMutable()->gyro_lpf2_type = _model.config.gyro.filter2.type;
+  gyroConfigMutable()->gyro_lpf2_static_hz = _model.config.gyro.filter2.freq;
+  gyroConfigMutable()->gyro_soft_notch_cutoff_1 = _model.config.gyro.notch1Filter.cutoff;
+  gyroConfigMutable()->gyro_soft_notch_hz_1 = _model.config.gyro.notch1Filter.freq;
+  gyroConfigMutable()->gyro_soft_notch_cutoff_2 = _model.config.gyro.notch2Filter.cutoff;
+  gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyro.notch2Filter.freq;
   gyroConfigMutable()->gyro_sync_denom = 1;
 
-  dynNotchConfigMutable()->dyn_notch_count = _model.config.dynamicFilter.width;
-  dynNotchConfigMutable()->dyn_notch_q = _model.config.dynamicFilter.q;
-  dynNotchConfigMutable()->dyn_notch_min_hz = _model.config.dynamicFilter.min_freq;
-  dynNotchConfigMutable()->dyn_notch_max_hz = _model.config.dynamicFilter.max_freq;
+  dynNotchConfigMutable()->dyn_notch_count = _model.config.gyro.dynamicFilter.count;
+  dynNotchConfigMutable()->dyn_notch_q = _model.config.gyro.dynamicFilter.q;
+  dynNotchConfigMutable()->dyn_notch_min_hz = _model.config.gyro.dynamicFilter.min_freq;
+  dynNotchConfigMutable()->dyn_notch_max_hz = _model.config.gyro.dynamicFilter.max_freq;
 
-  accelerometerConfigMutable()->acc_lpf_hz = _model.config.accelFilter.freq;
-  accelerometerConfigMutable()->acc_hardware = _model.config.accelDev;
-  barometerConfigMutable()->baro_hardware = _model.config.baroDev;
-  compassConfigMutable()->mag_hardware = _model.config.magDev;
+  accelerometerConfigMutable()->acc_lpf_hz = _model.config.accel.filter.freq;
+  accelerometerConfigMutable()->acc_hardware = _model.config.accel.dev;
+  barometerConfigMutable()->baro_hardware = _model.config.baro.dev;
+  compassConfigMutable()->mag_hardware = _model.config.mag.dev;
 
   motorConfigMutable()->dev.useUnsyncedPwm = _model.config.output.async;
   motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;
   motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
   motorConfigMutable()->mincommand = _model.config.output.minCommand;
   motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
-  motorConfigMutable()->minthrottle = _model.state.minThrottle;
-  motorConfigMutable()->maxthrottle = _model.state.maxThrottle;
+  motorConfigMutable()->minthrottle = _model.state.mixer.minThrottle;
+  motorConfigMutable()->maxthrottle = _model.state.mixer.maxThrottle;
   motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;
   motorConfigMutable()->motorPoleCount = _model.config.output.motorPoles;
 
@@ -152,27 +152,27 @@ int Blackbox::begin()
   if(_model.magActive()) sensorsSet(SENSOR_MAG);
   if(_model.baroActive()) sensorsSet(SENSOR_BARO);
 
-  gyro.sampleLooptime = _model.state.gyroTimer.interval;
+  gyro.sampleLooptime = _model.state.gyro.timer.interval;
   targetPidLooptime = _model.state.loopTimer.interval;
   activePidLoopDenom = _model.config.loopSync;
 
-  if(_model.config.blackboxPdenom >= 0 && _model.config.blackboxPdenom <= 4)
+  if(_model.config.blackbox.pDenom >= 0 && _model.config.blackbox.pDenom <= 4)
   {
-    blackboxConfigMutable()->sample_rate = _model.config.blackboxPdenom;
+    blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
   }
   else
   {
-    blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackboxPdenom);
+    blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackbox.pDenom);
   }
-  blackboxConfigMutable()->device = _model.config.blackboxDev;
-  blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackboxFieldsMask;
-  blackboxConfigMutable()->mode = _model.config.blackboxMode;
+  blackboxConfigMutable()->device = _model.config.blackbox.dev;
+  blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
+  blackboxConfigMutable()->mode = _model.config.blackbox.mode;
 
   featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
-  batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibatSource;
-  batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbatSource;
-  batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbatCellWarning;
+  batteryConfigMutable()->currentMeterSource = (currentMeterSource_e)_model.config.ibat.source;
+  batteryConfigMutable()->voltageMeterSource = (voltageMeterSource_e)_model.config.vbat.source;
+  batteryConfigMutable()->vbatwarningcellvoltage = _model.config.vbat.cellWarning;
   batteryConfigMutable()->vbatmaxcellvoltage = 420;
   batteryConfigMutable()->vbatmincellvoltage = 340;
 
@@ -182,21 +182,21 @@ int Blackbox::begin()
   rxConfigMutable()->airModeActivateThreshold = 40;
   rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
 
-  rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.rpmFilterHarmonics;
-  rpmFilterConfigMutable()->rpm_filter_q = _model.config.rpmFilterQ;
-  rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.rpmFilterMinFreq;
-  rpmFilterConfigMutable()->rpm_filter_fade_range_hz = _model.config.rpmFilterFade;
-  rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.rpmFilterFreqLpf;
-  rpmFilterConfigMutable()->rpm_filter_weights[0] = _model.config.rpmFilterWeights[0];
-  rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.rpmFilterWeights[1];
-  rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.rpmFilterWeights[2];
+  rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.gyro.rpmFilter.harmonics;
+  rpmFilterConfigMutable()->rpm_filter_q = _model.config.gyro.rpmFilter.q;
+  rpmFilterConfigMutable()->rpm_filter_min_hz = _model.config.gyro.rpmFilter.minFreq;
+  rpmFilterConfigMutable()->rpm_filter_fade_range_hz = _model.config.gyro.rpmFilter.fade;
+  rpmFilterConfigMutable()->rpm_filter_lpf_hz = _model.config.gyro.rpmFilter.freqLpf;
+  rpmFilterConfigMutable()->rpm_filter_weights[0] = _model.config.gyro.rpmFilter.weights[0];
+  rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.gyro.rpmFilter.weights[1];
+  rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.gyro.rpmFilter.weights[2];
 
-  updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.modeMaskPresent & 1 << MODE_ARMED);
-  updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.modeMaskPresent & 1 << MODE_ANGLE);
-  updateModeFlag(&rcModeActivationPresent, BOXAIRMODE, _model.state.modeMaskPresent & 1 << MODE_AIRMODE);
-  updateModeFlag(&rcModeActivationPresent, BOXFAILSAFE, _model.state.modeMaskPresent & 1 << MODE_FAILSAFE);
-  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOX, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX);
-  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOXERASE, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX_ERASE);
+  updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.mode.maskPresent & 1 << MODE_ARMED);
+  updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.mode.maskPresent & 1 << MODE_ANGLE);
+  updateModeFlag(&rcModeActivationPresent, BOXAIRMODE, _model.state.mode.maskPresent & 1 << MODE_AIRMODE);
+  updateModeFlag(&rcModeActivationPresent, BOXFAILSAFE, _model.state.mode.maskPresent & 1 << MODE_FAILSAFE);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOX, _model.state.mode.maskPresent & 1 << MODE_BLACKBOX);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOXERASE, _model.state.mode.maskPresent & 1 << MODE_BLACKBOX_ERASE);
 
   blackboxInit();
 
@@ -206,7 +206,7 @@ int Blackbox::begin()
 int FAST_CODE_ATTR Blackbox::update()
 {
   if(!_model.blackboxEnabled()) return 0;
-  if(_model.config.blackboxDev == 3 && !_serial) return 0;
+  if(_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL && !_serial) return 0;
 
   Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
@@ -219,13 +219,13 @@ int FAST_CODE_ATTR Blackbox::update()
   }
   //PIN_DEBUG(HIGH);
   blackboxUpdate(_model.state.loopTimer.last);
-  if(_model.config.blackboxDev == 3)
+  if(_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
     _buffer.flush();
   }
   //PIN_DEBUG(LOW);
 
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     _model.state.debug[5] = micros() - startTime;
   }
@@ -235,37 +235,37 @@ int FAST_CODE_ATTR Blackbox::update()
 
 void FAST_CODE_ATTR Blackbox::updateData()
 {
-  for(size_t i = 0; i < 3; i++)
+  for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
-    gyro.gyroADCf[i] = degrees(_model.state.gyro[i]);
-    gyro.gyroADC[i] = degrees(_model.state.gyroScaled[i]);
+    gyro.gyroADCf[i] = Math::toDeg(_model.state.gyro.adc[i]);
+    gyro.gyroADC[i] = Math::toDeg(_model.state.gyro.scaled[i]);
     pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
     pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
     pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
     pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
-    rcCommand[i] = (_model.state.inputBuffer[i] - 1500) * (i == AXIS_YAW ? -1 : 1);
+    rcCommand[i] = (_model.state.input.buffer[i] - 1500) * (i == AXIS_YAW ? -1 : 1);
     if(_model.accelActive()) {
-      acc.accADC[i] = _model.state.accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
+      acc.accADC[i] = _model.state.accel.adc[i] * ACCEL_G_INV * acc.dev.acc_1G;
     }
     if(_model.magActive()) {
-      mag.magADC[i] = _model.state.mag[i] * 1090;
+      mag.magADC[i] = _model.state.mag.adc[i] * 1090;
     }
     if(_model.baroActive()) {
-      baro.altitude = lrintf(_model.state.baroAltitude * 100.f); // cm
+      baro.altitude = lrintf(_model.state.baro.altitude * 100.f); // cm
     }
   }
-  rcCommand[AXIS_THRUST] = _model.state.inputBuffer[AXIS_THRUST];
+  rcCommand[AXIS_THRUST] = _model.state.input.buffer[AXIS_THRUST];
   for(size_t i = 0; i < 4; i++)
   {
-    motor[i] = Math::clamp(_model.state.outputUs[i], (int16_t)1000, (int16_t)2000);
-    if(_model.state.digitalOutput)
+    motor[i] = Math::clamp(_model.state.output.us[i], (int16_t)1000, (int16_t)2000);
+    if(_model.state.mixer.digitalOutput)
     {
       motor[i] = PWM_TO_DSHOT(motor[i]);
     }
   }
-  if(_model.config.debugMode != DEBUG_NONE && _model.config.debugMode != DEBUG_BLACKBOX_OUTPUT)
+  if(_model.config.debug.mode != DEBUG_NONE && _model.config.debug.mode != DEBUG_BLACKBOX_OUTPUT)
   {
-    for(size_t i = 0; i < 8; i++)
+    for(size_t i = 0; i < DEBUG_VALUE_COUNT; i++)
     {
       debug[i] = _model.state.debug[i];
     }
@@ -301,7 +301,7 @@ void FAST_CODE_ATTR Blackbox::updateArmed()
   {
     DISABLE_ARMING_FLAG(ARMED);
     flightLogEventData_t eventData;
-    eventData.disarm.reason = _model.state.disarmReason;
+    eventData.disarm.reason = _model.state.mode.disarmReason;
     blackboxLogEvent(FLIGHT_LOG_EVENT_DISARM, &eventData);
     stop = _model.state.loopTimer.last + 500000; // schedule stop in 500ms
   }

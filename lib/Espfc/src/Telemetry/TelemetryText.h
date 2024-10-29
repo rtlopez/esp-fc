@@ -13,7 +13,7 @@ class TelemetryText
 
     int process(Stream& s) const
     {
-      //print(s, _model.state.gyro.x, 3);
+      //print(s, _model.state.gyro.adc.x, 3);
       //println(s);
 
       return 1;

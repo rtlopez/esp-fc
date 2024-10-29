@@ -4,12 +4,8 @@
 namespace Espfc {
 
 Espfc::Espfc():
-  _hardware(_model), _controller(_model), _telemetry(_model), _input(_model, _telemetry), _actuator(_model), _sensor(_model),
-  _mixer(_model), _blackbox(_model)
-#ifdef ESPFC_BUZER
-  , _buzzer(_model)
-#endif
-  , _serial(_model, _telemetry)
+  _hardware{_model}, _controller{_model}, _telemetry{_model}, _input{_model, _telemetry}, _actuator{_model}, _sensor{_model},
+  _mixer{_model}, _blackbox{_model}, _buzzer{_model}, _serial{_model, _telemetry}
   {}
 
 int Espfc::load()
@@ -32,9 +28,7 @@ int Espfc::begin()
   _actuator.begin();    // requires _model.begin()
   _controller.begin();
   _blackbox.begin();    // requires _serial.begin(), _actuator.begin()
-#ifdef ESPFC_BUZER
   _buzzer.begin();
-#endif
   _model.state.buzzer.push(BUZZER_SYSTEM_INIT);
 
   return 1;
@@ -44,18 +38,18 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 {
   if(externalTrigger)
   {
-    _model.state.gyroTimer.update();
+    _model.state.gyro.timer.update();
   }
   else
   {
-    if(!_model.state.gyroTimer.check()) return 0;
+    if(!_model.state.gyro.timer.check()) return 0;
   }
   Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
 #if defined(ESPFC_MULTI_CORE)
 
   _sensor.read();
-  if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+  if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
   {
     _input.update();
   }
@@ -65,23 +59,21 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   }
 
   _serial.update();
-#ifdef ESPFC_BUZER
   _buzzer.update();
-#endif
   _model.state.stats.update();
 
 #else
 
   _sensor.update();
-  if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
+  if(_model.state.loopTimer.syncTo(_model.state.gyro.timer))
   {
     _controller.update();
-    if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
+    if(_model.state.mixer.timer.syncTo(_model.state.loopTimer))
     {
       _mixer.update();
     }
     _blackbox.update();
-    if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+    if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
     {
       _input.update();
     }
@@ -93,9 +85,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   _sensor.updateDelayed();
 
   _serial.update();
-#ifdef ESPFC_BUZER
   _buzzer.update();
-#endif
   _model.state.stats.update();
 #endif
 

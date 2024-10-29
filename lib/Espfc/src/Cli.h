@@ -415,6 +415,7 @@ class Cli
 
       static const char* voltageSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
       static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
+      static const char* blackboxDevChoices[] = { PSTR("NONE"), PSTR("FLASH"), PSTR("SD_CARD"), PSTR("SERIAL"), NULL };
       static const char* blackboxModeChoices[] = { PSTR("NORMAL"), PSTR("TEST"), PSTR("ALWAYS"), NULL };
 
       size_t i = 0;
@@ -428,80 +429,79 @@ class Cli
         Param(PSTR("feature_soft_serial"), &c.featureMask, 6),
         Param(PSTR("feature_telemetry"), &c.featureMask, 10),
 
-        Param(PSTR("debug_mode"), &c.debugMode, debugModeChoices),
-        Param(PSTR("debug_axis"), &c.debugAxis),
+        Param(PSTR("debug_mode"), &c.debug.mode, debugModeChoices),
+        Param(PSTR("debug_axis"), &c.debug.axis),
 
-        Param(PSTR("gyro_bus"), &c.gyroBus, busDevChoices),
-        Param(PSTR("gyro_dev"), &c.gyroDev, gyroDevChoices),
-        Param(PSTR("gyro_dlpf"), &c.gyroDlpf, gyroDlpfChoices),
-        Param(PSTR("gyro_align"), &c.gyroAlign, alignChoices),
-        Param(PSTR("gyro_lpf_type"), &c.gyroFilter.type, filterTypeChoices),
-        Param(PSTR("gyro_lpf_freq"), &c.gyroFilter.freq),
-        Param(PSTR("gyro_lpf2_type"), &c.gyroFilter2.type, filterTypeChoices),
-        Param(PSTR("gyro_lpf2_freq"), &c.gyroFilter2.freq),
-        Param(PSTR("gyro_lpf3_type"), &c.gyroFilter3.type, filterTypeChoices),
-        Param(PSTR("gyro_lpf3_freq"), &c.gyroFilter3.freq),
-        Param(PSTR("gyro_notch1_freq"), &c.gyroNotch1Filter.freq),
-        Param(PSTR("gyro_notch1_cutoff"), &c.gyroNotch1Filter.cutoff),
-        Param(PSTR("gyro_notch2_freq"), &c.gyroNotch2Filter.freq),
-        Param(PSTR("gyro_notch2_cutoff"), &c.gyroNotch2Filter.cutoff),
-        Param(PSTR("gyro_dyn_lpf_min"), &c.gyroDynLpfFilter.cutoff),
-        Param(PSTR("gyro_dyn_lpf_max"), &c.gyroDynLpfFilter.freq),
-        Param(PSTR("gyro_dyn_notch_q"), &c.dynamicFilter.q),
-        Param(PSTR("gyro_dyn_notch_count"), &c.dynamicFilter.width),
-        Param(PSTR("gyro_dyn_notch_min"), &c.dynamicFilter.min_freq),
-        Param(PSTR("gyro_dyn_notch_max"), &c.dynamicFilter.max_freq),
-        Param(PSTR("gyro_rpm_harmonics"), &c.rpmFilterHarmonics),
-        Param(PSTR("gyro_rpm_q"), &c.rpmFilterQ),
-        Param(PSTR("gyro_rpm_min_freq"), &c.rpmFilterMinFreq),
-        Param(PSTR("gyro_rpm_fade"), &c.rpmFilterFade),
-        Param(PSTR("gyro_rpm_weight_1"), &c.rpmFilterWeights[0]),
-        Param(PSTR("gyro_rpm_weight_2"), &c.rpmFilterWeights[1]),
-        Param(PSTR("gyro_rpm_weight_3"), &c.rpmFilterWeights[2]),
-        Param(PSTR("gyro_rpm_tlm_lpf_freq"), &c.rpmFilterFreqLpf),
-        Param(PSTR("gyro_offset_x"), &c.gyroBias[0]),
-        Param(PSTR("gyro_offset_y"), &c.gyroBias[1]),
-        Param(PSTR("gyro_offset_z"), &c.gyroBias[2]),
+        Param(PSTR("gyro_bus"), &c.gyro.bus, busDevChoices),
+        Param(PSTR("gyro_dev"), &c.gyro.dev, gyroDevChoices),
+        Param(PSTR("gyro_dlpf"), &c.gyro.dlpf, gyroDlpfChoices),
+        Param(PSTR("gyro_align"), &c.gyro.align, alignChoices),
+        Param(PSTR("gyro_lpf_type"), &c.gyro.filter.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf_freq"), &c.gyro.filter.freq),
+        Param(PSTR("gyro_lpf2_type"), &c.gyro.filter2.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf2_freq"), &c.gyro.filter2.freq),
+        Param(PSTR("gyro_lpf3_type"), &c.gyro.filter3.type, filterTypeChoices),
+        Param(PSTR("gyro_lpf3_freq"), &c.gyro.filter3.freq),
+        Param(PSTR("gyro_notch1_freq"), &c.gyro.notch1Filter.freq),
+        Param(PSTR("gyro_notch1_cutoff"), &c.gyro.notch1Filter.cutoff),
+        Param(PSTR("gyro_notch2_freq"), &c.gyro.notch2Filter.freq),
+        Param(PSTR("gyro_notch2_cutoff"), &c.gyro.notch2Filter.cutoff),
+        Param(PSTR("gyro_dyn_lpf_min"), &c.gyro.dynLpfFilter.cutoff),
+        Param(PSTR("gyro_dyn_lpf_max"), &c.gyro.dynLpfFilter.freq),
+        Param(PSTR("gyro_dyn_notch_q"), &c.gyro.dynamicFilter.q),
+        Param(PSTR("gyro_dyn_notch_count"), &c.gyro.dynamicFilter.count),
+        Param(PSTR("gyro_dyn_notch_min"), &c.gyro.dynamicFilter.min_freq),
+        Param(PSTR("gyro_dyn_notch_max"), &c.gyro.dynamicFilter.max_freq),
+        Param(PSTR("gyro_rpm_harmonics"), &c.gyro.rpmFilter.harmonics),
+        Param(PSTR("gyro_rpm_q"), &c.gyro.rpmFilter.q),
+        Param(PSTR("gyro_rpm_min_freq"), &c.gyro.rpmFilter.minFreq),
+        Param(PSTR("gyro_rpm_fade"), &c.gyro.rpmFilter.fade),
+        Param(PSTR("gyro_rpm_weight_1"), &c.gyro.rpmFilter.weights[0]),
+        Param(PSTR("gyro_rpm_weight_2"), &c.gyro.rpmFilter.weights[1]),
+        Param(PSTR("gyro_rpm_weight_3"), &c.gyro.rpmFilter.weights[2]),
+        Param(PSTR("gyro_rpm_tlm_lpf_freq"), &c.gyro.rpmFilter.freqLpf),
+        Param(PSTR("gyro_offset_x"), &c.gyro.bias[0]),
+        Param(PSTR("gyro_offset_y"), &c.gyro.bias[1]),
+        Param(PSTR("gyro_offset_z"), &c.gyro.bias[2]),
 
-        Param(PSTR("accel_bus"), &c.accelBus, busDevChoices),
-        Param(PSTR("accel_dev"), &c.accelDev, gyroDevChoices),
-        //Param(PSTR("accel_align"), &c.accelAlign, alignChoices),
-        Param(PSTR("accel_lpf_type"), &c.accelFilter.type, filterTypeChoices),
-        Param(PSTR("accel_lpf_freq"), &c.accelFilter.freq),
-        Param(PSTR("accel_offset_x"), &c.accelBias[0]),
-        Param(PSTR("accel_offset_y"), &c.accelBias[1]),
-        Param(PSTR("accel_offset_z"), &c.accelBias[2]),
+        Param(PSTR("accel_bus"), &c.accel.bus, busDevChoices),
+        Param(PSTR("accel_dev"), &c.accel.dev, gyroDevChoices),
+        Param(PSTR("accel_lpf_type"), &c.accel.filter.type, filterTypeChoices),
+        Param(PSTR("accel_lpf_freq"), &c.accel.filter.freq),
+        Param(PSTR("accel_offset_x"), &c.accel.bias[0]),
+        Param(PSTR("accel_offset_y"), &c.accel.bias[1]),
+        Param(PSTR("accel_offset_z"), &c.accel.bias[2]),
 
-        Param(PSTR("mag_bus"), &c.magBus, busDevChoices),
-        Param(PSTR("mag_dev"), &c.magDev, magDevChoices),
-        Param(PSTR("mag_align"), &c.magAlign, alignChoices),
-        Param(PSTR("mag_filter_type"), &c.magFilter.type, filterTypeChoices),
-        Param(PSTR("mag_filter_lpf"), &c.magFilter.freq),
-        Param(PSTR("mag_offset_x"), &c.magCalibrationOffset[0]),
-        Param(PSTR("mag_offset_y"), &c.magCalibrationOffset[1]),
-        Param(PSTR("mag_offset_z"), &c.magCalibrationOffset[2]),
-        Param(PSTR("mag_scale_x"), &c.magCalibrationScale[0]),
-        Param(PSTR("mag_scale_y"), &c.magCalibrationScale[1]),
-        Param(PSTR("mag_scale_z"), &c.magCalibrationScale[2]),
+        Param(PSTR("mag_bus"), &c.mag.bus, busDevChoices),
+        Param(PSTR("mag_dev"), &c.mag.dev, magDevChoices),
+        Param(PSTR("mag_align"), &c.mag.align, alignChoices),
+        Param(PSTR("mag_filter_type"), &c.mag.filter.type, filterTypeChoices),
+        Param(PSTR("mag_filter_lpf"), &c.mag.filter.freq),
+        Param(PSTR("mag_offset_x"), &c.mag.offset[0]),
+        Param(PSTR("mag_offset_y"), &c.mag.offset[1]),
+        Param(PSTR("mag_offset_z"), &c.mag.offset[2]),
+        Param(PSTR("mag_scale_x"), &c.mag.scale[0]),
+        Param(PSTR("mag_scale_y"), &c.mag.scale[1]),
+        Param(PSTR("mag_scale_z"), &c.mag.scale[2]),
 
-        Param(PSTR("baro_bus"), &c.baroBus, busDevChoices),
-        Param(PSTR("baro_dev"), &c.baroDev, baroDevChoices),
-        Param(PSTR("baro_lpf_type"), &c.baroFilter.type, filterTypeChoices),
-        Param(PSTR("baro_lpf_freq"), &c.baroFilter.freq),
+        Param(PSTR("baro_bus"), &c.baro.bus, busDevChoices),
+        Param(PSTR("baro_dev"), &c.baro.dev, baroDevChoices),
+        Param(PSTR("baro_lpf_type"), &c.baro.filter.type, filterTypeChoices),
+        Param(PSTR("baro_lpf_freq"), &c.baro.filter.freq),
 
         Param(PSTR("board_align_roll"), &c.boardAlignment[0]),
         Param(PSTR("board_align_pitch"), &c.boardAlignment[1]),
         Param(PSTR("board_align_yaw"), &c.boardAlignment[2]),
 
-        Param(PSTR("vbat_source"), &c.vbatSource, voltageSourceChoices),
-        Param(PSTR("vbat_scale"), &c.vbatScale),
-        Param(PSTR("vbat_mul"), &c.vbatResMult),
-        Param(PSTR("vbat_div"), &c.vbatResDiv),
-        Param(PSTR("vbat_cell_warn"), &c.vbatCellWarning),
+        Param(PSTR("vbat_source"), &c.vbat.source, voltageSourceChoices),
+        Param(PSTR("vbat_scale"), &c.vbat.scale),
+        Param(PSTR("vbat_mul"), &c.vbat.resMult),
+        Param(PSTR("vbat_div"), &c.vbat.resDiv),
+        Param(PSTR("vbat_cell_warn"), &c.vbat.cellWarning),
 
-        Param(PSTR("ibat_source"), &c.ibatSource, currentSourceChoices),
-        Param(PSTR("ibat_scale"), &c.ibatScale),
-        Param(PSTR("ibat_offset"), &c.ibatOffset),
+        Param(PSTR("ibat_source"), &c.ibat.source, currentSourceChoices),
+        Param(PSTR("ibat_scale"), &c.ibat.scale),
+        Param(PSTR("ibat_offset"), &c.ibat.offset),
 
         Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
         Param(PSTR("fusion_gain_p"), &c.fusion.gain),
@@ -574,6 +574,9 @@ class Cli
 #ifdef ESPFC_SERIAL_SOFT_0
         Param(PSTR("serial_soft_0"), &c.serial[SERIAL_SOFT_0]),
 #endif
+#ifdef ESPFC_SERIAL_USB
+        Param(PSTR("serial_usb"), &c.serial[SERIAL_USB]),
+#endif
 
         Param(PSTR("scaler_0"), &c.scaler[0]),
         Param(PSTR("scaler_1"), &c.scaler[1]),
@@ -609,34 +612,34 @@ class Cli
         Param(PSTR("pid_level_i"), &c.pid[FC_PID_LEVEL].I),
         Param(PSTR("pid_level_d"), &c.pid[FC_PID_LEVEL].D),
 
-        Param(PSTR("pid_level_angle_limit"), &c.angleLimit),
-        Param(PSTR("pid_level_rate_limit"), &c.angleRateLimit),
-        Param(PSTR("pid_level_lpf_type"), &c.levelPtermFilter.type, filterTypeChoices),
-        Param(PSTR("pid_level_lpf_freq"), &c.levelPtermFilter.freq),
+        Param(PSTR("pid_level_angle_limit"), &c.level.angleLimit),
+        Param(PSTR("pid_level_rate_limit"), &c.level.rateLimit),
+        Param(PSTR("pid_level_lpf_type"), &c.level.ptermFilter.type, filterTypeChoices),
+        Param(PSTR("pid_level_lpf_freq"), &c.level.ptermFilter.freq),
 
-        Param(PSTR("pid_yaw_lpf_type"), &c.yawFilter.type, filterTypeChoices),
-        Param(PSTR("pid_yaw_lpf_freq"), &c.yawFilter.freq),
+        Param(PSTR("pid_yaw_lpf_type"), &c.yaw.filter.type, filterTypeChoices),
+        Param(PSTR("pid_yaw_lpf_freq"), &c.yaw.filter.freq),
 
-        Param(PSTR("pid_dterm_lpf_type"), &c.dtermFilter.type, filterTypeChoices),
-        Param(PSTR("pid_dterm_lpf_freq"), &c.dtermFilter.freq),
-        Param(PSTR("pid_dterm_lpf2_type"), &c.dtermFilter2.type, filterTypeChoices),
-        Param(PSTR("pid_dterm_lpf2_freq"), &c.dtermFilter2.freq),
-        Param(PSTR("pid_dterm_notch_freq"), &c.dtermNotchFilter.freq),
-        Param(PSTR("pid_dterm_notch_cutoff"), &c.dtermNotchFilter.cutoff),
-        Param(PSTR("pid_dterm_dyn_lpf_min"), &c.dtermDynLpfFilter.cutoff),
-        Param(PSTR("pid_dterm_dyn_lpf_max"), &c.dtermDynLpfFilter.freq),
+        Param(PSTR("pid_dterm_lpf_type"), &c.dterm.filter.type, filterTypeChoices),
+        Param(PSTR("pid_dterm_lpf_freq"), &c.dterm.filter.freq),
+        Param(PSTR("pid_dterm_lpf2_type"), &c.dterm.filter2.type, filterTypeChoices),
+        Param(PSTR("pid_dterm_lpf2_freq"), &c.dterm.filter2.freq),
+        Param(PSTR("pid_dterm_notch_freq"), &c.dterm.notchFilter.freq),
+        Param(PSTR("pid_dterm_notch_cutoff"), &c.dterm.notchFilter.cutoff),
+        Param(PSTR("pid_dterm_dyn_lpf_min"), &c.dterm.dynLpfFilter.cutoff),
+        Param(PSTR("pid_dterm_dyn_lpf_max"), &c.dterm.dynLpfFilter.freq),
 
-        Param(PSTR("pid_dterm_weight"), &c.dtermSetpointWeight),
-        Param(PSTR("pid_iterm_limit"), &c.itermLimit),
-        Param(PSTR("pid_iterm_zero"), &c.lowThrottleZeroIterm),
-        Param(PSTR("pid_iterm_relax"), &c.itermRelax, inputItermRelaxChoices),
-        Param(PSTR("pid_iterm_relax_cutoff"), &c.itermRelaxCutoff),
-        Param(PSTR("pid_tpa_scale"), &c.tpaScale),
-        Param(PSTR("pid_tpa_breakpoint"), &c.tpaBreakpoint),
+        Param(PSTR("pid_dterm_weight"), &c.dterm.setpointWeight),
+        Param(PSTR("pid_iterm_limit"), &c.iterm.limit),
+        Param(PSTR("pid_iterm_zero"), &c.iterm.lowThrottleZeroIterm),
+        Param(PSTR("pid_iterm_relax"), &c.iterm.relax, inputItermRelaxChoices),
+        Param(PSTR("pid_iterm_relax_cutoff"), &c.iterm.relaxCutoff),
+        Param(PSTR("pid_tpa_scale"), &c.controller.tpaScale),
+        Param(PSTR("pid_tpa_breakpoint"), &c.controller.tpaBreakpoint),
 
         Param(PSTR("mixer_sync"), &c.mixerSync),
-        Param(PSTR("mixer_type"), &c.mixerType, mixerTypeChoices),
-        Param(PSTR("mixer_yaw_reverse"), &c.yawReverse),
+        Param(PSTR("mixer_type"), &c.mixer.type, mixerTypeChoices),
+        Param(PSTR("mixer_yaw_reverse"), &c.mixer.yawReverse),
         Param(PSTR("mixer_throttle_limit_type"), &c.output.throttleLimitType, throtleLimitTypeChoices),
         Param(PSTR("mixer_throttle_limit_percent"), &c.output.throttleLimitPercent),
         Param(PSTR("mixer_output_limit"), &c.output.motorLimit),
@@ -691,9 +694,7 @@ class Cli
 #if ESPFC_OUTPUT_COUNT > 7
         Param(PSTR("pin_output_7"), &c.pin[PIN_OUTPUT_7]),
 #endif
-#ifdef ESPFC_BUZZER
         Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
-#endif
 #if defined(ESPFC_SERIAL_0) && defined(ESPFC_SERIAL_REMAP_PINS)
         Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
         Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
@@ -724,9 +725,7 @@ class Cli
         Param(PSTR("pin_spi_cs_1"), &c.pin[PIN_SPI_CS1]),
         Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
 #endif
-#ifdef ESPFC_BUZZER
         Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
-#endif
 
 #ifdef ESPFC_I2C_0
         Param(PSTR("i2c_speed"), &c.i2cSpeed),
@@ -736,23 +735,23 @@ class Cli
         //Param(PSTR("telemetry"), &c.telemetry),
         Param(PSTR("telemetry_interval"), &c.telemetryInterval),
 
-        Param(PSTR("blackbox_dev"), &c.blackboxDev),
-        Param(PSTR("blackbox_mode"), &c.blackboxMode, blackboxModeChoices),
-        Param(PSTR("blackbox_rate"), &c.blackboxPdenom),
-        Param(PSTR("blackbox_log_acc"), &c.blackboxFieldsMask, BLACKBOX_FIELD_ACC),
-        Param(PSTR("blackbox_log_alt"), &c.blackboxFieldsMask, BLACKBOX_FIELD_ALTITUDE),
-        Param(PSTR("blackbox_log_bat"), &c.blackboxFieldsMask, BLACKBOX_FIELD_BATTERY),
-        Param(PSTR("blackbox_log_debug"), &c.blackboxFieldsMask, BLACKBOX_FIELD_DEBUG_LOG),
-        Param(PSTR("blackbox_log_gps"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GPS),
-        Param(PSTR("blackbox_log_gyro"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GYRO),
-        Param(PSTR("blackbox_log_gyro_raw"), &c.blackboxFieldsMask, BLACKBOX_FIELD_GYROUNFILT),
-        Param(PSTR("blackbox_log_mag"), &c.blackboxFieldsMask, BLACKBOX_FIELD_MAG),
-        Param(PSTR("blackbox_log_motor"), &c.blackboxFieldsMask, BLACKBOX_FIELD_MOTOR),
-        Param(PSTR("blackbox_log_pid"), &c.blackboxFieldsMask, BLACKBOX_FIELD_PID),
-        Param(PSTR("blackbox_log_rc"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RC_COMMANDS),
-        Param(PSTR("blackbox_log_rpm"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RPM),
-        Param(PSTR("blackbox_log_rssi"), &c.blackboxFieldsMask, BLACKBOX_FIELD_RSSI),
-        Param(PSTR("blackbox_log_sp"), &c.blackboxFieldsMask, BLACKBOX_FIELD_SETPOINT),
+        Param(PSTR("blackbox_dev"), &c.blackbox.dev, blackboxDevChoices),
+        Param(PSTR("blackbox_mode"), &c.blackbox.mode, blackboxModeChoices),
+        Param(PSTR("blackbox_rate"), &c.blackbox.pDenom),
+        Param(PSTR("blackbox_log_acc"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_ACC),
+        Param(PSTR("blackbox_log_alt"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_ALTITUDE),
+        Param(PSTR("blackbox_log_bat"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_BATTERY),
+        Param(PSTR("blackbox_log_debug"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_DEBUG_LOG),
+        Param(PSTR("blackbox_log_gps"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_GPS),
+        Param(PSTR("blackbox_log_gyro"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_GYRO),
+        Param(PSTR("blackbox_log_gyro_raw"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_GYROUNFILT),
+        Param(PSTR("blackbox_log_mag"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_MAG),
+        Param(PSTR("blackbox_log_motor"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_MOTOR),
+        Param(PSTR("blackbox_log_pid"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_PID),
+        Param(PSTR("blackbox_log_rc"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_RC_COMMANDS),
+        Param(PSTR("blackbox_log_rpm"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_RPM),
+        Param(PSTR("blackbox_log_rssi"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_RSSI),
+        Param(PSTR("blackbox_log_sp"), &c.blackbox.fieldsMask, BLACKBOX_FIELD_SETPOINT),
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
         Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL, 32),
@@ -1040,36 +1039,36 @@ class Cli
         if(!cmd.args[1])
         {
           s.print(F(" gyro offset: "));
-          s.print(_model.config.gyroBias[0]); s.print(' ');
-          s.print(_model.config.gyroBias[1]); s.print(' ');
-          s.print(_model.config.gyroBias[2]); s.print(F(" ["));
-          s.print(Math::toDeg(_model.state.gyroBias[0])); s.print(' ');
-          s.print(Math::toDeg(_model.state.gyroBias[1])); s.print(' ');
-          s.print(Math::toDeg(_model.state.gyroBias[2])); s.println(F("]"));
+          s.print(_model.config.gyro.bias[0]); s.print(' ');
+          s.print(_model.config.gyro.bias[1]); s.print(' ');
+          s.print(_model.config.gyro.bias[2]); s.print(F(" ["));
+          s.print(Math::toDeg(_model.state.gyro.bias[0])); s.print(' ');
+          s.print(Math::toDeg(_model.state.gyro.bias[1])); s.print(' ');
+          s.print(Math::toDeg(_model.state.gyro.bias[2])); s.println(F("]"));
 
           s.print(F("accel offset: "));
-          s.print(_model.config.accelBias[0]); s.print(' ');
-          s.print(_model.config.accelBias[1]); s.print(' ');
-          s.print(_model.config.accelBias[2]); s.print(F(" ["));
-          s.print(_model.state.accelBias[0]); s.print(' ');
-          s.print(_model.state.accelBias[1]); s.print(' ');
-          s.print(_model.state.accelBias[2]); s.println(F("]"));
+          s.print(_model.config.accel.bias[0]); s.print(' ');
+          s.print(_model.config.accel.bias[1]); s.print(' ');
+          s.print(_model.config.accel.bias[2]); s.print(F(" ["));
+          s.print(_model.state.accel.bias[0]); s.print(' ');
+          s.print(_model.state.accel.bias[1]); s.print(' ');
+          s.print(_model.state.accel.bias[2]); s.println(F("]"));
 
           s.print(F("  mag offset: "));
-          s.print(_model.config.magCalibrationOffset[0]); s.print(' ');
-          s.print(_model.config.magCalibrationOffset[1]); s.print(' ');
-          s.print(_model.config.magCalibrationOffset[2]); s.print(F(" ["));
-          s.print(_model.state.magCalibrationOffset[0]); s.print(' ');
-          s.print(_model.state.magCalibrationOffset[1]); s.print(' ');
-          s.print(_model.state.magCalibrationOffset[2]); s.println(F("]"));
+          s.print(_model.config.mag.offset[0]); s.print(' ');
+          s.print(_model.config.mag.offset[1]); s.print(' ');
+          s.print(_model.config.mag.offset[2]); s.print(F(" ["));
+          s.print(_model.state.mag.calibrationOffset[0]); s.print(' ');
+          s.print(_model.state.mag.calibrationOffset[1]); s.print(' ');
+          s.print(_model.state.mag.calibrationOffset[2]); s.println(F("]"));
 
           s.print(F("   mag scale: "));
-          s.print(_model.config.magCalibrationScale[0]); s.print(' ');
-          s.print(_model.config.magCalibrationScale[1]); s.print(' ');
-          s.print(_model.config.magCalibrationScale[2]); s.print(F(" ["));
-          s.print(_model.state.magCalibrationScale[0]); s.print(' ');
-          s.print(_model.state.magCalibrationScale[1]); s.print(' ');
-          s.print(_model.state.magCalibrationScale[2]); s.println(F("]"));
+          s.print(_model.config.mag.scale[0]); s.print(' ');
+          s.print(_model.config.mag.scale[1]); s.print(' ');
+          s.print(_model.config.mag.scale[2]); s.print(F(" ["));
+          s.print(_model.state.mag.calibrationScale[0]); s.print(' ');
+          s.print(_model.state.mag.calibrationScale[1]); s.print(' ');
+          s.print(_model.state.mag.calibrationScale[2]); s.println(F("]"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("gyro")) == 0)
         {
@@ -1083,18 +1082,18 @@ class Cli
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_accel")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
         {
-          _model.state.accelBias = VectorFloat();
+          _model.state.accel.bias = VectorFloat();
           s.println(F("OK"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_gyro")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
         {
-          _model.state.gyroBias = VectorFloat();
+          _model.state.gyro.bias = VectorFloat();
           s.println(F("OK"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_mag")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
         {
-          _model.state.magCalibrationOffset = VectorFloat();
-          _model.state.magCalibrationScale = VectorFloat(1.f, 1.f, 1.f);
+          _model.state.mag.calibrationOffset = VectorFloat();
+          _model.state.mag.calibrationScale = VectorFloat(1.f, 1.f, 1.f);
           s.println(F("OK"));
         }
       }
@@ -1198,7 +1197,7 @@ class Cli
           uint32_t mode = _model.config.scaler[i].dimension;
           if(!mode) continue;
           short c = _model.config.scaler[i].channel;
-          float v = _model.state.input[c];
+          float v = _model.state.input.ch[c];
           float min = _model.config.scaler[i].minScale * 0.01f;
           float max = _model.config.scaler[i].maxScale * 0.01f;
           float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
@@ -1240,9 +1239,9 @@ class Cli
         printStats(s);
         s.println();
 
-        Device::GyroDevice * gyro = _model.state.gyroDev;
-        Device::BaroDevice * baro = _model.state.baroDev;
-        Device::MagDevice  * mag  = _model.state.magDev;
+        Device::GyroDevice * gyro = _model.state.gyro.dev;
+        Device::BaroDevice * baro = _model.state.baro.dev;
+        Device::MagDevice  * mag  = _model.state.mag.dev;
         s.print(F("     devices: "));
         if(gyro)
         {
@@ -1281,11 +1280,11 @@ class Cli
         s.println();
 
         s.print(F("       input: "));
-        s.print(_model.state.inputFrameRate);
+        s.print(_model.state.input.frameRate);
         s.print(F(" Hz, "));
-        s.print(_model.state.inputAutoFreq);
+        s.print(_model.state.input.autoFreq);
         s.print(F(" Hz, "));
-        s.println(_model.state.inputAutoFactor);
+        s.println(_model.state.input.autoFactor);
 
         static const char* armingDisableNames[] = {
           PSTR("NO_GYRO"), PSTR("FAILSAFE"), PSTR("RX_FAILSAFE"), PSTR("BAD_RX_RECOVERY"),
@@ -1301,14 +1300,14 @@ class Cli
         s.print(F("arming flags:"));
         for(size_t i = 0; i < armingDisableNamesLength; i++)
         {
-          if(_model.state.armingDisabledFlags & (1 << i)) {
+          if(_model.state.mode.armingDisabledFlags & (1 << i)) {
             s.print(' ');
             s.print(armingDisableNames[i]);
           }
         }
         s.println();
         s.print(F(" rescue mode: "));
-        s.print(_model.state.rescueConfigMode);
+        s.print(_model.state.mode.rescueConfigMode);
         s.println();
 
         s.print(F("      uptime: "));
@@ -1385,7 +1384,7 @@ class Cli
           } else {
             s.print(_model.config.pin[i + PIN_OUTPUT_0]);
             s.print(' ');
-            s.println(_model.state.outputUs[i]);
+            s.println(_model.state.output.us[i]);
           }
         }
       }
@@ -1520,11 +1519,11 @@ class Cli
       s.println(F(" MHz"));
 
       s.print(F("  gyro clock: "));
-      s.print(_model.state.gyroClock);
+      s.print(_model.state.gyro.clock);
       s.println(F(" Hz"));
 
       s.print(F("   gyro rate: "));
-      s.print(_model.state.gyroTimer.rate);
+      s.print(_model.state.gyro.timer.rate);
       s.println(F(" Hz"));
 
       s.print(F("   loop rate: "));
@@ -1532,19 +1531,19 @@ class Cli
       s.println(F(" Hz"));
 
       s.print(F("  mixer rate: "));
-      s.print(_model.state.mixerTimer.rate);
+      s.print(_model.state.mixer.timer.rate);
       s.println(F(" Hz"));
 
       s.print(F("  accel rate: "));
-      s.print(_model.state.accelTimer.rate);
+      s.print(_model.state.accel.timer.rate);
       s.println(F(" Hz"));
 
       s.print(F("   baro rate: "));
-      s.print(_model.state.baroRate);
+      s.print(_model.state.baro.rate);
       s.println(F(" Hz"));
 
       s.print(F("    mag rate: "));
-      s.print(_model.state.magTimer.rate);
+      s.print(_model.state.mag.timer.rate);
       s.println(F(" Hz"));
     }
 

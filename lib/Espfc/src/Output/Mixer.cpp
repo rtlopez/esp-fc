@@ -19,7 +19,7 @@ int Mixer::begin()
     .dshotTelemetry = !!_model.config.output.dshotTelemetry,
   };
   escMotor.begin(motorConf);
-  _model.state.escMotor = _motor = &escMotor;
+  _model.state.mixer.escMotor = _motor = &escMotor;
   _model.logger.info().log(F("MOTOR CONF")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).log(_model.config.output.dshotTelemetry).logln(ESC_DRIVER_MOTOR_TIMER);
 
   if(_model.config.output.servoRate)
@@ -32,11 +32,11 @@ int Mixer::begin()
       .dshotTelemetry = false,
     };
     escServo.begin(servoConf);
-    _model.state.escServo = _servo = &escServo;
+    _model.state.mixer.escServo = _servo = &escServo;
     _model.logger.info().log(F("SERVO CONF")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
   }
   _erpmToHz = EscDriver::getErpmToHzRatio(_model.config.output.motorPoles);
-  _statsCounterMax = _model.state.mixerTimer.rate / 2;
+  _statsCounterMax = _model.state.mixer.timer.rate / 2;
   _statsCounter = 0;
 
   for(size_t i = 0; i < OUTPUT_CHANNELS; ++i)
@@ -55,27 +55,27 @@ int Mixer::begin()
       _motor->attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1000);
       _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
     }
-    _model.state.outputTelemetryErrors[i] = 0;
-    _model.state.outputTelemetryErrorsSum[i] = 0;
-    _model.state.outputTelemetryErrorsCount[i] = 0;
-    _model.state.outputTelemetryTemperature[i] = 0;
-    _model.state.outputTelemetryCurrent[i] = 0;
-    _model.state.outputTelemetryVoltage[i] = 0;
-    _model.state.outputTelemetryErpm[i] = 0;
-    _model.state.outputTelemetryRpm[i] = 0;
-    _model.state.outputTelemetryFreq[i] = 0;
+    _model.state.output.telemetry.errors[i] = 0;
+    _model.state.output.telemetry.errorsSum[i] = 0;
+    _model.state.output.telemetry.errorsCount[i] = 0;
+    _model.state.output.telemetry.temperature[i] = 0;
+    _model.state.output.telemetry.current[i] = 0;
+    _model.state.output.telemetry.voltage[i] = 0;
+    _model.state.output.telemetry.erpm[i] = 0;
+    _model.state.output.telemetry.rpm[i] = 0;
+    _model.state.output.telemetry.freq[i] = 0;
   }
   motorInitEscDevice(_motor);
 
-  _model.state.minThrottle = _model.config.output.minThrottle;
-  _model.state.maxThrottle = _model.config.output.maxThrottle;
-  _model.state.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
-  if(_model.state.digitalOutput)
+  _model.state.mixer.minThrottle = _model.config.output.minThrottle;
+  _model.state.mixer.maxThrottle = _model.config.output.maxThrottle;
+  _model.state.mixer.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
+  if(_model.state.mixer.digitalOutput)
   {
-    _model.state.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
-    _model.state.maxThrottle = 2000.f;
+    _model.state.mixer.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
+    _model.state.mixer.maxThrottle = 2000.f;
   }
-  _model.state.currentMixer = Mixers::getMixer((MixerType)_model.config.mixerType, _model.state.customMixer);
+  _model.state.currentMixer = Mixers::getMixer((MixerType)_model.config.mixer.type, _model.state.customMixer);
   return 1;
 }
 
@@ -90,14 +90,14 @@ int FAST_CODE_ATTR Mixer::update()
   updateMixer(mixer, outputs);
   writeOutput(mixer, outputs);
 
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     _model.state.debug[3] = micros() - startTime;
   }
 
   _model.state.stats.loopTick();
 
-  if(_model.config.debugMode == DEBUG_CYCLETIME)
+  if(_model.config.debug.mode == DEBUG_CYCLETIME)
   {
     _model.state.debug[0] = _model.state.stats.loopTime();
     _model.state.debug[1] = lrintf(_model.state.stats.getCpuLoad());
@@ -113,19 +113,19 @@ void FAST_CODE_ATTR Mixer::updateMixer(const MixerConfig& mixer, float * outputs
   float sources[MIXER_SOURCE_MAX];
   sources[MIXER_SOURCE_NULL]   = 0;
 
-  sources[MIXER_SOURCE_ROLL]   = _model.state.output[AXIS_ROLL];
-  sources[MIXER_SOURCE_PITCH]  = _model.state.output[AXIS_PITCH];
-  sources[MIXER_SOURCE_YAW]    = _model.state.output[AXIS_YAW] * (_model.config.yawReverse ? 1.f : -1.f);
-  sources[MIXER_SOURCE_THRUST] = _model.state.output[AXIS_THRUST];
+  sources[MIXER_SOURCE_ROLL]   = _model.state.output.ch[AXIS_ROLL];
+  sources[MIXER_SOURCE_PITCH]  = _model.state.output.ch[AXIS_PITCH];
+  sources[MIXER_SOURCE_YAW]    = _model.state.output.ch[AXIS_YAW] * (_model.config.mixer.yawReverse ? 1.f : -1.f);
+  sources[MIXER_SOURCE_THRUST] = _model.state.output.ch[AXIS_THRUST];
 
-  sources[MIXER_SOURCE_RC_ROLL]   = _model.state.input[AXIS_ROLL];
-  sources[MIXER_SOURCE_RC_PITCH]  = _model.state.input[AXIS_PITCH];
-  sources[MIXER_SOURCE_RC_YAW]    = _model.state.input[AXIS_YAW];
-  sources[MIXER_SOURCE_RC_THRUST] = _model.state.input[AXIS_THRUST];
+  sources[MIXER_SOURCE_RC_ROLL]   = _model.state.input.ch[AXIS_ROLL];
+  sources[MIXER_SOURCE_RC_PITCH]  = _model.state.input.ch[AXIS_PITCH];
+  sources[MIXER_SOURCE_RC_YAW]    = _model.state.input.ch[AXIS_YAW];
+  sources[MIXER_SOURCE_RC_THRUST] = _model.state.input.ch[AXIS_THRUST];
 
   for(size_t i = 0; i < 3; i++)
   {
-    sources[MIXER_SOURCE_RC_AUX1 + i] = _model.state.input[AXIS_AUX_1 + i];
+    sources[MIXER_SOURCE_RC_AUX1 + i] = _model.state.input.ch[AXIS_AUX_1 + i];
   }
   
   for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -244,19 +244,19 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
     const OutputChannelConfig& och = _model.config.output.channel[i];
     if(i >= mixer.count || stop)
     {
-      _model.state.outputUs[i] = och.servo && _model.state.outputDisarmed[i] == 1000 ? och.neutral : _model.state.outputDisarmed[i];
+      _model.state.output.us[i] = och.servo && _model.state.output.disarmed[i] == 1000 ? och.neutral : _model.state.output.disarmed[i];
     }
     else
     {
       if(och.servo)
       {
         const int16_t tmp = lrintf(Math::map3(out[i], -1.f, 0.f, 1.f, och.reverse ? 2000 : 1000, och.neutral, och.reverse ? 1000 : 2000));
-        _model.state.outputUs[i] = Math::clamp(tmp, och.min, och.max);
+        _model.state.output.us[i] = Math::clamp(tmp, och.min, och.max);
       }
       else
       {
         float v = Math::clamp(out[i], -1.f, 1.f);
-        _model.state.outputUs[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.minThrottle, _model.state.maxThrottle));
+        _model.state.output.us[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.mixer.minThrottle, _model.state.mixer.maxThrottle));
       }
     }
   }
@@ -266,11 +266,11 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
     const OutputChannelConfig& och = _model.config.output.channel[i];
     if(och.servo)
     {
-      if(_servo) _servo->write(i, _model.state.outputUs[i]);
+      if(_servo) _servo->write(i, _model.state.output.us[i]);
     }
     else
     {
-      if(_motor) _motor->write(i, _model.state.outputUs[i]);
+      if(_motor) _motor->write(i, _model.state.output.us[i]);
     }
   }
 
@@ -289,11 +289,11 @@ void FAST_CODE_ATTR Mixer::readTelemetry()
     uint32_t value = _motor->telemetry(i);
     value = EscDriver::gcrToRawValue(value);
 
-    _model.state.outputTelemetryErrorsCount[i]++;
+    _model.state.output.telemetry.errorsCount[i]++;
 
     if(value == EscDriver::INVALID_TELEMETRY_VALUE)
     {
-      _model.state.outputTelemetryErrorsSum[i]++;
+      _model.state.output.telemetry.errorsSum[i]++;
       continue;
     }
 
@@ -302,44 +302,44 @@ void FAST_CODE_ATTR Mixer::readTelemetry()
     {
       case 0x0200:
         // Temperature range (in degree Celsius, just like Blheli_32 and KISS)
-        _model.state.outputTelemetryTemperature[i] = value & 0x00ff;
+        _model.state.output.telemetry.temperature[i] = value & 0x00ff;
         break;
       case 0x0400:
         // Voltage range (0-63,75V step 0,25V)
-        _model.state.outputTelemetryVoltage[i] = value & 0x00ff;
+        _model.state.output.telemetry.voltage[i] = value & 0x00ff;
         break;
       case 0x0600:
         // Current range (0-255A step 1A)
-        _model.state.outputTelemetryCurrent[i] = value & 0x00ff;
+        _model.state.output.telemetry.current[i] = value & 0x00ff;
         break;
       case 0x0800:
         // Debug 1 value
-        _model.state.outputTelemetryDebug1[i] = value & 0x00ff;
+        _model.state.output.telemetry.debug1[i] = value & 0x00ff;
         break;
       case 0x0A00:
         // Debug 2 value
-        _model.state.outputTelemetryDebug2[i] = value & 0x00ff;
+        _model.state.output.telemetry.debug2[i] = value & 0x00ff;
         break;
       case 0x0C00:
         // Debug 3 value
-        _model.state.outputTelemetryDebug3[i] = value & 0x00ff;
+        _model.state.output.telemetry.debug3[i] = value & 0x00ff;
         break;
       case 0x0E00:
         // State / Events
-        _model.state.outputTelemetryEvents[i] = value & 0x00ff;
+        _model.state.output.telemetry.events[i] = value & 0x00ff;
         break;
       default:
         value = EscDriver::convertToValue(value);
-        _model.state.outputTelemetryErpm[i] = EscDriver::convertToErpm(value);
-        _model.state.outputTelemetryRpm[i] = erpmToRpm(_model.state.outputTelemetryErpm[i]);
-        _model.setDebug(DEBUG_DSHOT_RPM_TELEMETRY, i, _model.state.outputTelemetryErpm[i]);
+        _model.state.output.telemetry.erpm[i] = EscDriver::convertToErpm(value);
+        _model.state.output.telemetry.rpm[i] = erpmToRpm(_model.state.output.telemetry.erpm[i]);
+        _model.setDebug(DEBUG_DSHOT_RPM_TELEMETRY, i, _model.state.output.telemetry.erpm[i]);
         break;
     }
   }
 
   for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
   {
-    _model.state.outputTelemetryFreq[i] = _model.state.rpmFreqFilter[i].update(erpmToHz(_model.state.outputTelemetryErpm[i]));
+    _model.state.output.telemetry.freq[i] = _model.state.gyro.rpmFreqFilter[i].update(erpmToHz(_model.state.output.telemetry.erpm[i]));
   }
 
   _statsCounter++;
@@ -347,16 +347,16 @@ void FAST_CODE_ATTR Mixer::readTelemetry()
   {
     for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
     {
-      if(_model.state.outputTelemetryErrorsCount[i])
+      if(_model.state.output.telemetry.errorsCount[i])
       {
-        _model.state.outputTelemetryErrors[i] = _model.state.outputTelemetryErrorsSum[i] * 10000 / _model.state.outputTelemetryErrorsCount[i];
-        if(_model.config.debugMode == DEBUG_DSHOT_RPM_ERRORS)
+        _model.state.output.telemetry.errors[i] = _model.state.output.telemetry.errorsSum[i] * 10000 / _model.state.output.telemetry.errorsCount[i];
+        if(_model.config.debug.mode == DEBUG_DSHOT_RPM_ERRORS)
         {
-          _model.state.debug[i] = _model.state.outputTelemetryErrors[i];
+          _model.state.debug[i] = _model.state.output.telemetry.errors[i];
         }
       }
-      _model.state.outputTelemetryErrorsCount[i] = 0;
-      _model.state.outputTelemetryErrorsSum[i] = 0;
+      _model.state.output.telemetry.errorsCount[i] = 0;
+      _model.state.output.telemetry.errorsSum[i] = 0;
     }
     _statsCounter = 0;
   }
