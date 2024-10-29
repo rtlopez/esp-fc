@@ -190,7 +190,7 @@ class Model
     void setOutputSaturated(bool val)
     {
       state.output.saturated = val;
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
         state.innerPid[i].outputSaturated = val;
         state.outerPid[i].outputSaturated = val;
@@ -416,9 +416,9 @@ class Model
         1 << (BUZZER_ARMING - 1) |
         1 << (BUZZER_BAT_LOW - 1);
 
-        if(config.gyro.dynamicFilter.width > 6)
+        if(config.gyro.dynamicFilter.count > DYN_NOTCH_COUNT_MAX)
         {
-          config.gyro.dynamicFilter.width = 6;
+          config.gyro.dynamicFilter.count = DYN_NOTCH_COUNT_MAX;
         }
     }
 
@@ -456,7 +456,7 @@ class Model
       {
         if(isActive(FEATURE_DYNAMIC_FILTER))
         {
-          for(size_t p = 0; p < (size_t)config.gyro.dynamicFilter.width; p++)
+          for(size_t p = 0; p < (size_t)config.gyro.dynamicFilter.count; p++)
           {
             state.gyro.dynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
           }

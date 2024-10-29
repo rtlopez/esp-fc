@@ -68,7 +68,7 @@ class Actuator
         float min = _model.config.scaler[i].minScale * 0.01f;
         float max = _model.config.scaler[i].maxScale * 0.01f;
         float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
-        for(size_t x = 0; x < AXES; x++)
+        for(size_t x = 0; x < AXIS_COUNT_RPYT; x++)
         {
           if(
             (x == AXIS_ROLL   && (mode & ACT_AXIS_ROLL))  ||

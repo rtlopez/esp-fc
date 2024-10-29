@@ -119,7 +119,7 @@ class MagSensor: public BaseSensor
 
     void updateCalibration()
     {
-      for(int i = 0; i < 3; i++)
+      for(int i = 0; i < AXIS_COUNT_RPY; i++)
       {
         if(_model.state.mag.adc[i] < _model.state.mag.calibrationMin[i]) _model.state.mag.calibrationMin.set(i, _model.state.mag.adc[i]);
         if(_model.state.mag.adc[i] > _model.state.mag.calibrationMax[i]) _model.state.mag.calibrationMax.set(i, _model.state.mag.adc[i]);
@@ -132,7 +132,7 @@ class MagSensor: public BaseSensor
 
       // verify calibration data and find biggest range
       float maxRange = -1;
-      for(int i = 0; i < 3; i++)
+      for(int i = 0; i < AXIS_COUNT_RPY; i++)
       {
         if(_model.state.mag.calibrationMin[i] > -EPSILON) return;
         if(_model.state.mag.calibrationMax[i] <  EPSILON) return;
@@ -148,7 +148,7 @@ class MagSensor: public BaseSensor
       VectorFloat scale(1.f, 1.f, 1.f);
       VectorFloat offset(0.f, 0.f, 0.f);
 
-      for (int i = 0; i < 3; i++)
+      for (int i = 0; i < AXIS_COUNT_RPY; i++)
       {
         const float range = (_model.state.mag.calibrationMax[i] - _model.state.mag.calibrationMin[i]);
         const float bias  = (_model.state.mag.calibrationMax[i] + _model.state.mag.calibrationMin[i]) * 0.5f;

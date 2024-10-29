@@ -20,6 +20,7 @@
 
 namespace Espfc {
 
+constexpr size_t DEBUG_VALUE_COUNT = 8;
 constexpr size_t CLI_BUFF_SIZE = 128;
 constexpr size_t CLI_ARGS_SIZE = 12;
 
@@ -272,7 +273,7 @@ struct GyroState
   Filter filter3[AXIS_COUNT_RPY];
   Filter notch1Filter[AXIS_COUNT_RPY];
   Filter notch2Filter[AXIS_COUNT_RPY];
-  Filter dynNotchFilter[6][AXIS_COUNT_RPY];
+  Filter dynNotchFilter[DYN_NOTCH_COUNT_MAX][AXIS_COUNT_RPY];
   Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
   Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
 
@@ -307,7 +308,7 @@ struct AttitudeState
 struct SetpointState
 {
   VectorFloat angle;
-  float rate[AXES];
+  float rate[AXIS_COUNT_RPYT];
 };
 
 struct ModeState
@@ -337,8 +338,8 @@ struct ModelState
   RotationMatrixFloat boardAlignment;
 
   SetpointState setpoint;
-  Control::Pid innerPid[AXES];
-  Control::Pid outerPid[AXES];
+  Control::Pid innerPid[AXIS_COUNT_RPYT];
+  Control::Pid outerPid[AXIS_COUNT_RPYT];
 
   MixerState mixer;
   OutputState output;
@@ -352,7 +353,7 @@ struct ModelState
   ModeState mode;
   Stats stats;
 
-  int16_t debug[8];
+  int16_t debug[DEBUG_VALUE_COUNT];
 
   BuzzerState buzzer;
 
@@ -370,7 +371,7 @@ struct ModelState
   Target::Queue appQueue;
 
   // other state
-  Kalman kalman[AXES];
+  Kalman kalman[AXIS_COUNT_RPYT];
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;
   VectorFloat accelPose;

@@ -124,7 +124,7 @@ int Blackbox::begin()
   gyroConfigMutable()->gyro_soft_notch_hz_2 = _model.config.gyro.notch2Filter.freq;
   gyroConfigMutable()->gyro_sync_denom = 1;
 
-  dynNotchConfigMutable()->dyn_notch_count = _model.config.gyro.dynamicFilter.width;
+  dynNotchConfigMutable()->dyn_notch_count = _model.config.gyro.dynamicFilter.count;
   dynNotchConfigMutable()->dyn_notch_q = _model.config.gyro.dynamicFilter.q;
   dynNotchConfigMutable()->dyn_notch_min_hz = _model.config.gyro.dynamicFilter.min_freq;
   dynNotchConfigMutable()->dyn_notch_max_hz = _model.config.gyro.dynamicFilter.max_freq;
@@ -235,7 +235,7 @@ int FAST_CODE_ATTR Blackbox::update()
 
 void FAST_CODE_ATTR Blackbox::updateData()
 {
-  for(size_t i = 0; i < 3; i++)
+  for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
     gyro.gyroADCf[i] = Math::toDeg(_model.state.gyro.adc[i]);
     gyro.gyroADC[i] = Math::toDeg(_model.state.gyro.scaled[i]);
@@ -265,7 +265,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
   }
   if(_model.config.debug.mode != DEBUG_NONE && _model.config.debug.mode != DEBUG_BLACKBOX_OUTPUT)
   {
-    for(size_t i = 0; i < 8; i++)
+    for(size_t i = 0; i < DEBUG_VALUE_COUNT; i++)
     {
       debug[i] = _model.state.debug[i];
     }

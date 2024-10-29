@@ -906,7 +906,7 @@ class MspProcessor
         case MSP_RC_TUNING:
           r.writeU8(_model.config.input.rate[AXIS_ROLL]);
           r.writeU8(_model.config.input.expo[AXIS_ROLL]);
-          for(size_t i = 0; i < 3; i++)
+          for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
           {
             r.writeU8(_model.config.input.superRate[i]);
           }
@@ -947,7 +947,7 @@ class MspProcessor
             }
             _model.config.input.expo[AXIS_ROLL] = expo;
 
-            for(size_t i = 0; i < 3; i++)
+            for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
             {
               _model.config.input.superRate[i] = m.readU8();
             }
@@ -1085,7 +1085,7 @@ class MspProcessor
           r.writeU16(_model.config.dterm.dynLpfFilter.freq);   // dyn lpf dterm max
           // gyro analyse
           r.writeU8(3);  // deprecated dyn notch range
-          r.writeU8(_model.config.gyro.dynamicFilter.width);  // dyn_notch_width_percent
+          r.writeU8(_model.config.gyro.dynamicFilter.count);  // dyn_notch_width_percent
           r.writeU16(_model.config.gyro.dynamicFilter.q); // dyn_notch_q
           r.writeU16(_model.config.gyro.dynamicFilter.min_freq); // dyn_notch_min_hz
           // rpm filter
@@ -1131,7 +1131,7 @@ class MspProcessor
           }
           if (m.remain() >= 8) {
             m.readU8();  // deprecated dyn_notch_range
-            _model.config.gyro.dynamicFilter.width = m.readU8();  // dyn_notch_width_percent
+            _model.config.gyro.dynamicFilter.count = m.readU8();  // dyn_notch_width_percent
             _model.config.gyro.dynamicFilter.q = m.readU16(); // dyn_notch_q
             _model.config.gyro.dynamicFilter.min_freq = m.readU16(); // dyn_notch_min_hz
             _model.config.gyro.rpmFilter.harmonics = m.readU8();  // gyro_rpm_notch_harmonics
@@ -1277,15 +1277,15 @@ class MspProcessor
           break;
 
         case MSP_RAW_IMU:
-          for (int i = 0; i < 3; i++)
+          for (int i = 0; i < AXIS_COUNT_RPY; i++)
           {
             r.writeU16(lrintf(_model.state.accel.adc[i] * ACCEL_G_INV * 2048.f));
           }
-          for (int i = 0; i < 3; i++)
+          for (int i = 0; i < AXIS_COUNT_RPY; i++)
           {
             r.writeU16(lrintf(Math::toDeg(_model.state.gyro.adc[i])));
           }
-          for (int i = 0; i < 3; i++)
+          for (int i = 0; i < AXIS_COUNT_RPY; i++)
           {
             r.writeU16(lrintf(_model.state.mag.adc[i] * 1090));
           }

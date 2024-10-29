@@ -131,7 +131,7 @@ void FAST_CODE_ATTR Controller::outerLoop()
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
-    for(size_t i = 0; i < 3; ++i)
+    for(size_t i = 0; i < AXIS_COUNT_RPY; ++i)
     {
       _model.state.debug[i] = lrintf(Math::toDeg(_model.state.setpoint.rate[i]));
     }
@@ -170,7 +170,7 @@ void Controller::resetIterm()
     || (!_model.isAirModeActive() && _model.config.iterm.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
   )
   {
-    for(size_t i = 0; i < AXES; i++)
+    for(size_t i = 0; i < AXIS_COUNT_RPYT; i++)
     {
       _model.state.innerPid[i].iTerm = 0;
       _model.state.outerPid[i].iTerm = 0;

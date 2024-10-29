@@ -55,7 +55,7 @@ enum ThrottleLimitType {
   THROTTLE_LIMIT_TYPE_MAX,
 };
 
-static const size_t MIXER_RULE_MAX = 64;
+constexpr size_t MIXER_RULE_MAX = 64;
 
 class MixerEntry {
   public:

@@ -22,7 +22,7 @@ class AccelSensor: public BaseSensor
 
       _model.state.accel.scale = 16.f * ACCEL_G / 32768.f;
 
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
         _filter[i].begin(FilterConfig(FILTER_FIR2, 1), _model.state.accel.timer.rate);
       }
@@ -67,7 +67,7 @@ class AccelSensor: public BaseSensor
       align(_model.state.accel.adc, _model.config.gyro.align);
       _model.state.accel.adc = _model.state.boardAlignment.apply(_model.state.accel.adc);
 
-      for(size_t i = 0; i < 3; i++)
+      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
         if(_model.config.debug.mode == DEBUG_ACCELEROMETER)
         {

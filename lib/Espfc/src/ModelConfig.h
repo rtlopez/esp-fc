@@ -229,8 +229,6 @@ enum InputFilterType : uint8_t {
 };
 
 constexpr size_t MODEL_NAME_LEN  = 16;
-constexpr size_t AXES            = 4;
-constexpr size_t AXES_RPY        = 3;
 constexpr size_t INPUT_CHANNELS  = AXIS_COUNT;
 constexpr size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
@@ -580,7 +578,7 @@ struct GyroConfig
   FilterConfig notch1Filter{FILTER_NOTCH, 0, 0};
   FilterConfig notch2Filter{FILTER_NOTCH, 0, 0};
   FilterConfig dynLpfFilter{FILTER_PT1, 425, 170};
-  DynamicFilterConfig dynamicFilter{4, 300, 80, 400};
+  DynamicFilterConfig dynamicFilter;
   RpmFilterConfig rpmFilter;
 };
 

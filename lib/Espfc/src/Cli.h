@@ -449,7 +449,7 @@ class Cli
         Param(PSTR("gyro_dyn_lpf_min"), &c.gyro.dynLpfFilter.cutoff),
         Param(PSTR("gyro_dyn_lpf_max"), &c.gyro.dynLpfFilter.freq),
         Param(PSTR("gyro_dyn_notch_q"), &c.gyro.dynamicFilter.q),
-        Param(PSTR("gyro_dyn_notch_count"), &c.gyro.dynamicFilter.width),
+        Param(PSTR("gyro_dyn_notch_count"), &c.gyro.dynamicFilter.count),
         Param(PSTR("gyro_dyn_notch_min"), &c.gyro.dynamicFilter.min_freq),
         Param(PSTR("gyro_dyn_notch_max"), &c.gyro.dynamicFilter.max_freq),
         Param(PSTR("gyro_rpm_harmonics"), &c.gyro.rpmFilter.harmonics),
