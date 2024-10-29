@@ -191,12 +191,12 @@ int Blackbox::begin()
   rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.gyro.rpmFilter.weights[1];
   rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.gyro.rpmFilter.weights[2];
 
-  updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.modeMaskPresent & 1 << MODE_ARMED);
-  updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.modeMaskPresent & 1 << MODE_ANGLE);
-  updateModeFlag(&rcModeActivationPresent, BOXAIRMODE, _model.state.modeMaskPresent & 1 << MODE_AIRMODE);
-  updateModeFlag(&rcModeActivationPresent, BOXFAILSAFE, _model.state.modeMaskPresent & 1 << MODE_FAILSAFE);
-  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOX, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX);
-  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOXERASE, _model.state.modeMaskPresent & 1 << MODE_BLACKBOX_ERASE);
+  updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.mode.maskPresent & 1 << MODE_ARMED);
+  updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.mode.maskPresent & 1 << MODE_ANGLE);
+  updateModeFlag(&rcModeActivationPresent, BOXAIRMODE, _model.state.mode.maskPresent & 1 << MODE_AIRMODE);
+  updateModeFlag(&rcModeActivationPresent, BOXFAILSAFE, _model.state.mode.maskPresent & 1 << MODE_FAILSAFE);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOX, _model.state.mode.maskPresent & 1 << MODE_BLACKBOX);
+  updateModeFlag(&rcModeActivationPresent, BOXBLACKBOXERASE, _model.state.mode.maskPresent & 1 << MODE_BLACKBOX_ERASE);
 
   blackboxInit();
 
@@ -301,7 +301,7 @@ void FAST_CODE_ATTR Blackbox::updateArmed()
   {
     DISABLE_ARMING_FLAG(ARMED);
     flightLogEventData_t eventData;
-    eventData.disarm.reason = _model.state.disarmReason;
+    eventData.disarm.reason = _model.state.mode.disarmReason;
     blackboxLogEvent(FLIGHT_LOG_EVENT_DISARM, &eventData);
     stop = _model.state.loopTimer.last + 500000; // schedule stop in 500ms
   }

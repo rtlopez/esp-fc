@@ -310,7 +310,19 @@ struct SetpointState
   float rate[AXES];
 };
 
-// working data
+struct ModeState
+{
+  uint32_t mask;
+  uint32_t maskPrev;
+  uint32_t maskSwitch;
+  uint32_t maskPresent;
+  uint32_t disarmReason;
+  uint32_t armingDisabledFlags;
+  RescueConfigMode rescueConfigMode;
+  bool airmodeAllowed;
+};
+
+// runtime data
 struct ModelState
 {
   GyroState gyro;
@@ -337,15 +349,8 @@ struct ModelState
   Timer actuatorTimer;
   Timer telemetryTimer;
 
+  ModeState mode;
   Stats stats;
-
-  uint32_t modeMask;
-  uint32_t modeMaskPrev;
-  uint32_t modeMaskSwitch;
-  uint32_t modeMaskPresent;
-  uint32_t disarmReason;
-
-  bool airmodeAllowed;
 
   int16_t debug[8];
 
@@ -358,10 +363,6 @@ struct ModelState
 
   int16_t i2cErrorCount;
   int16_t i2cErrorDelta;
-
-  uint32_t armingDisabledFlags;
-
-  RescueConfigMode rescueConfigMode;
 
   SerialPortState serial[SERIAL_UART_COUNT];
   Timer serialTimer;

@@ -1300,14 +1300,14 @@ class Cli
         s.print(F("arming flags:"));
         for(size_t i = 0; i < armingDisableNamesLength; i++)
         {
-          if(_model.state.armingDisabledFlags & (1 << i)) {
+          if(_model.state.mode.armingDisabledFlags & (1 << i)) {
             s.print(' ');
             s.print(armingDisableNames[i]);
           }
         }
         s.println();
         s.print(F(" rescue mode: "));
-        s.print(_model.state.rescueConfigMode);
+        s.print(_model.state.mode.rescueConfigMode);
         s.println();
 
         s.print(F("      uptime: "));

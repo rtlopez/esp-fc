@@ -454,11 +454,11 @@ void test_actuator_arming_gyro_motor_calbration()
   Actuator actuator(model);
   actuator.begin();
 
-  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.mode.armingDisabledFlags);
 
   actuator.updateArmingDisabled();
 
-  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_NO_GYRO | ARMING_DISABLED_MOTOR_PROTOCOL, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_NO_GYRO | ARMING_DISABLED_MOTOR_PROTOCOL, model.state.mode.armingDisabledFlags);
 }
 
 void test_actuator_arming_failsafe()
@@ -476,11 +476,11 @@ void test_actuator_arming_failsafe()
   Actuator actuator(model);
   actuator.begin();
 
-  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.mode.armingDisabledFlags);
 
   actuator.updateArmingDisabled();
 
-  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_RX_FAILSAFE | ARMING_DISABLED_FAILSAFE | ARMING_DISABLED_CALIBRATING, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_RX_FAILSAFE | ARMING_DISABLED_FAILSAFE | ARMING_DISABLED_CALIBRATING, model.state.mode.armingDisabledFlags);
 }
 
 void test_actuator_arming_throttle()
@@ -496,11 +496,11 @@ void test_actuator_arming_throttle()
   Actuator actuator(model);
   actuator.begin();
 
-  TEST_ASSERT_EQUAL_UINT32(0, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(0, model.state.mode.armingDisabledFlags);
 
   actuator.updateArmingDisabled();
 
-  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.armingDisabledFlags);
+  TEST_ASSERT_EQUAL_UINT32(ARMING_DISABLED_THROTTLE, model.state.mode.armingDisabledFlags);
 }
 
 void test_mixer_throttle_limit_none()

@@ -40,39 +40,39 @@ class Model
 
     bool isModeActive(FlightMode mode) const
     {
-      return state.modeMask & (1 << mode);
+      return state.mode.mask & (1 << mode);
     }
 
     bool hasChanged(FlightMode mode) const
     {
-      return (state.modeMask & (1 << mode)) != (state.modeMaskPrev & (1 << mode));
+      return (state.mode.mask & (1 << mode)) != (state.mode.maskPrev & (1 << mode));
     }
 
     void clearMode(FlightMode mode)
     {
-      state.modeMaskPrev |= state.modeMask & (1 << mode);
-      state.modeMask &= ~(1 << mode);
+      state.mode.maskPrev |= state.mode.mask & (1 << mode);
+      state.mode.mask &= ~(1 << mode);
     }
 
     void updateModes(uint32_t mask)
     {
-      state.modeMaskPrev = state.modeMask;
-      state.modeMask = mask;
+      state.mode.maskPrev = state.mode.mask;
+      state.mode.mask = mask;
     }
 
     bool isSwitchActive(FlightMode mode) const
     {
-      return state.modeMaskSwitch & (1 << mode);
+      return state.mode.maskSwitch & (1 << mode);
     }
 
     void updateSwitchActive(uint32_t mask)
     {
-      state.modeMaskSwitch = mask;
+      state.mode.maskSwitch = mask;
     }
 
     void disarm(DisarmReason r)
     {
-      state.disarmReason = r;
+      state.mode.disarmReason = r;
       clearMode(MODE_ARMED);
       clearMode(MODE_AIRMODE);
       state.appQueue.send(Event(EVENT_DISARM));
@@ -172,19 +172,19 @@ class Model
 #if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
       return false;
 #else
-      return state.armingDisabledFlags != 0;
+      return state.mode.armingDisabledFlags != 0;
 #endif
     }
 
     void setArmingDisabled(ArmingDisabledFlags flag, bool value)
     {
-      if(value) state.armingDisabledFlags |= flag;
-      else state.armingDisabledFlags &= ~flag;
+      if(value) state.mode.armingDisabledFlags |= flag;
+      else state.mode.armingDisabledFlags &= ~flag;
     }
 
     bool getArmingDisabled(ArmingDisabledFlags flag)
     {
-      return state.armingDisabledFlags & flag;
+      return state.mode.armingDisabledFlags & flag;
     }
 
     void setOutputSaturated(bool val)

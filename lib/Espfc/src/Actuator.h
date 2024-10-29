@@ -13,19 +13,19 @@ class Actuator
 
     int begin()
     {
-      _model.state.modeMask = 0;
-      _model.state.modeMaskPrev = 0;
-      _model.state.modeMaskPresent = 0;
-      _model.state.modeMaskSwitch = 0;
+      _model.state.mode.mask = 0;
+      _model.state.mode.maskPrev = 0;
+      _model.state.mode.maskPresent = 0;
+      _model.state.mode.maskSwitch = 0;
       for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
       {
         const auto &c = _model.config.conditions[i];
         if(!(c.min < c.max)) continue; // inactive
         if(c.ch < AXIS_AUX_1 || c.ch >= AXIS_COUNT) continue; // invalid channel
-        _model.state.modeMaskPresent |= 1 << c.id;
+        _model.state.mode.maskPresent |= 1 << c.id;
       }
-      _model.state.airmodeAllowed = false;
-      _model.state.rescueConfigMode = RESCUE_CONFIG_PENDING;
+      _model.state.mode.airmodeAllowed = false;
+      _model.state.mode.rescueConfigMode = RESCUE_CONFIG_PENDING;
       return 1;
     }
 
@@ -104,7 +104,7 @@ class Actuator
       _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
       _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
       _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
-      _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
+      _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.mode.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
     }
 
     void updateModeMask()
@@ -141,7 +141,7 @@ class Actuator
       for(size_t i = 0; i < MODE_COUNT; i++)
       {
         bool newVal = newMask & (1 << i);
-        bool oldVal = _model.state.modeMask & (1 << i);
+        bool oldVal = _model.state.mode.mask & (1 << i);
         if(newVal == oldVal) continue; // mode unchanged
         if(newVal && !canActivateMode((FlightMode)i))
         {
@@ -161,7 +161,7 @@ class Actuator
         case MODE_ANGLE:
           return _model.accelActive();
         case MODE_AIRMODE:
-          return _model.state.airmodeAllowed;
+          return _model.state.mode.airmodeAllowed;
         default:
           return true;
       }
@@ -174,12 +174,12 @@ class Actuator
         bool armed = _model.isModeActive(MODE_ARMED);
         if(armed)
         {
-          _model.state.disarmReason = DISARM_REASON_SYSTEM;
-          _model.state.rescueConfigMode = RESCUE_CONFIG_DISABLED;
+          _model.state.mode.disarmReason = DISARM_REASON_SYSTEM;
+          _model.state.mode.rescueConfigMode = RESCUE_CONFIG_DISABLED;
         }
-        else if(!armed && _model.state.disarmReason == DISARM_REASON_SYSTEM)
+        else if(!armed && _model.state.mode.disarmReason == DISARM_REASON_SYSTEM)
         {
-          _model.state.disarmReason = DISARM_REASON_SWITCH;
+          _model.state.mode.disarmReason = DISARM_REASON_SWITCH;
         }
       }
     }
@@ -189,11 +189,11 @@ class Actuator
       bool armed = _model.isModeActive(MODE_ARMED);
       if(!armed)
       {
-        _model.state.airmodeAllowed = false;
+        _model.state.mode.airmodeAllowed = false;
       }
-      if(armed && !_model.state.airmodeAllowed && _model.state.input.us[AXIS_THRUST] > 1400) // activate airmode in the air
+      if(armed && !_model.state.mode.airmodeAllowed && _model.state.input.us[AXIS_THRUST] > 1400) // activate airmode in the air
       {
-        _model.state.airmodeAllowed = true;
+        _model.state.mode.airmodeAllowed = true;
       }
     }
 
@@ -237,17 +237,17 @@ class Actuator
 
     void updateRescueConfig()
     {
-      switch(_model.state.rescueConfigMode)
+      switch(_model.state.mode.rescueConfigMode)
       {
         case RESCUE_CONFIG_PENDING:
           // if some rc frames are received, disable to prevent activate later
           if(_model.state.input.frameCount > 100)
           {
-            _model.state.rescueConfigMode = RESCUE_CONFIG_DISABLED;
+            _model.state.mode.rescueConfigMode = RESCUE_CONFIG_DISABLED;
           }
           if(_model.state.failsafe.phase != FC_FAILSAFE_IDLE && _model.config.rescueConfigDelay > 0 && millis() > _model.config.rescueConfigDelay * 1000)
           {
-            _model.state.rescueConfigMode = RESCUE_CONFIG_ACTIVE;
+            _model.state.mode.rescueConfigMode = RESCUE_CONFIG_ACTIVE;
           }
           break;
         case RESCUE_CONFIG_ACTIVE:
