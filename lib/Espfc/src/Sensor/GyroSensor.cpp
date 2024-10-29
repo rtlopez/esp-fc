@@ -146,7 +146,7 @@ int FAST_CODE_ATTR GyroSensor::filter()
 
   if (_model.accelActive())
   {
-    _model.state.gyroImu = Utils::applyFilter(_model.state.gyroImuFilter, _model.state.gyro.adc);
+    _model.state.attitude.rate = Utils::applyFilter(_model.state.attitude.filter, _model.state.gyro.adc);
   }
 
   return 1;

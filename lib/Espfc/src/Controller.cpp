@@ -82,14 +82,14 @@ void Controller::outerLoopRobot()
 void Controller::innerLoopRobot()
 {
   //VectorFloat v(0.f, 0.f, 1.f);
-  //v.rotate(_model.state.angleQ);
+  //v.rotate(_model.state.attitude.quaternion);
   //const float angle = acos(v.z);
-  const float angle = std::max(abs(_model.state.angle[AXIS_PITCH]), abs(_model.state.angle[AXIS_ROLL]));
+  const float angle = std::max(abs(_model.state.attitude.euler[AXIS_PITCH]), abs(_model.state.attitude.euler[AXIS_ROLL]));
 
   const bool stabilize = angle < Math::toRad(_model.config.level.angleLimit);
   if(stabilize)
   {
-    _model.state.output.ch[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
+    _model.state.output.ch[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
     _model.state.output.ch[AXIS_YAW]   = _model.state.innerPid[AXIS_YAW].update(_model.state.desiredRate[AXIS_YAW], _model.state.gyro.adc[AXIS_YAW]);
   }
   else
@@ -101,7 +101,7 @@ void Controller::innerLoopRobot()
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
-    _model.state.debug[2] = lrintf(Math::toDeg(_model.state.angle[AXIS_PITCH]) * 10);
+    _model.state.debug[2] = lrintf(Math::toDeg(_model.state.attitude.euler[AXIS_PITCH]) * 10);
     _model.state.debug[3] = lrintf(_model.state.output.ch[AXIS_PITCH] * 1000);
   }
 }
@@ -113,10 +113,10 @@ void FAST_CODE_ATTR Controller::outerLoop()
     _model.state.desiredAngle = VectorFloat(
       _model.state.input.ch[AXIS_ROLL] * Math::toRad(_model.config.level.angleLimit),
       _model.state.input.ch[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit),
-      _model.state.angle[AXIS_YAW]
+      _model.state.attitude.euler[AXIS_YAW]
     );
-    _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.angle[AXIS_ROLL]);
-    _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.angle[AXIS_PITCH]);
+    _model.state.desiredRate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.desiredAngle[AXIS_ROLL], _model.state.attitude.euler[AXIS_ROLL]);
+    _model.state.desiredRate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.desiredAngle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
     // disable fterm in angle mode
     _model.state.innerPid[AXIS_ROLL].fScale = 0.f;
     _model.state.innerPid[AXIS_PITCH].fScale = 0.f;

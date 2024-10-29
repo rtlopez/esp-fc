@@ -286,7 +286,7 @@ struct AccelState
   VectorInt16 raw;
   VectorFloat adc;
   VectorFloat prev;
-  Filter filter[3];
+  Filter filter[AXIS_COUNT_RPY];
   Timer timer;
 
   float scale;
@@ -294,6 +294,14 @@ struct AccelState
   float biasAlpha;
   int biasSamples;
   int calibrationState;
+};
+
+struct AttitudeState
+{
+  VectorFloat rate;
+  Filter filter[AXIS_COUNT_RPY];
+  VectorFloat euler;
+  Quaternion quaternion;
 };
 
 // working data
@@ -304,23 +312,17 @@ struct ModelState
   MagState mag;
   BaroState baro;
 
+  AttitudeState attitude;
+
   VectorFloat gyroPose;
   Quaternion gyroPoseQ;
   VectorFloat accelPose;
   VectorFloat accelPose2;
   Quaternion accelPoseQ;
-
-  bool loopUpdate;
   VectorFloat pose;
   Quaternion poseQ;
-  VectorFloat angle;
-  Quaternion angleQ;
 
   RotationMatrixFloat boardAlignment;
-
-  bool imuUpdate;
-  VectorFloat gyroImu;
-  Filter gyroImuFilter[3];
 
   VectorFloat velocity;
   VectorFloat desiredVelocity;

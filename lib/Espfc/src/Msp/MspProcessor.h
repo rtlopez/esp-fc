@@ -679,9 +679,9 @@ class MspProcessor
           break;
 
         case MSP_ATTITUDE:
-          r.writeU16(lrintf(Math::toDeg(_model.state.angle.x) * 10.f)); // roll  [decidegrees]
-          r.writeU16(lrintf(Math::toDeg(_model.state.angle.y) * 10.f)); // pitch [decidegrees]
-          r.writeU16(lrintf(Math::toDeg(-_model.state.angle.z)));       // yaw   [degrees]
+          r.writeU16(lrintf(Math::toDeg(_model.state.attitude.euler.x) * 10.f)); // roll  [decidegrees]
+          r.writeU16(lrintf(Math::toDeg(_model.state.attitude.euler.y) * 10.f)); // pitch [decidegrees]
+          r.writeU16(lrintf(Math::toDeg(-_model.state.attitude.euler.z)));       // yaw   [degrees]
           break;
 
         case MSP_ALTITUDE:
