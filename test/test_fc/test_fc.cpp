@@ -4,7 +4,7 @@
 #include "Timer.h"
 #include "Model.h"
 #include "Control/Controller.h"
-#include "Actuator.h"
+#include "Control/Actuator.h"
 #include "Output/Mixer.h"
 
 using namespace fakeit;
