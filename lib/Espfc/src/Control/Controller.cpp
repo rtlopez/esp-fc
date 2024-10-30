@@ -1,7 +1,9 @@
-#include "Controller.h"
+#include "Control/Controller.h"
 #include "Math/Utils.h"
 
 namespace Espfc {
+
+namespace Control {
 
 Controller::Controller(Model& model): _model(model) {}
 
@@ -182,6 +184,8 @@ float Controller::calculateSetpointRate(int axis, float input)
 {
   if(axis == AXIS_YAW) input *= -1.f;
   return _rates.getSetpoint(axis, input);
+}
+
 }
 
 }
