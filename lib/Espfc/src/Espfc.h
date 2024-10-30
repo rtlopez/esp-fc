@@ -2,7 +2,7 @@
 
 #include "Model.h"
 #include "Hardware.h"
-#include "Controller.h"
+#include "Control/Controller.h"
 #include "Input.h"
 #include "Actuator.h"
 #include "SensorManager.h"
@@ -32,7 +32,7 @@ class Espfc
   private:
     Model _model;
     Hardware _hardware;
-    Controller _controller;
+    Control::Controller _controller;
     TelemetryManager _telemetry;
     Input _input;
     Actuator _actuator;

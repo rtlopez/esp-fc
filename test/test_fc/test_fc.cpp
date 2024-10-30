@@ -3,12 +3,13 @@
 #include <EscDriver.h>
 #include "Timer.h"
 #include "Model.h"
-#include "Controller.h"
+#include "Control/Controller.h"
 #include "Actuator.h"
 #include "Output/Mixer.h"
 
 using namespace fakeit;
 using namespace Espfc;
+using namespace Espfc::Control;
 
 /*void setUp(void)
 {

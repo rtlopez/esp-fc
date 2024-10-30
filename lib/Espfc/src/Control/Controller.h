@@ -1,10 +1,11 @@
-#ifndef _ESPFC_CONTROLLER_H_
-#define _ESPFC_CONTROLLER_H_
+#pragma once
 
 #include "Model.h"
 #include "Control/Rates.h"
 
 namespace Espfc {
+
+namespace Control {
 
 class Controller
 {
@@ -30,4 +31,4 @@ class Controller
 
 }
 
-#endif
+}
