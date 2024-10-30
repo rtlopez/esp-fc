@@ -1,7 +1,9 @@
-#include "Fusion.h"
+#include "Control/Fusion.h"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
+
+namespace Control {
 
 Fusion::Fusion(Model& model): _model(model), _first(true) {}
 
@@ -327,6 +329,8 @@ void FAST_CODE_ATTR Fusion::mahonyFusion()
   }
   _model.state.attitude.quaternion = _mahony.getQuaternion();
   _model.state.attitude.euler  = _mahony.getEuler();
+}
+
 }
 
 }

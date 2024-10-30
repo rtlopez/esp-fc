@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Model.h"
-#include "Madgwick.h"
-#include "Mahony.h"
+#include <Madgwick.h>
+#include <Mahony.h>
 
 namespace Espfc {
+
+namespace Control {
 
 class Fusion
 {
@@ -33,5 +35,7 @@ class Fusion
     Madgwick _madgwick;
     Mahony _mahony;
 };
+
+}
 
 }
