@@ -59,6 +59,16 @@ pin_status_t FAST_CODE_ATTR Gpio::digitalRead(uint8_t pin)
 #endif
 }
 
+void FAST_CODE_ATTR Gpio::pinMode(uint8_t pin, pin_mode_t mode)
+{
+#if defined(UNIT_TEST)
+  return;
+  // do nothing
+#else
+  ::pinMode(pin, mode);
+#endif
+}
+
 }
 
 }
