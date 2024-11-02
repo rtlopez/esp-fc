@@ -2,7 +2,7 @@
 #define _ESPFC_MATH_FREQ_ANALYZER_H_
 
 #include "Math/Utils.h"
-#include "Filter.h"
+#include "Utils/Filter.h"
 
 namespace Espfc {
 
@@ -57,7 +57,7 @@ class FreqAnalyzer
     float noise;
 
   private:
-    Filter _bpf;
+    Utils::Filter _bpf;
     float _rate;
 
     float _freq_min;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "Filter.h"
+#include "Utils/Filter.h"
 #include "Math/Utils.h"
 
 namespace Espfc {
@@ -64,12 +64,12 @@ class Pid
     float dTerm;
     float fTerm;
 
-    Filter dtermFilter;
-    Filter dtermFilter2;
-    Filter dtermNotchFilter;
-    Filter ptermFilter;
-    Filter ftermFilter;
-    Filter itermRelaxFilter;
+    Utils::Filter dtermFilter;
+    Utils::Filter dtermFilter2;
+    Utils::Filter dtermNotchFilter;
+    Utils::Filter ptermFilter;
+    Utils::Filter ftermFilter;
+    Utils::Filter itermRelaxFilter;
 
     float prevMeasurement;
     float prevError;

@@ -1,5 +1,5 @@
 #include <cmath>
-#include "Filter.h"
+#include "Utils/Filter.h"
 #include "Math/Utils.h"
 #include "Utils/MemoryHelper.h"
 
@@ -27,6 +27,8 @@ FilterConfig FAST_CODE_ATTR FilterConfig::sanitize(int rate) const
 
   return FilterConfig(t, f, c);
 }
+
+namespace Utils {
 
 void FilterStatePt1::reset()
 {
@@ -477,6 +479,8 @@ float FAST_CODE_ATTR Filter::getNotchQ(float freq, float cutoff)
 {
   float octaves = std::log2(freq / cutoff) * 2.f;
   return sqrtf(std::pow(2.f, octaves)) / (std::pow(2.f, octaves) - 1);
+}
+
 }
 
 }

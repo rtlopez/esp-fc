@@ -11,7 +11,7 @@
 #include "helper_3dmath.h"
 #include "Control/Pid.h"
 #include "Kalman.h"
-#include "Filter.h"
+#include "Utils/Filter.h"
 #include "Stats.h"
 #include "Timer.h"
 #include "Device/SerialDevice.h"
@@ -194,7 +194,7 @@ struct InputState
   float us[INPUT_CHANNELS];
   float ch[INPUT_CHANNELS];
 
-  Filter filter[AXIS_COUNT_RPYT];
+  Utils::Filter filter[AXIS_COUNT_RPYT];
 
   Timer timer;
 };
@@ -218,7 +218,7 @@ struct MagState
 
   VectorInt16 raw;
   VectorFloat adc;
-  Filter filter[3];
+  Utils::Filter filter[3];
   Timer timer;
 
   int calibrationSamples;
@@ -268,14 +268,14 @@ struct GyroState
   int calibrationState;
   int calibrationRate;
 
-  Filter filter[AXIS_COUNT_RPY];
-  Filter filter2[AXIS_COUNT_RPY];
-  Filter filter3[AXIS_COUNT_RPY];
-  Filter notch1Filter[AXIS_COUNT_RPY];
-  Filter notch2Filter[AXIS_COUNT_RPY];
-  Filter dynNotchFilter[DYN_NOTCH_COUNT_MAX][AXIS_COUNT_RPY];
-  Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
-  Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
+  Utils::Filter filter[AXIS_COUNT_RPY];
+  Utils::Filter filter2[AXIS_COUNT_RPY];
+  Utils::Filter filter3[AXIS_COUNT_RPY];
+  Utils::Filter notch1Filter[AXIS_COUNT_RPY];
+  Utils::Filter notch2Filter[AXIS_COUNT_RPY];
+  Utils::Filter dynNotchFilter[DYN_NOTCH_COUNT_MAX][AXIS_COUNT_RPY];
+  Utils::Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
+  Utils::Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
 
   Timer timer;
   Timer dynamicFilterTimer;
@@ -287,7 +287,7 @@ struct AccelState
   VectorInt16 raw;
   VectorFloat adc;
   VectorFloat prev;
-  Filter filter[AXIS_COUNT_RPY];
+  Utils::Filter filter[AXIS_COUNT_RPY];
   Timer timer;
 
   float scale;
@@ -300,7 +300,7 @@ struct AccelState
 struct AttitudeState
 {
   VectorFloat rate;
-  Filter filter[AXIS_COUNT_RPY];
+  Utils::Filter filter[AXIS_COUNT_RPY];
   VectorFloat euler;
   Quaternion quaternion;
 };
