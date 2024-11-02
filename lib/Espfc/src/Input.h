@@ -58,7 +58,7 @@ class Input
     Model& _model;
     TelemetryManager& _telemetry;
     Device::InputDevice * _device;
-    Filter _filter[INPUT_CHANNELS];
+    Utils::Filter _filter[INPUT_CHANNELS];
     float _step;
     Device::InputPPM _ppm;
     Device::InputSBUS _sbus;

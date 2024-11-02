@@ -5,7 +5,7 @@
 #include "msp/msp_protocol.h"
 #include "Math/Utils.h"
 #include "Math/Bits.h"
-#include "Filter.h"
+#include "Utils/Filter.h"
 #include "Control/Pid.h"
 #include "Target/QueueAtomic.h"
 #include "Utils/RingBuf.h"
@@ -21,6 +21,7 @@
 
 using namespace Espfc;
 using namespace Espfc::Control;
+using namespace Espfc::Utils;
 
 void test_math_map()
 {

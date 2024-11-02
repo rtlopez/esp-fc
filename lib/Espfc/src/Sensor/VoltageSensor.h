@@ -2,7 +2,7 @@
 
 #include "Model.h"
 #include "BaseSensor.h"
-#include "Filter.h"
+#include "Utils/Filter.h"
 
 namespace Espfc {
 
@@ -23,10 +23,10 @@ class VoltageSensor: public BaseSensor
 
   private:
     Model& _model;
-    Filter _vFilterFast;
-    Filter _vFilter;
-    Filter _iFilterFast;
-    Filter _iFilter;
+    Utils::Filter _vFilterFast;
+    Utils::Filter _vFilter;
+    Utils::Filter _iFilterFast;
+    Utils::Filter _iFilter;
     State _state;
 };
 

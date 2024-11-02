@@ -26,7 +26,7 @@ class Controller
   private:
     Model& _model;
     Rates _rates;
-    Filter _speedFilter;
+    Utils::Filter _speedFilter;
 };
 
 }

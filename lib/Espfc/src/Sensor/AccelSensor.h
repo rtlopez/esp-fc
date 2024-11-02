@@ -23,7 +23,7 @@ class AccelSensor: public BaseSensor
 
     Model& _model;
     Device::GyroDevice * _gyro;
-    Filter _filter[AXIS_COUNT_RPY];
+    Utils::Filter _filter[AXIS_COUNT_RPY];
 };
 
 }

@@ -4,7 +4,7 @@
 #include "BaseSensor.h"
 #include "Model.h"
 #include "Device/BaroDevice.h"
-#include "Filter.h"
+#include "Utils/Filter.h"
 
 namespace Espfc {
 
@@ -34,9 +34,9 @@ class BaroSensor: public BaseSensor
     Model& _model;
     Device::BaroDevice * _baro;
     BaroState _state;
-    Filter _temperatureFilter;
-    Filter _pressureFilter;
-    Filter _altitudeFilter;
+    Utils::Filter _temperatureFilter;
+    Utils::Filter _pressureFilter;
+    Utils::Filter _altitudeFilter;
     uint32_t _wait;
     int32_t _counter;
 };

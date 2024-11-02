@@ -50,6 +50,8 @@ class DynamicFilterConfig {
     static const int MIN_FREQ = 1000;
 };
 
+namespace Utils {
+
 class FilterStatePt1 {
   public:
     void reset();
@@ -163,5 +165,7 @@ class Filter
     float _input_weight;
     float _output_weight;
 };
+
+}
 
 }
