@@ -1,6 +1,4 @@
-#ifndef UNIT_TEST
-#include <Arduino.h>
-#endif
+//#include <Arduino.h>
 #include "Buzzer.h"
 #include "Hal/Gpio.h"
 
@@ -10,11 +8,9 @@ Buzzer::Buzzer(Model& model): _model(model), _status(BUZZER_STATUS_IDLE), _wait(
 
 int Buzzer::begin()
 {
-#ifndef UNIT_TEST
   if(_model.config.pin[PIN_BUZZER] == -1) return 0;
   Hal::Gpio::pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
   Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)_model.config.buzzer.inverted);
-#endif
   _model.state.buzzer.timer.setRate(100);
 
   return 1;
@@ -26,9 +22,7 @@ int Buzzer::update()
   //_model.state.debug[1] = _status;
   //_model.state.debug[2] = (int16_t)(millis() - _wait);
 
-#ifndef UNIT_TEST
   if(_model.config.pin[PIN_BUZZER] == -1) return 0;
-#endif
   if(!_model.state.buzzer.timer.check()) return 0;
   if(_wait > millis()) return 0;
 
@@ -75,9 +69,7 @@ void Buzzer::_play(bool v, int time, BuzzerPlayStatus s)
 
 void Buzzer::_write(bool v)
 {
-#ifndef UNIT_TEST
   Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)(_model.config.buzzer.inverted ? !v : v));
-#endif
 }
 
 void Buzzer::_delay(int time)
