@@ -4,6 +4,8 @@
 
 namespace Espfc {
 
+namespace Utils {
+
 class Timer
 {
   public:
@@ -27,5 +29,7 @@ class Timer
     uint32_t delta;
     float intervalf;
 };
+
+}
 
 }

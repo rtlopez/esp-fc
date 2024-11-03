@@ -1,8 +1,10 @@
 #include <Arduino.h>
-#include "Timer.h"
+#include "Utils/Timer.h"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
+
+namespace Utils {
 
 Timer::Timer(): interval(0), last(0), next(0), iteration(0), delta(0)
 {
@@ -65,6 +67,8 @@ bool FAST_CODE_ATTR Timer::syncTo(const Timer& t, uint32_t slot)
     return update(micros());
   }
   return check(micros());
+}
+
 }
 
 }

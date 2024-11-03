@@ -14,6 +14,8 @@ enum RateType {
   RATES_TYPE_QUICK,
 };
 
+namespace Control {
+
 class Rates
 {
   public:
@@ -50,4 +52,6 @@ class Rates
     int16_t rateLimit[3];
 };
 
-} // namespace Espfc
+}
+
+}

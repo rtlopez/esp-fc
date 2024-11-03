@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <ArduinoFake.h>
 #include <EscDriver.h>
-#include "Timer.h"
+#include "Utils/Timer.h"
 #include "Model.h"
 #include "Control/Controller.h"
 #include "Control/Actuator.h"
@@ -9,7 +9,10 @@
 
 using namespace fakeit;
 using namespace Espfc;
-using namespace Espfc::Control;
+using Espfc::Control::Rates;
+using Espfc::Control::Controller;
+using Espfc::Control::Actuator;
+using Espfc::Utils::Timer;
 
 /*void setUp(void)
 {

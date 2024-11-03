@@ -1,7 +1,7 @@
 #ifndef _ESPFC_STATS_H_
 #define _ESPFC_STATS_H_
 
-#include "Timer.h"
+#include "Utils/Timer.h"
 
 namespace Espfc {
 
@@ -201,7 +201,7 @@ class Stats
       }
     }
 
-    Timer timer;
+    Utils::Timer timer;
 
   private:
     uint32_t _start[COUNTER_COUNT];
