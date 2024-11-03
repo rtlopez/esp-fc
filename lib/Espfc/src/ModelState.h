@@ -12,8 +12,8 @@
 #include "Control/Pid.h"
 #include "Kalman.h"
 #include "Utils/Filter.h"
+#include "Utils/Timer.h"
 #include "Stats.h"
-#include "Timer.h"
 #include "Device/SerialDevice.h"
 #include "Math/FreqAnalyzer.h"
 #include "Msp/Msp.h"
@@ -80,7 +80,7 @@ class BuzzerState
       return idx >= BUZZER_MAX_EVENTS;
     }
 
-    Timer timer;
+    Utils::Timer timer;
     BuzzerEvent events[BUZZER_MAX_EVENTS];
     size_t idx;
     int32_t beeperMask;
@@ -105,7 +105,7 @@ class BatteryState
     float percentage;
     int8_t cells;
     int8_t samples;
-    Timer timer;
+    Utils::Timer timer;
 };
 
 enum CalibrationState {
@@ -196,12 +196,12 @@ struct InputState
 
   Utils::Filter filter[AXIS_COUNT_RPYT];
 
-  Timer timer;
+  Utils::Timer timer;
 };
 
 struct MixerState
 {
-  Timer timer;
+  Utils::Timer timer;
   float minThrottle;
   float maxThrottle;
   bool digitalOutput;
@@ -219,7 +219,7 @@ struct MagState
   VectorInt16 raw;
   VectorFloat adc;
   Utils::Filter filter[3];
-  Timer timer;
+  Utils::Timer timer;
 
   int calibrationSamples;
   int calibrationState;
@@ -277,8 +277,8 @@ struct GyroState
   Utils::Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
   Utils::Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
 
-  Timer timer;
-  Timer dynamicFilterTimer;
+  Utils::Timer timer;
+  Utils::Timer dynamicFilterTimer;
 };
 
 struct AccelState
@@ -288,7 +288,7 @@ struct AccelState
   VectorFloat adc;
   VectorFloat prev;
   Utils::Filter filter[AXIS_COUNT_RPY];
-  Timer timer;
+  Utils::Timer timer;
 
   float scale;
   VectorFloat bias;
@@ -345,10 +345,10 @@ struct ModelState
   OutputState output;
 
   int32_t loopRate;
-  Timer loopTimer;
+  Utils::Timer loopTimer;
 
-  Timer actuatorTimer;
-  Timer telemetryTimer;
+  Utils::Timer actuatorTimer;
+  Utils::Timer telemetryTimer;
 
   ModeState mode;
   Stats stats;
@@ -366,7 +366,7 @@ struct ModelState
   int16_t i2cErrorDelta;
 
   SerialPortState serial[SERIAL_UART_COUNT];
-  Timer serialTimer;
+  Utils::Timer serialTimer;
 
   Target::Queue appQueue;
 

@@ -3,6 +3,8 @@
 
 namespace Espfc {
 
+namespace Control {
+
 constexpr float SETPOINT_RATE_LIMIT = 1998.0f;
 constexpr float RC_RATE_INCREMENTAL = 14.54f;
 
@@ -108,6 +110,8 @@ float FAST_CODE_ATTR Rates::quick(const int axis, float rcCommandf, const float 
   float angleRate = constrainf(rcCommandf * rcRate * superfactor, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT);
 
   return angleRate;
+}
+
 }
 
 }
