@@ -28,7 +28,7 @@ int VoltageSensor::update()
 {
   if (!_model.state.battery.timer.check()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_BATTERY);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_BATTERY);
 
   switch (_state)
   {

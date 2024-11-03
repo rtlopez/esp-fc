@@ -42,7 +42,7 @@ int MagSensor::read()
 {
   if(!_mag || !_model.magActive() || !_model.state.mag.timer.check()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_MAG_READ);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_MAG_READ);
   _mag->readMag(_model.state.mag.raw);
 
   return 1;
@@ -52,7 +52,7 @@ int MagSensor::filter()
 {
   if(!_mag || !_model.magActive()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_MAG_FILTER);
 
   _model.state.mag.adc = _mag->convert(_model.state.mag.raw);
 

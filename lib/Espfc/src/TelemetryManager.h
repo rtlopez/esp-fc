@@ -20,7 +20,7 @@ public:
 
   int process(Device::SerialDevice& s, TelemetryProtocol protocol) const
   {
-    Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
+    Utils::Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
 
     switch(protocol)
     {

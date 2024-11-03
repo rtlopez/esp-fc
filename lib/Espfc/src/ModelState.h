@@ -13,7 +13,7 @@
 #include "Kalman.h"
 #include "Utils/Filter.h"
 #include "Utils/Timer.h"
-#include "Stats.h"
+#include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
 #include "Math/FreqAnalyzer.h"
 #include "Msp/Msp.h"
@@ -351,7 +351,7 @@ struct ModelState
   Utils::Timer telemetryTimer;
 
   ModeState mode;
-  Stats stats;
+  Utils::Stats stats;
 
   int16_t debug[DEBUG_VALUE_COUNT];
 

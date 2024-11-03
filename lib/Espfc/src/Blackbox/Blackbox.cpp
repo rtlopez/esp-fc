@@ -208,7 +208,7 @@ int FAST_CODE_ATTR Blackbox::update()
   if(!_model.blackboxEnabled()) return 0;
   if(_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL && !_serial) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_BLACKBOX);
 
   uint32_t startTime = micros();
   updateArmed();

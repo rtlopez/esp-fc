@@ -28,7 +28,7 @@ int Actuator::begin()
 int Actuator::update()
 {
   uint32_t startTime = micros();
-  Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
+  Utils::Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
   updateArmingDisabled();
   updateModeMask();
   updateArmed();

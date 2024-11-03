@@ -98,7 +98,7 @@ int FAST_CODE_ATTR Input::update()
 
 InputStatus FAST_CODE_ATTR Input::readInputs()
 {
-  Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
+  Utils::Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
   uint32_t startTime = micros();
 
   InputStatus status = _device->update();
@@ -183,7 +183,7 @@ void FAST_CODE_ATTR Input::processInputs()
 
 bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 {
-  Stats::Measure readMeasure(_model.state.stats, COUNTER_FAILSAFE);
+  Utils::Stats::Measure readMeasure(_model.state.stats, COUNTER_FAILSAFE);
 
   if(_model.isSwitchActive(MODE_FAILSAFE))
   {
@@ -251,7 +251,7 @@ void FAST_CODE_ATTR Input::failsafeStage2()
 
 void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
 {
-  Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
+  Utils::Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
   uint32_t startTime = micros();
 
   const bool newFrame = status != INPUT_IDLE;

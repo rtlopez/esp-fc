@@ -108,7 +108,7 @@ int FAST_CODE_ATTR Mixer::update()
 
 void FAST_CODE_ATTR Mixer::updateMixer(const MixerConfig& mixer, float * outputs)
 {
-  Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER);
+  Utils::Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER);
 
   float sources[MIXER_SOURCE_MAX];
   sources[MIXER_SOURCE_NULL]   = 0;
@@ -236,7 +236,7 @@ float FAST_CODE_ATTR Mixer::limitOutput(float output, const OutputChannelConfig&
 
 void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
 {
-  Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
+  Utils::Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
 
   bool stop = _stop();
   for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -280,7 +280,7 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
 
 void FAST_CODE_ATTR Mixer::readTelemetry()
 {
-  Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_READ);
+  Utils::Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_READ);
   if(!_model.config.output.dshotTelemetry || !_motor) return;
 
   for(size_t i = 0; i < OUTPUT_CHANNELS; i++)

@@ -32,7 +32,7 @@ void Fusion::restoreGain()
 
 int FAST_CODE_ATTR Fusion::update()
 {
-  Stats::Measure measure(_model.state.stats, COUNTER_IMU_FUSION);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_IMU_FUSION);
 
   if(_model.accelActive())
   {

@@ -63,7 +63,7 @@ int FAST_CODE_ATTR GyroSensor::read()
 {
   if (!_model.gyroActive()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_GYRO_READ);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_GYRO_READ);
 
   _gyro->readGyro(_model.state.gyro.raw);
 
@@ -87,7 +87,7 @@ int FAST_CODE_ATTR GyroSensor::filter()
 {
   if (!_model.gyroActive()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FILTER);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FILTER);
 
   _model.state.gyro.adc = _model.state.gyro.sampled;
 
@@ -162,7 +162,7 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
 {
   if (!_rpm_enabled) return;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_RPM_UPDATE);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_RPM_UPDATE);
 
   const float motorFreq = _model.state.output.telemetry.freq[_rpm_motor_index];
   for (size_t n = 0; n < _model.config.gyro.rpmFilter.harmonics; n++)
@@ -198,7 +198,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
 
   if (_dyn_notch_enabled || _dyn_notch_debug)
   {
-    Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FFT);
+    Utils::Stats::Measure measure(_model.state.stats, COUNTER_GYRO_FFT);
 
     const float q = _model.config.gyro.dynamicFilter.q * 0.01;
     bool feed = _model.state.loopTimer.iteration % _dyn_notch_denom == 0;

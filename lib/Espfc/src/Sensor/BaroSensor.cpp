@@ -44,7 +44,7 @@ int BaroSensor::read()
 
   if(_wait > micros()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_BARO);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_BARO);
 
   if(_model.config.debug.mode == DEBUG_BARO)
   {
