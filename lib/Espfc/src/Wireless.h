@@ -95,7 +95,7 @@ class Wireless
 
     int update()
     {
-      Stats::Measure measure(_model.state.stats, COUNTER_WIFI);
+      Utils::Stats::Measure measure(_model.state.stats, COUNTER_WIFI);
 
       switch(_status)
       {

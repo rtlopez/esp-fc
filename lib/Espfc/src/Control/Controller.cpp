@@ -24,7 +24,7 @@ int FAST_CODE_ATTR Controller::update()
   }
 
   {
-    Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
+    Utils::Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
     resetIterm();
     if(_model.config.mixer.type == FC_MIXER_GIMBAL)
     {
@@ -37,7 +37,7 @@ int FAST_CODE_ATTR Controller::update()
   }
 
   {
-    Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
+    Utils::Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
     if(_model.config.mixer.type == FC_MIXER_GIMBAL)
     {
       innerLoopRobot();

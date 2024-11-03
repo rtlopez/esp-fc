@@ -147,7 +147,7 @@ int FAST_CODE_ATTR SerialManager::update()
   {
     if(!serialRx)
     {
-      Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
+      Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
       size_t len = stream->available();
       if(len > 0)
       {

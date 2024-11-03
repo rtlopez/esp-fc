@@ -44,7 +44,7 @@ int FAST_CODE_ATTR AccelSensor::read()
 
   //if(!_model.state.accel.timer.check()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
   _gyro->readAccel(_model.state.accel.raw);
 
   return 1;
@@ -54,7 +54,7 @@ int FAST_CODE_ATTR AccelSensor::filter()
 {
   if(!_model.accelActive()) return 0;
 
-  Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
   _model.state.accel.adc = (VectorFloat)_model.state.accel.raw * _model.state.accel.scale;
 
