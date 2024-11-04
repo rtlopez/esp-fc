@@ -27,6 +27,8 @@
 
 namespace Espfc {
 
+namespace Connect {
+
 class Cli
 {
   public:
@@ -1557,6 +1559,8 @@ class Cli
     bool _ignore;
     bool _active;
 };
+
+}
 
 }
 
