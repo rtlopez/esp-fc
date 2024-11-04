@@ -7,7 +7,7 @@
 #include "Debug_Espfc.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
-#include "Storage.h"
+#include "Utils/Storage.h"
 #include "Logger.h"
 #include "Math/Utils.h"
 
@@ -279,7 +279,7 @@ class Model
     {
       preSave();
       #ifndef UNIT_TEST
-      _storageResult = _storage.write(config);
+      _storageResult = _storage.save(config);
       logStorageResult();
       #endif
     }
@@ -617,7 +617,7 @@ class Model
 
   private:
     #ifndef UNIT_TEST
-    Storage _storage;
+    Utils::Storage _storage;
     #endif
     StorageResult _storageResult;
 };
