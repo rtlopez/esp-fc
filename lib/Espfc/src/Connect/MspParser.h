@@ -6,7 +6,7 @@
 
 namespace Espfc {
 
-namespace Msp {
+namespace Connect {
 
 class MspParser
 {

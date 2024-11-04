@@ -1,10 +1,10 @@
 #ifndef _ESPFC_MSP_PROCESSOR_H_
 #define _ESPFC_MSP_PROCESSOR_H_
 
-#include "Msp/Msp.h"
+#include "Connect/Msp.h"
 #include "Model.h"
 #include "Hardware.h"
-#include "Msp/MspParser.h"
+#include "Connect/MspParser.h"
 #include "platform.h"
 #if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
 #include <driver/timer.h>
@@ -155,7 +155,7 @@ static uint16_t toIbatCurrent(float current)
 
 namespace Espfc {
 
-namespace Msp {
+namespace Connect {
 
 class MspProcessor
 {

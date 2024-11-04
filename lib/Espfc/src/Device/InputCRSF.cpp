@@ -166,7 +166,7 @@ void FAST_CODE_ATTR InputCRSF::applyMspReq(const CrsfMessage& msg)
   if(!_telemetry) return;
 
   uint8_t origin;
-  Msp::MspMessage m;
+  Connect::MspMessage m;
 
   Crsf::decodeMsp(msg, m, origin);
 
