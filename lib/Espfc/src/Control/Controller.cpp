@@ -63,7 +63,7 @@ void Controller::outerLoopRobot()
   const float speed = _speedFilter.update(_model.state.output.ch[AXIS_PITCH] * speedScale + _model.state.gyro.adc[AXIS_PITCH] * gyroScale);
   float angle = 0;
 
-  if(true || _model.isActive(MODE_ANGLE))
+  if(true || _model.isModeActive(MODE_ANGLE))
   {
     angle = _model.state.input.ch[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit);
   }
@@ -110,7 +110,7 @@ void Controller::innerLoopRobot()
 
 void FAST_CODE_ATTR Controller::outerLoop()
 {
-  if(_model.isActive(MODE_ANGLE))
+  if(_model.isModeActive(MODE_ANGLE))
   {
     _model.state.setpoint.angle = VectorFloat(
       _model.state.input.ch[AXIS_ROLL] * Math::toRad(_model.config.level.angleLimit),
@@ -168,7 +168,7 @@ float Controller::getTpaFactor() const
 
 void Controller::resetIterm()
 {
-  if(!_model.isActive(MODE_ARMED)   // when not armed
+  if(!_model.isModeActive(MODE_ARMED)   // when not armed
     || (!_model.isAirModeActive() && _model.config.iterm.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
   )
   {

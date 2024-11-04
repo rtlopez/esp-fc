@@ -374,8 +374,8 @@ float inline Mixer::erpmToRpm(float erpm)
 
 bool Mixer::_stop(void)
 {
-  if(!_model.isActive(MODE_ARMED)) return true;
-  if(_model.isActive(FEATURE_MOTOR_STOP) && _model.isThrottleLow()) return true;
+  if(!_model.isModeActive(MODE_ARMED)) return true;
+  if(_model.isFeatureActive(FEATURE_MOTOR_STOP) && _model.isThrottleLow()) return true;
   return false;
 }
 

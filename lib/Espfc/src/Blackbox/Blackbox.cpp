@@ -290,7 +290,7 @@ void FAST_CODE_ATTR Blackbox::updateArmed()
     stop = 0;
   }
 
-  bool armed = _model.isActive(MODE_ARMED);
+  bool armed = _model.isModeActive(MODE_ARMED);
   if(armed == ARMING_FLAG(ARMED)) return;
   if(armed)
   {

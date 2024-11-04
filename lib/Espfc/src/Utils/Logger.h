@@ -1,10 +1,10 @@
-#ifndef _ESPFC_LOGGER_H_
-#define _ESPFC_LOGGER_H_
+#pragma once
 
-#include <Arduino.h>
 #include "Debug_Espfc.h"
 
 namespace Espfc {
+
+namespace Utils {
 
 class Logger
 {
@@ -114,4 +114,4 @@ class Logger
 
 }
 
-#endif
+}
