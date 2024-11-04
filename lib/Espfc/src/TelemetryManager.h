@@ -3,8 +3,8 @@
 #include "Model.h"
 #include "Telemetry/TelemetryText.h"
 #include "Telemetry/TelemetryCRSF.h"
-#include "Msp/Msp.h"
-#include "Msp/MspProcessor.h"
+#include "Connect/Msp.h"
+#include "Connect/MspProcessor.h"
 
 namespace Espfc {
 
@@ -35,9 +35,9 @@ public:
     return 1;
   }
 
-  int processMsp(Device::SerialDevice& s, TelemetryProtocol protocol, Msp::MspMessage m, uint8_t origin)
+  int processMsp(Device::SerialDevice& s, TelemetryProtocol protocol, Connect::MspMessage m, uint8_t origin)
   {
-    Msp::MspResponse r;
+    Connect::MspResponse r;
 
     // not valid msp message, stop processing
     if(!m.isReady() || !m.isCmd()) return 0;
@@ -60,7 +60,7 @@ public:
 
 private:
   Model& _model;
-  Msp::MspProcessor _msp;
+  Connect::MspProcessor _msp;
   Telemetry::TelemetryText _text;
   Telemetry::TelemetryCRSF _crsf;
 };

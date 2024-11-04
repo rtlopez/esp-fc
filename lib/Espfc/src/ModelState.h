@@ -16,7 +16,7 @@
 #include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
 #include "Math/FreqAnalyzer.h"
-#include "Msp/Msp.h"
+#include "Connect/Msp.h"
 
 namespace Espfc {
 
@@ -38,8 +38,8 @@ class CliCmd
 class SerialPortState
 {
   public:
-    Msp::MspMessage mspRequest;
-    Msp::MspResponse mspResponse;
+    Connect::MspMessage mspRequest;
+    Connect::MspResponse mspResponse;
     CliCmd cliCmd;
     Device::SerialDevice * stream;
 };

@@ -2,7 +2,7 @@
 
 #include "Model.h"
 #include "Device/SerialDevice.h"
-#include "Msp/MspProcessor.h"
+#include "Connect/MspProcessor.h"
 #include "Cli.h"
 #include "TelemetryManager.h"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
@@ -29,7 +29,7 @@ class SerialManager
     }
 
     Model& _model;
-    Msp::MspProcessor _msp;
+    Connect::MspProcessor _msp;
     Cli _cli;
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
     Wireless _wireless;

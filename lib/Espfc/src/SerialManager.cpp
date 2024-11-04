@@ -167,8 +167,8 @@ int FAST_CODE_ATTR SerialManager::update()
                 _msp.processCommand(ss.mspRequest, ss.mspResponse, *stream);
                 _msp.sendResponse(ss.mspResponse, *stream);
                 _msp.postCommand();
-                ss.mspRequest = Msp::MspMessage();
-                ss.mspResponse = Msp::MspResponse();
+                ss.mspRequest = Connect::MspMessage();
+                ss.mspResponse = Connect::MspResponse();
               }
             }
             else

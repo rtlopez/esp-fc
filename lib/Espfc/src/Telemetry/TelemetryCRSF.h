@@ -73,7 +73,7 @@ public:
     return 1;
   }
 
-  int sendMsp(Device::SerialDevice& s, Msp::MspResponse r, uint8_t origin) const
+  int sendMsp(Device::SerialDevice& s, Connect::MspResponse r, uint8_t origin) const
   {
     Rc::CrsfMessage msg;
 

@@ -13,7 +13,7 @@ extern "C" {
 
 namespace Espfc {
 
-namespace Msp {
+namespace Connect {
 
 static const size_t MSP_BUF_SIZE = 192;
 static const size_t MSP_BUF_OUT_SIZE = 240;
