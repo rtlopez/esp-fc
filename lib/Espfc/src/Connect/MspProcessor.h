@@ -1392,11 +1392,11 @@ class MspProcessor
           break;
 
         case MSP_ACC_CALIBRATION:
-          if(!_model.isActive(MODE_ARMED)) _model.calibrateGyro();
+          if(!_model.isModeActive(MODE_ARMED)) _model.calibrateGyro();
           break;
 
         case MSP_MAG_CALIBRATION:
-          if(!_model.isActive(MODE_ARMED)) _model.calibrateMag();
+          if(!_model.isModeActive(MODE_ARMED)) _model.calibrateMag();
           break;
 
         case MSP_VTX_CONFIG:
@@ -1463,7 +1463,7 @@ class MspProcessor
           break;
 
         case MSP_RESET_CONF:
-          if(!_model.isActive(MODE_ARMED))
+          if(!_model.isModeActive(MODE_ARMED))
           {
             _model.reset();
           }

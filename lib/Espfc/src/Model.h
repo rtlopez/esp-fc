@@ -8,7 +8,7 @@
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Utils/Storage.h"
-#include "Logger.h"
+#include "Utils/Logger.h"
 #include "Math/Utils.h"
 
 namespace Espfc {
@@ -28,14 +28,6 @@ class Model
       state = ModelState(); // FIXME: causes board wdt reset
       #endif
       //config.brobot();
-    }
-
-    /**
-     * @deprecated use isModeActive
-     */
-    bool isActive(FlightMode mode) const
-    {
-      return isModeActive(mode);
     }
 
     bool isModeActive(FlightMode mode) const
@@ -78,14 +70,6 @@ class Model
       state.appQueue.send(Event(EVENT_DISARM));
     }
 
-    /**
-     * @deprecated use isFeatureActive
-     */
-    bool isActive(Feature feature) const
-    {
-      return isFeatureActive(feature);
-    }
-
     bool isFeatureActive(Feature feature) const
     {
       return config.featureMask & feature;
@@ -93,7 +77,7 @@ class Model
 
     bool isAirModeActive() const
     {
-      return isModeActive(MODE_AIRMODE);// || isActive(FEATURE_AIRMODE);
+      return isModeActive(MODE_AIRMODE);// || isFeatureActive(FEATURE_AIRMODE);
     }
 
     bool isThrottleLow() const
@@ -454,7 +438,7 @@ class Model
       // configure filters
       for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
-        if(isActive(FEATURE_DYNAMIC_FILTER))
+        if(isFeatureActive(FEATURE_DYNAMIC_FILTER))
         {
           for(size_t p = 0; p < (size_t)config.gyro.dynamicFilter.count; p++)
           {
@@ -595,7 +579,7 @@ class Model
 
     ModelState state;
     ModelConfig config;
-    Logger logger;
+    Utils::Logger logger;
 
     void logStorageResult()
     {

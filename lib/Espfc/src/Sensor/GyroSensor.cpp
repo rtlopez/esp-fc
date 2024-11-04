@@ -31,7 +31,7 @@ int GyroSensor::begin()
   _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
   _dyn_notch_sma.begin(_dyn_notch_denom);
   _dyn_notch_count = std::min((size_t)_model.config.gyro.dynamicFilter.count, DYN_NOTCH_COUNT_MAX);
-  _dyn_notch_enabled = _model.isActive(FEATURE_DYNAMIC_FILTER) && _dyn_notch_count > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
+  _dyn_notch_enabled = _model.isFeatureActive(FEATURE_DYNAMIC_FILTER) && _dyn_notch_count > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
   _dyn_notch_debug = _model.config.debug.mode == DEBUG_FFT_FREQ || _model.config.debug.mode == DEBUG_FFT_TIME;
 
   _rpm_enabled = _model.config.gyro.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;

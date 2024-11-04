@@ -1,13 +1,11 @@
 #ifndef _ESPFC_CLI_H_
 #define _ESPFC_CLI_H_
 
-#include <Arduino.h>
-#include <algorithm>
 #include <platform.h>
+#include <algorithm>
 
 #include "Model.h"
 #include "Hardware.h"
-#include "Logger.h"
 #include "Device/GyroDevice.h"
 #include "Hal/Pgm.h"
 
@@ -1078,12 +1076,12 @@ class Cli
         }
         else if(strcmp_P(cmd.args[1], PSTR("gyro")) == 0)
         {
-          if(!_model.isActive(MODE_ARMED)) _model.calibrateGyro();
+          if(!_model.isModeActive(MODE_ARMED)) _model.calibrateGyro();
           s.println(F("OK"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("mag")) == 0)
         {
-          if(!_model.isActive(MODE_ARMED)) _model.calibrateMag();
+          if(!_model.isModeActive(MODE_ARMED)) _model.calibrateMag();
           s.println(F("OK"));
         }
         else if(strcmp_P(cmd.args[1], PSTR("reset_accel")) == 0 || strcmp_P(cmd.args[1], PSTR("reset_all")) == 0)
