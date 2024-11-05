@@ -1,8 +1,6 @@
 #ifndef _ESPFC_MODEL_STATE_H_
 #define _ESPFC_MODEL_STATE_H_
 
-#include <Arduino.h>
-
 #ifndef UNIT_TEST
 #include <IPAddress.h>
 #endif
