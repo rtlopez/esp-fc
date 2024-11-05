@@ -20,7 +20,6 @@
 */
 #ifndef ESP_TWI_H
 #define ESP_TWI_H
-#include <Arduino.h>
 
 #ifdef __cplusplus
 extern "C" {
