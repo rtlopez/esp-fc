@@ -1,6 +1,10 @@
 
 #include "GyroSensor.h"
 #include "Utils/FilterHelper.h"
+#include "Utils/Sma.ipp"
+#ifdef ESPFC_DSP
+#include "Utils/FFTAnalyzer.ipp"
+#endif
 
 #define ESPFC_FUZZY_ACCEL_ZERO 0.05
 #define ESPFC_FUZZY_GYRO_ZERO 0.20
