@@ -4,7 +4,7 @@
 #include <helper_3dmath.h>
 #include "msp/msp_protocol.h"
 #include "Math/Utils.h"
-#include "Math/Bits.h"
+#include "Utils/Bits.hpp"
 #include "Utils/Filter.h"
 #include "Control/Pid.h"
 #include "Target/QueueAtomic.h"
@@ -61,70 +61,70 @@ void test_math_deadband()
 
 void test_math_bit()
 {
-  TEST_ASSERT_EQUAL(0, Math::getBit(0, 0));
-  TEST_ASSERT_EQUAL(1, Math::getBit(1, 0));
-  TEST_ASSERT_EQUAL(0, Math::getBit(1, 1));
-  TEST_ASSERT_EQUAL(1, Math::getBit(3, 1));
+  TEST_ASSERT_EQUAL(0, Utils::getBit(0, 0));
+  TEST_ASSERT_EQUAL(1, Utils::getBit(1, 0));
+  TEST_ASSERT_EQUAL(0, Utils::getBit(1, 1));
+  TEST_ASSERT_EQUAL(1, Utils::getBit(3, 1));
 
-  TEST_ASSERT_EQUAL_UINT8(0, Math::setBit(0, 0, 0));
-  TEST_ASSERT_EQUAL_UINT8(1, Math::setBit(0, 0, 1));
-  TEST_ASSERT_EQUAL_UINT8(2, Math::setBit(0, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(3, Math::setBit(2, 0, 1));
+  TEST_ASSERT_EQUAL_UINT8(0, Utils::setBit(0, 0, 0));
+  TEST_ASSERT_EQUAL_UINT8(1, Utils::setBit(0, 0, 1));
+  TEST_ASSERT_EQUAL_UINT8(2, Utils::setBit(0, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8(3, Utils::setBit(2, 0, 1));
 }
 
 void test_math_bitmask()
 {
-  TEST_ASSERT_EQUAL_UINT8(   0, Math::setMasked(0, 1, 0));
-  TEST_ASSERT_EQUAL_UINT8(   1, Math::setMasked(0, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(0x38, Math::setMasked(0x00, 0x38, 0xff));
-  TEST_ASSERT_EQUAL_UINT8(0xc7, Math::setMasked(0xff, 0x38, 0x00));
+  TEST_ASSERT_EQUAL_UINT8(   0, Utils::setMasked(0, 1, 0));
+  TEST_ASSERT_EQUAL_UINT8(   1, Utils::setMasked(0, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8(0x38, Utils::setMasked(0x00, 0x38, 0xff));
+  TEST_ASSERT_EQUAL_UINT8(0xc7, Utils::setMasked(0xff, 0x38, 0x00));
 }
 
 void test_math_bitmask_lsb()
 {
-  TEST_ASSERT_EQUAL_UINT8( 1, Math::getMaskLsb(0, 1));
-  TEST_ASSERT_EQUAL_UINT8( 2, Math::getMaskLsb(1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 4, Math::getMaskLsb(2, 1));
-  TEST_ASSERT_EQUAL_UINT8(12, Math::getMaskLsb(2, 2));
-  TEST_ASSERT_EQUAL_UINT8(56, Math::getMaskLsb(3, 3));
+  TEST_ASSERT_EQUAL_UINT8( 1, Utils::getMaskLsb(0, 1));
+  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getMaskLsb(1, 1));
+  TEST_ASSERT_EQUAL_UINT8( 4, Utils::getMaskLsb(2, 1));
+  TEST_ASSERT_EQUAL_UINT8(12, Utils::getMaskLsb(2, 2));
+  TEST_ASSERT_EQUAL_UINT8(56, Utils::getMaskLsb(3, 3));
 }
 
 void test_math_bitmask_msb()
 {
-  TEST_ASSERT_EQUAL_UINT8( 1, Math::getMaskMsb(0, 1));
-  TEST_ASSERT_EQUAL_UINT8( 2, Math::getMaskMsb(1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 4, Math::getMaskMsb(2, 1));
-  TEST_ASSERT_EQUAL_UINT8( 6, Math::getMaskMsb(2, 2));
-  TEST_ASSERT_EQUAL_UINT8(14, Math::getMaskMsb(3, 3));
-  TEST_ASSERT_EQUAL_UINT8(30, Math::getMaskMsb(4, 4));
+  TEST_ASSERT_EQUAL_UINT8( 1, Utils::getMaskMsb(0, 1));
+  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getMaskMsb(1, 1));
+  TEST_ASSERT_EQUAL_UINT8( 4, Utils::getMaskMsb(2, 1));
+  TEST_ASSERT_EQUAL_UINT8( 6, Utils::getMaskMsb(2, 2));
+  TEST_ASSERT_EQUAL_UINT8(14, Utils::getMaskMsb(3, 3));
+  TEST_ASSERT_EQUAL_UINT8(30, Utils::getMaskMsb(4, 4));
 }
 
 void test_math_bits_lsb()
 {
-  TEST_ASSERT_EQUAL_UINT8(0, Math::getBitsLsb(0x00, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(0, Math::getBitsLsb(0x55, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(1, Math::getBitsLsb(0x55, 2, 2));
-  TEST_ASSERT_EQUAL_UINT8(1, Math::getBitsLsb(0x55, 4, 2));
-  TEST_ASSERT_EQUAL_UINT8(5, Math::getBitsLsb(0x55, 2, 4));
+  TEST_ASSERT_EQUAL_UINT8(0, Utils::getBitsLsb(0x00, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8(0, Utils::getBitsLsb(0x55, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8(1, Utils::getBitsLsb(0x55, 2, 2));
+  TEST_ASSERT_EQUAL_UINT8(1, Utils::getBitsLsb(0x55, 4, 2));
+  TEST_ASSERT_EQUAL_UINT8(5, Utils::getBitsLsb(0x55, 2, 4));
 
-  TEST_ASSERT_EQUAL_UINT8( 8, Math::setBitsLsb(0x00, 3, 4, 1));
-  TEST_ASSERT_EQUAL_UINT8(80, Math::setBitsLsb(0x00, 3, 4, 10));
-  TEST_ASSERT_EQUAL_UINT8(16, Math::setBitsLsb(0x00, 4, 2, 1));
-  TEST_ASSERT_EQUAL_UINT8(160, Math::setBitsLsb(0x00, 4, 4, 10));
+  TEST_ASSERT_EQUAL_UINT8(  8, Utils::setBitsLsb(0x00, 3, 4, 1));
+  TEST_ASSERT_EQUAL_UINT8( 80, Utils::setBitsLsb(0x00, 3, 4, 10));
+  TEST_ASSERT_EQUAL_UINT8( 16, Utils::setBitsLsb(0x00, 4, 2, 1));
+  TEST_ASSERT_EQUAL_UINT8(160, Utils::setBitsLsb(0x00, 4, 4, 10));
 }
 
 void test_math_bits_msb()
 {
-  TEST_ASSERT_EQUAL_UINT8( 0, Math::getBitsMsb(0x00, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 0, Math::getBitsMsb(0x55, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 2, Math::getBitsMsb(0x55, 2, 2));
-  TEST_ASSERT_EQUAL_UINT8( 2, Math::getBitsMsb(0x55, 4, 2));
-  TEST_ASSERT_EQUAL_UINT8(10, Math::getBitsMsb(0x55, 4, 4));
+  TEST_ASSERT_EQUAL_UINT8( 0, Utils::getBitsMsb(0x00, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8( 0, Utils::getBitsMsb(0x55, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getBitsMsb(0x55, 2, 2));
+  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getBitsMsb(0x55, 4, 2));
+  TEST_ASSERT_EQUAL_UINT8(10, Utils::getBitsMsb(0x55, 4, 4));
 
-  TEST_ASSERT_EQUAL_UINT8( 1, Math::setBitsMsb(0x00, 3, 4, 1));
-  TEST_ASSERT_EQUAL_UINT8(10, Math::setBitsMsb(0x00, 3, 4, 10));
-  TEST_ASSERT_EQUAL_UINT8( 8, Math::setBitsMsb(0x00, 6, 4, 1));
-  TEST_ASSERT_EQUAL_UINT8(80, Math::setBitsMsb(0x00, 6, 4, 10));
+  TEST_ASSERT_EQUAL_UINT8( 1, Utils::setBitsMsb(0x00, 3, 4, 1));
+  TEST_ASSERT_EQUAL_UINT8(10, Utils::setBitsMsb(0x00, 3, 4, 10));
+  TEST_ASSERT_EQUAL_UINT8( 8, Utils::setBitsMsb(0x00, 6, 4, 1));
+  TEST_ASSERT_EQUAL_UINT8(80, Utils::setBitsMsb(0x00, 6, 4, 10));
 }
 
 void test_math_clock_align()
