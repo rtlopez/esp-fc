@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstdint>
+
 namespace Espfc {
 
-namespace Math {
+namespace Utils {
 
   inline bool getBit(uint8_t data, uint8_t bitNum)
   {

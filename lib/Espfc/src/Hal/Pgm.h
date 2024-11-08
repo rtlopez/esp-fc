@@ -1,6 +1,10 @@
 #pragma once
 
-#ifdef UNIT_TEST
+#ifndef UNIT_TEST
+
+#include <pgmspace.h>
+
+#else
 
 #ifndef PSTR
 #define PSTR(s) (s)
@@ -18,7 +22,3 @@
 #define pgm_read_byte(addr)   (*(const unsigned char *)(addr))
 
 #endif // UNIT_TEST
-
-//#undef max
-//#undef min
-
