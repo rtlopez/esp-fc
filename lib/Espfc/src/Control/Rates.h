@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "ModelConfig.h"
 
 namespace Espfc
@@ -41,7 +41,7 @@ class Rates
 
     inline float constrainf(float x, float l, float h) const
     {
-      return Math::clamp(x, l, h);
+      return Utils::clamp(x, l, h);
     }
 
   private:

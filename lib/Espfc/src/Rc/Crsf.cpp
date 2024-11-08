@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "Crsf.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "Utils/Crc.hpp"
 #include "Utils/MemoryHelper.h"
 #include <cstring>
@@ -178,8 +178,8 @@ uint16_t Crsf::convert(int v)
     */
   return ((v * 1024) / 1639) + 881;
   //return lrintf((0.62477120195241 * (float)v) + 880.54);
-  //return Math::map(v, 172, 1811, 988, 2012);
-  //return Math::mapi(v, 172, 1811, 988, 2012);
+  //return Utils::map(v, 172, 1811, 988, 2012);
+  //return Utils::mapi(v, 172, 1811, 988, 2012);
 }
 
 uint8_t Crsf::crc(const CrsfMessage& msg)

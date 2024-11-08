@@ -1,11 +1,11 @@
 #include <cmath>
 #include "Utils/Filter.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
 
 static inline float pt1Gain(float rate, float freq)
 {
-  float rc = 1.f / (2.f * Espfc::Math::pi() * freq);
+  float rc = 1.f / (2.f * Espfc::Utils::pi() * freq);
   float dt = 1.f / rate;
   return dt / (dt + rc);
 }
@@ -19,8 +19,8 @@ FilterConfig FAST_CODE_ATTR FilterConfig::sanitize(int rate) const
 {
   const int halfRate = rate * 0.49f;
   FilterType t = (FilterType)type;
-  int16_t f = Math::clamp((int)freq, 0, halfRate);   // adj cut freq below nyquist rule
-  int16_t c = Math::clamp((int)cutoff, 0, (int)(f * 0.98f));      // sanitize cutoff to be slightly below filter freq
+  int16_t f = Utils::clamp((int)freq, 0, halfRate);   // adj cut freq below nyquist rule
+  int16_t c = Utils::clamp((int)cutoff, 0, (int)(f * 0.98f));      // sanitize cutoff to be slightly below filter freq
 
   bool biquad = type == FILTER_NOTCH || type == FILTER_NOTCH_DF1 || type == FILTER_BPF;
   if(f == 0 || (biquad && c == 0)) t = FILTER_NONE; // if freq is zero or cutoff for biquad, turn off
@@ -78,7 +78,7 @@ void FilterStateBiquad::reset()
 
 void FilterStateBiquad::init(BiquadFilterType filterType, float rate, float freq, float q)
 {
-  const float omega = (2.0f * Math::pi() * freq) / rate;
+  const float omega = (2.0f * Utils::pi() * freq) / rate;
   const float sn = sinf(omega);
   const float cs = cosf(omega);
   const float alpha = sn / (2.0f * q);
@@ -158,9 +158,9 @@ void FilterStateFirstOrder::reset()
 
 void FilterStateFirstOrder::init(float rate, float freq)
 {
-  freq = Math::clamp(freq, 0.0f, rate * 0.48f);
+  freq = Utils::clamp(freq, 0.0f, rate * 0.48f);
 
-  const float W = std::tan(Math::pi() * freq / rate);
+  const float W = std::tan(Utils::pi() * freq / rate);
 
   a1 = (W - 1) / (W + 1);
   b1 = b0 = W / (W + 1);

@@ -74,9 +74,9 @@ int FAST_CODE_ATTR Fusion::update()
 
     if(_model.config.debug.mode == DEBUG_ALTITUDE)
     {
-      _model.state.debug[0] = lrintf(Math::toDeg(_model.state.attitude.euler[0]) * 10);
-      _model.state.debug[1] = lrintf(Math::toDeg(_model.state.attitude.euler[1]) * 10);
-      _model.state.debug[2] = lrintf(Math::toDeg(_model.state.attitude.euler[2]) * 10);
+      _model.state.debug[0] = lrintf(Utils::toDeg(_model.state.attitude.euler[0]) * 10);
+      _model.state.debug[1] = lrintf(Utils::toDeg(_model.state.attitude.euler[1]) * 10);
+      _model.state.debug[2] = lrintf(Utils::toDeg(_model.state.attitude.euler[2]) * 10);
     }
     return 1;
 }

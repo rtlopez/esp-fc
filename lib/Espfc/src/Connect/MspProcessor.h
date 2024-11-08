@@ -679,9 +679,9 @@ class MspProcessor
           break;
 
         case MSP_ATTITUDE:
-          r.writeU16(lrintf(Math::toDeg(_model.state.attitude.euler.x) * 10.f)); // roll  [decidegrees]
-          r.writeU16(lrintf(Math::toDeg(_model.state.attitude.euler.y) * 10.f)); // pitch [decidegrees]
-          r.writeU16(lrintf(Math::toDeg(-_model.state.attitude.euler.z)));       // yaw   [degrees]
+          r.writeU16(lrintf(Utils::toDeg(_model.state.attitude.euler.x) * 10.f)); // roll  [decidegrees]
+          r.writeU16(lrintf(Utils::toDeg(_model.state.attitude.euler.y) * 10.f)); // pitch [decidegrees]
+          r.writeU16(lrintf(Utils::toDeg(-_model.state.attitude.euler.z)));       // yaw   [degrees]
           break;
 
         case MSP_ALTITUDE:
@@ -951,10 +951,10 @@ class MspProcessor
             {
               _model.config.input.superRate[i] = m.readU8();
             }
-            _model.config.controller.tpaScale = Math::clamp(m.readU8(), (uint8_t)0, (uint8_t)90); // dyn thr pid
+            _model.config.controller.tpaScale = Utils::clamp(m.readU8(), (uint8_t)0, (uint8_t)90); // dyn thr pid
             m.readU8(); // thrMid8
             m.readU8();  // thr expo
-            _model.config.controller.tpaBreakpoint = Math::clamp(m.readU16(), (uint16_t)1000, (uint16_t)2000); // tpa breakpoint
+            _model.config.controller.tpaBreakpoint = Utils::clamp(m.readU16(), (uint16_t)1000, (uint16_t)2000); // tpa breakpoint
             if(m.remain() >= 1)
             {
               _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo
@@ -1283,7 +1283,7 @@ class MspProcessor
           }
           for (int i = 0; i < AXIS_COUNT_RPY; i++)
           {
-            r.writeU16(lrintf(Math::toDeg(_model.state.gyro.adc[i])));
+            r.writeU16(lrintf(Utils::toDeg(_model.state.gyro.adc[i])));
           }
           for (int i = 0; i < AXIS_COUNT_RPY; i++)
           {
