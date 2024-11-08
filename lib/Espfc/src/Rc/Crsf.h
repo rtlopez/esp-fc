@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <cstddef>
-#include "Math/Crc.h"
+#include "Utils/Crc.hpp"
 #include "Connect/Msp.h"
 
 namespace Espfc {
@@ -170,8 +170,8 @@ struct CrsfMessage
 
   uint8_t crc() const
   {
-    uint8_t crc = Math::crc8_dvb_s2(0, type);
-    return Math::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
+    uint8_t crc = Utils::crc8_dvb_s2(0, type);
+    return Utils::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
   }
 } __attribute__ ((__packed__));
 

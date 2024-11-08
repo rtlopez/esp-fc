@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Crsf.h"
 #include "Math/Utils.h"
-#include "Math/Crc.h"
+#include "Utils/Crc.hpp"
 #include "Utils/MemoryHelper.h"
 #include <cstring>
 
@@ -185,9 +185,9 @@ uint16_t Crsf::convert(int v)
 uint8_t Crsf::crc(const CrsfMessage& msg)
 {
   // CRC includes type and payload
-  uint8_t crc = Math::crc8_dvb_s2(0, msg.type);
+  uint8_t crc = Utils::crc8_dvb_s2(0, msg.type);
   for (int i = 0; i < msg.size - 2; i++) { // size includes type and crc
-      crc = Math::crc8_dvb_s2(crc, msg.payload[i]);
+      crc = Utils::crc8_dvb_s2(crc, msg.payload[i]);
   }
   return crc;
 }

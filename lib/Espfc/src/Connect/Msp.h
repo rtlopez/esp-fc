@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include "Hal/Pgm.h"
-#include "Math/Crc.h"
+#include "Utils/Crc.hpp"
 
 extern "C" {
 #include "msp/msp_protocol.h"
@@ -205,11 +205,11 @@ class MspResponse
       buff[3] = len;
       buff[4] = cmd;
 
-      uint8_t checksum = Math::crc8_xor(0, &buff[3], 2);
+      uint8_t checksum = Utils::crc8_xor(0, &buff[3], 2);
       size_t i = 5;
       for(size_t j = 0; j < len; j++)
       {
-        checksum = Math::crc8_xor(checksum, data[j]);
+        checksum = Utils::crc8_xor(checksum, data[j]);
         buff[i++] = data[j];
       }
       buff[i] = checksum;
@@ -231,11 +231,11 @@ class MspResponse
       buff[6] = len & 0xff;
       buff[7] = (len >> 8) & 0xff;
 
-      uint8_t checksum = Math::crc8_dvb_s2(0, &buff[3], 5);
+      uint8_t checksum = Utils::crc8_dvb_s2(0, &buff[3], 5);
       size_t i = 8;
       for(size_t j = 0; j < len; j++)
       {
-        checksum = Math::crc8_dvb_s2(checksum, data[j]);
+        checksum = Utils::crc8_dvb_s2(checksum, data[j]);
         buff[i++] = data[j];
       }
       buff[i] = checksum;
