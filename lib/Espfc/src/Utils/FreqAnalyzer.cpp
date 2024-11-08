@@ -1,5 +1,5 @@
 #include "Utils/FreqAnalyzer.hpp"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -28,14 +28,14 @@ void FreqAnalyzer::update(float v)
 
   // detect rising zero crossing
   if(sign && !_sign_prev) {
-    float f = Math::clamp(_rate / std::max(_pitch_count_raise, 1), _freq_min, _freq_max);
+    float f = Utils::clamp(_rate / std::max(_pitch_count_raise, 1), _freq_min, _freq_max);
     _pitch_freq_raise += k * (f - _pitch_freq_raise);
     _pitch_count_raise = 0;
   }
 
   // detect falling zero crossing
   if(!sign && _sign_prev) {
-    float f = Math::clamp(_rate / std::max(_pitch_count_fall, 1), _freq_min, _freq_max);
+    float f = Utils::clamp(_rate / std::max(_pitch_count_fall, 1), _freq_min, _freq_max);
     _pitch_freq_fall += k * (f - _pitch_freq_fall);
     _pitch_count_fall = 0;
   }

@@ -1,6 +1,6 @@
 
 #include "Input.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
@@ -18,7 +18,7 @@ int Input::begin()
   switch(_model.config.input.interpolationMode)
   {
     case INPUT_INTERPOLATION_AUTO:
-      _model.state.input.interpolationDelta = Math::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+      _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
       break;
     case INPUT_INTERPOLATION_MANUAL:
       _model.state.input.interpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
@@ -66,12 +66,12 @@ void FAST_CODE_ATTR Input::setInput(Axis i, float v, bool newFrame, bool noFilte
   {
     const float nv = noFilter ? v : _model.state.input.filter[i].update(v);
     _model.state.input.us[i] = nv;
-    _model.state.input.ch[i] = Math::map(nv, ich.min, ich.max, -1.f, 1.f);
+    _model.state.input.ch[i] = Utils::map(nv, ich.min, ich.max, -1.f, 1.f);
   }
   else if(newFrame)
   {
     _model.state.input.us[i] = v;
-    _model.state.input.ch[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
+    _model.state.input.ch[i] = Utils::map(v, ich.min, ich.max, -1.f, 1.f);
   }
 }
 
@@ -150,8 +150,8 @@ void FAST_CODE_ATTR Input::processInputs()
     v -= _model.config.input.midRc - PWM_RANGE_MID;
 
     // adj range
-    //float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, (float)PWM_RANGE_MIN, (float)PWM_RANGE_MID, (float)PWM_RANGE_MAX);
-    float t = Math::mapi(v, ich.min, ich.max, PWM_RANGE_MIN, PWM_RANGE_MAX);
+    //float t = Utils::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, (float)PWM_RANGE_MIN, (float)PWM_RANGE_MID, (float)PWM_RANGE_MAX);
+    float t = Utils::mapi(v, ich.min, ich.max, PWM_RANGE_MIN, PWM_RANGE_MAX);
 
     // filter if required
     t = _filter[c].update(t);
@@ -160,7 +160,7 @@ void FAST_CODE_ATTR Input::processInputs()
     // apply deadband
     if(c < AXIS_THRUST)
     {
-      v = Math::deadband(v - PWM_RANGE_MID, (int)_model.config.input.deadband) + PWM_RANGE_MID;
+      v = Utils::deadband(v - PWM_RANGE_MID, (int)_model.config.input.deadband) + PWM_RANGE_MID;
     }
 
     // check if inputs are valid, apply failsafe value otherwise
@@ -205,7 +205,7 @@ bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 
   // stage 2 timeout
   _model.state.input.lossTime = micros() - _model.state.input.frameTime;
-  if(_model.state.input.lossTime > Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)2u, (uint32_t)200u) * TENTH_TO_US)
+  if(_model.state.input.lossTime > Utils::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)2u, (uint32_t)200u) * TENTH_TO_US)
   {
     failsafeStage2();
     return true;
@@ -296,7 +296,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
 
   if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO && _model.config.input.filterType == INPUT_INTERPOLATION)
   {
-    _model.state.input.interpolationDelta = Math::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+    _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
     _model.state.input.interpolationStep = _model.state.loopTimer.intervalf / _model.state.input.interpolationDelta;
   }
 

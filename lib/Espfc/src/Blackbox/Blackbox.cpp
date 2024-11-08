@@ -1,7 +1,7 @@
 #include "Blackbox.h"
 #include "Hardware.h"
 #include "EscDriver.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "BlackboxBridge.h"
 
 namespace Espfc {
@@ -237,8 +237,8 @@ void FAST_CODE_ATTR Blackbox::updateData()
 {
   for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
-    gyro.gyroADCf[i] = Math::toDeg(_model.state.gyro.adc[i]);
-    gyro.gyroADC[i] = Math::toDeg(_model.state.gyro.scaled[i]);
+    gyro.gyroADCf[i] = Utils::toDeg(_model.state.gyro.adc[i]);
+    gyro.gyroADC[i] = Utils::toDeg(_model.state.gyro.scaled[i]);
     pidData[i].P = _model.state.innerPid[i].pTerm * 1000.f;
     pidData[i].I = _model.state.innerPid[i].iTerm * 1000.f;
     pidData[i].D = _model.state.innerPid[i].dTerm * 1000.f;
@@ -257,7 +257,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
   rcCommand[AXIS_THRUST] = _model.state.input.buffer[AXIS_THRUST];
   for(size_t i = 0; i < 4; i++)
   {
-    motor[i] = Math::clamp(_model.state.output.us[i], (int16_t)1000, (int16_t)2000);
+    motor[i] = Utils::clamp(_model.state.output.us[i], (int16_t)1000, (int16_t)2000);
     if(_model.state.mixer.digitalOutput)
     {
       motor[i] = PWM_TO_DSHOT(motor[i]);

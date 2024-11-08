@@ -1,5 +1,5 @@
 #include "Control/Actuator.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -59,7 +59,7 @@ void Actuator::updateScaler()
     float v = _model.state.input.ch[c];
     float min = _model.config.scaler[i].minScale * 0.01f;
     float max = _model.config.scaler[i].maxScale * 0.01f;
-    float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
+    float scale = Utils::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
     for(size_t x = 0; x < AXIS_COUNT_RPYT; x++)
     {
       if(
@@ -212,15 +212,15 @@ void Actuator::updateBuzzer()
 void Actuator::updateDynLpf()
 {
   return; // temporary disable
-  int scale = Math::clamp((int)_model.state.input.us[AXIS_THRUST], 1000, 2000);
+  int scale = Utils::clamp((int)_model.state.input.us[AXIS_THRUST], 1000, 2000);
   if(_model.config.gyro.dynLpfFilter.cutoff > 0) {
-    int gyroFreq = Math::map(scale, 1000, 2000, _model.config.gyro.dynLpfFilter.cutoff, _model.config.gyro.dynLpfFilter.freq);
+    int gyroFreq = Utils::map(scale, 1000, 2000, _model.config.gyro.dynLpfFilter.cutoff, _model.config.gyro.dynLpfFilter.freq);
     for(size_t i = 0; i < AXIS_COUNT_RPY; i++) {
       _model.state.gyro.filter[i].reconfigure(gyroFreq);
     }
   }
   if(_model.config.dterm.dynLpfFilter.cutoff > 0) {
-    int dtermFreq = Math::map(scale, 1000, 2000, _model.config.dterm.dynLpfFilter.cutoff, _model.config.dterm.dynLpfFilter.freq);
+    int dtermFreq = Utils::map(scale, 1000, 2000, _model.config.dterm.dynLpfFilter.cutoff, _model.config.dterm.dynLpfFilter.freq);
     for(size_t i = 0; i < AXIS_COUNT_RPY; i++) {
       _model.state.innerPid[i].dtermFilter.reconfigure(dtermFreq);
     }

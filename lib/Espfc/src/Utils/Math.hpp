@@ -7,7 +7,7 @@
 
 namespace Espfc {
 
-namespace Math {
+namespace Utils {
 
 class Peak
 {
@@ -166,6 +166,7 @@ public:
       return a.freq < b.freq;
     });
   }
+
 }
 
 }

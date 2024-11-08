@@ -25,7 +25,7 @@ int GyroSensor::begin()
 
   _gyro->setDLPFMode(_model.config.gyro.dlpf);
   _gyro->setRate(_gyro->getRate());
-  _model.state.gyro.scale = Math::toRad(2000.f) / 32768.f;
+  _model.state.gyro.scale = Utils::toRad(2000.f) / 32768.f;
 
   _model.state.gyro.calibrationState = CALIBRATION_START; // calibrate gyro on start
   _model.state.gyro.calibrationRate = _model.state.loopTimer.rate;
@@ -47,7 +47,7 @@ int GyroSensor::begin()
 
   for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
   {
-    _rpm_weights[i] = Math::clamp(0.01f * _model.config.gyro.rpmFilter.weights[i], 0.0f, 1.0f);
+    _rpm_weights[i] = Utils::clamp(0.01f * _model.config.gyro.rpmFilter.weights[i], 0.0f, 1.0f);
   }
   for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
@@ -102,14 +102,14 @@ int FAST_CODE_ATTR GyroSensor::filter()
   for (size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
     _model.setDebug(DEBUG_GYRO_RAW, i, _model.state.gyro.raw[i]);
-    _model.setDebug(DEBUG_GYRO_SCALED, i, lrintf(Math::toDeg(_model.state.gyro.scaled[i])));
+    _model.setDebug(DEBUG_GYRO_SCALED, i, lrintf(Utils::toDeg(_model.state.gyro.scaled[i])));
   }
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 0, lrintf(Math::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 0, lrintf(Utils::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
 
   _model.state.gyro.adc = Utils::applyFilter(_model.state.gyro.filter2, _model.state.gyro.adc);
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 1, lrintf(Math::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 1, lrintf(Utils::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
 
   if (_rpm_enabled)
   {
@@ -122,13 +122,13 @@ int FAST_CODE_ATTR GyroSensor::filter()
     }
   }
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 2, lrintf(Math::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 2, lrintf(Utils::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
 
   _model.state.gyro.adc = Utils::applyFilter(_model.state.gyro.notch1Filter, _model.state.gyro.adc);
   _model.state.gyro.adc = Utils::applyFilter(_model.state.gyro.notch2Filter, _model.state.gyro.adc);
   _model.state.gyro.adc = Utils::applyFilter(_model.state.gyro.filter, _model.state.gyro.adc);
 
-  _model.setDebug(DEBUG_GYRO_SAMPLE, 3, lrintf(Math::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
+  _model.setDebug(DEBUG_GYRO_SAMPLE, 3, lrintf(Utils::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));
 
   if (_dyn_notch_enabled || _dyn_notch_debug)
   {
@@ -145,7 +145,7 @@ int FAST_CODE_ATTR GyroSensor::filter()
 
   for (size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
-    _model.setDebug(DEBUG_GYRO_FILTERED, i, lrintf(Math::toDeg(_model.state.gyro.adc[i])));
+    _model.setDebug(DEBUG_GYRO_FILTERED, i, lrintf(Utils::toDeg(_model.state.gyro.adc[i])));
   }
 
   if (_model.accelActive())
@@ -171,7 +171,7 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
   const float motorFreq = _model.state.output.telemetry.freq[_rpm_motor_index];
   for (size_t n = 0; n < _model.config.gyro.rpmFilter.harmonics; n++)
   {
-    const float freq = Math::clamp(motorFreq * (n + 1), _rpm_min_freq, _rpm_max_freq);
+    const float freq = Utils::clamp(motorFreq * (n + 1), _rpm_min_freq, _rpm_max_freq);
     const float freqMargin = freq - _rpm_min_freq;
     float weight = _rpm_weights[n];
     if (freqMargin < _model.config.gyro.rpmFilter.fade)
@@ -254,7 +254,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
         if (_model.config.debug.mode == DEBUG_FFT_FREQ)
         {
           if (update) _model.state.debug[i] = lrintf(freq);
-          if (i == _model.config.debug.axis) _model.state.debug[3] = lrintf(Math::toDeg(_model.state.gyro.dynNotch[i]));
+          if (i == _model.config.debug.axis) _model.state.debug[3] = lrintf(Utils::toDeg(_model.state.gyro.dynNotch[i]));
         }
         if (_dyn_notch_enabled && update)
         {
@@ -264,7 +264,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
             {
               size_t x = (p + i) % 3;
               int harmonic = (p / 3) + 1;
-              int16_t f = Math::clamp((int16_t)lrintf(freq * harmonic), _model.config.gyro.dynamicFilter.min_freq, _model.config.gyro.dynamicFilter.max_freq);
+              int16_t f = Utils::clamp((int16_t)lrintf(freq * harmonic), _model.config.gyro.dynamicFilter.min_freq, _model.config.gyro.dynamicFilter.max_freq);
               _model.state.gyro.dynNotchFilter[p][x].reconfigure(f, f, q);
             }
           }

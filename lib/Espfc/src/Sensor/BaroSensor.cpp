@@ -104,7 +104,7 @@ void BaroSensor::readPressure()
 
 void BaroSensor::updateAltitude()
 {
-  _model.state.baro.altitudeRaw = _altitudeFilter.update(Math::toAltitude(_model.state.baro.pressure));
+  _model.state.baro.altitudeRaw = _altitudeFilter.update(Utils::toAltitude(_model.state.baro.pressure));
   if(_model.state.baro.altitudeBiasSamples > 0)
   {
     _model.state.baro.altitudeBiasSamples--;

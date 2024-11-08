@@ -9,7 +9,7 @@
 #include "ModelState.h"
 #include "Utils/Storage.h"
 #include "Utils/Logger.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -136,7 +136,7 @@ class Model
       {
         //save();
         state.buzzer.push(BUZZER_GYRO_CALIBRATED);
-        logger.info().log(F("GYRO BIAS")).log(Math::toDeg(state.gyro.bias.x)).log(Math::toDeg(state.gyro.bias.y)).logln(Math::toDeg(state.gyro.bias.z));
+        logger.info().log(F("GYRO BIAS")).log(Utils::toDeg(state.gyro.bias.x)).log(Utils::toDeg(state.gyro.bias.y)).logln(Utils::toDeg(state.gyro.bias.z));
       }
       if(state.accel.calibrationState == CALIBRATION_SAVE)
       {
@@ -243,7 +243,7 @@ class Model
       size_t channel = config.input.rssiChannel;
       if(channel < 4 || channel > state.input.channelCount) return 0;
       float value = state.input.ch[channel - 1];
-      return Math::clamp(lrintf(Math::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
+      return Utils::clamp(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
     }
 
     int load()
@@ -285,11 +285,11 @@ class Model
       // for spi gyro allow full speed mode
       if (state.gyro.dev && state.gyro.dev->getBus()->isSPI())
       {
-        state.gyro.rate = Math::alignToClock(state.gyro.clock, ESPFC_GYRO_SPI_RATE_MAX);
+        state.gyro.rate = Utils::alignToClock(state.gyro.clock, ESPFC_GYRO_SPI_RATE_MAX);
       }
       else
       {
-        state.gyro.rate = Math::alignToClock(state.gyro.clock, ESPFC_GYRO_I2C_RATE_MAX);
+        state.gyro.rate = Utils::alignToClock(state.gyro.clock, ESPFC_GYRO_I2C_RATE_MAX);
         // first usage
         if(_storageResult == STORAGE_ERR_BAD_MAGIC || _storageResult == STORAGE_ERR_BAD_SIZE || _storageResult == STORAGE_ERR_BAD_VERSION)
         {
@@ -413,11 +413,11 @@ class Model
       // init timers
       // sample rate = clock / ( divider + 1)
       state.gyro.timer.setRate(state.gyro.rate);
-      int accelRate = Math::alignToClock(state.gyro.timer.rate, 500);
+      int accelRate = Utils::alignToClock(state.gyro.timer.rate, 500);
       state.accel.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / accelRate);
       state.loopTimer.setRate(state.gyro.timer.rate, config.loopSync);
       state.mixer.timer.setRate(state.loopTimer.rate, config.mixerSync);
-      int inputRate = Math::alignToClock(state.gyro.timer.rate, 1000);
+      int inputRate = Utils::alignToClock(state.gyro.timer.rate, 1000);
       state.input.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / inputRate);
       state.actuatorTimer.setRate(50);
       state.gyro.dynamicFilterTimer.setRate(50);
@@ -428,7 +428,7 @@ class Model
         state.mag.timer.setRate(state.mag.rate);
       }
 
-      state.boardAlignment.init(VectorFloat(Math::toRad(config.boardAlignment[0]), Math::toRad(config.boardAlignment[1]), Math::toRad(config.boardAlignment[2])));
+      state.boardAlignment.init(VectorFloat(Utils::toRad(config.boardAlignment[0]), Utils::toRad(config.boardAlignment[1]), Utils::toRad(config.boardAlignment[2])));
 
       const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
@@ -464,7 +464,7 @@ class Model
           state.gyro.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.gyro.rpmFilter.freqLpf), gyroFilterRate);
           for(size_t n = 0; n < config.gyro.rpmFilter.harmonics; n++)
           {
-            int center = Math::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.gyro.rpmFilter.harmonics, config.gyro.rpmFilter.minFreq, gyroFilterRate / 2);
+            int center = Utils::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.gyro.rpmFilter.harmonics, config.gyro.rpmFilter.minFreq, gyroFilterRate / 2);
             state.gyro.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
           }
         }
@@ -539,8 +539,8 @@ class Model
         pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
         pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
         pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
-        pid.iLimit = Math::toRad(config.level.rateLimit) * 0.1f;
-        pid.oLimit = Math::toRad(config.level.rateLimit);
+        pid.iLimit = Utils::toRad(config.level.rateLimit) * 0.1f;
+        pid.oLimit = Utils::toRad(config.level.rateLimit);
         pid.rate = state.loopTimer.rate;
         pid.ptermFilter.begin(config.level.ptermFilter, pidFilterRate);
         //pid.iLimit = 0.3f; // ROBOT

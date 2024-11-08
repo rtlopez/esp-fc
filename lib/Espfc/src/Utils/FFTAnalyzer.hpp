@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "Utils/Filter.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -26,7 +26,7 @@ public:
   int update(float v);
 
   static const size_t PEAKS_MAX = 8;
-  Math::Peak peaks[PEAKS_MAX];
+  Utils::Peak peaks[PEAKS_MAX];
 
 private:
   void clearPeaks();

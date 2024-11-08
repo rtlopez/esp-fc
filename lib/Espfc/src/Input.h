@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Model.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "Device/InputDevice.h"
 #include "Device/InputPPM.h"
 #include "Device/InputSBUS.h"

@@ -69,7 +69,7 @@ int VoltageSensor::readVbat()
   }
 
   _model.state.battery.cellVoltage = _model.state.battery.voltage / constrain(_model.state.battery.cells, 1, 6);
-  _model.state.battery.percentage = Math::clamp(Math::map(_model.state.battery.cellVoltage, 3.4f, 4.2f, 0.0f, 100.0f), 0.0f, 100.0f);
+  _model.state.battery.percentage = Utils::clamp(Utils::map(_model.state.battery.cellVoltage, 3.4f, 4.2f, 0.0f, 100.0f), 0.0f, 100.0f);
 
   if (_model.config.debug.mode == DEBUG_BATTERY)
   {

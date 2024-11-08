@@ -91,10 +91,10 @@ int FFTAnalyzer<SAMPLES>::update(float v)
 
       clearPeaks();
 
-      Math::peakDetect(_out, _begin, _end, _bin_width, peaks, _peak_count);
+      Utils::peakDetect(_out, _begin, _end, _bin_width, peaks, _peak_count);
 
       // sort peaks by freq
-      Math::peakSort(peaks, _peak_count);
+      Utils::peakSort(peaks, _peak_count);
 
       _phase = PHASE_COLLECT;
       return 1;
@@ -108,7 +108,7 @@ int FFTAnalyzer<SAMPLES>::update(float v)
 template<size_t SAMPLES>
 void FFTAnalyzer<SAMPLES>::clearPeaks()
 {
-  for(size_t i = 0; i < PEAKS_MAX; i++) peaks[i] = Math::Peak();
+  for(size_t i = 0; i < PEAKS_MAX; i++) peaks[i] = Utils::Peak();
   //std::fill(peaks, peaks + PEAKS_MAX, Peak());
 }
 

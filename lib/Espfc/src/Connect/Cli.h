@@ -1046,9 +1046,9 @@ class Cli
           s.print(_model.config.gyro.bias[0]); s.print(' ');
           s.print(_model.config.gyro.bias[1]); s.print(' ');
           s.print(_model.config.gyro.bias[2]); s.print(F(" ["));
-          s.print(Math::toDeg(_model.state.gyro.bias[0])); s.print(' ');
-          s.print(Math::toDeg(_model.state.gyro.bias[1])); s.print(' ');
-          s.print(Math::toDeg(_model.state.gyro.bias[2])); s.println(F("]"));
+          s.print(Utils::toDeg(_model.state.gyro.bias[0])); s.print(' ');
+          s.print(Utils::toDeg(_model.state.gyro.bias[1])); s.print(' ');
+          s.print(Utils::toDeg(_model.state.gyro.bias[2])); s.println(F("]"));
 
           s.print(F("accel offset: "));
           s.print(_model.config.accel.bias[0]); s.print(' ');
@@ -1205,7 +1205,7 @@ class Cli
           float v = _model.state.input.ch[c];
           float min = _model.config.scaler[i].minScale * 0.01f;
           float max = _model.config.scaler[i].maxScale * 0.01f;
-          float scale = Math::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
+          float scale = Utils::map3(v, -1.f, 0.f, 1.f, min, min < 0 ? 0.f : 1.f, max);
           s.print(F("scaler: "));
           s.print(i);
           s.print(' ');
@@ -1450,7 +1450,7 @@ class Cli
           {
             size = String(cmd.args[3]).toInt();
           }
-          size = Math::clamp(size, 8u, 128 * 1024u);
+          size = Utils::clamp(size, 8u, 128 * 1024u);
           size_t chunk_size = 256;
 
           uint8_t* data = new uint8_t[chunk_size];

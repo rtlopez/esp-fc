@@ -1,5 +1,5 @@
 #include "Control/Controller.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -65,19 +65,19 @@ void Controller::outerLoopRobot()
 
   if(true || _model.isModeActive(MODE_ANGLE))
   {
-    angle = _model.state.input.ch[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit);
+    angle = _model.state.input.ch[AXIS_PITCH] * Utils::toRad(_model.config.level.angleLimit);
   }
   else
   {
-    angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input.ch[AXIS_PITCH], speed) * Math::toRad(_model.config.level.rateLimit);
+    angle = _model.state.outerPid[AXIS_PITCH].update(_model.state.input.ch[AXIS_PITCH], speed) * Utils::toRad(_model.config.level.rateLimit);
   }
   _model.state.setpoint.angle.set(AXIS_PITCH, angle);
-  _model.state.setpoint.rate[AXIS_YAW] = _model.state.input.ch[AXIS_YAW] * Math::toRad(_model.config.level.rateLimit);
+  _model.state.setpoint.rate[AXIS_YAW] = _model.state.input.ch[AXIS_YAW] * Utils::toRad(_model.config.level.rateLimit);
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     _model.state.debug[0] = speed * 1000;
-    _model.state.debug[1] = lrintf(Math::toDeg(angle) * 10);
+    _model.state.debug[1] = lrintf(Utils::toDeg(angle) * 10);
   }
 }
 
@@ -88,7 +88,7 @@ void Controller::innerLoopRobot()
   //const float angle = acos(v.z);
   const float angle = std::max(abs(_model.state.attitude.euler[AXIS_PITCH]), abs(_model.state.attitude.euler[AXIS_ROLL]));
 
-  const bool stabilize = angle < Math::toRad(_model.config.level.angleLimit);
+  const bool stabilize = angle < Utils::toRad(_model.config.level.angleLimit);
   if(stabilize)
   {
     _model.state.output.ch[AXIS_PITCH] = _model.state.innerPid[AXIS_PITCH].update(_model.state.setpoint.angle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
@@ -103,7 +103,7 @@ void Controller::innerLoopRobot()
 
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
-    _model.state.debug[2] = lrintf(Math::toDeg(_model.state.attitude.euler[AXIS_PITCH]) * 10);
+    _model.state.debug[2] = lrintf(Utils::toDeg(_model.state.attitude.euler[AXIS_PITCH]) * 10);
     _model.state.debug[3] = lrintf(_model.state.output.ch[AXIS_PITCH] * 1000);
   }
 }
@@ -113,8 +113,8 @@ void FAST_CODE_ATTR Controller::outerLoop()
   if(_model.isModeActive(MODE_ANGLE))
   {
     _model.state.setpoint.angle = VectorFloat(
-      _model.state.input.ch[AXIS_ROLL] * Math::toRad(_model.config.level.angleLimit),
-      _model.state.input.ch[AXIS_PITCH] * Math::toRad(_model.config.level.angleLimit),
+      _model.state.input.ch[AXIS_ROLL] * Utils::toRad(_model.config.level.angleLimit),
+      _model.state.input.ch[AXIS_PITCH] * Utils::toRad(_model.config.level.angleLimit),
       _model.state.attitude.euler[AXIS_YAW]
     );
     _model.state.setpoint.rate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.setpoint.angle[AXIS_ROLL], _model.state.attitude.euler[AXIS_ROLL]);
@@ -135,7 +135,7 @@ void FAST_CODE_ATTR Controller::outerLoop()
   {
     for(size_t i = 0; i < AXIS_COUNT_RPY; ++i)
     {
-      _model.state.debug[i] = lrintf(Math::toDeg(_model.state.setpoint.rate[i]));
+      _model.state.debug[i] = lrintf(Utils::toDeg(_model.state.setpoint.rate[i]));
     }
   }
 }
@@ -152,9 +152,9 @@ void FAST_CODE_ATTR Controller::innerLoop()
 
   if(_model.config.debug.mode == DEBUG_ITERM_RELAX)
   {
-    _model.state.debug[0] = lrintf(Math::toDeg(_model.state.innerPid[0].itermRelaxBase));
+    _model.state.debug[0] = lrintf(Utils::toDeg(_model.state.innerPid[0].itermRelaxBase));
     _model.state.debug[1] = lrintf(_model.state.innerPid[0].itermRelaxFactor * 100.0f);
-    _model.state.debug[2] = lrintf(Math::toDeg(_model.state.innerPid[0].iTermError));
+    _model.state.debug[2] = lrintf(Utils::toDeg(_model.state.innerPid[0].iTermError));
     _model.state.debug[3] = lrintf(_model.state.innerPid[0].iTerm * 1000.0f);
   }
 }
@@ -162,8 +162,8 @@ void FAST_CODE_ATTR Controller::innerLoop()
 float Controller::getTpaFactor() const
 {
   if(_model.config.controller.tpaScale == 0) return 1.f;
-  float t = Math::clamp(_model.state.input.us[AXIS_THRUST], (float)_model.config.controller.tpaBreakpoint, 2000.f);
-  return Math::map(t, (float)_model.config.controller.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.controller.tpaScale * 0.01f));
+  float t = Utils::clamp(_model.state.input.us[AXIS_THRUST], (float)_model.config.controller.tpaBreakpoint, 2000.f);
+  return Utils::map(t, (float)_model.config.controller.tpaBreakpoint, 2000.f, 1.f, 1.f - ((float)_model.config.controller.tpaScale * 0.01f));
 }
 
 void Controller::resetIterm()
