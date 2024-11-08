@@ -1,9 +1,9 @@
-#include "Crc.h"
+#include "Utils/Crc.hpp"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
-namespace Math {
+namespace Utils {
 
 uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t a)
 {
@@ -36,7 +36,7 @@ uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t a)
   return checksum ^ a;
 }
 
-uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t *data, int len)
+uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t *data, size_t len)
 {
   while (len-- > 0)
   {

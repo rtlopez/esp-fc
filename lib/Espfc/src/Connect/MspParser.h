@@ -2,7 +2,7 @@
 #define _ESPFC_MSP_PARSER_H_
 
 #include "Msp.h"
-#include "Math/Crc.h"
+#include "Utils/Crc.hpp"
 
 namespace Espfc {
 
@@ -73,7 +73,7 @@ class MspParser
 
         case MSP_STATE_HEADER_V1:
           msg.buffer[msg.received++] = c;
-          msg.checksum = Math::crc8_xor(msg.checksum, c);
+          msg.checksum = Utils::crc8_xor(msg.checksum, c);
           if(msg.received == sizeof(MspHeaderV1))
           {
             const MspHeaderV1 * hdr = reinterpret_cast<MspHeaderV1*>(msg.buffer);
@@ -90,7 +90,7 @@ class MspParser
 
         case MSP_STATE_PAYLOAD_V1:
           msg.buffer[msg.received++] = c;
-          msg.checksum = Math::crc8_xor(msg.checksum, c);
+          msg.checksum = Utils::crc8_xor(msg.checksum, c);
           if(msg.received == msg.expected)
           {
             msg.state = MSP_STATE_CHECKSUM_V1;
@@ -103,7 +103,7 @@ class MspParser
 
         case MSP_STATE_HEADER_V2:
           msg.buffer[msg.received++] = c;
-          msg.checksum2 = Math::crc8_dvb_s2(msg.checksum2, c);
+          msg.checksum2 = Utils::crc8_dvb_s2(msg.checksum2, c);
           if(msg.received == sizeof(MspHeaderV2))
           {
             const MspHeaderV2 * hdr = reinterpret_cast<MspHeaderV2*>(msg.buffer);
@@ -121,7 +121,7 @@ class MspParser
 
         case MSP_STATE_PAYLOAD_V2:
           msg.buffer[msg.received++] = c;
-          msg.checksum2 = Math::crc8_dvb_s2(msg.checksum2, c);
+          msg.checksum2 = Utils::crc8_dvb_s2(msg.checksum2, c);
           if(msg.received == msg.expected)
           {
             msg.state = MSP_STATE_CHECKSUM_V2;
