@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "Utils/Crc.hpp"
-#include "Connect/Msp.h"
+#include "Connect/Msp.hpp"
 
 namespace Espfc {
 

@@ -13,7 +13,7 @@
 #include "Utils/Timer.h"
 #include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
-#include "Connect/Msp.h"
+#include "Connect/Msp.hpp"
 
 namespace Espfc {
 
