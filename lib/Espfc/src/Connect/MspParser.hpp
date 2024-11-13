@@ -1,5 +1,4 @@
-#ifndef _ESPFC_MSP_PARSER_H_
-#define _ESPFC_MSP_PARSER_H_
+#pragma once
 
 #include "Connect/Msp.hpp"
 
@@ -17,5 +16,3 @@ class MspParser
 }
 
 }
-
-#endif
