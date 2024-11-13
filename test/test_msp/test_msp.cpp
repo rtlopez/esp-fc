@@ -5,8 +5,9 @@
 #include <Kalman.h>
 #include <EscDriver.h>
 #include <printf.h>
-#include "Connect/Msp.h"
-#include "Connect/MspParser.h"
+#include "Connect/Msp.hpp"
+#include "Connect/MspParser.hpp"
+#include "msp/msp_protocol.h"
 
 using namespace fakeit;
 using namespace Espfc;

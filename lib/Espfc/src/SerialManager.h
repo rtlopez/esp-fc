@@ -2,7 +2,7 @@
 
 #include "Model.h"
 #include "Device/SerialDevice.h"
-#include "Connect/MspProcessor.h"
+#include "Connect/MspProcessor.hpp"
 #include "Connect/Cli.h"
 #include "TelemetryManager.h"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI

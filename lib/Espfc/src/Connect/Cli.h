@@ -8,6 +8,7 @@
 #include "Hardware.h"
 #include "Device/GyroDevice.h"
 #include "Hal/Pgm.h"
+#include "msp/msp_protocol.h"
 
 #ifdef USE_FLASHFS
 #include "Device/FlashDevice.h"
@@ -1485,7 +1486,7 @@ class Cli
     }
 
   private:
-    void print(const Param& param, Stream& s)
+    void print(const Param& param, Stream& s) const
     {
       s.print(F("set "));
       s.print(FPSTR(param.name));
@@ -1494,7 +1495,7 @@ class Cli
       s.println();
     }
 
-    void printVersion(Stream& s)
+    void printVersion(Stream& s) const
     {
       s.print(boardIdentifier);
       s.print(' ');
@@ -1517,7 +1518,7 @@ class Cli
       s.print(__cplusplus);
     }
 
-    void printStats(Stream& s)
+    void printStats(Stream& s) const
     {
       s.print(F("    cpu freq: "));
       s.print(targetCpuFreq());

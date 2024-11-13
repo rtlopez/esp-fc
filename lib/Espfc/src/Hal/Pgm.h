@@ -22,3 +22,12 @@
 #define pgm_read_byte(addr)   (*(const unsigned char *)(addr))
 
 #endif // UNIT_TEST
+
+#ifdef ARCH_RP2040
+namespace arduino {
+class __FlashStringHelper;
+}
+using __FlashStringHelper = arduino::__FlashStringHelper;
+#else
+class __FlashStringHelper;
+#endif

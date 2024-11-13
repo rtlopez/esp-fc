@@ -4,8 +4,8 @@
 #include "Device/SerialDevice.h"
 #include "Telemetry/TelemetryText.h"
 #include "Telemetry/TelemetryCRSF.h"
-#include "Connect/Msp.h"
-#include "Connect/MspProcessor.h"
+#include "Connect/Msp.hpp"
+#include "Connect/MspProcessor.hpp"
 
 namespace Espfc {
 
