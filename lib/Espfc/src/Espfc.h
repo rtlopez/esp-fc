@@ -10,7 +10,7 @@
 #include "SerialManager.h"
 #include "Output/Mixer.h"
 #include "Blackbox/Blackbox.h"
-#include "Buzzer.h"
+#include "Connect/Buzzer.hpp"
 
 namespace Espfc {
 
@@ -39,7 +39,7 @@ class Espfc
     SensorManager _sensor;
     Output::Mixer _mixer;
     Blackbox::Blackbox _blackbox;
-    Buzzer _buzzer;
+    Connect::Buzzer _buzzer;
     SerialManager _serial;
     uint32_t _loop_next;
 };

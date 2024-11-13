@@ -1,7 +1,9 @@
-#include "Buzzer.h"
+#include "Buzzer.hpp"
 #include "Hal/Gpio.h"
 
 namespace Espfc {
+
+namespace Connect {
 
 Buzzer::Buzzer(Model& model): _model(model), _status(BUZZER_STATUS_IDLE), _wait(0), _scheme(NULL), _e(BUZZER_SILENCE) {}
 
@@ -142,6 +144,8 @@ const uint8_t** Buzzer::schemes()
   };
 
   return beeperSchemes;
+}
+
 }
 
 }

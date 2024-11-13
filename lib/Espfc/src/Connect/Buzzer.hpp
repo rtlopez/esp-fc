@@ -4,6 +4,8 @@
 
 namespace Espfc {
 
+namespace Connect {
+
 enum BuzzerPlayStatus
 {
   BUZZER_STATUS_IDLE,
@@ -33,5 +35,7 @@ private:
   const uint8_t * _scheme;
   BuzzerEvent _e;
 };
+
+}
 
 }
