@@ -1,6 +1,7 @@
 #if defined(ARCH_RP2040)
 
 #include "EscDriverRP2040.h"
+#include <Arduino.h>
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
 #include <hardware/dma.h>
@@ -15,7 +16,7 @@
 #define DSHOT150_T1H 4666u
 #define DSHOT150_T   6666u
 
-int EscDriverRP2040::attach(size_t channel, int pin, int pulse)
+int IRAM_ATTR EscDriverRP2040::attach(size_t channel, int pin, int pulse)
 {
   if(channel >= ESC_CHANNEL_COUNT) return 0;
   if(pin > 28) return 0;
@@ -96,14 +97,14 @@ bool EscDriverRP2040::isSliceDriven(int slice)
   return false;
 }
 
-int EscDriverRP2040::write(size_t channel, int pulse)
+int IRAM_ATTR EscDriverRP2040::write(size_t channel, int pulse)
 {
   if(channel >= ESC_CHANNEL_COUNT) return 0;
   _slots[channel].pulse = usToTicks(pulse);
   return 1;
 }
 
-void EscDriverRP2040::apply()
+void IRAM_ATTR EscDriverRP2040::apply()
 {
   if(_protocol >= ESC_PROTOCOL_DSHOT150 && _protocol <= ESC_PROTOCOL_DSHOT600)
   {
@@ -117,7 +118,7 @@ void EscDriverRP2040::apply()
   }
 }
 
-uint32_t EscDriverRP2040::usToTicks(uint32_t us)
+uint32_t IRAM_ATTR EscDriverRP2040::usToTicks(uint32_t us)
 {
   uint32_t ticks = 0;
   switch(_protocol)
@@ -146,7 +147,7 @@ uint32_t EscDriverRP2040::usToTicks(uint32_t us)
   return ticks;
 }
 
-uint32_t EscDriverRP2040::usToTicksReal(uint32_t us)
+uint32_t IRAM_ATTR EscDriverRP2040::usToTicksReal(uint32_t us)
 {
   uint64_t t = (uint64_t)us * (F_CPU / _divider);
   return t / 1000000ul;
