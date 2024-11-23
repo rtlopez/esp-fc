@@ -108,7 +108,7 @@ int FAST_CODE_ATTR Mixer::update()
 
 void FAST_CODE_ATTR Mixer::updateMixer(const MixerConfig& mixer, float * outputs)
 {
-  Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER);
+  Utils::Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER);
 
   float sources[MIXER_SOURCE_MAX];
   sources[MIXER_SOURCE_NULL]   = 0;
@@ -167,7 +167,7 @@ void FAST_CODE_ATTR Mixer::updateMixer(const MixerConfig& mixer, float * outputs
     }
     else
     {
-      thrust = Math::clamp(thrust, -1.f + range, 1.f - range);
+      thrust = Utils::clamp(thrust, -1.f + range, 1.f - range);
     }
   }
 
@@ -210,7 +210,7 @@ float FAST_CODE_ATTR Mixer::limitThrust(float thrust, ThrottleLimitType type, in
     case THROTTLE_LIMIT_TYPE_SCALE:
       return (thrust + 1.0f) * limit * 0.01f - 1.0f;
     case THROTTLE_LIMIT_TYPE_CLIP:
-      return Math::clamp(thrust, -1.f, (limit * 0.02f) - 1.0f);
+      return Utils::clamp(thrust, -1.f, (limit * 0.02f) - 1.0f);
     default:
       break;
   }
@@ -225,18 +225,18 @@ float FAST_CODE_ATTR Mixer::limitOutput(float output, const OutputChannelConfig&
   if(occ.servo)
   {
     const float factor = limit * 0.01f;
-    return Math::clamp(output, -factor, factor);
+    return Utils::clamp(output, -factor, factor);
   }
   else
   {
     const float factor = limit * 0.02f; // *2
-    return Math::clamp(output + 1.f, 0.f, factor) - 1.0f;
+    return Utils::clamp(output + 1.f, 0.f, factor) - 1.0f;
   }
 }
 
 void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
 {
-  Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
+  Utils::Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_WRITE);
 
   bool stop = _stop();
   for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -250,13 +250,13 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
     {
       if(och.servo)
       {
-        const int16_t tmp = lrintf(Math::map3(out[i], -1.f, 0.f, 1.f, och.reverse ? 2000 : 1000, och.neutral, och.reverse ? 1000 : 2000));
-        _model.state.output.us[i] = Math::clamp(tmp, och.min, och.max);
+        const int16_t tmp = lrintf(Utils::map3(out[i], -1.f, 0.f, 1.f, och.reverse ? 2000 : 1000, och.neutral, och.reverse ? 1000 : 2000));
+        _model.state.output.us[i] = Utils::clamp(tmp, och.min, och.max);
       }
       else
       {
-        float v = Math::clamp(out[i], -1.f, 1.f);
-        _model.state.output.us[i] = lrintf(Math::map(v, -1.f, 1.f, _model.state.mixer.minThrottle, _model.state.mixer.maxThrottle));
+        float v = Utils::clamp(out[i], -1.f, 1.f);
+        _model.state.output.us[i] = lrintf(Utils::map(v, -1.f, 1.f, _model.state.mixer.minThrottle, _model.state.mixer.maxThrottle));
       }
     }
   }
@@ -280,7 +280,7 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
 
 void FAST_CODE_ATTR Mixer::readTelemetry()
 {
-  Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_READ);
+  Utils::Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_READ);
   if(!_model.config.output.dshotTelemetry || !_motor) return;
 
   for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
@@ -374,8 +374,8 @@ float inline Mixer::erpmToRpm(float erpm)
 
 bool Mixer::_stop(void)
 {
-  if(!_model.isActive(MODE_ARMED)) return true;
-  if(_model.isActive(FEATURE_MOTOR_STOP) && _model.isThrottleLow()) return true;
+  if(!_model.isModeActive(MODE_ARMED)) return true;
+  if(_model.isFeatureActive(FEATURE_MOTOR_STOP) && _model.isThrottleLow()) return true;
   return false;
 }
 

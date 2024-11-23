@@ -1,5 +1,5 @@
 #include "InputSBUS.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
@@ -140,7 +140,7 @@ void FAST_CODE_ATTR InputSBUS::apply()
 
 uint16_t FAST_CODE_ATTR InputSBUS::convert(int v)
 {
-  return Math::clamp(((v * 5) / 8) + 880, 800, 2200);
+  return Utils::clamp(((v * 5) / 8) + 880, 800, 2200);
 }
 
 }

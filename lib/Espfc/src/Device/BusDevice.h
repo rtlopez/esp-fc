@@ -1,9 +1,8 @@
-#ifndef _ESPFC_DEVICE_BUSDEVICE_H_
-#define _ESPFC_DEVICE_BUSDEVICE_H_
+#pragma once
 
 #include <functional>
 #include <cstdint>
-#include "Math/Bits.h"
+#include "Utils/Bits.hpp"
 
 #define ESPFC_BUS_TIMEOUT 100
 
@@ -57,7 +56,7 @@ class BusDevice
     {
       uint8_t b;
       uint8_t count = readByte(devAddr, regAddr, &b);
-      *data = Math::getBit(b, bitNum);
+      *data = Utils::getBit(b, bitNum);
       return count;
     }
 
@@ -66,7 +65,7 @@ class BusDevice
       uint8_t count, b;
       if ((count = readByte(devAddr, regAddr, &b)) != 0)
       {
-        *data = Math::getBitsMsb(b, bitStart, length);
+        *data = Utils::getBitsMsb(b, bitStart, length);
       }
       return count;
     }
@@ -76,7 +75,7 @@ class BusDevice
       uint8_t count, b;
       if ((count = readByte(devAddr, regAddr, &b)) != 0)
       {
-        *data = Math::getBitsLsb(b, bitStart, length);
+        *data = Utils::getBitsLsb(b, bitStart, length);
       }
       return count;
     }
@@ -85,7 +84,7 @@ class BusDevice
     {
       uint8_t b;
       readByte(devAddr, regAddr, &b);
-      b = Math::setBit(b, bitNum, data);
+      b = Utils::setBit(b, bitNum, data);
       return writeByte(devAddr, regAddr, b);
     }
 
@@ -94,7 +93,7 @@ class BusDevice
       uint8_t b = 0;
       if (readByte(devAddr, regAddr, &b) != 0)
       {
-        b = Math::setBitsMsb(b, bitStart, length, data);
+        b = Utils::setBitsMsb(b, bitStart, length, data);
         return writeByte(devAddr, regAddr, b);
       } else {
         return false;
@@ -106,7 +105,7 @@ class BusDevice
       uint8_t b = 0;
       if (readByte(devAddr, regAddr, &b) != 0)
       {
-        b = Math::setBitsLsb(b, bitStart, length, data);
+        b = Utils::setBitsLsb(b, bitStart, length, data);
         return writeByte(devAddr, regAddr, b);
       } else {
         return false;
@@ -118,24 +117,15 @@ class BusDevice
       uint8_t b = 0;
       if (readByte(devAddr, regAddr, &b) != 0)
       {
-        b = Math::setMasked(b, mask, data);
+        b = Utils::setMasked(b, mask, data);
         return writeByte(devAddr, regAddr, b);
       } else {
         return false;
       }
     }
 
-    static const char ** getNames()
-    {
-      static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), PSTR("SLV"), NULL };
-      return busDevChoices;
-    }
-
-    static const char * getName(BusType type)
-    {
-      if(type >= BUS_MAX) return PSTR("?");
-      return getNames()[type];
-    }
+    static const char ** getNames();
+    static const char * getName(BusType type);
 
     std::function<void(void)> onError;
 
@@ -146,5 +136,3 @@ class BusDevice
 }
 
 }
-
-#endif

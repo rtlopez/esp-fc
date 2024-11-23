@@ -1,5 +1,4 @@
-#ifndef _ESPFC_DEVICE_MAG_DEVICE_H_
-#define _ESPFC_DEVICE_MAG_DEVICE_H_
+#pragma once
 
 #include "helper_3dmath.h"
 #include "BusAwareDevice.h"
@@ -34,21 +33,10 @@ class MagDevice: public BusAwareDevice
 
     virtual bool testConnection() = 0;
 
-    static const char ** getNames()
-    {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883L"), PSTR("AK8975"), PSTR("AK8963"), PSTR("QMC5883L"),NULL };
-      return devChoices;
-    }
-
-    static const char * getName(DeviceType type)
-    {
-      if(type >= MAG_MAX) return PSTR("?");
-      return getNames()[type];
-    }
+    static const char ** getNames();
+    static const char * getName(DeviceType type);
 };
 
 }
 
 }
-
-#endif

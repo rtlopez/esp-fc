@@ -25,9 +25,7 @@
 #define EspTwoWire_h
 
 #include <cinttypes>
-#ifndef UNIT_TEST
-#include <Stream.h>
-#endif
+#include <Arduino.h>
 
 #define ESPWIRE_BUFFER_LENGTH 64
 

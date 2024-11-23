@@ -94,7 +94,6 @@ int EscDriverEsp32::begin(const EscConfig& conf)
   _interval = TO_INTERVAL_US(_rate);
   _digital = isDigital(_protocol);
   _dshot_tlm = conf.dshotTelemetry && (_protocol == ESC_PROTOCOL_DSHOT300 || _protocol == ESC_PROTOCOL_DSHOT600);
-  _timer.setInterval(1000000);
 
   return 1;
 }

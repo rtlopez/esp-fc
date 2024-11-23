@@ -1,8 +1,6 @@
 #ifndef _ESPFC_MODEL_STATE_H_
 #define _ESPFC_MODEL_STATE_H_
 
-#include <Arduino.h>
-
 #ifndef UNIT_TEST
 #include <IPAddress.h>
 #endif
@@ -11,12 +9,11 @@
 #include "helper_3dmath.h"
 #include "Control/Pid.h"
 #include "Kalman.h"
-#include "Filter.h"
-#include "Stats.h"
-#include "Timer.h"
+#include "Utils/Filter.h"
+#include "Utils/Timer.h"
+#include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
-#include "Math/FreqAnalyzer.h"
-#include "Msp/Msp.h"
+#include "Connect/Msp.hpp"
 
 namespace Espfc {
 
@@ -38,8 +35,8 @@ class CliCmd
 class SerialPortState
 {
   public:
-    Msp::MspMessage mspRequest;
-    Msp::MspResponse mspResponse;
+    Connect::MspMessage mspRequest;
+    Connect::MspResponse mspResponse;
     CliCmd cliCmd;
     Device::SerialDevice * stream;
 };
@@ -80,7 +77,7 @@ class BuzzerState
       return idx >= BUZZER_MAX_EVENTS;
     }
 
-    Timer timer;
+    Utils::Timer timer;
     BuzzerEvent events[BUZZER_MAX_EVENTS];
     size_t idx;
     int32_t beeperMask;
@@ -105,7 +102,7 @@ class BatteryState
     float percentage;
     int8_t cells;
     int8_t samples;
-    Timer timer;
+    Utils::Timer timer;
 };
 
 enum CalibrationState {
@@ -194,14 +191,14 @@ struct InputState
   float us[INPUT_CHANNELS];
   float ch[INPUT_CHANNELS];
 
-  Filter filter[AXIS_COUNT_RPYT];
+  Utils::Filter filter[AXIS_COUNT_RPYT];
 
-  Timer timer;
+  Utils::Timer timer;
 };
 
 struct MixerState
 {
-  Timer timer;
+  Utils::Timer timer;
   float minThrottle;
   float maxThrottle;
   bool digitalOutput;
@@ -218,8 +215,8 @@ struct MagState
 
   VectorInt16 raw;
   VectorFloat adc;
-  Filter filter[3];
-  Timer timer;
+  Utils::Filter filter[3];
+  Utils::Timer timer;
 
   int calibrationSamples;
   int calibrationState;
@@ -268,17 +265,17 @@ struct GyroState
   int calibrationState;
   int calibrationRate;
 
-  Filter filter[AXIS_COUNT_RPY];
-  Filter filter2[AXIS_COUNT_RPY];
-  Filter filter3[AXIS_COUNT_RPY];
-  Filter notch1Filter[AXIS_COUNT_RPY];
-  Filter notch2Filter[AXIS_COUNT_RPY];
-  Filter dynNotchFilter[DYN_NOTCH_COUNT_MAX][AXIS_COUNT_RPY];
-  Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
-  Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
+  Utils::Filter filter[AXIS_COUNT_RPY];
+  Utils::Filter filter2[AXIS_COUNT_RPY];
+  Utils::Filter filter3[AXIS_COUNT_RPY];
+  Utils::Filter notch1Filter[AXIS_COUNT_RPY];
+  Utils::Filter notch2Filter[AXIS_COUNT_RPY];
+  Utils::Filter dynNotchFilter[DYN_NOTCH_COUNT_MAX][AXIS_COUNT_RPY];
+  Utils::Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
+  Utils::Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
 
-  Timer timer;
-  Timer dynamicFilterTimer;
+  Utils::Timer timer;
+  Utils::Timer dynamicFilterTimer;
 };
 
 struct AccelState
@@ -287,8 +284,8 @@ struct AccelState
   VectorInt16 raw;
   VectorFloat adc;
   VectorFloat prev;
-  Filter filter[AXIS_COUNT_RPY];
-  Timer timer;
+  Utils::Filter filter[AXIS_COUNT_RPY];
+  Utils::Timer timer;
 
   float scale;
   VectorFloat bias;
@@ -300,7 +297,7 @@ struct AccelState
 struct AttitudeState
 {
   VectorFloat rate;
-  Filter filter[AXIS_COUNT_RPY];
+  Utils::Filter filter[AXIS_COUNT_RPY];
   VectorFloat euler;
   Quaternion quaternion;
 };
@@ -345,13 +342,13 @@ struct ModelState
   OutputState output;
 
   int32_t loopRate;
-  Timer loopTimer;
+  Utils::Timer loopTimer;
 
-  Timer actuatorTimer;
-  Timer telemetryTimer;
+  Utils::Timer actuatorTimer;
+  Utils::Timer telemetryTimer;
 
   ModeState mode;
-  Stats stats;
+  Utils::Stats stats;
 
   int16_t debug[DEBUG_VALUE_COUNT];
 
@@ -366,7 +363,7 @@ struct ModelState
   int16_t i2cErrorDelta;
 
   SerialPortState serial[SERIAL_UART_COUNT];
-  Timer serialTimer;
+  Utils::Timer serialTimer;
 
   Target::Queue appQueue;
 

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Model.h"
+#include "Device/SerialDevice.h"
 #include "Telemetry/TelemetryText.h"
 #include "Telemetry/TelemetryCRSF.h"
-#include "Msp/Msp.h"
-#include "Msp/MspProcessor.h"
+#include "Connect/Msp.hpp"
+#include "Connect/MspProcessor.hpp"
 
 namespace Espfc {
 
@@ -16,51 +17,13 @@ enum TelemetryProtocol {
 class TelemetryManager
 {
 public:
-  TelemetryManager(Model& model): _model(model), _msp(model), _text(model), _crsf(model) {}
-
-  int process(Device::SerialDevice& s, TelemetryProtocol protocol) const
-  {
-    Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
-
-    switch(protocol)
-    {
-      case TELEMETRY_PROTOCOL_TEXT:
-        _text.process(s);
-        break;
-      case TELEMETRY_PROTOCOL_CRSF:
-        _crsf.process(s);
-        break;
-    }
-
-    return 1;
-  }
-
-  int processMsp(Device::SerialDevice& s, TelemetryProtocol protocol, Msp::MspMessage m, uint8_t origin)
-  {
-    Msp::MspResponse r;
-
-    // not valid msp message, stop processing
-    if(!m.isReady() || !m.isCmd()) return 0;
-
-    _msp.processCommand(m, r, s);
-
-    switch(protocol)
-    {
-      case TELEMETRY_PROTOCOL_CRSF:
-        _crsf.sendMsp(s, r, origin);
-        break;
-      default:
-        break;
-    }
-
-    _msp.postCommand();
-
-    return 1;
-  }
+  TelemetryManager(Model& model);
+  int process(Device::SerialDevice& s, TelemetryProtocol protocol) const;
+  int processMsp(Device::SerialDevice& s, TelemetryProtocol protocol, Connect::MspMessage m, uint8_t origin);
 
 private:
   Model& _model;
-  Msp::MspProcessor _msp;
+  Connect::MspProcessor _msp;
   Telemetry::TelemetryText _text;
   Telemetry::TelemetryCRSF _crsf;
 };
