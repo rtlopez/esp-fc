@@ -1,9 +1,7 @@
-#ifndef _ESPFC_DEVICE_BUSDEVICE_H_
-#define _ESPFC_DEVICE_BUSDEVICE_H_
+#pragma once
 
 #include <functional>
 #include <cstdint>
-#include "Hal/Pgm.h"
 #include "Utils/Bits.hpp"
 
 #define ESPFC_BUS_TIMEOUT 100
@@ -126,17 +124,8 @@ class BusDevice
       }
     }
 
-    static const char ** getNames()
-    {
-      static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), PSTR("SLV"), NULL };
-      return busDevChoices;
-    }
-
-    static const char * getName(BusType type)
-    {
-      if(type >= BUS_MAX) return PSTR("?");
-      return getNames()[type];
-    }
+    static const char ** getNames();
+    static const char * getName(BusType type);
 
     std::function<void(void)> onError;
 
@@ -147,5 +136,3 @@ class BusDevice
 }
 
 }
-
-#endif
