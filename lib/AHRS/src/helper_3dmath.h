@@ -435,7 +435,55 @@ class VectorBase {
     }
 };
 
+template<typename T>
+class RotationMatrix
+{
+public:
+  RotationMatrix() = default;
+
+  void init(const VectorBase<T>& v)
+  {
+    const T cosx = cosf(v.x);
+    const T sinx = sinf(v.x);
+    const T cosy = cosf(v.y);
+    const T siny = sinf(v.y);
+    const T cosz = cosf(v.z);
+    const T sinz = sinf(v.z);
+
+    const T coszcosx = cosz * cosx;
+    const T sinzcosx = sinz * cosx;
+    const T coszsinx = sinx * cosz;
+    const T sinzsinx = sinx * sinz;
+
+    _m[0][0] = cosz * cosy;
+    _m[0][1] = -cosy * sinz;
+    _m[0][2] = siny;
+    _m[1][0] = sinzcosx + (coszsinx * siny);
+    _m[1][1] = coszcosx - (sinzsinx * siny);
+    _m[1][2] = -sinx * cosy;
+    _m[2][0] = (sinzsinx) - (coszcosx * siny);
+    _m[2][1] = (coszsinx) + (sinzcosx * siny);
+    _m[2][2] = cosy * cosx;
+  }
+
+  VectorBase<T> apply(const VectorBase<T>& v)
+  {
+    const T x = _m[0][0] * v.x + _m[1][0] * v.y + _m[2][0] * v.z;
+    const T y = _m[0][1] * v.x + _m[1][1] * v.y + _m[2][1] * v.z;
+    const T z = _m[0][2] * v.x + _m[1][2] * v.y + _m[2][2] * v.z;
+    return VectorBase<T>{x, y, z};
+  }
+
+private:
+  T _m[3][3] = {
+    { T{1}, T{0}, T{0} },
+    { T{0}, T{1}, T{0} },
+    { T{0}, T{0}, T{1} },
+  };
+};
+
 typedef VectorBase<float> VectorFloat;
 typedef VectorBase<int16_t> VectorInt16;
+typedef RotationMatrix<float> RotationMatrixFloat;
 
 #endif /* _HELPER_3DMATH_H_ */
