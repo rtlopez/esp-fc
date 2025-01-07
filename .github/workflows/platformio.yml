@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        target: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp8266', 'rp2040', 'rp2350']
+        target: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp8266', 'rp2040']
     steps:
       - uses: actions/checkout@v4
       - name: Extract Version
