@@ -60,7 +60,6 @@ class MagSensor: public BaseSensor
 
       _model.state.mag.adc = _mag->convert(_model.state.mag.raw);
 
-
       align(_model.state.mag.adc, _model.config.mag.align);
       _model.state.mag.adc = _model.state.boardAlignment.apply(_model.state.mag.adc);
 

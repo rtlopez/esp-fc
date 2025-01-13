@@ -15,7 +15,7 @@ constexpr float FTERM_SCALE_BETAFLIGHT = 0.00013754f;
 constexpr float PTERM_SCALE = PTERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.00183 = 0.032029f * 57.29 / 1000
 constexpr float ITERM_SCALE = ITERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.014f
 constexpr float DTERM_SCALE = DTERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.0000303f
-constexpr float FTERM_SCALE = FTERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; //
+constexpr float FTERM_SCALE = FTERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.00000788f
 
 constexpr float LEVEL_PTERM_SCALE = 0.1f;    // 1/10
 constexpr float LEVEL_ITERM_SCALE = 0.1f;    // 1/10
