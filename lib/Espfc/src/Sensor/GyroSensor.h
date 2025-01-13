@@ -35,6 +35,7 @@ class GyroSensor: public BaseSensor
     Math::Sma<VectorFloat, 8> _sma;
     Math::Sma<VectorFloat, 8> _dyn_notch_sma;
     size_t _dyn_notch_denom;
+    size_t _dyn_notch_count;
     bool _dyn_notch_enabled;
     bool _dyn_notch_debug;
     bool _rpm_enabled;

@@ -3,9 +3,6 @@
 #include "Math/Utils.h"
 #include "ModelConfig.h"
 
-#define SETPOINT_RATE_LIMIT 1998.0f
-#define RC_RATE_INCREMENTAL 14.54f
-
 namespace Espfc
 {
 

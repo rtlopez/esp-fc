@@ -263,7 +263,6 @@ int main(int argc, char **argv)
   RUN_TEST(test_esc_extract_telemetry_dshot300_sample);
   RUN_TEST(test_esc_extract_telemetry_dshot300_running);
   RUN_TEST(test_esc_extract_telemetry_dshot300_idle);
-  UNITY_END();
 
-  return 0;
+  return UNITY_END();
 }

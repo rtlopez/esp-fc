@@ -31,7 +31,7 @@ public:
     _rate = rate;
     _freq_min = config.min_freq;
     _freq_max = std::min(config.max_freq, nyquistLimit);
-    _peak_count = std::min((size_t)config.width, PEAKS_MAX);
+    _peak_count = std::min((size_t)config.count, PEAKS_MAX);
 
     _idx = axis * SAMPLES / 3;
     _bin_width = (float)_rate / SAMPLES; // no need to dived by 2 as we next process `SAMPLES / 2` results
