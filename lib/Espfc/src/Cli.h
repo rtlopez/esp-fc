@@ -307,8 +307,8 @@ class Cli
           if(args[3]) ac.ch = String(args[3]).toInt();
           if(args[4]) ac.min = String(args[4]).toInt();
           if(args[5]) ac.max = String(args[5]).toInt();
-          if(args[6]) ac.max = String(args[6]).toInt();
-          if(args[7]) ac.max = String(args[7]).toInt();
+          if(args[6]) ac.logicMode = String(args[6]).toInt();
+          if(args[7]) ac.linkId = String(args[7]).toInt();
         }
 
         void write(MixerEntry& ac, const char ** args) const
@@ -713,9 +713,11 @@ class Cli
         Param(PSTR("blackbox_rate"), &c.blackboxPdenom),
         Param(PSTR("blackbox_mask"), &c.blackboxFieldsDisabledMask),
 
+        Param(PSTR("model_name"), PARAM_STRING, &c.modelName[0], NULL, MODEL_NAME_LEN),
+
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
-        Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL, 32),
-        Param(PSTR("wifi_pass"), PARAM_STRING, &c.wireless.pass[0], NULL, 32),
+        Param(PSTR("wifi_ssid"), PARAM_STRING, &c.wireless.ssid[0], NULL, WirelessConfig::MAX_LEN),
+        Param(PSTR("wifi_pass"), PARAM_STRING, &c.wireless.pass[0], NULL, WirelessConfig::MAX_LEN),
         Param(PSTR("wifi_tcp_port"), &c.wireless.port),
 #endif
 
@@ -989,10 +991,12 @@ class Cli
         //s.print(F("# "));
         //printVersion(s);
         //s.println();
+        s.println(F("defaults"));
         for(size_t i = 0; _params[i].name; ++i)
         {
           print(_params[i], s);
         }
+        s.println(F("save"));
       }
       else if(strcmp_P(cmd.args[0], PSTR("cal")) == 0)
       {
@@ -1122,7 +1126,8 @@ class Cli
       else if(strcmp_P(cmd.args[0], PSTR("save")) == 0)
       {
         _model.save();
-        s.println(F("OK"));
+        s.println(F("# Saved, type reboot to apply changes"));
+        s.println();
       }
       else if(strcmp_P(cmd.args[0], PSTR("eeprom")) == 0)
       {
