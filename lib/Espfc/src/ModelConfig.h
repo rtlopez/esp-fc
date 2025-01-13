@@ -864,7 +864,7 @@ class ModelConfig
       pid[FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 };
       pid[FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 };
       pid[FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 };
-      pid[FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
+      pid[FC_PID_LEVEL] = { .P = 45, .I =  0, .D =  0, .F = 0 };
 
       pid[FC_PID_ALT]   = { .P = 0, .I =  0, .D =  0, .F = 0 };
       pid[FC_PID_POS]   = { .P = 0, .I =  0, .D =  0, .F = 0 };  // POSHOLD_P * 100, POSHOLD_I * 100,
@@ -896,6 +896,8 @@ class ModelConfig
         conditions[i].ch = AXIS_AUX_1 + 0;
         conditions[i].min = 900;
         conditions[i].max = 900;
+        conditions[i].logicMode = 0;
+        conditions[i].linkId = 0;
       }
 
       // actuator config - pid scaling
