@@ -6,10 +6,6 @@ namespace Espfc {
 
 namespace Utils {
 
-Timer::Timer(): interval(0), last(0), next(0), iteration(0), delta(0)
-{
-}
-
 int Timer::setInterval(uint32_t interval)
 {
   this->interval = interval;
@@ -17,6 +13,7 @@ int Timer::setInterval(uint32_t interval)
   this->denom = 1;
   this->delta = this->interval;
   this->intervalf = this->interval * 0.000001f;
+  this->realRate = (float)this->rate;
   iteration = 0;
   return 1;
 }
@@ -28,6 +25,7 @@ int Timer::setRate(uint32_t rate, uint32_t denom)
   this->denom = denom;
   this->delta = this->interval;
   this->intervalf = this->interval * 0.000001f;
+  this->realRate = (float)this->rate;
   iteration = 0;
   return 1;
 }
@@ -55,6 +53,7 @@ int FAST_CODE_ATTR Timer::update(uint32_t now)
   delta = now - last;
   last = now;
   iteration++;
+  realRate += 0.1f * ((1000000.0f / delta) - realRate);
   return 1;
 }
 
