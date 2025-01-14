@@ -359,6 +359,11 @@ void FAST_CODE_ATTR Filter::reconfigure(int16_t freq, int16_t cutoff, float q, f
   reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), _rate, q, weight);
 }
 
+void FAST_CODE_ATTR Filter::reconfigure(int16_t freq, int16_t cutoff, float q, float weight, int rate)
+{
+  reconfigure(FilterConfig((FilterType)_conf.type, freq, cutoff), rate, q, weight);
+}
+
 void FAST_CODE_ATTR Filter::reconfigure(const FilterConfig& config, int rate)
 {
   _rate = rate;
