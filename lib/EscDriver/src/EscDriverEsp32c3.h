@@ -39,7 +39,7 @@ class EscDriverEsp32c3: public EscDriverBase
         void reset() { *this = Item(); }
     };
 
-    typedef uint32_t mask_t;
+    using mask_t = uint32_t;
 
     EscDriverEsp32c3();
 

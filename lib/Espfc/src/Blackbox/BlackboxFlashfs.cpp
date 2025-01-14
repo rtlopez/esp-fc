@@ -9,7 +9,8 @@
 
 static const uint32_t FLASHFS_ERASED_VAL = 0xffffffff;
 
-typedef Espfc::Utils::RingBuf<uint8_t, FLASHFS_WRITE_BUFFER_SIZE> BufferType;
+using BufferType = Espfc::Utils::RingBuf<uint8_t, FLASHFS_WRITE_BUFFER_SIZE>;
+
 static BufferType buff;
 
 static FlashfsRuntime flashfs;

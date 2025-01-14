@@ -3,11 +3,11 @@
 #include <cstdint>
 
 #if defined(ARCH_RP2040)
-  typedef PinStatus pin_status_t;
-  typedef PinMode pin_mode_t;
+  using pin_status_t = PinStatus;
+  using pin_mode_t = PinMode;
 #else
-  typedef uint8_t pin_status_t;
-  typedef uint8_t pin_mode_t;
+  using pin_status_t = uint8_t;
+  using pin_mode_t = uint8_t;
 #endif
 
 namespace Espfc {

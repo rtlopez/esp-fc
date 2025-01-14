@@ -34,7 +34,7 @@ class EscDriverRP2040: public EscDriverBase
         inline bool active() const { return pin != -1; }
     };
 
-    typedef uint32_t mask_t;
+    using mask_t = uint32_t;
 
     EscDriverRP2040();
 
