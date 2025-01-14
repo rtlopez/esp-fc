@@ -147,10 +147,13 @@ class Filter
     void reset();
 
     void reconfigure(int16_t freq, int16_t cutoff = 0);
-    void reconfigure(int16_t freq, int16_t cutoff, float q, float weight = 1.0f);
+    void reconfigure(int16_t freq, int16_t cutoff, float q, float weight);
+    void reconfigure(int16_t freq, int16_t cutoff, float q, float weight, int rate);
+
     void reconfigure(const FilterConfig& config, int rate);
     void reconfigure(const FilterConfig& config, int rate, float q, float weight);
     void reconfigure(const Filter& filter);
+
     void setWeight(float weight);
     float getNotchQApprox(float freq, float cutoff);
     float getNotchQ(float freq, float cutoff);
