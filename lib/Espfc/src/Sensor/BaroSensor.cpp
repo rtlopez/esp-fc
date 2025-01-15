@@ -1,4 +1,5 @@
 #include "BaroSensor.h"
+#include <functional>
 
 namespace Espfc {
 
@@ -22,8 +23,11 @@ int BaroSensor::begin()
   _model.state.baro.altitudeBiasSamples = 2 * _model.state.baro.rate;
 
   // TODO: move filters to BaroState
-  _temperatureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baro.rate * 0.1f), _model.state.baro.rate);
-  _pressureFilter.begin(FilterConfig(FILTER_PT1, _model.state.baro.rate * 0.1f), _model.state.baro.rate);
+  auto internalFilter = FILTER_PT1;
+  auto internalCutoff = std::max(_model.state.baro.rate / 10, 1);
+  _temperatureFilter.begin(FilterConfig(internalFilter, internalCutoff), _model.state.baro.rate);
+  _pressureFilter.begin(FilterConfig(internalFilter, internalCutoff), _model.state.baro.rate);
+
   _altitudeFilter.begin(_model.config.baro.filter, _model.state.baro.rate);
 
   _model.logger.info().log(F("BARO INIT")).log(FPSTR(Device::BaroDevice::getName(_baro->getType()))).log(_baro->getAddress()).log(toGyroRate).log(_model.state.baro.rate).logln(_model.config.baro.filter.freq);
@@ -48,7 +52,7 @@ int BaroSensor::read()
 
   if(_model.config.debug.mode == DEBUG_BARO)
   {
-    _model.state.debug[0] = _state;
+    _model.state.debug[3] = _state;
   }
 
   switch(_state)
@@ -104,19 +108,19 @@ void BaroSensor::readPressure()
 
 void BaroSensor::updateAltitude()
 {
-  _model.state.baro.altitudeRaw = _altitudeFilter.update(Utils::toAltitude(_model.state.baro.pressure));
+  _model.state.baro.altitudeRaw = Utils::toAltitude(_model.state.baro.pressure);
   if(_model.state.baro.altitudeBiasSamples > 0)
   {
     _model.state.baro.altitudeBiasSamples--;
-    _model.state.baro.altitudeBias += (_model.state.baro.altitudeRaw - _model.state.baro.altitudeBias) * 0.2f;
+    _model.state.baro.altitudeBias += (_model.state.baro.altitudeRaw - _model.state.baro.altitudeBias) * (5.0f / _model.state.baro.rate);
   }
-  _model.state.baro.altitude = _model.state.baro.altitudeRaw - _model.state.baro.altitudeBias;
+  _model.state.baro.altitude = _altitudeFilter.update(_model.state.baro.altitudeRaw - _model.state.baro.altitudeBias);
 
   if(_model.config.debug.mode == DEBUG_BARO)
   {
+    _model.state.debug[0] = lrintf((_model.state.baro.altitudeRaw - _model.state.baro.altitudeBias) * 100.f); // cm
     _model.state.debug[1] = lrintf(_model.state.baro.pressureRaw * 0.1f); // hPa x 10
     _model.state.debug[2] = lrintf(_model.state.baro.temperatureRaw * 100.f); // deg C x 100
-    _model.state.debug[3] = lrintf(_model.state.baro.altitudeRaw * 10.f);
   }
 }
 

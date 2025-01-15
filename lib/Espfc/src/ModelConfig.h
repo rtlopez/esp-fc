@@ -594,7 +594,7 @@ struct BaroConfig
 {
   int8_t bus = BUS_AUTO;
   int8_t dev = BARO_NONE;
-  FilterConfig filter{FILTER_BIQUAD, 5};
+  FilterConfig filter{FILTER_BIQUAD, 3};
 };
 
 struct MagConfig
