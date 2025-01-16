@@ -147,7 +147,7 @@ int FAST_CODE_ATTR SerialManager::update()
   {
     if(!serialRx)
     {
-      Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
+      Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
       size_t len = stream->available();
       if(len > 0)
       {
@@ -167,8 +167,8 @@ int FAST_CODE_ATTR SerialManager::update()
                 _msp.processCommand(ss.mspRequest, ss.mspResponse, *stream);
                 _msp.sendResponse(ss.mspResponse, *stream);
                 _msp.postCommand();
-                ss.mspRequest = Msp::MspMessage();
-                ss.mspResponse = Msp::MspResponse();
+                ss.mspRequest = Connect::MspMessage();
+                ss.mspResponse = Connect::MspResponse();
               }
             }
             else

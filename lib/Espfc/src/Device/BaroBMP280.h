@@ -23,8 +23,13 @@
 #define BMP280_PRESSURE_REG           0xF7
 #define BMP280_TEMPERATURE_REG        0xFA
 
-#define BMP280_FILTER_X2              (1 << 2)
 #define BMP280_MODE_NORMAL            0x03
+
+#define BMP280_FILTER_OFF             0x00
+#define BMP280_FILTER_X2              0x01
+#define BMP280_FILTER_X4              0x02
+#define BMP280_FILTER_X8              0x03
+#define BMP280_FILTER_X16             0x04
 
 #define BMP280_SAMPLING_X1            1
 #define BMP280_SAMPLING_X2            2
@@ -75,10 +80,10 @@ class BaroBMP280: public BaroDevice
       writeReg(BMP280_RESET_REG, BMP280_RESET_VAL); // device reset
       delay(2);
 
-      writeReg(BMP280_CONFIG_REG, BMP280_FILTER_X2); // set minimal standby and IIR filter X2
+      writeReg(BMP280_CONFIG_REG, BMP280_FILTER_X4 << 2); // set minimal standby and IIR filter X2
       //writeReg(BMP280_CONFIG_REG, 0); // set minimal standby and IIR filter off
 
-      writeReg(BMP280_CONTROL_REG, BMP280_SAMPLING_X1 << 5 | BMP280_SAMPLING_X4 << 2 | BMP280_MODE_NORMAL); // set sampling mode
+      writeReg(BMP280_CONTROL_REG, BMP280_SAMPLING_X2 << 5 | BMP280_SAMPLING_X8 << 2 | BMP280_MODE_NORMAL); // set sampling mode
 
       delay(20);
 
@@ -145,7 +150,9 @@ class BaroBMP280: public BaroDevice
         default:
           //return 5500; // if sapling X1
           //return 7500; // if sampling X2
-          return 11500;  // if sampling X4
+          //return 11500;  // if sampling X4
+          return 19500;  // if sampling X8
+          //return 37500;  // if sampling X16
       }
     }
 

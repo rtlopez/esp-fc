@@ -1,5 +1,4 @@
-#ifndef _ESPFC_DEVICE_GYRO_DEVICE_H_
-#define _ESPFC_DEVICE_GYRO_DEVICE_H_
+#pragma once
 
 #include <helper_3dmath.h>
 #include "BusDevice.h"
@@ -41,21 +40,10 @@ class GyroDevice: public BusAwareDevice
 
     virtual bool testConnection() = 0;
 
-    static const char ** getNames()
-    {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), PSTR("LSM6DSO"), PSTR("ICM20602"),PSTR("BMI160"), NULL };
-      return devChoices;
-    }
-
-    static const char * getName(DeviceType type)
-    {
-      if(type >= GYRO_MAX) return PSTR("?");
-      return getNames()[type];
-    }
+    static const char ** getNames();
+    static const char * getName(DeviceType type);
 };
 
 }
 
 }
-
-#endif

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Crsf.h"
-#include "Math/Utils.h"
-#include "Math/Crc.h"
+#include "Utils/Math.hpp"
+#include "Utils/Crc.hpp"
 #include "Utils/MemoryHelper.h"
 #include <cstring>
 
@@ -92,7 +92,7 @@ void Crsf::encodeRcData(CrsfMessage& msg, const CrsfData& data)
   msg.payload[sizeof(data)] = crc(msg);
 }
 
-int Crsf::encodeMsp(CrsfMessage& msg, const Msp::MspResponse& resp, uint8_t origin)
+int Crsf::encodeMsp(CrsfMessage& msg, const Connect::MspResponse& resp, uint8_t origin)
 {
   uint8_t buff[CRSF_PAYLOAD_SIZE_MAX];
   size_t size = resp.serialize(buff, CRSF_PAYLOAD_SIZE_MAX);
@@ -101,7 +101,7 @@ int Crsf::encodeMsp(CrsfMessage& msg, const Msp::MspResponse& resp, uint8_t orig
 
   uint8_t status = 0;
   status |= (1 << 4); // start bit
-  status |= ((resp.version == Msp::MSP_V1 ? 1 : 2) << 5);
+  status |= ((resp.version == Connect::MSP_V1 ? 1 : 2) << 5);
 
   msg.prepare(Rc::CRSF_FRAMETYPE_MSP_RESP);
   msg.writeU8(origin);
@@ -113,7 +113,7 @@ int Crsf::encodeMsp(CrsfMessage& msg, const Msp::MspResponse& resp, uint8_t orig
   return msg.size;
 }
 
-int Crsf::decodeMsp(const CrsfMessage& msg, Msp::MspMessage& m, uint8_t& origin)
+int Crsf::decodeMsp(const CrsfMessage& msg, Connect::MspMessage& m, uint8_t& origin)
 {
   //uint8_t dst = msg.payload[0];
   origin = msg.payload[1];
@@ -128,32 +128,32 @@ int Crsf::decodeMsp(const CrsfMessage& msg, Msp::MspMessage& m, uint8_t& origin)
   {
     if(version == 1)
     {
-      const Msp::MspHeaderV1 * hdr = reinterpret_cast<const Msp::MspHeaderV1*>(msg.payload + 3);
-      size_t framePayloadSize = msg.size - 5 - sizeof(Msp::MspHeaderV1);
+      const Connect::MspHeaderV1 * hdr = reinterpret_cast<const Connect::MspHeaderV1*>(msg.payload + 3);
+      size_t framePayloadSize = msg.size - 5 - sizeof(Connect::MspHeaderV1);
       if(framePayloadSize >= hdr->size)
       {
         m.expected = hdr->size;
         m.received = hdr->size;
         m.cmd = hdr->cmd;
-        m.state = Msp::MSP_STATE_RECEIVED;
-        m.dir = Msp::MSP_TYPE_CMD;
-        m.version = Msp::MSP_V1;
-        std::copy_n(msg.payload + 3 + sizeof(Msp::MspHeaderV1), m.received, m.buffer);
+        m.state = Connect::MSP_STATE_RECEIVED;
+        m.dir = Connect::MSP_TYPE_CMD;
+        m.version = Connect::MSP_V1;
+        std::copy_n(msg.payload + 3 + sizeof(Connect::MspHeaderV1), m.received, m.buffer);
       }
     }
     else if(version == 2)
     {
-      const Msp::MspHeaderV2 * hdr = reinterpret_cast<const Msp::MspHeaderV2*>(msg.payload + 3);
-      size_t framePayloadSize = msg.size - 5 - sizeof(Msp::MspHeaderV2);
+      const Connect::MspHeaderV2 * hdr = reinterpret_cast<const Connect::MspHeaderV2*>(msg.payload + 3);
+      size_t framePayloadSize = msg.size - 5 - sizeof(Connect::MspHeaderV2);
       if(framePayloadSize >= hdr->size)
       {
         m.expected = hdr->size;
         m.received = hdr->size;
         m.cmd = hdr->cmd;
-        m.state = Msp::MSP_STATE_RECEIVED;
-        m.dir = Msp::MSP_TYPE_CMD;
-        m.version = Msp::MSP_V1;
-        std::copy_n(msg.payload + 3 + sizeof(Msp::MspHeaderV2), m.received, m.buffer);
+        m.state = Connect::MSP_STATE_RECEIVED;
+        m.dir = Connect::MSP_TYPE_CMD;
+        m.version = Connect::MSP_V1;
+        std::copy_n(msg.payload + 3 + sizeof(Connect::MspHeaderV2), m.received, m.buffer);
       }
     }
   }
@@ -178,16 +178,16 @@ uint16_t Crsf::convert(int v)
     */
   return ((v * 1024) / 1639) + 881;
   //return lrintf((0.62477120195241 * (float)v) + 880.54);
-  //return Math::map(v, 172, 1811, 988, 2012);
-  //return Math::mapi(v, 172, 1811, 988, 2012);
+  //return Utils::map(v, 172, 1811, 988, 2012);
+  //return Utils::mapi(v, 172, 1811, 988, 2012);
 }
 
 uint8_t Crsf::crc(const CrsfMessage& msg)
 {
   // CRC includes type and payload
-  uint8_t crc = Math::crc8_dvb_s2(0, msg.type);
+  uint8_t crc = Utils::crc8_dvb_s2(0, msg.type);
   for (int i = 0; i < msg.size - 2; i++) { // size includes type and crc
-      crc = Math::crc8_dvb_s2(crc, msg.payload[i]);
+      crc = Utils::crc8_dvb_s2(crc, msg.payload[i]);
   }
   return crc;
 }

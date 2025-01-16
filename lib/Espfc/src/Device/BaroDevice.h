@@ -1,5 +1,4 @@
-#ifndef _ESPFC_DEVICE_BARO_DEVICE_H_
-#define _ESPFC_DEVICE_BARO_DEVICE_H_
+#pragma once
 
 #include "BusDevice.h"
 #include "BusAwareDevice.h"
@@ -40,21 +39,10 @@ class BaroDevice: public BusAwareDevice
 
     virtual bool testConnection() = 0;
 
-    static const char ** getNames()
-    {
-      static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("BMP085"), PSTR("MS5611"), PSTR("BMP280"), PSTR("SPL06-001"), NULL };
-      return devChoices;
-    }
-
-    static const char * getName(DeviceType type)
-    {
-      if(type >= BARO_MAX) return PSTR("?");
-      return getNames()[type];
-    }
+    static const char ** getNames();
+    static const char * getName(DeviceType type);
 };
 
 }
 
 }
-
-#endif

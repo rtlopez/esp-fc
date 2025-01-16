@@ -34,21 +34,21 @@ class EscDriverRP2040: public EscDriverBase
         inline bool active() const { return pin != -1; }
     };
 
-    typedef uint32_t mask_t;
+    using mask_t = uint32_t;
 
     EscDriverRP2040();
 
     int begin(const EscConfig& conf);
     void end();
-    int attach(size_t channel, int pin, int pulse) IRAM_ATTR;
-    int write(size_t channel, int pulse) IRAM_ATTR;
+    int attach(size_t channel, int pin, int pulse);
+    int write(size_t channel, int pulse);
     int pin(size_t channel) const;
     uint32_t telemetry(size_t channel) const;
-    void apply() IRAM_ATTR;
+    void apply();
 
   private:
-    uint32_t usToTicks(uint32_t us) IRAM_ATTR;
-    uint32_t usToTicksReal(uint32_t us) IRAM_ATTR;
+    uint32_t usToTicks(uint32_t us);
+    uint32_t usToTicksReal(uint32_t us);
     uint32_t nsToDshotTicks(uint32_t ns);
     void dshotWriteDMA();
     bool isSliceDriven(int slice);

@@ -87,11 +87,10 @@ class BaroBMP085: public BaroDevice
       uint8_t buffer[3];
       _bus->read(_addr, BMP085_MEASUREMENT_REG, 3, buffer);
 
+      uint32_t up = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | buffer[2];
+
       uint8_t oss = (_mode & 0xC0) >> 6;
-
-      uint32_t up = ((uint32_t)buffer[0] << 16) + ((uint16_t)buffer[1] << 8) + buffer[2];
       if(_mode & 0x34) up = up >> (8 - oss);
-
       if(up == 0) return NAN;
 
       int32_t b6 = _t_fine - 4000;
@@ -104,6 +103,7 @@ class BaroBMP085: public BaroDevice
       x3 = ((x1 + x2) + 2) >> 2;
       uint32_t b4 = ((uint32_t)_cal.ac4 * (uint32_t)(x3 + 32768)) >> 15;
       uint32_t b7 = ((uint32_t)up - b3) * (uint32_t)(50000UL >> oss);
+
       int32_t p = 0;
       if (b7 < 0x80000000) {
         p = (b7 << 1) / b4;
@@ -114,12 +114,14 @@ class BaroBMP085: public BaroDevice
       x1 = (x1 * 3038) >> 16;
       x2 = (-7357 * p) >> 16;
 
-      return p + ((x1 + x2 + (int32_t)3791) >> 4);
+      p = p + ((x1 + x2 + (int32_t)3791) >> 4);
+
+      return p;
     }
 
     void setMode(BaroDeviceMode mode)
     {
-      _mode = mode == BARO_MODE_TEMP ? BMP085_MEASURE_T : BMP085_MEASURE_P2;
+      _mode = mode == BARO_MODE_TEMP ? BMP085_MEASURE_T : BMP085_MEASURE_P3;
       _bus->writeByte(_addr, BMP085_CONTROL_REG, _mode);
     }
 
@@ -132,8 +134,8 @@ class BaroBMP085: public BaroDevice
         default:
           //return 4550;  // press_0
           //return 7550;  // press_1
-          return 13550; // press_2
-          //return 25550; // press_3
+          //return 13550; // press_2
+          return 25550; // press_3
       }
     }
 

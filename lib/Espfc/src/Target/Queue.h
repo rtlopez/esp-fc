@@ -28,15 +28,15 @@ class Event
 
 #if defined(ARCH_RP2040)
   #include <pico/util/queue.h>
-  typedef queue_t TargetQueueHandle;
+  using TargetQueueHandle = queue_t;
 #elif defined(ESPFC_FREE_RTOS_QUEUE)
   #include <freertos/queue.h>
-  typedef QueueHandle_t TargetQueueHandle;
+  using TargetQueueHandle = QueueHandle_t;
 #elif defined(ESPFC_ATOMIC_QUEUE)
   #include "QueueAtomic.h"
-  typedef Espfc::QueueAtomic<Espfc::Event, 63> TargetQueueHandle;
+  using TargetQueueHandle = Espfc::QueueAtomic<Espfc::Event, 63>;
 #elif defined(UNIT_TEST) || !defined(ESPFC_MULTI_CORE)
-  typedef int TargetQueueHandle;
+  using TargetQueueHandle = int;
 #else
   #error "Not yet implelented multicore queue"
 #endif
