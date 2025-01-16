@@ -24,7 +24,7 @@ int BaroSensor::begin()
 
   // TODO: move filters to BaroState
   auto internalFilter = FILTER_PT1;
-  auto internalCutoff = std::max(_model.state.baro.rate / 10, 1);
+  auto internalCutoff = std::max(_model.state.baro.rate / 10, (int32_t)1);
   _temperatureFilter.begin(FilterConfig(internalFilter, internalCutoff), _model.state.baro.rate);
   _pressureFilter.begin(FilterConfig(internalFilter, internalCutoff), _model.state.baro.rate);
 
