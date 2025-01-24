@@ -304,8 +304,8 @@ void test_crsf_encode_msp_v1()
   CrsfMessage frame;
   memset(&frame, 0, sizeof(frame));
 
-  Msp::MspResponse resp;
-  resp.version = Msp::MSP_V1;
+  Connect::MspResponse resp;
+  resp.version = Connect::MSP_V1;
   resp.cmd = MSP_API_VERSION;
   resp.result = 0;
   resp.writeU8(1);
@@ -342,8 +342,8 @@ void test_crsf_encode_msp_v2()
   CrsfMessage frame;
   memset(&frame, 0, sizeof(frame));
 
-  Msp::MspResponse resp;
-  resp.version = Msp::MSP_V2;
+  Connect::MspResponse resp;
+  resp.version = Connect::MSP_V2;
   resp.cmd = MSP_API_VERSION;
   resp.result = 0;
   resp.writeU8(1);
@@ -386,7 +386,7 @@ void test_crsf_decode_msp_v1()
   CrsfMessage frame; 
   std::copy_n(data, sizeof(data), (uint8_t*)&frame);
 
-  Msp::MspMessage m;
+  Connect::MspMessage m;
   uint8_t origin = 0;
 
   Crsf::decodeMsp(frame, m, origin);

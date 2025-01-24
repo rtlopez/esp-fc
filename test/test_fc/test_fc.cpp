@@ -1,14 +1,18 @@
 #include <unity.h>
 #include <ArduinoFake.h>
 #include <EscDriver.h>
-#include "Timer.h"
+#include "Utils/Timer.h"
 #include "Model.h"
-#include "Controller.h"
-#include "Actuator.h"
+#include "Control/Controller.h"
+#include "Control/Actuator.h"
 #include "Output/Mixer.h"
 
 using namespace fakeit;
 using namespace Espfc;
+using Espfc::Control::Rates;
+using Espfc::Control::Controller;
+using Espfc::Control::Actuator;
+using Espfc::Utils::Timer;
 
 /*void setUp(void)
 {

@@ -65,7 +65,7 @@ bool sensors(uint32_t mask)
 
 float pidGetPreviousSetpoint(int axis)
 {
-  return Espfc::Math::toDeg(_model_ptr->state.setpoint.rate[axis]);
+  return Espfc::Utils::toDeg(_model_ptr->state.setpoint.rate[axis]);
 }
 
 float mixerGetThrottle(void)

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include "Filter.h"
-#include "Math/Utils.h"
+#include "Utils/Filter.h"
+#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -12,10 +12,10 @@ constexpr float ITERM_SCALE_BETAFLIGHT = 0.244381f;
 constexpr float DTERM_SCALE_BETAFLIGHT = 0.000529f;
 constexpr float FTERM_SCALE_BETAFLIGHT = 0.00013754f;
 
-constexpr float PTERM_SCALE = PTERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.00183 = 0.032029f * 57.29 / 1000
-constexpr float ITERM_SCALE = ITERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.014f
-constexpr float DTERM_SCALE = DTERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.0000303f
-constexpr float FTERM_SCALE = FTERM_SCALE_BETAFLIGHT * Math::toDeg(1.0f) * 0.001f; // ~ 0.00000788f
+constexpr float PTERM_SCALE = PTERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.00183 = 0.032029f * 57.29 / 1000
+constexpr float ITERM_SCALE = ITERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.014f
+constexpr float DTERM_SCALE = DTERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.0000303f
+constexpr float FTERM_SCALE = FTERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.00000788f
 
 constexpr float LEVEL_PTERM_SCALE = 0.1f;    // 1/10
 constexpr float LEVEL_ITERM_SCALE = 0.1f;    // 1/10
@@ -64,12 +64,12 @@ class Pid
     float dTerm;
     float fTerm;
 
-    Filter dtermFilter;
-    Filter dtermFilter2;
-    Filter dtermNotchFilter;
-    Filter ptermFilter;
-    Filter ftermFilter;
-    Filter itermRelaxFilter;
+    Utils::Filter dtermFilter;
+    Utils::Filter dtermFilter2;
+    Utils::Filter dtermNotchFilter;
+    Utils::Filter ptermFilter;
+    Utils::Filter ftermFilter;
+    Utils::Filter itermRelaxFilter;
 
     float prevMeasurement;
     float prevError;

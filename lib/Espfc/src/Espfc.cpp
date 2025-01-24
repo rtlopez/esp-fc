@@ -44,7 +44,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   {
     if(!_model.state.gyro.timer.check()) return 0;
   }
-  Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
 #if defined(ESPFC_MULTI_CORE)
 
@@ -102,7 +102,7 @@ int FAST_CODE_ATTR Espfc::updateOther()
   }
   Event e = _model.state.appQueue.receive();
 
-  Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
   switch(e.type)
   {

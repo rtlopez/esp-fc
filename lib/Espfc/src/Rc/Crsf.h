@@ -2,8 +2,8 @@
 
 #include <cstdint>
 #include <cstddef>
-#include "Math/Crc.h"
-#include "Msp/Msp.h"
+#include "Utils/Crc.hpp"
+#include "Connect/Msp.hpp"
 
 namespace Espfc {
 
@@ -170,8 +170,8 @@ struct CrsfMessage
 
   uint8_t crc() const
   {
-    uint8_t crc = Math::crc8_dvb_s2(0, type);
-    return Math::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
+    uint8_t crc = Utils::crc8_dvb_s2(0, type);
+    return Utils::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
   }
 } __attribute__ ((__packed__));
 
@@ -182,8 +182,8 @@ public:
   static void decodeRcDataShift8(uint16_t* channels, const CrsfData* frame);
   //static void decodeRcDataShift32(uint16_t* channels, const CrsfData* frame);
   static void encodeRcData(CrsfMessage& frame, const CrsfData& data);
-  static int encodeMsp(CrsfMessage& msg, const Msp::MspResponse& res, uint8_t origin);
-  static int decodeMsp(const CrsfMessage& msg, Msp::MspMessage& m, uint8_t& origin);
+  static int encodeMsp(CrsfMessage& msg, const Connect::MspResponse& res, uint8_t origin);
+  static int decodeMsp(const CrsfMessage& msg, Connect::MspMessage& m, uint8_t& origin);
   static uint16_t convert(int v);
   static uint8_t crc(const CrsfMessage& frame);
 };
