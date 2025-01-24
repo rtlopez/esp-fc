@@ -4,8 +4,8 @@
 namespace Espfc {
 
 Espfc::Espfc():
-  _hardware(_model), _controller(_model), _input(_model), _actuator(_model), _sensor(_model),
-  _mixer(_model), _blackbox(_model), _buzzer(_model), _serial(_model)
+  _hardware{_model}, _controller{_model}, _telemetry{_model}, _input{_model, _telemetry}, _actuator{_model}, _sensor{_model},
+  _mixer{_model}, _blackbox{_model}, _buzzer{_model}, _serial{_model, _telemetry}
   {}
 
 int Espfc::load()
@@ -19,7 +19,7 @@ int Espfc::load()
 int Espfc::begin()
 {
   _serial.begin();      // requires _model.load()
-  _model.logStorageResult();
+  //_model.logStorageResult();
   _hardware.begin();    // requires _model.load()
   _model.begin();       // requires _hardware.begin()
   _mixer.begin();
@@ -38,18 +38,18 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 {
   if(externalTrigger)
   {
-    _model.state.gyroTimer.update();
+    _model.state.gyro.timer.update();
   }
   else
   {
-    if(!_model.state.gyroTimer.check()) return 0;
+    if(!_model.state.gyro.timer.check()) return 0;
   }
-  Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
 #if defined(ESPFC_MULTI_CORE)
 
   _sensor.read();
-  if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+  if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
   {
     _input.update();
   }
@@ -65,15 +65,15 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 #else
 
   _sensor.update();
-  if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
+  if(_model.state.loopTimer.syncTo(_model.state.gyro.timer))
   {
     _controller.update();
-    if(_model.state.mixerTimer.syncTo(_model.state.loopTimer))
+    if(_model.state.mixer.timer.syncTo(_model.state.loopTimer))
     {
       _mixer.update();
     }
     _blackbox.update();
-    if(_model.state.inputTimer.syncTo(_model.state.gyroTimer, 1u))
+    if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
     {
       _input.update();
     }
@@ -102,7 +102,7 @@ int FAST_CODE_ATTR Espfc::updateOther()
   }
   Event e = _model.state.appQueue.receive();
 
-  Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
   switch(e.type)
   {

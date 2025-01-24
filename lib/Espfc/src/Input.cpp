@@ -1,43 +1,43 @@
 
 #include "Input.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
-Input::Input(Model& model): _model(model) {}
+Input::Input(Model& model, TelemetryManager& telemetry): _model(model), _telemetry(telemetry) {}
 
 int Input::begin()
 {
   _device = getInputDevice();
-  _model.state.inputChannelCount = _device ? _device->getChannelCount() : INPUT_CHANNELS;
-  _model.state.inputFrameDelta = FRAME_TIME_DEFAULT_US;
-  _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
-  _model.state.inputFrameCount = 0;
-  _model.state.inputAutoFactor = 1.f / (2.f + _model.config.input.filterAutoFactor * 0.1f);
+  _model.state.input.channelCount = _device ? _device->getChannelCount() : INPUT_CHANNELS;
+  _model.state.input.frameDelta = FRAME_TIME_DEFAULT_US;
+  _model.state.input.frameRate = 1000000ul / _model.state.input.frameDelta;
+  _model.state.input.frameCount = 0;
+  _model.state.input.autoFactor = 1.f / (2.f + _model.config.input.filterAutoFactor * 0.1f);
   switch(_model.config.input.interpolationMode)
   {
     case INPUT_INTERPOLATION_AUTO:
-      _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+      _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
       break;
     case INPUT_INTERPOLATION_MANUAL:
-      _model.state.inputInterpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
+      _model.state.input.interpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
       break;
     case INPUT_INTERPOLATION_DEFAULT:
     case INPUT_INTERPOLATION_OFF:
     default:
-      _model.state.inputInterpolationDelta = FRAME_TIME_DEFAULT_US * 0.000001f;
+      _model.state.input.interpolationDelta = FRAME_TIME_DEFAULT_US * 0.000001f;
       break;
   }
-  _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;
+  _model.state.input.interpolationStep = _model.state.loopTimer.intervalf / _model.state.input.interpolationDelta;
   _step = 0.0f;
   for(size_t c = 0; c < INPUT_CHANNELS; ++c)
   {
     if(_device) _filter[c].begin(FilterConfig(_device->needAverage() ? FILTER_FIR2 : FILTER_NONE, 1), _model.state.loopTimer.rate);
     int16_t v = c == AXIS_THRUST ? PWM_RANGE_MIN : PWM_RANGE_MID;
-    _model.state.inputRaw[c] = v;
-    _model.state.inputBuffer[c] = v;
-    _model.state.inputBufferPrevious[c] = v;
+    _model.state.input.raw[c] = v;
+    _model.state.input.buffer[c] = v;
+    _model.state.input.bufferPrevious[c] = v;
     setInput((Axis)c, v, true, true);
   }
   return 1;
@@ -55,7 +55,7 @@ int16_t FAST_CODE_ATTR Input::getFailsafeValue(uint8_t c)
     case FAILSAFE_MODE_INVALID:
     case FAILSAFE_MODE_HOLD:
     default:
-      return _model.state.inputBuffer[c];
+      return _model.state.input.buffer[c];
   }
 }
 
@@ -64,14 +64,14 @@ void FAST_CODE_ATTR Input::setInput(Axis i, float v, bool newFrame, bool noFilte
   const InputChannelConfig& ich = _model.config.input.channel[i];
   if(i <= AXIS_THRUST)
   {
-    const float nv = noFilter ? v : _model.state.inputFilter[i].update(v);
-    _model.state.inputUs[i] = nv;
-    _model.state.input[i] = Math::map(nv, ich.min, ich.max, -1.f, 1.f);
+    const float nv = noFilter ? v : _model.state.input.filter[i].update(v);
+    _model.state.input.us[i] = nv;
+    _model.state.input.ch[i] = Utils::map(nv, ich.min, ich.max, -1.f, 1.f);
   }
   else if(newFrame)
   {
-    _model.state.inputUs[i] = v;
-    _model.state.input[i] = Math::map(v, ich.min, ich.max, -1.f, 1.f);
+    _model.state.input.us[i] = v;
+    _model.state.input.ch[i] = Utils::map(v, ich.min, ich.max, -1.f, 1.f);
   }
 }
 
@@ -88,7 +88,7 @@ int FAST_CODE_ATTR Input::update()
     filterInputs(status);
   }
 
-  if(_model.config.debugMode == DEBUG_PIDLOOP)
+  if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
     _model.state.debug[1] = micros() - startTime;
   }
@@ -98,32 +98,32 @@ int FAST_CODE_ATTR Input::update()
 
 InputStatus FAST_CODE_ATTR Input::readInputs()
 {
-  Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
+  Utils::Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
   uint32_t startTime = micros();
 
   InputStatus status = _device->update();
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[0] = micros() - startTime;
   }
 
   if(status == INPUT_IDLE) return status;
 
-  _model.state.inputRxLoss = (status == INPUT_LOST || status == INPUT_FAILSAFE);
-  _model.state.inputRxFailSafe = (status == INPUT_FAILSAFE);
-  _model.state.inputFrameCount++;
+  _model.state.input.rxLoss = (status == INPUT_LOST || status == INPUT_FAILSAFE);
+  _model.state.input.rxFailSafe = (status == INPUT_FAILSAFE);
+  _model.state.input.frameCount++;
 
   updateFrameRate();
 
   processInputs();
 
-  if(_model.config.debugMode == DEBUG_RX_SIGNAL_LOSS)
+  if(_model.config.debug.mode == DEBUG_RX_SIGNAL_LOSS)
   {
-    _model.state.debug[0] = !_model.state.inputRxLoss;
-    _model.state.debug[1] = _model.state.inputRxFailSafe;
-    _model.state.debug[2] = _model.state.inputChannelsValid;
-    _model.state.debug[3] = _model.state.inputLossTime / (100 * 1000);
+    _model.state.debug[0] = !_model.state.input.rxLoss;
+    _model.state.debug[1] = _model.state.input.rxFailSafe;
+    _model.state.debug[2] = _model.state.input.channelsValid;
+    _model.state.debug[3] = _model.state.input.lossTime / (100 * 1000);
   }
 
   return status;
@@ -131,27 +131,27 @@ InputStatus FAST_CODE_ATTR Input::readInputs()
 
 void FAST_CODE_ATTR Input::processInputs()
 {
-  if(_model.state.inputFrameCount < 5) return; // ignore few first frames that might be garbage
+  if(_model.state.input.frameCount < 5) return; // ignore few first frames that might be garbage
 
   uint32_t startTime = micros();
 
   uint16_t channels[INPUT_CHANNELS];
-  _device->get(channels, _model.state.inputChannelCount);
+  _device->get(channels, _model.state.input.channelCount);
 
-  _model.state.inputChannelsValid = true;
-  for(size_t c = 0; c < _model.state.inputChannelCount; c++)
+  _model.state.input.channelsValid = true;
+  for(size_t c = 0; c < _model.state.input.channelCount; c++)
   {
     const InputChannelConfig& ich = _model.config.input.channel[c];
 
     // remap channels
-    int16_t v = _model.state.inputRaw[c] = (int16_t)channels[ich.map];
+    int16_t v = _model.state.input.raw[c] = (int16_t)channels[ich.map];
 
     // adj midrc
     v -= _model.config.input.midRc - PWM_RANGE_MID;
 
     // adj range
-    //float t = Math::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, (float)PWM_RANGE_MIN, (float)PWM_RANGE_MID, (float)PWM_RANGE_MAX);
-    float t = Math::mapi(v, ich.min, ich.max, PWM_RANGE_MIN, PWM_RANGE_MAX);
+    //float t = Utils::map3((float)v, (float)ich.min, (float)ich.neutral, (float)ich.max, (float)PWM_RANGE_MIN, (float)PWM_RANGE_MID, (float)PWM_RANGE_MAX);
+    float t = Utils::mapi(v, ich.min, ich.max, PWM_RANGE_MIN, PWM_RANGE_MAX);
 
     // filter if required
     t = _filter[c].update(t);
@@ -160,22 +160,22 @@ void FAST_CODE_ATTR Input::processInputs()
     // apply deadband
     if(c < AXIS_THRUST)
     {
-      v = Math::deadband(v - PWM_RANGE_MID, (int)_model.config.input.deadband) + PWM_RANGE_MID;
+      v = Utils::deadband(v - PWM_RANGE_MID, (int)_model.config.input.deadband) + PWM_RANGE_MID;
     }
 
     // check if inputs are valid, apply failsafe value otherwise
     if(v < _model.config.input.minRc || v > _model.config.input.maxRc)
     {
       v = getFailsafeValue(c);
-      if(c <= AXIS_THRUST) _model.state.inputChannelsValid = false;
+      if(c <= AXIS_THRUST) _model.state.input.channelsValid = false;
     }
 
     // update input buffer
-    _model.state.inputBufferPrevious[c] = _model.state.inputBuffer[c];
-    _model.state.inputBuffer[c] = v;
+    _model.state.input.bufferPrevious[c] = _model.state.input.buffer[c];
+    _model.state.input.buffer[c] = v;
   }
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[2] = micros() - startTime;
   }
@@ -183,7 +183,7 @@ void FAST_CODE_ATTR Input::processInputs()
 
 bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 {
-  Stats::Measure readMeasure(_model.state.stats, COUNTER_FAILSAFE);
+  Utils::Stats::Measure readMeasure(_model.state.stats, COUNTER_FAILSAFE);
 
   if(_model.isSwitchActive(MODE_FAILSAFE))
   {
@@ -204,15 +204,15 @@ bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
   }
 
   // stage 2 timeout
-  _model.state.inputLossTime = micros() - _model.state.inputFrameTime;
-  if(_model.state.inputLossTime > Math::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)2u, (uint32_t)200u) * TENTH_TO_US)
+  _model.state.input.lossTime = micros() - _model.state.input.frameTime;
+  if(_model.state.input.lossTime > Utils::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)2u, (uint32_t)200u) * TENTH_TO_US)
   {
     failsafeStage2();
     return true;
   }
 
   // stage 1 timeout (100ms)
-  if(_model.state.inputLossTime >= 2 * TENTH_TO_US)
+  if(_model.state.input.lossTime >= 2 * TENTH_TO_US)
   {
     failsafeStage1();
     return true;
@@ -224,14 +224,14 @@ bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 void FAST_CODE_ATTR Input::failsafeIdle()
 {
   _model.state.failsafe.phase = FC_FAILSAFE_IDLE;
-  _model.state.inputLossTime = 0;
+  _model.state.input.lossTime = 0;
 }
 
 void FAST_CODE_ATTR Input::failsafeStage1()
 {
   _model.state.failsafe.phase = FC_FAILSAFE_RX_LOSS_DETECTED;
-  _model.state.inputRxLoss = true;
-  for(size_t i = 0; i < _model.state.inputChannelCount; i++)
+  _model.state.input.rxLoss = true;
+  for(size_t i = 0; i < _model.state.input.channelCount; i++)
   {
     setInput((Axis)i, getFailsafeValue(i), true, true);
   }
@@ -240,8 +240,8 @@ void FAST_CODE_ATTR Input::failsafeStage1()
 void FAST_CODE_ATTR Input::failsafeStage2()
 {
   _model.state.failsafe.phase = FC_FAILSAFE_RX_LOSS_DETECTED;
-  _model.state.inputRxLoss = true;
-  _model.state.inputRxFailSafe = true;
+  _model.state.input.rxLoss = true;
+  _model.state.input.rxFailSafe = true;
   if(_model.isModeActive(MODE_ARMED))
   {
     _model.state.failsafe.phase = FC_FAILSAFE_LANDED;
@@ -251,7 +251,7 @@ void FAST_CODE_ATTR Input::failsafeStage2()
 
 void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
 {
-  Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
+  Utils::Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
   uint32_t startTime = micros();
 
   const bool newFrame = status != INPUT_IDLE;
@@ -265,21 +265,21 @@ void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
     }
     if(_step < 1.f)
     {
-      _step += _model.state.inputInterpolationStep;
+      _step += _model.state.input.interpolationStep;
     }
   }
 
-  for(size_t c = 0; c < _model.state.inputChannelCount; c++)
+  for(size_t c = 0; c < _model.state.input.channelCount; c++)
   {
-    float v = _model.state.inputBuffer[c];
+    float v = _model.state.input.buffer[c];
     if(c <= AXIS_THRUST)
     {
-      v = interpolation ? _interpolate(_model.state.inputBufferPrevious[c], v, _step) : v;
+      v = interpolation ? _interpolate(_model.state.input.bufferPrevious[c], v, _step) : v;
     }
     setInput((Axis)c, v, newFrame);
   }
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[3] = micros() - startTime;
   }
@@ -288,41 +288,41 @@ void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
 void FAST_CODE_ATTR Input::updateFrameRate()
 {
   const uint32_t now = micros();
-  const uint32_t frameDelta = now - _model.state.inputFrameTime;
+  const uint32_t frameDelta = now - _model.state.input.frameTime;
 
-  _model.state.inputFrameTime = now;
-  _model.state.inputFrameDelta += (((int)frameDelta - (int)_model.state.inputFrameDelta) >> 3); // avg * 0.125
-  _model.state.inputFrameRate = 1000000ul / _model.state.inputFrameDelta;
+  _model.state.input.frameTime = now;
+  _model.state.input.frameDelta += (((int)frameDelta - (int)_model.state.input.frameDelta) >> 3); // avg * 0.125
+  _model.state.input.frameRate = 1000000ul / _model.state.input.frameDelta;
 
   if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO && _model.config.input.filterType == INPUT_INTERPOLATION)
   {
-    _model.state.inputInterpolationDelta = Math::clamp(_model.state.inputFrameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
-    _model.state.inputInterpolationStep = _model.state.loopTimer.intervalf / _model.state.inputInterpolationDelta;
+    _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+    _model.state.input.interpolationStep = _model.state.loopTimer.intervalf / _model.state.input.interpolationDelta;
   }
 
-  if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
+  if(_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
   {
-    _model.state.debug[0] = _model.state.inputFrameDelta / 10;
-    _model.state.debug[1] = _model.state.inputFrameRate;
+    _model.state.debug[0] = _model.state.input.frameDelta / 10;
+    _model.state.debug[1] = _model.state.input.frameRate;
   }
 
   // auto cutoff input freq
-  float freq = std::max(_model.state.inputFrameRate * _model.state.inputAutoFactor, 15.f); // no lower than 15Hz
-  if(freq > _model.state.inputAutoFreq * 1.1f || freq < _model.state.inputAutoFreq * 0.9f)
+  float freq = std::max(_model.state.input.frameRate * _model.state.input.autoFactor, 15.f); // no lower than 15Hz
+  if(freq > _model.state.input.autoFreq * 1.1f || freq < _model.state.input.autoFreq * 0.9f)
   {
-    _model.state.inputAutoFreq += 0.25f * (freq - _model.state.inputAutoFreq);
-    if(_model.config.debugMode == DEBUG_RC_SMOOTHING_RATE)
+    _model.state.input.autoFreq += 0.25f * (freq - _model.state.input.autoFreq);
+    if(_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
     {
       _model.state.debug[2] = lrintf(freq);
-      _model.state.debug[3] = lrintf(_model.state.inputAutoFreq);
+      _model.state.debug[3] = lrintf(_model.state.input.autoFreq);
     }
-    FilterConfig conf((FilterType)_model.config.input.filter.type, _model.state.inputAutoFreq);
-    FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, _model.state.inputAutoFreq);
-    for(size_t i = 0; i <= AXIS_THRUST; i++)
+    FilterConfig conf((FilterType)_model.config.input.filter.type, _model.state.input.autoFreq);
+    FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, _model.state.input.autoFreq);
+    for(size_t i = 0; i < AXIS_COUNT_RPYT; i++)
     {
       if(_model.config.input.filter.freq == 0)
       {
-        _model.state.inputFilter[i].reconfigure(conf, _model.state.loopTimer.rate);
+        _model.state.input.filter[i].reconfigure(conf, _model.state.loopTimer.rate);
       }
       if(_model.config.input.filterDerivative.freq == 0)
       {
@@ -331,7 +331,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
     }
   }
 
-  if(_model.config.debugMode == DEBUG_RX_TIMING)
+  if(_model.config.debug.mode == DEBUG_RX_TIMING)
   {
     _model.state.debug[1] = micros() - now;
   }
@@ -348,7 +348,7 @@ Device::InputDevice * Input::getInputDevice()
   }
   if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
   {
-    _crsf.begin(serial);
+    _crsf.begin(serial, _model.isFeatureActive(FEATURE_TELEMETRY) ? &_telemetry : nullptr);
     _model.logger.info().logln(F("RX CRSF"));
     return &_crsf;
   }

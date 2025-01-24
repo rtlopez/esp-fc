@@ -1,5 +1,5 @@
 #include "Pid.h"
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
@@ -41,11 +41,11 @@ float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
         const bool increasing = (iTerm > 0 && iTermError > 0) || (iTerm < 0 && iTermError < 0);
         const bool incrementOnly = itermRelax == ITERM_RELAX_RP_INC || itermRelax == ITERM_RELAX_RPY_INC;
         itermRelaxBase = setpoint - itermRelaxFilter.update(setpoint);
-        itermRelaxFactor = std::max(0.0f, 1.0f - std::abs(Math::toDeg(itermRelaxBase)) * 0.025f); // (itermRelaxBase / 40)
+        itermRelaxFactor = std::max(0.0f, 1.0f - std::abs(Utils::toDeg(itermRelaxBase)) * 0.025f); // (itermRelaxBase / 40)
         if(!incrementOnly || increasing) iTermError *= itermRelaxFactor;
       }
       iTerm += Ki * iScale * iTermError * dt;
-      iTerm = Math::clamp(iTerm, -iLimit, iLimit);
+      iTerm = Utils::clamp(iTerm, -iLimit, iLimit);
     }
   }
   else
@@ -82,7 +82,7 @@ float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
   prevError = error;
   prevSetpoint = setpoint;
 
-  return Math::clamp(pTerm + iTerm + dTerm + fTerm, -oLimit, oLimit);
+  return Utils::clamp(pTerm + iTerm + dTerm + fTerm, -oLimit, oLimit);
 }
 
 }

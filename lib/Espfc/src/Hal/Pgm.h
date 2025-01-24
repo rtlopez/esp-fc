@@ -1,6 +1,10 @@
 #pragma once
 
-#ifdef UNIT_TEST
+#ifndef UNIT_TEST
+
+#include <pgmspace.h>
+
+#else
 
 #ifndef PSTR
 #define PSTR(s) (s)
@@ -19,6 +23,11 @@
 
 #endif // UNIT_TEST
 
-//#undef max
-//#undef min
-
+#ifdef ARCH_RP2040
+namespace arduino {
+class __FlashStringHelper;
+}
+using __FlashStringHelper = arduino::__FlashStringHelper;
+#else
+class __FlashStringHelper;
+#endif

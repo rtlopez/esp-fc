@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Math/Utils.h"
+#include "Utils/Math.hpp"
 #include "ModelConfig.h"
-
-#define SETPOINT_RATE_LIMIT 1998.0f
-#define RC_RATE_INCREMENTAL 14.54f
 
 namespace Espfc
 {
@@ -16,6 +13,8 @@ enum RateType {
   RATES_TYPE_ACTUAL,
   RATES_TYPE_QUICK,
 };
+
+namespace Control {
 
 class Rates
 {
@@ -42,7 +41,7 @@ class Rates
 
     inline float constrainf(float x, float l, float h) const
     {
-      return Math::clamp(x, l, h);
+      return Utils::clamp(x, l, h);
     }
 
   private:
@@ -53,4 +52,6 @@ class Rates
     int16_t rateLimit[3];
 };
 
-} // namespace Espfc
+}
+
+}

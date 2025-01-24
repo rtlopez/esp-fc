@@ -2,19 +2,19 @@
 
 #include "Model.h"
 #include "Device/SerialDevice.h"
+#include "Connect/MspProcessor.hpp"
+#include "Connect/Cli.hpp"
+#include "TelemetryManager.h"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
 #endif
-#include "Msp/MspProcessor.h"
-#include "Cli.h"
-#include "Telemetry.h"
 
 namespace Espfc {
 
 class SerialManager
 {
   public:
-    SerialManager(Model& model);
+    SerialManager(Model& model, TelemetryManager& telemetry);
 
     int begin();
     int update();
@@ -29,12 +29,12 @@ class SerialManager
     }
 
     Model& _model;
-    Msp::MspProcessor _msp;
-    Cli _cli;
+    Connect::MspProcessor _msp;
+    Connect::Cli _cli;
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
     Wireless _wireless;
 #endif
-    Telemetry _telemetry;
+    TelemetryManager& _telemetry;
     size_t _current;
 };
 

@@ -20,12 +20,12 @@ int FAST_CODE_ATTR SensorManager::read()
 {
   _gyro.read();
 
-  if(_model.state.loopTimer.syncTo(_model.state.gyroTimer))
+  if(_model.state.loopTimer.syncTo(_model.state.gyro.timer))
   {
     _model.state.appQueue.send(Event(EVENT_GYRO_READ));
   }
 
-  if(_model.state.accelTimer.syncTo(_model.state.gyroTimer))
+  if(_model.state.accel.timer.syncTo(_model.state.gyro.timer))
   {
     _accel.update();
     _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
@@ -44,9 +44,9 @@ int FAST_CODE_ATTR SensorManager::read()
 int FAST_CODE_ATTR SensorManager::preLoop()
 {
   _gyro.filter();
-  if(_model.state.gyroBiasSamples == 0)
+  if(_model.state.gyro.biasSamples == 0)
   {
-    _model.state.gyroBiasSamples = -1;
+    _model.state.gyro.biasSamples = -1;
     _fusion.restoreGain();
   }
   return 1;
@@ -77,7 +77,7 @@ int SensorManager::updateDelayed()
 
   // update at most one sensor besides gyro
   int status = 0;
-  if(_model.state.accelTimer.syncTo(_model.state.gyroTimer))
+  if(_model.state.accel.timer.syncTo(_model.state.gyro.timer))
   {
     _accel.update();
     status = 1;

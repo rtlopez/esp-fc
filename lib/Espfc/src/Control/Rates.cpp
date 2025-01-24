@@ -3,6 +3,11 @@
 
 namespace Espfc {
 
+namespace Control {
+
+constexpr float SETPOINT_RATE_LIMIT = 1998.0f;
+constexpr float RC_RATE_INCREMENTAL = 14.54f;
+
 void Rates::begin(const InputConfig& config)
 {
   rateType = (RateType)config.rateType;
@@ -17,7 +22,7 @@ void Rates::begin(const InputConfig& config)
 
 float FAST_CODE_ATTR Rates::getSetpoint(const int axis, float input) const
 {
-  input = Math::clamp(input, -0.995f, 0.995f); // limit input
+  input = Utils::clamp(input, -0.995f, 0.995f); // limit input
   const float inputAbs = fabsf(input);
   float result = 0;
   switch(rateType)
@@ -33,7 +38,7 @@ float FAST_CODE_ATTR Rates::getSetpoint(const int axis, float input) const
     case RATES_TYPE_QUICK:
       result = quick(axis, input, inputAbs);
   }
-  return Math::toRad(Math::clamp(result, -(float)rateLimit[axis], (float)rateLimit[axis]));
+  return Utils::toRad(Utils::clamp(result, -(float)rateLimit[axis], (float)rateLimit[axis]));
 }
 
 float FAST_CODE_ATTR Rates::betaflight(const int axis, float rcCommandf, const float rcCommandfAbs) const
@@ -105,6 +110,8 @@ float FAST_CODE_ATTR Rates::quick(const int axis, float rcCommandf, const float 
   float angleRate = constrainf(rcCommandf * rcRate * superfactor, -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT);
 
   return angleRate;
+}
+
 }
 
 }

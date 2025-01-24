@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
+#include "Utils/Crc.hpp"
+#include "Connect/Msp.hpp"
 
 namespace Espfc {
 
@@ -28,6 +31,7 @@ enum {
 
 enum {
     CRSF_FRAMETYPE_GPS = 0x02,
+    CRSF_FRAMETYPE_VARIO_SENSOR = 0x07,
     CRSF_FRAMETYPE_BATTERY_SENSOR = 0x08,
     CRSF_FRAMETYPE_HEARTBEAT = 0x0B,
     CRSF_FRAMETYPE_LINK_STATISTICS = 0x14,
@@ -104,8 +108,9 @@ struct CrsfData
  * Every frame has the structure:
  * <Device address><Frame length><Type><Payload><CRC>
  * Device address: (uint8_t)
- * Frame length:   length in  bytes including Type (uint8_t)
+ * Frame length:   length in bytes including Type and CRC (uint8_t)
  * Type:           (uint8_t)
+ * Payload:        (....)
  * CRC:            (uint8_t)
  */
 struct CrsfMessage
@@ -114,13 +119,61 @@ struct CrsfMessage
   uint8_t size; // counts size after this byte, so it must be the payload size + 2 (type and crc)
   uint8_t type; // CrsfFrameType
   uint8_t payload[CRSF_PAYLOAD_SIZE_MAX + 1];
-} __attribute__ ((__packed__));
 
-union CrsfFrame
-{
-  CrsfMessage message;
-  uint8_t data[CRSF_FRAME_SIZE_MAX];
-};
+  void prepare(uint8_t t)
+  {
+    addr = Rc::CRSF_SYNC_BYTE;
+    type = t;
+    size = 0;
+  }
+
+  void finalize()
+  {
+    size += 2;
+    writeCRC(crc());
+  }
+
+  void writeU8(uint8_t v)
+  {
+    payload[size++] = v;
+  }
+
+  void writeU16(uint16_t v)
+  {
+    writeU8(v >> 0);
+    writeU8(v >> 8);
+  }
+
+  void writeU32(uint32_t v)
+  {
+    writeU8(v >> 0);
+    writeU8(v >> 8);
+    writeU8(v >> 16);
+    writeU8(v >> 24);
+  }
+
+  void write(const uint8_t * v, size_t len)
+  {
+    while(len--) writeU8(*v++);
+  }
+
+  void writeString(const char * v, bool terminate = false)
+  {
+    while(*v) writeU8(*v++);
+    if(terminate) writeU8(0);
+  }
+
+  void writeCRC(uint8_t v)
+  {
+    payload[size - 2] = v;
+  }
+
+  uint8_t crc() const
+  {
+    uint8_t crc = Utils::crc8_dvb_s2(0, type);
+    return Utils::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
+  }
+} __attribute__ ((__packed__));
 
 class Crsf
 {
@@ -128,9 +181,11 @@ public:
   static void decodeRcData(uint16_t* channels, const CrsfData* frame);
   static void decodeRcDataShift8(uint16_t* channels, const CrsfData* frame);
   //static void decodeRcDataShift32(uint16_t* channels, const CrsfData* frame);
-  static void encodeRcData(CrsfFrame& frame, const CrsfData& data);
+  static void encodeRcData(CrsfMessage& frame, const CrsfData& data);
+  static int encodeMsp(CrsfMessage& msg, const Connect::MspResponse& res, uint8_t origin);
+  static int decodeMsp(const CrsfMessage& msg, Connect::MspMessage& m, uint8_t& origin);
   static uint16_t convert(int v);
-  static uint8_t crc(const CrsfFrame& frame);
+  static uint8_t crc(const CrsfMessage& frame);
 };
 
 }

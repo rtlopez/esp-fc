@@ -24,7 +24,7 @@ int32_t getAmperageLatest(void)
 bool rxIsReceivingSignal(void)
 {
   if(!_model_ptr) return false;
-  return !((*_model_ptr).state.inputRxLoss || (*_model_ptr).state.inputRxFailSafe);
+  return !((*_model_ptr).state.input.rxLoss || (*_model_ptr).state.input.rxFailSafe);
 }
 
 bool isRssiConfigured(void)
@@ -65,22 +65,22 @@ bool sensors(uint32_t mask)
 
 float pidGetPreviousSetpoint(int axis)
 {
-  return Espfc::Math::toDeg(_model_ptr->state.desiredRate[axis]);
+  return Espfc::Utils::toDeg(_model_ptr->state.setpoint.rate[axis]);
 }
 
 float mixerGetThrottle(void)
 {
-  return (_model_ptr->state.output[Espfc::AXIS_THRUST] + 1.0f) * 0.5f;
+  return (_model_ptr->state.output.ch[Espfc::AXIS_THRUST] + 1.0f) * 0.5f;
 }
 
 int16_t getMotorOutputLow()
 {
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
+  return _model_ptr->state.mixer.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
 }
 
 int16_t getMotorOutputHigh()
 {
-  return _model_ptr->state.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
+  return _model_ptr->state.mixer.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
 }
 
 bool areMotorsRunning(void)
@@ -90,5 +90,5 @@ bool areMotorsRunning(void)
 
 uint16_t getDshotErpm(uint8_t i)
 {
-  return _model_ptr->state.outputTelemetryErpm[i];
+  return _model_ptr->state.output.telemetry.erpm[i];
 }

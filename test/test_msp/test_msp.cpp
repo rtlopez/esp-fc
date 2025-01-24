@@ -5,11 +5,13 @@
 #include <Kalman.h>
 #include <EscDriver.h>
 #include <printf.h>
-#include "Msp/Msp.h"
-#include "Msp/MspParser.h"
+#include "Connect/Msp.hpp"
+#include "Connect/MspParser.hpp"
+#include "msp/msp_protocol.h"
 
 using namespace fakeit;
 using namespace Espfc;
+using namespace Espfc::Connect;
 
 /*void setUp(void)
 {
@@ -20,7 +22,6 @@ using namespace Espfc;
 // // clean stuff up here
 // }
 
-using namespace Espfc::Msp;
 
 #define MSP_V2_FLAG 0
 
@@ -127,7 +128,6 @@ int main(int argc, char **argv)
   RUN_TEST(test_msp_v2_parse_header);
   RUN_TEST(test_msp_v2_parse_no_payload);
   RUN_TEST(test_msp_v2_parse_payload);
-  UNITY_END();
 
-  return 0;
+  return UNITY_END();
 }
