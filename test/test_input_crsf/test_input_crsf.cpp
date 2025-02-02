@@ -1,6 +1,7 @@
 #include <unity.h>
 #include <ArduinoFake.h>
 #include "Device/InputCRSF.h"
+#include "Device/InputIBUS.hpp"
 #include <EscDriver.h>
 #include <helper_3dmath.h>
 #include <Kalman.h>
@@ -27,7 +28,7 @@ void test_input_crsf_rc_valid()
     input.parse(frame, data[i]);
   }
 
-  for (size_t i; i < sizeof(data); i++) {
+  for (size_t i = 0; i < sizeof(data); i++) {
     TEST_ASSERT_EQUAL_UINT8(data[i], frame.data[i]);
   }
 
@@ -290,6 +291,76 @@ void test_crsf_decode_rc_shift8()
   TEST_ASSERT_EQUAL_UINT16(1500, channels[15]);
 }*/
 
+void test_input_ibus_rc_valid()
+{
+  InputIBUS input;
+  InputIBUS::IBusData frame;
+  memset(&frame, 0, sizeof(frame));
+  uint8_t * frame_data = reinterpret_cast<uint8_t*>(&frame);
+
+  When(Method(ArduinoFake(), micros)).Return(0);
+
+  input.begin(nullptr);
+
+  // const uint8_t data[] = {
+  //   0x20, 0x40,  // preambule (len, cmd)
+  //   0xDC, 0x05,  0xDC, 0x05,  0xBE, 0x05,  0xDC, 0x05, // channel 1-4
+  //   0xD0, 0x07,  0xD0, 0x07,  0xDC, 0x05,  0xDC, 0x05, // channel 5-8
+  //   0xDC, 0x05,  0xDC, 0x05,  0xDC, 0x05,  0xDC, 0x05, // channel 9-12
+  //   0xDC, 0x05,  0xDC, 0x05,  // channel 13-14
+  //   0x83, 0xF3  // checksum
+  // };
+
+  const uint8_t data[] = {
+    0x20, 0x40,
+    0xDB, 0x05, 0xDC, 0x05,  0x54, 0x05, 0xDC, 0x05,  0xE8, 0x03, 0xD0, 0x07,  0xD2, 0x05, 0xE8, 0x03,
+    0xDC, 0x05, 0xDC, 0x05,  0xDC, 0x05, 0xDC, 0x05,  0xDC, 0x05, 0xDC, 0x05,
+    0xDA, 0xF3,
+  };
+  for (size_t i = 0; i < sizeof(data); i++) {
+    input.parse(frame, data[i]);
+  }
+
+  for (size_t i = 0; i < sizeof(data); i++) {
+    TEST_ASSERT_EQUAL_HEX8(data[i], frame_data[i]);
+  }
+
+  TEST_ASSERT_EQUAL_HEX16(0xF3DA, frame.checksum);
+
+  TEST_ASSERT_EQUAL_HEX8(0x20, frame.len);
+  TEST_ASSERT_EQUAL_HEX8(0x40, frame.cmd);
+
+  TEST_ASSERT_EQUAL_UINT16(1499, frame.ch[0]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[1]);
+  TEST_ASSERT_EQUAL_UINT16(1364, frame.ch[2]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[3]);
+  TEST_ASSERT_EQUAL_UINT16(1000, frame.ch[4]);
+  TEST_ASSERT_EQUAL_UINT16(2000, frame.ch[5]);
+  TEST_ASSERT_EQUAL_UINT16(1490, frame.ch[6]);
+  TEST_ASSERT_EQUAL_UINT16(1000, frame.ch[7]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[8]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[9]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[10]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[11]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[12]);
+  TEST_ASSERT_EQUAL_UINT16(1500, frame.ch[13]);
+
+  TEST_ASSERT_EQUAL_UINT16(1499, input.get(0));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(1));
+  TEST_ASSERT_EQUAL_UINT16(1364, input.get(2));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(3));
+  TEST_ASSERT_EQUAL_UINT16(1000, input.get(4));
+  TEST_ASSERT_EQUAL_UINT16(2000, input.get(5));
+  TEST_ASSERT_EQUAL_UINT16(1490, input.get(6));
+  TEST_ASSERT_EQUAL_UINT16(1000, input.get(7));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(8));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(9));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(10));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(11));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(12));
+  TEST_ASSERT_EQUAL_UINT16(1500, input.get(13));
+}
+
 int main(int argc, char **argv)
 {
   UNITY_BEGIN();
@@ -299,7 +370,7 @@ int main(int argc, char **argv)
   RUN_TEST(test_crsf_decode_rc_struct);
   RUN_TEST(test_crsf_decode_rc_shift8);
   //RUN_TEST(test_crsf_decode_rc_shift32);
-  UNITY_END();
+  RUN_TEST(test_input_ibus_rc_valid);
 
-  return 0;
+  return UNITY_END();
 }

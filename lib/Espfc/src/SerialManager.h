@@ -2,6 +2,7 @@
 
 #include "Model.h"
 #include "Device/SerialDevice.h"
+#include "Output/OutputIBUS.hpp"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
 #endif
@@ -36,6 +37,7 @@ class SerialManager
 #endif
     Telemetry _telemetry;
     size_t _current;
+    Output::OutputIBUS _ibus;
 };
 
 }
