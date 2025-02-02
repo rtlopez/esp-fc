@@ -340,17 +340,25 @@ void FAST_CODE_ATTR Input::updateFrameRate()
 Device::InputDevice * Input::getInputDevice()
 {
   Device::SerialDevice * serial = _model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
-  if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_SBUS)
+  if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL))
   {
-    _sbus.begin(serial);
-    _model.logger.info().logln(F("RX SBUS"));
-    return &_sbus;
-  }
-  if(serial && _model.isFeatureActive(FEATURE_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
-  {
-    _crsf.begin(serial, _model.isFeatureActive(FEATURE_TELEMETRY) ? &_telemetry : nullptr);
-    _model.logger.info().logln(F("RX CRSF"));
-    return &_crsf;
+    switch(_model.config.input.serialRxProvider)
+    {
+      case SERIALRX_IBUS:
+        _ibus.begin(serial);
+        _model.logger.info().logln(F("RX IBUS"));
+        return &_ibus;
+
+      case SERIALRX_SBUS:
+        _sbus.begin(serial);
+        _model.logger.info().logln(F("RX SBUS"));
+        return &_sbus;
+
+      case SERIALRX_CRSF:
+        _crsf.begin(serial, _model.isFeatureActive(FEATURE_TELEMETRY) ? &_telemetry : nullptr);
+        _model.logger.info().logln(F("RX CRSF"));
+        return &_crsf;
+    }
   }
   else if(_model.isFeatureActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
   {
@@ -366,6 +374,7 @@ Device::InputDevice * Input::getInputDevice()
     return &_espnow;
   }
 #endif
+
   return nullptr;
 }
 

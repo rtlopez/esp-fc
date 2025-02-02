@@ -27,7 +27,7 @@ InputStatus FAST_CODE_ATTR InputSBUS::update()
   if(len)
   {
     uint8_t buff[64] = {0};
-    len = std::min(len, sizeof(buff));
+    len = std::min(len, (size_t)sizeof(buff));
     _serial->readMany(buff, len);
     size_t i = 0;
     while(i < len)
