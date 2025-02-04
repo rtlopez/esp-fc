@@ -81,11 +81,11 @@ int SerialManager::begin()
           sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
           sdc.inverted = true;
           break;
+        case SERIALRX_IBUS:
+          sdc.baud = 115200ul;
+          break;
         case SERIALRX_CRSF:
           sdc.baud = 420000ul;
-          //sdc.parity = SDC_SERIAL_PARITY_EVEN;
-          //sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
-          //sdc.inverted = true;
           break;
         default:
           break;
@@ -98,6 +98,11 @@ int SerialManager::begin()
       {
         sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
       }
+    }
+    else if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
+    {
+      sdc.baud = 115200;
+      _ibus.begin(port);
     }
 
     /*if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY)
@@ -184,6 +189,11 @@ int FAST_CODE_ATTR SerialManager::update()
     {
       _telemetry.process(*stream, TELEMETRY_PROTOCOL_TEXT);
     }
+  }
+
+  if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
+  {
+    _ibus.update();
   }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI

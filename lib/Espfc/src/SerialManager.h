@@ -5,6 +5,7 @@
 #include "Connect/MspProcessor.hpp"
 #include "Connect/Cli.hpp"
 #include "TelemetryManager.h"
+#include "Output/OutputIBUS.hpp"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
 #endif
@@ -36,6 +37,7 @@ class SerialManager
 #endif
     TelemetryManager& _telemetry;
     size_t _current;
+    Output::OutputIBUS _ibus;
 };
 
 }
