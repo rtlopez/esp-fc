@@ -298,8 +298,6 @@ void test_input_ibus_rc_valid()
   memset(&frame, 0, sizeof(frame));
   uint8_t * frame_data = reinterpret_cast<uint8_t*>(&frame);
 
-  When(Method(ArduinoFake(), micros)).Return(0);
-
   input.begin(nullptr);
 
   // const uint8_t data[] = {
