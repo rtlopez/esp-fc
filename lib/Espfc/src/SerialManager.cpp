@@ -195,11 +195,11 @@ int FAST_CODE_ATTR SerialManager::update()
   {
     _ibus.update();
   }
-  }
 
   if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
   {
     _ibus.update();
+  }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
   if(_current == SERIAL_SOFT_0)

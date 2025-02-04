@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Device/SerialDevice.h"
-#include "Utils/Timer.h"
+#include "Timer.h"
 
 namespace Espfc::Output {
 
@@ -45,7 +45,7 @@ public:
 
 private:
   Device::SerialDevice* _serial;
-  Utils::Timer _timer;
+  Timer _timer;
 };
 
 }
