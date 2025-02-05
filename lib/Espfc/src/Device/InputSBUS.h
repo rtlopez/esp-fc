@@ -64,8 +64,8 @@ class InputSBUS: public InputDevice
     void apply();
     uint16_t convert(int v);
 
-    const static size_t SBUS_FRAME_SIZE = sizeof(SbusData);
-    static const size_t CHANNELS = 16;
+    static constexpr size_t SBUS_FRAME_SIZE = sizeof(SbusData);
+    static constexpr size_t CHANNELS = 16;
 
     Device::SerialDevice * _serial;
     SbusState _state;

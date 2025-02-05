@@ -58,8 +58,8 @@ class EscDriverEsp32: public EscDriverBase
           return (int)pin != -1;
         }
 
-        static const size_t ITEM_COUNT = DSHOT_BIT_COUNT + 1;
-        static const int32_t DURATION_MAX = 0x7fff; // max in 15 bits
+        static constexpr size_t ITEM_COUNT = DSHOT_BIT_COUNT + 1;
+        static constexpr int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
         rmt_item32_t items[ITEM_COUNT];
         int pin;

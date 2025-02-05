@@ -47,7 +47,7 @@ class DynamicFilterConfig {
     int16_t q = 300;
     int16_t min_freq = 80;
     int16_t max_freq = 400;
-    static const int MIN_FREQ = 1000;
+    static constexpr int MIN_FREQ = 1000;
 };
 
 namespace Utils {

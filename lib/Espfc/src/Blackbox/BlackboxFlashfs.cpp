@@ -7,7 +7,7 @@
 #include "Utils/RingBuf.h"
 #include "Utils/Math.hpp"
 
-static const uint32_t FLASHFS_ERASED_VAL = 0xffffffff;
+static constexpr uint32_t FLASHFS_ERASED_VAL = 0xffffffff;
 
 using BufferType = Espfc::Utils::RingBuf<uint8_t, FLASHFS_WRITE_BUFFER_SIZE>;
 

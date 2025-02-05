@@ -12,11 +12,11 @@ class BusSPI: public BusDevice
   public:
     BusSPI(ESPFC_SPI_0_DEV_T& spi);
 
-    static const uint8_t  SPI_READ  = 0x80;
-    static const uint8_t  SPI_WRITE = 0x7f;
+    static constexpr uint8_t  SPI_READ  = 0x80;
+    static constexpr uint8_t  SPI_WRITE = 0x7f;
     
-    static const uint32_t SPI_SPEED_NORMAL = 1000000;
-    static const uint32_t SPI_SPEED_FAST  = 16000000;
+    static constexpr uint32_t SPI_SPEED_NORMAL = 1000000;
+    static constexpr uint32_t SPI_SPEED_FAST  = 16000000;
 
     BusType getType() const override;
 

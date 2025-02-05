@@ -509,11 +509,11 @@ enum ArmingDisabledFlags {
   ARMING_DISABLED_ARM_SWITCH      = (1 << 25), // Needs to be the last element, since it's always activated if one of the others is active when arming
 };
 
-static const size_t ARMING_DISABLED_FLAGS_COUNT = 25;
+static constexpr size_t ARMING_DISABLED_FLAGS_COUNT = 25;
 
 struct WirelessConfig
 {
-  static const size_t MAX_LEN = 32;
+  static constexpr size_t MAX_LEN = 32;
   int16_t port = 1111;
   char ssid[MAX_LEN + 1];
   char pass[MAX_LEN + 1];

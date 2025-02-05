@@ -10,11 +10,22 @@ namespace Blackbox {
 class BlackboxSerialBuffer: public Device::SerialDevice
 {
   public:
-    BlackboxSerialBuffer(): _dev(nullptr), _idx(0) {}
+    static constexpr size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
+
+    BlackboxSerialBuffer(): _dev(nullptr), _idx(0), _data(nullptr) {}
+
+    ~BlackboxSerialBuffer()
+    {
+      if(!_data) return;
+
+      delete[] _data;
+      _data = nullptr;
+    }
 
     virtual void wrap(Espfc::Device::SerialDevice * s)
     {
       _dev = s;
+      _data = new uint8_t[SIZE];
     }
 
     virtual void begin(const Espfc::SerialDeviceConfig& conf)
@@ -74,11 +85,10 @@ class BlackboxSerialBuffer: public Device::SerialDevice
     virtual bool isSoft() const { return false; };
     virtual operator bool() const { return (bool)(*_dev); }
 
-    static const size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
 
     Device::SerialDevice * _dev;
     size_t _idx;
-    uint8_t _data[SIZE];
+    uint8_t* _data;
 };
 
 }

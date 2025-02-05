@@ -69,8 +69,8 @@ class Input
     Device::InputEspNow _espnow;
 #endif
 
-    static const uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
-    static const uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms
+    static constexpr uint32_t TENTH_TO_US = 100000UL;  // 1_000_000 / 10;
+    static constexpr uint32_t FRAME_TIME_DEFAULT_US = 23000; // 23 ms
 };
 
 }
