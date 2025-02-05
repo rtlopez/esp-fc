@@ -1332,7 +1332,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   else if(strcmp_P(cmd.args[0], PSTR("logs")) == 0)
   {
     s.print(_model.logger.c_str());
-    s.print(PSTR("total: "));
+    s.print(PSTR("usage: "));
     s.println(_model.logger.length());
   }
 #ifdef USE_FLASHFS
@@ -1442,13 +1442,13 @@ void Cli::printVersion(Stream& s) const
   s.print(buildDate);
   s.print(' ');
   s.print(buildTime);
-  s.print(' ');
+  s.print(" api=");
   s.print(API_VERSION_MAJOR);
   s.print('.');
   s.print(API_VERSION_MINOR);
-  s.print(' ');
+  s.print(" gcc=");
   s.print(__VERSION__);
-  s.print(' ');
+  s.print(" std=");
   s.print(__cplusplus);
 }
 

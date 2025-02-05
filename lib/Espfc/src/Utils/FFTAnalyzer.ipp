@@ -6,6 +6,7 @@
 #include "Utils/FFTAnalyzer.hpp"
 #include "dsps_fft4r.h"
 #include "dsps_wind_hann.h"
+#include "esp_heap_caps.h"
 #include <algorithm>
 
 namespace Espfc {
@@ -13,7 +14,20 @@ namespace Espfc {
 namespace Utils {
 
 template<size_t SAMPLES>
-FFTAnalyzer<SAMPLES>::FFTAnalyzer(): _idx(0), _phase(PHASE_COLLECT) {}
+FFTAnalyzer<SAMPLES>::FFTAnalyzer(): _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0), _in(nullptr), _out(nullptr), _win(nullptr)
+{
+  _in = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES, MALLOC_CAP_DEFAULT));
+  _out = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES, MALLOC_CAP_DEFAULT));
+  _win = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES, MALLOC_CAP_DEFAULT));
+}
+
+template<size_t SAMPLES>
+FFTAnalyzer<SAMPLES>::~FFTAnalyzer()
+{
+  heap_caps_free(_in);
+  heap_caps_free(_out);
+  heap_caps_free(_win);
+}
 
 template<size_t SAMPLES>
 int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config, size_t axis)

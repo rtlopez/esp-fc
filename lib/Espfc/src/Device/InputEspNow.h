@@ -23,7 +23,7 @@ public:
 
 private:
   EspNowRcLink::Receiver _rx;
-  static const size_t CHANNELS = EspNowRcLink::RC_CHANNEL_MAX + 1;
+  static constexpr size_t CHANNELS = EspNowRcLink::RC_CHANNEL_MAX + 1;
   uint16_t _channels[CHANNELS];
 };
 

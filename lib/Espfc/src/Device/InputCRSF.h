@@ -43,8 +43,8 @@ class InputCRSF: public InputDevice
     void applyChannels(const Rc::CrsfMessage& msg);
     void applyMspReq(const Rc::CrsfMessage& msg);
 
-    static const size_t CHANNELS = 16;
-    static const size_t TELEMETRY_INTERVAL = 20000;
+    static constexpr size_t CHANNELS = 16;
+    static constexpr size_t TELEMETRY_INTERVAL = 20000;
 
     Device::SerialDevice * _serial;
     TelemetryManager * _telemetry;

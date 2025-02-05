@@ -21,6 +21,7 @@ class GyroSensor: public BaseSensor
 {
   public:
     GyroSensor(Model& model);
+    ~GyroSensor();
 
     int begin();
     int read();

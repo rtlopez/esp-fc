@@ -9,6 +9,18 @@ namespace Utils {
 class Logger
 {
   public:
+    Logger(): _buff(nullptr), _size(0), _tail(0) { }
+
+    ~Logger()
+    {
+      if(!_buff) return;
+
+      delete[] _buff;
+      _buff = nullptr;
+      _size = 0;
+      _tail = 0;
+    }
+
     int begin(size_t size = 1024)
     {
       _size = size;

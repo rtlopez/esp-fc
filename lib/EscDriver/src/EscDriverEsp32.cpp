@@ -8,7 +8,7 @@
 #include "hal/gpio_ll.h"
 #include "esp_rom_gpio.h"
 
-static const size_t DURATION_CLOCK = 25; // [ns] doubled value to increase precision
+static constexpr size_t DURATION_CLOCK = 25; // [ns] doubled value to increase precision
 #define TO_INTERVAL_US(v) (1 * 1000 * 1000 / (v)) // [us]
 
 #define RMT_RX_CHANNEL_ENCODING_START (SOC_RMT_CHANNELS_PER_GROUP - SOC_RMT_TX_CANDIDATES_PER_GROUP)

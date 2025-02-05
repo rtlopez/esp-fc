@@ -24,8 +24,8 @@ class InputPPM: public InputDevice
     bool needAverage() const override;
 
   private:
-    static const size_t CHANNELS = 16;
-    static const uint32_t BROKEN_LINK_US = 100000UL; // 100ms
+    static constexpr size_t CHANNELS = 16;
+    static constexpr uint32_t BROKEN_LINK_US = 100000UL; // 100ms
 
     void handle();
     static void handle_isr(void* args);

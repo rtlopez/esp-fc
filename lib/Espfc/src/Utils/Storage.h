@@ -31,9 +31,9 @@ class Storage
     StorageResult save(const ModelConfig& config);
 
   private:
-    static const uint8_t EEPROM_MAGIC   = 0xA5;
-    static const uint8_t EEPROM_VERSION = 0x01;
-    static const size_t  EEPROM_SIZE    = 2048;
+    static constexpr uint8_t EEPROM_MAGIC   = 0xA5;
+    static constexpr uint8_t EEPROM_VERSION = 0x01;
+    static constexpr size_t  EEPROM_SIZE    = 2048;
 };
 
 }

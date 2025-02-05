@@ -18,6 +18,10 @@ GyroSensor::GyroSensor(Model &model) : _dyn_notch_denom(1), _model(model)
 {
 }
 
+GyroSensor::~GyroSensor()
+{
+}
+
 int GyroSensor::begin()
 {
   _gyro = _model.state.gyro.dev;

@@ -22,16 +22,18 @@ class FFTAnalyzer
 {
 public:
   FFTAnalyzer();
+  ~FFTAnalyzer();
+
   int begin(int16_t rate, const DynamicFilterConfig& config, size_t axis);
   int update(float v);
 
-  static const size_t PEAKS_MAX = 8;
+  static constexpr size_t PEAKS_MAX = 8;
   Utils::Peak peaks[PEAKS_MAX];
 
 private:
   void clearPeaks();
 
-  static const size_t BINS = SAMPLES >> 1;
+  static constexpr size_t BINS = SAMPLES >> 1;
 
   int16_t _rate;
   int16_t _freq_min;
@@ -44,14 +46,18 @@ private:
   size_t _end;
   float _bin_width;
 
-  // fft input
-  __attribute__((aligned(16))) float _in[SAMPLES];
+  // // fft input
+  // __attribute__((aligned(16))) float _in[SAMPLES];
 
-  // fft output
-  __attribute__((aligned(16))) float _out[SAMPLES];
+  // // fft output
+  // __attribute__((aligned(16))) float _out[SAMPLES];
 
-  // Window coefficients
-  __attribute__((aligned(16))) float _win[SAMPLES];
+  // // Window coefficients
+  // __attribute__((aligned(16))) float _win[SAMPLES];
+
+  float* _in;
+  float* _out;
+  float* _win;
 };
 
 }
