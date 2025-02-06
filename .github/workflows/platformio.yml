@@ -74,39 +74,16 @@ jobs:
           echo "build_ver=${VAR_VER}" >> $GITHUB_ENV
           echo "build_rev=${VAR_SHA}" >> $GITHUB_ENV
           echo "build_name=${VAR_NAME}" >> $GITHUB_ENV
-
-          # VAR_PR=${GITHUB_REF}
-          # VAR_PR=${VAR_PR%%/merge}
-          # VAR_PR=${VAR_PR##*/}
-          # VAR_NAME=${GITHUB_REF#refs/*/}
-          # VAR_BRANCH=${GITHUB_REF#refs/heads/}
-          # VAR_TAG=${GITHUB_REF#refs/tags/}
-          # VAR_SHA=$(echo ${GITHUB_SHA} | cut -c1-7)
-          # echo "build_name=${VAR_NAME}" >> $GITHUB_ENV
-          # echo "build_branch=${VAR_BRANCH}" >> $GITHUB_ENV
-          # echo "build_tag=${VAR_TAG}" >> $GITHUB_ENV
-          # echo "build_sha=$(VAR_SHA" >> $GITHUB_ENV
-          # echo "build_pr=${VAR_PR}" >> $GITHUB_ENV
-          # echo "build_file_devel=espfc_${{ env.build_sha }}_${{ matrix.target.name }}" >> $GITHUB_ENV
-          # echo "build_file_release=espfc_${{ env.build_tag }}_${{ matrix.target.name }}" >> $GITHUB_ENV
-          # echo "build_is_dev=${{ startsWith(github.ref, 'refs/tags/') }}" >> $GITHUB_ENV
-      - name: Print Version
-        run: |
-          cat $GITHUB_ENV
-          # echo SHA:     ${{ env.build_sha }}
-          # echo TAG:     ${{ env.build_tag }}
-          # echo BRANCH:  ${{ env.build_branch }}
-          # echo NAME:    ${{ env.build_name }}
-          # echo DEVEL:   ${{ env.build_file_devel }}
-          # echo RELEASE: ${{ env.build_file_release }}
-          # echo IS_DEV  :${{ env.build_is_dev }}
+          echo $VAR_VER
+          echo $VAR_REV
+          echo $VAR_NAME
 
       - name: Build Target
         run: |
           platformio run -e ${{ matrix.target.name }}
           mv .pio/build/${{ matrix.target.name }}/firmware.bin .pio/build/${{ env.build_name }}.bin
         env:
-          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ env.build_rev }} -DESPFC_REVISION=${{ env.build_ver }}
+          PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ env.build_rev }} -DESPFC_VERSION=${{ env.build_ver }}
 
       - name: Rename Target Merged
         if: ${{ matrix.target.merge == true }}
@@ -124,28 +101,4 @@ jobs:
         if: ${{ matrix.target.merge == true }}
         with:
           name: "${{ env.build_name }}_0x00.bin"
-          path: .pio/build/$${{ env.build_name }}_0x00.bin
-
-
-      # - name: Build Release Target
-      #   if: ${{ startsWith(github.ref, 'refs/tags/') }}
-      #   run: |
-      #     platformio run -e ${{ matrix.target.name }}
-      #     mv .pio/build/${{ matrix.target.name }}/firmware.bin .pio/build/${{ env.build_file_release }}.bin
-      #     mv .pio/build/${{ matrix.target.name }}/firmware_0x00.bin .pio/build/${{ env.build_file_release }}_0x00.bin
-      #   env:
-      #     PLATFORMIO_BUILD_FLAGS: -DESPFC_REVISION=${{ env.build_sha }} -DESPFC_VERSION=${{ env.build_tag }}
-
-      # - name: Create Release Artifact
-      #   uses: actions/upload-artifact@v4
-      #   if: ${{ startsWith(github.ref, 'refs/tags/') }}
-      #   with:
-      #     name: ${{ env.build_file_release }}.bin
-      #     path: .pio/build/${{ env.build_file_release }}.bin
-
-      # - name: Create Release Artifact Merged
-      #   uses: actions/upload-artifact@v4
-      #   if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(matrix.target.name, 'esp32') }}
-      #   with:
-      #     name: ${{ env.build_file_release }}_0x00.bin
-      #     path: .pio/build/${{ env.build_file_release }}_0x00.bin
+          path: .pio/build/${{ env.build_name }}_0x00.bin
