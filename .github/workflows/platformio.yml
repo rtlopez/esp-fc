@@ -60,7 +60,7 @@ jobs:
 
       - name: Extract Version
         run: |
-          VAR_SHA=$(echo ${GITHUB_SHA} | cut -c1-7)
+          VAR_REV=$(echo ${GITHUB_SHA} | cut -c1-7)
           if [[ $GITHUB_EVENT_NAME == "pull_request" ]]; then
             VAR_VER="pr${{ github.event.pull_request.number }}"
             VAR_NAME="espfc_${VAR_VER}_${{ matrix.target.name }}"
@@ -69,14 +69,14 @@ jobs:
             VAR_NAME="espfc_${VAR_VER}_${{ matrix.target.name }}"
           else
             VAR_VER="0.0.0"
-            VAR_NAME="espfc_${VAR_SHA}_${{ matrix.target.name }}"
+            VAR_NAME="espfc_${VAR_REV}_${{ matrix.target.name }}"
           fi
+          echo VERSION=$VAR_VER
+          echo REVISION=$VAR_REV
+          echo FILENAME=$VAR_NAME
           echo "build_ver=${VAR_VER}" >> $GITHUB_ENV
-          echo "build_rev=${VAR_SHA}" >> $GITHUB_ENV
+          echo "build_rev=${VAR_REV}" >> $GITHUB_ENV
           echo "build_name=${VAR_NAME}" >> $GITHUB_ENV
-          echo $VAR_VER
-          echo $VAR_REV
-          echo $VAR_NAME
 
       - name: Build Target
         run: |
