@@ -210,6 +210,7 @@ enum Feature {
   FEATURE_RX_SERIAL  = 1 << 3,
   FEATURE_MOTOR_STOP = 1 << 4,
   FEATURE_SOFTSERIAL = 1 << 6,
+  FEATURE_GPS        = 1 << 7,
   FEATURE_TELEMETRY  = 1 << 10,
   FEATURE_AIRMODE    = 1 << 22,
   FEATURE_RX_SPI     = 1 << 25,
@@ -646,6 +647,16 @@ struct ControllerConfig
 {
   int8_t tpaScale = 10;
   int16_t tpaBreakpoint = 1650;
+};
+
+struct GpsConfig
+{
+  uint8_t provider;
+  uint8_t sbasMode;
+  uint8_t autoConfig;
+  uint8_t autoBaud;
+  uint8_t setHomeOnce;
+  uint8_t useGalileo;
 };
 
 // persistent data

@@ -6,6 +6,7 @@
 #include "Connect/Cli.hpp"
 #include "TelemetryManager.h"
 #include "Output/OutputIBUS.hpp"
+#include "Sensor/GpsSensor.hpp"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
 #endif
@@ -14,30 +15,32 @@ namespace Espfc {
 
 class SerialManager
 {
-  public:
-    SerialManager(Model& model, TelemetryManager& telemetry);
+public:
+  SerialManager(Model& model, TelemetryManager& telemetry);
 
-    int begin();
-    int update();
+  int begin();
+  int update();
 
-    static Device::SerialDevice * getSerialPortById(SerialPort portId);
+private:
+  static Device::SerialDevice * getSerialPortById(SerialPort portId);
+  void processMsp(SerialPortState& ss);
 
-  private:
-    void next()
-    {
-      _current++;
-      if(_current >= SERIAL_UART_COUNT) _current = 0;
-    }
+  void next()
+  {
+    _current++;
+    if(_current >= SERIAL_UART_COUNT) _current = 0;
+  }
 
-    Model& _model;
-    Connect::MspProcessor _msp;
-    Connect::Cli _cli;
+  Model& _model;
+  size_t _current;
+  Connect::MspProcessor _msp;
+  Connect::Cli _cli;
+  TelemetryManager& _telemetry;
+  Output::OutputIBUS _ibus;
+  Sensor::GpsSensor _gps;
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
-    Wireless _wireless;
+  Wireless _wireless;
 #endif
-    TelemetryManager& _telemetry;
-    size_t _current;
-    Output::OutputIBUS _ibus;
 };
 
 }

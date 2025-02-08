@@ -21,7 +21,7 @@ class Logger
       _tail = 0;
     }
 
-    int begin(size_t size = 1024)
+    int begin(size_t size = 2048)
     {
       _size = size;
       _tail = 0;

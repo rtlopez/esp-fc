@@ -10,6 +10,7 @@
 #include <blackbox/blackbox.h>
 #include <EscDriver.h>
 #include <EspWire.h>
+#include <Gps.hpp>
 #if defined(ESPFC_ESPNOW)
 #include <EspNowRcLink/Receiver.h>
 #endif
