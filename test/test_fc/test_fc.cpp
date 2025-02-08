@@ -5,6 +5,7 @@
 #include "Control/Controller.h"
 #include "Control/Actuator.h"
 #include "Output/Mixer.h"
+#include <Gps.hpp>
 
 using namespace fakeit;
 using namespace Espfc;
