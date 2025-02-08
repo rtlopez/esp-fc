@@ -3,7 +3,6 @@
 #include "Model.h"
 #include "Device/SerialDevice.h"
 #include "Utils/Timer.h"
-#include <GpsProtocol.hpp>
 #include <GpsParser.hpp>
 #include <array>
 #include <algorithm>

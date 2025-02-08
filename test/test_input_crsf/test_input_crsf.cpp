@@ -3,6 +3,7 @@
 #include "Device/InputCRSF.h"
 #include "Device/InputIBUS.hpp"
 #include "msp/msp_protocol.h"
+#include <Gps.hpp>
 
 using namespace Espfc;
 using namespace Espfc::Device;

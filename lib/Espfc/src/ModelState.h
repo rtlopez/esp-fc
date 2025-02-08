@@ -14,7 +14,6 @@
 #include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
 #include "Connect/Msp.hpp"
-#include <GpsProtocol.hpp>
 
 namespace Espfc {
 
@@ -321,9 +320,17 @@ struct ModeState
   bool airmodeAllowed;
 };
 
+enum GpsDeviceVersion
+{
+  GPS_UNKNOWN,
+  GPS_M8,
+  GPS_M9,
+  GPS_F9,
+};
+
 struct GpsSupportState
 {
-  Gps::DeviceVersion version = Gps::GPS_UNKNOWN;
+  GpsDeviceVersion version = GPS_UNKNOWN;
   bool glonass = false;
   bool galileo = false;
   bool beidou = false;

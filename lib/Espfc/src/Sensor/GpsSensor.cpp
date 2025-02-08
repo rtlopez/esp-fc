@@ -1,4 +1,5 @@
 #include "Sensor/GpsSensor.hpp"
+#include <GpsProtocol.hpp>
 #include <Arduino.h>
 
 namespace Espfc::Sensor
@@ -329,15 +330,15 @@ void GpsSensor::handleVersion() const
 
   if (std::strcmp(payload + 30, "00080000") == 0)
   {
-    _model.state.gps.support.version = Gps::GPS_M8;
+    _model.state.gps.support.version = GPS_M8;
   }
   else if (std::strcmp(payload + 30, "00090000") == 0)
   {
-    _model.state.gps.support.version = Gps::GPS_M9;
+    _model.state.gps.support.version = GPS_M9;
   }
   else if (std::strcmp(payload + 30, "00190000") == 0)
   {
-    _model.state.gps.support.version = Gps::GPS_F9;
+    _model.state.gps.support.version = GPS_F9;
   }
   if (_ubxMsg.length >= 70)
   {
