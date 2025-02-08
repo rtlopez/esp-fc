@@ -10,6 +10,7 @@
 #include "Target/QueueAtomic.h"
 #include "Utils/RingBuf.h"
 #include <printf.h>
+#include <Gps.hpp>
 
 // void setUp(void) {
 // // set stuff up here

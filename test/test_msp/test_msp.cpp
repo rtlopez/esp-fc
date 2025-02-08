@@ -8,6 +8,7 @@
 #include "Connect/Msp.hpp"
 #include "Connect/MspParser.hpp"
 #include "msp/msp_protocol.h"
+#include <Gps.hpp>
 
 using namespace fakeit;
 using namespace Espfc;
