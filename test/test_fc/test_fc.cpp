@@ -1,6 +1,5 @@
 #include <unity.h>
 #include <ArduinoFake.h>
-#include <EscDriver.h>
 #include "Utils/Timer.h"
 #include "Model.h"
 #include "Control/Controller.h"
