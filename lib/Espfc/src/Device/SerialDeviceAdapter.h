@@ -63,8 +63,26 @@ inline bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 }
 
 template<>
-inline void SerialDeviceAdapter<WiFiClient>::updateBadRate(int baud) {};
+inline void SerialDeviceAdapter<WiFiClient>::updateBadRate(int baud) {}
 
+#endif
+
+#if defined(ESP32C3) || defined(ESP32S3)
+template<>
+inline void SerialDeviceAdapter<HWCDC>::updateBadRate(int baud) {}
+#endif
+
+#if defined(ESP32S2)
+template<>
+inline void SerialDeviceAdapter<USBCDC>::updateBadRate(int baud) {}
+#endif
+
+#if defined(ARCH_RP2040)
+template<>
+inline void SerialDeviceAdapter<SerialUART>::updateBadRate(int baud) {}
+
+template<>
+inline void SerialDeviceAdapter<SerialUSB>::updateBadRate(int baud) {}
 #endif
 
 }
