@@ -96,6 +96,11 @@ class Model
       return state.gyro.present && config.gyro.dev != GYRO_NONE;
     }
 
+    bool gpsActive() const /* IRAM_ATTR */
+    {
+      return state.gps.present;
+    }
+
     bool accelActive() const
     {
       return state.accel.present && config.accel.dev != GYRO_NONE;
@@ -375,8 +380,10 @@ class Model
       }
 
       // configure serial ports
-      constexpr uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT | SERIAL_FUNCTION_TELEMETRY_IBUS | SERIAL_FUNCTION_VTX_SMARTAUDIO;
-      uint32_t featureAllowMask = FEATURE_RX_SERIAL | FEATURE_RX_PPM | FEATURE_RX_SPI | FEATURE_SOFTSERIAL | FEATURE_MOTOR_STOP | FEATURE_TELEMETRY;// | FEATURE_AIRMODE;
+      constexpr uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_BLACKBOX | 
+        SERIAL_FUNCTION_GPS | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT | SERIAL_FUNCTION_TELEMETRY_IBUS | SERIAL_FUNCTION_VTX_SMARTAUDIO;
+      uint32_t featureAllowMask =  FEATURE_RX_PPM | FEATURE_RX_SERIAL | FEATURE_MOTOR_STOP | FEATURE_SOFTSERIAL | FEATURE_GPS |
+        FEATURE_TELEMETRY | FEATURE_RX_SPI;// | FEATURE_AIRMODE;
 
       // allow dynamic filter only above 1k sampling rate
       if(state.loopRate >= DynamicFilterConfig::MIN_FREQ)

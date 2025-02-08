@@ -14,6 +14,7 @@
 #include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
 #include "Connect/Msp.hpp"
+#include <GpsProtocol.hpp>
 
 namespace Espfc {
 
@@ -325,6 +326,76 @@ struct VtxState
   uint8_t active = false;
 };
 
+struct GpsSupportState
+{
+  Gps::DeviceVersion version = Gps::GPS_UNKNOWN;
+  bool glonass = false;
+  bool galileo = false;
+  bool beidou = false;
+  bool sbas = false;
+};
+
+template<typename T>
+struct GpsCoordinate
+{
+  T lat = T{};
+  T lon = T{};
+  T height = T{};
+};
+
+struct GpsPosition
+{
+  GpsCoordinate<int32_t> raw;
+  GpsCoordinate<int32_t> home;
+};
+
+template<typename T>
+struct GpsSpeed
+{
+  T north = T{};
+  T east = T{};
+  T down = T{};
+  T groundSpeed = T{};
+  T heading = T{};
+};
+
+struct GpsVelocity
+{
+  GpsSpeed<int32_t> raw;
+};
+
+struct GpsAccuracy
+{
+  uint32_t horizontal = 0;
+  uint32_t vertical = 0;
+  uint32_t speed = 0;
+  uint32_t heading = 0;
+  uint32_t pDop = 0;
+};
+
+struct GpsSatelite
+{
+  uint8_t gnssId = 0;
+  uint8_t id = 0;
+  uint8_t cno = 0;
+  uint8_t quality = 0;
+};
+
+static constexpr size_t SAT_MAX = 32u;
+
+struct GpsState
+{
+  uint8_t fixType = 0;
+  uint8_t numSats = 0;
+  uint8_t numCh = 0;
+  bool present = false;
+  GpsSupportState support;
+  GpsPosition location;
+  GpsVelocity velocity;
+  GpsAccuracy accuracy;
+  GpsSatelite svinfo[SAT_MAX];
+};
+
 // runtime data
 struct ModelState
 {
@@ -332,6 +403,7 @@ struct ModelState
   AccelState accel;
   MagState mag;
   BaroState baro;
+  GpsState gps;
 
   InputState input;
   FailsafeState failsafe;
