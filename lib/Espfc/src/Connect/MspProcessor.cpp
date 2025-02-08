@@ -1,6 +1,8 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hardware.h"
 #include <platform.h>
+#include <algorithm>
+#include <limits>
 #if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
 #include <driver/timer.h>
 #endif
@@ -1470,7 +1472,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(_model.state.gps.numSats); //gpsSol.numSat
       r.writeU32(_model.state.gps.location.raw.lat); // lat
       r.writeU32(_model.state.gps.location.raw.lon); // lon
-      r.writeU16(std::clamp(_model.state.gps.location.raw.height / 1000, 0, UINT16_MAX)); // height [m]
+      r.writeU16(std::clamp((int)_model.state.gps.location.raw.height / 1000, 0, (int)std::numeric_limits<uint16_t>::max())); // height [m]
       r.writeU16(_model.state.gps.velocity.raw.groundSpeed / 10); // cm/s
       r.writeU16(_model.state.gps.velocity.raw.heading / 10000); // deg * 10
       // Added in API version 1.44
