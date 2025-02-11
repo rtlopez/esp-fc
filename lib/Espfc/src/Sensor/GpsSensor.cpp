@@ -1,12 +1,13 @@
 #include "Sensor/GpsSensor.hpp"
 #include <GpsProtocol.hpp>
 #include <Arduino.h>
+#include <cmath>
 
 namespace Espfc::Sensor
 {
 
 static constexpr std::array<int, 6> BAUDS{
-  115200, 9600, 230400, 57600, 38400, 19200,
+  9600, 115200, 230400, 57600, 38400, 19200,
 };
 
 static constexpr std::array<uint16_t, 6> NMEA_MSG_OFF{
@@ -256,7 +257,7 @@ void GpsSensor::handle()
 void GpsSensor::setBaud(int baud)
 {
   _port->updateBadRate(baud);
-  _model.logger.info().log(F("GPS BAUD")).logln(BAUDS[_counter]);
+  _model.logger.info().log(F("GPS BAUD")).logln(baud);
 }
 
 void GpsSensor::setState(State state, State ackState, State timeoutState)
@@ -280,26 +281,42 @@ void GpsSensor::handleError() const
 void GpsSensor::handleNavPvt() const
 {
   const auto &m = *_ubxMsg.getAs<Gps::UbxNavPvt92>();
-  _model.state.gps.location.raw.lat = m.lat;
-  _model.state.gps.location.raw.lon = m.lon;
-  _model.state.gps.location.raw.height = m.height;
 
-  _model.state.gps.velocity.raw.north = m.velN;
-  _model.state.gps.velocity.raw.east = m.velE;
-  _model.state.gps.velocity.raw.down = m.velD;
-  _model.state.gps.velocity.raw.groundSpeed = m.gSpeed;
-  _model.state.gps.velocity.raw.heading = m.headMot;
-
+  _model.state.gps.fix = m.fixType == 3 && m.flags.gnssFixOk;
   _model.state.gps.fixType = m.fixType;
   _model.state.gps.numSats = m.numSV;
-  _model.state.gps.accuracy.pDop = m.pDOP;
 
-  //_hal->printf("\n");
-  //_hal->printf("Dat: %d-%d-%d %d:%d:%d %d\n", m.year, m.month, m.day, m.hour, m.min, m.sec, m.iTow);
-  //_hal->printf("Pos: %.7f %.7f %.7f %d %d %d\n", 1e-7f * m.lat, 1e-7f * m.lon, 1e-3f * m.height, m.lat, m.lon, m.height);
-  //_hal->printf("Vel: %d %d %d %d %d\n", m.velN, m.velE, m.velD, m.gSpeed, m.headMot);
-  //_hal->printf("Fix: %d %d\n", m.numSV, m.fixType);
-  //_hal->printf("Acu: %d %d %d %d %d\n", m.hAcc, m.vAcc, m.sAcc, m.headAcc, m.pDOP);
+  _model.state.gps.accuracy.pDop = m.pDOP;
+  _model.state.gps.accuracy.horizontal = m.hAcc; // mm
+  _model.state.gps.accuracy.vertical = m.vAcc; // mm
+  _model.state.gps.accuracy.speed = m.sAcc; // mm/s
+  _model.state.gps.accuracy.heading = (m.headAcc + 5000) / 10000; // deg * 0.1
+
+  _model.state.gps.location.raw.lat = m.lat;
+  _model.state.gps.location.raw.lon = m.lon;
+  _model.state.gps.location.raw.height = m.hSML; // mm
+
+  _model.state.gps.velocity.raw.groundSpeed = m.gSpeed; // mm/s
+  _model.state.gps.velocity.raw.heading = m.headMot; // deg * 1e5
+
+  _model.state.gps.velocity.raw.north = m.velN; // mm/s
+  _model.state.gps.velocity.raw.east  = m.velE; // mm/s
+  _model.state.gps.velocity.raw.down  = m.velD; // mm/s
+  _model.state.gps.velocity.raw.speed3d = lrintf(std::sqrt(
+    _model.state.gps.velocity.raw.groundSpeed * _model.state.gps.velocity.raw.groundSpeed +
+    _model.state.gps.velocity.raw.down * _model.state.gps.velocity.raw.down
+  ));
+
+  if(m.valid.validDate && m.valid.validTime)
+  {
+    _model.state.gps.dateTime.year = m.year;
+    _model.state.gps.dateTime.month = m.month;
+    _model.state.gps.dateTime.day = m.day;
+    _model.state.gps.dateTime.hour = m.hour;
+    _model.state.gps.dateTime.minute = m.min;
+    _model.state.gps.dateTime.second = m.sec;
+    _model.state.gps.dateTime.msec = m.nano >= 0 ? m.nano / 1000 : 0;
+  }
 }
 
 void GpsSensor::handleNavSat() const
