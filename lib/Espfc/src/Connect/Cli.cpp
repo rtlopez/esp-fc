@@ -1043,6 +1043,10 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.println(F("OK"));
     }
   }
+  else if(strcmp_P(cmd.args[0], PSTR("gps")) == 0)
+  {
+    printGpsStatus(s, true);
+  }
   else if(strcmp_P(cmd.args[0], PSTR("preset")) == 0)
   {
     if(!cmd.args[1])
@@ -1433,6 +1437,80 @@ void Cli::print(const Param& param, Stream& s) const
   s.print(' ');
   param.print(s);
   s.println();
+}
+
+void Cli::printGpsStatus(Stream& s, bool full) const
+{
+  s.println(F("GPS STATUS:"));
+
+  s.print(F("Fix: "));
+  s.print(_model.state.gps.fix);
+  s.print(F(" ("));
+  s.print(_model.state.gps.fixType);
+  s.println(F(")"));
+
+  s.print(F("Lat: "));
+  s.print(_model.state.gps.location.raw.lat);
+  s.print(F(" ("));
+  s.print((float)_model.state.gps.location.raw.lat * 1e-7f, 7);
+  s.print(F(" deg)"));
+  s.println();
+
+  s.print(F("Lon: "));
+  s.print(_model.state.gps.location.raw.lon);
+  s.print(F(" ("));
+  s.print((float)_model.state.gps.location.raw.lon * 1e-7f, 7);
+  s.print(F(" deg)"));
+  s.println();
+
+  s.print(F("Hei: "));
+  s.print(_model.state.gps.location.raw.height);
+  s.print(F(" ("));
+  s.print((float)_model.state.gps.location.raw.height * 0.001f);
+  s.print(F(" m)"));
+  s.println();
+
+  s.print(F("Acc: "));
+  s.print((float)_model.state.gps.accuracy.horizontal * 0.001f);
+  s.print(F(" m, "));
+  s.print((float)_model.state.gps.accuracy.vertical * 0.001f);
+  s.print(F(" m, "));
+  s.print((float)_model.state.gps.accuracy.speed * 0.001f);
+  s.print(F(" m/s, "));
+  s.print((float)_model.state.gps.accuracy.heading * 0.00001f);
+  s.print(F(" deg, pDOP: "));
+  s.print((float)_model.state.gps.accuracy.pDop * 0.01f);
+  s.println();
+
+  s.print(F("Tim: "));
+  s.print(_model.state.gps.dateTime.year);
+  s.print(F("-"));
+  s.print(_model.state.gps.dateTime.month);
+  s.print(F("-"));
+  s.print(_model.state.gps.dateTime.day);
+  s.print(F(" "));
+  s.print(_model.state.gps.dateTime.hour);
+  s.print(F(":"));
+  s.print(_model.state.gps.dateTime.minute);
+  s.print(F(":"));
+  s.print(_model.state.gps.dateTime.second);
+  s.println(F(" UTC"));
+
+  s.print(F("Sat: "));
+  s.print(_model.state.gps.numSats);
+  s.print(F(" ("));
+  s.print(_model.state.gps.numCh);
+  s.println(F(" ch)"));
+  for (size_t i = 0; i < _model.state.gps.numCh; i++)
+  {
+    s.print(_model.state.gps.svinfo[i].gnssId);
+    s.print(' ');
+    s.print(_model.state.gps.svinfo[i].id);
+    s.print(' ');
+    s.print(_model.state.gps.svinfo[i].quality);
+    s.print(' ');
+    s.println(_model.state.gps.svinfo[i].cno);
+  }
 }
 
 void Cli::printVersion(Stream& s) const
