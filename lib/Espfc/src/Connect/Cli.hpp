@@ -93,6 +93,7 @@ public:
 
 private:
   void print(const Param& param, Stream& s) const;
+  void printGpsStatus(Stream& s, bool full) const;
   void printVersion(Stream& s) const;
   void printStats(Stream& s) const;
 

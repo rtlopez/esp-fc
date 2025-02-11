@@ -191,6 +191,10 @@ int Blackbox::begin()
   rpmFilterConfigMutable()->rpm_filter_weights[1] = _model.config.gyro.rpmFilter.weights[1];
   rpmFilterConfigMutable()->rpm_filter_weights[2] = _model.config.gyro.rpmFilter.weights[2];
 
+  gpsConfigMutable()->provider = 1; // ubx
+  gpsConfigMutable()->gps_set_home_point_once = false;
+  gpsConfigMutable()->gps_use_3d_speed = false;
+
   updateModeFlag(&rcModeActivationPresent, BOXARM, _model.state.mode.maskPresent & 1 << MODE_ARMED);
   updateModeFlag(&rcModeActivationPresent, BOXANGLE, _model.state.mode.maskPresent & 1 << MODE_ANGLE);
   updateModeFlag(&rcModeActivationPresent, BOXAIRMODE, _model.state.mode.maskPresent & 1 << MODE_AIRMODE);
@@ -270,6 +274,14 @@ void FAST_CODE_ATTR Blackbox::updateData()
       debug[i] = _model.state.debug[i];
     }
   }
+  GPS_home[0] = _model.state.gps.location.home.lat;
+  GPS_home[1] = _model.state.gps.location.home.lon;
+  gpsSol.llh.lat = _model.state.gps.location.raw.lat;
+  gpsSol.llh.lon = _model.state.gps.location.raw.lon;
+  gpsSol.llh.altCm = (_model.state.gps.location.raw.height + 50) / 100; // 0.1 m
+  gpsSol.groundSpeed = (_model.state.gps.velocity.raw.groundSpeed + 5) / 10; // cm/s
+  gpsSol.groundCourse = (_model.state.gps.velocity.raw.heading + 5000) / 10000; // 0.1 deg
+  gpsSol.numSat = _model.state.gps.numSats;
 }
 
 void FAST_CODE_ATTR Blackbox::updateArmed()

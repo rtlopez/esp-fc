@@ -1469,7 +1469,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 
   case MSP_RAW_GPS:
       r.writeU8(_model.state.gps.fixType > 2); // STATE(GPS_FIX));
-      r.writeU8(_model.state.gps.numSats); //gpsSol.numSat
+      r.writeU8(_model.state.gps.numSats); // numSat
       r.writeU32(_model.state.gps.location.raw.lat); // lat
       r.writeU32(_model.state.gps.location.raw.lon); // lon
       r.writeU16(std::clamp((int)_model.state.gps.location.raw.height / 1000, 0, (int)std::numeric_limits<uint16_t>::max())); // height [m]

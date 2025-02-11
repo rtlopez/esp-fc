@@ -340,9 +340,9 @@ struct GpsSupportState
 template<typename T>
 struct GpsCoordinate
 {
-  T lat = T{};
-  T lon = T{};
-  T height = T{};
+  T lat = T{}; // deg * 1e7
+  T lon = T{}; // deg * 1e7
+  T height = T{}; // mm (1e3)
 };
 
 struct GpsPosition
@@ -354,11 +354,12 @@ struct GpsPosition
 template<typename T>
 struct GpsSpeed
 {
-  T north = T{};
-  T east = T{};
-  T down = T{};
-  T groundSpeed = T{};
-  T heading = T{};
+  T north = T{}; // mm/s (1e3)
+  T east = T{}; // mm/s (1e3)
+  T down = T{}; // mm/s (1e3)
+  T groundSpeed = T{}; // mm/s (1e3)
+  T heading = T{}; // deg * 1e5
+  T speed3d = T{}; // mm/s (1e3)
 };
 
 struct GpsVelocity
@@ -368,11 +369,11 @@ struct GpsVelocity
 
 struct GpsAccuracy
 {
-  uint32_t horizontal = 0;
-  uint32_t vertical = 0;
-  uint32_t speed = 0;
-  uint32_t heading = 0;
-  uint32_t pDop = 0;
+  uint32_t horizontal = 0; // mm (1e3)
+  uint32_t vertical = 0; // mm (1e3)
+  uint32_t speed = 0; // mm/s (1e3)
+  uint32_t heading = 0; // deg * 1e5
+  uint32_t pDop = 0; // (1e2)
 };
 
 struct GpsSatelite
@@ -383,10 +384,22 @@ struct GpsSatelite
   uint8_t quality = 0;
 };
 
+struct GpsDateTime
+{
+  uint16_t year; // full year
+  uint8_t month; // 1-12
+  uint8_t day; // 1-31
+  uint8_t hour; // 0-23
+  uint8_t minute; // 0-59
+  uint8_t second; // 0-59
+  uint16_t msec; // 0-999
+};
+
 static constexpr size_t SAT_MAX = 32u;
 
 struct GpsState
 {
+  bool fix = 0;
   uint8_t fixType = 0;
   uint8_t numSats = 0;
   uint8_t numCh = 0;
@@ -395,6 +408,7 @@ struct GpsState
   GpsPosition location;
   GpsVelocity velocity;
   GpsAccuracy accuracy;
+  GpsDateTime dateTime;
   GpsSatelite svinfo[SAT_MAX];
 };
 

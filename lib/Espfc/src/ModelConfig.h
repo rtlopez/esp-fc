@@ -651,12 +651,7 @@ struct ControllerConfig
 
 struct GpsConfig
 {
-  uint8_t provider;
-  uint8_t sbasMode;
-  uint8_t autoConfig;
-  uint8_t autoBaud;
-  uint8_t setHomeOnce;
-  uint8_t useGalileo;
+  uint8_t minSats = 8;
 };
 
 // persistent data
@@ -673,6 +668,7 @@ class ModelConfig
     FusionConfig fusion;
     VBatConfig vbat;
     IBatConfig ibat;
+    GpsConfig gps;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
     ScalerConfig scaler[SCALER_COUNT];
@@ -695,7 +691,6 @@ class ModelConfig
     DtermConfig dterm;
     ItermConfig iterm;
     ControllerConfig controller;
-
     // hardware
     int8_t pin[PIN_COUNT] = {
 #ifdef ESPFC_INPUT
