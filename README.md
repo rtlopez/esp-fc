@@ -6,7 +6,7 @@ The mini, DIY, Low cost, ESP32 based, high performance flight controller for hob
 * ESC protocols (PWM, Oneshot125/42, Multishot, Brushed, Dshot150/300/600 bidirectional)
 * PPM, SBUS and CRSF Receivers
 * Builtin ESP-NOW receiver and WiFi configuration [read more...](/docs/wireless.md)
-* SPI and I2C gyro modules support (MPU6050, MPU9250, ICM20602, BMI160)
+* SPI and I2C gyro modules support (MPU6050, MPU9250, ICM20602, BMI160, ICM40608)
 * Flight modes (ACRO, ANGLE, AIRMODE)
 * Frames (Quad X)
 * Betaflight configuration tool compatible (v10.8-v10.10)
@@ -117,6 +117,7 @@ Here are more details about [how to setup](/docs/setup.md).
 | MPU9250     | Yes     |   Yes |    Yes |
 | ICM20602    | Yes     |   Yes |    Yes |
 | BMI160      | Yes     |   Yes |    Yes |
+| ICM40608    | Yes     |   Yes |    Yes |
 
 ## Supported Baro devices
 

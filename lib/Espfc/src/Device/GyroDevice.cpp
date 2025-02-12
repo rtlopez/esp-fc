@@ -6,7 +6,7 @@ namespace Espfc::Device {
 
 const char ** GyroDevice::getNames()
 {
-  static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), PSTR("LSM6DSO"), PSTR("ICM20602"),PSTR("BMI160"), NULL };
+  static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), PSTR("LSM6DSO"), PSTR("ICM20602"),PSTR("BMI160"),PSTR("ICM40608"), NULL };
   return devChoices;
 }
 
