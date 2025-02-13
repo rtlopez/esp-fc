@@ -1445,37 +1445,53 @@ void Cli::printGpsStatus(Stream& s, bool full) const
   s.print(F("Lat: "));
   s.print(_model.state.gps.location.raw.lat);
   s.print(F(" ("));
-  s.print((float)_model.state.gps.location.raw.lat * 1e-7f, 7);
+  s.print(_model.state.gps.location.raw.lat * 1e-7f, 7);
   s.print(F(" deg)"));
   s.println();
 
   s.print(F("Lon: "));
   s.print(_model.state.gps.location.raw.lon);
   s.print(F(" ("));
-  s.print((float)_model.state.gps.location.raw.lon * 1e-7f, 7);
+  s.print(_model.state.gps.location.raw.lon * 1e-7f, 7);
   s.print(F(" deg)"));
   s.println();
 
-  s.print(F("Hei: "));
+  s.print(F("Height: "));
   s.print(_model.state.gps.location.raw.height);
   s.print(F(" ("));
-  s.print((float)_model.state.gps.location.raw.height * 0.001f);
+  s.print(_model.state.gps.location.raw.height * 0.001f);
   s.print(F(" m)"));
   s.println();
 
-  s.print(F("Acc: "));
-  s.print((float)_model.state.gps.accuracy.horizontal * 0.001f);
-  s.print(F(" m, "));
-  s.print((float)_model.state.gps.accuracy.vertical * 0.001f);
-  s.print(F(" m, "));
-  s.print((float)_model.state.gps.accuracy.speed * 0.001f);
+  s.print(F(" Speed: "));
+  s.print(_model.state.gps.velocity.raw.groundSpeed);
+  s.print(F(" ("));
+  s.print(_model.state.gps.velocity.raw.groundSpeed * 0.001f);
   s.print(F(" m/s, "));
-  s.print((float)_model.state.gps.accuracy.heading * 0.00001f);
-  s.print(F(" deg, pDOP: "));
-  s.print((float)_model.state.gps.accuracy.pDop * 0.01f);
+  s.print(_model.state.gps.velocity.raw.groundSpeed * 0.0036f);
+  s.print(F(" km/h, "));
   s.println();
 
-  s.print(F("Tim: "));
+  s.print(F("  Head: "));
+  s.print(_model.state.gps.velocity.raw.heading);
+  s.print(F(" ("));
+  s.print(_model.state.gps.velocity.raw.heading * 0.00001f);
+  s.print(F(" deg)"));
+  s.println();
+
+  s.print(F("  Accu: "));
+  s.print(_model.state.gps.accuracy.horizontal * 0.001f);
+  s.print(F(" m, "));
+  s.print(_model.state.gps.accuracy.vertical * 0.001f);
+  s.print(F(" m, "));
+  s.print(_model.state.gps.accuracy.speed * 0.001f);
+  s.print(F(" m/s, "));
+  s.print(_model.state.gps.accuracy.heading * 0.00001f);
+  s.print(F(" deg, pDOP: "));
+  s.print(_model.state.gps.accuracy.pDop * 0.01f);
+  s.println();
+
+  s.print(F("  Time: "));
   s.print(_model.state.gps.dateTime.year);
   s.print(F("-"));
   s.print(_model.state.gps.dateTime.month);
@@ -1491,11 +1507,11 @@ void Cli::printGpsStatus(Stream& s, bool full) const
   s.print(_model.state.gps.dateTime.msec);
   s.println(F(" UTC"));
 
-  s.print(F("Rate: "));
+  s.print(F("  Rate: "));
   s.print(1000000.0f / _model.state.gps.interval);
   s.println(F(" Hz"));
 
-  s.print(F("Sat: "));
+  s.print(F("  Sats: "));
   s.print(_model.state.gps.numSats);
   s.print(F(" ("));
   s.print(_model.state.gps.numCh);
@@ -1506,9 +1522,9 @@ void Cli::printGpsStatus(Stream& s, bool full) const
     s.print(' ');
     s.print(_model.state.gps.svinfo[i].id);
     s.print(' ');
-    s.print(_model.state.gps.svinfo[i].quality);
+    s.print(_model.state.gps.svinfo[i].cno);
     s.print(' ');
-    s.println(_model.state.gps.svinfo[i].cno);
+    s.println(_model.state.gps.svinfo[i].quality);
   }
 }
 
