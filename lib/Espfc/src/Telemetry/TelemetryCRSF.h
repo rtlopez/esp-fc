@@ -150,9 +150,9 @@ public:
 
     msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lat)); // deg * 1e7
     msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lon)); // deg * 1e7
-    msg.writeU16(Utils::toBigEndian16(_model.state.gps.velocity.raw.groundSpeed * 36)); // in km/h * 10
-    msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.heading + 50) / 100)); // deg * 10
-    uint16_t altitude = std::clamp((_model.state.gps.location.raw.height + 500) / 1000, (int32_t)0, (int32_t)5000) + 1000; // m
+    msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.groundSpeed * 36 + 500) / 1000)); // in km/h * 10
+    msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.heading + 500) / 1000)); // deg * 10
+    uint16_t altitude = std::clamp((_model.state.gps.location.raw.height + 500) / 1000, (int32_t)-900, (int32_t)5000) + 1000; // m
     msg.writeU16(Utils::toBigEndian16(altitude));
     msg.writeU8(_model.state.gps.numSats);
 
