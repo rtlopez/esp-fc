@@ -15,15 +15,16 @@ class GpsSensor
 public:
   GpsSensor(Model& model);
 
-  int begin(Device::SerialDevice* port);
+  int begin(Device::SerialDevice* port, int baud);
 
   int update();
 
 private:
   enum State {
     DETECT_BAUD,
-    DISABLE_NMEA,
     SET_BAUD,
+    DISABLE_NMEA,
+    GET_VERSION,
     ENABLE_UBX,
     ENABLE_SBAS,
     SET_RATE,
@@ -37,6 +38,8 @@ private:
   bool processUbx(uint8_t c);
   void processNmea(uint8_t c);
   void setBaud(int baud);
+
+  void onMessage();
 
   template<typename MsgType>
   void send(const MsgType m, State ackState, State timeoutState = ERROR)
@@ -59,6 +62,7 @@ private:
   void checkSupport(const char* payload) const;
 
   static constexpr uint32_t TIMEOUT = 300000;
+  static constexpr uint32_t DETECT_TIMEOUT = 2200000;
 
   Model& _model;
 
@@ -67,6 +71,8 @@ private:
   State _timeoutState = DETECT_BAUD;
   size_t _counter = 0;
   uint32_t _timeout = 0;
+  int _currentBaud = 0;
+  int _targetBaud = 0;
 
   Gps::UbxParser _ubxParser;
   Gps::UbxMessage _ubxMsg;

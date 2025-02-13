@@ -37,7 +37,7 @@
 #define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
 
 #define ESPFC_SERIAL_REMAP_PINS
-#define SERIAL_TX_FIFO_SIZE 128
+#define SERIAL_TX_FIFO_SIZE 256
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_USB
 
 #define ESPFC_SPI_0
@@ -109,12 +109,13 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
 
   dev.setFIFOSize(SERIAL_TX_FIFO_SIZE);
   dev.setPinout(conf.tx_pin, conf.rx_pin);
-  dev.begin(conf.baud, sc);
-
   if(conf.inverted) {
-    gpio_set_inover(conf.rx_pin, GPIO_OVERRIDE_INVERT);
-    gpio_set_outover(conf.tx_pin, GPIO_OVERRIDE_INVERT);
+    //gpio_set_inover(conf.rx_pin, GPIO_OVERRIDE_INVERT);
+    //gpio_set_outover(conf.tx_pin, GPIO_OVERRIDE_INVERT);
+    dev.setInvertRX();
+    dev.setInvertTX();
   }
+  dev.begin(conf.baud, sc);
 
   return 1;
 }

@@ -181,6 +181,14 @@ public:
   uint16_t msgId;
 } __attribute__((packed));
 
+class UbxCfgMsg3
+{
+public:
+  static constexpr MsgId ID = UBX_CFG_MSG;
+  uint16_t msgId;
+  uint8_t rate;
+} __attribute__((packed));
+
 class UbxCfgMsg8
 {
 public:

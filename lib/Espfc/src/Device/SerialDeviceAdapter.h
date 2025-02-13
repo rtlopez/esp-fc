@@ -79,7 +79,10 @@ inline void SerialDeviceAdapter<USBCDC>::updateBadRate(int baud) {}
 
 #if defined(ARCH_RP2040)
 template<>
-inline void SerialDeviceAdapter<SerialUART>::updateBadRate(int baud) {}
+inline void SerialDeviceAdapter<SerialUART>::updateBadRate(int baud)
+{
+  _dev.begin(baud);
+}
 
 template<>
 inline void SerialDeviceAdapter<SerialUSB>::updateBadRate(int baud) {}
