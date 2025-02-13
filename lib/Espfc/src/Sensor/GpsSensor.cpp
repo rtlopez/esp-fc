@@ -352,6 +352,7 @@ void GpsSensor::handleNavPvt() const
 void GpsSensor::handleNavSat() const
 {
   const auto &m = *_ubxMsg.getAs<Gps::UbxNavSat>();
+  _model.state.gps.numCh = m.numSvs;
   for (uint8_t i = 0; i < SAT_MAX; i++)
   {
     if(i < m.numSvs)
@@ -359,7 +360,7 @@ void GpsSensor::handleNavSat() const
       _model.state.gps.svinfo[i].id = m.sats[i].svId;
       _model.state.gps.svinfo[i].gnssId = m.sats[i].gnssId;
       _model.state.gps.svinfo[i].cno = m.sats[i].cno;
-      _model.state.gps.svinfo[i].quality = m.sats[i].flags.qualityInd;
+      _model.state.gps.svinfo[i].quality = m.sats[i].flags.value;
     }
     else
     {
