@@ -106,10 +106,6 @@ int SerialManager::begin()
       sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
       sdc.data_bits = 8;
     }
-    else if(spc.functionMask & SERIAL_FUNCTION_GPS)
-    {
-      _gps.begin(port);
-    }
 
     /*if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY)
     {
@@ -132,6 +128,15 @@ int SerialManager::begin()
     if(i == ESPFC_SERIAL_DEBUG_PORT)
     {
       initDebugStream(port);
+    }
+
+    if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
+    {
+      _ibus.begin(port);
+    }
+    else if(spc.functionMask & SERIAL_FUNCTION_GPS)
+    {
+      _gps.begin(port, sdc.baud);
     }
 
     _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(i == ESPFC_SERIAL_DEBUG_PORT).log(sdc.tx_pin).logln(sdc.rx_pin);

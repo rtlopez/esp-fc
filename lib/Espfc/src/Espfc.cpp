@@ -1,4 +1,5 @@
 #include "Espfc.h"
+#include "Hal/Gpio.h"
 #include "Debug_Espfc.h"
 
 namespace Espfc {

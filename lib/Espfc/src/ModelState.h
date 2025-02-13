@@ -409,6 +409,9 @@ struct GpsState
   uint8_t numSats = 0;
   uint8_t numCh = 0;
   bool present = false;
+  bool frameError = false;
+  uint32_t interval;
+  uint32_t lastMsgTs;
   GpsSupportState support;
   GpsPosition location;
   GpsVelocity velocity;

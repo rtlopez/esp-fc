@@ -2,6 +2,7 @@
 #include <GpsProtocol.hpp>
 #include <Arduino.h>
 #include <cmath>
+#include <tuple>
 
 namespace Espfc::Sensor
 {
@@ -15,25 +16,23 @@ static constexpr std::array<uint16_t, 6> NMEA_MSG_OFF{
   Gps::NMEA_MSG_GSV, Gps::NMEA_MSG_RMC, Gps::NMEA_MSG_VTG,
 };
 
-static constexpr std::array<uint16_t, 2> UBX_MSG_ON{
-  Gps::UBX_NAV_PVT,
-  Gps::UBX_NAV_SAT,
-  //Gps::UBX_NAV_SOL,
-  //Gps::UBX_HNR_PVT,
+static constexpr std::array<std::tuple<uint16_t, uint8_t>, 2> UBX_MSG_ON{
+  std::make_tuple(Gps::UBX_NAV_PVT,  1u),
+  std::make_tuple(Gps::UBX_NAV_SAT, 10u),
 };
 
 GpsSensor::GpsSensor(Model& model): _model(model) {}
 
-int GpsSensor::begin(Device::SerialDevice* port)
+int GpsSensor::begin(Device::SerialDevice* port, int baud)
 {
   _port = port;
+  _targetBaud = _currentBaud = baud;
   _timer.setRate(50);
 
-  _model.logger.info().log(F("GPS")).logln(1);
-
-  setState(WAIT, WAIT, DETECT_BAUD);
-  _timeout = micros() + 3000000;
-
+  _state = DETECT_BAUD;
+  _timeout = micros() + DETECT_TIMEOUT;
+  _counter = 0;
+  setBaud(BAUDS[_counter]);
 
   return 1;
 }
@@ -68,6 +67,8 @@ bool GpsSensor::processUbx(uint8_t c)
   _ubxParser.parse(c, _ubxMsg);
   if (!_ubxMsg.isReady()) return false;
 
+  onMessage();
+
   handle();
   _ubxMsg = Gps::UbxMessage();
 
@@ -79,13 +80,27 @@ void GpsSensor::processNmea(uint8_t c)
   _nmeaParser.parse(c, _nmeaMsg);
   if (!_nmeaMsg.isReady()) return;
 
-  char buff[64];
-  size_t len = std::min(_nmeaMsg.length, sizeof(buff) - 1);
-  std::copy(_nmeaMsg.payload, _nmeaMsg.payload + len, buff);
-  buff[len] = 0;
-  D(buff);
+  //$GNTXT,01,01,01,More than 100 frame errors, UART RX was disabled*70
+  static const char * msg = "GNTXT,01,01,01,More than 100 frame errors";
+
+  if(!_model.state.gps.frameError && std::strncmp(_nmeaMsg.payload, msg, std::strlen(msg)) == 0)
+  {
+    _model.state.gps.frameError = true;
+    if(!_model.isModeActive(MODE_ARMED)) _model.logger.err().logln("GPS RX Frame Err");
+  }
+
+  onMessage();
 
   _nmeaMsg = Gps::NmeaMessage();
+}
+
+void GpsSensor::onMessage()
+{
+  if(_state == DETECT_BAUD)
+  {
+    _state = SET_BAUD;
+    _model.logger.info().log("GPS DET").logln(_currentBaud);
+  }
 }
 
 void GpsSensor::handle()
@@ -93,24 +108,45 @@ void GpsSensor::handle()
   switch (_state)
   {
     case DETECT_BAUD:
-      setBaud(BAUDS[_counter]);
-      _counter++;
-      if (_counter < BAUDS.size())
+      if(micros() > _timeout)
       {
-        send(Gps::UbxMonVer{}, _state, DETECT_BAUD);
+        // on timeout check next baud
+        _counter++;
+        if(_counter < BAUDS.size())
+        {
+          setBaud(BAUDS[_counter]);
+        }
+        else
+        {
+          _state = SET_BAUD;
+          _counter = 0;
+        }
+        _timeout = micros() + DETECT_TIMEOUT;
       }
-      else
-      {
-        send(Gps::UbxMonVer{}, ERROR, ERROR);
-        _counter = 0;
-      }
+      break;
+
+    case SET_BAUD:
+      send(Gps::UbxCfgPrt20{
+        .portId = 1,
+        .resered1 = 0,
+        .txReady = 0,
+        .mode = 0x08c0,     // 8N1
+        .baudRate = (uint32_t)_targetBaud, // baud
+        .inProtoMask = 0x07,
+        .outProtoMask = 0x07,
+        .flags = 0,
+        .resered2 = 0,
+      }, DISABLE_NMEA, DISABLE_NMEA);
+      delay(30); // wait until transmission complete at 9600bps
+      setBaud(_targetBaud);
+      delay(5);
       break;
 
     case DISABLE_NMEA:
     {
-      const Gps::UbxCfgMsg8 m{
+      const Gps::UbxCfgMsg3 m{
         .msgId = NMEA_MSG_OFF[_counter],
-        .channels = {0, 0, 0, 0, 0, 0},
+        .rate = 0,
       };
       _counter++;
       if (_counter < NMEA_MSG_OFF.size())
@@ -120,41 +156,22 @@ void GpsSensor::handle()
       else
       {
         _counter = 0;
-        send(m, SET_BAUD);
+        send(m, GET_VERSION);
         _model.logger.info().log(F("GPS NMEA")).logln(0);
       }
     }
     break;
 
-    case SET_BAUD:
-    {
-      const Gps::UbxCfgPrt20 m{
-        .portId = 1,
-        .resered1 = 0,
-        .txReady = 0,
-        .mode = 0x08c0,     // 8N1
-        .baudRate = 115200, // baud
-        .inProtoMask = 0x07,
-        .outProtoMask = 0x07,
-        .flags = 0,
-        .resered2 = 0,
-      };
-      // if(!_counter++) {
-      send(m, ENABLE_UBX);
-      //} else {
-      //  send(m, ENABLE_UBX, ERROR);
-      _counter = 0;
-      //}
-      delay(35); // wait until transmission complete at 9600bps
-      setBaud(115200);
-    }
-    break;
+    case GET_VERSION:
+      send(Gps::UbxMonVer{}, ENABLE_UBX);
+      _timeout = micros() + 3 * TIMEOUT;
+      break;
 
     case ENABLE_UBX:
     {
-      const Gps::UbxCfgMsg8 m{
-        .msgId = UBX_MSG_ON[_counter],
-        .channels = {0, 1, 0, 0, 0, 0},
+      const Gps::UbxCfgMsg3 m{
+        .msgId = std::get<0>(UBX_MSG_ON[_counter]),
+        .rate = std::get<1>(UBX_MSG_ON[_counter]),
       };
       _counter++;
       if (_counter < UBX_MSG_ON.size())
@@ -172,7 +189,6 @@ void GpsSensor::handle()
     break;
 
     case ENABLE_SBAS:
-    {
       if (_model.state.gps.support.sbas)
       {
         const Gps::UbxCfgSbas8 m{
@@ -189,13 +205,12 @@ void GpsSensor::handle()
         setState(SET_RATE);
       }
       _model.logger.info().log(F("GPS SBAS")).logln(_model.state.gps.support.sbas);
-    }
-    break;
+      break;
 
     case SET_RATE:
     {
-      const uint16_t mRate = 200;
-      const uint16_t nRate = 10;
+      const uint16_t mRate = _currentBaud > 100000 ? 100 : 200;
+      const uint16_t nRate = 1;
       const Gps::UbxCfgRate6 m{
         .measRate = mRate,
         .navRate = nRate,
@@ -232,7 +247,7 @@ void GpsSensor::handle()
         else if (_ubxMsg.isResponse(Gps::UbxMonVer::ID))
         {
           handleVersion();
-          _state = DISABLE_NMEA;
+          _state = _ackState;
           _counter = 0;
         }
         else if (_ubxMsg.isResponse(Gps::UbxNavPvt92::ID))
@@ -242,6 +257,9 @@ void GpsSensor::handle()
         else if (_ubxMsg.isResponse(Gps::UbxNavSat::ID))
         {
           handleNavSat();
+        }
+        else
+        {
         }
       }
       else if (_state == WAIT && micros() > _timeout)
@@ -256,8 +274,12 @@ void GpsSensor::handle()
 
 void GpsSensor::setBaud(int baud)
 {
-  _port->updateBadRate(baud);
-  _model.logger.info().log(F("GPS BAUD")).logln(baud);
+  if(baud != _currentBaud)
+  {
+    _port->updateBadRate(baud);
+    _currentBaud = baud;
+    _model.logger.info().log(F("GPS BAUD")).logln(baud);
+  }
 }
 
 void GpsSensor::setState(State state, State ackState, State timeoutState)
@@ -290,7 +312,7 @@ void GpsSensor::handleNavPvt() const
   _model.state.gps.accuracy.horizontal = m.hAcc; // mm
   _model.state.gps.accuracy.vertical = m.vAcc; // mm
   _model.state.gps.accuracy.speed = m.sAcc; // mm/s
-  _model.state.gps.accuracy.heading = (m.headAcc + 5000) / 10000; // deg * 0.1
+  _model.state.gps.accuracy.heading = m.headAcc; // deg * 1e5
 
   _model.state.gps.location.raw.lat = m.lat;
   _model.state.gps.location.raw.lon = m.lon;
@@ -315,8 +337,16 @@ void GpsSensor::handleNavPvt() const
     _model.state.gps.dateTime.hour = m.hour;
     _model.state.gps.dateTime.minute = m.min;
     _model.state.gps.dateTime.second = m.sec;
-    _model.state.gps.dateTime.msec = m.nano >= 0 ? m.nano / 1000 : 0;
+    int32_t msec = m.nano / 1000000;
+    if(msec < 0) {
+      msec += 1000;
+    }
+    _model.state.gps.dateTime.msec = msec;
   }
+
+  uint32_t now = micros();
+  _model.state.gps.interval = now - _model.state.gps.lastMsgTs;
+  _model.state.gps.lastMsgTs = now;
 }
 
 void GpsSensor::handleNavSat() const
