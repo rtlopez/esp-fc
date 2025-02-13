@@ -97,11 +97,6 @@ int SerialManager::begin()
     else if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
     {
       sdc.baud = 115200;
-      _ibus.begin(port);
-    }
-    else if(spc.functionMask & SERIAL_FUNCTION_GPS)
-    {
-      _gps.begin(port);
     }
 
     if(!sdc.baud)
@@ -115,6 +110,15 @@ int SerialManager::begin()
     if(i == ESPFC_SERIAL_DEBUG_PORT)
     {
       initDebugStream(port);
+    }
+
+    if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
+    {
+      _ibus.begin(port);
+    }
+    else if(spc.functionMask & SERIAL_FUNCTION_GPS)
+    {
+      _gps.begin(port, sdc.baud);
     }
 
     _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(i == ESPFC_SERIAL_DEBUG_PORT).log(sdc.tx_pin).logln(sdc.rx_pin);

@@ -912,15 +912,16 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     printVersion(s);
     s.println();
 
-    s.print(F("config size: "));
-    s.println(sizeof(ModelConfig));
-
-    s.print(F("  free heap: "));
-    s.println(targetFreeHeap());
-
-    s.print(F("   cpu freq: "));
+    s.print(F("cpu freq: "));
     s.print(targetCpuFreq());
     s.println(F(" MHz"));
+
+    s.print(F("  memory: "));
+    s.print(sizeof(ModelConfig));
+    s.print(F(", "));
+    s.print(sizeof(ModelState));
+    s.print(F(", "));
+    s.println(targetFreeHeap());
   }
   else if(strcmp_P(cmd.args[0], PSTR("get")) == 0)
   {
@@ -1197,7 +1198,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     }
     else
     {
-      s.print(F("NO_GYRO"));
+      s.print(F("NO GYRO"));
     }
 
     if(baro)
@@ -1207,10 +1208,6 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.print('/');
       s.print(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
     }
-    else
-    {
-      s.print(F(", NO_BARO"));
-    }
 
     if(mag)
     {
@@ -1219,9 +1216,10 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.print('/');
       s.print(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
     }
-    else
+
+    if(_model.state.gps.present)
     {
-      s.print(F(", NO_MAG"));
+      s.print(F(", GPS"));
     }
     s.println();
 
@@ -1243,7 +1241,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     };
     const size_t armingDisableNamesLength = sizeof(armingDisableNames) / sizeof(armingDisableNames[0]);
 
-    s.print(F("arming flags:"));
+    s.print(F("   arm flags:"));
     for(size_t i = 0; i < armingDisableNamesLength; i++)
     {
       if(_model.state.mode.armingDisabledFlags & (1 << i)) {
@@ -1489,7 +1487,13 @@ void Cli::printGpsStatus(Stream& s, bool full) const
   s.print(_model.state.gps.dateTime.minute);
   s.print(F(":"));
   s.print(_model.state.gps.dateTime.second);
+  s.print(F("."));
+  s.print(_model.state.gps.dateTime.msec);
   s.println(F(" UTC"));
+
+  s.print(F("Rate: "));
+  s.print(1000000.0f / _model.state.gps.interval);
+  s.println(F(" Hz"));
 
   s.print(F("Sat: "));
   s.print(_model.state.gps.numSats);
