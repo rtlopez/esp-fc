@@ -429,6 +429,9 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("baro_lpf_type"), &c.baro.filter.type, filterTypeChoices),
     Param(PSTR("baro_lpf_freq"), &c.baro.filter.freq),
 
+    Param(PSTR("gps_min_sats"), &c.gps.minSats),
+    Param(PSTR("gps_set_home_once"), &c.gps.setHomeOnce),
+
     Param(PSTR("board_align_roll"), &c.boardAlignment[0]),
     Param(PSTR("board_align_pitch"), &c.boardAlignment[1]),
     Param(PSTR("board_align_yaw"), &c.boardAlignment[2]),

@@ -59,11 +59,11 @@ https://github.com/esp8266/esp8266-wiki/wiki/Boot-Process#esp-boot-modes
 ```
 Pin | Name | Function                                   | ESPFC external device
 ----+------+--------------------------------------------+----------------------------------------------
- 0  |      | PU,ADC2_CH1,CLK_OUT1                       | >  BUZZER
+ 0  |      | PU,ADC2_CH1,CLK_OUT1                       | >  BUTTON
  1  | TXD  | U0TXD,CLK_OUT3                             |    TX0, PROG, MSP
- 2  |      | ADC2_CH2,HSPIWP,HS2_DATA0,SD_DATA0         | >  M5
+ 2  |      | ADC2_CH2,HSPIWP,HS2_DATA0,SD_DATA0         | >  LED
  3  | RXD  | U0RXD,CLK_OUT2                             |    RX0, PROG, MSP
- 4  |      | ADC2_CH0,HSPIHD,HS2_DATA1,SD_DATA1         | $  M2
+ 4  |      | ADC2_CH0,HSPIHD,HS2_DATA1,SD_DATA1         |    M2
  5  |      | VSPICS0,HS1_DATA6                          | >  SPI_CS0_GYRO, SPI0_SS
 12  | TD1  | PD,ADC2_CH5,MTDI,HSPIQ,HS2_DATA2,SD_DATA2  | >  M3, SPI1_MISO
 13  | TCK  | ADC2_CH4,MTCK,HSPID,HS2_DATA3,SD_DATA3     |    SPI_CS1_BARO, SPI1_MOSI

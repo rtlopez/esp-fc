@@ -660,6 +660,7 @@ struct VtxConfig
 struct GpsConfig
 {
   uint8_t minSats = 8;
+  uint8_t setHomeOnce = 1;
 };
 
 // persistent data

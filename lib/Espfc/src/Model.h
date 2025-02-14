@@ -205,6 +205,18 @@ class Model
       state.debug[index] = value;
     }
 
+    void setGpsHome(bool force = false)
+    {
+      if(force || (state.gps.fix && state.gps.numSats >= config.gps.minSats))
+      {
+        if(!state.gps.homeSet || !config.gps.setHomeOnce)
+        {
+          state.gps.location.home = state.gps.location.raw;
+          state.gps.homeSet = true;
+        }
+      }
+    }
+
     Device::SerialDevice * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
