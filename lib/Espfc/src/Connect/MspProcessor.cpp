@@ -1320,6 +1320,10 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_MOTOR:
+      if(_model.isFeatureActive(FEATURE_GPS) && _model.config.blackbox.mode > 0)
+      {
+        _model.setGpsHome(true);
+      }
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         _model.state.output.disarmed[i] = m.readU16();
@@ -1452,7 +1456,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       m.readU8(); // auto baud
       if (m.remain() >= 2) {
           // Added in API version 1.43
-          m.readU8(); // gps_set_home_point_once
+          _model.config.gps.setHomeOnce = m.readU8(); // gps_set_home_point_once
           m.readU8(); // gps_ublox_use_galileo
       }
       break;
@@ -1463,8 +1467,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(1); // autoConfig, 0: off, 1: on
       r.writeU8(1); // autoBaud, 0: off, 1: on
       // Added in API version 1.43
-      r.writeU8(0); // gps_set_home_point_once
-      r.writeU8(0); // gps_ublox_use_galileo
+      r.writeU8(_model.config.gps.setHomeOnce); // gps_set_home_point_once
+      r.writeU8(1); // gps_ublox_use_galileo
       break;
 
   case MSP_RAW_GPS:
