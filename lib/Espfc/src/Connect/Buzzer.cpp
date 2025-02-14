@@ -108,7 +108,7 @@ const uint8_t** Buzzer::schemes()
     beeperBatteryCritical,
     //BUZZER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
     beeperBatteryLow,
-    //BUZZER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
+    //BUZZER_GPS_STATUS,              // Num beeps = num Gps Sats, FIXME **** Disable beeper when connected to USB ****
     beeperSilence,
     //BUZZER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
     beeperRxLost,
@@ -117,7 +117,7 @@ const uint8_t** Buzzer::schemes()
     //BUZZER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
     beeperSilence,
     //BUZZER_READY_BEEP,              // Ring a tone when GPS is locked and ready
-    beeperSilence,
+    beeperGyroCalibrated,
     //BUZZER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
     beeperSilence,
     //BUZZER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position

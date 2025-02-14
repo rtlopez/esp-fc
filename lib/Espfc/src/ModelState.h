@@ -405,6 +405,8 @@ struct GpsState
   uint8_t numCh = 0;
   bool present = false;
   bool frameError = false;
+  bool wasLocked = false;
+  bool homeSet = false;
   uint32_t interval;
   uint32_t lastMsgTs;
   GpsSupportState support;

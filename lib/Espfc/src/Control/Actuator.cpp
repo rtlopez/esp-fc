@@ -90,13 +90,17 @@ void Actuator::updateArmingDisabled()
   int errors = _model.state.i2cErrorDelta;
   _model.state.i2cErrorDelta = 0;
 
-  _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,       !_model.state.gyro.present || errors);
-  _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,       _model.state.failsafe.phase != FC_FAILSAFE_IDLE);
-  _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,    _model.state.input.rxLoss || _model.state.input.rxFailSafe);
-  _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,      !_model.isThrottleLow());
-  _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,    _model.calibrationActive());
-  _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
+  _model.setArmingDisabled(ARMING_DISABLED_NO_GYRO,        !_model.state.gyro.present || errors);
+  _model.setArmingDisabled(ARMING_DISABLED_FAILSAFE,        _model.state.failsafe.phase != FC_FAILSAFE_IDLE);
+  _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE,     _model.state.input.rxLoss || _model.state.input.rxFailSafe);
+  _model.setArmingDisabled(ARMING_DISABLED_THROTTLE,       !_model.isThrottleLow());
+  _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,     _model.calibrationActive());
+  _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL,  _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
   _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.mode.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
+  if(_model.isFeatureActive(FEATURE_GPS))
+  {
+    _model.setArmingDisabled(ARMING_DISABLED_GPS, !_model.state.gps.present || _model.state.gps.numSats < _model.config.gps.minSats);
+  }
 }
 
 void Actuator::updateModeMask()
@@ -161,7 +165,7 @@ bool Actuator::canActivateMode(FlightMode mode)
 
 void Actuator::updateArmed()
 {
-  if((_model.hasChanged(MODE_ARMED)))
+  if(_model.hasChanged(MODE_ARMED))
   {
     bool armed = _model.isModeActive(MODE_ARMED);
     if(armed)
@@ -173,6 +177,7 @@ void Actuator::updateArmed()
     {
       _model.state.mode.disarmReason = DISARM_REASON_SWITCH;
     }
+    if(armed) _model.setGpsHome();
   }
 }
 
@@ -206,6 +211,11 @@ void Actuator::updateBuzzer()
   if((_model.hasChanged(MODE_ARMED)))
   {
     _model.state.buzzer.push(_model.isModeActive(MODE_ARMED) ? BUZZER_ARMING : BUZZER_DISARMING);
+  }
+  if(!_model.state.gps.wasLocked && _model.state.gps.numSats >= _model.config.gps.minSats)
+  {
+    _model.state.buzzer.play(BUZZER_READY_BEEP);
+    _model.state.gps.wasLocked = true;
   }
 }
 
