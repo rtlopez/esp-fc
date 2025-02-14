@@ -112,21 +112,19 @@ namespace Espfc
       int begin(BusDevice *bus, uint8_t addr) override
       {
         setBus(bus, addr);
+        if (!testConnection())
+          return 0;
         // https://github.com/Mert-Kilic/ICM-42688-P/blob/main/icm.c
         uint8_t configure_reset = 0x01;
         uint8_t fifo_conf_data = 0x03;
         uint8_t buffer = 0x1F; // temperature sensor enabled. RC oscillator is on, gyro and accelerometer low noise mode,
         uint8_t fifo_init = 0x40;
         _bus->writeByte(_addr, 0x11, configure_reset); // DEVICE_CONFIG 0x11
-        delay(100);
         _bus->writeByte(_addr, ICM40608_RA_REG_BANK_SEL, ICM40608_BANK_SELECT0); // select bank 0
         _bus->writeByte(_addr, ICM40608_RA_PWR_MGMT0, buffer);
         delay(100);
-        if (!testConnection())
-          return 0;
         _bus->writeByte(_addr, 0x16, fifo_init);      // FIFO_CONFIG_INIT 0x16
         _bus->writeByte(_addr, 0x5F, fifo_conf_data); // FIFO_CONFIGURATION 0x5F
-        delay(100);
         return 1;
       }
 
@@ -157,11 +155,12 @@ namespace Espfc
 
       void setDLPFMode(uint8_t mode) override
       {
+        
       }
 
       int getRate() const override
       {
-        return 3200;
+        return 1000;
       }
 
       void setRate(int rate) override

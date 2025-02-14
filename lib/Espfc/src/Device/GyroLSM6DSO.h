@@ -148,6 +148,7 @@ class GyroLSM6DSO: public GyroDevice
 
     void setRate(int rate) override
     {
+      
     }
 
     bool testConnection() override
