@@ -53,6 +53,12 @@ int Mixer::begin()
     else
     {
       _motor->attach(i, _model.config.pin[PIN_OUTPUT_0 + i], 1000);
+      if (_motor->reverseMotor(i, occ.reverse)) {
+        _model.logger.info().log(F("MOTOR REVERSED")).logln(i);
+      } else {
+        _model.logger.info().log(F("MOTOR NOT REVERSED")).logln(i);
+      }
+      _model.logger.info().log(F("MOTOR PIN")).log(i).log(F("REVERSE")).logln(occ.reverse);
       _model.logger.info().log(F("MOTOR PIN")).log(i).logln(_model.config.pin[PIN_OUTPUT_0 + i]);
     }
     _model.state.output.telemetry.errors[i] = 0;
