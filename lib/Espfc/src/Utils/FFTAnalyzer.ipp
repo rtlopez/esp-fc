@@ -14,24 +14,25 @@ namespace Espfc {
 namespace Utils {
 
 template<size_t SAMPLES>
-FFTAnalyzer<SAMPLES>::FFTAnalyzer(): _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0), _in(nullptr), _out(nullptr), _win(nullptr)
+FFTAnalyzer<SAMPLES>::FFTAnalyzer(): _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0)/*, _in(nullptr), _out(nullptr), _win(nullptr)*/
 {
-  _in = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES, MALLOC_CAP_DEFAULT));
-  _out = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES, MALLOC_CAP_DEFAULT));
-  _win = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES, MALLOC_CAP_DEFAULT));
 }
 
 template<size_t SAMPLES>
 FFTAnalyzer<SAMPLES>::~FFTAnalyzer()
 {
-  heap_caps_free(_in);
-  heap_caps_free(_out);
-  heap_caps_free(_win);
+  // if(_in) heap_caps_free(_in);
+  // if(_out) heap_caps_free(_out);
+  // if(_win) heap_caps_free(_win);
 }
 
 template<size_t SAMPLES>
 int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config, size_t axis)
 {
+  // if(!_in) _in = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
+  // if(!_out) _out = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
+  // if(!_win) _win = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
+
   int16_t nyquistLimit = rate / 2;
   _rate = rate;
   _freq_min = config.min_freq;

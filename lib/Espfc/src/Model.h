@@ -276,7 +276,7 @@ class Model
     void reset()
     {
       initialize();
-      save();
+      //save();
       reload();
     }
 

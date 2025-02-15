@@ -1461,6 +1461,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       if(!_model.isModeActive(MODE_ARMED))
       {
         _model.reset();
+        _model.save();
       }
       break;
 

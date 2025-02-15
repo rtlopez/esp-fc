@@ -65,11 +65,10 @@ Pin | Name | Function                                   | ESPFC external device
  3  | RXD  | U0RXD,CLK_OUT2                             |    RX0, PROG, MSP
  4  |      | ADC2_CH0,HSPIHD,HS2_DATA1,SD_DATA1         | $  M2
  5  |      | VSPICS0,HS1_DATA6                          | >  SPI_CS0_GYRO, SPI0_SS
-11  | CMD  | SD_CMD,SPICS0,HS1_CMD,U1RTS                | $  
-12  | TD1  | PD,ADC2_CH5,MTDI,HSPIQ,HS2_DATA2,SD_DATA2  | >  M4, SPI1_MISO 
-13  | TCK  | ADC2_CH4,MTCK,HSPID,HS2_DATA3,SD_DATA3     |    SPI_CS1_BARO, M6, SPI1_MOSI
-14  | TMS  | ADC2_CH6,MTMS,HSPICLK,HS2_CLK,SD_CLK       |    M7, SPI1_SCK
-15  | TD0  | PU,ADC2_CH3,MTDO,HSPICS0,HS2_CMD,SD_CMD    | >  SPI_CS2_SDCARD, SPI1_SS
+12  | TD1  | PD,ADC2_CH5,MTDI,HSPIQ,HS2_DATA2,SD_DATA2  | >  M3, SPI1_MISO
+13  | TCK  | ADC2_CH4,MTCK,HSPID,HS2_DATA3,SD_DATA3     |    SPI_CS1_BARO, SPI1_MOSI
+14  | TMS  | ADC2_CH6,MTMS,HSPICLK,HS2_CLK,SD_CLK       | $  FREE, SPI1_SCK
+15  | TD0  | PU,ADC2_CH3,MTDO,HSPICS0,HS2_CMD,SD_CMD    | >  FREE, SPI_CS2_SDCARD, SPI1_SS
 16  |      | HS1_DATA4,U2RXD                            |    RX2
 17  |      | HS1_DATA5,U2TXD                            |    TX2
 18  |      | VSPICLK,HS1_DATA7                          |    SPI0_SCK
@@ -78,7 +77,7 @@ Pin | Name | Function                                   | ESPFC external device
 22  |      | VSPIWP,U0RTS                               |    I2C0_SCL
 23  |      | VSPID,HS1_STROBE                           |    SPI0_MOSI
 25  |      | ADC2_CH8,DAC1                              |    M1
-26  |      | ADC2_CH9,DAC2                              |    M3
+26  |      | ADC2_CH9,DAC2                              |    BUZZER
 27  |      | ADC2_CH7                                   |    M0
 32  |      | ADC1_CH4,XTAL                              |    RX1
 33  |      | ADC1_CH5,XTAL                              |    TX1
@@ -88,21 +87,6 @@ Pin | Name | Function                                   | ESPFC external device
 37  | -    | ADC1_CH1                                   | -  N/A
 38  | -    | ADC1_CH2                                   | -  N/A
 39  | SVN  | ADC1_CH3                                   | <  ADC_CURRENT
-
-RESERVED
- 6  | CLK  | SD_CLK,SPICLK,HS1_CLK,U1CTS                | (flash)
- 7  | SD0  | SD_DATA0,SPIQ,HS1_DATA0,U2RTS              | (flash)
- 8  | SD1  | SD_DATA1,SPID,HS1_DATA1,U2CTS              | (flash)
- 9  | SD2  | SD_DATA2,SPIHD,HS1_DATA2,U1RXD             | (flash)
-10  | SD3  | SD_DATA3,SPIWP,HS1_DATA3,U1TXD             | (flash)
-
-NOT EXISTS
-20  | -    | -                                          | -
-24  | -    | -                                          | -
-28  | -    | -                                          | -
-29  | -    | -                                          | -
-30  | -    | -                                          | -
-31  | -    | -                                          | -
 ```
 
 ## Legend
@@ -112,8 +96,10 @@ NOT EXISTS
  '$' free
  '-' not available
 ```
-GPIO `0, 2, 12, 15` recommended as output because of boot process impact
+GPIO `0, 2, 5, 12, 15` recommended as output because of boot process impact
 GPIO `34-39` are input-only by chip
+GPIO `6-11` are reserved for integrated flash
+GPIO `20,24,28,29,30,31` does not exist
 
 - GPIO0 - Low/GND	ROM serial bootloader for esptool.py, High/VCC	Normal execution mode
 - GPIO2 - GPIO2 must also be either left unconnected/floating, or driven Low, in order to enter the serial bootloader. In normal boot mode (GPIO0 high), GPIO2 is ignored.

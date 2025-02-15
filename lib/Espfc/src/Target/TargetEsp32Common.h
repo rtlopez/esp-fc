@@ -48,6 +48,7 @@ inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
     case SDC_SERIAL_STOP_BITS_1:  sc |= SERIAL_UART_NB_STOP_BIT_1;  break;
     default: break;
   }
+  if(dev) dev.end();
   dev.setTxBufferSize(SERIAL_TX_FIFO_SIZE);
   dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
   return 1;

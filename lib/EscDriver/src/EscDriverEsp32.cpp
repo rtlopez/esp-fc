@@ -81,6 +81,8 @@ void EscDriverEsp32::end()
   for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
   {
     if (!_channel[i].attached()) continue;
+    if (_protocol == ESC_PROTOCOL_DISABLED) continue;
+    // TODO: handle splitted case
     rmt_driver_uninstall((rmt_channel_t)i);
   }
   _protocol = ESC_PROTOCOL_DISABLED;

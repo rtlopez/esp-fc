@@ -58,7 +58,8 @@ StorageResult Storage::save(const ModelConfig& config)
   EEPROM.write(addr++, size & 0xFF);
   EEPROM.write(addr++, (size >> 8) & 0xFF);
   EEPROM.put(addr, config);
-  if(!EEPROM.commit()) return STORAGE_SAVE_ERROR;
+  bool ok = EEPROM.commit();
+  if(!ok) return STORAGE_SAVE_ERROR;
   return STORAGE_SAVE_SUCCESS;
 }
 
