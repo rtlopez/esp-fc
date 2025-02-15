@@ -112,6 +112,21 @@ int IRAM_ATTR EscDriverEsp32::write(size_t channel, int pulse)
   return 1;
 }
 
+int EscDriverEsp32::reverseMotor(size_t channel, bool reverse)
+{
+  LOG_SERIAL_DEBUG("EscDriverEsp32::reverseMotor\n");
+  if (channel < 0 || channel >= ESC_CHANNEL_COUNT || !isDigital(_protocol)) return 0;
+  if (reverse) {
+    writeDshotCommand(channel, DSHOT_CMD_SPIN_DIRECTION_REVERSED);
+  } else {
+    writeDshotCommand(channel, DSHOT_CMD_SPIN_DIRECTION_NORMAL);
+  }
+
+  writeDshotCommand(channel, DSHOT_CMD_SAVE_SETTINGS);
+
+  return 1;
+}
+
 void IRAM_ATTR EscDriverEsp32::apply()
 {
   if (_protocol == ESC_PROTOCOL_DISABLED) return;
@@ -292,7 +307,7 @@ void IRAM_ATTR EscDriverEsp32::transmitOne(uint32_t i)
   if (!_channel[i].attached()) return;
   if (_digital)
   {
-    writeDshotCommand(i, _channel[i].pulse);
+    writeDshotThrottleCommand(i, _channel[i].pulse);
   }
   else
   {
@@ -309,7 +324,7 @@ void IRAM_ATTR EscDriverEsp32::transmitAll()
     if (!_channel[i].attached()) continue;
     if (_digital)
     {
-      writeDshotCommand(i, _channel[i].pulse);
+      writeDshotThrottleCommand(i, _channel[i].pulse);
     }
     else
     {
@@ -379,7 +394,7 @@ void IRAM_ATTR EscDriverEsp32::writeAnalogCommand(uint32_t channel, int32_t puls
   _rmt_fill_tx_items((rmt_channel_t)channel, _channel[channel].items, count, 0);
 }
 
-void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse)
+void IRAM_ATTR EscDriverEsp32::writeDshotThrottleCommand(uint32_t channel, int32_t pulse)
 {
   if(_digital && _dshot_tlm)
   {
@@ -400,6 +415,74 @@ void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse
   slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
 
   _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
+}
+
+void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, dshot_cmd_e cmd)
+{
+  if(_digital && _dshot_tlm)
+  {
+    modeTx((rmt_channel_t)channel);
+  }
+
+  uint16_t frame;
+
+  switch (cmd) {
+    case DSHOT_CMD_SPIN_DIRECTION_REVERSED:
+      frame = dshotEncode(DSHOT_CMD_SPIN_DIRECTION_REVERSED, _dshot_tlm);
+  
+      for (int i = 0; i < 10; i++)
+      {
+        Slot& slot = _channel[channel];
+        for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+        {
+          slot.setDshotBit(i, 1, _dshot_tlm);
+        }
+        slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
+        _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
+
+        transmitCommand(channel);
+      }
+      
+      break;
+    case DSHOT_CMD_SPIN_DIRECTION_NORMAL:
+      frame = dshotEncode(DSHOT_CMD_SPIN_DIRECTION_NORMAL, _dshot_tlm);
+  
+      for (int i = 0; i < 10; i++)
+      {
+        Slot& slot = _channel[channel];
+        for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+        {
+          slot.setDshotBit(i, 1, _dshot_tlm);
+        }
+        slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
+        _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
+
+        transmitCommand(channel);
+      }
+  
+      break;
+    case DSHOT_CMD_SAVE_SETTINGS:
+      frame = dshotEncode(DSHOT_CMD_SAVE_SETTINGS, _dshot_tlm);
+  
+      for (int i = 0; i < 10; i++)
+      {
+        Slot& slot = _channel[channel];
+        for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+        {
+          slot.setDshotBit(i, 1, _dshot_tlm);
+        }
+        slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
+        _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
+
+        transmitCommand(channel);
+      }
+
+      delayMicroseconds(35000);
+
+      break;
+    default:
+      return;
+  }
 }
 
 void IRAM_ATTR EscDriverEsp32::transmitCommand(uint32_t channel)
