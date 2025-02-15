@@ -1,7 +1,8 @@
 #pragma once
 
-#include <algorithm>
+#include <platform.h>
 #include <esp_partition.h>
+#include <algorithm>
 
 namespace Espfc {
 

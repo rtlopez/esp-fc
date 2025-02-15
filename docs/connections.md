@@ -65,11 +65,10 @@ Pin | Name | Function                                   | ESPFC external device
  3  | RXD  | U0RXD,CLK_OUT2                             |    RX0, PROG, MSP
  4  |      | ADC2_CH0,HSPIHD,HS2_DATA1,SD_DATA1         |    M2
  5  |      | VSPICS0,HS1_DATA6                          | >  SPI_CS0_GYRO, SPI0_SS
-11  | CMD  | SD_CMD,SPICS0,HS1_CMD,U1RTS                | $  BUZZER
-12  | TD1  | PD,ADC2_CH5,MTDI,HSPIQ,HS2_DATA2,SD_DATA2  | $> FREE, SPI1_MISO
+12  | TD1  | PD,ADC2_CH5,MTDI,HSPIQ,HS2_DATA2,SD_DATA2  | >  M3, SPI1_MISO
 13  | TCK  | ADC2_CH4,MTCK,HSPID,HS2_DATA3,SD_DATA3     |    SPI_CS1_BARO, SPI1_MOSI
 14  | TMS  | ADC2_CH6,MTMS,HSPICLK,HS2_CLK,SD_CLK       | $  FREE, SPI1_SCK
-15  | TD0  | PU,ADC2_CH3,MTDO,HSPICS0,HS2_CMD,SD_CMD    | $> FREE, SPI_CS2_SDCARD, SPI1_SS
+15  | TD0  | PU,ADC2_CH3,MTDO,HSPICS0,HS2_CMD,SD_CMD    | >  FREE, SPI_CS2_SDCARD, SPI1_SS
 16  |      | HS1_DATA4,U2RXD                            |    RX2
 17  |      | HS1_DATA5,U2TXD                            |    TX2
 18  |      | VSPICLK,HS1_DATA7                          |    SPI0_SCK
@@ -78,7 +77,7 @@ Pin | Name | Function                                   | ESPFC external device
 22  |      | VSPIWP,U0RTS                               |    I2C0_SCL
 23  |      | VSPID,HS1_STROBE                           |    SPI0_MOSI
 25  |      | ADC2_CH8,DAC1                              |    M1
-26  |      | ADC2_CH9,DAC2                              |    M3
+26  |      | ADC2_CH9,DAC2                              |    BUZZER
 27  |      | ADC2_CH7                                   |    M0
 32  |      | ADC1_CH4,XTAL                              |    RX1
 33  |      | ADC1_CH5,XTAL                              |    TX1
@@ -95,6 +94,7 @@ RESERVED
  8  | SD1  | SD_DATA1,SPID,HS1_DATA1,U2CTS              | (flash)
  9  | SD2  | SD_DATA2,SPIHD,HS1_DATA2,U1RXD             | (flash)
 10  | SD3  | SD_DATA3,SPIWP,HS1_DATA3,U1TXD             | (flash)
+11  | CMD  |                                            | (flash)
 
 NOT EXISTS
 20  | -    | -                                          | -
@@ -112,7 +112,7 @@ NOT EXISTS
  '$' free
  '-' not available
 ```
-GPIO `0, 2, 12, 15` recommended as output because of boot process impact
+GPIO `0, 2, 5, 12, 15` recommended as output because of boot process impact
 GPIO `34-39` are input-only by chip
 
 - GPIO0 - Low/GND	ROM serial bootloader for esptool.py, High/VCC	Normal execution mode
