@@ -47,17 +47,17 @@ private:
   float _bin_width;
 
   // fft input
-  __attribute__((aligned(16))) float _in[SAMPLES];
+  //__attribute__((aligned(16))) float _in[SAMPLES];
 
   // fft output
-  __attribute__((aligned(16))) float _out[SAMPLES];
+  //__attribute__((aligned(16))) float _out[SAMPLES];
 
   // Window coefficients
-  __attribute__((aligned(16))) float _win[SAMPLES];
+  //__attribute__((aligned(16))) float _win[SAMPLES];
 
-  // float* _in;
-  // float* _out;
-  // float* _win;
+  float* _in;
+  float* _out;
+  float* _win;
 };
 
 }
