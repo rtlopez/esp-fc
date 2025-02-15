@@ -940,6 +940,54 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     }
     s.println();
   }
+  else if(strcmp_P(cmd.args[0], PSTR("motor")) ==0)
+  {
+    if(!cmd.args[1])
+    {
+      s.println(F("command required, available commands are"));
+      s.println(F("  reverse, normalize"));
+    }
+    else if(strcmp_P(cmd.args[1], PSTR("reverse")) == 0)
+    {
+      if(!cmd.args[2])
+      {
+        s.println(F("motor index required"));
+      }
+      else
+      {
+        int index = atoi(cmd.args[2]);
+        if(index >= 0 && index < MAX_SUPPORTED_MOTORS)
+        {
+          if(_model.state.mixer.escMotor) _model.state.mixer.escMotor->reverseMotor(index, true);
+          s.print(F("motor ")); s.print(index); s.println(F(" reversed"));
+        }
+        else
+        {
+          s.print(F("motor index out of range: ")); s.println(index);
+        }
+      }
+    }
+    else if(strcmp_P(cmd.args[1], PSTR("normalize")) == 0)
+    {
+      if(!cmd.args[2])
+      {
+        s.println(F("motor index required"));
+      }
+      else
+      {
+        int index = atoi(cmd.args[2]);
+        if(index >= 0 && index < MAX_SUPPORTED_MOTORS)
+        {
+          if(_model.state.mixer.escMotor) _model.state.mixer.escMotor->reverseMotor(index, false);
+          s.print(F("motor ")); s.print(index); s.println(F(" normalized: "));
+        }
+        else
+        {
+          s.print(F("motor index out of range: ")); s.println(index);
+        }
+      }
+    }
+  }
   else if(strcmp_P(cmd.args[0], PSTR("set")) == 0)
   {
     if(!cmd.args[1])

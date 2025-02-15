@@ -355,11 +355,7 @@ Device::InputDevice * Input::getInputDevice()
         return &_sbus;
 
       case SERIALRX_CRSF:
-<<<<<<< HEAD
         _crsf.begin(serial, _model.isFeatureActive(FEATURE_TELEMETRY) ? &_telemetry : nullptr);
-=======
-        _crsf.begin(serial);
->>>>>>> 987a1bb (IBUS RX support (cherry-pick))
         _model.logger.info().logln(F("RX CRSF"));
         return &_crsf;
     }
