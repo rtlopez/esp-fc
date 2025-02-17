@@ -2,9 +2,7 @@
 
 #include "Model.h"
 
-namespace Espfc {
-
-namespace Control {
+namespace Espfc::Control {
 
 class Actuator
 {
@@ -27,10 +25,9 @@ class Actuator
     void updateBuzzer();
     void updateDynLpf();
     void updateRescueConfig();
+    void updateLed();
 
     Model& _model;
 };
-
-}
 
 }

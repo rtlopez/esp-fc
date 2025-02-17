@@ -1,9 +1,7 @@
 #include "Control/Actuator.h"
 #include "Utils/Math.hpp"
 
-namespace Espfc {
-
-namespace Control {
+namespace Espfc::Control {
 
 Actuator::Actuator(Model& model): _model(model) {}
 
@@ -37,6 +35,7 @@ int Actuator::update()
   updateBuzzer();
   updateDynLpf();
   updateRescueConfig();
+  updateLed();
 
   if(_model.config.debug.mode == DEBUG_PIDLOOP)
   {
@@ -259,6 +258,20 @@ void Actuator::updateRescueConfig()
   }
 }
 
+void Actuator::updateLed()
+{
+  if(_model.armingDisabled())
+  {
+    _model.state.led.setStatus(Connect::LED_ERROR);
+  }
+  else if(_model.isModeActive(MODE_ARMED))
+  {
+    _model.state.led.setStatus(Connect::LED_ON);
+  }
+  else
+  {
+    _model.state.led.setStatus(Connect::LED_OK);
+  }
 }
 
 }

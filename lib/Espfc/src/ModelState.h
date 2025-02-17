@@ -14,6 +14,7 @@
 #include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
 #include "Connect/Msp.hpp"
+#include "Connect/StatusLed.hpp"
 
 namespace Espfc {
 
@@ -451,6 +452,7 @@ struct ModelState
   int16_t debug[DEBUG_VALUE_COUNT];
 
   BuzzerState buzzer;
+  Connect::StatusLed led;
 
   BatteryState battery;
 
