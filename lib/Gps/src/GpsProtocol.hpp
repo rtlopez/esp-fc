@@ -42,6 +42,7 @@ enum MsgId: uint16_t
   UBX_CFG_RST      = 0x04 << 8 | UBX_CFG,  // Reset receiver / Clear backup data
   UBX_CFG_RATE     = 0x08 << 8 | UBX_CFG,  // Navigation/measurement rate settings
   UBX_CFG_SBAS     = 0x16 << 8 | UBX_CFG,  // SBAS configuration
+  UBX_CFG_NAV5     = 0x24 << 8 | UBX_CFG,  // Navigation engine settings
 
   UBX_NAV_HPOSECEF = 0x13 << 8 | UBX_NAV,  // High precision position solution in ECEF (28 Bytes)
   UBX_NAV_HPOSLLH  = 0x14 << 8 | UBX_NAV,  // High precision geodetic position solution (36 Bytes)
@@ -237,6 +238,46 @@ public:
   uint8_t maxSbas;  // Maximum number of SBAS prioritized tracking channels (valid range: 0 - 3) to use
   uint8_t scanmode2; // Continuation of scanmode bitmask
   uint32_t scanmode1; // Which SBAS PRN numbers to search for (bitmask).If all bits are set to zero, auto-scan (i.e. allvalid PRNs) are searched. Every bit corresponds to a PRN number
+} __attribute__((packed));
+
+class UbxCfgNav5
+{
+public:
+  static constexpr MsgId ID = UBX_CFG_NAV5;
+  union {                        // Parameters bitmask. Only the masked parameters will be applied.
+    uint16_t value;
+    struct {
+      uint8_t dyn: 1;            // Apply dynamic model settings
+      uint8_t minEl: 1;          // Apply minimum elevation settings
+      uint8_t posFixMode: 1;     // Apply fix mode settings
+      uint8_t drLim: 1;          // Reserved
+      uint8_t posMask: 1;        // Apply position mask settings
+      uint8_t timeMask: 1;       // Apply time mask settings
+      uint8_t staticHoldMask: 1; // Apply static hold settings
+      uint8_t dgpsMask: 1;       // Apply DGPS settings
+      uint8_t cnoThreshold: 1;   // Apply CNO threshold settings (cnoThresh, cnoThreshNumSVs)
+      uint8_t reserved: 1;
+      uint8_t utc: 1;            // Apply UTC settings
+    };
+  } mask;
+  uint8_t dynModel;           // Dynamic model, 0:portable, 2:stationary, 3:pedestrian, 4:automotive, 5:sea, 6:airbone<1g, 7:airbone<2g, 8: airbone<4g, 9:wrist watch, 10:motorbike, 11: lawnmower, 12: electric scooter
+  uint8_t fixMode;            // Position fixing mode, 1: 2D only, 2: 3D only, 3: auto 2D/3D
+  int32_t fixedAlt;           // Fixed altitude (mean sea level) for 2D fix mode, [m * 0.01]
+  uint32_t fixedAltVar;       // Fixed altitude variance for 2D mode, [m^2 * 0.0001]
+  int8_t minElev;             // Minimum elevation for a GNSS satellite to be used in NAV, [deg]
+  uint8_t drLimit;            // reserved [s]
+  uint16_t pDOP;              // Position DOP mask to use * 0.1
+  uint16_t tDOP;              // Time DOP mask to use * 0.1
+  uint16_t pAcc;              // Position accuracy mask [m]
+  uint16_t tAcc;              // Time accuracy mask [m]
+  uint8_t staticHoldThresh;   // Static hold threshold [cm/s]
+  uint8_t dgnssTimeout;       // DGNSS timeout [s]
+  uint8_t cnoThreshNumSVs;    // Number of satellites required to have C/N0 above cnoThresh for a fix to be attempted
+  uint8_t cnoThresh;          // C/N0 threshold for deciding whether to attempt a fix
+  uint8_t reserved0[2];
+  uint16_t staticHoldMaxDist; // Static hold distance threshold
+  uint8_t utcStandard;        // UTC standard to be used, 0:auto, 3:USNaval Obs, 5: EURLabs, 6:Soviet, 7: NTSC (China), 8: NTPL (India)
+  uint8_t reserved1[5];
 } __attribute__((packed));
 
 class UbxNavPvt92
