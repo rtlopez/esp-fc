@@ -57,6 +57,8 @@
 #define ESPFC_I2C_0_SOFT
 
 #define ESPFC_BUZZER_PIN 5
+#define ESPFC_BUTTON_PIN -1
+#define ESPFC_LED_PIN -1
 
 #define ESPFC_ADC_0
 #define ESPFC_ADC_0_PIN 1

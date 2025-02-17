@@ -257,7 +257,9 @@ enum PinFunction {
 #if ESPFC_OUTPUT_COUNT > 7
   PIN_OUTPUT_7,
 #endif
+  PIN_BUTTON,
   PIN_BUZZER,
+  PIN_LED_BLINK,
 #ifdef ESPFC_SERIAL_0
   PIN_SERIAL_0_TX,
   PIN_SERIAL_0_RX,
@@ -655,6 +657,11 @@ struct GpsConfig
   uint8_t setHomeOnce = 1;
 };
 
+struct LedConfig
+{
+  uint8_t invert = 0;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -713,7 +720,9 @@ class ModelConfig
 #if ESPFC_OUTPUT_COUNT > 7
       [PIN_OUTPUT_7] = ESPFC_OUTPUT_7,
 #endif
+      [PIN_BUTTON] = ESPFC_BUTTON_PIN,
       [PIN_BUZZER] = ESPFC_BUZZER_PIN,
+      [PIN_LED_BLINK] = ESPFC_LED_PIN,
 #ifdef ESPFC_SERIAL_0
       [PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX,
       [PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX,
@@ -740,8 +749,6 @@ class ModelConfig
       [PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK,
       [PIN_SPI_0_MOSI] = ESPFC_SPI_0_MOSI,
       [PIN_SPI_0_MISO] = ESPFC_SPI_0_MISO,
-#endif
-#ifdef ESPFC_SPI_0
       [PIN_SPI_CS0] = ESPFC_SPI_CS_GYRO,
       [PIN_SPI_CS1] = ESPFC_SPI_CS_BARO,
       [PIN_SPI_CS2] = -1,
@@ -764,6 +771,8 @@ class ModelConfig
       [SERIAL_SOFT_0] = { .id = SERIAL_ID_SOFTSERIAL_1, .functionMask = ESPFC_SERIAL_SOFT_0_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
 #endif
     };
+
+    LedConfig led;
     BuzzerConfig buzzer;
     WirelessConfig wireless;
 
