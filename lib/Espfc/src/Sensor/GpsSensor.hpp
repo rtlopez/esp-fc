@@ -26,6 +26,7 @@ private:
     DISABLE_NMEA,
     GET_VERSION,
     ENABLE_UBX,
+    ENABLE_NAV5,
     ENABLE_SBAS,
     SET_RATE,
     WAIT,

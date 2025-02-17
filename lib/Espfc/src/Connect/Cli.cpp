@@ -1442,20 +1442,20 @@ void Cli::printGpsStatus(Stream& s, bool full) const
 {
   s.println(F("GPS STATUS:"));
 
-  s.print(F("Fix: "));
+  s.print(F("   Fix: "));
   s.print(_model.state.gps.fix);
   s.print(F(" ("));
   s.print(_model.state.gps.fixType);
   s.println(F(")"));
 
-  s.print(F("Lat: "));
+  s.print(F("   Lat: "));
   s.print(_model.state.gps.location.raw.lat);
   s.print(F(" ("));
   s.print(_model.state.gps.location.raw.lat * 1e-7f, 7);
   s.print(F(" deg)"));
   s.println();
 
-  s.print(F("Lon: "));
+  s.print(F("   Lon: "));
   s.print(_model.state.gps.location.raw.lon);
   s.print(F(" ("));
   s.print(_model.state.gps.location.raw.lon * 1e-7f, 7);
@@ -1475,7 +1475,7 @@ void Cli::printGpsStatus(Stream& s, bool full) const
   s.print(_model.state.gps.velocity.raw.groundSpeed * 0.001f);
   s.print(F(" m/s, "));
   s.print(_model.state.gps.velocity.raw.groundSpeed * 0.0036f);
-  s.print(F(" km/h, "));
+  s.print(F(" km/h)"));
   s.println();
 
   s.print(F("  Head: "));

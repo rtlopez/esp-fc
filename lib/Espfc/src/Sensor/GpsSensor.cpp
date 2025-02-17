@@ -180,25 +180,49 @@ void GpsSensor::handle()
       }
       else
       {
-        send(m, ENABLE_SBAS);
+        send(m, ENABLE_NAV5);
         _counter = 0;
         _timeout = micros() + 10 * TIMEOUT;
-        _model.logger.info().log(F("GPS UBX")).logln(1);
+        _model.logger.info().logln(F("GPS UBX"));
       }
     }
     break;
 
+    case ENABLE_NAV5:
+      send(Gps::UbxCfgNav5{
+        .mask = { .value = 0xffff }, // all
+        .dynModel = 8, // airborne
+        .fixMode = 3,
+        .fixedAlt = 0,
+        .fixedAltVar = 10000,
+        .minElev = 5,
+        .drLimit = 0,
+        .pDOP = 250,
+        .tDOP = 250,
+        .pAcc = 100,
+        .tAcc = 300,
+        .staticHoldThresh = 0,
+        .dgnssTimeout = 60,
+        .cnoThreshNumSVs = 0,
+        .cnoThresh = 0,
+        .reserved0 = {0, 0},
+        .staticHoldMaxDist = 200,
+        .utcStandard = 0,
+        .reserved1 = {0, 0, 0, 0, 0},
+      }, ENABLE_SBAS, ENABLE_SBAS);
+      _model.logger.info().logln(F("GPS NAV5"));
+      break;
+
     case ENABLE_SBAS:
       if (_model.state.gps.support.sbas)
       {
-        const Gps::UbxCfgSbas8 m{
+        send(Gps::UbxCfgSbas8{
           .mode = 1,
           .usage = 1,
           .maxSbas = 3,
           .scanmode2 = 0,
           .scanmode1 = 0,
-        };
-        send(m, SET_RATE);
+        }, SET_RATE, SET_RATE);
       }
       else
       {
@@ -242,7 +266,7 @@ void GpsSensor::handle()
         }
         else if (_ubxMsg.isNak())
         {
-          _state = ERROR;
+          _state = _timeoutState;
         }
         else if (_ubxMsg.isResponse(Gps::UbxMonVer::ID))
         {
