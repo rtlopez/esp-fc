@@ -1494,7 +1494,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       for (size_t i = 0; i < _model.state.gps.numCh; i++) {
         r.writeU8(_model.state.gps.svinfo[i].gnssId); // GPS_svinfo_chn[i]
         r.writeU8(_model.state.gps.svinfo[i].id); // GPS_svinfo_svid[i]
-        r.writeU8(static_cast<uint8_t>(_model.state.gps.svinfo[i].quality.value)); // GPS_svinfo_quality[i]
+        r.writeU8(static_cast<uint8_t>(_model.state.gps.svinfo[i].quality.value & 0xff)); // GPS_svinfo_quality[i]
         r.writeU8(_model.state.gps.svinfo[i].cno); // GPS_svinfo_cno[i]
       }
       break;
