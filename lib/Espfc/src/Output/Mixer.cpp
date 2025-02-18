@@ -20,7 +20,7 @@ int Mixer::begin()
   };
   escMotor.begin(motorConf);
   _model.state.mixer.escMotor = _motor = &escMotor;
-  _model.logger.info().log(F("MOTOR")).log(_model.config.output.protocol).log(_model.config.output.async).log(_model.config.output.rate).log(_model.config.output.dshotTelemetry).logln(ESC_DRIVER_MOTOR_TIMER);
+  _model.logger.info().log(F("MOTOR")).log(FPSTR(EscDriver::getProtocolName((EscProtocol)_model.config.output.protocol))).log(_model.config.output.async).log(_model.config.output.rate).log(_model.config.output.dshotTelemetry).logln(ESC_DRIVER_MOTOR_TIMER);
 
   if(_model.config.output.servoRate)
   {
@@ -33,7 +33,7 @@ int Mixer::begin()
     };
     escServo.begin(servoConf);
     _model.state.mixer.escServo = _servo = &escServo;
-    _model.logger.info().log(F("SERVO")).log(ESC_PROTOCOL_PWM).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
+    _model.logger.info().log(F("SERVO")).log(FPSTR(EscDriver::getProtocolName(ESC_PROTOCOL_PWM))).log(true).logln(_model.config.output.servoRate).logln(ESC_DRIVER_SERVO_TIMER);
   }
   _erpmToHz = EscDriver::getErpmToHzRatio(_model.config.output.motorPoles);
   _statsCounterMax = _model.state.mixer.timer.rate / 2;

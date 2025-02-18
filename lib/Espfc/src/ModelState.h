@@ -395,7 +395,7 @@ struct GpsSatelite
       uint8_t health: 2; // signal health 0-unknown, 1-healthy, 2-unhealty
       uint8_t difCorr: 1; // differential correction available for this SV
       uint8_t smoothed: 1; // carrier smotthed pseudorange used
-      uint8_t orbitSource: 3; // orgnit source: 0-no inform, 1-ephemeris, 2-almanac, 3-assistnow offline, 4-assistnow autonomous, 5,6,7-other
+      uint8_t orbitSource: 3; // orbit source: 0-no inform, 1-ephemeris, 2-almanac, 3-assistnow offline, 4-assistnow autonomous, 5,6,7-other
       uint8_t ephAvail: 1; // ephemeris available
       uint8_t elmAvail: 1; // almanac available
       uint8_t enoAvail: 1; // assistnow offline available
