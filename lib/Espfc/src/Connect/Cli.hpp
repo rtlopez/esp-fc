@@ -33,7 +33,7 @@ public:
       Param(): Param(NULL, PARAM_NONE, NULL, NULL) {}
       Param(const Param& p): Param(p.name, p.type, p.addr, p.choices) {}
 
-      Param(const char * n, ParamType t, char * a, const char ** c, size_t l = 16): name(n), type(t), addr(a), choices(c), maxLen(l) {}
+      Param(const char * n, ParamType t, char * a, const char * const * c, size_t l = 16): name(n), type(t), addr(a), choices(c), maxLen(l) {}
 
       Param(const char * n, bool    * a): Param(n, PARAM_BOOL,   reinterpret_cast<char*>(a), NULL) {}
       Param(const char * n, int8_t  * a): Param(n, PARAM_BYTE,   reinterpret_cast<char*>(a), NULL) {}
@@ -41,7 +41,7 @@ public:
       Param(const char * n, int16_t * a): Param(n, PARAM_SHORT,  reinterpret_cast<char*>(a), NULL) {}
       Param(const char * n, int32_t * a): Param(n, PARAM_INT,    reinterpret_cast<char*>(a), NULL) {}
 
-      Param(const char * n, int8_t * a, const char ** c): Param(n, PARAM_BYTE, reinterpret_cast<char*>(a), c) {}
+      Param(const char * n, int8_t * a, const char * const * c): Param(n, PARAM_BYTE, reinterpret_cast<char*>(a), c) {}
       Param(const char * n, int32_t * a, uint8_t b):  Param(n, PARAM_BITMASK,  reinterpret_cast<char*>(a), NULL, b) {}
 
       Param(const char * n, InputChannelConfig * a):  Param(n, PARAM_INPUT_CHANNEL,  reinterpret_cast<char*>(a), NULL) {}
@@ -81,7 +81,7 @@ public:
       const char * name;
       ParamType type;
       char * addr;
-      const char ** choices;
+      const char * const * choices;
       size_t maxLen;
   };
 
@@ -93,6 +93,7 @@ public:
 
 private:
   void print(const Param& param, Stream& s) const;
+  void printGpsStatus(Stream& s, bool full) const;
   void printVersion(Stream& s) const;
   void printStats(Stream& s) const;
 

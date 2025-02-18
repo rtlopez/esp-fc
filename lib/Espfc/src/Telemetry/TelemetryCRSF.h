@@ -4,6 +4,7 @@
 #include "Device/SerialDevice.h"
 #include "Rc/Crsf.h"
 #include "Utils/Math.hpp"
+#include <algorithm>
 
 // https://github.com/crsf-wg/crsf/wiki/CRSF_FRAMETYPE_MSP_REQ - not correct
 // https://github.com/betaflight/betaflight/blob/2525be9a3369fa666d8ce1485ec5ad344326b085/src/main/telemetry/crsf.c#L664
@@ -18,7 +19,7 @@ enum TelemetryState {
   CRSF_TELEMETRY_STATE_BAT,
   CRSF_TELEMETRY_STATE_FM,
   CRSF_TELEMETRY_STATE_GPS,
-  CRSF_TELEMETRY_STATE_VARIO,
+  CRSF_TELEMETRY_STATE_BARO,
   CRSF_TELEMETRY_STATE_HB,
 };
 
@@ -50,15 +51,14 @@ public:
       case CRSF_TELEMETRY_STATE_FM:
         flightMode(f);
         send(f, s);
-        //_current = CRSF_TELEMETRY_STATE_GPS;
-        _current = CRSF_TELEMETRY_STATE_VARIO;
+        _current = CRSF_TELEMETRY_STATE_GPS;
         break;
       case CRSF_TELEMETRY_STATE_GPS:
-        //gps(f);
-        //send(f, s);
-        _current = CRSF_TELEMETRY_STATE_VARIO;
+        gps(f);
+        send(f, s);
+        _current = CRSF_TELEMETRY_STATE_BARO;
         break;
-      case CRSF_TELEMETRY_STATE_VARIO:
+      case CRSF_TELEMETRY_STATE_BARO:
         vario(f);
         send(f, s);
         _current = CRSF_TELEMETRY_STATE_HB;
@@ -144,11 +144,28 @@ public:
     msg.finalize();
   }
 
+  void gps(Rc::CrsfMessage& msg) const
+  {
+    msg.prepare(Rc::CRSF_FRAMETYPE_GPS);
+
+    msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lat)); // deg * 1e7
+    msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lon)); // deg * 1e7
+    msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.groundSpeed * 36 + 500) / 1000)); // in km/h * 10
+    msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.heading + 500) / 1000)); // deg * 10
+    uint16_t altitude = std::clamp((_model.state.gps.location.raw.height + 500) / 1000, (int32_t)-900, (int32_t)5000) + 1000; // m
+    msg.writeU16(Utils::toBigEndian16(altitude));
+    msg.writeU8(_model.state.gps.numSats);
+
+    msg.finalize();
+  }
+
   void vario(Rc::CrsfMessage& msg) const
   {
-    msg.prepare(Rc::CRSF_FRAMETYPE_VARIO_SENSOR);
+    // https://github.com/crsf-wg/crsf/wiki/CRSF_FRAMETYPE_BARO_ALTITUDE
+    msg.prepare(Rc::CRSF_FRAMETYPE_BARO_ALTITUDE);
 
-    msg.writeU16(Utils::toBigEndian16(0));
+    msg.writeU16(Utils::toBigEndian16(0)); // (cm + 10000) or (m + 0 | 0x8000)
+    msg.writeU16(Utils::toBigEndian16(0)); // cm/s
 
     msg.finalize();
   }

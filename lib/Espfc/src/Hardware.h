@@ -29,7 +29,7 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus, cs);
-      _model.logger.info().log(F("SPI DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
+      _model.logger.info().log(F("SPI")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 #endif
@@ -40,7 +40,7 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus);
-      _model.logger.info().log(F("I2C DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
+      _model.logger.info().log(F("I2C")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 #endif
@@ -50,7 +50,7 @@ class Hardware
     {
       typename Dev::DeviceType type = dev.getType();
       bool status = dev.begin(&bus);
-      _model.logger.info().log(F("SLV DETECT")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
+      _model.logger.info().log(F("SLV")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
       return status;
     }
 

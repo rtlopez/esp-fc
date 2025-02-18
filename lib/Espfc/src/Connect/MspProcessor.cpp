@@ -1,6 +1,8 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hardware.h"
 #include <platform.h>
+#include <algorithm>
+#include <limits>
 #if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
 #include <driver/timer.h>
 #endif
@@ -237,7 +239,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU16(_model.state.stats.loopTime());
       r.writeU16(_model.state.i2cErrorCount); // i2c error count
       //         acc,     baro,    mag,     gps,     sonar,   gyro
-      r.writeU16(_model.accelActive() | _model.baroActive() << 1 | _model.magActive() << 2 | 0 << 3 | 0 << 4 | _model.gyroActive() << 5);
+      r.writeU16(_model.accelActive() | _model.baroActive() << 1 | _model.magActive() << 2 | _model.gpsActive() << 3 | 0 << 4 | _model.gyroActive() << 5);
       r.writeU32(_model.state.mode.mask); // flight mode flags
       r.writeU8(0); // pid profile
       r.writeU16(lrintf(_model.state.stats.getCpuLoad()));
@@ -1040,16 +1042,6 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.reload();
       break;
 
-    case MSP_GPS_CONFIG:
-      r.writeU8(0); // provider
-      r.writeU8(0); // sbasMode
-      r.writeU8(0); // autoConfig
-      r.writeU8(0); // autoBaud
-      // 1.43+
-      r.writeU8(0); // gps_set_home_point_once
-      r.writeU8(0); // gps_ublox_use_galileo
-      break;
-
     //case MSP_COMPASS_CONFIG:
     //  r.writeU16(0); // mag_declination * 10
     //  break;
@@ -1328,6 +1320,10 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_MOTOR:
+      if(_model.isFeatureActive(FEATURE_GPS) && _model.config.blackbox.mode > 0)
+      {
+        _model.setGpsHome(true);
+      }
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
         _model.state.output.disarmed[i] = m.readU16();
@@ -1450,6 +1446,56 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     case MSP_DEBUG:
       for (int i = 0; i < 4; i++) {
         r.writeU16(_model.state.debug[i]);
+      }
+      break;
+
+    case MSP_SET_GPS_CONFIG:
+      m.readU8(); // provider
+      m.readU8(); // sbas mode
+      m.readU8(); // auto config
+      m.readU8(); // auto baud
+      if (m.remain() >= 2) {
+          // Added in API version 1.43
+          _model.config.gps.setHomeOnce = m.readU8(); // gps_set_home_point_once
+          m.readU8(); // gps_ublox_use_galileo
+      }
+      break;
+
+    case MSP_GPS_CONFIG:
+      r.writeU8(1); // provider
+      r.writeU8(0); // sbasMode, 0: auto
+      r.writeU8(1); // autoConfig, 0: off, 1: on
+      r.writeU8(1); // autoBaud, 0: off, 1: on
+      // Added in API version 1.43
+      r.writeU8(_model.config.gps.setHomeOnce); // gps_set_home_point_once
+      r.writeU8(1); // gps_ublox_use_galileo
+      break;
+
+  case MSP_RAW_GPS:
+      r.writeU8(_model.state.gps.fixType > 2); // STATE(GPS_FIX));
+      r.writeU8(_model.state.gps.numSats); // numSat
+      r.writeU32(_model.state.gps.location.raw.lat); // lat
+      r.writeU32(_model.state.gps.location.raw.lon); // lon
+      r.writeU16(std::clamp((int)_model.state.gps.location.raw.height / 1000, 0, (int)std::numeric_limits<uint16_t>::max())); // height [m]
+      r.writeU16(_model.state.gps.velocity.raw.groundSpeed / 10); // cm/s
+      r.writeU16(_model.state.gps.velocity.raw.heading / 10000); // deg * 10
+      // Added in API version 1.44
+      r.writeU16(_model.state.gps.accuracy.pDop); // pDOP
+      break;
+
+  case MSP_COMP_GPS:
+      r.writeU16(0); // GPS_distanceToHome
+      r.writeU16(0); // GPS_directionToHome / 10 // resolution increased in Betaflight 4.4 by factor of 10, this maintains backwards compatibility for DJI OSD
+      r.writeU8(0);  // GPS_update & 1 // direct or msp
+      break;
+
+  case MSP_GPSSVINFO:
+      r.writeU8(_model.state.gps.numCh); // GPS_numCh
+      for (size_t i = 0; i < _model.state.gps.numCh; i++) {
+        r.writeU8(_model.state.gps.svinfo[i].gnssId); // GPS_svinfo_chn[i]
+        r.writeU8(_model.state.gps.svinfo[i].id); // GPS_svinfo_svid[i]
+        r.writeU8(static_cast<uint8_t>(_model.state.gps.svinfo[i].quality.value & 0xff)); // GPS_svinfo_quality[i]
+        r.writeU8(_model.state.gps.svinfo[i].cno); // GPS_svinfo_cno[i]
       }
       break;
 

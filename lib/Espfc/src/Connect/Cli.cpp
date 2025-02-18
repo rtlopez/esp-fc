@@ -326,6 +326,8 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
   const char ** magDevChoices            = Device::MagDevice::getNames();
 
   const char ** fusionModeChoices        = FusionConfig::getModeNames();
+  static const char * const * protocolChoices = EscDriver::getProtocolNames();
+
   static const char* gyroDlpfChoices[]   = { PSTR("256Hz"), PSTR("188Hz"), PSTR("98Hz"), PSTR("42Hz"), PSTR("20Hz"), PSTR("10Hz"), PSTR("5Hz"), PSTR("EXPERIMENTAL"), NULL };
   static const char* debugModeChoices[]  = {  PSTR("NONE"), PSTR("CYCLETIME"), PSTR("BATTERY"), PSTR("GYRO_FILTERED"), PSTR("ACCELEROMETER"), PSTR("PIDLOOP"), PSTR("GYRO_SCALED"), PSTR("RC_INTERPOLATION"),
                                               PSTR("ANGLERATE"), PSTR("ESC_SENSOR"), PSTR("SCHEDULER"), PSTR("STACK"), PSTR("ESC_SENSOR_RPM"), PSTR("ESC_SENSOR_TMP"), PSTR("ALTITUDE"), PSTR("FFT"),
@@ -345,8 +347,6 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
                                               PSTR("DUALCOPTER"), PSTR("SINGLECOPTER"), PSTR("ATAIL4"), PSTR("CUSTOM"), PSTR("CUSTOMAIRPLANE"),
                                               PSTR("CUSTOMTRI"), PSTR("QUADX1234"), NULL };
   static const char* interpolChoices[]   = { PSTR("NONE"), PSTR("DEFAULT"), PSTR("AUTO"), PSTR("MANUAL"), NULL };
-  static const char* protocolChoices[]   = { PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
-                                              PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("PROSHOT1000"), PSTR("DISABLED"), NULL };
   static const char* inputRateTypeChoices[] = { PSTR("BETAFLIGHT"), PSTR("RACEFLIGHT"), PSTR("KISS"), PSTR("ACTUAL"), PSTR("QUICK"), NULL };
   static const char* throtleLimitTypeChoices[] = { PSTR("NONE"), PSTR("SCALE"), PSTR("CLIP"), NULL };
   static const char* inputFilterChoices[] = { PSTR("INTERPOLATION"), PSTR("FILTER"), NULL };
@@ -360,6 +360,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
   size_t i = 0;
   static const Param params[] = {
 
+    Param(PSTR("feature_gps"), &c.featureMask, 7),
     Param(PSTR("feature_dyn_notch"), &c.featureMask, 29),
     Param(PSTR("feature_motor_stop"), &c.featureMask, 4),
     Param(PSTR("feature_rx_ppm"), &c.featureMask, 0),
@@ -427,6 +428,9 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("baro_dev"), &c.baro.dev, baroDevChoices),
     Param(PSTR("baro_lpf_type"), &c.baro.filter.type, filterTypeChoices),
     Param(PSTR("baro_lpf_freq"), &c.baro.filter.freq),
+
+    Param(PSTR("gps_min_sats"), &c.gps.minSats),
+    Param(PSTR("gps_set_home_once"), &c.gps.setHomeOnce),
 
     Param(PSTR("board_align_roll"), &c.boardAlignment[0]),
     Param(PSTR("board_align_pitch"), &c.boardAlignment[1]),
@@ -633,7 +637,9 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
 #if ESPFC_OUTPUT_COUNT > 7
     Param(PSTR("pin_output_7"), &c.pin[PIN_OUTPUT_7]),
 #endif
+    Param(PSTR("pin_button"), &c.pin[PIN_BUTTON]),
     Param(PSTR("pin_buzzer"), &c.pin[PIN_BUZZER]),
+    Param(PSTR("pin_led"), &c.pin[PIN_LED_BLINK]),
 #if defined(ESPFC_SERIAL_0) && defined(ESPFC_SERIAL_REMAP_PINS)
     Param(PSTR("pin_serial_0_tx"), &c.pin[PIN_SERIAL_0_TX]),
     Param(PSTR("pin_serial_0_rx"), &c.pin[PIN_SERIAL_0_RX]),
@@ -665,6 +671,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
 #endif
     Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+    Param(PSTR("pin_led_invert"), &c.led.invert),
 
 #ifdef ESPFC_I2C_0
     Param(PSTR("i2c_speed"), &c.i2cSpeed),
@@ -850,16 +857,16 @@ void Cli::execute(CliCmd& cmd, Stream& s)
 
   if(strcmp_P(cmd.args[0], PSTR("help")) == 0)
   {
-    static const char * helps[] = {
+    static const char * const helps[] = {
       PSTR("available commands:"),
       PSTR(" help"), PSTR(" dump"), PSTR(" get param"), PSTR(" set param value ..."), PSTR(" cal [gyro]"),
       PSTR(" defaults"), PSTR(" save"), PSTR(" reboot"), PSTR(" scaler"), PSTR(" mixer"),
-      PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"), PSTR(" logs"),
+      PSTR(" stats"), PSTR(" status"), PSTR(" devinfo"), PSTR(" version"), PSTR(" logs"), PSTR(" gps"),
       //PSTR(" load"), PSTR(" eeprom"),
       //PSTR(" fsinfo"), PSTR(" fsformat"), PSTR(" log"),
-      NULL
+      nullptr
     };
-    for(const char ** ptr = helps; *ptr; ptr++)
+    for(const char * const * ptr = helps; *ptr; ptr++)
     {
       s.println(FPSTR(*ptr));
     }
@@ -911,15 +918,16 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     printVersion(s);
     s.println();
 
-    s.print(F("config size: "));
-    s.println(sizeof(ModelConfig));
-
-    s.print(F("  free heap: "));
-    s.println(targetFreeHeap());
-
-    s.print(F("   cpu freq: "));
+    s.print(F("cpu freq: "));
     s.print(targetCpuFreq());
     s.println(F(" MHz"));
+
+    s.print(F("  memory: "));
+    s.print(sizeof(ModelConfig));
+    s.print(F(", "));
+    s.print(sizeof(ModelState));
+    s.print(F(", "));
+    s.println(targetFreeHeap());
   }
   else if(strcmp_P(cmd.args[0], PSTR("get")) == 0)
   {
@@ -1036,6 +1044,10 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       _model.state.mag.calibrationScale = VectorFloat(1.f, 1.f, 1.f);
       s.println(F("OK"));
     }
+  }
+  else if(strcmp_P(cmd.args[0], PSTR("gps")) == 0)
+  {
+    printGpsStatus(s, true);
   }
   else if(strcmp_P(cmd.args[0], PSTR("preset")) == 0)
   {
@@ -1192,7 +1204,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     }
     else
     {
-      s.print(F("NO_GYRO"));
+      s.print(F("NO GYRO"));
     }
 
     if(baro)
@@ -1202,10 +1214,6 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.print('/');
       s.print(FPSTR(Device::BusDevice::getName(baro->getBus()->getType())));
     }
-    else
-    {
-      s.print(F(", NO_BARO"));
-    }
 
     if(mag)
     {
@@ -1214,9 +1222,10 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.print('/');
       s.print(FPSTR(Device::BusDevice::getName(mag->getBus()->getType())));
     }
-    else
+
+    if(_model.state.gps.present)
     {
-      s.print(F(", NO_MAG"));
+      s.print(F(", GPS"));
     }
     s.println();
 
@@ -1238,7 +1247,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     };
     const size_t armingDisableNamesLength = sizeof(armingDisableNames) / sizeof(armingDisableNames[0]);
 
-    s.print(F("arming flags:"));
+    s.print(F("   arm flags:"));
     for(size_t i = 0; i < armingDisableNamesLength; i++)
     {
       if(_model.state.mode.armingDisabledFlags & (1 << i)) {
@@ -1427,6 +1436,116 @@ void Cli::print(const Param& param, Stream& s) const
   s.print(' ');
   param.print(s);
   s.println();
+}
+
+static constexpr const char * const gnssNames[] = {" GPS", "SBAS", "GALI", "BEID", "IMES", "QZSS", "GLON"};
+static constexpr const char * const qualityNames[] = {"no_signal", "searching", "acquired", "unusable", "locked", "fully_locked", "fully_locked", "fully_locked"};
+static constexpr const char * const usedNames[] = {" No", "Yes"};
+
+static const char * const getGnssName(size_t num)
+{
+  constexpr size_t gnssNamesMax = sizeof(gnssNames) / sizeof(gnssNames[0]);
+  if(num < gnssNamesMax) return gnssNames[num];
+  return "?";
+}
+
+static const char * const getQualityName(size_t num)
+{
+  constexpr size_t qualityNamesMax = sizeof(qualityNames) / sizeof(qualityNames[0]);
+  if(num < qualityNamesMax) return qualityNames[num];
+  return "?";
+}
+
+static const char * const getUsedName(size_t num)
+{
+  constexpr size_t usedNamesMax = sizeof(usedNames) / sizeof(usedNames[0]);
+  if(num < usedNamesMax) return usedNames[num];
+  return "?";
+}
+
+void Cli::printGpsStatus(Stream& s, bool full) const
+{
+#ifndef UNIT_TEST
+  s.println(F("GPS STATUS:"));
+
+  s.print(F("   Fix: "));
+  s.print(_model.state.gps.fix);
+  s.print(F(" ("));
+  s.print(_model.state.gps.fixType);
+  s.println(F(")"));
+
+  s.print(F("   Lat: "));
+  s.print(_model.state.gps.location.raw.lat);
+  s.print(F(" ("));
+  s.print(_model.state.gps.location.raw.lat * 1e-7f, 7);
+  s.print(F(" deg)"));
+  s.println();
+
+  s.print(F("   Lon: "));
+  s.print(_model.state.gps.location.raw.lon);
+  s.print(F(" ("));
+  s.print(_model.state.gps.location.raw.lon * 1e-7f, 7);
+  s.print(F(" deg)"));
+  s.println();
+
+  s.print(F("Height: "));
+  s.print(_model.state.gps.location.raw.height);
+  s.print(F(" ("));
+  s.print(_model.state.gps.location.raw.height * 0.001f);
+  s.print(F(" m)"));
+  s.println();
+
+  s.print(F(" Speed: "));
+  s.print(_model.state.gps.velocity.raw.groundSpeed);
+  s.print(F(" ("));
+  s.print(_model.state.gps.velocity.raw.groundSpeed * 0.001f);
+  s.print(F(" m/s, "));
+  s.print(_model.state.gps.velocity.raw.groundSpeed * 0.0036f);
+  s.print(F(" km/h)"));
+  s.println();
+
+  s.print(F("  Head: "));
+  s.print(_model.state.gps.velocity.raw.heading);
+  s.print(F(" ("));
+  s.print(_model.state.gps.velocity.raw.heading * 0.00001f);
+  s.print(F(" deg)"));
+  s.println();
+
+  s.print(F("  Accu: "));
+  s.print(_model.state.gps.accuracy.horizontal * 0.001f);
+  s.print(F(" m, "));
+  s.print(_model.state.gps.accuracy.vertical * 0.001f);
+  s.print(F(" m, "));
+  s.print(_model.state.gps.accuracy.speed * 0.001f);
+  s.print(F(" m/s, "));
+  s.print(_model.state.gps.accuracy.heading * 0.00001f);
+  s.print(F(" deg, pDOP: "));
+  s.print(_model.state.gps.accuracy.pDop * 0.01f);
+  s.println();
+
+  const GpsDateTime& gdt = _model.state.gps.dateTime;
+  s.printf("  Time: %04d-%02d-%02d %02d:%02d:%02d.%03d UTC", gdt.year, gdt.month, gdt.day, gdt.hour, gdt.minute, gdt.second, gdt.msec);
+  s.println();
+
+  s.print(F("  Rate: "));
+  s.print(1000000.0f / _model.state.gps.interval, 1);
+  s.println(F(" Hz"));
+
+  s.print(F("  Sats: "));
+  s.print(_model.state.gps.numSats);
+  s.print(F(" ("));
+  s.print(_model.state.gps.numCh);
+  s.println(F(" ch)"));
+
+  s.printf("GNSS  ID Sig Used Quality");
+  s.println();
+  for (size_t i = 0; i < _model.state.gps.numCh; i++)
+  {
+    const GpsSatelite& sv = _model.state.gps.svinfo[i];
+    s.printf("%s %3d %3d  %s %s", getGnssName(sv.gnssId), sv.id, sv.cno, getUsedName(sv.quality.svUsed), getQualityName(sv.quality.qualityInd));
+    s.println();
+  }
+#endif
 }
 
 void Cli::printVersion(Stream& s) const

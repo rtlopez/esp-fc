@@ -1,6 +1,22 @@
 #include "EscDriverBase.hpp"
 #include <Arduino.h>
 
+const char * const * EscDriverBase::getProtocolNames()
+{
+  static const char * const protocols[] = {
+    PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
+    PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("PROSHOT1000"), PSTR("DISABLED"),
+    nullptr
+  };
+  return protocols;
+}
+
+const char * const EscDriverBase::getProtocolName(EscProtocol protocol)
+{
+  if(protocol >= ESC_PROTOCOL_COUNT) return PSTR("?");
+  return getProtocolNames()[protocol];
+}
+
 uint16_t IRAM_ATTR EscDriverBase::dshotConvert(uint16_t pulse)
 {
   return pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;

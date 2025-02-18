@@ -14,6 +14,7 @@
 #include "Utils/Stats.h"
 #include "Device/SerialDevice.h"
 #include "Connect/Msp.hpp"
+#include "Connect/StatusLed.hpp"
 
 namespace Espfc {
 
@@ -320,6 +321,126 @@ struct ModeState
   bool airmodeAllowed;
 };
 
+enum GpsDeviceVersion
+{
+  GPS_UNKNOWN,
+  GPS_M8,
+  GPS_M9,
+  GPS_F9,
+};
+
+struct GpsSupportState
+{
+  GpsDeviceVersion version = GPS_UNKNOWN;
+  bool glonass = false;
+  bool galileo = false;
+  bool beidou = false;
+  bool sbas = false;
+};
+
+template<typename T>
+struct GpsCoordinate
+{
+  T lat = T{}; // deg * 1e7
+  T lon = T{}; // deg * 1e7
+  T height = T{}; // mm (1e3)
+};
+
+struct GpsPosition
+{
+  GpsCoordinate<int32_t> raw;
+  GpsCoordinate<int32_t> home;
+};
+
+template<typename T>
+struct GpsSpeed
+{
+  T north = T{}; // mm/s (1e3)
+  T east = T{}; // mm/s (1e3)
+  T down = T{}; // mm/s (1e3)
+  T groundSpeed = T{}; // mm/s (1e3)
+  T heading = T{}; // deg * 1e5
+  T speed3d = T{}; // mm/s (1e3)
+};
+
+struct GpsVelocity
+{
+  GpsSpeed<int32_t> raw;
+};
+
+struct GpsAccuracy
+{
+  uint32_t horizontal = 0; // mm (1e3)
+  uint32_t vertical = 0; // mm (1e3)
+  uint32_t speed = 0; // mm/s (1e3)
+  uint32_t heading = 0; // deg * 1e5
+  uint32_t pDop = 0; // (1e2)
+};
+
+struct GpsSatelite
+{
+  uint8_t gnssId = 0;
+  uint8_t id = 0;
+  uint8_t cno = 0;
+  union {
+    uint32_t value;
+    struct {
+      uint8_t qualityInd: 3; // quality indicatopr: 0-no signal, 1-searching, 2-aquired, 3-unstable, 4-code locked, 5,6,7-code and carrier locked
+      uint8_t svUsed: 1; // used for navigation
+      uint8_t health: 2; // signal health 0-unknown, 1-healthy, 2-unhealty
+      uint8_t difCorr: 1; // differential correction available for this SV
+      uint8_t smoothed: 1; // carrier smotthed pseudorange used
+      uint8_t orbitSource: 3; // orbit source: 0-no inform, 1-ephemeris, 2-almanac, 3-assistnow offline, 4-assistnow autonomous, 5,6,7-other
+      uint8_t ephAvail: 1; // ephemeris available
+      uint8_t elmAvail: 1; // almanac available
+      uint8_t enoAvail: 1; // assistnow offline available
+      uint8_t eopAvail: 1; // assistnow autonomous available
+      uint8_t reserved: 1;
+      uint8_t sbasCorrUsed: 1; // SBAS corrections used
+      uint8_t rtcmCorrUsed: 1; // RTCM corrections used
+      uint8_t slasCorrUsed: 1; // SLAS corrections used
+      uint8_t spartnCorrUsed: 1; // SPARTN corrections used
+      uint8_t prCorrUsed: 1; // Pseudorange corrections used
+      uint8_t crCorrUsed: 1; // Carrier range corrections used
+      uint8_t doCorrUsed: 1; // Range rate (Doppler) corrections used
+      uint8_t clasCorrUsed: 1; // CLAS corrections used
+    };
+  } quality = { .value = 0 };
+};
+
+struct GpsDateTime
+{
+  uint16_t year; // full year
+  uint8_t month; // 1-12
+  uint8_t day; // 1-31
+  uint8_t hour; // 0-23
+  uint8_t minute; // 0-59
+  uint8_t second; // 0-59
+  uint16_t msec; // 0-999
+};
+
+static constexpr size_t SAT_MAX = 32u;
+
+struct GpsState
+{
+  bool fix = 0;
+  uint8_t fixType = 0;
+  uint8_t numSats = 0;
+  uint8_t numCh = 0;
+  bool present = false;
+  bool frameError = false;
+  bool wasLocked = false;
+  bool homeSet = false;
+  uint32_t interval;
+  uint32_t lastMsgTs;
+  GpsSupportState support;
+  GpsPosition location;
+  GpsVelocity velocity;
+  GpsAccuracy accuracy;
+  GpsDateTime dateTime;
+  GpsSatelite svinfo[SAT_MAX];
+};
+
 // runtime data
 struct ModelState
 {
@@ -327,6 +448,7 @@ struct ModelState
   AccelState accel;
   MagState mag;
   BaroState baro;
+  GpsState gps;
 
   InputState input;
   FailsafeState failsafe;
@@ -353,6 +475,7 @@ struct ModelState
   int16_t debug[DEBUG_VALUE_COUNT];
 
   BuzzerState buzzer;
+  Connect::StatusLed led;
 
   BatteryState battery;
 
