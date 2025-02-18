@@ -1470,6 +1470,7 @@ static const char * const getUsedName(size_t num)
 
 void Cli::printGpsStatus(Stream& s, bool full) const
 {
+#ifndef UNIT_TEST
   s.println(F("GPS STATUS:"));
 
   s.print(F("   Fix: "));
@@ -1549,6 +1550,7 @@ void Cli::printGpsStatus(Stream& s, bool full) const
     s.printf("%s %3d %3d  %s %s", getGnssName(sv.gnssId), sv.id, sv.cno, getUsedName(sv.quality.svUsed), getQualityName(sv.quality.qualityInd));
     s.println();
   }
+#endif
 }
 
 void Cli::printVersion(Stream& s) const
