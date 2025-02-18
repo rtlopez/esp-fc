@@ -384,7 +384,7 @@ void GpsSensor::handleNavSat() const
       _model.state.gps.svinfo[i].id = m.sats[i].svId;
       _model.state.gps.svinfo[i].gnssId = m.sats[i].gnssId;
       _model.state.gps.svinfo[i].cno = m.sats[i].cno;
-      _model.state.gps.svinfo[i].quality = m.sats[i].flags.value;
+      _model.state.gps.svinfo[i].quality.value = m.sats[i].flags.value;
     }
     else
     {

@@ -387,7 +387,30 @@ struct GpsSatelite
   uint8_t gnssId = 0;
   uint8_t id = 0;
   uint8_t cno = 0;
-  uint8_t quality = 0;
+  union {
+    uint32_t value;
+    struct {
+      uint8_t qualityInd: 3; // quality indicatopr: 0-no signal, 1-searching, 2-aquired, 3-unstable, 4-code locked, 5,6,7-code and carrier locked
+      uint8_t svUsed: 1; // used for navigation
+      uint8_t health: 2; // signal health 0-unknown, 1-healthy, 2-unhealty
+      uint8_t difCorr: 1; // differential correction available for this SV
+      uint8_t smoothed: 1; // carrier smotthed pseudorange used
+      uint8_t orbitSource: 3; // orgnit source: 0-no inform, 1-ephemeris, 2-almanac, 3-assistnow offline, 4-assistnow autonomous, 5,6,7-other
+      uint8_t ephAvail: 1; // ephemeris available
+      uint8_t elmAvail: 1; // almanac available
+      uint8_t enoAvail: 1; // assistnow offline available
+      uint8_t eopAvail: 1; // assistnow autonomous available
+      uint8_t reserved: 1;
+      uint8_t sbasCorrUsed: 1; // SBAS corrections used
+      uint8_t rtcmCorrUsed: 1; // RTCM corrections used
+      uint8_t slasCorrUsed: 1; // SLAS corrections used
+      uint8_t spartnCorrUsed: 1; // SPARTN corrections used
+      uint8_t prCorrUsed: 1; // Pseudorange corrections used
+      uint8_t crCorrUsed: 1; // Carrier range corrections used
+      uint8_t doCorrUsed: 1; // Range rate (Doppler) corrections used
+      uint8_t clasCorrUsed: 1; // CLAS corrections used
+    };
+  } quality = { .value = 0 };
 };
 
 struct GpsDateTime
