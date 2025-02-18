@@ -1438,6 +1438,31 @@ void Cli::print(const Param& param, Stream& s) const
   s.println();
 }
 
+static constexpr const char * const gnssNames[] = {" GPS", "SBAS", "GALI", "BEID", "IMES", "QZSS", "GLON"};
+static constexpr const char * const qualityNames[] = {"no_signal", "searching", "acquired", "unusable", "locked", "fully_locked", "fully_locked", "fully_locked"};
+static constexpr const char * const usedNames[] = {" No", "Yes"};
+
+static const char * const getGnssName(size_t num)
+{
+  constexpr size_t gnssNamesMax = sizeof(gnssNames) / sizeof(gnssNames[0]);
+  if(num < gnssNamesMax) return gnssNames[num];
+  return "?";
+}
+
+static const char * const getQualityName(size_t num)
+{
+  constexpr size_t qualityNamesMax = sizeof(qualityNames) / sizeof(qualityNames[0]);
+  if(num < qualityNamesMax) return qualityNames[num];
+  return "?";
+}
+
+static const char * const getUsedName(size_t num)
+{
+  constexpr size_t usedNamesMax = sizeof(usedNames) / sizeof(usedNames[0]);
+  if(num < usedNamesMax) return usedNames[num];
+  return "?";
+}
+
 void Cli::printGpsStatus(Stream& s, bool full) const
 {
   s.println(F("GPS STATUS:"));
@@ -1497,24 +1522,12 @@ void Cli::printGpsStatus(Stream& s, bool full) const
   s.print(_model.state.gps.accuracy.pDop * 0.01f);
   s.println();
 
-  s.print(F("  Time: "));
-  s.print(_model.state.gps.dateTime.year);
-  s.print(F("-"));
-  s.print(_model.state.gps.dateTime.month);
-  s.print(F("-"));
-  s.print(_model.state.gps.dateTime.day);
-  s.print(F(" "));
-  s.print(_model.state.gps.dateTime.hour);
-  s.print(F(":"));
-  s.print(_model.state.gps.dateTime.minute);
-  s.print(F(":"));
-  s.print(_model.state.gps.dateTime.second);
-  s.print(F("."));
-  s.print(_model.state.gps.dateTime.msec);
-  s.println(F(" UTC"));
+  const GpsDateTime& gdt = _model.state.gps.dateTime;
+  s.printf("  Time: %04d-%02d-%02d %02d:%02d:%02d.%03d UTC", gdt.year, gdt.month, gdt.day, gdt.hour, gdt.minute, gdt.second, gdt.msec);
+  s.println();
 
   s.print(F("  Rate: "));
-  s.print(1000000.0f / _model.state.gps.interval);
+  s.print(1000000.0f / _model.state.gps.interval, 1);
   s.println(F(" Hz"));
 
   s.print(F("  Sats: "));
@@ -1522,15 +1535,14 @@ void Cli::printGpsStatus(Stream& s, bool full) const
   s.print(F(" ("));
   s.print(_model.state.gps.numCh);
   s.println(F(" ch)"));
+
+  s.printf("GNSS  ID Sig Used Quality");
+  s.println();
   for (size_t i = 0; i < _model.state.gps.numCh; i++)
   {
-    s.print(_model.state.gps.svinfo[i].gnssId);
-    s.print(' ');
-    s.print(_model.state.gps.svinfo[i].id);
-    s.print(' ');
-    s.print(_model.state.gps.svinfo[i].cno);
-    s.print(' ');
-    s.println(_model.state.gps.svinfo[i].quality);
+    const GpsSatelite& sv = _model.state.gps.svinfo[i];
+    s.printf("%s %3d %3d  %s %s", getGnssName(sv.gnssId), sv.id, sv.cno, getUsedName(sv.quality.svUsed), getQualityName(sv.quality.qualityInd));
+    s.println();
   }
 }
 
