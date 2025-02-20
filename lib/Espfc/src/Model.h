@@ -155,6 +155,7 @@ class Model
     {
 #if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
       return false;
+#warning "Danger macro used ESPFC_DEV_PRESET_UNSAFE_ARMING"
 #else
       return state.mode.armingDisabledFlags != 0;
 #endif
@@ -548,6 +549,17 @@ class Model
         pid.begin();
       }
       state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
+
+      PidConfig& pcav = config.pid[FC_PID_VEL];
+      Control::Pid& pidav = state.innerPid[AXIS_THRUST];
+      pidav.Kp = (float)pcav.P * VEL_PTERM_SCALE;
+      pidav.Ki = (float)pcav.I * VEL_ITERM_SCALE;
+      pidav.Kd = (float)pcav.D * VEL_DTERM_SCALE;
+      pidav.Kf = 0.0f;
+      pidav.iLimit = 0.6f;
+      pidav.oLimit = 1.0f;
+      pidav.rate = state.loopTimer.rate;
+      pidav.begin();
 
       // override temporary
       //state.telemetryTimer.setRate(100);

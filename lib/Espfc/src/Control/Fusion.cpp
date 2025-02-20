@@ -72,7 +72,7 @@ int FAST_CODE_ATTR Fusion::update()
     }
     //else madgwickFusion1();
 
-    if(_model.config.debug.mode == DEBUG_ALTITUDE)
+    if(_model.config.debug.mode == DEBUG_AC_CORRECTION)
     {
       _model.state.debug[0] = lrintf(Utils::toDeg(_model.state.attitude.euler[0]) * 10);
       _model.state.debug[1] = lrintf(Utils::toDeg(_model.state.attitude.euler[1]) * 10);

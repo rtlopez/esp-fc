@@ -5,12 +5,13 @@ namespace Espfc {
 
 namespace Control {
 
-Controller::Controller(Model& model): _model(model) {}
+Controller::Controller(Model& model): _model(model), _altitude(model) {}
 
 int Controller::begin()
 {
   _rates.begin(_model.config.input);
   _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
+  _altitude.begin();
   return 1;
 }
 
@@ -25,26 +26,31 @@ int FAST_CODE_ATTR Controller::update()
 
   {
     Utils::Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
+    _altitude.update();
     resetIterm();
-    if(_model.config.mixer.type == FC_MIXER_GIMBAL)
+    switch(_model.config.mixer.type)
     {
-      outerLoopRobot();
-    }
-    else
-    {
-      outerLoop();
+      case FC_MIXER_GIMBAL:
+        outerLoopRobot();
+        break;
+
+      default:
+        outerLoop();
+        break;
     }
   }
 
   {
     Utils::Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
-    if(_model.config.mixer.type == FC_MIXER_GIMBAL)
+    switch(_model.config.mixer.type)
     {
-      innerLoopRobot();
-    }
-    else
-    {
-      innerLoop();
+      case FC_MIXER_GIMBAL:
+        innerLoopRobot();
+        break;
+
+      default:
+        innerLoop();
+        break;
     }
   }
 
@@ -110,27 +116,44 @@ void Controller::innerLoopRobot()
 
 void FAST_CODE_ATTR Controller::outerLoop()
 {
+  // Roll/Pitch rates control
   if(_model.isModeActive(MODE_ANGLE))
   {
-    _model.state.setpoint.angle = VectorFloat(
-      _model.state.input.ch[AXIS_ROLL] * Utils::toRad(_model.config.level.angleLimit),
-      _model.state.input.ch[AXIS_PITCH] * Utils::toRad(_model.config.level.angleLimit),
-      _model.state.attitude.euler[AXIS_YAW]
-    );
-    _model.state.setpoint.rate[AXIS_ROLL]  = _model.state.outerPid[AXIS_ROLL].update(_model.state.setpoint.angle[AXIS_ROLL], _model.state.attitude.euler[AXIS_ROLL]);
-    _model.state.setpoint.rate[AXIS_PITCH] = _model.state.outerPid[AXIS_PITCH].update(_model.state.setpoint.angle[AXIS_PITCH], _model.state.attitude.euler[AXIS_PITCH]);
-    // disable fterm in angle mode
-    _model.state.innerPid[AXIS_ROLL].fScale = 0.f;
-    _model.state.innerPid[AXIS_PITCH].fScale = 0.f;
+    for(size_t i = 0; i < AXIS_COUNT_RP; i++)
+    {
+      const float angleSetpoint = Utils::toRad(_model.config.level.angleLimit) * _model.state.input.ch[i];
+      _model.state.setpoint.rate[i] = _model.state.outerPid[i].update(angleSetpoint, _model.state.attitude.euler[i]);
+      // disable fterm in angle mode
+      _model.state.innerPid[i].fScale = 0.f;
+    }
   }
   else
   {
-    _model.state.setpoint.rate[AXIS_ROLL] = calculateSetpointRate(AXIS_ROLL, _model.state.input.ch[AXIS_ROLL]);
-    _model.state.setpoint.rate[AXIS_PITCH] = calculateSetpointRate(AXIS_PITCH, _model.state.input.ch[AXIS_PITCH]);
+    for(size_t i = 0; i < AXIS_COUNT_RP; i++)
+    {
+      _model.state.setpoint.rate[i] = calculateSetpointRate(i, _model.state.input.ch[i]);
+    }
   }
-  _model.state.setpoint.rate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input.ch[AXIS_YAW]);
-  _model.state.setpoint.rate[AXIS_THRUST] = _model.state.input.ch[AXIS_THRUST];
 
+  // Yaw rates control
+  _model.state.setpoint.rate[AXIS_YAW] = calculateSetpointRate(AXIS_YAW, _model.state.input.ch[AXIS_YAW]);
+
+  // thrust control
+  if(_model.isModeActive(MODE_ALTHOLD))
+  {
+    _model.state.setpoint.rate[AXIS_THRUST] = calcualteAltHoldSetpoint();
+    if(_model.config.debug.mode == DEBUG_ALTITUDE)
+    {
+      _model.state.debug[0] = lrintf(_model.state.input.ch[AXIS_THRUST] * 1000.0f);
+      _model.state.debug[1] = lrintf(_model.state.setpoint.rate[AXIS_THRUST] * 1000.0f);
+    }
+  }
+  else
+  {
+    _model.state.setpoint.rate[AXIS_THRUST] = _model.state.input.ch[AXIS_THRUST];
+  }
+
+  // debug
   if(_model.config.debug.mode == DEBUG_ANGLERATE)
   {
     for(size_t i = 0; i < AXIS_COUNT_RPY; ++i)
@@ -142,14 +165,29 @@ void FAST_CODE_ATTR Controller::outerLoop()
 
 void FAST_CODE_ATTR Controller::innerLoop()
 {
+  // Roll/Pitch/Yaw rates control
   const float tpaFactor = getTpaFactor();
   for(size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
     _model.state.output.ch[i] = _model.state.innerPid[i].update(_model.state.setpoint.rate[i], _model.state.gyro.adc[i]) * tpaFactor;
-    //_model.state.debug[i] = lrintf(_model.state.innerPid[i].fTerm * 1000);
   }
-  _model.state.output.ch[AXIS_THRUST] = _model.state.setpoint.rate[AXIS_THRUST];
 
+  // thrust control
+  if(_model.isModeActive(MODE_ALTHOLD))
+  {
+    _model.state.output.ch[AXIS_THRUST] = _model.state.innerPid[AXIS_THRUST].update(_model.state.setpoint.rate[AXIS_THRUST], _model.state.altitude.rate);
+    if(_model.config.debug.mode == DEBUG_ALTITUDE)
+    {
+      _model.state.debug[2] = lrintf(_model.state.output.ch[AXIS_THRUST] * 1000.0f);
+      _model.state.debug[3] = lrintf(_model.state.innerPid[AXIS_THRUST].iTerm * 1000.0f);
+    }
+  }
+  else
+  {
+    _model.state.output.ch[AXIS_THRUST] = _model.state.setpoint.rate[AXIS_THRUST];
+  }
+
+  // debug
   if(_model.config.debug.mode == DEBUG_ITERM_RELAX)
   {
     _model.state.debug[0] = lrintf(Utils::toDeg(_model.state.innerPid[0].itermRelaxBase));
@@ -157,6 +195,17 @@ void FAST_CODE_ATTR Controller::innerLoop()
     _model.state.debug[2] = lrintf(Utils::toDeg(_model.state.innerPid[0].iTermError));
     _model.state.debug[3] = lrintf(_model.state.innerPid[0].iTerm * 1000.0f);
   }
+}
+
+float Controller::calcualteAltHoldSetpoint() const
+{
+  float thrust = _model.state.input.ch[AXIS_THRUST];
+
+  if(_model.isThrottleLow()) thrust = 0.0f; // stick below min check, no command
+
+  thrust = Utils::deadband(thrust, 0.125f); // +/- 12.5% deadband
+
+  return thrust * 0.5f; // climb/descend rate factor 0.5 m/s
 }
 
 float Controller::getTpaFactor() const
@@ -172,15 +221,19 @@ void Controller::resetIterm()
     || (!_model.isAirModeActive() && _model.config.iterm.lowThrottleZeroIterm && _model.isThrottleLow()) // on low throttle (not in air mode)
   )
   {
-    for(size_t i = 0; i < AXIS_COUNT_RPYT; i++)
+    for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
     {
-      _model.state.innerPid[i].iTerm = 0;
-      _model.state.outerPid[i].iTerm = 0;
+      _model.state.innerPid[i].iTerm = 0.0f;
+      _model.state.outerPid[i].iTerm = 0.0f;
     }
+  }
+  if(!_model.isModeActive(MODE_ARMED))
+  {
+    _model.state.innerPid[AXIS_THRUST].iTerm = 0.0f;
   }
 }
 
-float Controller::calculateSetpointRate(int axis, float input)
+float Controller::calculateSetpointRate(int axis, float input) const
 {
   if(axis == AXIS_YAW) input *= -1.f;
   return _rates.getSetpoint(axis, input);
