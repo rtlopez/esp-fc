@@ -22,6 +22,10 @@ constexpr float LEVEL_ITERM_SCALE = 0.1f;    // 1/10
 constexpr float LEVEL_DTERM_SCALE = 0.001f;  // 1/1000
 constexpr float LEVEL_FTERM_SCALE = 0.001f;  // 1/1000
 
+constexpr float VEL_PTERM_SCALE = 0.02f;
+constexpr float VEL_ITERM_SCALE = 0.01f;
+constexpr float VEL_DTERM_SCALE = 0.001f;
+
 enum ItermRelaxType {
   ITERM_RELAX_OFF,
   ITERM_RELAX_RP,
