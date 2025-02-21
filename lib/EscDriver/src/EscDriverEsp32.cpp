@@ -109,8 +109,47 @@ int EscDriverEsp32::attach(size_t channel, int pin, int pulse)
 
 int IRAM_ATTR EscDriverEsp32::write(size_t channel, int pulse)
 {
-  if (channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
+  if (_holdThrottle) Serial.println("hold throttle");
+  if (channel < 0 || channel >= ESC_CHANNEL_COUNT || _holdThrottle) return 0;
   _channel[channel].pulse = pulse;
+  return 1;
+}
+
+int EscDriverEsp32::reverseMotor(size_t channel, bool reverse)
+{
+  for (int i = 0; i < 30; i++)
+  {
+    uint16_t frame = buildDshotFrame(0, true);
+    Slot& slot = _channel[channel];
+    for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+    {
+      int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
+      slot.setDshotBit(i, val, _dshot_tlm);
+      //Serial.print(val);
+    }
+    //Serial.println();
+    slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
+    _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
+
+    transmitCommand(channel);
+    delayMicroseconds(100);
+  
+  }
+  delayMicroseconds(1000);
+  
+  _holdThrottle = true;
+  if (channel < 0 || channel >= ESC_CHANNEL_COUNT || !isDigital(_protocol)) return 0;
+  if (reverse) {
+    Serial.println("reverse");
+    writeDshotCustomCommand(channel, DSHOT_CMD_SPIN_DIRECTION_2);
+  } else {
+    Serial.println("forward");
+    writeDshotCustomCommand(channel, DSHOT_CMD_SPIN_DIRECTION_1);
+  }
+
+
+  writeDshotCustomCommand(channel, DSHOT_CMD_SAVE_SETTINGS);
+
   return 1;
 }
 
@@ -383,6 +422,7 @@ void IRAM_ATTR EscDriverEsp32::writeAnalogCommand(uint32_t channel, int32_t puls
 
 void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse)
 {
+  if (_holdThrottle) Serial.println("Holding throttle");
   if(_digital && _dshot_tlm)
   {
     modeTx((rmt_channel_t)channel);
@@ -402,6 +442,56 @@ void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse
   slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
 
   _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
+}
+
+void IRAM_ATTR EscDriverEsp32::writeDshotCustomCommand(uint32_t channel, DshotCommand cmd)
+{
+  if (!_digital || channel >= ESC_CHANNEL_COUNT) return;
+
+  uint16_t frame;
+  switch (cmd) {
+      case DSHOT_CMD_SPIN_DIRECTION_1:
+          frame = buildDshotFrame(DSHOT_CMD_SPIN_DIRECTION_1, _dshot_tlm); // Normal direction
+          Serial.printf("Channel %d: SPIN_DIRECTION_1, frame: 0x%04x\n", channel, frame);
+          break;
+      case DSHOT_CMD_SPIN_DIRECTION_2:
+          frame = buildDshotFrame(DSHOT_CMD_SPIN_DIRECTION_2, _dshot_tlm); // Reverse direction
+          Serial.printf("Channel %d: SPIN_DIRECTION_2, frame: 0x%04x\n", channel, frame);
+          break;
+      case DSHOT_CMD_SAVE_SETTINGS:
+          frame = buildDshotFrame(DSHOT_CMD_SAVE_SETTINGS, _dshot_tlm); // Save settings
+          Serial.printf("Channel %d: SAVE_SETTINGS, frame: 0x%04x\n", channel, frame);
+          break;
+      default:
+          return;
+  }
+
+  // Stop throttle
+  _holdThrottle = true;
+  int savedPulse = _channel[channel].pulse;
+  _channel[channel].pulse = 0; // Ensure throttle is 0
+  
+  // Send command 50 times (100ms total at 2ms intervals)
+  for (int i = 0; i < 50; i++) {
+      Slot& slot = _channel[channel];
+      for (size_t j = 0; j < DSHOT_BIT_COUNT; j++) {
+          int val = (frame >> (DSHOT_BIT_COUNT - 1 - j)) & 0x01;
+          slot.setDshotBit(j, val, _dshot_tlm);
+      }
+      slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
+      _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
+      transmitCommand(channel);
+      delayMicroseconds(2000); // 500 Hz rate
+  }
+
+  // Special handling for SAVE_SETTINGS
+  if (cmd == DSHOT_CMD_SAVE_SETTINGS) {
+      delayMicroseconds(100000); // 100ms delay for EEPROM write
+  }
+
+  // Restore throttle
+  _channel[channel].pulse = savedPulse;
+  _holdThrottle = false;
 }
 
 void IRAM_ATTR EscDriverEsp32::transmitCommand(uint32_t channel)
