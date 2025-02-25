@@ -39,6 +39,7 @@ class EscDriverBase
 
     static uint16_t dshotConvert(uint16_t pulse);
     static uint16_t dshotEncode(uint16_t value, bool inverted = false);
+    static uint16_t buildDshotFrame(uint16_t command, bool telemetry);
 
     /**
      * @param data expected data layout (bits): duration0(15), level0(1), duration(15), level1(1)

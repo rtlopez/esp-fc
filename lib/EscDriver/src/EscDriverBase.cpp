@@ -27,6 +27,14 @@ uint16_t IRAM_ATTR EscDriverBase::dshotEncode(uint16_t value, bool inverted)
   return (value << 4) | csum;
 }
 
+uint16_t IRAM_ATTR EscDriverBase::buildDshotFrame(uint16_t command, bool telemetry) 
+{
+  command &= 0x7FF; // 11-bit command
+  uint16_t frame = (command << 5) | (telemetry ? 0x10 : 0);
+  uint8_t crc = ((frame >> 12) ^ (frame >> 8) ^ (frame >> 4)) & 0x0F;
+  return (frame & 0xFFF0) | crc;
+}
+
 uint32_t IRAM_ATTR EscDriverBase::durationToBitLen(uint32_t duration, uint32_t len)
 {
   return (duration + (len >> 1)) / len;
