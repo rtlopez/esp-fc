@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -51,6 +52,13 @@ class DynamicFilterConfig {
 };
 
 namespace Utils {
+
+inline float pt1Gain(float rate, float freq)
+{
+  float rc = 1.f / (2.f * pi() * freq);
+  float dt = 1.f / rate;
+  return dt / (dt + rc);
+}
 
 class FilterStatePt1 {
   public:

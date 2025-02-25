@@ -4,9 +4,7 @@
 #include "BaseSensor.h"
 #include "Device/GyroDevice.h"
 
-namespace Espfc {
-
-namespace Sensor {
+namespace Espfc::Sensor {
 
 class AccelSensor: public BaseSensor
 {
@@ -25,7 +23,5 @@ class AccelSensor: public BaseSensor
     Device::GyroDevice * _gyro;
     Utils::Filter _filter[AXIS_COUNT_RPY];
 };
-
-}
 
 }

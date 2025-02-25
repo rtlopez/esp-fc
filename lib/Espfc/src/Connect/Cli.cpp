@@ -1382,6 +1382,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     else if(strcmp_P(cmd.args[1], PSTR("erase")) == 0)
     {
       flashfsEraseCompletely();
+      s.println("OK");
     }
     else if(strcmp_P(cmd.args[1], PSTR("test")) == 0)
     {
@@ -1389,6 +1390,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       flashfsWrite((const uint8_t*)data, strlen(data), true);
       flashfsFlushAsync(true);
       flashfsClose();
+      s.println("OK");
     }
     else if(strcmp_P(cmd.args[1], PSTR("print")) == 0)
     {

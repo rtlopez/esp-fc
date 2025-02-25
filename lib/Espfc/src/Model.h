@@ -452,8 +452,8 @@ class Model
 
       const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
-      const uint32_t inputFilterRate = state.input.timer.rate;
       const uint32_t pidFilterRate = state.loopTimer.rate;
+      const uint32_t inputFilterRate = state.input.timer.rate;
 
       // configure filters
       for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
@@ -477,7 +477,6 @@ class Model
         }
         state.gyro.filter2[i].begin(config.gyro.filter2, gyroFilterRate);
         state.gyro.filter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.accel.filter[i].begin(config.accel.filter, gyroFilterRate);
         state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / 3), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
         {
@@ -530,9 +529,11 @@ class Model
         pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
         pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
         pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[i];
-        pid.iLimit = config.iterm.limit * 0.01f;
-        pid.oLimit = 0.66f;
-        pid.rate = state.loopTimer.rate;
+        pid.iLimitLow = -config.iterm.limit * 0.01f;
+        pid.iLimitHigh = config.iterm.limit * 0.01f;
+        pid.oLimitLow = -0.66f;
+        pid.oLimitHigh = 0.66f;
+        pid.rate = pidFilterRate;
         pid.dtermNotchFilter.begin(config.dterm.notchFilter, pidFilterRate);
         if(config.dterm.dynLpfFilter.cutoff > 0) {
           pid.dtermFilter.begin(FilterConfig((FilterType)config.dterm.filter.type, config.dterm.dynLpfFilter.cutoff), pidFilterRate);
@@ -543,7 +544,7 @@ class Model
         pid.ftermFilter.begin(config.input.filterDerivative, pidFilterRate);
         pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, config.iterm.relaxCutoff), pidFilterRate);
         if(i == AXIS_YAW) {
-          pid.itermRelax = config.iterm.relax == ITERM_RELAX_RPY || config.iterm.relax == ITERM_RELAX_RPY_INC ? config.iterm.relax : ITERM_RELAX_OFF;
+          pid.itermRelax = (config.iterm.relax == ITERM_RELAX_RPY || config.iterm.relax == ITERM_RELAX_RPY_INC) ? config.iterm.relax : ITERM_RELAX_OFF;
           pid.ptermFilter.begin(config.yaw.filter, pidFilterRate);
         } else {
           pid.itermRelax = config.iterm.relax;
@@ -559,9 +560,11 @@ class Model
         pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
         pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
         pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
-        pid.iLimit = Utils::toRad(config.level.rateLimit) * 0.1f;
-        pid.oLimit = Utils::toRad(config.level.rateLimit);
-        pid.rate = state.loopTimer.rate;
+        pid.iLimitHigh = Utils::toRad(config.level.rateLimit) * 0.1f;
+        pid.iLimitLow = -pid.iLimitHigh;
+        pid.oLimitHigh = Utils::toRad(config.level.rateLimit);
+        pid.oLimitLow = -pid.oLimitHigh;
+        pid.rate = pidFilterRate;
         pid.ptermFilter.begin(config.level.ptermFilter, pidFilterRate);
         //pid.iLimit = 0.3f; // ROBOT
         //pid.oLimit = 1.f;  // ROBOT
@@ -575,9 +578,13 @@ class Model
       pidav.Ki = (float)pcav.I * VEL_ITERM_SCALE;
       pidav.Kd = (float)pcav.D * VEL_DTERM_SCALE;
       pidav.Kf = 0.0f;
-      pidav.iLimit = 0.6f;
-      pidav.oLimit = 1.0f;
-      pidav.rate = state.loopTimer.rate;
+      pidav.iLimitLow = -1.0f;
+      pidav.iLimitHigh = 1.0f;
+      pidav.iReset = -1.0f;
+      pidav.oLimitLow = -1.0f;
+      pidav.oLimitHigh = 1.0f;
+      pidav.rate = pidFilterRate;
+      pidav.dtermFilter.begin(FilterConfig(FILTER_PT1, 20), pidFilterRate);
       pidav.begin();
 
       // override temporary

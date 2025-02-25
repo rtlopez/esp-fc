@@ -255,7 +255,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
       mag.magADC[i] = _model.state.mag.adc[i] * 1090;
     }
     if(_model.baroActive()) {
-      baro.altitude = lrintf(_model.state.baro.altitude * 100.f); // cm
+      baro.altitude = lrintf(_model.state.baro.altitudeGround * 100.f); // cm
     }
   }
   rcCommand[AXIS_THRUST] = _model.state.input.buffer[AXIS_THRUST];

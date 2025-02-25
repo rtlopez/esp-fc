@@ -685,8 +685,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_ALTITUDE:
-      r.writeU32(lrintf(_model.state.baro.altitude * 100.f));    // alt [cm]
-      r.writeU16(0); // vario
+      r.writeU32(lrintf(_model.state.altitude.height * 100.f));  // alt [cm]
+      r.writeU16(lrintf(_model.state.altitude.vario * 100.f));   // vario [cm/s]
       break;
 
     case MSP_BEEPER_CONFIG:

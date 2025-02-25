@@ -721,8 +721,10 @@ void test_pid_init()
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.Kd);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.Kf);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.3f, pid.iLimit);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.oLimit);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,  0.3f, pid.iLimitHigh);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, -0.3f, pid.iLimitLow);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f,  1.0f, pid.oLimitHigh);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, -1.0f, pid.oLimitLow);
 
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.pScale);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.iScale);
@@ -816,7 +818,8 @@ void test_pid_update_i_limit()
   Pid pid;
   ensure(pid);
   gain(pid, 0, 10, 0, 0);
-  pid.iLimit = 0.2f;
+  pid.iLimitHigh = 0.2f;
+  pid.iLimitLow = -0.2f;
   pid.begin();
 
   float result1 = pid.update(0.8f, 0.f);

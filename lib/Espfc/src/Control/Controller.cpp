@@ -1,17 +1,15 @@
 #include "Control/Controller.h"
 #include "Utils/Math.hpp"
+#include <algorithm>
 
-namespace Espfc {
+namespace Espfc::Control {
 
-namespace Control {
-
-Controller::Controller(Model& model): _model(model), _altitude(model) {}
+Controller::Controller(Model& model): _model(model) {}
 
 int Controller::begin()
 {
   _rates.begin(_model.config.input);
   _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
-  _altitude.begin();
   return 1;
 }
 
@@ -26,7 +24,6 @@ int FAST_CODE_ATTR Controller::update()
 
   {
     Utils::Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
-    _altitude.update();
     resetIterm();
     switch(_model.config.mixer.type)
     {
@@ -142,11 +139,6 @@ void FAST_CODE_ATTR Controller::outerLoop()
   if(_model.isModeActive(MODE_ALTHOLD))
   {
     _model.state.setpoint.rate[AXIS_THRUST] = calcualteAltHoldSetpoint();
-    if(_model.config.debug.mode == DEBUG_ALTITUDE)
-    {
-      _model.state.debug[0] = lrintf(_model.state.input.ch[AXIS_THRUST] * 1000.0f);
-      _model.state.debug[1] = lrintf(_model.state.setpoint.rate[AXIS_THRUST] * 1000.0f);
-    }
   }
   else
   {
@@ -175,16 +167,23 @@ void FAST_CODE_ATTR Controller::innerLoop()
   // thrust control
   if(_model.isModeActive(MODE_ALTHOLD))
   {
-    _model.state.output.ch[AXIS_THRUST] = _model.state.innerPid[AXIS_THRUST].update(_model.state.setpoint.rate[AXIS_THRUST], _model.state.altitude.rate);
-    if(_model.config.debug.mode == DEBUG_ALTITUDE)
-    {
-      _model.state.debug[2] = lrintf(_model.state.output.ch[AXIS_THRUST] * 1000.0f);
-      _model.state.debug[3] = lrintf(_model.state.innerPid[AXIS_THRUST].iTerm * 1000.0f);
-    }
+    _model.state.output.ch[AXIS_THRUST] = _model.state.innerPid[AXIS_THRUST].update(_model.state.setpoint.rate[AXIS_THRUST], _model.state.altitude.vario);
   }
   else
   {
     _model.state.output.ch[AXIS_THRUST] = _model.state.setpoint.rate[AXIS_THRUST];
+  }
+
+  if(_model.config.debug.mode == DEBUG_STACK)
+  {
+    _model.state.debug[0] = std::clamp(lrintf(_model.state.setpoint.rate[AXIS_THRUST] * 1000.0f), -3000l, 30000l);  // gps trust
+    _model.state.debug[1] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -3000l, 30000l);              // baro alt
+    _model.state.debug[2] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].error * 1000.0f), -3000l, 30000l); // gps alt
+    _model.state.debug[3] = std::clamp(lrintf(_model.state.altitude.vario * 100.0f), -3000l, 30000l);               // vario
+    _model.state.debug[4] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].pTerm * 1000.0f), -3000l, 30000l); // not used 1
+    _model.state.debug[5] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].iTerm * 1000.0f), -3000l, 30000l); // not used 2
+    _model.state.debug[6] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].dTerm * 1000.0f), -3000l, 30000l); // not used 3
+    _model.state.debug[7] = std::clamp(lrintf(_model.state.baro.pressureRaw - 100000.0f), -30000l, 30000l);         // not used 4
   }
 
   // debug
@@ -201,9 +200,9 @@ float Controller::calcualteAltHoldSetpoint() const
 {
   float thrust = _model.state.input.ch[AXIS_THRUST];
 
-  if(_model.isThrottleLow()) thrust = 0.0f; // stick below min check, no command
+  //if(_model.isThrottleLow()) thrust = 0.0f; // stick below min check, no command
 
-  thrust = Utils::deadband(thrust, 0.125f); // +/- 12.5% deadband
+  thrust = Utils::deadband(thrust, 0.1f); // +/- 12.5% deadband
 
   return thrust * 0.5f; // climb/descend rate factor 0.5 m/s
 }
@@ -223,13 +222,13 @@ void Controller::resetIterm()
   {
     for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
     {
-      _model.state.innerPid[i].iTerm = 0.0f;
-      _model.state.outerPid[i].iTerm = 0.0f;
+      _model.state.innerPid[i].resetIterm();
+      _model.state.outerPid[i].resetIterm();
     }
   }
   if(!_model.isModeActive(MODE_ARMED))
   {
-    _model.state.innerPid[AXIS_THRUST].iTerm = 0.0f;
+    _model.state.innerPid[AXIS_THRUST].resetIterm();
   }
 }
 
@@ -237,8 +236,6 @@ float Controller::calculateSetpointRate(int axis, float input) const
 {
   if(axis == AXIS_YAW) input *= -1.f;
   return _rates.getSetpoint(axis, input);
-}
-
 }
 
 }
