@@ -501,6 +501,11 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("failsafe_delay"), &c.failsafe.delay),
     Param(PSTR("failsafe_kill_switch"), &c.failsafe.killSwitch),
 
+    Param(PSTR("vtx_power"), &c.vtx.power),
+    Param(PSTR("vtx_channel"), &c.vtx.channel),
+    Param(PSTR("vtx_band"), &c.vtx.band),
+    Param(PSTR("vtx_low_power_disarm"), &c.vtx.lowPowerDisarm),
+
 #ifdef ESPFC_SERIAL_0
     Param(PSTR("serial_0"), &c.serial[SERIAL_UART_0]),
 #endif

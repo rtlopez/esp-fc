@@ -320,6 +320,11 @@ struct ModeState
   bool airmodeAllowed;
 };
 
+struct VtxState
+{
+  uint8_t active = false;
+};
+
 // runtime data
 struct ModelState
 {
@@ -340,6 +345,7 @@ struct ModelState
 
   MixerState mixer;
   OutputState output;
+  VtxState vtx;
 
   int32_t loopRate;
   Utils::Timer loopTimer;

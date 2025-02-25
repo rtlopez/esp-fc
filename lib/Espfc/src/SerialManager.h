@@ -3,6 +3,7 @@
 #include "Model.h"
 #include "Device/SerialDevice.h"
 #include "Connect/MspProcessor.hpp"
+#include "Connect/Vtx.hpp"
 #include "Connect/Cli.hpp"
 #include "TelemetryManager.h"
 #include "Output/OutputIBUS.hpp"
@@ -38,6 +39,7 @@ class SerialManager
     TelemetryManager& _telemetry;
     size_t _current;
     Output::OutputIBUS _ibus;
+    Connect::Vtx _vtx;
 };
 
 }

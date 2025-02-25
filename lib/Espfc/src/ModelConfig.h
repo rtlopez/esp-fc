@@ -648,6 +648,14 @@ struct ControllerConfig
   int16_t tpaBreakpoint = 1650;
 };
 
+struct VtxConfig
+{
+  uint8_t channel = 0x8;
+  uint8_t band = 0x1;
+  uint8_t power = 0;
+  uint8_t lowPowerDisarm = 0;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -662,6 +670,7 @@ class ModelConfig
     FusionConfig fusion;
     VBatConfig vbat;
     IBatConfig ibat;
+    VtxConfig vtx;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
     ScalerConfig scaler[SCALER_COUNT];

@@ -20,7 +20,7 @@
 
 namespace Espfc {
 
-SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _msp(model), _cli(model),
+SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _msp(model), _cli(model), _vtx(model),
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 _wireless(model),
 #endif
@@ -104,6 +104,13 @@ int SerialManager::begin()
       sdc.baud = 115200;
       _ibus.begin(port);
     }
+    else if(spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
+    {
+      sdc.baud = 4800;
+      sdc.parity = SDC_SERIAL_PARITY_NONE;
+      sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+      sdc.data_bits = 8;
+    }
 
     /*if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY)
     {
@@ -124,7 +131,10 @@ int SerialManager::begin()
 
     //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
     port->begin(sdc);
-
+    if (spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO) {
+      _vtx.begin(port);
+    }
+  
     _model.state.serial[i].stream = port;
     if(i == ESPFC_SERIAL_DEBUG_PORT)
     {
@@ -194,6 +204,11 @@ int FAST_CODE_ATTR SerialManager::update()
   if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
   {
     _ibus.update();
+  }
+
+  if(sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
+  {
+    _vtx.update();
   }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
