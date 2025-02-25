@@ -67,10 +67,18 @@ int FAST_CODE_ATTR Fusion::update()
         break;
       case FUSION_NONE:
       default:
-        ;
+        break;
       }
+
+      _model.state.accel.world = _model.state.accel.adc.getRotated(_model.state.attitude.quaternion);
     }
-    //else madgwickFusion1();
+
+    if(_model.config.debug.mode == DEBUG_AC_ERROR)
+    {
+      _model.state.debug[0] = lrintf(_model.state.accel.world[0] * ACCEL_G_INV * 1000);
+      _model.state.debug[1] = lrintf(_model.state.accel.world[1] * ACCEL_G_INV * 1000);
+      _model.state.debug[2] = lrintf(_model.state.accel.world[2] * ACCEL_G_INV * 1000);
+    }
 
     if(_model.config.debug.mode == DEBUG_AC_CORRECTION)
     {

@@ -2,6 +2,7 @@
 
 #include "Model.h"
 #include "Control/Fusion.h"
+#include "Control/Altitude.hpp"
 #include "Sensor/GyroSensor.h"
 #include "Sensor/AccelSensor.h"
 #include "Sensor/MagSensor.h"
@@ -33,6 +34,7 @@ class SensorManager
     Sensor::BaroSensor _baro;
     Sensor::VoltageSensor _voltage;
     Control::Fusion _fusion;
+    Control::Altitude _altitude;
     bool _fusionUpdate;
 };
 

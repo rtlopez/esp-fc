@@ -4,9 +4,7 @@
 #include "Control/Rates.h"
 #include "Control/Altitude.hpp"
 
-namespace Espfc {
-
-namespace Control {
+namespace Espfc::Control {
 
 class Controller
 {
@@ -27,11 +25,8 @@ class Controller
 
   private:
     Model& _model;
-    Altitude _altitude;
     Rates _rates;
     Utils::Filter _speedFilter;
 };
-
-}
 
 }

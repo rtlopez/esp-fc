@@ -1,9 +1,10 @@
 #include "Sensor/AccelSensor.h"
 #include "Utils/FilterHelper.h"
 
-namespace Espfc {
+namespace Espfc::Sensor {
 
-namespace Sensor {
+static constexpr float ESPFC_FUZZY_ACCEL_ZERO = 0.05f;
+static constexpr float ESPFC_FUZZY_GYRO_ZERO = 0.20f;
 
 AccelSensor::AccelSensor(Model& model): _model(model) {}
 
@@ -19,9 +20,10 @@ int AccelSensor::begin()
   for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
     _filter[i].begin(FilterConfig(FILTER_FIR2, 1), _model.state.accel.timer.rate);
+    _model.state.accel.filter[i].begin(_model.config.accel.filter, _model.state.accel.timer.rate);
   }
 
-  _model.state.accel.biasAlpha = _model.state.accel.timer.rate > 0 ? 5.0f / _model.state.accel.timer.rate : 0;
+  _model.state.accel.biasAlpha = 5.0f / _model.state.accel.timer.rate;
   _model.state.accel.calibrationState = CALIBRATION_IDLE;
 
   _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.state.accel.timer.rate).log(_model.state.accel.timer.interval).logln(_model.state.accel.present);
@@ -41,8 +43,6 @@ int FAST_CODE_ATTR AccelSensor::update()
 int FAST_CODE_ATTR AccelSensor::read()
 {
   if(!_model.accelActive()) return 0;
-
-  //if(!_model.state.accel.timer.check()) return 0;
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
   _gyro->readAccel(_model.state.accel.raw);
@@ -105,8 +105,6 @@ void FAST_CODE_ATTR AccelSensor::calibrate()
       _model.state.accel.calibrationState = CALIBRATION_IDLE;
       break;
   }
-}
-
 }
 
 }

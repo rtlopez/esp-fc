@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Model.h"
+#include "Utils/Filter.h"
 
 namespace Espfc::Control {
 
@@ -12,24 +13,36 @@ public:
   int begin()
   {
     _model.state.altitude.height = 0.0f;
-    _model.state.altitude.heightPrev = 0.0f;
-    _model.state.altitude.rate = 0.0f;
+    _model.state.altitude.vario = 0.0f;
+
+    _altitudeFilter.begin(FilterConfig(FILTER_PT2, 5), _model.state.accel.timer.rate);
+    _varioFilter.begin(FilterConfig(FILTER_PT2, 5), _model.state.accel.timer.rate);
 
     return 1;
   }
 
   int update()
   {
-    // initialy use baro altitude only, in feature mix with other sources according to trust level
-    _model.state.altitude.height = _model.state.altitude.height + _model.state.baro.altitude;
-    _model.state.altitude.rate = (_model.state.altitude.height - _model.state.altitude.heightPrev) * _model.state.loopTimer.rate;
-    _model.state.altitude.heightPrev = _model.state.altitude.height;
+    _model.state.altitude.height = _altitudeFilter.update(_model.state.baro.altitudeGround);
+
+    float baroVario = _varioFilter.update(_model.state.baro.vario);
+    _model.state.altitude.vario = baroVario;
+
+    if(_model.config.debug.mode == DEBUG_ALTITUDE)
+    {
+      _model.state.debug[0] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -32000l, 32000l);   // gps trust
+      _model.state.debug[1] = std::clamp(lrintf(_model.state.altitude.vario * 100.0f), -32000l, 32000l);    // baroAlt cm
+      //_model.state.debug[1] = std::clamp(lrintf(accVario * 100.0f), -3200l, 32000l);                        // gpsAlt cm
+      _model.state.debug[1] = std::clamp(lrintf(baroVario * 100.0f), -3200l, 32000l);                       // vario
+    }
 
     return 1;
   }
 
 private:
   Model& _model;
+  Utils::Filter _altitudeFilter;
+  Utils::Filter _varioFilter;
 };
 
 }

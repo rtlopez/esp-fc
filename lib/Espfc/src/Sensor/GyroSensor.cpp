@@ -6,13 +6,11 @@
 #include "Utils/FFTAnalyzer.ipp"
 #endif
 
-#define ESPFC_FUZZY_ACCEL_ZERO 0.05
-#define ESPFC_FUZZY_GYRO_ZERO 0.20
+namespace Espfc::Sensor
+{
 
-namespace Espfc
-{
-namespace Sensor
-{
+static constexpr float ESPFC_FUZZY_ACCEL_ZERO = 0.05f;
+static constexpr float ESPFC_FUZZY_GYRO_ZERO = 0.20f;
 
 GyroSensor::GyroSensor(Model &model) : _dyn_notch_denom(1), _model(model)
 {
@@ -315,8 +313,6 @@ void FAST_CODE_ATTR GyroSensor::calibrate()
     _model.state.gyro.calibrationState = CALIBRATION_IDLE;
     break;
   }
-}
-
 }
 
 }

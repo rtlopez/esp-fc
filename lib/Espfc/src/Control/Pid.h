@@ -22,9 +22,9 @@ constexpr float LEVEL_ITERM_SCALE = 0.1f;    // 1/10
 constexpr float LEVEL_DTERM_SCALE = 0.001f;  // 1/1000
 constexpr float LEVEL_FTERM_SCALE = 0.001f;  // 1/1000
 
-constexpr float VEL_PTERM_SCALE = 0.02f;
+constexpr float VEL_PTERM_SCALE = 0.001f;
 constexpr float VEL_ITERM_SCALE = 0.01f;
-constexpr float VEL_DTERM_SCALE = 0.001f;
+constexpr float VEL_DTERM_SCALE = 0.00001f;
 
 enum ItermRelaxType {
   ITERM_RELAX_OFF,
@@ -39,50 +39,54 @@ namespace Control {
 
 class Pid
 {
-  public:
-    Pid();
-    void begin();
-    float update(float setpoint, float measure);
+public:
+  Pid();
+  void begin();
+  float update(float setpoint, float measure);
+  void resetIterm();
 
-    float rate;
-    float dt;
+  float rate;
+  float dt;
 
-    float Kp;
-    float Ki;
-    float Kd;
-    float Kf;
+  float Kp;
+  float Ki;
+  float Kd;
+  float Kf;
 
-    float iLimit;
-    float oLimit;
+  float iLimitLow;
+  float iLimitHigh;
+  float iReset;
+  float oLimitLow;
+  float oLimitHigh;
 
-    float pScale;
-    float iScale;
-    float dScale;
-    float fScale;
+  float pScale;
+  float iScale;
+  float dScale;
+  float fScale;
 
-    float error;
-    float iTermError;
+  float error;
+  float iTermError;
 
-    float pTerm;
-    float iTerm;
-    float dTerm;
-    float fTerm;
+  float pTerm;
+  float iTerm;
+  float dTerm;
+  float fTerm;
 
-    Utils::Filter dtermFilter;
-    Utils::Filter dtermFilter2;
-    Utils::Filter dtermNotchFilter;
-    Utils::Filter ptermFilter;
-    Utils::Filter ftermFilter;
-    Utils::Filter itermRelaxFilter;
+  Utils::Filter dtermFilter;
+  Utils::Filter dtermFilter2;
+  Utils::Filter dtermNotchFilter;
+  Utils::Filter ptermFilter;
+  Utils::Filter ftermFilter;
+  Utils::Filter itermRelaxFilter;
 
-    float prevMeasurement;
-    float prevError;
-    float prevSetpoint;
+  float prevMeasurement;
+  float prevError;
+  float prevSetpoint;
 
-    bool outputSaturated;
-    int8_t itermRelax;
-    float itermRelaxFactor;
-    float itermRelaxBase;
+  bool outputSaturated;
+  int8_t itermRelax;
+  float itermRelaxFactor;
+  float itermRelaxBase;
 };
 
 }

@@ -241,7 +241,10 @@ struct BaroState
   float pressure;
   float altitudeRaw;
   float altitude;
+  float altitudeGround;
   float altitudeBias;
+  float altitudePrev;
+  float vario;
   int32_t altitudeBiasSamples;
 };
 
@@ -287,6 +290,8 @@ struct AccelState
   Utils::Filter filter[AXIS_COUNT_RPY];
   Utils::Timer timer;
 
+  VectorFloat world;
+
   float scale;
   VectorFloat bias;
   float biasAlpha;
@@ -323,8 +328,7 @@ struct ModeState
 struct AltitudeState
 {
   float height;
-  float heightPrev;
-  float rate;
+  float vario;
 };
 
 // runtime data
