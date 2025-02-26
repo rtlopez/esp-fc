@@ -5,6 +5,8 @@
 #include <driver/timer.h>
 #endif
 
+#define VTXCOMMON_MSP_BANDCHAN_CHKVAL ((uint16_t)((7 << 3) + 7))
+
 extern "C" {
   #include "msp/msp_protocol.h"
   #include "msp/msp_protocol_v2_common.h"
@@ -1395,14 +1397,25 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_VTX_CONFIG:
-      r.writeU8(0xff); // vtx type unknown
-      r.writeU8(0);    // band
-      r.writeU8(0);    // channel
-      r.writeU8(0);    // power
-      r.writeU8(0);    // status
-      r.writeU16(0);   // freq
-      r.writeU8(0);    // ready
-      r.writeU8(0);    // low power disarm
+      if (!_model.state.vtx.active) {
+        r.writeU8(0); // vtx type
+        r.writeU8(0); // band
+        r.writeU8(0); // channel
+        r.writeU8(0); // power
+        r.writeU8(0); // status
+        r.writeU16(0); // freq
+        r.writeU8(0); // ready
+        r.writeU8(0); // low power disarm
+      } else {
+        r.writeU8(3 /* SMARTAUDIO */); // vtx type unknown
+        r.writeU8(_model.config.vtx.band);    // band
+        r.writeU8(_model.config.vtx.channel); // channel
+        r.writeU8(_model.config.vtx.power);   // power
+        r.writeU8(0);    // status (looks like 1 means pit mode :shrug:)
+        r.writeU16(0);   // freq
+        r.writeU8(1);    // ready
+        r.writeU8(_model.config.vtx.lowPowerDisarm);    // low power disarm
+      }
       // 1.42
       r.writeU16(0);   // pit mode freq
       r.writeU8(0);    // vtx table available (no)
@@ -1410,6 +1423,40 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(0);    // vtx table channels
       r.writeU8(0);    // vtx power levels
       break;
+    
+    case MSP_SET_VTX_CONFIG:
+      {
+        uint16_t freq = m.readU16();
+        if (freq <= VTXCOMMON_MSP_BANDCHAN_CHKVAL) {  // Value is band and channel
+          const uint8_t newBand = (freq / 8) + 1;
+          const uint8_t newChannel = (freq % 8) + 1;
+        }
+
+        if (m.remain() >= 2) {
+          _model.config.vtx.power =  m.readU8();
+          const uint8_t newPitmode = m.readU8();
+        }
+
+        if (m.remain()) {
+          _model.config.vtx.lowPowerDisarm = m.readU8();
+        }
+
+      // API version 1.42 - this parameter kept separate since clients may already be supplying
+      if (m.remain() >= 2) {
+          const uint16_t pitModeFreq = m.readU16();
+      }
+
+      // API version 1.42 - extensions for non-encoded versions of the band, channel or frequency
+      if (m.remain() >= 4) {
+          // Added standalone values for band, channel and frequency to move
+          // away from the flawed encoded combined method originally implemented.
+          _model.config.vtx.band = m.readU8(); 
+          _model.config.vtx.channel = m.readU8();
+          uint16_t newFreq = m.readU16();
+      }
+    }
+      break;
+
 
     case MSP_SET_ARMING_DISABLED:
       {
