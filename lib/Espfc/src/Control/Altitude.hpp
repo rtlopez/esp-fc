@@ -24,16 +24,14 @@ public:
   int update()
   {
     _model.state.altitude.height = _altitudeFilter.update(_model.state.baro.altitudeGround);
-
-    float baroVario = _varioFilter.update(_model.state.baro.vario);
-    _model.state.altitude.vario = baroVario;
+    _model.state.altitude.vario = _varioFilter.update(_model.state.baro.vario);
 
     if(_model.config.debug.mode == DEBUG_ALTITUDE)
     {
-      _model.state.debug[0] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -32000l, 32000l);   // gps trust
-      _model.state.debug[1] = std::clamp(lrintf(_model.state.altitude.vario * 100.0f), -32000l, 32000l);    // baroAlt cm
-      //_model.state.debug[1] = std::clamp(lrintf(accVario * 100.0f), -3200l, 32000l);                        // gpsAlt cm
-      _model.state.debug[1] = std::clamp(lrintf(baroVario * 100.0f), -3200l, 32000l);                       // vario
+      _model.state.debug[0] = std::clamp(lrintf(_model.state.baro.altitudeGround * 100.0f), -32000l, 32000l);  // gps trust
+      _model.state.debug[1] = std::clamp(lrintf(_model.state.baro.vario * 100.0f), -32000l, 32000l);           // baroAlt cm
+      _model.state.debug[2] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -32000l, 32000l);      // gpsAlt cm
+      _model.state.debug[3] = std::clamp(lrintf(_model.state.altitude.vario * 100.0f), -32000l, 32000l);       // vario
     }
 
     return 1;

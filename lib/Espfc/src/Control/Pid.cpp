@@ -14,7 +14,7 @@ Pid::Pid():
   error(0.f), iTermError(0.f),
   pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
   prevMeasurement(0.f), prevError(0.f), prevSetpoint(0.f),
-  outputSaturated(false),
+  ftermDerivative(true), outputSaturated(false),
   itermRelax(ITERM_RELAX_OFF), itermRelaxFactor(1.0f), itermRelaxBase(0.f)
   {}
 
@@ -77,7 +77,14 @@ float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
   // F-term
   if(Kf > 0.f && fScale > 0.f)
   {
-    fTerm = Kf * fScale * (setpoint - prevSetpoint) * rate;
+    if(ftermDerivative)
+    {
+      fTerm = Kf * fScale * (setpoint - prevSetpoint) * rate;
+    }
+    else
+    {
+      fTerm = Kf * fScale * setpoint;
+    }
     fTerm = ftermFilter.update(fTerm);
   }
   else
