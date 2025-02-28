@@ -10,6 +10,14 @@ int Controller::begin()
 {
   _rates.begin(_model.config.input);
   _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
+
+  beginInnerLoop(AXIS_ROLL);
+  beginInnerLoop(AXIS_PITCH);
+  beginInnerLoop(AXIS_YAW);
+  beginOuterLoop(AXIS_ROLL);
+  beginOuterLoop(AXIS_PITCH);
+  beginAltHold();
+
   return 1;
 }
 
@@ -171,19 +179,21 @@ void FAST_CODE_ATTR Controller::innerLoop()
   }
   else
   {
+    _model.state.innerPid[AXIS_THRUST].update(0, _model.state.altitude.vario);
+    _model.state.innerPid[AXIS_THRUST].iTerm = _model.state.input.ch[AXIS_THRUST]; // follow iTerm from rc input for smooth mid-air transition
     _model.state.output.ch[AXIS_THRUST] = _model.state.setpoint.rate[AXIS_THRUST];
   }
 
   if(_model.config.debug.mode == DEBUG_STACK)
   {
-    _model.state.debug[0] = std::clamp(lrintf(_model.state.setpoint.rate[AXIS_THRUST] * 1000.0f), -3000l, 30000l);  // gps trust
-    _model.state.debug[1] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -3000l, 30000l);              // baro alt
-    _model.state.debug[2] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].error * 1000.0f), -3000l, 30000l); // gps alt
-    _model.state.debug[3] = std::clamp(lrintf(_model.state.altitude.vario * 100.0f), -3000l, 30000l);               // vario
-    _model.state.debug[4] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].pTerm * 1000.0f), -3000l, 30000l); // not used 1
-    _model.state.debug[5] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].iTerm * 1000.0f), -3000l, 30000l); // not used 2
-    _model.state.debug[6] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].dTerm * 1000.0f), -3000l, 30000l); // not used 3
-    _model.state.debug[7] = std::clamp(lrintf(_model.state.baro.pressureRaw - 100000.0f), -30000l, 30000l);         // not used 4
+    _model.state.debug[0] = std::clamp(lrintf(_model.state.setpoint.rate[AXIS_THRUST] * 1000.0f), -3000l, 3000l); // stack hi mem
+    _model.state.debug[1] = std::clamp(lrintf(_model.state.altitude.vario * 100.0f), -30000l, 30000l);            // stack lo mem
+    _model.state.debug[2] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -30000l, 30000l);           // stack curr
+    _model.state.debug[3] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].error * 1000.0f), -30000l, 30000l); // stack p
+    _model.state.debug[4] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].pTerm * 1000.0f), -3000l, 3000l);
+    _model.state.debug[5] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].iTerm * 1000.0f), -3000l, 3000l);
+    _model.state.debug[6] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].dTerm * 1000.0f), -3000l, 3000l);
+    _model.state.debug[7] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].fTerm * 1000.0f), -3000l, 3000l);
   }
 
   // debug
@@ -204,7 +214,7 @@ float Controller::calcualteAltHoldSetpoint() const
 
   thrust = Utils::deadband(thrust, 0.1f); // +/- 12.5% deadband
 
-  return thrust * 0.5f; // climb/descend rate factor 0.5 m/s
+  return thrust * 2.0f; // climb/descend rate factor 2 m/s
 }
 
 float Controller::getTpaFactor() const
@@ -228,7 +238,7 @@ void Controller::resetIterm()
   }
   if(!_model.isModeActive(MODE_ARMED))
   {
-    _model.state.innerPid[AXIS_THRUST].resetIterm();
+    //_model.state.innerPid[AXIS_THRUST].resetIterm();
   }
 }
 
@@ -236,6 +246,84 @@ float Controller::calculateSetpointRate(int axis, float input) const
 {
   if(axis == AXIS_YAW) input *= -1.f;
   return _rates.getSetpoint(axis, input);
+}
+
+void Controller::beginInnerLoop(size_t axis)
+{
+  const int pidFilterRate = _model.state.loopTimer.rate;
+  float pidScale[] = { 1.f, 1.f, 1.f };
+  if(_model.config.mixer.type == FC_MIXER_GIMBAL)
+  {
+    pidScale[AXIS_YAW] = 0.2f; // ROBOT
+    pidScale[AXIS_PITCH] = 20.f; // ROBOT
+  }
+
+  const PidConfig& pc = _model.config.pid[axis];
+  Pid& pid = _model.state.innerPid[axis];
+  pid.Kp = (float)pc.P * PTERM_SCALE * pidScale[axis];
+  pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[axis];
+  pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[axis];
+  pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[axis];
+  pid.iLimitLow = -_model.config.iterm.limit * 0.01f;
+  pid.iLimitHigh = _model.config.iterm.limit * 0.01f;
+  pid.oLimitLow = -0.66f;
+  pid.oLimitHigh = 0.66f;
+  pid.rate = pidFilterRate;
+  pid.dtermNotchFilter.begin(_model.config.dterm.notchFilter, pidFilterRate);
+  if(_model.config.dterm.dynLpfFilter.cutoff > 0) {
+    pid.dtermFilter.begin(FilterConfig((FilterType)_model.config.dterm.filter.type, _model.config.dterm.dynLpfFilter.cutoff), pidFilterRate);
+  } else {
+    pid.dtermFilter.begin(_model.config.dterm.filter, pidFilterRate);
+  }
+  pid.dtermFilter2.begin(_model.config.dterm.filter2, pidFilterRate);
+  pid.ftermFilter.begin(_model.config.input.filterDerivative, pidFilterRate);
+  pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, _model.config.iterm.relaxCutoff), pidFilterRate);
+  if(axis == AXIS_YAW) {
+    pid.itermRelax = (_model.config.iterm.relax == ITERM_RELAX_RPY || _model.config.iterm.relax == ITERM_RELAX_RPY_INC) ? _model.config.iterm.relax : ITERM_RELAX_OFF;
+    pid.ptermFilter.begin(_model.config.yaw.filter, pidFilterRate);
+  } else {
+    pid.itermRelax = _model.config.iterm.relax;
+  }
+  pid.begin();
+}
+
+void Controller::beginOuterLoop(size_t axis)
+{
+  const int pidFilterRate = _model.state.loopTimer.rate;
+  PidConfig& pc = _model.config.pid[FC_PID_LEVEL];
+  Pid& pid = _model.state.outerPid[axis];
+  pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
+  pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
+  pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
+  pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
+  pid.iLimitHigh = Utils::toRad(_model.config.level.rateLimit * 0.1f);
+  pid.iLimitLow = -pid.iLimitHigh;
+  pid.oLimitHigh = Utils::toRad(_model.config.level.rateLimit);
+  pid.oLimitLow = -pid.oLimitHigh;
+  pid.rate = pidFilterRate;
+  pid.ptermFilter.begin(_model.config.level.ptermFilter, pidFilterRate);
+  //pid.iLimit = 0.3f; // ROBOT
+  //pid.oLimit = 1.f;  // ROBOT
+  pid.begin();
+}
+
+void Controller::beginAltHold()
+{
+  PidConfig& pc = _model.config.pid[FC_PID_VEL];
+  Pid& pid = _model.state.innerPid[AXIS_THRUST];
+  pid.Kp = (float)pc.P * VEL_PTERM_SCALE;
+  pid.Ki = (float)pc.I * VEL_ITERM_SCALE;
+  pid.Kd = (float)pc.D * VEL_DTERM_SCALE;
+  pid.Kf = (float)pc.F * VEL_FTERM_SCALE;
+  pid.iLimitLow = -0.5f;
+  pid.iLimitHigh = 0.5f;
+  pid.iReset = -0.5f;
+  pid.oLimitLow = -1.0f;
+  pid.oLimitHigh = 1.0f;
+  pid.rate = _model.state.loopTimer.rate;
+  pid.dtermFilter.begin(FilterConfig(FILTER_PT1, 20), _model.state.loopTimer.rate);
+  pid.ftermDerivative = false;
+  pid.begin();
 }
 
 }

@@ -16,8 +16,8 @@ int BaroSensor::begin()
   const int interval = _model.state.gyro.timer.interval * toGyroRate;
   const int rate = 1000000 / interval;
   const int biasSamples = 3 * rate;
-  auto internalFilter = FILTER_FO;
-  auto internalCutoff = std::max((rate + 3) / 6, 1);
+  const auto internalFilter = FILTER_PT1;
+  const auto internalCutoff = std::max((rate + 2) / 5, 1);
 
   _temperatureFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
   _pressureFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);

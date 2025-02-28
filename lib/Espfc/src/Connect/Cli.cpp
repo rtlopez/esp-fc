@@ -560,11 +560,17 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("pid_level_p"), &c.pid[FC_PID_LEVEL].P),
     Param(PSTR("pid_level_i"), &c.pid[FC_PID_LEVEL].I),
     Param(PSTR("pid_level_d"), &c.pid[FC_PID_LEVEL].D),
+    Param(PSTR("pid_level_f"), &c.pid[FC_PID_LEVEL].F),
 
     Param(PSTR("pid_level_angle_limit"), &c.level.angleLimit),
     Param(PSTR("pid_level_rate_limit"), &c.level.rateLimit),
     Param(PSTR("pid_level_lpf_type"), &c.level.ptermFilter.type, filterTypeChoices),
     Param(PSTR("pid_level_lpf_freq"), &c.level.ptermFilter.freq),
+
+    Param(PSTR("pid_althold_vel_p"), &c.pid[FC_PID_VEL].P),
+    Param(PSTR("pid_althold_vel_i"), &c.pid[FC_PID_VEL].I),
+    Param(PSTR("pid_althold_vel_d"), &c.pid[FC_PID_VEL].D),
+    Param(PSTR("pid_althold_vel_f"), &c.pid[FC_PID_VEL].F),
 
     Param(PSTR("pid_yaw_lpf_type"), &c.yaw.filter.type, filterTypeChoices),
     Param(PSTR("pid_yaw_lpf_freq"), &c.yaw.filter.freq),

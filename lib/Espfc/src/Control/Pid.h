@@ -23,8 +23,9 @@ constexpr float LEVEL_DTERM_SCALE = 0.001f;  // 1/1000
 constexpr float LEVEL_FTERM_SCALE = 0.001f;  // 1/1000
 
 constexpr float VEL_PTERM_SCALE = 0.001f;
-constexpr float VEL_ITERM_SCALE = 0.01f;
-constexpr float VEL_DTERM_SCALE = 0.00001f;
+constexpr float VEL_ITERM_SCALE = 0.0025f;
+constexpr float VEL_DTERM_SCALE = 0.00005f;
+constexpr float VEL_FTERM_SCALE = 0.001f;
 
 enum ItermRelaxType {
   ITERM_RELAX_OFF,
@@ -83,6 +84,7 @@ public:
   float prevError;
   float prevSetpoint;
 
+  bool ftermDerivative;
   bool outputSaturated;
   int8_t itermRelax;
   float itermRelaxFactor;

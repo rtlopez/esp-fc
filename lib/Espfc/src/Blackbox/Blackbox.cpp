@@ -324,6 +324,7 @@ void FAST_CODE_ATTR Blackbox::updateMode()
   updateModeFlag(&rcModeActivationMask, BOXARM, _model.isSwitchActive(MODE_ARMED));
   updateModeFlag(&rcModeActivationMask, BOXANGLE, _model.isSwitchActive(MODE_ANGLE));
   updateModeFlag(&rcModeActivationMask, BOXAIRMODE, _model.isSwitchActive(MODE_AIRMODE));
+  updateModeFlag(&rcModeActivationMask, BOXANTIGRAVITY, _model.isSwitchActive(MODE_ALTHOLD));
   updateModeFlag(&rcModeActivationMask, BOXFAILSAFE, _model.isSwitchActive(MODE_FAILSAFE));
   updateModeFlag(&rcModeActivationMask, BOXBLACKBOX, _model.isSwitchActive(MODE_BLACKBOX));
   updateModeFlag(&rcModeActivationMask, BOXBLACKBOXERASE, _model.isSwitchActive(MODE_BLACKBOX_ERASE));

@@ -24,6 +24,10 @@ class Controller
     float calcualteAltHoldSetpoint() const;
 
   private:
+    void beginAltHold();
+    void beginInnerLoop(size_t axis);
+    void beginOuterLoop(size_t axis);
+
     Model& _model;
     Rates _rates;
     Utils::Filter _speedFilter;

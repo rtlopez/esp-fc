@@ -70,14 +70,15 @@ int FAST_CODE_ATTR Fusion::update()
         break;
       }
 
-      _model.state.accel.world = _model.state.accel.adc.getRotated(_model.state.attitude.quaternion);
+      //_model.state.accel.world = _model.state.accel.adc.getRotated(_model.state.attitude.quaternion);
+      _model.state.accel.world = VectorFloat(0.f, 0.f, 1.f).getRotated(_model.state.attitude.quaternion);
     }
 
-    if(_model.config.debug.mode == DEBUG_AC_ERROR)
+    if(_model.config.debug.mode == DEBUG_ACCELEROMETER)
     {
-      _model.state.debug[0] = lrintf(_model.state.accel.world[0] * ACCEL_G_INV * 1000);
-      _model.state.debug[1] = lrintf(_model.state.accel.world[1] * ACCEL_G_INV * 1000);
-      _model.state.debug[2] = lrintf(_model.state.accel.world[2] * ACCEL_G_INV * 1000);
+      _model.state.debug[3] = lrintf(_model.state.accel.world[0] * 2048);
+      _model.state.debug[4] = lrintf(_model.state.accel.world[1] * 2048);
+      _model.state.debug[5] = lrintf(_model.state.accel.world[2] * 2048);
     }
 
     if(_model.config.debug.mode == DEBUG_AC_CORRECTION)
