@@ -45,12 +45,11 @@ failsafePhase_e failsafePhase()
   return (failsafePhase_e)(*_model_ptr).state.failsafe.phase;
 }
 
-static uint32_t activeFeaturesLatch = 0;
 static uint32_t enabledSensors = 0;
 
 bool featureIsEnabled(uint32_t mask)
 {
-  return activeFeaturesLatch & mask;
+  return featureConfigMutable()->enabledFeatures & mask;
 }
 
 void sensorsSet(uint32_t mask)

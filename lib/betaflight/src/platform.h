@@ -10,6 +10,7 @@
 #define USE_ITERM_RELAX
 #define USE_DSHOT_TELEMETRY
 #define USE_RPM_FILTER
+#define USE_GPS
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -993,6 +994,38 @@ int16_t getMotorOutputLow();
 int16_t getMotorOutputHigh();
 uint16_t getDshotErpm(uint8_t i);
 /* FAILSAFE END */
+
+typedef enum {
+    GPS_LATITUDE,
+    GPS_LONGITUDE
+} gpsCoordinateType_e;
+
+/* LLH Location in NEU axis system */
+typedef struct gpsLocation_s {
+    int32_t lat;                    // latitude * 1e+7
+    int32_t lon;                    // longitude * 1e+7
+    int32_t altCm;                  // altitude in 0.01m
+} gpsLocation_t;
+
+typedef struct gpsSolutionData_s {
+    gpsLocation_t llh;
+    uint16_t speed3d;              // speed in 0.1m/s
+    uint16_t groundSpeed;           // speed in 0.1m/s
+    uint16_t groundCourse;          // degrees * 10
+    uint16_t hdop;                  // generic HDOP value (*100)
+    uint8_t numSat;
+} gpsSolutionData_t;
+
+typedef struct gpsConfig_s {
+    uint8_t provider;
+    bool gps_set_home_point_once;
+    bool gps_use_3d_speed;
+} gpsConfig_t;
+
+PG_DECLARE(gpsConfig_t, gpsConfig);
+
+extern int32_t GPS_home[2];
+extern gpsSolutionData_t gpsSol;
 
 #define PARAM_NAME_GYRO_HARDWARE_LPF "gyro_hardware_lpf"
 #define PARAM_NAME_GYRO_LPF1_TYPE "gyro_lpf1_type"

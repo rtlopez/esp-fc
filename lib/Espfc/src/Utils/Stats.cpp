@@ -131,6 +131,7 @@ const char * Stats::getName(StatCounter c) const
     case COUNTER_MAG_READ:     return PSTR(" mag_r");
     case COUNTER_MAG_FILTER:   return PSTR(" mag_f");
     case COUNTER_BARO:         return PSTR("baro_p");
+    case COUNTER_GPS_READ:     return PSTR(" gps_r");
     case COUNTER_IMU_FUSION:   return PSTR(" imu_p");
     case COUNTER_IMU_FUSION2:  return PSTR(" imu_c");
     case COUNTER_OUTER_PID:    return PSTR(" pid_o");

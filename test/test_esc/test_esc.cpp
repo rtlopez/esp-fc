@@ -1,10 +1,6 @@
 #include <unity.h>
 #include <ArduinoFake.h>
 #include <EscDriver.h>
-#include <helper_3dmath.h>
-#include <Kalman.h>
-#include "msp/msp_protocol.h"
-#include <printf.h>
 
 void test_esc_dshot_encode()
 {

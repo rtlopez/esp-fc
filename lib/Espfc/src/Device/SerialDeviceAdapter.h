@@ -15,10 +15,11 @@ class SerialDeviceAdapter: public SerialDevice
 {
   public:
     SerialDeviceAdapter(T& dev): _dev(dev) {}
-    virtual void begin(const SerialDeviceConfig& conf) { targetSerialInit(_dev, conf); }
-    virtual int available() { return _dev.available(); }
-    virtual int read() { return _dev.read(); }
-    virtual size_t readMany(uint8_t * c, size_t l) {
+    void begin(const SerialDeviceConfig& conf) override { targetSerialInit(_dev, conf); }
+    void updateBaudRate(int baud) override { _dev.updateBaudRate(baud); };
+    int available() override { return _dev.available(); }
+    int read() override { return _dev.read(); }
+    size_t readMany(uint8_t * c, size_t l) override {
 #if defined(ARCH_RP2040)
       size_t count = std::min(l, (size_t)available());
       for(size_t i = 0; i < count; i++)
@@ -30,14 +31,14 @@ class SerialDeviceAdapter: public SerialDevice
       return _dev.read(c, l);
 #endif
     }
-    virtual int peek() { return _dev.peek(); }
-    virtual void flush() { _dev.flush(); }
-    virtual size_t write(uint8_t c) { return _dev.write(c); }
-    virtual size_t write(const uint8_t * c, size_t l) { return _dev.write(c, l); }
-    virtual bool isSoft() const { return false; };
-    virtual int availableForWrite() { return _dev.availableForWrite(); }
-    virtual bool isTxFifoEmpty() { return _dev.availableForWrite() >= SERIAL_TX_FIFO_SIZE; }
-    virtual operator bool() const { return (bool)_dev; }
+    int peek() override { return _dev.peek(); }
+    void flush() override { _dev.flush(); }
+    size_t write(uint8_t c) override { return _dev.write(c); }
+    size_t write(const uint8_t * c, size_t l) override { return _dev.write(c, l); }
+    bool isSoft() const override { return false; };
+    int availableForWrite() override { return _dev.availableForWrite(); }
+    bool isTxFifoEmpty() override { return _dev.availableForWrite() >= SERIAL_TX_FIFO_SIZE; }
+    operator bool() const override { return (bool)_dev; }
   private:
     T& _dev;
 };
@@ -60,6 +61,31 @@ inline bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 {
   return true;
 }
+
+template<>
+inline void SerialDeviceAdapter<WiFiClient>::updateBaudRate(int baud) {}
+
+#endif
+
+#if defined(ESP32C3) || defined(ESP32S3)
+template<>
+inline void SerialDeviceAdapter<HWCDC>::updateBaudRate(int baud) {}
+#endif
+
+#if defined(ESP32S2)
+template<>
+inline void SerialDeviceAdapter<USBCDC>::updateBaudRate(int baud) {}
+#endif
+
+#if defined(ARCH_RP2040)
+template<>
+inline void SerialDeviceAdapter<SerialUART>::updateBaudRate(int baud)
+{
+  _dev.begin(baud);
+}
+
+template<>
+inline void SerialDeviceAdapter<SerialUSB>::updateBaudRate(int baud) {}
 #endif
 
 }

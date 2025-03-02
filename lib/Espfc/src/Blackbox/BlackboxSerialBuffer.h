@@ -22,45 +22,47 @@ class BlackboxSerialBuffer: public Device::SerialDevice
       _data = nullptr;
     }
 
-    virtual void wrap(Espfc::Device::SerialDevice * s)
+    void updateBaudRate(int baud) override { };
+
+    void wrap(Espfc::Device::SerialDevice * s)
     {
       _dev = s;
       _data = new uint8_t[SIZE];
     }
 
-    virtual void begin(const Espfc::SerialDeviceConfig& conf)
+    void begin(const Espfc::SerialDeviceConfig& conf) override
     {
       //_dev->begin(conf);
     }
 
-    virtual size_t write(uint8_t c)
+    size_t write(uint8_t c) override
     {
       _data[_idx++] = c;
       if(_idx >= SIZE) flush();
       return 1;
     }
 
-    virtual void flush()
+    void flush() override
     {
       if(_dev) _dev->write(_data, _idx);
       _idx = 0;
     }
 
-    virtual int availableForWrite()
+    int availableForWrite() override
     {
       //return _dev->availableForWrite();
       return SIZE - _idx;
     }
 
-    virtual bool isTxFifoEmpty()
+    bool isTxFifoEmpty() override
     {
       //return _dev->isTxFifoEmpty();
       return _idx == 0;
     }
 
-    virtual int available() { return _dev->available(); }
-    virtual int read() { return _dev->read(); }
-    virtual size_t readMany(uint8_t * c, size_t l) {
+    int available() override { return _dev->available(); }
+    int read() override { return _dev->read(); }
+    size_t readMany(uint8_t * c, size_t l) override {
 #if defined(ARCH_RP2040)
       size_t count = std::min(l, (size_t)available());
       for(size_t i = 0; i < count; i++)
@@ -72,9 +74,9 @@ class BlackboxSerialBuffer: public Device::SerialDevice
       return _dev->readMany(c, l);
 #endif
     }
-    virtual int peek() { return _dev->peek(); }
+    int peek() override { return _dev->peek(); }
 
-    virtual size_t write(const uint8_t * c, size_t l)
+    size_t write(const uint8_t * c, size_t l) override
     {
       for(size_t i = 0; i < l; i++)
       {
@@ -82,9 +84,8 @@ class BlackboxSerialBuffer: public Device::SerialDevice
       }
       return l;
     }
-    virtual bool isSoft() const { return false; };
-    virtual operator bool() const { return (bool)(*_dev); }
-
+    bool isSoft() const override { return false; };
+    operator bool() const override { return (bool)(*_dev); }
 
     Device::SerialDevice * _dev;
     size_t _idx;

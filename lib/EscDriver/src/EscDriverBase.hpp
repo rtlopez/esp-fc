@@ -55,6 +55,9 @@ class EscDriverBase
     static uint32_t convertToErpm(uint32_t value);
     static uint32_t convertToValue(uint32_t value);
 
+    static const char * const * getProtocolNames();
+    static const char * const getProtocolName(EscProtocol protocol);
+
 #if defined(UNIT_TEST)
     int begin(const EscConfig& conf) { return 1; }
     void end() {}

@@ -21,6 +21,8 @@
 
 #define ESPFC_SERIAL_DEBUG_PORT 0
 #define ESPFC_BUZZER_PIN -1
+#define ESPFC_BUTTON_PIN -1
+#define ESPFC_LED_PIN -1
 
 inline void targetReset()
 {

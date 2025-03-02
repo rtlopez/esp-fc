@@ -210,6 +210,7 @@ enum Feature {
   FEATURE_RX_SERIAL  = 1 << 3,
   FEATURE_MOTOR_STOP = 1 << 4,
   FEATURE_SOFTSERIAL = 1 << 6,
+  FEATURE_GPS        = 1 << 7,
   FEATURE_TELEMETRY  = 1 << 10,
   FEATURE_AIRMODE    = 1 << 22,
   FEATURE_RX_SPI     = 1 << 25,
@@ -256,7 +257,9 @@ enum PinFunction {
 #if ESPFC_OUTPUT_COUNT > 7
   PIN_OUTPUT_7,
 #endif
+  PIN_BUTTON,
   PIN_BUZZER,
+  PIN_LED_BLINK,
 #ifdef ESPFC_SERIAL_0
   PIN_SERIAL_0_TX,
   PIN_SERIAL_0_RX,
@@ -656,6 +659,17 @@ struct VtxConfig
   uint8_t lowPowerDisarm = 0;
 };
 
+struct GpsConfig
+{
+  uint8_t minSats = 8;
+  uint8_t setHomeOnce = 1;
+};
+
+struct LedConfig
+{
+  uint8_t invert = 0;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -671,6 +685,7 @@ class ModelConfig
     VBatConfig vbat;
     IBatConfig ibat;
     VtxConfig vtx;
+    GpsConfig gps;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
     ScalerConfig scaler[SCALER_COUNT];
@@ -693,7 +708,6 @@ class ModelConfig
     DtermConfig dterm;
     ItermConfig iterm;
     ControllerConfig controller;
-
     // hardware
     int8_t pin[PIN_COUNT] = {
 #ifdef ESPFC_INPUT
@@ -715,7 +729,9 @@ class ModelConfig
 #if ESPFC_OUTPUT_COUNT > 7
       [PIN_OUTPUT_7] = ESPFC_OUTPUT_7,
 #endif
+      [PIN_BUTTON] = ESPFC_BUTTON_PIN,
       [PIN_BUZZER] = ESPFC_BUZZER_PIN,
+      [PIN_LED_BLINK] = ESPFC_LED_PIN,
 #ifdef ESPFC_SERIAL_0
       [PIN_SERIAL_0_TX] = ESPFC_SERIAL_0_TX,
       [PIN_SERIAL_0_RX] = ESPFC_SERIAL_0_RX,
@@ -742,8 +758,6 @@ class ModelConfig
       [PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK,
       [PIN_SPI_0_MOSI] = ESPFC_SPI_0_MOSI,
       [PIN_SPI_0_MISO] = ESPFC_SPI_0_MISO,
-#endif
-#ifdef ESPFC_SPI_0
       [PIN_SPI_CS0] = ESPFC_SPI_CS_GYRO,
       [PIN_SPI_CS1] = ESPFC_SPI_CS_BARO,
       [PIN_SPI_CS2] = -1,
@@ -766,6 +780,8 @@ class ModelConfig
       [SERIAL_SOFT_0] = { .id = SERIAL_ID_SOFTSERIAL_1, .functionMask = ESPFC_SERIAL_SOFT_0_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
 #endif
     };
+
+    LedConfig led;
     BuzzerConfig buzzer;
     WirelessConfig wireless;
 

@@ -2,6 +2,7 @@
 #include "Device/SerialDeviceAdapter.h"
 #include "Debug_Espfc.h"
 
+// TODO: move to target
 #ifdef ESPFC_SERIAL_0
   static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_0_DEV_T> _uart0(ESPFC_SERIAL_0_DEV);
 #endif
@@ -20,27 +21,22 @@
 
 namespace Espfc {
 
-SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _msp(model), _cli(model), _vtx(model),
+SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _current(0), _msp(model), _cli(model), _vtx(model),
+  _telemetry(telemetry), _gps(model)
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
-_wireless(model),
+  , _wireless(model)
 #endif
-_telemetry(telemetry), _current(0) {}
+{}
 
 int SerialManager::begin()
 {
   for(int i = 0; i < SERIAL_UART_COUNT; i++)
   {
     Device::SerialDevice * port = getSerialPortById((SerialPort)i);
-    if(!port)
-    {
-      //D("uart-no-port", i, (bool)port);
-      continue;
-    }
-
     const SerialPortConfig& spc = _model.config.serial[i];
-    if(!spc.functionMask)
+
+    if(!port || !spc.functionMask)
     {
-      //D("uart-no-func", i, spc.id, spc.functionMask, spc.baud);
       continue;
     }
 
@@ -63,7 +59,6 @@ int SerialManager::begin()
       sdc.rx_pin = _model.config.pin[pin_idx + PIN_SERIAL_0_RX];
       if(sdc.tx_pin == -1 && sdc.rx_pin == -1)
       {
-        //D("uart-no-pins", i, spc.id, spc.functionMask, spc.baud);
         continue;
       }
     }
@@ -119,19 +114,13 @@ int SerialManager::begin()
 
     if(!sdc.baud)
     {
-      //D("uart-no-baud", i, spc.id, spc.functionMask, spc.baud);
       continue;
     }
 
-    //if(true || !isUsbPort) {
-      //D("uart-flush", i, spc.id, spc.functionMask, spc.baud);
-      //port->flush();
-      //delay(10);
-    //}
-
-    //D("uart-begin", i, spc.id, spc.functionMask, spc.baud, sdc.tx_pin, sdc.rx_pin);
     port->begin(sdc);
-    if (spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO) {
+
+    if (spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
+    {
       _vtx.begin(port);
     }
   
@@ -139,6 +128,15 @@ int SerialManager::begin()
     if(i == ESPFC_SERIAL_DEBUG_PORT)
     {
       initDebugStream(port);
+    }
+
+    if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
+    {
+      _ibus.begin(port);
+    }
+    else if(spc.functionMask & SERIAL_FUNCTION_GPS)
+    {
+      _gps.begin(port, sdc.baud);
     }
 
     _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(i == ESPFC_SERIAL_DEBUG_PORT).log(sdc.tx_pin).logln(sdc.rx_pin);
@@ -153,62 +151,32 @@ int SerialManager::begin()
 
 int FAST_CODE_ATTR SerialManager::update()
 {
-  SerialPortState& ss = _model.state.serial[_current];
   const SerialPortConfig& sc = _model.config.serial[_current];
-  Device::SerialDevice * stream = ss.stream;
+  SerialPortState& ss = _model.state.serial[_current];
 
-  bool serialRx = sc.functionMask & SERIAL_FUNCTION_RX_SERIAL;
-  if(stream)
+  if(ss.stream && !(sc.functionMask & SERIAL_FUNCTION_RX_SERIAL))
   {
-    if(!serialRx)
+    Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
+    if (sc.functionMask & SERIAL_FUNCTION_MSP)
     {
-      Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
-      size_t len = stream->available();
-      if(len > 0)
-      {
-        uint8_t buff[64] = {0};
-        len = std::min(len, (size_t)sizeof(buff));
-        stream->readMany(buff, len);
-        char * c = (char*)&buff[0];
-        while(len--)
-        {
-          if(sc.functionMask & SERIAL_FUNCTION_MSP)
-          {
-            bool consumed = _msp.parse(*c, ss.mspRequest);
-            if(consumed)
-            {
-              if(ss.mspRequest.isReady() && ss.mspRequest.isCmd())
-              {
-                _msp.processCommand(ss.mspRequest, ss.mspResponse, *stream);
-                _msp.sendResponse(ss.mspResponse, *stream);
-                _msp.postCommand();
-                ss.mspRequest = Connect::MspMessage();
-                ss.mspResponse = Connect::MspResponse();
-              }
-            }
-            else
-            {
-              _cli.process(*c, ss.cliCmd, *stream);
-            }
-          }
-          c++;
-        }
-      }
+      processMsp(ss);
     }
     if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
     {
-      _telemetry.process(*stream, TELEMETRY_PROTOCOL_TEXT);
+      _telemetry.process(*ss.stream, TELEMETRY_PROTOCOL_TEXT);
     }
-  }
-
-  if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
-  {
-    _ibus.update();
-  }
-
-  if(sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
-  {
-    _vtx.update();
+    if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
+    {
+      _ibus.update();
+    }
+    if(sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
+    {
+      _vtx.update();
+    }
+    if(sc.functionMask & SERIAL_FUNCTION_GPS)
+    {
+      _gps.update();
+    }
   }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
@@ -221,6 +189,37 @@ int FAST_CODE_ATTR SerialManager::update()
   next();
 
   return 1;
+}
+
+void SerialManager::processMsp(SerialPortState& ss)
+{
+  size_t len = ss.stream->available();
+  if(!len) return;
+
+  uint8_t buff[64] = {0};
+  len = std::min(len, (size_t)sizeof(buff));
+  ss.stream->readMany(buff, len);
+  char * c = (char*)&buff[0];
+  while(len--)
+  {
+    bool consumed = _msp.parse(*c, ss.mspRequest);
+    if(consumed)
+    {
+      if(ss.mspRequest.isReady() && ss.mspRequest.isCmd())
+      {
+        _msp.processCommand(ss.mspRequest, ss.mspResponse, *ss.stream);
+        _msp.sendResponse(ss.mspResponse, *ss.stream);
+        _msp.postCommand();
+        ss.mspRequest = Connect::MspMessage();
+        ss.mspResponse = Connect::MspResponse();
+      }
+    }
+    else
+    {
+      _cli.process(*c, ss.cliCmd, *ss.stream);
+    }
+    c++;
+  }
 }
 
 Device::SerialDevice * SerialManager::getSerialPortById(SerialPort portId)

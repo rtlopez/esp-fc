@@ -1,4 +1,5 @@
 #include "Espfc.h"
+#include "Hal/Gpio.h"
 #include "Debug_Espfc.h"
 
 namespace Espfc {
@@ -18,6 +19,8 @@ int Espfc::load()
 
 int Espfc::begin()
 {
+  _model.state.led.begin(_model.config.pin[PIN_LED_BLINK], _model.config.led.invert);
+
   _serial.begin();      // requires _model.load()
   //_model.logStorageResult();
   _hardware.begin();    // requires _model.load()
@@ -29,6 +32,7 @@ int Espfc::begin()
   _controller.begin();
   _blackbox.begin();    // requires _serial.begin(), _actuator.begin()
   _buzzer.begin();
+
   _model.state.buzzer.push(BUZZER_SYSTEM_INIT);
 
   return 1;
@@ -58,10 +62,6 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
     _actuator.update();
   }
 
-  _serial.update();
-  _buzzer.update();
-  _model.state.stats.update();
-
 #else
 
   _sensor.update();
@@ -84,10 +84,12 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   }
   _sensor.updateDelayed();
 
+#endif
+
   _serial.update();
   _buzzer.update();
+  _model.state.led.update();
   _model.state.stats.update();
-#endif
 
   return 1;
 }
