@@ -97,7 +97,6 @@ int SerialManager::begin()
     else if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
     {
       sdc.baud = 115200;
-      _ibus.begin(port);
     }
     else if(spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
     {
@@ -107,34 +106,27 @@ int SerialManager::begin()
       sdc.data_bits = 8;
     }
 
-    /*if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY)
-    {
-      sdc.baud = 420000ul;
-    }*/
-
     if(!sdc.baud)
     {
       continue;
     }
 
-    port->begin(sdc);
-
-    if (spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
-    {
-      _vtx.begin(port);
-    }
-  
+    port->begin(sdc);   
     _model.state.serial[i].stream = port;
+
     if(i == ESPFC_SERIAL_DEBUG_PORT)
     {
       initDebugStream(port);
     }
-
     if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
     {
       _ibus.begin(port);
     }
-    else if(spc.functionMask & SERIAL_FUNCTION_GPS)
+    if(spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
+    {
+      _vtx.begin(port);
+    }
+    if(spc.functionMask & SERIAL_FUNCTION_GPS)
     {
       _gps.begin(port, sdc.baud);
     }
