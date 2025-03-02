@@ -309,19 +309,19 @@ void Controller::beginOuterLoop(size_t axis)
 
 void Controller::beginAltHold()
 {
+  float itermCenter = std::clamp((int)_model.config.altHold.itermCenter, 10, 60) * 0.01f;
+  float itermRange = itermCenter * std::clamp((int)_model.config.altHold.itermRange, 10, 60) * 0.01f;
   PidConfig& pc = _model.config.pid[FC_PID_VEL];
   Pid& pid = _model.state.innerPid[AXIS_THRUST];
   pid.Kp = (float)pc.P * VEL_PTERM_SCALE;
   pid.Ki = (float)pc.I * VEL_ITERM_SCALE;
   pid.Kd = (float)pc.D * VEL_DTERM_SCALE;
   pid.Kf = (float)pc.F * VEL_FTERM_SCALE;
-  pid.iLimitLow = -0.5f;
-  pid.iLimitHigh = 0.5f;
-  pid.iReset = -0.5f;
-  pid.oLimitLow = -1.0f;
-  pid.oLimitHigh = 1.0f;
+  pid.iLimitLow  = -1.0f + 2.0f * (itermCenter - itermRange);
+  pid.iLimitHigh = -1.0f + 2.0f * (itermCenter + itermRange);
+  pid.iReset = pid.iLimitLow;
   pid.rate = _model.state.loopTimer.rate;
-  pid.dtermFilter.begin(FilterConfig(FILTER_PT1, 20), _model.state.loopTimer.rate);
+  pid.dtermFilter.begin(FilterConfig(FILTER_PT1, 10), _model.state.loopTimer.rate);
   pid.ftermDerivative = false;
   pid.begin();
 }

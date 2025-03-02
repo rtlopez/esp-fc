@@ -72,6 +72,9 @@ int FAST_CODE_ATTR Fusion::update()
 
       //_model.state.accel.world = _model.state.accel.adc.getRotated(_model.state.attitude.quaternion);
       _model.state.accel.world = VectorFloat(0.f, 0.f, 1.f).getRotated(_model.state.attitude.quaternion);
+
+      const Quaternion& q = _model.state.attitude.quaternion;
+      _model.state.attitude.cosTheta = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
     }
 
     if(_model.config.debug.mode == DEBUG_ACCELEROMETER)
@@ -79,6 +82,7 @@ int FAST_CODE_ATTR Fusion::update()
       _model.state.debug[3] = lrintf(_model.state.accel.world[0] * 2048);
       _model.state.debug[4] = lrintf(_model.state.accel.world[1] * 2048);
       _model.state.debug[5] = lrintf(_model.state.accel.world[2] * 2048);
+      _model.state.debug[6] = lrintf(_model.state.attitude.cosTheta * 1000.f);
     }
 
     if(_model.config.debug.mode == DEBUG_AC_CORRECTION)

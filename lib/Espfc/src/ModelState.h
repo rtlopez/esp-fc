@@ -306,6 +306,7 @@ struct AttitudeState
   Utils::Filter filter[AXIS_COUNT_RPY];
   VectorFloat euler;
   Quaternion quaternion;
+  float cosTheta;
 };
 
 struct SetpointState

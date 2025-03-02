@@ -1497,7 +1497,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_DEBUG:
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 8; i++) {
         r.writeU16(_model.state.debug[i]);
       }
       break;

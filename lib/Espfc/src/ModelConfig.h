@@ -640,6 +640,12 @@ struct LevelConfig
   int16_t rateLimit = 300;
 };
 
+struct AltHoldConfig
+{
+  uint8_t itermCenter = 50;
+  uint8_t itermRange = 50;
+};
+
 struct MixerConfiguration
 {
   int8_t type = FC_MIXER_QUADX;
@@ -709,6 +715,7 @@ class ModelConfig
     LevelConfig level;
     DtermConfig dterm;
     ItermConfig iterm;
+    AltHoldConfig altHold;
     ControllerConfig controller;
     // hardware
     int8_t pin[PIN_COUNT] = {
@@ -837,12 +844,17 @@ class ModelConfig
 
     void devPreset()
     {
-#ifdef ESPFC_DEV_PRESET_BLACKBOX
+#ifdef ESPFC_DEV_PRESET_BLACKBOX_SERIAL
       blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
       debug.mode = DEBUG_GYRO_SCALED;
-      serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
-      serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;
-      serial[ESPFC_DEV_PRESET_BLACKBOX].baud = SERIAL_SPEED_250000;
+      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].functionMask |= SERIAL_FUNCTION_BLACKBOX;
+      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].blackboxBaud = SERIAL_SPEED_250000;
+      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].baud = SERIAL_SPEED_250000;
+#endif
+
+#ifdef ESPFC_DEV_PRESET_BLACKBOX_FLASH
+      blackbox.dev = BLACKBOX_DEV_FLASH; // flash
+      blackbox.pDenom = 16; // 500Hz
 #endif
 
 #ifdef ESPFC_DEV_PRESET_MODES
@@ -853,19 +865,26 @@ class ModelConfig
       conditions[0].logicMode = 0;
       conditions[0].linkId = 0;
 
-      conditions[1].id = MODE_ANGLE;
+      conditions[1].id = MODE_AIRMODE;
       conditions[1].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[1].min = 1700;
+      conditions[1].min = 1300;
       conditions[1].max = 2100;
       conditions[1].logicMode = 0;
       conditions[1].linkId = 0;
 
-      conditions[2].id = MODE_AIRMODE;
-      conditions[2].ch = AXIS_AUX_1 + 0; // aux1
+      conditions[2].id = MODE_ANGLE;
+      conditions[2].ch = AXIS_AUX_1 + 1; // aux2
       conditions[2].min = 1300;
       conditions[2].max = 2100;
       conditions[2].logicMode = 0;
       conditions[2].linkId = 0;
+
+      conditions[3].id = MODE_ALTHOLD;
+      conditions[3].ch = AXIS_AUX_1 + 1; // aux2
+      conditions[3].min = 1700;
+      conditions[3].max = 2100;
+      conditions[3].logicMode = 0;
+      conditions[3].linkId = 0;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_SCALER
@@ -879,6 +898,12 @@ class ModelConfig
 
 #ifdef ESPFC_DEV_PRESET_DSHOT
       output.protocol = ESC_PROTOCOL_DSHOT300;
+#endif
+
+#ifdef ESPFC_DEV_PRESET_BRUSHED
+      output.protocol = ESC_PROTOCOL_BRUSHED;
+      output.async = true;
+      output.rate = 3000;
 #endif
     }
 
