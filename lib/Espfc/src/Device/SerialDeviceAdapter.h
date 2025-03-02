@@ -16,7 +16,7 @@ class SerialDeviceAdapter: public SerialDevice
   public:
     SerialDeviceAdapter(T& dev): _dev(dev) {}
     void begin(const SerialDeviceConfig& conf) override { targetSerialInit(_dev, conf); }
-    void updateBadRate(int baud) override { _dev.updateBaudRate(baud); };
+    void updateBaudRate(int baud) override { _dev.updateBaudRate(baud); };
     int available() override { return _dev.available(); }
     int read() override { return _dev.read(); }
     size_t readMany(uint8_t * c, size_t l) override {
@@ -63,29 +63,29 @@ inline bool SerialDeviceAdapter<WiFiClient>::isTxFifoEmpty()
 }
 
 template<>
-inline void SerialDeviceAdapter<WiFiClient>::updateBadRate(int baud) {}
+inline void SerialDeviceAdapter<WiFiClient>::updateBaudRate(int baud) {}
 
 #endif
 
 #if defined(ESP32C3) || defined(ESP32S3)
 template<>
-inline void SerialDeviceAdapter<HWCDC>::updateBadRate(int baud) {}
+inline void SerialDeviceAdapter<HWCDC>::updateBaudRate(int baud) {}
 #endif
 
 #if defined(ESP32S2)
 template<>
-inline void SerialDeviceAdapter<USBCDC>::updateBadRate(int baud) {}
+inline void SerialDeviceAdapter<USBCDC>::updateBaudRate(int baud) {}
 #endif
 
 #if defined(ARCH_RP2040)
 template<>
-inline void SerialDeviceAdapter<SerialUART>::updateBadRate(int baud)
+inline void SerialDeviceAdapter<SerialUART>::updateBaudRate(int baud)
 {
   _dev.begin(baud);
 }
 
 template<>
-inline void SerialDeviceAdapter<SerialUSB>::updateBadRate(int baud) {}
+inline void SerialDeviceAdapter<SerialUSB>::updateBaudRate(int baud) {}
 #endif
 
 }

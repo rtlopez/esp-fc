@@ -300,7 +300,7 @@ void GpsSensor::setBaud(int baud)
 {
   if(baud != _currentBaud)
   {
-    _port->updateBadRate(baud);
+    _port->updateBaudRate(baud);
     _currentBaud = baud;
     _model.logger.info().log(F("GPS BAUD")).logln(baud);
   }

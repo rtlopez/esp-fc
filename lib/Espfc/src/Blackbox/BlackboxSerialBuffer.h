@@ -22,7 +22,7 @@ class BlackboxSerialBuffer: public Device::SerialDevice
       _data = nullptr;
     }
 
-    void updateBadRate(int baud) override { };
+    void updateBaudRate(int baud) override { };
 
     void wrap(Espfc::Device::SerialDevice * s)
     {
