@@ -157,6 +157,8 @@ bool Actuator::canActivateMode(FlightMode mode)
       return _model.accelActive();
     case MODE_AIRMODE:
       return _model.state.mode.airmodeAllowed;
+    case MODE_ALTHOLD:
+      return _model.state.baro.dev;
     default:
       return true;
   }

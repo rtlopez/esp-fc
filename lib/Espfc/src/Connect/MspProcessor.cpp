@@ -275,13 +275,14 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_BOXNAMES:
-      r.writeString(F("ARM;ANGLE;AIRMODE;BEEPER;FAILSAFE;BLACKBOX;BLACKBOXERASE;"));
+      r.writeString(F("ARM;AIRMODE;ANGLE;ALTHOLD;BEEPER;FAILSAFE;BLACKBOX;BLACKBOXERASE;"));
       break;
 
     case MSP_BOXIDS:
       r.writeU8(MODE_ARMED);
-      r.writeU8(MODE_ANGLE);
       r.writeU8(MODE_AIRMODE);
+      r.writeU8(MODE_ANGLE);
+      r.writeU8(MODE_ALTHOLD);
       r.writeU8(MODE_BUZZER);
       r.writeU8(MODE_FAILSAFE);
       r.writeU8(MODE_BLACKBOX);
@@ -684,8 +685,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_ALTITUDE:
-      r.writeU32(lrintf(_model.state.baro.altitude * 100.f));    // alt [cm]
-      r.writeU16(0); // vario
+      r.writeU32(lrintf(_model.state.altitude.height * 100.f));  // alt [cm]
+      r.writeU16(lrintf(_model.state.altitude.vario * 100.f));   // vario [cm/s]
       break;
 
     case MSP_BEEPER_CONFIG:
@@ -1462,7 +1463,12 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
           disableRunawayTakeoff = m.readU8();
         }
         (void)disableRunawayTakeoff;
-        _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+#if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
+        (void)cmd;
+#warning "Danger macro used ESPFC_DEV_PRESET_UNSAFE_ARMING"
+#else
+      _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+#endif
         if (_model.isModeActive(MODE_ARMED)) _model.disarm(DISARM_REASON_ARMING_DISABLED);
       }
       break;
@@ -1491,7 +1497,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_DEBUG:
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 8; i++) {
         r.writeU16(_model.state.debug[i]);
       }
       break;

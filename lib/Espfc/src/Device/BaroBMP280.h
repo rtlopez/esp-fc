@@ -95,13 +95,13 @@ class BaroBMP280: public BaroDevice
       return BARO_BMP280;
     }
 
-    virtual float readTemperature() override
+    float readTemperature() override
     {
       float T = (_t_fine * 5 + 128) >> 8;
       return T * 0.01f;
     }
 
-    virtual float readPressure() override
+    float readPressure() override
     {
       readMesurment();
 
@@ -133,7 +133,7 @@ class BaroBMP280: public BaroDevice
 
       p = ((p + var1 + var2) >> 8) + (((int64_t)_cal.dig_P7) << 4);
 
-      return ((float)p) / 256.f;
+      return ((float)p) / 256.f; // Pa
     }
 
     void setMode(BaroDeviceMode mode)
@@ -141,7 +141,7 @@ class BaroBMP280: public BaroDevice
       (void)mode;
     }
 
-    virtual int getDelay(BaroDeviceMode mode) const override
+    int getDelay(BaroDeviceMode mode) const override
     {
       switch(mode)
       {

@@ -1,14 +1,6 @@
 #include <cmath>
 #include "Utils/Filter.h"
-#include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
-
-static inline float pt1Gain(float rate, float freq)
-{
-  float rc = 1.f / (2.f * Espfc::Utils::pi() * freq);
-  float dt = 1.f / rate;
-  return dt / (dt + rc);
-}
 
 namespace Espfc {
 

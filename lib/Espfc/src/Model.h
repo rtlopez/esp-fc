@@ -160,6 +160,7 @@ class Model
     {
 #if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
       return false;
+#warning "Danger macro used ESPFC_DEV_PRESET_UNSAFE_ARMING"
 #else
       return state.mode.armingDisabledFlags != 0;
 #endif
@@ -452,7 +453,6 @@ class Model
       const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
       const uint32_t inputFilterRate = state.input.timer.rate;
-      const uint32_t pidFilterRate = state.loopTimer.rate;
 
       // configure filters
       for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
@@ -476,7 +476,6 @@ class Model
         }
         state.gyro.filter2[i].begin(config.gyro.filter2, gyroFilterRate);
         state.gyro.filter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.accel.filter[i].begin(config.accel.filter, gyroFilterRate);
         state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / 3), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
         {
@@ -513,60 +512,8 @@ class Model
 
       state.buzzer.beeperMask = config.buzzer.beeperMask;
 
-      // configure PIDs
-      float pidScale[] = { 1.f, 1.f, 1.f };
-      if(config.mixer.type == FC_MIXER_GIMBAL)
-      {
-        pidScale[AXIS_YAW] = 0.2f; // ROBOT
-        pidScale[AXIS_PITCH] = 20.f; // ROBOT
-      }
-
-      for(size_t i = 0; i < AXIS_COUNT_RPY; i++) // rpy
-      {
-        const PidConfig& pc = config.pid[i];
-        Control::Pid& pid = state.innerPid[i];
-        pid.Kp = (float)pc.P * PTERM_SCALE * pidScale[i];
-        pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[i];
-        pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[i];
-        pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[i];
-        pid.iLimit = config.iterm.limit * 0.01f;
-        pid.oLimit = 0.66f;
-        pid.rate = state.loopTimer.rate;
-        pid.dtermNotchFilter.begin(config.dterm.notchFilter, pidFilterRate);
-        if(config.dterm.dynLpfFilter.cutoff > 0) {
-          pid.dtermFilter.begin(FilterConfig((FilterType)config.dterm.filter.type, config.dterm.dynLpfFilter.cutoff), pidFilterRate);
-        } else {
-          pid.dtermFilter.begin(config.dterm.filter, pidFilterRate);
-        }
-        pid.dtermFilter2.begin(config.dterm.filter2, pidFilterRate);
-        pid.ftermFilter.begin(config.input.filterDerivative, pidFilterRate);
-        pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, config.iterm.relaxCutoff), pidFilterRate);
-        if(i == AXIS_YAW) {
-          pid.itermRelax = config.iterm.relax == ITERM_RELAX_RPY || config.iterm.relax == ITERM_RELAX_RPY_INC ? config.iterm.relax : ITERM_RELAX_OFF;
-          pid.ptermFilter.begin(config.yaw.filter, pidFilterRate);
-        } else {
-          pid.itermRelax = config.iterm.relax;
-        }
-        pid.begin();
-      }
-
-      for(size_t i = 0; i < AXIS_COUNT_RP; i++)
-      {
-        PidConfig& pc = config.pid[FC_PID_LEVEL];
-        Control::Pid& pid = state.outerPid[i];
-        pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
-        pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
-        pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
-        pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
-        pid.iLimit = Utils::toRad(config.level.rateLimit) * 0.1f;
-        pid.oLimit = Utils::toRad(config.level.rateLimit);
-        pid.rate = state.loopTimer.rate;
-        pid.ptermFilter.begin(config.level.ptermFilter, pidFilterRate);
-        //pid.iLimit = 0.3f; // ROBOT
-        //pid.oLimit = 1.f;  // ROBOT
-        pid.begin();
-      }
       state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
+
       // override temporary
       //state.telemetryTimer.setRate(100);
     }

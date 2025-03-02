@@ -559,11 +559,19 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("pid_level_p"), &c.pid[FC_PID_LEVEL].P),
     Param(PSTR("pid_level_i"), &c.pid[FC_PID_LEVEL].I),
     Param(PSTR("pid_level_d"), &c.pid[FC_PID_LEVEL].D),
+    Param(PSTR("pid_level_f"), &c.pid[FC_PID_LEVEL].F),
 
     Param(PSTR("pid_level_angle_limit"), &c.level.angleLimit),
     Param(PSTR("pid_level_rate_limit"), &c.level.rateLimit),
     Param(PSTR("pid_level_lpf_type"), &c.level.ptermFilter.type, filterTypeChoices),
     Param(PSTR("pid_level_lpf_freq"), &c.level.ptermFilter.freq),
+
+    Param(PSTR("pid_althold_vel_p"), &c.pid[FC_PID_VEL].P),
+    Param(PSTR("pid_althold_vel_i"), &c.pid[FC_PID_VEL].I),
+    Param(PSTR("pid_althold_vel_d"), &c.pid[FC_PID_VEL].D),
+    Param(PSTR("pid_althold_vel_f"), &c.pid[FC_PID_VEL].F),
+    Param(PSTR("pid_althold_iterm_center"), &c.altHold.itermCenter),
+    Param(PSTR("pid_althold_iterm_range"), &c.altHold.itermRange),
 
     Param(PSTR("pid_yaw_lpf_type"), &c.yaw.filter.type, filterTypeChoices),
     Param(PSTR("pid_yaw_lpf_freq"), &c.yaw.filter.freq),
@@ -1380,6 +1388,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     else if(strcmp_P(cmd.args[1], PSTR("erase")) == 0)
     {
       flashfsEraseCompletely();
+      s.println("OK");
     }
     else if(strcmp_P(cmd.args[1], PSTR("test")) == 0)
     {
@@ -1387,6 +1396,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       flashfsWrite((const uint8_t*)data, strlen(data), true);
       flashfsFlushAsync(true);
       flashfsClose();
+      s.println("OK");
     }
     else if(strcmp_P(cmd.args[1], PSTR("print")) == 0)
     {

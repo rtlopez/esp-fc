@@ -242,7 +242,10 @@ struct BaroState
   float pressure;
   float altitudeRaw;
   float altitude;
+  float altitudeGround;
   float altitudeBias;
+  float altitudePrev;
+  float vario;
   int32_t altitudeBiasSamples;
 };
 
@@ -288,6 +291,8 @@ struct AccelState
   Utils::Filter filter[AXIS_COUNT_RPY];
   Utils::Timer timer;
 
+  VectorFloat world;
+
   float scale;
   VectorFloat bias;
   float biasAlpha;
@@ -301,6 +306,7 @@ struct AttitudeState
   Utils::Filter filter[AXIS_COUNT_RPY];
   VectorFloat euler;
   Quaternion quaternion;
+  float cosTheta;
 };
 
 struct SetpointState
@@ -319,6 +325,12 @@ struct ModeState
   uint32_t armingDisabledFlags;
   RescueConfigMode rescueConfigMode;
   bool airmodeAllowed;
+};
+
+struct AltitudeState
+{
+  float height;
+  float vario;
 };
 
 struct VtxState
@@ -460,6 +472,8 @@ struct ModelState
 
   AttitudeState attitude;
   RotationMatrixFloat boardAlignment;
+
+  AltitudeState altitude;
 
   SetpointState setpoint;
   Control::Pid innerPid[AXIS_COUNT_RPYT];
