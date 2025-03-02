@@ -71,6 +71,9 @@ int Vtx::update()
         _state = State::SET_POWER;
       }
       break;
+    case State::INACTIVE:
+    default:
+      break;
   }
 
   return 1;
@@ -89,7 +92,7 @@ int Vtx::setChannel()
 
 int Vtx::setPower()
 {
-  uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x05, 0x01, !_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED) ? _model.config.vtx.power - 1 : 0 };
+  uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x05, 0x01, (uint8_t)((!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? _model.config.vtx.power - 1 : 0) };
   vtxCommand[5] = crc8(vtxCommand, 5);
   _serial->write(dummyByte, 1);
   _serial->write(vtxCommand, 6);
