@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Arduino.h>
 #include <cstdint>
 
 #if defined(ARCH_RP2040)

@@ -319,6 +319,10 @@ struct ModeState
   uint32_t armingDisabledFlags;
   RescueConfigMode rescueConfigMode;
   bool airmodeAllowed;
+  uint32_t button;
+  bool isSingleClickActive() const { return button & (1 << 0); }
+  bool isDoubleClickActive() const { return button & (1 << 1); }
+  bool isLongClickActive()   const { return button & (1 << 2); }
 };
 
 struct VtxState
