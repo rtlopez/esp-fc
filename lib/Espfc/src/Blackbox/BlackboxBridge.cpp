@@ -84,7 +84,7 @@ int16_t getMotorOutputHigh()
 
 bool areMotorsRunning(void)
 {
-  return _model_ptr->areMotorsRunning();
+  return _model_ptr->areMotorsRunning() || _model_ptr->state.mode.isLongClickActive();
 }
 
 uint16_t getDshotErpm(uint8_t i)

@@ -12,7 +12,8 @@ int SensorManager::begin()
   _baro.begin();
   _voltage.begin();
   _fusion.begin();
-  
+  _button.begin(_model.config.pin[PIN_BUTTON]);
+
   return 1;
 }
 
@@ -29,6 +30,7 @@ int FAST_CODE_ATTR SensorManager::read()
   {
     _accel.update();
     _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
+    _model.state.mode.button = _button.update();
     return 1;
   }
 
@@ -80,6 +82,7 @@ int SensorManager::updateDelayed()
   if(_model.state.accel.timer.syncTo(_model.state.gyro.timer))
   {
     _accel.update();
+    _model.state.mode.button = _button.update();
     status = 1;
   }
 
