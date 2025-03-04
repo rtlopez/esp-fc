@@ -20,6 +20,7 @@
 
 #define ESPFC_WIFI
 #define ESPFC_ESPNOW
+#define ESPFC_LED_WS2812
 
 namespace Espfc {
 
