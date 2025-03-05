@@ -186,9 +186,9 @@ void FAST_CODE_ATTR Controller::innerLoop()
 
   if(_model.config.debug.mode == DEBUG_STACK)
   {
-    _model.state.debug[0] = std::clamp(lrintf(_model.state.setpoint.rate[AXIS_THRUST] * 1000.0f), -3000l, 3000l); // stack hi mem
-    _model.state.debug[1] = std::clamp(lrintf(_model.state.altitude.vario * 100.0f), -30000l, 30000l);            // stack lo mem
-    _model.state.debug[2] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -30000l, 30000l);           // stack curr
+    _model.state.debug[0] = std::clamp(lrintf(_model.state.setpoint.rate[AXIS_THRUST] * 1000.0f), -3000l, 3000l);   // stack hi mem
+    _model.state.debug[1] = std::clamp(lrintf(_model.state.altitude.vario * 1000.0f), -30000l, 30000l);             // stack lo mem
+    _model.state.debug[2] = std::clamp(lrintf(_model.state.altitude.height * 100.0f), -30000l, 30000l);             // stack curr
     _model.state.debug[3] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].error * 1000.0f), -30000l, 30000l); // stack p
     _model.state.debug[4] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].pTerm * 1000.0f), -3000l, 3000l);
     _model.state.debug[5] = std::clamp(lrintf(_model.state.innerPid[AXIS_THRUST].iTerm * 1000.0f), -3000l, 3000l);
@@ -214,7 +214,7 @@ float Controller::calcualteAltHoldSetpoint() const
 
   thrust = Utils::deadband(thrust, 0.1f); // +/- 12.5% deadband
 
-  return thrust * 2.0f; // climb/descend rate factor 2 m/s
+  return Utils::map3(thrust, -1.f, 0.f, 1.f, -2.0f, 0.f, 4.f); // climb rate 5ms, descend rate 2 m/s
 }
 
 float Controller::getTpaFactor() const

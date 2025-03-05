@@ -17,7 +17,7 @@ int BaroSensor::begin()
   const int rate = 1000000 / interval;
   const int biasSamples = 3 * rate;
   const auto internalFilter = FILTER_PT1;
-  const auto internalCutoff = std::max((rate + 2) / 5, 1);
+  const auto internalCutoff = std::max((rate + 4) / 8, 1);
 
   _temperatureFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
   _pressureFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);

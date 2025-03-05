@@ -276,8 +276,8 @@ void Cli::Param::write(ActuatorCondition& ac, const char ** args) const
   if(args[3]) ac.ch = String(args[3]).toInt();
   if(args[4]) ac.min = String(args[4]).toInt();
   if(args[5]) ac.max = String(args[5]).toInt();
-  if(args[6]) ac.max = String(args[6]).toInt();
-  if(args[7]) ac.max = String(args[7]).toInt();
+  if(args[6]) ac.logicMode = String(args[6]).toInt();
+  if(args[7]) ac.linkId = String(args[7]).toInt();
 }
 
 void Cli::Param::write(MixerEntry& ac, const char ** args) const

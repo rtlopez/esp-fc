@@ -15,8 +15,8 @@ public:
     _model.state.altitude.height = 0.0f;
     _model.state.altitude.vario = 0.0f;
 
-    _altitudeFilter.begin(FilterConfig(FILTER_PT2, 5), _model.state.accel.timer.rate);
-    _varioFilter.begin(FilterConfig(FILTER_PT2, 5), _model.state.accel.timer.rate);
+    _altitudeFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
+    _varioFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
 
     return 1;
   }
