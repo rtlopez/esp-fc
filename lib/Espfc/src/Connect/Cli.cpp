@@ -356,6 +356,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
   static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
   static const char* blackboxDevChoices[] = { PSTR("NONE"), PSTR("FLASH"), PSTR("SD_CARD"), PSTR("SERIAL"), NULL };
   static const char* blackboxModeChoices[] = { PSTR("NORMAL"), PSTR("TEST"), PSTR("ALWAYS"), NULL };
+  static const char* ledTypeChoices[] = { PSTR("SIMPLE"), PSTR("STRIP"), NULL };
 
   size_t i = 0;
   static const Param params[] = {
@@ -677,6 +678,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
 #endif
     Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
     Param(PSTR("pin_led_invert"), &c.led.invert),
+    Param(PSTR("pin_led_type"), &c.led.type, ledTypeChoices),
 
 #ifdef ESPFC_I2C_0
     Param(PSTR("i2c_speed"), &c.i2cSpeed),

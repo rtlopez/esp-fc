@@ -668,6 +668,7 @@ struct GpsConfig
 struct LedConfig
 {
   uint8_t invert = 0;
+  int8_t type = 0;
 };
 
 // persistent data
