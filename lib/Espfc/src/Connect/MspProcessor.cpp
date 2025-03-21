@@ -151,6 +151,40 @@ static uint16_t toIbatCurrent(float current)
   return constrain(lrintf(current * 100.0f), -32000, 32000);
 }
 
+static uint8_t mapPowerToTramp(uint8_t power) {
+  switch (power) {
+    case 25:
+      return 0;
+    case 100:
+      return 1;
+    case 200:
+      return 2;
+    case 400:
+      return 3;
+    case 600:
+      return 4;
+    default:
+      return 0; // Default to the lowest power if unknown
+  }
+}
+
+uint8_t mapTrampToPower(uint8_t powerIndex) {
+    switch (powerIndex) {
+        case 0:
+            return 25;  // 25 mW
+        case 1:
+            return 100; // 100 mW
+        case 2:
+            return 200; // 200 mW
+        case 3:
+            return 400; // 400 mW
+        case 4:
+            return 600; // 600 mW
+        default:
+            return 25;  // Default to 25 mW if unknown
+    }
+}
+
 constexpr uint8_t MSP_PASSTHROUGH_ESC_4WAY = 0xff;
 
 }
@@ -1403,34 +1437,33 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         r.writeU8(0); // ready
         r.writeU8(0); // low power disarm
       } else {
-        r.writeU8(3 /* SMARTAUDIO */); // vtx type unknown
-        r.writeU8(_model.config.vtx.band);    // band
-        r.writeU8(_model.config.vtx.channel); // channel
-        r.writeU8(_model.config.vtx.power);   // power
-        r.writeU8(0);    // status (looks like 1 means pit mode :shrug:)
+        r.writeU8(_model.config.vtx.protocol); // vtx type
+        r.writeU8(_model.config.vtx.band);     // band
+        r.writeU8(_model.config.vtx.channel);  // channel
+        r.writeU8(_model.config.vtx.power);    // power
+        r.writeU8(0);    // status (1 indicates pit mode)
         r.writeU16(0);   // freq
         r.writeU8(1);    // ready
-        r.writeU8(_model.config.vtx.lowPowerDisarm);    // low power disarm
+        r.writeU8(_model.config.vtx.lowPowerDisarm); // low power disarm
       }
-      // 1.42
+      // API version 1.42
       r.writeU16(0);   // pit mode freq
       r.writeU8(0);    // vtx table available (no)
       r.writeU8(0);    // vtx table bands
       r.writeU8(0);    // vtx table channels
       r.writeU8(0);    // vtx power levels
       break;
-    
+
     case MSP_SET_VTX_CONFIG:
       {
         uint16_t freq = m.readU16();
         if (freq <= VTXCOMMON_MSP_BANDCHAN_CHKVAL) {  // Value is band and channel
-          //const uint8_t newBand = (freq / 8) + 1;
-          //const uint8_t newChannel = (freq % 8) + 1;
+          // Extract band and channel if needed
         }
 
         if (m.remain() >= 2) {
-          _model.config.vtx.power =  m.readU8();
-          /*const uint8_t newPitmode = */m.readU8();
+          _model.config.vtx.power = m.readU8();
+          m.readU8(); // Read pitmode but not used
         }
 
         if (m.remain()) {
@@ -1439,20 +1472,17 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 
         // API version 1.42 - this parameter kept separate since clients may already be supplying
         if (m.remain() >= 2) {
-          /*const uint16_t pitModeFreq = */m.readU16();
+          m.readU16(); // Read pitModeFreq but not used
         }
 
         // API version 1.42 - extensions for non-encoded versions of the band, channel or frequency
         if (m.remain() >= 4) {
-          // Added standalone values for band, channel and frequency to move
-          // away from the flawed encoded combined method originally implemented.
           _model.config.vtx.band = m.readU8(); 
           _model.config.vtx.channel = m.readU8();
-          /*uint16_t newFreq = */m.readU16();
+          m.readU16(); // Read newFreq but not used
         }
       }
       break;
-
 
     case MSP_SET_ARMING_DISABLED:
       {

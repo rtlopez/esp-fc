@@ -27,6 +27,7 @@ static unsigned char crc8tab[256] =
   0xD6, 0x03, 0xA9, 0x7C, 0x28, 0xFD, 0x57, 0x82, 0xFF, 0x2A, 0x80, 0x55, 0x01, 0xD4, 0x7E, 0xAB,
   0x84, 0x51, 0xFB, 0x2E, 0x7A, 0xAF, 0x05, 0xD0, 0xAD, 0x78, 0xD2, 0x07, 0x53, 0x86, 0x2C, 0xF9
 };
+
 static uint8_t crc8(const uint8_t * ptr, uint8_t len)
 {
   uint8_t crc = 0;
@@ -36,12 +37,30 @@ static uint8_t crc8(const uint8_t * ptr, uint8_t len)
 return crc;
 }
 
+struct TrampCommand {
+    uint8_t header[2] = {0x0F, 0x00}; // Header bytes
+    uint8_t command;                  // Command identifier
+    uint8_t payload[12] = {0};        // Data payload
+    uint8_t crc;                      // CRC byte
+    uint8_t terminator = 0x00;        // Terminator byte
+};
+
 namespace Espfc::Connect {
 
 int Vtx::begin(Device::SerialDevice * serial)
 {
   _serial = serial;
   _timer.setRate(300);
+
+  if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
+  {
+    // Send initialization command
+    TrampCommand initCmd;
+    initCmd.command = 'r'; // 'r' for reset/init
+    initCmd.crc = crc8(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd) - 2);
+    _serial->write(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd));
+    _serial->flush();
+  }
 
   _state = State::INIT;
   return 1;
@@ -81,23 +100,51 @@ int Vtx::update()
 
 int Vtx::setChannel()
 {
-  uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x07, 0x01, (uint8_t)((_model.config.vtx.band -1)*8 + _model.config.vtx.channel - 1) };
-  vtxCommand[5] = crc8(vtxCommand, 5);
-  _serial->write(dummyByte, 1);
-  _serial->write(vtxCommand, 6);
-  _serial->flush();
-
+  uint8_t vtxCommand[6];
+  if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO) // SmartAudio
+  {
+    uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x07, 0x01, (uint8_t)((_model.config.vtx.band -1)*8 + _model.config.vtx.channel - 1) };
+    vtxCommand[5] = crc8(vtxCommand, 5);
+    _serial->write(dummyByte, 1);
+    _serial->write(vtxCommand, 6);
+    _serial->flush();
+  }
+  else if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
+  {
+    vtxCommand[0] = 0x0F;
+    vtxCommand[1] = 0x55;
+    vtxCommand[2] = 0x00;
+    vtxCommand[3] = 0x00;
+    vtxCommand[4] = (_model.config.vtx.band - 1) * 8 + (_model.config.vtx.channel - 1);
+    vtxCommand[5] = crc8(vtxCommand, 5);
+    _serial->write(vtxCommand, 6);
+    _serial->flush();
+  }
   return 1;
 }
 
 int Vtx::setPower()
 {
-  uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x05, 0x01, (uint8_t)((!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? _model.config.vtx.power - 1 : 0) };
-  vtxCommand[5] = crc8(vtxCommand, 5);
-  _serial->write(dummyByte, 1);
-  _serial->write(vtxCommand, 6);
-  _serial->flush();
-
+  uint8_t vtxCommand[6];
+  if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO) // SmartAudio
+  {
+    uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x05, 0x01, !_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED) ? _model.config.vtx.power - 1 : 0 };
+    vtxCommand[5] = crc8(vtxCommand, 5);
+    _serial->write(dummyByte, 1);
+    _serial->write(vtxCommand, 6);
+    _serial->flush();
+  }
+  else if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
+  {
+    vtxCommand[0] = 0x0F;
+    vtxCommand[1] = 0x56;
+    vtxCommand[2] = 0x00;
+    vtxCommand[3] = 0x00;
+    vtxCommand[4] = (!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? _model.config.vtx.power : 0;
+    vtxCommand[5] = crc8(vtxCommand, 5);
+    _serial->write(vtxCommand, 6);
+    _serial->flush();
+  }
   return 1;
 }
 

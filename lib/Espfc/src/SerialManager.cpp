@@ -105,6 +105,13 @@ int SerialManager::begin()
       sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
       sdc.data_bits = 8;
     }
+    else if(spc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      sdc.baud = 9600;
+      sdc.parity = SDC_SERIAL_PARITY_NONE;
+      sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+      sdc.data_bits = 8;
+    }
 
     if(!sdc.baud)
     {
@@ -123,6 +130,10 @@ int SerialManager::begin()
       _ibus.begin(port);
     }
     if(spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
+    {
+      _vtx.begin(port);
+    }
+    if(spc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
     {
       _vtx.begin(port);
     }
