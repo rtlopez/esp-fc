@@ -62,7 +62,6 @@ int Vtx::update()
   switch (_state)
   {
     case State::INIT:
-      _model.config.vtx.protocol = VTXDEV_TRAMP;
       if (_model.config.vtx.protocol == VTXDEV_TRAMP)
       {
         // Send initialization command
