@@ -653,7 +653,6 @@ struct ControllerConfig
 
 struct VtxConfig
 {
-  uint8_t protocol = 0; // 0: None, 3: SmartAudio, 4: Tramp
   uint8_t channel = 0x8;
   uint8_t band = 0x1;
   uint8_t power = 0;

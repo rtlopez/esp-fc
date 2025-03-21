@@ -1403,7 +1403,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         r.writeU8(0); // ready
         r.writeU8(0); // low power disarm
       } else {
-        r.writeU8(_model.config.vtx.protocol); // vtx type
+        r.writeU8(_model.state.vtx.protocol); // vtx type
         r.writeU8(_model.config.vtx.band);     // band
         r.writeU8(_model.config.vtx.channel);  // channel
         r.writeU8(_model.config.vtx.power);    // power
