@@ -151,40 +151,6 @@ static uint16_t toIbatCurrent(float current)
   return constrain(lrintf(current * 100.0f), -32000, 32000);
 }
 
-static uint8_t mapPowerToTramp(uint8_t power) {
-  switch (power) {
-    case 25:
-      return 0;
-    case 100:
-      return 1;
-    case 200:
-      return 2;
-    case 400:
-      return 3;
-    case 600:
-      return 4;
-    default:
-      return 0; // Default to the lowest power if unknown
-  }
-}
-
-uint8_t mapTrampToPower(uint8_t powerIndex) {
-    switch (powerIndex) {
-        case 0:
-            return 25;  // 25 mW
-        case 1:
-            return 100; // 100 mW
-        case 2:
-            return 200; // 200 mW
-        case 3:
-            return 400; // 400 mW
-        case 4:
-            return 600; // 600 mW
-        default:
-            return 25;  // Default to 25 mW if unknown
-    }
-}
-
 constexpr uint8_t MSP_PASSTHROUGH_ESC_4WAY = 0xff;
 
 }
