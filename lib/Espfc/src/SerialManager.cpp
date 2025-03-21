@@ -176,6 +176,10 @@ int FAST_CODE_ATTR SerialManager::update()
     {
       _vtx.update();
     }
+    if(sc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      _vtx.update();
+    }
     if(sc.functionMask & SERIAL_FUNCTION_GPS)
     {
       _gps.update();

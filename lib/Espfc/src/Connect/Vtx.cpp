@@ -52,16 +52,6 @@ int Vtx::begin(Device::SerialDevice * serial)
   _serial = serial;
   _timer.setRate(300);
 
-  if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
-  {
-    // Send initialization command
-    TrampCommand initCmd;
-    initCmd.command = 'r'; // 'r' for reset/init
-    initCmd.crc = crc8(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd) - 2);
-    _serial->write(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd));
-    _serial->flush();
-  }
-
   _state = State::INIT;
   return 1;
 }
@@ -72,6 +62,16 @@ int Vtx::update()
   switch (_state)
   {
     case State::INIT:
+      _model.config.vtx.protocol = VTXDEV_TRAMP;
+      if (_model.config.vtx.protocol == VTXDEV_TRAMP)
+      {
+        // Send initialization command
+        TrampCommand initCmd;
+        initCmd.command = 'r'; // 'r' for reset/init
+        initCmd.crc = crc8(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd) - 2);
+        _serial->write(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd));
+        _serial->flush();
+      }
       _state = State::SET_CHANNEL;
       _model.state.vtx.active = true;
       break;
@@ -100,7 +100,7 @@ int Vtx::update()
 
 int Vtx::setChannel()
 {
-  if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO) // SmartAudio
+  if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO)
   {
     uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x07, 0x01, (uint8_t)((_model.config.vtx.band -1)*8 + _model.config.vtx.channel - 1) };
     vtxCommand[5] = crc8(vtxCommand, 5);
@@ -108,7 +108,7 @@ int Vtx::setChannel()
     _serial->write(vtxCommand, 6);
     _serial->flush();
   }
-  else if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
+  else if (_model.config.vtx.protocol == VTXDEV_TRAMP)
   {
     uint8_t vtxCommand[6];
     vtxCommand[0] = 0x0F;
@@ -125,7 +125,7 @@ int Vtx::setChannel()
 
 int Vtx::setPower()
 {
-  if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO) // SmartAudio
+  if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO)
   {
     uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x05, 0x01, (uint8_t)((!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? _model.config.vtx.power - 1 : 0) };
     vtxCommand[5] = crc8(vtxCommand, 5);
@@ -133,7 +133,7 @@ int Vtx::setPower()
     _serial->write(vtxCommand, 6);
     _serial->flush();
   }
-  else if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
+  else if (_model.config.vtx.protocol == VTXDEV_TRAMP)
   {
     uint8_t vtxCommand[6];
     vtxCommand[0] = 0x0F;
