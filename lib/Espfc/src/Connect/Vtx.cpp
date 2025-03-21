@@ -100,7 +100,6 @@ int Vtx::update()
 
 int Vtx::setChannel()
 {
-  uint8_t vtxCommand[6];
   if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO) // SmartAudio
   {
     uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x07, 0x01, (uint8_t)((_model.config.vtx.band -1)*8 + _model.config.vtx.channel - 1) };
@@ -111,6 +110,7 @@ int Vtx::setChannel()
   }
   else if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
   {
+    uint8_t vtxCommand[6];
     vtxCommand[0] = 0x0F;
     vtxCommand[1] = 0x55;
     vtxCommand[2] = 0x00;
@@ -125,7 +125,6 @@ int Vtx::setChannel()
 
 int Vtx::setPower()
 {
-  uint8_t vtxCommand[6];
   if (_model.config.vtx.protocol == VTXDEV_SMARTAUDIO) // SmartAudio
   {
     uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x05, 0x01, !_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED) ? _model.config.vtx.power - 1 : 0 };
@@ -136,6 +135,7 @@ int Vtx::setPower()
   }
   else if (_model.config.vtx.protocol == VTXDEV_TRAMP) // IRC Tramp
   {
+    uint8_t vtxCommand[6];
     vtxCommand[0] = 0x0F;
     vtxCommand[1] = 0x56;
     vtxCommand[2] = 0x00;
