@@ -8,7 +8,7 @@ namespace Espfc::Connect {
 int VtxSmartAudio::begin(Device::SerialDevice * serial)
 {
   _serial = serial;
-  _timer.setRate(300);
+  _timer.setInterval(300);
 
   _state = State::INIT;
   return 1;

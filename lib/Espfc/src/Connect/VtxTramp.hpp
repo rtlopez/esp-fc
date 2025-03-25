@@ -29,11 +29,16 @@ class VtxTramp
 
 
 struct TrampCommand {
-    uint8_t header[2] = {0x0F, 0x00}; // Header bytes
-    uint8_t command;                  // Command identifier
-    uint8_t payload[12] = {0};        // Data payload
-    uint8_t crc;                      // CRC byte
-    uint8_t terminator = 0x00;        // Terminator byte
+    uint8_t header[2];
+    uint8_t command;
+    uint8_t payload[12];
+    uint8_t crc;
+    uint8_t terminator;
+
+    TrampCommand() 
+        : header{0x0F, 0x00}, command(0), payload{0}, crc(0), terminator(0x00) 
+    {
+    }
 };
 
 

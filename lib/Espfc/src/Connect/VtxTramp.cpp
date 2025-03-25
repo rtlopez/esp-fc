@@ -8,7 +8,7 @@ namespace Espfc::Connect {
 int VtxTramp::begin(Device::SerialDevice * serial)
 {
   _serial = serial;
-  _timer.setRate(300);
+  _timer.setInterval(300);
 
   _state = State::INIT;
   return 1;
@@ -16,9 +16,8 @@ int VtxTramp::begin(Device::SerialDevice * serial)
 
 int VtxTramp::initTramp() 
 {
-  // Send initialization command
   TrampCommand initCmd;
-  initCmd.command = 'r'; // 'r' for reset/init
+  initCmd.command = 'r';
   initCmd.crc = Utils::crc8_dvb_s2(0, reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd) - 2);
   _serial->write(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd));
   _serial->flush();
