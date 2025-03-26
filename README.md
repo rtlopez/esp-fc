@@ -134,6 +134,13 @@ Here are more details about [how to setup](/docs/setup.md).
 | QMC5883     | Yes     |   Yes |    Yes |
 | AK8963      | Yes     |   Yes |    Yes |
 
+## Supported VTX devices
+
+| Device            | ESP8266 | ESP32 | RP2040 |
+|------------------:|--------:|------:|-------:|
+| [TBS SmartAudio](/docs/vtx_table_tbs_smartaudio.json)    | Yes     |   Yes |    Yes |
+| [IRC Tramp](/docs/vtx_table_irc_tramp.json)         | Yes     |   Yes |    Yes |
+
 ## Issues
 You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues)
 You can also join to our [Discord Channel](https://discord.gg/jhyPPM5UEH)
