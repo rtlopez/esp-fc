@@ -26,5 +26,4 @@ class VtxSmartAudio
     Utils::Timer _timer;
 };
 
-
 }

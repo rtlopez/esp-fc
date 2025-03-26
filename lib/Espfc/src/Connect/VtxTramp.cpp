@@ -1,8 +1,6 @@
 #include "VtxTramp.hpp"
 #include "Utils/Crc.hpp"
 
-static const uint8_t dummyByte[] = { 0x00 };
-
 namespace Espfc::Connect {
 
 int VtxTramp::begin(Device::SerialDevice * serial)
@@ -14,23 +12,12 @@ int VtxTramp::begin(Device::SerialDevice * serial)
   return 1;
 }
 
-int VtxTramp::initTramp() 
-{
-  TrampCommand initCmd;
-  initCmd.command = 'r';
-  initCmd.crc = Utils::crc8_dvb_s2(0, reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd) - 2);
-  _serial->write(reinterpret_cast<uint8_t*>(&initCmd), sizeof(initCmd));
-  _serial->flush();
-  return 1;
-}
-
 int VtxTramp::update()
 {
   if (!_timer.check()) return 1;
   switch (_state)
   {
     case State::INIT:
-      initTramp();  
       _state = State::SET_CHANNEL;
       _model.state.vtx.active = true;
       break;
@@ -57,31 +44,28 @@ int VtxTramp::update()
   return 1;
 }
 
+int VtxTramp::trampSendCommand(uint8_t cmd, uint16_t param)
+{
+  uint8_t vtxCommand[15];
+  vtxCommand[0] = 0x0F;
+  vtxCommand[1] = cmd;
+  vtxCommand[2] = param & 0xff;
+  vtxCommand[3] = (param >> 8) & 0xff;
+  vtxCommand[14] = Utils::crc8_dvb_s2(0, reinterpret_cast<uint8_t*>(&vtxCommand), 13);
+  _serial->write(vtxCommand, 16);
+  _serial->flush();
+  return 1;
+}
+
 int VtxTramp::setChannel()
 {
-  uint8_t vtxCommand[6];
-  vtxCommand[0] = 0x0F;
-  vtxCommand[1] = 0x55;
-  vtxCommand[2] = 0x00;
-  vtxCommand[3] = 0x00;
-  vtxCommand[4] = (_model.config.vtx.band - 1) * 8 + (_model.config.vtx.channel - 1);
-  vtxCommand[5] = Utils::crc8_dvb_s2(0, reinterpret_cast<uint8_t*>(&vtxCommand), 5);
-  _serial->write(vtxCommand, 6);
-  _serial->flush();
+  trampSendCommand('F', TrampFreqTable[_model.config.vtx.band -1][_model.config.vtx.channel -1]);
   return 1;
 }
 
 int VtxTramp::setPower()
 {
-  uint8_t vtxCommand[6];
-  vtxCommand[0] = 0x0F;
-  vtxCommand[1] = 0x56;
-  vtxCommand[2] = 0x00;
-  vtxCommand[3] = 0x00;
-  vtxCommand[4] = (!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? _model.config.vtx.power : 0;
-  vtxCommand[5] = Utils::crc8_dvb_s2(0, reinterpret_cast<uint8_t*>(&vtxCommand), 5);
-  _serial->write(vtxCommand, 6);
-  _serial->flush();
+  trampSendCommand('P', (!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? TrampPowerTable[_model.config.vtx.power -1] : 0);
   return 1;
 }
 

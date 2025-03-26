@@ -17,7 +17,22 @@ class VtxTramp
     int update();
     int setChannel();
     int setPower();
+    int trampSendCommand(uint8_t cmd, uint16_t param);
     Connect::VtxDeviceType type = Connect::VTXDEV_TRAMP;
+    const uint16_t TrampFreqTable[8][8] {
+      {5865, 5845, 5825, 5805, 5785, 5765, 5745, 0},
+      {5733, 5752, 5771, 5790, 5809, 5828, 5847, 5866},
+      {5740, 5760, 5780, 5800, 5820, 5840, 5860, 0},
+      {0, 0, 5732, 5769, 5806, 5843, 0, 0},
+      {5732, 5765, 5828, 5840, 5866, 5740, 0, 0},
+      {0, 0, 0, 0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0, 0, 0, 0},
+    };
+    const uint16_t TrampPowerTable[5] {
+      25, 100, 200, 400, 600
+    };
+
 
   private:
     Device::SerialDevice* _serial;
@@ -26,20 +41,5 @@ class VtxTramp
     bool _armed = false;
     Utils::Timer _timer;
 };
-
-
-struct TrampCommand {
-    uint8_t header[2];
-    uint8_t command;
-    uint8_t payload[12];
-    uint8_t crc;
-    uint8_t terminator;
-
-    TrampCommand() 
-        : header{0x0F, 0x00}, command(0), payload{0}, crc(0), terminator(0x00) 
-    {
-    }
-};
-
 
 }
