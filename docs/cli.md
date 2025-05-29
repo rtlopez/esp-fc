@@ -91,6 +91,9 @@ serial:   6us,    6us/i,   0.6%,   962 Hz
  - **save** - persist configuration after changes
  - **reboot** - reboot board
 
+>[NOTE]
+>if you change any parameter, remember to apply `save` and `reboot`. Without that some changes might not take effect.
+
 ## Configuration parameters
 
  - **dump** - dump all paramters
@@ -136,7 +139,7 @@ set pin_output_0 0
 >[NOTE]
 >you don't need to use `=` character for assignment
 
-Setting multiple values
+Setting milti-argument values
 ```
 set output_0 S R
 ```
