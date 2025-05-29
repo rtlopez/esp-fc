@@ -96,7 +96,7 @@ serial:   6us,    6us/i,   0.6%,   962 Hz
 
 ## Configuration parameters
 
- - **dump** - dump all paramters
+ - **dump** - dump all parameters
  - **get parameter_name** - get paramter value, list matching patameters with current values
  - **set paramter value1 [value2] [value3]** - set parameter to new value (some parameters store multiple values, ex. input)
 
@@ -145,9 +145,7 @@ set output_0 S R
 ```
 Note that you don't have to enter all values, you can ommit last values if they are not changed.
 
-
-
-## Specific paramters reference
+## Specific parameters reference
 
 ### Pin functions
 
@@ -351,9 +349,9 @@ Mixer Sources:
  - 10: rc aux 2
  - 11: rc aux 3
 
-## All supported paramters
+## All supported parameters
 
-Use `dump` command to backup all your settings. You can then load you configuration in CLI tab. Below you can find full list of paramters.
+Use `dump` command to backup all your settings. You can then load you configuration in CLI tab. Below you can find full list of parameters.
 
 ```
 set feature_gps 0
