@@ -25,7 +25,8 @@ The mini, DIY, Low cost, ESP32 based, high performance flight controller for hob
 
 In this repository you can find firmware code that allows you to build your own flight controller. For convenience it mimics Betaflight 4.2 compability, so that it can be configured using [betaflight-configurator](https://github.com/betaflight/betaflight-configurator). Also [online blackbox-log-viewer](https://blackbox.betaflight.com/) can be used to analyze blackbox logs. In most aspects it is similar to Betaflight, so that many configuration and tuning advices are helpfull here too. But you must be aware, that this software is not the same as Betaflight, there are some limitations and differences in functionality and performance.
 
-Before you begin, **read the following documentation carefully first!**.
+> [!IMPORTANT]
+> Before you begin, **read the following documentation carefully first!**.
 
  * [Setup Guide](/docs/setup.md)
  * [Wiring](/docs/wiring.md)

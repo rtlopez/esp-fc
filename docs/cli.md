@@ -91,8 +91,8 @@ serial:   6us,    6us/i,   0.6%,   962 Hz
  - **save** - persist configuration after changes
  - **reboot** - reboot board
 
->[!IMPORTANT]
->if you change any parameter, remember to apply `save` and `reboot`. Without that some changes might not take effect.
+> [!IMPORTANT]
+> if you change any parameter, remember to apply `save` and `reboot`. Without that some changes might not take effect.
 
 ## Configuration parameters
 
@@ -136,8 +136,8 @@ Setting single value
 ```
 set pin_output_0 0
 ```
->[!NOTE]
->you don't need to use `=` character for assignment
+> [!NOTE]
+> You don't need to use `=` character for assignment
 
 Setting milti-argument values
 ```
@@ -334,7 +334,8 @@ set mix_{index} {src} {dst} {rate}
  - `{dst}`: output channel (0-index)
  - `{rate}`: mix rate in percent
 
->[!IMPORTANT] you need to add a termination rule at the end, to inform mixer to stop processing. In this case set `src` argument to 0. When mixer encounters such a rule, it stops processing and ignore next rules. You can add maximum 64 rules.
+> [!IMPORTANT]
+> You need to add a termination rule at the end, to inform mixer to stop processing. In this case set `src` argument to 0. When mixer encounters such a rule, it stops processing and ignore next rules. You can add maximum 64 rules.
 
 Mixer Sources:
  - 0: null for termination rule

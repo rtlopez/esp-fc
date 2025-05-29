@@ -8,9 +8,8 @@ Tu unmap pin function use -1 as pin number
 
 `set pin_output_3 -1`
 
->[!NOTE]
->There are still some limitations in remapping. Not all pins can be used with all functions. Some pins are input only, others are strapping pins and may prevent from booting if used incorrectly. please consult MCU documentation for available options. Default layout is proven to work.
-
+> [!NOTE]
+> There are still some limitations in remapping. Not all pins can be used with all functions. Some pins are input only, others are strapping pins and may prevent from booting if used incorrectly. please consult MCU documentation for available options. Default layout is proven to work.
 
 ## Default I2C pin mapping for gyro modules
 
@@ -19,8 +18,8 @@ Tu unmap pin function use -1 as pin number
 | SCK/SCL    | `pin_i2c_scl`    | 22    | 10       |
 | SDA/SDI    | `pin_i2c_scl`    | 21    | 9        |
 
->[!NOTE]
->I2C driver accepts only pins from 1 to 31
+> [!NOTE]
+> I2C driver accepts only pins from 1 to 31
 
 ## Default SPI pin mapping gyro modules
 
@@ -32,7 +31,7 @@ Tu unmap pin function use -1 as pin number
 | NCS         | `pin_spi_cs_0`   |  5    |  8       |
 | CSB*        | `pin_spi_cs_1`   | 13    |  7       |
 
-NOTE: CSB is required for barometer on 10-DOF MPU-9250 modules
+**Note:** `CSB` is required for barometer on 10-DOF MPU-9250 modules
 
 ## Default Servo/Motor output mapping
 

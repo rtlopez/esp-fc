@@ -29,8 +29,8 @@ Go to the `CLI` tab and type `get pin`. This command will show what pins are ass
 
 Go to `Setup tab`, make sure that your model is in horizontal steady state position. Then click **"Calibrate Accelerometer"** button and wait two seconds.
 
-> [!NOTE]
-> **Important!** Ensure that model in preview moves exactly in the same way as yours. If it is not the case, go to the `Configuration` tab, and configure `Board orientation` or `Sensor Alignment`
+> [!CAUTION]
+> Ensure that model in preview moves exactly in the same way as yours. If it is not the case, go to the `Configuration` tab, and configure `Board orientation` or `Sensor Alignment`
 
 ![Sensor Alignment](/docs/images/bfc/bfc_configuration.png)
 
@@ -59,7 +59,7 @@ You can select mixer type here, this configuration depends on type of aircraft y
 1. Specified motor number is connected to specified output and placed in specified position in your aircraft according to gyro orientation, presented on a picture.
 2. Specified motor is rotating in correct direction according to image.
 
-> [!WARNING] 
+> [!CAUTION] 
 > If these conditions aren't met, your quad will go crazy on the first start and may cause damage or even injury.
 
 To verify that you can enable **test mode** and spin each motor selectively. To do that,
