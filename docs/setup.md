@@ -118,9 +118,13 @@ Triggers Failsafe procedure.
 
 ## Blackbox
 
-Logging using serial device is possible, like [D-ronin OpenLager](https://github.com/d-ronin/openlager) or [OpenLog](https://github.com/sparkfun/OpenLog). To configure it
+It is possible to collect flight data in two ways. Via `serial port` or with `onboard flash`
+
+Onboard flash allows to store about 2.5MB of data. This is equivalent of 2-3 minutes of flight. It should be enough for tuning. 
+
+If you need more, choose `Serial Port` and serial device like [D-ronin OpenLager](https://github.com/d-ronin/openlager) or [OpenLog](https://github.com/sparkfun/OpenLog). To configure it
 1. In `Ports` select uart to generate stream and in Peripherals column select `Blackbox logging` on free port
-2. Then in `Blackbox` tab select `Serial Port` as `logging device`
+2. Then in `Blackbox` tab select `Serial Port` or `Onboard flash` as `logging device`
 
 > [!NOTE]
 > Port speed from column `Configuration/MSP` is used, and the same speed must be used in logging device, _(this might be subject of change in a future versions)_.

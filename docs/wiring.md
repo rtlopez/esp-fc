@@ -33,6 +33,9 @@ Tu unmap pin function use -1 as pin number
 
 **Note:** `CSB` is required for barometer on 10-DOF MPU-9250 modules
 
+> [!TIP]
+> For better performance preffer SPI
+
 ## Default Servo/Motor output mapping
 
 | Motor  | CLI name       | ESP32 | ESP32-S3 |
@@ -59,6 +62,9 @@ Tu unmap pin function use -1 as pin number
 |--------:|-------------------|------:|---------:|
 | Voltage | `pin_input_adc_0` |  36   | 1        |
 | Current | `pin_input_adc_1` |  19   | 4        |
+
+> [!NOTE]
+> On ESP32 choose only pins assigned to ADC1 channels
 
 ## Default PPM receiver pin mapping
 
