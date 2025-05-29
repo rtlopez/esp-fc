@@ -8,7 +8,7 @@ Tu unmap pin function use -1 as pin number
 
 `set pin_output_3 -1`
 
->[NOTE]
+>[!NOTE]
 >There are still some limitations in remapping. Not all pins can be used with all functions. Some pins are input only, others are strapping pins and may prevent from booting if used incorrectly. please consult MCU documentation for available options. Default layout is proven to work.
 
 
@@ -19,7 +19,7 @@ Tu unmap pin function use -1 as pin number
 | SCK/SCL    | `pin_i2c_scl`    | 22    | 10       |
 | SDA/SDI    | `pin_i2c_scl`    | 21    | 9        |
 
->[NOTE]
+>[!NOTE]
 >I2C driver accepts only pins from 1 to 31
 
 ## Default SPI pin mapping gyro modules
