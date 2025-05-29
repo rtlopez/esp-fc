@@ -4,7 +4,8 @@ Espressif modules have a built-in WiFi module that can be used for configuration
 
 ## WiFi configuration
 
-> [!NOTE] To be able to configure device using WiFi connection, you need to enable `SOFTSERIAL` function. WiFi function can only be used to configure device. Whilst WiFi is active, it is not possible to ARM controller and reboot is required.
+> [!NOTE]
+> To be able to configure device using WiFi connection, you need to enable `SOFTSERIAL` function. WiFi function can only be used to configure device. Whilst WiFi is active, it is not possible to ARM controller and reboot is required.
 
 ![Enable WiFi](/docs/images/espfc_wifi_ap_enable.png)
 
@@ -17,7 +18,8 @@ You can also automatically connect ESP-FC to your home network. To achive that, 
 set wifi_ssid MY-HOME-NET
 set wifi_pass MY-HOME-PASS
 ```
-> [!NOTE] Network name and pass cannot contains spaces.
+> [!NOTE]
+> Network name and pass must not contains spaces.
 
 then you can check status of connection by typing `wifi` in CLI tab.
 ```

@@ -29,8 +29,8 @@ Go to the `CLI` tab and type `get pin`. This command will show what pins are ass
 
 Go to `Setup tab`, make sure that your model is in horizontal steady state position. Then click **"Calibrate Accelerometer"** button and wait two seconds.
 
-> [!NOTE]
-> **Important!** Ensure that model in preview moves exactly in the same way as yours. If it is not the case, go to the `Configuration` tab, and configure `Sensor Alignment`
+> [!CAUTION]
+> Ensure that model in preview moves exactly in the same way as yours. If it is not the case, go to the `Configuration` tab, and configure `Board orientation` or `Sensor Alignment`
 
 ![Sensor Alignment](/docs/images/bfc/bfc_configuration.png)
 
@@ -40,14 +40,9 @@ In `Configuration` tab set `Pid loop frequency`. Recomended values are 1kHz to 2
 
 ## Receiver setup
 
-If you want to use Serial based receiver (SBUS,CRSF), you need to allocate UART port for it. You can do it in `Ports` tab, by ticking switch in `Serial Rx` column.
+If you want to use Serial based receiver (SBUS,IBUS,CRSF), you need to allocate UART port for it. You can do it in `Ports` tab, by ticking switch in `Serial Rx` column.
 
 Then go to the `Receiver` tab, and select `Receiver mode` and `Serial Receiver Provider`.
-
-To use Serial RX on ESP8266, you need to connect reciver to primary UART. In this case you lose ability to configure through UART.
-To deal with it activate "SOFTSERIAL" feature. In this case if board stay in failsafe mode for 30 seconds (transmitter is turned off), then automatically WiFi access point will be started.
-Default name is "ESP-FC". After connecting to this AP open configurator, select "manual" port and type port: `tcp://192.168.4.1:1111`.
-You can also configure board to automatically connect existing wifi network. In this case set `wifi_ssid` and `wifi_pass` parameters in CLI.
 
 To use ESP-NOW receiver, choose "SPI Rx (e.g. built-in Rx)" receiver mode in Receiver tab. You need compatible transmitter module. Read more about [ESP-FC Wireless Functions](/docs/wireless.md)
 
@@ -64,16 +59,16 @@ You can select mixer type here, this configuration depends on type of aircraft y
 1. Specified motor number is connected to specified output and placed in specified position in your aircraft according to gyro orientation, presented on a picture.
 2. Specified motor is rotating in correct direction according to image.
 
-> [!WARNING] 
+> [!CAUTION] 
 > If these conditions aren't met, your quad will go crazy on the first start and may cause damage or even injury.
 
-To verify it you can enable **test mode** and spin each motor selectively. To do that, 
+To verify that you can enable **test mode** and spin each motor selectively. To do that,
 1. remove all propellers, 
 2. connect batery,
 3. click "I understand the risk...", 
 4. move specified slider to spin motor.
 
-If you are using any analog protocol (PWM, OneShot, Multishot), you need to calibrate your ESCs here. To do that
+If you are using any analog protocol (PWM, OneShot, Multishot), you also need to calibrate your ESCs here. To do that
 1. click "I understand the risk...", 
 2. move master sliders to highest value
 3. connect battery
@@ -123,9 +118,13 @@ Triggers Failsafe procedure.
 
 ## Blackbox
 
-Logging using serial device is possible, like [D-ronin OpenLager](https://github.com/d-ronin/openlager) or [OpenLog](https://github.com/sparkfun/OpenLog). To configure it
+It is possible to collect flight data in two ways. Via `serial port` or with `onboard flash`
+
+Onboard flash allows to store about 2.5MB of data. This is equivalent of 2-3 minutes of flight. It should be enough for tuning. 
+
+If you need more, choose `Serial Port` and serial device like [D-ronin OpenLager](https://github.com/d-ronin/openlager) or [OpenLog](https://github.com/sparkfun/OpenLog). To configure it
 1. In `Ports` select uart to generate stream and in Peripherals column select `Blackbox logging` on free port
-2. Then in `Blackbox` tab select `Serial Port` as `logging device`
+2. Then in `Blackbox` tab select `Serial Port` or `Onboard flash` as `logging device`
 
 > [!NOTE]
 > Port speed from column `Configuration/MSP` is used, and the same speed must be used in logging device, _(this might be subject of change in a future versions)_.
@@ -138,6 +137,12 @@ Recommended settings
 OpenLager can handle it easily. If you plan to use OpenLog, you might need to flash [blackbox-firmware](https://github.com/cleanflight/blackbox-firmware) to be able to handle more than 115.2kbps. Either 250kbps and 500kbps works well with modern SD cards up to 32GB size.
 
 ## Limitations
+
+### Configuration tab
+
+In Other features you can enable only `Dynamic Filter` and `SoftSerial`
+
+`AirMode` is only available in modes tab. If you want to enable it permanently, use the same control channel as ARM.
 
 ### Failsafe tab
 
@@ -159,10 +164,10 @@ Presets aren't supported, do not try to apply any of them.
 
 Besides that most of Betaflight principles can be applied here according to PID and Filter tuning. But keep in mind, very aggresive tunnig tips aren't recommended to apply and might lead to diferrent results.
 
-### Receive
+### Receiver
 
-1. Not all protocols are implemented, currently only PPM, CRSF, SBUS
-2. No telemetry and rssi_adc
+1. Not all protocols are implemented, currently only PPM, CRSF, SBUS, IBUS
+2. NoOnly CRSF telemetry and and rssi_adc
 3. RC deadband applies to RPY, no separate Yaw deadband
 
 ### Modes
@@ -179,11 +184,11 @@ Not Implemented, for replacemnt you can use [output cli](/docs/cli.md#output-cha
 
 ### Motors
 
-No 3D features
+No 3D features, only Quad-X Mixer
 
 ### Video transmitter
 
-Not implemented, no replacemnt
+Not yet implemented, work in progess
 
 ### OSD
 
