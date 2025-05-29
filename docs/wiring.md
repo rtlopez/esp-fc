@@ -1,4 +1,4 @@
-# ESP-FC wiring axamples and PIN mapping
+# ESP-FC wiring examples and PIN mapping
 
 ESP32 MCUs allows to remap pins, so the wiring is not final and you can remap intputs and outputs to your needs. To change pin function go to the CLI and use `get pin` command to check current assignment. For example, to set first output to pin 1 use command 
 
@@ -8,12 +8,19 @@ Tu unmap pin function use -1 as pin number
 
 `set pin_output_3 -1`
 
+>[NOTE]
+>There are still some limitations in remapping. Not all pins can be used with all functions. Some pins are input only, others are strapping pins and may prevent from booting if used incorrectly. please consult MCU documentation for available options. Default layout is proven to work.
+
+
 ## Default I2C pin mapping for gyro modules
 
 | Module Pin | CLI Name         | ESP32 | ESP32-S3 |
 |------------|------------------|------:|---------:|
 | SCK/SCL    | `pin_i2c_scl`    | 22    | 10       |
 | SDA/SDI    | `pin_i2c_scl`    | 21    | 9        |
+
+>[NOTE]
+>I2C driver accepts only pins from 1 to 31
 
 ## Default SPI pin mapping gyro modules
 

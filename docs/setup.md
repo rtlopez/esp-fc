@@ -40,7 +40,7 @@ In `Configuration` tab set `Pid loop frequency`. Recomended values are 1kHz to 2
 
 ## Receiver setup
 
-If you want to use Serial based receiver (SBUS,CRSF), you need to allocate UART port for it. You can do it in `Ports` tab, by ticking switch in `Serial Rx` column.
+If you want to use Serial based receiver (SBUS,IBUS,CRSF), you need to allocate UART port for it. You can do it in `Ports` tab, by ticking switch in `Serial Rx` column.
 
 Then go to the `Receiver` tab, and select `Receiver mode` and `Serial Receiver Provider`.
 
@@ -62,13 +62,13 @@ You can select mixer type here, this configuration depends on type of aircraft y
 > [!WARNING] 
 > If these conditions aren't met, your quad will go crazy on the first start and may cause damage or even injury.
 
-To verify it you can enable **test mode** and spin each motor selectively. To do that, 
+To verify that you can enable **test mode** and spin each motor selectively. To do that,
 1. remove all propellers, 
 2. connect batery,
 3. click "I understand the risk...", 
 4. move specified slider to spin motor.
 
-If you are using any analog protocol (PWM, OneShot, Multishot), you need to calibrate your ESCs here. To do that
+If you are using any analog protocol (PWM, OneShot, Multishot), you also need to calibrate your ESCs here. To do that
 1. click "I understand the risk...", 
 2. move master sliders to highest value
 3. connect battery
@@ -160,10 +160,10 @@ Presets aren't supported, do not try to apply any of them.
 
 Besides that most of Betaflight principles can be applied here according to PID and Filter tuning. But keep in mind, very aggresive tunnig tips aren't recommended to apply and might lead to diferrent results.
 
-### Receive
+### Receiver
 
-1. Not all protocols are implemented, currently only PPM, CRSF, SBUS
-2. No telemetry and rssi_adc
+1. Not all protocols are implemented, currently only PPM, CRSF, SBUS, IBUS
+2. NoOnly CRSF telemetry and and rssi_adc
 3. RC deadband applies to RPY, no separate Yaw deadband
 
 ### Modes
@@ -180,11 +180,11 @@ Not Implemented, for replacemnt you can use [output cli](/docs/cli.md#output-cha
 
 ### Motors
 
-No 3D features
+No 3D features, only Quad-X Mixer
 
 ### Video transmitter
 
-Not implemented, no replacemnt
+Not yet implemented, work in progess
 
 ### OSD
 
