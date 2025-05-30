@@ -5,12 +5,18 @@
 namespace Espfc::Connect
 {
 
+enum LedType
+{
+  LED_SIMPLE,
+  LED_STRIP,
+};
+
 enum LedStatus
 {
   LED_OFF,
   LED_OK,
   LED_ERROR,
-  LED_ON
+  LED_ON,
 };
 
 class StatusLed
@@ -18,14 +24,15 @@ class StatusLed
 
 public:
   StatusLed();
-  void begin(int8_t pin, uint8_t invert);
+  void begin(int8_t pin, uint8_t type, uint8_t invert);
   void update();
   void setStatus(LedStatus newStatus, bool force = false);
 
 private:
   void _write(uint8_t val);
   int8_t _pin;
-  int8_t _invert;
+  uint8_t _type;
+  uint8_t _invert;
   LedStatus _status;
   uint32_t _next;
   bool _state;
