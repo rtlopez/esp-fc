@@ -33,6 +33,8 @@ class Vtx
     int update();
     int setChannel();
     int setPower();
+    int setTrampChannel();
+    int setTrampPower();
     Connect::VtxDeviceType type;
 
   private:
