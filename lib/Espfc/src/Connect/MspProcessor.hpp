@@ -27,6 +27,8 @@ public:
   void debugResponse(const MspResponse& r);
 
 private:
+  void processCommandBF(MspMessage& m, MspResponse& r, Device::SerialDevice& s);
+  void processCommandESP(MspMessage& m, MspResponse& r, Device::SerialDevice& s);
   Model& _model;
   MspParser _parser;
   std::function<void(void)> _postCommand;

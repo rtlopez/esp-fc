@@ -30,12 +30,17 @@ enum MspState {
 
 enum MspType {
   MSP_TYPE_CMD,
-  MSP_TYPE_REPLY
+  MSP_TYPE_REPLY,
 };
 
 enum MspVersion {
   MSP_V1,
-  MSP_V2
+  MSP_V2,
+};
+
+enum MspVariant {
+  MSP_BF,
+  MSP_ESP,
 };
 
 struct MspHeaderV1 {
@@ -65,6 +70,7 @@ public:
   MspState state;
   MspType dir;
   MspVersion version;
+  MspVariant variant;
   uint8_t flags;
   uint16_t cmd;
   uint16_t expected;
@@ -81,11 +87,18 @@ public:
   MspResponse();
 
   MspVersion version;
+  MspVariant variant;
   uint16_t cmd;
   int8_t  result;
   uint8_t direction;
   uint16_t len;
   uint8_t data[MSP_BUF_OUT_SIZE];
+
+  template<typename T>
+  void write(const T& v)
+  {
+    writeData(reinterpret_cast<const char*>(&v), sizeof(T));
+  }
 
   int remain() const;
   void advance(size_t size);

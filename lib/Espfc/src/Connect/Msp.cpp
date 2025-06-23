@@ -126,7 +126,7 @@ size_t MspResponse::serializeV1(uint8_t * buff, size_t len_max) const
   if(len + 6ul > len_max) return 0;
 
   buff[0] = '$';
-  buff[1] = 'M';
+  buff[1] = variant == MSP_ESP ? 'E' : 'M';
   buff[2] = result == -1 ? '!' : '>';
   buff[3] = len;
   buff[4] = cmd;

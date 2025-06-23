@@ -1,5 +1,6 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hardware.h"
+#include "EspProtocol.hpp"
 #include <platform.h>
 #include <algorithm>
 #include <limits>
@@ -155,9 +156,7 @@ constexpr uint8_t MSP_PASSTHROUGH_ESC_4WAY = 0xff;
 
 }
 
-namespace Espfc {
-
-namespace Connect {
+namespace Espfc::Connect {
 
 MspProcessor::MspProcessor(Model& model): _model(model) {}
 
@@ -174,7 +173,89 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 {
   r.cmd = m.cmd;
   r.version = m.version;
+  r.variant = m.variant;
   r.result = 1;
+  switch(m.variant)
+  {
+    case MSP_BF:
+      processCommandBF(m, r, s);
+      break;
+    case MSP_ESP:
+      processCommandESP(m, r, s);
+      break;
+    default:
+      r.cmd = m.cmd;
+      r.version = m.version;
+      r.variant = m.variant;
+      r.result = -1; // unsupported variant
+      break;
+  }
+}
+
+void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
+{
+  switch(m.cmd)
+  {
+    case ESP_CMD_VERSION:
+      {
+        EspCmdVersion version = {
+          .apiMajor = ESP_API_VERSION_MAJOR,
+          .apiMinor = ESP_API_VERSION_MINOR,
+          .hwType = ESP_HW_TYPE_UNKNOWN,
+          .capabilities = 0,
+          .fwVersion = {0},
+          .fwRevision = {0}
+        };
+        char ver[] = STR(ESPFC_VERSION);
+        char rev[] = STR(ESPFC_REVISION);
+        std::copy_n(ver, std::min(sizeof(version.fwVersion), sizeof(ver)), version.fwVersion);
+        std::copy_n(rev, std::min(sizeof(version.fwRevision), sizeof(rev)), version.fwRevision);
+        r.write(version);
+      }
+      break;
+
+    case ESP_CMD_STATUS:
+      {
+        EspCmdStatus status = {
+          .sensors = 0,
+          .gyroTimeUs = (uint16_t)_model.state.gyro.timer.interval,
+          .modeSwitchMask = _model.state.mode.maskSwitch,
+          .modeActiveMask = _model.state.mode.mask,
+          .armingDisableFlags = _model.state.mode.armingDisabledFlags,
+        };
+        if(_model.state.gyro.present) status.sensors |= 1 << 0;
+        if(_model.state.accel.present) status.sensors |= 1 << 1;
+        if(_model.state.baro.present) status.sensors |= 1 << 2;
+        if(_model.state.mag.present) status.sensors |= 1 << 3;
+        if(_model.state.gps.present) status.sensors |= 1 << 4;
+        r.write(status);
+      }
+      break;
+
+    case ESP_CMD_STATISTICS:
+      {
+        EspCmdStatistics stats = {
+          .uptimeMs = millis(),
+          .cpuLoad = (uint8_t)lrintf(_model.state.stats.getCpuLoad()),
+          .cpu0Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_0)),
+          .cpu1Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_1)),
+          .freeHeap = targetFreeHeap(),
+          .totalHeap = 0,
+          .flashTotal = flashfsGetSize(),
+          .flashUsed = flashfsGetOffset()
+        };
+        r.write(stats);
+      }
+      break;
+
+    default:
+      r.result = -1; // unsupported command
+      break;
+  }
+}
+
+void MspProcessor::processCommandBF(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
+{
   switch(m.cmd)
   {
     case MSP_API_VERSION:
@@ -1691,8 +1772,6 @@ void MspProcessor::debugResponse(const MspResponse& r)
     s->print(r.data[i], HEX); s->print(' ');
   }
   s->println();
-}
-
 }
 
 }
