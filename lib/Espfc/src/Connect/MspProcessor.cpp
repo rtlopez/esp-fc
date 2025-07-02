@@ -239,12 +239,150 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           .cpuLoad = (uint8_t)lrintf(_model.state.stats.getCpuLoad()),
           .cpu0Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_0)),
           .cpu1Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_1)),
-          .freeHeap = targetFreeHeap(),
-          .totalHeap = 0,
+          .heapTotal = 0,
+          .heapFree = targetFreeHeap(),
           .flashTotal = flashfsGetSize(),
           .flashUsed = flashfsGetOffset()
         };
         r.write(stats);
+      }
+      break;
+
+    case ESP_CMD_ATTITUDE:
+      {
+        EspCmdAttitude attitude = {
+          .x = (int16_t)lrintf(_model.state.attitude.quaternion.x * 1000.0f),
+          .y = (int16_t)lrintf(_model.state.attitude.quaternion.y * 1000.0f),
+          .z = (int16_t)lrintf(_model.state.attitude.quaternion.z * 1000.0f),
+          .w = (int16_t)lrintf(_model.state.attitude.quaternion.w * 1000.0f),
+        };
+        r.write(attitude);
+      }
+      break;
+
+    case ESP_CMD_SENSORS:
+      {
+        EspCmdSensors sensors = {
+          .gyro = {
+            (int16_t)lrintf(_model.state.gyro.bias.x * 100.0f),
+            (int16_t)lrintf(_model.state.gyro.bias.y * 100.0f),
+            (int16_t)lrintf(_model.state.gyro.bias.z * 100.0f),
+          },
+          .accel = {
+            (int16_t)lrintf(_model.state.accel.bias.x * 100.0f),
+            (int16_t)lrintf(_model.state.accel.bias.y * 100.0f),
+            (int16_t)lrintf(_model.state.accel.bias.z * 100.0f),
+          },
+          .mag = {
+            (int16_t)lrintf(_model.state.mag.calibrationOffset.x * 100.0f),
+            (int16_t)lrintf(_model.state.mag.calibrationOffset.y * 100.0f),
+            (int16_t)lrintf(_model.state.mag.calibrationOffset.z * 100.0f),
+          },
+          .baroAlt = (int16_t)lrintf(_model.state.baro.altitude * 100.0f),
+        };
+        r.write(sensors);
+      }
+      break;
+
+    case ESP_CMD_INPUT:
+      {
+        EspCmdInput input = {
+          .channelCount = (uint8_t)_model.state.input.channelCount,
+          .channels = {0}
+        };
+        std::copy(_model.state.input.us, _model.state.input.us + _model.state.input.channelCount, input.channels);
+        r.write(input);
+      }
+      break;
+
+    case ESP_CMD_OUTPUT:
+      {
+        EspCmdOutput output = {
+          .channelCount = OUTPUT_CHANNELS,
+          .channels = {0}
+        };
+        std::copy(_model.state.output.us, _model.state.output.us + OUTPUT_CHANNELS, output.channels);
+        r.write(output);
+      }
+      break;
+
+    case ESP_CMD_VOLTAGE:
+      {
+        EspCmdVoltage voltage = {
+          .voltage = (uint16_t)lrintf(_model.state.battery.voltage * 100.0f),
+          .cellCount = (uint8_t)_model.state.battery.cells,
+        };
+        r.write(voltage);
+      }
+      break;
+
+    case ESP_CMD_CURRENT:
+      {
+        EspCmdCurrent current = {
+          .current = (uint16_t)std::clamp(lrintf(_model.state.battery.current * 100.0f), 0l, (long)UINT16_MAX),
+          .consumption = (uint32_t)lrintf(_model.state.battery.consumption),
+        };
+        r.write(current);
+      }
+      break;
+
+    case ESP_CMD_DEBUG:
+      {
+        EspCmdDebug debug = {};
+        std::copy(_model.state.debug, _model.state.debug + 8, debug.debug);
+        r.write(debug);
+      }
+      break;
+
+    case ESP_CMD_INPUT_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdInputConfig))
+        {
+          EspCmdInputConfig req;
+          req.type = 0; m.advance(1);
+          _model.config.input.deadband = req.deadband = m.readU8();
+          _model.config.input.minRc = req.min = m.readU16();
+          _model.config.input.midRc = req.mid = m.readU16();
+          _model.config.input.maxRc = req.max = m.readU16();
+        }
+        EspCmdInputConfig res = {
+          .type = 3,
+          .deadband = _model.config.input.deadband,
+          .min = _model.config.input.minRc,
+          .mid = _model.config.input.midRc,
+          .max = _model.config.input.maxRc,
+          .dbg = m.received
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_DISABLE_ARM:
+      {
+        const uint8_t cmd = m.readU8();
+        _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+        if (_model.isModeActive(MODE_ARMED)) _model.disarm(DISARM_REASON_ARMING_DISABLED);
+      }
+      break;
+
+    case ESP_CMD_DEFAULTS:
+      if(!_model.isModeActive(MODE_ARMED))
+      {
+        _model.reset();
+        _model.save();
+      }
+      break;
+
+    case ESP_CMD_SAVE:
+      {
+        _model.save();
+      }
+      break;
+
+    case ESP_CMD_REBOOT:
+      {
+        r.writeU8(0); // reboot to firmware
+        _postCommand = std::bind(&MspProcessor::processRestart, this);
       }
       break;
 
