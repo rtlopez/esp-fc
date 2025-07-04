@@ -198,10 +198,10 @@ struct EspCmdNames
 struct EspCmdInputChannelConfig
 {
   uint8_t map; // channel mapping
-  uint8_t flags; // flags for the channel
-  uint16_t min; // minimum value
-  uint16_t max; // maximum value
-  uint16_t neutral; // neutral value
+  uint16_t min; // minimum range
+  uint16_t max; // maximum range
+  uint8_t fsMode; // failsafe mode
+  uint16_t fsValue; // failsafe value
 } __attribute__((packed));
 
 struct EspCmdInputChannelConfigRequest
@@ -212,8 +212,8 @@ struct EspCmdInputChannelConfigRequest
 
 struct EspCmdInputChannelConfigResponse
 {
-  uint8_t channelCount;
-  EspCmdInputChannelConfig channels[16]; // up to 16 channels
+  uint8_t count;
+  EspCmdInputChannelConfig configs[INPUT_CHANNELS]; // up to 16 channels
 } __attribute__((packed));
 
 struct EspCmdOutputChannelConfig
