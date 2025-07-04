@@ -235,14 +235,19 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_STATISTICS:
       {
         EspCmdStatistics stats = {
-          .uptimeMs = millis(),
+          .uptimeMs = static_cast<uint32_t>(millis()),
           .cpuLoad = (uint8_t)lrintf(_model.state.stats.getCpuLoad()),
           .cpu0Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_0)),
           .cpu1Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_1)),
           .heapTotal = 0,
           .heapFree = targetFreeHeap(),
+#ifdef USE_FLASHFS
           .flashTotal = flashfsGetSize(),
           .flashUsed = flashfsGetOffset()
+#else
+          .flashTotal = 0,
+          .flashUsed = 0
+#endif
         };
         r.write(stats);
       }
@@ -290,7 +295,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           .channelCount = (uint8_t)_model.state.input.channelCount,
           .channels = {0}
         };
-        std::copy(_model.state.input.us, _model.state.input.us + _model.state.input.channelCount, input.channels);
+        for(size_t i = 0; i < _model.state.input.channelCount; i++) input.channels[i] = _model.state.input.us[i];
         r.write(input);
       }
       break;
@@ -301,7 +306,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           .channelCount = OUTPUT_CHANNELS,
           .channels = {0}
         };
-        std::copy(_model.state.output.us, _model.state.output.us + OUTPUT_CHANNELS, output.channels);
+        for(size_t i = 0; i < OUTPUT_CHANNELS; i++) output.channels[i] = _model.state.output.us[i];
         r.write(output);
       }
       break;
@@ -329,7 +334,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_DEBUG:
       {
         EspCmdDebug debug = {};
-        std::copy(_model.state.debug, _model.state.debug + 8, debug.debug);
+        for(size_t i = 0; i < 8; i++) debug.debug[i] = _model.state.debug[i];
         r.write(debug);
       }
       break;
@@ -338,12 +343,11 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       {
         if(m.received >= sizeof(EspCmdInputConfig))
         {
-          EspCmdInputConfig req;
-          req.type = 0; m.advance(1);
-          _model.config.input.deadband = req.deadband = m.readU8();
-          _model.config.input.minRc = req.min = m.readU16();
-          _model.config.input.midRc = req.mid = m.readU16();
-          _model.config.input.maxRc = req.max = m.readU16();
+          m.advance(1);
+          _model.config.input.deadband = m.readU8();
+          _model.config.input.minRc = m.readU16();
+          _model.config.input.midRc = m.readU16();
+          _model.config.input.maxRc = m.readU16();
         }
         EspCmdInputConfig res = {
           .type = 3,
@@ -352,6 +356,36 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           .mid = _model.config.input.midRc,
           .max = _model.config.input.maxRc,
           .dbg = m.received
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_INPUT_CHANNEL_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdInputChannelConfigResponse))
+        {
+          m.advance(1);
+          for(size_t i = 0; i < INPUT_CHANNELS; i++)
+          {
+            InputChannelConfig& c = _model.config.input.channel[i];
+            c.map = m.readU8();
+            c.min = m.readU16();
+            c.max = m.readU16();
+            c.fsMode = m.readU8();
+            c.fsValue = m.readU16();
+          }
+        }
+        EspCmdInputChannelConfigResponse res;
+        res.count = (uint8_t)_model.state.input.channelCount;
+        for(size_t i = 0; i < INPUT_CHANNELS; i++)
+        {
+          InputChannelConfig& c = _model.config.input.channel[i];
+          res.configs[i].map = c.map;
+          res.configs[i].min = c.min;
+          res.configs[i].max = c.max;
+          res.configs[i].fsMode = c.fsMode;
+          res.configs[i].fsValue = c.fsValue;
         };
         r.write(res);
       }
@@ -675,7 +709,7 @@ void MspProcessor::processCommandBF(MspMessage& m, MspResponse& r, Device::Seria
       break;
 
     case MSP_DATAFLASH_SUMMARY:
-#ifdef USE_FLASHFS   
+#ifdef USE_FLASHFS
       {
         uint8_t flags = flashfsIsSupported() ? 2 : 0;
         flags |= flashfsIsReady() ? 1 : 0;
