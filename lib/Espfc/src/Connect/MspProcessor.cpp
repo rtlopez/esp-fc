@@ -158,6 +158,55 @@ constexpr uint8_t MSP_PASSTHROUGH_ESC_4WAY = 0xff;
 
 namespace Espfc::Connect {
 
+static EspCmdInputType toEspInputType(const Model& _model)
+{
+  if(_model.config.featureMask & FEATURE_RX_SERIAL)
+  {
+    if(_model.config.input.serialRxProvider == SERIALRX_IBUS) return RX_SERIAL_IBUS;
+    else if(_model.config.input.serialRxProvider == SERIALRX_SBUS) return RX_SERIAL_SBUS;
+    else if(_model.config.input.serialRxProvider == SERIALRX_CRSF) return RX_SERIAL_CRSF;
+    return RX_NONE;
+  }
+  else if(_model.config.featureMask & FEATURE_RX_SPI)
+  {
+    return RX_ESPNOW;
+  }
+  else if(_model.config.featureMask & FEATURE_RX_PPM)
+  {
+    return RX_PPM;
+  }
+  return RX_NONE;
+}
+
+static void fromEspInputType(Model& _model, EspCmdInputType type)
+{
+  _model.config.featureMask &= ~(FEATURE_RX_SERIAL | FEATURE_RX_SPI | FEATURE_RX_PPM);
+  switch(type)
+  {
+    case RX_SERIAL_IBUS:
+      _model.config.featureMask |= FEATURE_RX_SERIAL;
+      _model.config.input.serialRxProvider = SERIALRX_IBUS;
+      break;
+    case RX_SERIAL_SBUS:
+      _model.config.featureMask |= FEATURE_RX_SERIAL;
+      _model.config.input.serialRxProvider = SERIALRX_SBUS;
+      break;
+    case RX_SERIAL_CRSF:
+      _model.config.featureMask |= FEATURE_RX_SERIAL;
+      _model.config.input.serialRxProvider = SERIALRX_CRSF;
+      break;
+    case RX_ESPNOW:
+      _model.config.featureMask |= FEATURE_RX_SPI;
+      break;
+    case RX_PPM:
+      _model.config.featureMask |= FEATURE_RX_PPM;
+      break;
+    case RX_NONE:
+    default:
+      break;
+  }
+}
+
 MspProcessor::MspProcessor(Model& model): _model(model) {}
 
 bool MspProcessor::parse(char c, MspMessage& msg)
@@ -341,21 +390,23 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
 
     case ESP_CMD_INPUT_CONFIG:
       {
+        InputConfig& c = _model.config.input;
         if(m.received >= sizeof(EspCmdInputConfig))
         {
-          m.advance(1);
-          _model.config.input.deadband = m.readU8();
-          _model.config.input.minRc = m.readU16();
-          _model.config.input.midRc = m.readU16();
-          _model.config.input.maxRc = m.readU16();
+          fromEspInputType(_model, (EspCmdInputType)m.readU8());
+          c.deadband = m.readU8();
+          c.filterAutoFactor = m.readU8();
+          c.midRc = m.readU16();
+          c.minRc = m.readU16();
+          c.maxRc = m.readU16();
         }
         EspCmdInputConfig res = {
-          .type = 3,
-          .deadband = _model.config.input.deadband,
-          .min = _model.config.input.minRc,
-          .mid = _model.config.input.midRc,
-          .max = _model.config.input.maxRc,
-          .dbg = m.received
+          .type = toEspInputType(_model),
+          .deadband = (uint8_t)c.deadband,
+          .smoothing = (uint8_t)c.filterAutoFactor,
+          .mid = c.midRc,
+          .min = c.minRc,
+          .max = c.maxRc,
         };
         r.write(res);
       }

@@ -456,14 +456,24 @@ struct EspCmdFlashReadResponse
   uint8_t data[1]; // data read from flash (variable length)
 } __attribute__((packed));
 
+enum EspCmdInputType: uint8_t
+{
+  RX_NONE = 0,
+  RX_SERIAL_IBUS = 1,
+  RX_SERIAL_SBUS,
+  RX_SERIAL_CRSF,
+  RX_ESPNOW = 0x10,
+  RX_PPM = 0x11,
+};
+
 struct EspCmdInputConfig
 {
   uint8_t type;
-  int8_t deadband;
-  int16_t min;
+  uint8_t deadband;
+  uint8_t smoothing;
   int16_t mid;
+  int16_t min;
   int16_t max;
-  uint16_t dbg;
 } __attribute__((packed));
 
 }
