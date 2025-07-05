@@ -442,6 +442,76 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_OUTPUT_CONFIG:
+      {
+        OutputConfig& c = _model.config.output;
+        if(m.received >= sizeof(EspCmdOutputConfig))
+        {
+          c.protocol = m.readU8();
+          c.async = m.readU8();
+          c.rate = m.readU16();
+          c.servoRate = m.readU16();
+          c.minCommand = m.readU16();
+          c.minThrottle = m.readU16();
+          c.maxThrottle = m.readU16();
+          c.dshotIdle = m.readU16();
+          c.dshotTelemetry = m.readU8();
+          c.motorPoles = m.readU8();
+          c.motorLimit = m.readU8();
+          c.throttleLimitType = m.readU8();
+          c.throttleLimitPercent = m.readU8();
+        }
+        EspCmdOutputConfig res = {
+          .protocol = (uint8_t)c.protocol,
+          .async = (uint8_t)c.async,
+          .rate = (uint16_t)c.rate,
+          .servoRate = (uint16_t)c.servoRate,
+          .minCommand = (uint16_t)c.minCommand,
+          .minThrottle = (uint16_t)c.minThrottle,
+          .maxThrottle = (uint16_t)c.maxThrottle,
+          .digitalIdle = (uint16_t)c.dshotIdle,
+          .digitalTlm = (uint8_t)c.dshotTelemetry,
+          .motorPoles = (uint8_t)c.motorPoles,
+          .motorLimit = (uint8_t)c.motorLimit,
+          .throttleLimitType = (uint8_t)c.throttleLimitType,
+          .throttleLimitPercent = (uint8_t)c.throttleLimitPercent,
+        };
+        r.write(res);
+      }
+      break;
+
+      case ESP_CMD_OUTPUT_CHANNEL_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdOutputChannelConfigResponse))
+        {
+          m.advance(1);
+          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            OutputChannelConfig& c = _model.config.output.channel[i];
+            c.min = m.readU16();
+            c.neutral = m.readU16();
+            c.max = m.readU16();
+            c.servo = m.readU8();
+            c.reverse = m.readU8();
+            _model.config.pin[PIN_OUTPUT_0 + i] = (int8_t)m.readU8();
+          }
+        }
+        EspCmdOutputChannelConfigResponse res;
+        res.count = OUTPUT_CHANNELS;
+        for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+        {
+          OutputChannelConfig& c = _model.config.output.channel[i];
+          res.configs[i].min = c.min;
+          res.configs[i].neutral = c.neutral;
+          res.configs[i].max = c.max;
+          res.configs[i].servo = c.servo;
+          res.configs[i].reverse = c.reverse;
+          res.configs[i].pin = _model.config.pin[PIN_OUTPUT_0 + i];
+        };
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_DISABLE_ARM:
       {
         const uint8_t cmd = m.readU8();

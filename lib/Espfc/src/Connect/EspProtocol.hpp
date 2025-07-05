@@ -216,13 +216,32 @@ struct EspCmdInputChannelConfigResponse
   EspCmdInputChannelConfig configs[INPUT_CHANNELS]; // up to 16 channels
 } __attribute__((packed));
 
+struct EspCmdOutputConfig
+{
+  uint8_t protocol;
+  uint8_t async;
+  uint16_t rate;
+  uint16_t servoRate;
+  uint16_t minCommand;
+  uint16_t minThrottle;
+  uint16_t maxThrottle;
+  uint16_t digitalIdle;
+  uint8_t digitalTlm;
+  uint8_t motorPoles;
+  uint8_t motorLimit;
+  uint8_t throttleLimitType;
+  uint8_t throttleLimitPercent;
+} __attribute__((packed));
+
+
 struct EspCmdOutputChannelConfig
 {
-  uint8_t servo; // 1 for servo, 0 for motor
-  uint8_t reverse; // 1 for reverse, 0 for normal
   uint16_t min; // minimum value
   uint16_t neutral; // neutral value
   uint16_t max; // maximum value
+  uint8_t servo; // servo or motor
+  uint8_t reverse; // normal or reversed
+  int8_t pin;
 } __attribute__((packed));
 
 struct EspCmdOutputChannelConfigRequest
@@ -233,8 +252,8 @@ struct EspCmdOutputChannelConfigRequest
 
 struct EspCmdOutputChannelConfigResponse
 {
-  uint8_t channelCount;
-  EspCmdOutputChannelConfig channels[8]; // up to 8 channels
+  uint8_t count;
+  EspCmdOutputChannelConfig configs[OUTPUT_CHANNELS]; // up to 8 channels
 } __attribute__((packed));
 
 struct EspCmdLpfConfig {
