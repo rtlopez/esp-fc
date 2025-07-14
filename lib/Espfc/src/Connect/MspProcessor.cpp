@@ -512,6 +512,140 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_PIN_CONFIG:
+      {
+        size_t count = m.received / 2;
+        while(count--)
+        {
+          const uint8_t id = m.readU8();
+          const uint8_t pin = (int8_t)m.readU8();
+          const uint8_t index = id & ESP_PIN_IDX_MASK;
+          switch(id & ESP_PIN_FN_MASK)
+          {
+#ifdef ESPFC_SERIAL_0
+            case ESP_PIN_SERIAL:
+              _model.config.pin[PIN_SERIAL_0_RX + index] = pin;
+              break;
+#endif
+            case ESP_PIN_OUTPUT:
+              _model.config.pin[PIN_OUTPUT_0 + index] = pin;
+              break;
+#ifdef ESPFC_INPUT
+            case ESP_PIN_INPUT:
+              _model.config.pin[PIN_INPUT_RX] = pin;
+              break;
+#endif
+#ifdef ESPFC_I2C_0
+            case ESP_PIN_I2C:
+              _model.config.pin[PIN_I2C_0_SCL + index] = pin;
+              break;
+#endif
+#ifdef ESPFC_SPI_0
+            case ESP_PIN_SPI:
+              _model.config.pin[PIN_SPI_0_SCK + index] = pin;
+              break;
+#endif
+#ifdef ESPFC_ADC_0
+            case ESP_PIN_ADC:
+              _model.config.pin[PIN_INPUT_ADC_0 + index] = pin;
+              break;
+#endif
+            case ESP_PIN_BUTTON:
+              _model.config.pin[PIN_BUTTON] = pin;
+              break;
+            case ESP_PIN_BUZZER:
+              _model.config.pin[PIN_BUZZER] = pin;
+              break;
+            case ESP_PIN_LED:
+              _model.config.pin[PIN_LED_BLINK] = pin;
+              break;
+            default:
+              break;
+          }
+        }
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_0]);
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_1);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_1]);
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_2);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_2]);
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_3);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_3]);
+#if ESPFC_OUTPUT_COUNT > 4
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_4);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_4]);
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_5);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_5]);
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_6);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_6]);
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_7);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_7]);
+#endif
+#ifdef ESPFC_SERIAL_0
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_SERIAL_0_RX]);
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_1);
+        r.writeU8(_model.config.pin[PIN_SERIAL_0_TX]);
+#endif
+#ifdef ESPFC_SERIAL_1
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_2);
+        r.writeU8(_model.config.pin[PIN_SERIAL_1_RX]);
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_3);
+        r.writeU8(_model.config.pin[PIN_SERIAL_1_TX]);
+#endif
+#ifdef ESPFC_SERIAL_2
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_4);
+        r.writeU8(_model.config.pin[PIN_SERIAL_2_RX]);
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_5);
+        r.writeU8(_model.config.pin[PIN_SERIAL_2_TX]);
+#endif
+        r.writeU8(ESP_PIN_BUZZER | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_BUZZER]);
+        r.writeU8(ESP_PIN_LED | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_LED_BLINK]);
+#ifdef ESPFC_INPUT
+        r.writeU8(ESP_PIN_INPUT | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_INPUT_RX]);
+#endif
+        r.writeU8(ESP_PIN_BUTTON | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_BUTTON]);
+#ifdef ESPFC_ADC_0
+        r.writeU8(ESP_PIN_ADC | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_INPUT_ADC_0]);
+#endif
+#ifdef ESPFC_ADC_1
+        r.writeU8(ESP_PIN_ADC | ESP_PIN_1);
+        r.writeU8(_model.config.pin[PIN_INPUT_ADC_1]);
+#endif
+#ifdef ESPFC_I2C_0
+        r.writeU8(ESP_PIN_I2C | ESP_PIN_SCL);
+        r.writeU8(_model.config.pin[PIN_I2C_0_SCL]);
+        r.writeU8(ESP_PIN_I2C | ESP_PIN_SDA);
+        r.writeU8(_model.config.pin[PIN_I2C_0_SDA]);
+#endif
+#ifdef ESPFC_SPI_0
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_SCK);
+        r.writeU8(_model.config.pin[PIN_SPI_0_SCK]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_MOSI);
+        r.writeU8(_model.config.pin[PIN_SPI_0_MOSI]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_MISO);
+        r.writeU8(_model.config.pin[PIN_SPI_0_MISO]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_CS0);
+        r.writeU8(_model.config.pin[PIN_SPI_CS0]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_CS1);
+        r.writeU8(_model.config.pin[PIN_SPI_CS1]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_CS2);
+        r.writeU8(_model.config.pin[PIN_SPI_CS2]);
+#endif
+      }
+      break;
+
     case ESP_CMD_DISABLE_ARM:
       {
         const uint8_t cmd = m.readU8();

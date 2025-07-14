@@ -287,8 +287,6 @@ enum PinFunction {
   PIN_SPI_0_SCK,
   PIN_SPI_0_MOSI,
   PIN_SPI_0_MISO,
-#endif
-#ifdef ESPFC_SPI_0
   PIN_SPI_CS0,
   PIN_SPI_CS1,
   PIN_SPI_CS2,
