@@ -53,6 +53,7 @@ enum EspCommand : uint8_t
   ESP_CMD_CALIBRATE = 0x37,
   ESP_CMD_ESC_PASSTHROUGH = 0x38,
   ESP_CMD_ALIGNMENT_CONFIG = 0x39,
+  ESP_CMD_PIN_CONFIG = 0x3a,
 
   ESP_CMD_FLASH_STATUS = 0x40,
   ESP_CMD_FLASH_READ = 0x41,
@@ -77,6 +78,41 @@ enum EspCmdHardwareType : uint8_t
   ESP_HW_TYPE_ESP8266 = 0x0f,
   ESP_HW_TYPE_RP2040 = 0x10,
   ESP_HW_TYPE_RP2350 = 0x11,
+};
+
+enum EspCmdPinIndex : uint8_t
+{
+  ESP_PIN_0,
+  ESP_PIN_1,
+  ESP_PIN_2,
+  ESP_PIN_3,
+  ESP_PIN_4,
+  ESP_PIN_5,
+  ESP_PIN_6,
+  ESP_PIN_7,
+  ESP_PIN_SCL = ESP_PIN_0,
+  ESP_PIN_SDA = ESP_PIN_1,
+  ESP_PIN_SCK = ESP_PIN_0,
+  ESP_PIN_MOSI = ESP_PIN_1,
+  ESP_PIN_MISO = ESP_PIN_2,
+  ESP_PIN_CS0 = ESP_PIN_3,
+  ESP_PIN_CS1 = ESP_PIN_4,
+  ESP_PIN_CS2 = ESP_PIN_5,
+  ESP_PIN_IDX_MASK = 0x0f,
+};
+
+enum EspCmdPinFunction : uint8_t
+{
+  ESP_PIN_SERIAL = 0x00,
+  ESP_PIN_OUTPUT = 0x10,
+  ESP_PIN_INPUT = 0x20,
+  ESP_PIN_I2C = 0x30,
+  ESP_PIN_SPI = 0x40,
+  ESP_PIN_ADC = 0x50,
+  ESP_PIN_BUTTON = 0x60,
+  ESP_PIN_BUZZER = 0x70,
+  ESP_PIN_LED = 0x80,
+  ESP_PIN_FN_MASK = 0xf0,
 };
 
 struct EspCmdVersion
@@ -232,7 +268,6 @@ struct EspCmdOutputConfig
   uint8_t throttleLimitType;
   uint8_t throttleLimitPercent;
 } __attribute__((packed));
-
 
 struct EspCmdOutputChannelConfig
 {
