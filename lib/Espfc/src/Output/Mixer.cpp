@@ -280,6 +280,7 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
 
 void FAST_CODE_ATTR Mixer::readTelemetry()
 {
+  // TODO: https://github.com/betaflight/betaflight/pull/14490
   Utils::Stats::Measure mixerMeasure(_model.state.stats, COUNTER_MIXER_READ);
   if(!_model.config.output.dshotTelemetry || !_motor) return;
 
