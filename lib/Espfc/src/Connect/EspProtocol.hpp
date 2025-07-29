@@ -276,7 +276,6 @@ struct EspCmdOutputChannelConfig
   uint16_t max; // maximum value
   uint8_t servo; // servo or motor
   uint8_t reverse; // normal or reversed
-  int8_t pin;
 } __attribute__((packed));
 
 struct EspCmdOutputChannelConfigRequest
@@ -339,14 +338,8 @@ struct EspCmdAccelConfig
 
 struct EspCmdSerialConfig
 {
-  uint8_t baud;
-  uint8_t func;
-} __attribute__((packed));
-
-struct EspCmdSerialConfigRequest
-{
-  uint8_t serial;
-  EspCmdSerialConfig config;
+  uint32_t baud;
+  uint32_t func;
 } __attribute__((packed));
 
 struct EspCmdSerialConfigResponse
