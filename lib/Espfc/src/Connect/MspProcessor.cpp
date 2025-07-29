@@ -493,7 +493,6 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
             c.max = m.readU16();
             c.servo = m.readU8();
             c.reverse = m.readU8();
-            _model.config.pin[PIN_OUTPUT_0 + i] = (int8_t)m.readU8();
           }
         }
         EspCmdOutputChannelConfigResponse res;
@@ -506,7 +505,6 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           res.configs[i].max = c.max;
           res.configs[i].servo = c.servo;
           res.configs[i].reverse = c.reverse;
-          res.configs[i].pin = _model.config.pin[PIN_OUTPUT_0 + i];
         };
         r.write(res);
       }
@@ -643,6 +641,56 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
         r.writeU8(ESP_PIN_SPI | ESP_PIN_CS2);
         r.writeU8(_model.config.pin[PIN_SPI_CS2]);
 #endif
+      }
+      break;
+
+    case ESP_CMD_SERIAL_NAMES:
+      {
+#ifdef ESPFC_SERIAL_USB
+        r.writeString("USB");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_0
+        r.writeString("UART1");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_1
+        r.writeString("UART2");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_2
+        r.writeString("UART3");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
+        r.writeString("WIFI");
+        r.writeU8(0);
+#endif
+      }
+      break;
+
+    case ESP_CMD_SERIAL_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdSerialConfigResponse))
+        {
+          m.advance(1);
+          for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
+          {
+            SerialPortConfig& c = _model.config.serial[i];
+            c.baud = m.readU32();
+            c.functionMask = m.readU32();
+          }
+        }
+        EspCmdSerialConfigResponse res = {
+          .serialCount = SERIAL_UART_COUNT,
+        };
+        for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
+        {
+          SerialPortConfig& c = _model.config.serial[i];
+          res.serial[i].baud = c.baud;
+          res.serial[i].func = c.functionMask;
+        }
+        r.write(res);
       }
       break;
 
