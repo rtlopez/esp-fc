@@ -345,7 +345,7 @@ struct EspCmdSerialConfig
 struct EspCmdSerialConfigResponse
 {
   uint8_t serialCount;
-  EspCmdSerialConfig serial[6];
+  EspCmdSerialConfig serial[SERIAL_UART_COUNT];
 } __attribute__((packed));
 
 struct EspCmdVoltageConfig
