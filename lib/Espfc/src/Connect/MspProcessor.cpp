@@ -644,6 +644,69 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_MODE_NAMES:
+      {
+        r.writeU8(MODE_ARMED);
+        r.writeString("ARM");
+        r.writeU8(0);
+        r.writeU8(MODE_ANGLE);
+        r.writeString("ANGLE");
+        r.writeU8(0);
+        r.writeU8(MODE_AIRMODE);
+        r.writeString("AIRMODE");
+        r.writeU8(0);
+        r.writeU8(MODE_BUZZER);
+        r.writeString("BUZZER");
+        r.writeU8(0);
+        r.writeU8(MODE_FAILSAFE);
+        r.writeString("FAILSAFE");
+        r.writeU8(0);
+        r.writeU8(MODE_BLACKBOX);
+        r.writeString("BLACKBOX");
+        r.writeU8(0);
+        r.writeU8(MODE_BLACKBOX_ERASE);
+        r.writeString("BLACKBOX_ERASE");
+        r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_FEATURE_NAMES:
+      {
+        r.writeU8(6);
+        r.writeString("SOFTSERIAL");
+        r.writeU8(0);
+
+        r.writeU8(7);
+        r.writeString("GPS");
+        r.writeU8(0);
+
+        r.writeU8(10);
+        r.writeString("TELEMETRY");
+        r.writeU8(0);
+
+        r.writeU8(22);
+        r.writeString("AIRMODE");
+        r.writeU8(0);
+
+        r.writeU8(29);
+        r.writeString("DYN-NOTCH");
+        r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_FEATURE_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdFeatureConfig))
+        {
+          _model.config.featureMask = m.readU32();
+        }
+        EspCmdFeatureConfig res = {
+          .features = (uint32_t)_model.config.featureMask,
+        };
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_SERIAL_NAMES:
       {
 #ifdef ESPFC_SERIAL_USB
