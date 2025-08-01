@@ -54,6 +54,7 @@ enum EspCommand : uint8_t
   ESP_CMD_ESC_PASSTHROUGH = 0x38,
   ESP_CMD_ALIGNMENT_CONFIG = 0x39,
   ESP_CMD_PIN_CONFIG = 0x3a,
+  ESP_CMD_SENSOR_CONFIG = 0x3b,
 
   ESP_CMD_FLASH_STATUS = 0x40,
   ESP_CMD_FLASH_READ = 0x41,
@@ -137,6 +138,7 @@ struct EspCmdStatus
 struct EspCmdStatistics
 {
   uint32_t uptimeMs;
+  uint16_t loopTimeUs;
   uint8_t cpuLoad;
   uint8_t cpu0Load;
   uint8_t cpu1Load;
@@ -358,6 +360,7 @@ struct EspCmdVoltageConfig
   uint16_t cellWarning; // cell warning threshold
   uint16_t cellCritical; // cell critical threshold
 } __attribute__((packed));
+
 struct EspCmdCurrentConfig
 {
   uint8_t source;
@@ -375,7 +378,7 @@ struct EspCmdPidConfig
 
 struct EspCmdPidConfigRequest
 {
-  uint8_t pid;
+  uint8_t pidIndex;
   EspCmdPidConfig config;
 } __attribute__((packed));
 
@@ -522,5 +525,13 @@ struct EspCmdInputConfig
   int16_t min;
   int16_t max;
 } __attribute__((packed));
+
+struct EspCmdSensorConfig
+{
+  uint8_t loopSync;
+  uint8_t accelDev;
+  uint8_t baroDev;
+  uint8_t magDev;
+};
 
 }

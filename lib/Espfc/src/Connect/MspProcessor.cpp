@@ -285,6 +285,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       {
         EspCmdStatistics stats = {
           .uptimeMs = static_cast<uint32_t>(millis()),
+          .loopTimeUs = static_cast<uint16_t>(std::min((uint32_t)0xffff, _model.state.stats.loopTime())),
           .cpuLoad = (uint8_t)lrintf(_model.state.stats.getCpuLoad()),
           .cpu0Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_0)),
           .cpu1Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_1)),
@@ -318,19 +319,19 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       {
         EspCmdSensors sensors = {
           .gyro = {
-            (int16_t)lrintf(_model.state.gyro.bias.x * 100.0f),
-            (int16_t)lrintf(_model.state.gyro.bias.y * 100.0f),
-            (int16_t)lrintf(_model.state.gyro.bias.z * 100.0f),
+            (int16_t)lrintf(_model.state.gyro.adc.x * 100.0f),
+            (int16_t)lrintf(_model.state.gyro.adc.y * 100.0f),
+            (int16_t)lrintf(_model.state.gyro.adc.z * 100.0f),
           },
           .accel = {
-            (int16_t)lrintf(_model.state.accel.bias.x * 100.0f),
-            (int16_t)lrintf(_model.state.accel.bias.y * 100.0f),
-            (int16_t)lrintf(_model.state.accel.bias.z * 100.0f),
+            (int16_t)lrintf(_model.state.accel.adc.x * 100.0f),
+            (int16_t)lrintf(_model.state.accel.adc.y * 100.0f),
+            (int16_t)lrintf(_model.state.accel.adc.z * 100.0f),
           },
           .mag = {
-            (int16_t)lrintf(_model.state.mag.calibrationOffset.x * 100.0f),
-            (int16_t)lrintf(_model.state.mag.calibrationOffset.y * 100.0f),
-            (int16_t)lrintf(_model.state.mag.calibrationOffset.z * 100.0f),
+            (int16_t)lrintf(_model.state.mag.adc.x * 100.0f),
+            (int16_t)lrintf(_model.state.mag.adc.y * 100.0f),
+            (int16_t)lrintf(_model.state.mag.adc.z * 100.0f),
           },
           .baroAlt = (int16_t)lrintf(_model.state.baro.altitude * 100.0f),
         };
@@ -754,6 +755,25 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           res.serial[i].func = c.functionMask;
         }
         r.write(res);
+      }
+      break;
+
+    case ESP_CMD_SENSOR_CONFIG:
+      {
+        if (m.received >= sizeof(EspCmdSensorConfig))
+        {
+          _model.config.loopSync = m.readU8();
+          _model.config.accel.dev = m.readU8();
+          _model.config.baro.dev = m.readU8();
+          _model.config.mag.dev = m.readU8();
+        }
+        EspCmdSensorConfig ret = {
+          .loopSync = (uint8_t)_model.config.loopSync,
+          .accelDev = (uint8_t)_model.config.accel.dev,
+          .baroDev = (uint8_t)_model.config.baro.dev,
+          .magDev = (uint8_t)_model.config.mag.dev,
+        };
+        r.write(ret);
       }
       break;
 
