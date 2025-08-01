@@ -1,5 +1,6 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hardware.h"
+#include "EspProtocol.hpp"
 #include <platform.h>
 #include <algorithm>
 #include <limits>
@@ -155,9 +156,56 @@ constexpr uint8_t MSP_PASSTHROUGH_ESC_4WAY = 0xff;
 
 }
 
-namespace Espfc {
+namespace Espfc::Connect {
 
-namespace Connect {
+static EspCmdInputType toEspInputType(const Model& _model)
+{
+  if(_model.config.featureMask & FEATURE_RX_SERIAL)
+  {
+    if(_model.config.input.serialRxProvider == SERIALRX_IBUS) return RX_SERIAL_IBUS;
+    else if(_model.config.input.serialRxProvider == SERIALRX_SBUS) return RX_SERIAL_SBUS;
+    else if(_model.config.input.serialRxProvider == SERIALRX_CRSF) return RX_SERIAL_CRSF;
+    return RX_NONE;
+  }
+  else if(_model.config.featureMask & FEATURE_RX_SPI)
+  {
+    return RX_ESPNOW;
+  }
+  else if(_model.config.featureMask & FEATURE_RX_PPM)
+  {
+    return RX_PPM;
+  }
+  return RX_NONE;
+}
+
+static void fromEspInputType(Model& _model, EspCmdInputType type)
+{
+  _model.config.featureMask &= ~(FEATURE_RX_SERIAL | FEATURE_RX_SPI | FEATURE_RX_PPM);
+  switch(type)
+  {
+    case RX_SERIAL_IBUS:
+      _model.config.featureMask |= FEATURE_RX_SERIAL;
+      _model.config.input.serialRxProvider = SERIALRX_IBUS;
+      break;
+    case RX_SERIAL_SBUS:
+      _model.config.featureMask |= FEATURE_RX_SERIAL;
+      _model.config.input.serialRxProvider = SERIALRX_SBUS;
+      break;
+    case RX_SERIAL_CRSF:
+      _model.config.featureMask |= FEATURE_RX_SERIAL;
+      _model.config.input.serialRxProvider = SERIALRX_CRSF;
+      break;
+    case RX_ESPNOW:
+      _model.config.featureMask |= FEATURE_RX_SPI;
+      break;
+    case RX_PPM:
+      _model.config.featureMask |= FEATURE_RX_PPM;
+      break;
+    case RX_NONE:
+    default:
+      break;
+  }
+}
 
 MspProcessor::MspProcessor(Model& model): _model(model) {}
 
@@ -174,7 +222,598 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 {
   r.cmd = m.cmd;
   r.version = m.version;
+  r.variant = m.variant;
   r.result = 1;
+  switch(m.variant)
+  {
+    case MSP_BF:
+      processCommandBF(m, r, s);
+      break;
+    case MSP_ESP:
+      processCommandESP(m, r, s);
+      break;
+    default:
+      r.cmd = m.cmd;
+      r.version = m.version;
+      r.variant = m.variant;
+      r.result = -1; // unsupported variant
+      break;
+  }
+}
+
+void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
+{
+  switch(m.cmd)
+  {
+    case ESP_CMD_VERSION:
+      {
+        EspCmdVersion version = {
+          .apiMajor = ESP_API_VERSION_MAJOR,
+          .apiMinor = ESP_API_VERSION_MINOR,
+          .hwType = ESP_HW_TYPE_UNKNOWN,
+          .capabilities = 0,
+          .fwVersion = {0},
+          .fwRevision = {0}
+        };
+        char ver[] = STR(ESPFC_VERSION);
+        char rev[] = STR(ESPFC_REVISION);
+        std::copy_n(ver, std::min(sizeof(version.fwVersion), sizeof(ver)), version.fwVersion);
+        std::copy_n(rev, std::min(sizeof(version.fwRevision), sizeof(rev)), version.fwRevision);
+        r.write(version);
+      }
+      break;
+
+    case ESP_CMD_STATUS:
+      {
+        EspCmdStatus status = {
+          .sensors = 0,
+          .gyroTimeUs = (uint16_t)_model.state.gyro.timer.interval,
+          .modeSwitchMask = _model.state.mode.maskSwitch,
+          .modeActiveMask = _model.state.mode.mask,
+          .armingDisableFlags = _model.state.mode.armingDisabledFlags,
+        };
+        if(_model.state.gyro.present) status.sensors |= 1 << 0;
+        if(_model.state.accel.present) status.sensors |= 1 << 1;
+        if(_model.state.baro.present) status.sensors |= 1 << 2;
+        if(_model.state.mag.present) status.sensors |= 1 << 3;
+        if(_model.state.gps.present) status.sensors |= 1 << 4;
+        r.write(status);
+      }
+      break;
+
+    case ESP_CMD_STATISTICS:
+      {
+        EspCmdStatistics stats = {
+          .uptimeMs = static_cast<uint32_t>(millis()),
+          .loopTimeUs = static_cast<uint16_t>(std::min((uint32_t)0xffff, _model.state.stats.loopTime())),
+          .cpuLoad = (uint8_t)lrintf(_model.state.stats.getCpuLoad()),
+          .cpu0Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_0)),
+          .cpu1Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_1)),
+          .heapTotal = 0,
+          .heapFree = targetFreeHeap(),
+#ifdef USE_FLASHFS
+          .flashTotal = flashfsGetSize(),
+          .flashUsed = flashfsGetOffset()
+#else
+          .flashTotal = 0,
+          .flashUsed = 0
+#endif
+        };
+        r.write(stats);
+      }
+      break;
+
+    case ESP_CMD_ATTITUDE:
+      {
+        EspCmdAttitude attitude = {
+          .x = (int16_t)lrintf(_model.state.attitude.quaternion.x * 1000.0f),
+          .y = (int16_t)lrintf(_model.state.attitude.quaternion.y * 1000.0f),
+          .z = (int16_t)lrintf(_model.state.attitude.quaternion.z * 1000.0f),
+          .w = (int16_t)lrintf(_model.state.attitude.quaternion.w * 1000.0f),
+        };
+        r.write(attitude);
+      }
+      break;
+
+    case ESP_CMD_SENSORS:
+      {
+        EspCmdSensors sensors = {
+          .gyro = {
+            (int16_t)lrintf(_model.state.gyro.adc.x * 100.0f),
+            (int16_t)lrintf(_model.state.gyro.adc.y * 100.0f),
+            (int16_t)lrintf(_model.state.gyro.adc.z * 100.0f),
+          },
+          .accel = {
+            (int16_t)lrintf(_model.state.accel.adc.x * 100.0f),
+            (int16_t)lrintf(_model.state.accel.adc.y * 100.0f),
+            (int16_t)lrintf(_model.state.accel.adc.z * 100.0f),
+          },
+          .mag = {
+            (int16_t)lrintf(_model.state.mag.adc.x * 100.0f),
+            (int16_t)lrintf(_model.state.mag.adc.y * 100.0f),
+            (int16_t)lrintf(_model.state.mag.adc.z * 100.0f),
+          },
+          .baroAlt = (int16_t)lrintf(_model.state.baro.altitude * 100.0f),
+        };
+        r.write(sensors);
+      }
+      break;
+
+    case ESP_CMD_INPUT:
+      {
+        EspCmdInput input = {
+          .channelCount = (uint8_t)_model.state.input.channelCount,
+          .channels = {0}
+        };
+        for(size_t i = 0; i < _model.state.input.channelCount; i++) input.channels[i] = _model.state.input.us[i];
+        r.write(input);
+      }
+      break;
+
+    case ESP_CMD_OUTPUT:
+      {
+        EspCmdOutput output = {
+          .channelCount = OUTPUT_CHANNELS,
+          .channels = {0}
+        };
+        for(size_t i = 0; i < OUTPUT_CHANNELS; i++) output.channels[i] = _model.state.output.us[i];
+        r.write(output);
+      }
+      break;
+
+    case ESP_CMD_VOLTAGE:
+      {
+        EspCmdVoltage voltage = {
+          .voltage = (uint16_t)lrintf(_model.state.battery.voltage * 100.0f),
+          .cellCount = (uint8_t)_model.state.battery.cells,
+        };
+        r.write(voltage);
+      }
+      break;
+
+    case ESP_CMD_CURRENT:
+      {
+        EspCmdCurrent current = {
+          .current = (uint16_t)std::clamp(lrintf(_model.state.battery.current * 100.0f), 0l, (long)UINT16_MAX),
+          .consumption = (uint32_t)lrintf(_model.state.battery.consumption),
+        };
+        r.write(current);
+      }
+      break;
+
+    case ESP_CMD_DEBUG:
+      {
+        EspCmdDebug debug = {};
+        for(size_t i = 0; i < 8; i++) debug.debug[i] = _model.state.debug[i];
+        r.write(debug);
+      }
+      break;
+
+    case ESP_CMD_INPUT_CONFIG:
+      {
+        InputConfig& c = _model.config.input;
+        if(m.received >= sizeof(EspCmdInputConfig))
+        {
+          fromEspInputType(_model, (EspCmdInputType)m.readU8());
+          c.deadband = m.readU8();
+          c.filterAutoFactor = m.readU8();
+          c.midRc = m.readU16();
+          c.minRc = m.readU16();
+          c.maxRc = m.readU16();
+        }
+        EspCmdInputConfig res = {
+          .type = toEspInputType(_model),
+          .deadband = (uint8_t)c.deadband,
+          .smoothing = (uint8_t)c.filterAutoFactor,
+          .mid = c.midRc,
+          .min = c.minRc,
+          .max = c.maxRc,
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_INPUT_CHANNEL_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdInputChannelConfigResponse))
+        {
+          m.advance(1);
+          for(size_t i = 0; i < INPUT_CHANNELS; i++)
+          {
+            InputChannelConfig& c = _model.config.input.channel[i];
+            c.map = m.readU8();
+            c.min = m.readU16();
+            c.max = m.readU16();
+            c.fsMode = m.readU8();
+            c.fsValue = m.readU16();
+          }
+        }
+        EspCmdInputChannelConfigResponse res;
+        res.count = (uint8_t)_model.state.input.channelCount;
+        for(size_t i = 0; i < INPUT_CHANNELS; i++)
+        {
+          InputChannelConfig& c = _model.config.input.channel[i];
+          res.configs[i].map = c.map;
+          res.configs[i].min = c.min;
+          res.configs[i].max = c.max;
+          res.configs[i].fsMode = c.fsMode;
+          res.configs[i].fsValue = c.fsValue;
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_OUTPUT_CONFIG:
+      {
+        OutputConfig& c = _model.config.output;
+        if(m.received >= sizeof(EspCmdOutputConfig))
+        {
+          c.protocol = m.readU8();
+          c.async = m.readU8();
+          c.rate = m.readU16();
+          c.servoRate = m.readU16();
+          c.minCommand = m.readU16();
+          c.minThrottle = m.readU16();
+          c.maxThrottle = m.readU16();
+          c.dshotIdle = m.readU16();
+          c.dshotTelemetry = m.readU8();
+          c.motorPoles = m.readU8();
+          c.motorLimit = m.readU8();
+          c.throttleLimitType = m.readU8();
+          c.throttleLimitPercent = m.readU8();
+        }
+        EspCmdOutputConfig res = {
+          .protocol = (uint8_t)c.protocol,
+          .async = (uint8_t)c.async,
+          .rate = (uint16_t)c.rate,
+          .servoRate = (uint16_t)c.servoRate,
+          .minCommand = (uint16_t)c.minCommand,
+          .minThrottle = (uint16_t)c.minThrottle,
+          .maxThrottle = (uint16_t)c.maxThrottle,
+          .digitalIdle = (uint16_t)c.dshotIdle,
+          .digitalTlm = (uint8_t)c.dshotTelemetry,
+          .motorPoles = (uint8_t)c.motorPoles,
+          .motorLimit = (uint8_t)c.motorLimit,
+          .throttleLimitType = (uint8_t)c.throttleLimitType,
+          .throttleLimitPercent = (uint8_t)c.throttleLimitPercent,
+        };
+        r.write(res);
+      }
+      break;
+
+      case ESP_CMD_OUTPUT_CHANNEL_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdOutputChannelConfigResponse))
+        {
+          m.advance(1);
+          for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            OutputChannelConfig& c = _model.config.output.channel[i];
+            c.min = m.readU16();
+            c.neutral = m.readU16();
+            c.max = m.readU16();
+            c.servo = m.readU8();
+            c.reverse = m.readU8();
+          }
+        }
+        EspCmdOutputChannelConfigResponse res;
+        res.count = OUTPUT_CHANNELS;
+        for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
+        {
+          OutputChannelConfig& c = _model.config.output.channel[i];
+          res.configs[i].min = c.min;
+          res.configs[i].neutral = c.neutral;
+          res.configs[i].max = c.max;
+          res.configs[i].servo = c.servo;
+          res.configs[i].reverse = c.reverse;
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_PIN_CONFIG:
+      {
+        size_t count = m.received / 2;
+        while(count--)
+        {
+          const uint8_t id = m.readU8();
+          const uint8_t pin = (int8_t)m.readU8();
+          const uint8_t index = id & ESP_PIN_IDX_MASK;
+          switch(id & ESP_PIN_FN_MASK)
+          {
+#ifdef ESPFC_SERIAL_0
+            case ESP_PIN_SERIAL:
+              _model.config.pin[PIN_SERIAL_0_RX + index] = pin;
+              break;
+#endif
+            case ESP_PIN_OUTPUT:
+              _model.config.pin[PIN_OUTPUT_0 + index] = pin;
+              break;
+#ifdef ESPFC_INPUT
+            case ESP_PIN_INPUT:
+              _model.config.pin[PIN_INPUT_RX] = pin;
+              break;
+#endif
+#ifdef ESPFC_I2C_0
+            case ESP_PIN_I2C:
+              _model.config.pin[PIN_I2C_0_SCL + index] = pin;
+              break;
+#endif
+#ifdef ESPFC_SPI_0
+            case ESP_PIN_SPI:
+              _model.config.pin[PIN_SPI_0_SCK + index] = pin;
+              break;
+#endif
+#ifdef ESPFC_ADC_0
+            case ESP_PIN_ADC:
+              _model.config.pin[PIN_INPUT_ADC_0 + index] = pin;
+              break;
+#endif
+            case ESP_PIN_BUTTON:
+              _model.config.pin[PIN_BUTTON] = pin;
+              break;
+            case ESP_PIN_BUZZER:
+              _model.config.pin[PIN_BUZZER] = pin;
+              break;
+            case ESP_PIN_LED:
+              _model.config.pin[PIN_LED_BLINK] = pin;
+              break;
+            default:
+              break;
+          }
+        }
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_0]);
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_1);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_1]);
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_2);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_2]);
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_3);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_3]);
+#if ESPFC_OUTPUT_COUNT > 4
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_4);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_4]);
+#endif
+#if ESPFC_OUTPUT_COUNT > 5
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_5);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_5]);
+#endif
+#if ESPFC_OUTPUT_COUNT > 6
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_6);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_6]);
+#endif
+#if ESPFC_OUTPUT_COUNT > 7
+        r.writeU8(ESP_PIN_OUTPUT | ESP_PIN_7);
+        r.writeU8(_model.config.pin[PIN_OUTPUT_7]);
+#endif
+#ifdef ESPFC_SERIAL_0
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_SERIAL_0_RX]);
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_1);
+        r.writeU8(_model.config.pin[PIN_SERIAL_0_TX]);
+#endif
+#ifdef ESPFC_SERIAL_1
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_2);
+        r.writeU8(_model.config.pin[PIN_SERIAL_1_RX]);
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_3);
+        r.writeU8(_model.config.pin[PIN_SERIAL_1_TX]);
+#endif
+#ifdef ESPFC_SERIAL_2
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_4);
+        r.writeU8(_model.config.pin[PIN_SERIAL_2_RX]);
+        r.writeU8(ESP_PIN_SERIAL | ESP_PIN_5);
+        r.writeU8(_model.config.pin[PIN_SERIAL_2_TX]);
+#endif
+        r.writeU8(ESP_PIN_BUZZER | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_BUZZER]);
+        r.writeU8(ESP_PIN_LED | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_LED_BLINK]);
+#ifdef ESPFC_INPUT
+        r.writeU8(ESP_PIN_INPUT | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_INPUT_RX]);
+#endif
+        r.writeU8(ESP_PIN_BUTTON | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_BUTTON]);
+#ifdef ESPFC_ADC_0
+        r.writeU8(ESP_PIN_ADC | ESP_PIN_0);
+        r.writeU8(_model.config.pin[PIN_INPUT_ADC_0]);
+#endif
+#ifdef ESPFC_ADC_1
+        r.writeU8(ESP_PIN_ADC | ESP_PIN_1);
+        r.writeU8(_model.config.pin[PIN_INPUT_ADC_1]);
+#endif
+#ifdef ESPFC_I2C_0
+        r.writeU8(ESP_PIN_I2C | ESP_PIN_SCL);
+        r.writeU8(_model.config.pin[PIN_I2C_0_SCL]);
+        r.writeU8(ESP_PIN_I2C | ESP_PIN_SDA);
+        r.writeU8(_model.config.pin[PIN_I2C_0_SDA]);
+#endif
+#ifdef ESPFC_SPI_0
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_SCK);
+        r.writeU8(_model.config.pin[PIN_SPI_0_SCK]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_MOSI);
+        r.writeU8(_model.config.pin[PIN_SPI_0_MOSI]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_MISO);
+        r.writeU8(_model.config.pin[PIN_SPI_0_MISO]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_CS0);
+        r.writeU8(_model.config.pin[PIN_SPI_CS0]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_CS1);
+        r.writeU8(_model.config.pin[PIN_SPI_CS1]);
+        r.writeU8(ESP_PIN_SPI | ESP_PIN_CS2);
+        r.writeU8(_model.config.pin[PIN_SPI_CS2]);
+#endif
+      }
+      break;
+
+    case ESP_CMD_MODE_NAMES:
+      {
+        r.writeU8(MODE_ARMED);
+        r.writeString("ARM");
+        r.writeU8(0);
+        r.writeU8(MODE_ANGLE);
+        r.writeString("ANGLE");
+        r.writeU8(0);
+        r.writeU8(MODE_AIRMODE);
+        r.writeString("AIRMODE");
+        r.writeU8(0);
+        r.writeU8(MODE_BUZZER);
+        r.writeString("BUZZER");
+        r.writeU8(0);
+        r.writeU8(MODE_FAILSAFE);
+        r.writeString("FAILSAFE");
+        r.writeU8(0);
+        r.writeU8(MODE_BLACKBOX);
+        r.writeString("BLACKBOX");
+        r.writeU8(0);
+        r.writeU8(MODE_BLACKBOX_ERASE);
+        r.writeString("BLACKBOX_ERASE");
+        r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_FEATURE_NAMES:
+      {
+        r.writeU8(6);
+        r.writeString("SOFTSERIAL");
+        r.writeU8(0);
+
+        r.writeU8(7);
+        r.writeString("GPS");
+        r.writeU8(0);
+
+        r.writeU8(10);
+        r.writeString("TELEMETRY");
+        r.writeU8(0);
+
+        r.writeU8(22);
+        r.writeString("AIRMODE");
+        r.writeU8(0);
+
+        r.writeU8(29);
+        r.writeString("DYN-NOTCH");
+        r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_FEATURE_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdFeatureConfig))
+        {
+          _model.config.featureMask = m.readU32();
+        }
+        EspCmdFeatureConfig res = {
+          .features = (uint32_t)_model.config.featureMask,
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_SERIAL_NAMES:
+      {
+#ifdef ESPFC_SERIAL_USB
+        r.writeString("USB");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_0
+        r.writeString("UART1");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_1
+        r.writeString("UART2");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_2
+        r.writeString("UART3");
+        r.writeU8(0);
+#endif
+#ifdef ESPFC_SERIAL_SOFT_0
+        r.writeString("WIFI");
+        r.writeU8(0);
+#endif
+      }
+      break;
+
+    case ESP_CMD_SERIAL_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdSerialConfigResponse))
+        {
+          m.advance(1);
+          for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
+          {
+            SerialPortConfig& c = _model.config.serial[i];
+            c.baud = m.readU32();
+            c.functionMask = m.readU32();
+          }
+        }
+        EspCmdSerialConfigResponse res = {
+          .serialCount = SERIAL_UART_COUNT,
+        };
+        for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
+        {
+          SerialPortConfig& c = _model.config.serial[i];
+          res.serial[i].baud = c.baud;
+          res.serial[i].func = c.functionMask;
+        }
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_SENSOR_CONFIG:
+      {
+        if (m.received >= sizeof(EspCmdSensorConfig))
+        {
+          _model.config.loopSync = m.readU8();
+          _model.config.accel.dev = m.readU8();
+          _model.config.baro.dev = m.readU8();
+          _model.config.mag.dev = m.readU8();
+        }
+        EspCmdSensorConfig ret = {
+          .loopSync = (uint8_t)_model.config.loopSync,
+          .accelDev = (uint8_t)_model.config.accel.dev,
+          .baroDev = (uint8_t)_model.config.baro.dev,
+          .magDev = (uint8_t)_model.config.mag.dev,
+        };
+        r.write(ret);
+      }
+      break;
+
+    case ESP_CMD_DISABLE_ARM:
+      {
+        const uint8_t cmd = m.readU8();
+        _model.setArmingDisabled(ARMING_DISABLED_MSP, cmd);
+        if (_model.isModeActive(MODE_ARMED)) _model.disarm(DISARM_REASON_ARMING_DISABLED);
+      }
+      break;
+
+    case ESP_CMD_DEFAULTS:
+      if(!_model.isModeActive(MODE_ARMED))
+      {
+        _model.reset();
+        _model.save();
+      }
+      break;
+
+    case ESP_CMD_SAVE:
+      {
+        _model.save();
+      }
+      break;
+
+    case ESP_CMD_REBOOT:
+      {
+        r.writeU8(0); // reboot to firmware
+        _postCommand = std::bind(&MspProcessor::processRestart, this);
+      }
+      break;
+
+    default:
+      r.result = -1; // unsupported command
+      break;
+  }
+}
+
+void MspProcessor::processCommandBF(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
+{
   switch(m.cmd)
   {
     case MSP_API_VERSION:
@@ -455,7 +1094,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_DATAFLASH_SUMMARY:
-#ifdef USE_FLASHFS   
+#ifdef USE_FLASHFS
       {
         uint8_t flags = flashfsIsSupported() ? 2 : 0;
         flags |= flashfsIsReady() ? 1 : 0;
@@ -1685,8 +2324,6 @@ void MspProcessor::debugResponse(const MspResponse& r)
     s->print(r.data[i], HEX); s->print(' ');
   }
   s->println();
-}
-
 }
 
 }

@@ -104,6 +104,7 @@ class BatteryState
     int8_t cells;
     int8_t samples;
     Utils::Timer timer;
+    float consumption; // in mAh
 };
 
 enum CalibrationState {
