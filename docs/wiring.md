@@ -26,8 +26,8 @@ Tu unmap pin function use -1 as pin number
 | Module Pin  | CLI Name         | ESP32 | ESP32-S3 |
 |-------------|------------------|------:|---------:|
 | SCK/SCL     | `pin_spi_0_sck`  | 18    | 12       |
-| SDA/SDI     | `pin_spi_0_miso` | 19    | 13       |
-| SAO/SDO/ADO | `pin_spi_0_mosi` | 23    | 11       |
+| SDA/SDI     | `pin_spi_0_mosi` | 23    | 11       |
+| SAO/SDO/ADO | `pin_spi_0_miso` | 19    | 13       |
 | NCS         | `pin_spi_cs_0`   |  5    |  8       |
 | CSB*        | `pin_spi_cs_1`   | 13    |  7       |
 
@@ -76,7 +76,7 @@ Tu unmap pin function use -1 as pin number
 
 | CLI name            | ESP32 | ESP32-S3 | Comment       |
 |---------------------|------:|---------:|---------------|
-| `pin_buzzer`        |  2    | 5        | Status buzzer |
+| `pin_buzzer`        |  0    | 5        | Status buzzer |
 | `pin_led`           |  26   | -        | Status led    |
 
 ## Example ESP32 SPI MPU-6500/MPU-9250 gyro
