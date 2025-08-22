@@ -674,7 +674,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_FEATURE_NAMES:
       {
         r.writeU8(6);
-        r.writeString("SOFTSERIAL");
+        r.writeString("WIFI");
         r.writeU8(0);
 
         r.writeU8(7);
