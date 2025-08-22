@@ -16,7 +16,7 @@ Tu unmap pin function use -1 as pin number
 | Module Pin | CLI Name         | ESP32 | ESP32-S3 |
 |------------|------------------|------:|---------:|
 | SCK/SCL    | `pin_i2c_scl`    | 22    | 10       |
-| SDA/SDI    | `pin_i2c_scl`    | 21    | 9        |
+| SDA/SDI    | `pin_i2c_sda`    | 21    | 9        |
 
 > [!NOTE]
 > I2C driver accepts only pins from 1 to 31
