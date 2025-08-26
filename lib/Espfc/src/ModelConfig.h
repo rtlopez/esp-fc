@@ -676,6 +676,17 @@ struct LedConfig
   int8_t type = 0;
 };
 
+struct PidTuningConfig
+{
+  uint8_t mode = 0; // 0: slider, 1: manual
+  uint8_t rpGain = 100; // roll/pitch gain
+  uint8_t rpStability = 100; // roll/pitch stability
+  uint8_t rpAgility = 100; // roll/pitch agility
+  uint8_t rpBalance = 100; // roll/pitch balance
+  uint8_t yawGain = 100; // yaw gain
+  uint8_t yawStability = 100; // stability
+} __attribute__((packed));
+
 // persistent data
 class ModelConfig
 {
@@ -810,6 +821,8 @@ class ModelConfig
     uint8_t rescueConfigDelay = 30;
     int16_t boardAlignment[3] = {0, 0, 0};
     char modelName[MODEL_NAME_LEN + 1];
+
+    PidTuningConfig pidTuning;
 
     ModelConfig()
     {

@@ -55,6 +55,7 @@ enum EspCommand : uint8_t
   ESP_CMD_ALIGNMENT_CONFIG = 0x39,
   ESP_CMD_PIN_CONFIG = 0x3a,
   ESP_CMD_SENSOR_CONFIG = 0x3b,
+  ESP_CMD_PID_TUNING = 0x3c,
 
   ESP_CMD_FLASH_STATUS = 0x40,
   ESP_CMD_FLASH_READ = 0x41,
@@ -373,7 +374,7 @@ struct EspCmdPidConfig
   uint8_t p; // P value
   uint8_t i; // I value
   uint8_t d; // D value
-  uint8_t f; // F value
+  uint16_t f; // F value
 } __attribute__((packed));
 
 struct EspCmdPidConfigRequest
@@ -533,5 +534,17 @@ struct EspCmdSensorConfig
   uint8_t baroDev;
   uint8_t magDev;
 };
+
+struct EspCmdPidTuning
+{
+  uint8_t mode; // 0: slider, 1: manual
+  uint8_t rpGain; // roll/pitch gain
+  uint8_t rpStability; // roll/pitch stability
+  uint8_t rpAgility; // roll/pitch agility
+  uint8_t rpBalance; // roll/pitch balance
+  uint8_t yawGain; // yaw gain
+  uint8_t yawStability; // stability
+  EspCmdPidConfig pids[3];
+} __attribute__((packed));
 
 }

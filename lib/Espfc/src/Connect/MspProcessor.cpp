@@ -777,6 +777,64 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_PID_TUNING:
+      {
+        if (m.received >= sizeof(EspCmdPidTuning))
+        {
+          _model.config.pidTuning.mode = m.readU8();
+          _model.config.pidTuning.rpGain = m.readU8();
+          _model.config.pidTuning.rpStability = m.readU8();
+          _model.config.pidTuning.rpAgility = m.readU8();
+          _model.config.pidTuning.rpBalance = m.readU8();
+          _model.config.pidTuning.yawGain = m.readU8();
+          _model.config.pidTuning.yawStability = m.readU8();
+          if(_model.config.pidTuning.mode == 1) // manual
+          {
+            _model.config.pid[FC_PID_ROLL].P = m.readU8();
+            _model.config.pid[FC_PID_ROLL].I = m.readU8();
+            _model.config.pid[FC_PID_ROLL].D = m.readU8();
+            _model.config.pid[FC_PID_ROLL].F = m.readU16();
+            _model.config.pid[FC_PID_PITCH].P = m.readU8();
+            _model.config.pid[FC_PID_PITCH].I = m.readU8();
+            _model.config.pid[FC_PID_PITCH].D = m.readU8();
+            _model.config.pid[FC_PID_PITCH].F = m.readU16();
+            _model.config.pid[FC_PID_YAW].P = m.readU8();
+            _model.config.pid[FC_PID_YAW].I = m.readU8();
+            _model.config.pid[FC_PID_YAW].D = m.readU8();
+            _model.config.pid[FC_PID_YAW].F = m.readU16();
+          }
+          else
+          {
+            m.advance(10); // skip unused manual pid values
+            _model.updatePidValues();
+          }
+        }
+
+        EspCmdPidTuning res;
+        res.mode = _model.config.pidTuning.mode;
+        res.rpGain = _model.config.pidTuning.rpGain;
+        res.rpStability = _model.config.pidTuning.rpStability;
+        res.rpAgility = _model.config.pidTuning.rpAgility;
+        res.rpBalance = _model.config.pidTuning.rpBalance;
+        res.yawGain = _model.config.pidTuning.yawGain;
+        res.yawStability = _model.config.pidTuning.yawStability;
+        res.pids[FC_PID_ROLL].p = _model.config.pid[FC_PID_ROLL].P;
+        res.pids[FC_PID_ROLL].i = _model.config.pid[FC_PID_ROLL].I;
+        res.pids[FC_PID_ROLL].d = _model.config.pid[FC_PID_ROLL].D;
+        res.pids[FC_PID_ROLL].f = _model.config.pid[FC_PID_ROLL].F;
+        res.pids[FC_PID_PITCH].p = _model.config.pid[FC_PID_PITCH].P;
+        res.pids[FC_PID_PITCH].i = _model.config.pid[FC_PID_PITCH].I;
+        res.pids[FC_PID_PITCH].d = _model.config.pid[FC_PID_PITCH].D;
+        res.pids[FC_PID_PITCH].f = _model.config.pid[FC_PID_PITCH].F;
+        res.pids[FC_PID_YAW].p = _model.config.pid[FC_PID_YAW].P;
+        res.pids[FC_PID_YAW].i = _model.config.pid[FC_PID_YAW].I;
+        res.pids[FC_PID_YAW].d = _model.config.pid[FC_PID_YAW].D;
+        res.pids[FC_PID_YAW].f = _model.config.pid[FC_PID_YAW].F;
+
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_DISABLE_ARM:
       {
         const uint8_t cmd = m.readU8();
