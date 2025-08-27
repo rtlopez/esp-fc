@@ -207,6 +207,40 @@ static void fromEspInputType(Model& _model, EspCmdInputType type)
   }
 }
 
+void updatePidValues(EspCmdPidTuning& tune)
+{
+  constexpr static PidConfig ref[3] = {
+    [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
+    [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
+    [FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 },  // YAW
+  };
+
+  float rpGain = 0.01f * tune.rpGain;
+  float rpStability = 0.01f * tune.rpStability;
+  float rpAgility = 0.01f * tune.rpAgility;
+  float rpAgilityInv = 2.0f - rpAgility;
+  float pBalance = 0.01f * tune.rpBalance;
+  float rBalance = 2.0f - pBalance;
+  float yawGain = 0.01f * tune.yawGain;
+  float yawStability = 0.01f * tune.yawStability;
+
+
+  tune.pids[FC_PID_ROLL].p = std::clamp(lrintf(ref[FC_PID_ROLL].P * rBalance * rpGain), 0l, 255l);
+  tune.pids[FC_PID_ROLL].i = std::clamp(lrintf(ref[FC_PID_ROLL].I * rBalance * rpGain * rpStability), 0l, 255l);
+  tune.pids[FC_PID_ROLL].d = std::clamp(lrintf(ref[FC_PID_ROLL].D * rBalance * rpGain * rpAgilityInv), 0l, 255l);
+  tune.pids[FC_PID_ROLL].f = std::clamp(lrintf(ref[FC_PID_ROLL].F * rBalance * rpGain * rpAgility), 0l, 1000l);
+
+  tune.pids[FC_PID_PITCH].p = std::clamp(lrintf(ref[FC_PID_PITCH].P * pBalance * rpGain), 0l, 255l);
+  tune.pids[FC_PID_PITCH].i = std::clamp(lrintf(ref[FC_PID_PITCH].I * pBalance * rpGain * rpStability), 0l, 255l);
+  tune.pids[FC_PID_PITCH].d = std::clamp(lrintf(ref[FC_PID_PITCH].D * pBalance * rpGain * rpAgilityInv), 0l, 255l);
+  tune.pids[FC_PID_PITCH].f = std::clamp(lrintf(ref[FC_PID_PITCH].F * pBalance * rpGain * rpAgility), 0l, 1000l);
+
+  tune.pids[FC_PID_YAW].p = std::clamp(lrintf(ref[FC_PID_YAW].P * yawGain), 0l, 255l);
+  tune.pids[FC_PID_YAW].i = std::clamp(lrintf(ref[FC_PID_YAW].I * yawGain * yawStability), 0l, 255l);
+  tune.pids[FC_PID_YAW].d = std::clamp(lrintf(ref[FC_PID_YAW].D * yawGain), 0l, 255l);
+  tune.pids[FC_PID_YAW].f = std::clamp(lrintf(ref[FC_PID_YAW].F * yawGain), 0l, 1000l);
+}
+
 MspProcessor::MspProcessor(Model& model): _model(model) {}
 
 bool MspProcessor::parse(char c, MspMessage& msg)
@@ -779,58 +813,61 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
 
     case ESP_CMD_PID_TUNING:
       {
+        EspCmdPidTuning res = { .mode = 0 };
         if (m.received >= sizeof(EspCmdPidTuning))
         {
-          _model.config.pidTuning.mode = m.readU8();
-          _model.config.pidTuning.rpGain = m.readU8();
-          _model.config.pidTuning.rpStability = m.readU8();
-          _model.config.pidTuning.rpAgility = m.readU8();
-          _model.config.pidTuning.rpBalance = m.readU8();
-          _model.config.pidTuning.yawGain = m.readU8();
-          _model.config.pidTuning.yawStability = m.readU8();
-          if(_model.config.pidTuning.mode == 1) // manual
+          m.readTo(res);
+          if(res.mode & ESP_CMD_PID_TUNING_MODE_CALC)
           {
-            _model.config.pid[FC_PID_ROLL].P = m.readU8();
-            _model.config.pid[FC_PID_ROLL].I = m.readU8();
-            _model.config.pid[FC_PID_ROLL].D = m.readU8();
-            _model.config.pid[FC_PID_ROLL].F = m.readU16();
-            _model.config.pid[FC_PID_PITCH].P = m.readU8();
-            _model.config.pid[FC_PID_PITCH].I = m.readU8();
-            _model.config.pid[FC_PID_PITCH].D = m.readU8();
-            _model.config.pid[FC_PID_PITCH].F = m.readU16();
-            _model.config.pid[FC_PID_YAW].P = m.readU8();
-            _model.config.pid[FC_PID_YAW].I = m.readU8();
-            _model.config.pid[FC_PID_YAW].D = m.readU8();
-            _model.config.pid[FC_PID_YAW].F = m.readU16();
+            updatePidValues(res);
           }
-          else
+          if(res.mode & ESP_CMD_PID_TUNING_MODE_SAVE)
           {
-            m.advance(10); // skip unused manual pid values
-            _model.updatePidValues();
+            res.mode &= ESP_CMD_PID_TUNING_MODE_CALC; // keep only calc flag
+            _model.config.pidTuning.mode = res.mode;
+            _model.config.pidTuning.rpGain = res.rpGain;
+            _model.config.pidTuning.rpStability = res.rpStability;
+            _model.config.pidTuning.rpAgility = res.rpAgility;
+            _model.config.pidTuning.rpBalance = res.rpBalance;
+            _model.config.pidTuning.yawGain = res.yawGain;
+            _model.config.pidTuning.yawStability = res.yawStability;
+            _model.config.pid[FC_PID_ROLL].P = res.pids[FC_PID_ROLL].p;
+            _model.config.pid[FC_PID_ROLL].I = res.pids[FC_PID_ROLL].i;
+            _model.config.pid[FC_PID_ROLL].D = res.pids[FC_PID_ROLL].d;
+            _model.config.pid[FC_PID_ROLL].F = res.pids[FC_PID_ROLL].f;
+            _model.config.pid[FC_PID_PITCH].P = res.pids[FC_PID_PITCH].p;
+            _model.config.pid[FC_PID_PITCH].I = res.pids[FC_PID_PITCH].i;
+            _model.config.pid[FC_PID_PITCH].D = res.pids[FC_PID_PITCH].d;
+            _model.config.pid[FC_PID_PITCH].F = res.pids[FC_PID_PITCH].f;
+            _model.config.pid[FC_PID_YAW].P = res.pids[FC_PID_YAW].p;
+            _model.config.pid[FC_PID_YAW].I = res.pids[FC_PID_YAW].i;
+            _model.config.pid[FC_PID_YAW].D = res.pids[FC_PID_YAW].d;
+            _model.config.pid[FC_PID_YAW].F = res.pids[FC_PID_YAW].f;
           }
         }
 
-        EspCmdPidTuning res;
-        res.mode = _model.config.pidTuning.mode;
-        res.rpGain = _model.config.pidTuning.rpGain;
-        res.rpStability = _model.config.pidTuning.rpStability;
-        res.rpAgility = _model.config.pidTuning.rpAgility;
-        res.rpBalance = _model.config.pidTuning.rpBalance;
-        res.yawGain = _model.config.pidTuning.yawGain;
-        res.yawStability = _model.config.pidTuning.yawStability;
-        res.pids[FC_PID_ROLL].p = _model.config.pid[FC_PID_ROLL].P;
-        res.pids[FC_PID_ROLL].i = _model.config.pid[FC_PID_ROLL].I;
-        res.pids[FC_PID_ROLL].d = _model.config.pid[FC_PID_ROLL].D;
-        res.pids[FC_PID_ROLL].f = _model.config.pid[FC_PID_ROLL].F;
-        res.pids[FC_PID_PITCH].p = _model.config.pid[FC_PID_PITCH].P;
-        res.pids[FC_PID_PITCH].i = _model.config.pid[FC_PID_PITCH].I;
-        res.pids[FC_PID_PITCH].d = _model.config.pid[FC_PID_PITCH].D;
-        res.pids[FC_PID_PITCH].f = _model.config.pid[FC_PID_PITCH].F;
-        res.pids[FC_PID_YAW].p = _model.config.pid[FC_PID_YAW].P;
-        res.pids[FC_PID_YAW].i = _model.config.pid[FC_PID_YAW].I;
-        res.pids[FC_PID_YAW].d = _model.config.pid[FC_PID_YAW].D;
-        res.pids[FC_PID_YAW].f = _model.config.pid[FC_PID_YAW].F;
-
+        if(res.mode == 0)
+        {
+          res.mode = _model.config.pidTuning.mode;
+          res.rpGain = _model.config.pidTuning.rpGain;
+          res.rpStability = _model.config.pidTuning.rpStability;
+          res.rpAgility = _model.config.pidTuning.rpAgility;
+          res.rpBalance = _model.config.pidTuning.rpBalance;
+          res.yawGain = _model.config.pidTuning.yawGain;
+          res.yawStability = _model.config.pidTuning.yawStability;
+          res.pids[FC_PID_ROLL].p = _model.config.pid[FC_PID_ROLL].P;
+          res.pids[FC_PID_ROLL].i = _model.config.pid[FC_PID_ROLL].I;
+          res.pids[FC_PID_ROLL].d = _model.config.pid[FC_PID_ROLL].D;
+          res.pids[FC_PID_ROLL].f = _model.config.pid[FC_PID_ROLL].F;
+          res.pids[FC_PID_PITCH].p = _model.config.pid[FC_PID_PITCH].P;
+          res.pids[FC_PID_PITCH].i = _model.config.pid[FC_PID_PITCH].I;
+          res.pids[FC_PID_PITCH].d = _model.config.pid[FC_PID_PITCH].D;
+          res.pids[FC_PID_PITCH].f = _model.config.pid[FC_PID_PITCH].F;
+          res.pids[FC_PID_YAW].p = _model.config.pid[FC_PID_YAW].P;
+          res.pids[FC_PID_YAW].i = _model.config.pid[FC_PID_YAW].I;
+          res.pids[FC_PID_YAW].d = _model.config.pid[FC_PID_YAW].D;
+          res.pids[FC_PID_YAW].f = _model.config.pid[FC_PID_YAW].F;
+        }
         r.write(res);
       }
       break;
