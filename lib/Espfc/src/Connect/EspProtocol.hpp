@@ -535,9 +535,14 @@ struct EspCmdSensorConfig
   uint8_t magDev;
 };
 
+enum EspCmdPidTuningMode: uint8_t {
+  ESP_CMD_PID_TUNING_MODE_CALC = 0x01,
+  ESP_CMD_PID_TUNING_MODE_SAVE = 0x80,
+};
+
 struct EspCmdPidTuning
 {
-  uint8_t mode; // 0: slider, 1: manual
+  uint8_t mode; // bits: 0=calc, 7=save
   uint8_t rpGain; // roll/pitch gain
   uint8_t rpStability; // roll/pitch stability
   uint8_t rpAgility; // roll/pitch agility

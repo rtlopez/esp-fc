@@ -264,42 +264,6 @@ class Model
       return Utils::clamp(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
     }
 
-    void updatePidValues()
-    {
-      constexpr static PidConfig ref[3] = {
-        [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
-        [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
-        [FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 },  // YAW
-      };
-
-      if(config.pidTuning.mode == 0) // slider
-      {
-        float rpGain = 0.01f * config.pidTuning.rpGain;
-        float rpStability = 0.01f * config.pidTuning.rpStability;
-        float rpAgility = 0.01f * config.pidTuning.rpAgility;
-        float pBalance = 0.01f * config.pidTuning.rpBalance;
-        float rBalance = 2.0f - pBalance;
-        float yawGain = 0.01f * config.pidTuning.yawGain;
-        float yawStability = 0.01f * config.pidTuning.yawStability;
-
-
-        config.pid[FC_PID_ROLL].P = lrintf(ref[FC_PID_ROLL].P * rBalance * rpGain);
-        config.pid[FC_PID_ROLL].I = lrintf(ref[FC_PID_ROLL].I * rBalance * rpGain * rpStability);
-        config.pid[FC_PID_ROLL].D = lrintf(ref[FC_PID_ROLL].D * rBalance * rpGain * rpAgility);
-        config.pid[FC_PID_ROLL].F = lrintf(ref[FC_PID_ROLL].F * rBalance * rpGain * rpAgility);
-
-        config.pid[FC_PID_PITCH].P = lrintf(ref[FC_PID_PITCH].P * pBalance * rpGain);
-        config.pid[FC_PID_PITCH].I = lrintf(ref[FC_PID_PITCH].I * pBalance * rpGain * rpStability);
-        config.pid[FC_PID_PITCH].D = lrintf(ref[FC_PID_PITCH].D * pBalance * rpGain * rpAgility);
-        config.pid[FC_PID_PITCH].F = lrintf(ref[FC_PID_PITCH].F * pBalance * rpGain * rpAgility);
-
-        config.pid[FC_PID_YAW].P = lrintf(ref[FC_PID_YAW].P * yawGain);
-        config.pid[FC_PID_YAW].I = lrintf(ref[FC_PID_YAW].I * yawGain * yawStability);
-        config.pid[FC_PID_YAW].D = lrintf(ref[FC_PID_YAW].D * yawGain);
-        config.pid[FC_PID_YAW].F = lrintf(ref[FC_PID_YAW].F * yawGain);
-      }
-    }
-
     int load()
     {
       logger.begin();

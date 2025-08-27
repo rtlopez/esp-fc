@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cstring>
+#include <type_traits>
 #include "Hal/Pgm.h"
 
 namespace Espfc {
@@ -66,6 +68,14 @@ public:
   uint8_t readU8();
   uint16_t readU16();
   uint32_t readU32();
+
+  template<typename T>
+  void readTo(T& value)
+  {
+    static_assert(std::is_trivially_copyable<T>::value, "Type must be trivially copyable");
+    std::memcpy(&value, &buffer[read], sizeof(T));
+    read += sizeof(T);
+  }
 
   MspState state;
   MspType dir;
