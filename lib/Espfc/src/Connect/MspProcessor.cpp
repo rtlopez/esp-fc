@@ -872,6 +872,31 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_MIXER_NAMES:
+      {
+        r.writeU8(MIXER_QUADX); r.writeString("Quad X"); r.writeU8(0);
+        r.writeU8(MIXER_TRI); r.writeString("Tricopter"); r.writeU8(0);
+        r.writeU8(MIXER_CUSTOM); r.writeString("Custom"); r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_MIXER_CONFIG:
+      {
+        if (m.received >= sizeof(EspCmdMixerConfig))
+        {
+          _model.config.mixer.type = m.readU8();
+          _model.config.mixer.yawReverse = m.readU8();
+          _model.config.mixerSync = m.readU8();
+        }
+        EspCmdMixerConfig ret = {
+          .type = (uint8_t)_model.config.mixer.type,
+          .yawReverse = (uint8_t)_model.config.mixer.yawReverse,
+          .sync = (uint8_t)_model.config.mixerSync,
+        };
+        r.write(ret);
+      }
+      break;
+
     case ESP_CMD_DISABLE_ARM:
       {
         const uint8_t cmd = m.readU8();
