@@ -745,22 +745,27 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_SERIAL_NAMES:
       {
 #ifdef ESPFC_SERIAL_USB
+        r.writeU8(SERIAL_USB);
         r.writeString("USB");
         r.writeU8(0);
 #endif
 #ifdef ESPFC_SERIAL_0
+        r.writeU8(SERIAL_UART_0);
         r.writeString("UART1");
         r.writeU8(0);
 #endif
 #ifdef ESPFC_SERIAL_1
+        r.writeU8(SERIAL_UART_1);
         r.writeString("UART2");
         r.writeU8(0);
 #endif
 #ifdef ESPFC_SERIAL_2
+        r.writeU8(SERIAL_UART_2);
         r.writeString("UART3");
         r.writeU8(0);
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0
+        r.writeU8(SERIAL_SOFT_0);
         r.writeString("WIFI");
         r.writeU8(0);
 #endif
