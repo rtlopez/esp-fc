@@ -130,3 +130,23 @@ If you like this project and you want it to be still developed, you can support 
 
 * BTC: 1Lopez7yPtbyjfLGe892JfheDFJMMt43tW
 * LTC: LV3G3sJxz9AYpDMYUp8e1LCmerFYxVY3ak
+
+## Extra Steps
+
+In order to use the UART Base cli command issue use the following command
+* pio device monitor --baud 115200
+
+Also to compile_upload
+* pio run -e esp32 -t upload
+
+In my case have changed the sda pin to 14 as the default was a staffing pin , SCL is pin 22
+
+* set pin_i2c_sda 14
+* save
+
+
+Also for CSRF set the 
+
+* set serial_2_0_function_mask 64    # Enable RX_SERIAL on Serial2
+* set serialrx_provider 6           # Set to CRSF (6 = CRSF)
+* save
