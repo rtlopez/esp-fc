@@ -295,8 +295,8 @@ struct EspCmdOutputChannelConfigResponse
 } __attribute__((packed));
 
 struct EspCmdLpfConfig {
-  uint8_t type;
-  uint16_t freq;
+  int8_t type;
+  int16_t freq;
 } __attribute__((packed));
 
 struct EspCmdDynLpfConfig {
@@ -313,14 +313,14 @@ struct EspCmdNotchConfig {
 
 struct EspCmdDynNotchConfig {
   uint8_t count;
-  uint16_t q;
-  uint16_t minFreq;
-  uint16_t maxFreq;
+  int8_t q;
+  int16_t minFreq;
+  int16_t maxFreq;
 } __attribute__((packed));
 
 struct EspCmdRpmNotchConfig {
   uint8_t harmonics;
-  uint16_t q;
+  int8_t q;
   uint16_t minFreq;
 } __attribute__((packed));
 
@@ -328,15 +328,14 @@ struct EspCmdGyroConfig
 {
   uint8_t align;
   EspCmdLpfConfig lpf[3];
-  EspCmdDynLpfConfig dynLpf;
-  EspCmdNotchConfig notch[2];
   EspCmdDynNotchConfig dynNotch;
   EspCmdRpmNotchConfig rpmNotch;
+  //EspCmdDynLpfConfig dynLpf;
+  //EspCmdNotchConfig notch[2];
 } __attribute__((packed));
 
 struct EspCmdAccelConfig
 {
-  uint8_t align;
   EspCmdLpfConfig lpf;
 } __attribute__((packed));
 

@@ -545,6 +545,76 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_GYRO_CONFIG:
+      {
+        GyroConfig& c = _model.config.gyro;
+        if(m.received >= sizeof(EspCmdGyroConfig))
+        {
+          c.align = m.readU8();
+          c.filter.type = m.readU8();
+          c.filter.freq = m.readU16();
+          c.filter2.type = m.readU8();
+          c.filter2.freq = m.readU16();
+          c.filter3.type = m.readU8();
+          c.filter3.freq = m.readU16();
+          c.dynamicFilter.count = m.readU8();
+          c.dynamicFilter.q = m.readU8() * 10;
+          c.dynamicFilter.min_freq = m.readU16();
+          c.dynamicFilter.max_freq = m.readU16();
+          c.rpmFilter.harmonics = m.readU8();
+          c.rpmFilter.q = m.readU8() * 10;
+          c.rpmFilter.minFreq = m.readU16();
+        }
+        EspCmdGyroConfig res = {
+          .align = (uint8_t)c.align,
+          .lpf = {
+            [0] = {
+              .type = c.filter.type,
+              .freq = c.filter.freq,
+            },
+            [1] = {
+              .type = c.filter2.type,
+              .freq = c.filter2.freq,
+            },
+            [2] = {
+              .type = c.filter3.type,
+              .freq = c.filter3.freq,
+            }
+          },
+          .dynNotch = {
+            .count = c.dynamicFilter.count,
+            .q = (int8_t)((c.dynamicFilter.q + 5) / 10),
+            .minFreq = c.dynamicFilter.min_freq,
+            .maxFreq = c.dynamicFilter.max_freq,
+          },
+          .rpmNotch = {
+            .harmonics = c.rpmFilter.harmonics,
+            .q = (int8_t)((c.rpmFilter.q + 5) / 10),
+            .minFreq = c.rpmFilter.minFreq,
+          },
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_ACCEL_CONFIG:
+      {
+        AccelConfig& c = _model.config.accel;
+        if(m.received >= sizeof(EspCmdAccelConfig))
+        {
+          c.filter.type = m.readU8();
+          c.filter.freq = m.readU16();
+        }
+        EspCmdAccelConfig res = {
+          .lpf = {
+            .type = c.filter.type,
+            .freq = c.filter.freq,
+          }
+        };
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_PIN_CONFIG:
       {
         size_t count = m.received / 2;
