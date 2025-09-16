@@ -52,3 +52,8 @@ inline uint32_t targetFreeHeap()
 {
   return 1;
 }
+
+inline uint32_t targetTotalHeap()
+{
+  return 1;
+}
