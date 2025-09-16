@@ -474,6 +474,9 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("input_mid"), &c.input.midRc),
     Param(PSTR("input_max"), &c.input.maxRc),
 
+    Param(PSTR("input_min_check"), &c.input.minCheck),
+    Param(PSTR("input_max_check"), &c.input.maxCheck),
+
     Param(PSTR("input_interpolation"), &c.input.interpolationMode, interpolChoices),
     Param(PSTR("input_interpolation_interval"), &c.input.interpolationInterval),
 
