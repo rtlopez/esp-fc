@@ -147,6 +147,11 @@ inline uint32_t targetFreeHeap()
   return ESP.getFreeHeap();
 }
 
+inline uint32_t targetTotalHeap()
+{
+  return ESP.getMaxFreeBlockSize();
+}
+
 /*
 //#include "user_interface.h"
 const rst_info * resetInfo = system_get_rst_info();

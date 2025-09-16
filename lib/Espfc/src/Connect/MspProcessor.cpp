@@ -323,7 +323,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           .cpuLoad = (uint8_t)lrintf(_model.state.stats.getCpuLoad()),
           .cpu0Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_0)),
           .cpu1Load = (uint8_t)lrintf(_model.state.stats.getLoad(COUNTER_CPU_1)),
-          .heapTotal = 0,
+          .heapTotal = targetTotalHeap(),
           .heapFree = targetFreeHeap(),
 #ifdef USE_FLASHFS
           .flashTotal = flashfsGetSize(),

@@ -184,4 +184,9 @@ inline uint32_t targetFreeHeap()
   return rp2040.getFreeHeap();
 }
 
+inline uint32_t targetTotalHeap()
+{
+  return rp2040.getTotalHeap();
+}
+
 };
