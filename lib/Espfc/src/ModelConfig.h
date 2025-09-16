@@ -412,8 +412,8 @@ struct InputConfig
   int8_t ppmMode = PPM_MODE_NORMAL;
   uint8_t serialRxProvider = SERIALRX_SBUS;
 
-  int16_t maxCheck = 1050;
-  int16_t minCheck = 1900;
+  int16_t minCheck = 1050;
+  int16_t maxCheck = 1900;
   int16_t minRc = 885;
   int16_t midRc = 1500;
   int16_t maxRc = 2115;

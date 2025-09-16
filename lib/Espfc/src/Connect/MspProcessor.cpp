@@ -615,6 +615,43 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+     case ESP_CMD_BARO_CONFIG:
+      {
+        EspCmdBaroConfig res;
+        BaroConfig& c = _model.config.baro;
+        if(m.received >= sizeof(EspCmdBaroConfig))
+        {
+          m.readTo(res);
+        }
+        res = {
+          .lpf = {
+            .type = c.filter.type,
+            .freq = c.filter.freq,
+          }
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_MAG_CONFIG:
+      {
+        EspCmdMagConfig res;
+        MagConfig& c = _model.config.mag;
+        if(m.received >= sizeof(EspCmdMagConfig))
+        {
+          m.readTo(res);
+        }
+        res = {
+          .align = c.align,
+          .lpf = {
+            .type = c.filter.type,
+            .freq = c.filter.freq,
+          }
+        };
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_PIN_CONFIG:
       {
         size_t count = m.received / 2;

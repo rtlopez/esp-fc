@@ -468,7 +468,7 @@ struct EspCmdBaroConfig
 
 struct EspCmdMagConfig
 {
-  uint8_t align; // magnetometer alignment
+  int8_t align; // magnetometer alignment
   EspCmdLpfConfig lpf; // magnetometer low-pass filter
 } __attribute__((packed));
 
