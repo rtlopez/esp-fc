@@ -812,6 +812,34 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_MODES_CONFIG:
+      {
+        if(m.received >= sizeof(EspCmdModesConfig))
+        {
+          m.advance(1);
+          for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+          {
+            ActuatorCondition& c = _model.config.conditions[i];
+            c.id = m.readU8();
+            c.ch = m.readU8();
+            c.min = m.readU16();
+            c.max = m.readU16();
+          }
+        }
+        EspCmdModesConfig res;
+        res.modeCount = ACTUATOR_CONDITIONS;
+        for(size_t i = 0; i < ACTUATOR_CONDITIONS; i++)
+        {
+          ActuatorCondition& c = _model.config.conditions[i];
+          res.modes[i].id = c.id;
+          res.modes[i].ch = c.ch;
+          res.modes[i].min = c.min;
+          res.modes[i].max = c.max;
+        };
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_FEATURE_NAMES:
       {
         r.writeU8(6);
