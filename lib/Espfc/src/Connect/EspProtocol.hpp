@@ -414,7 +414,7 @@ struct EspCmdModesConfig
     uint8_t ch; // channel
     uint16_t min; // rate limit
     uint16_t max; // angle limit
-  } modes[8]; // up to 8 modes
+  } modes[ACTUATOR_CONDITIONS]; // up to 8 modes
 } __attribute__((packed));
 
 struct EspCmdFailsafeConfig
