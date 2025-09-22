@@ -398,8 +398,8 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_VOLTAGE:
       {
         EspCmdVoltage voltage = {
-          .voltage = (uint16_t)lrintf(_model.state.battery.voltage * 100.0f),
-          .cellCount = (uint8_t)_model.state.battery.cells,
+          .voltage = (uint16_t)std::clamp(lrintf(_model.state.battery.voltage * 100.0f), 0l, (long)UINT16_MAX),
+          .cellCount = _model.state.battery.cells,
         };
         r.write(voltage);
       }
@@ -418,7 +418,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_DEBUG:
       {
         EspCmdDebug debug = {};
-        for(size_t i = 0; i < 8; i++) debug.debug[i] = _model.state.debug[i];
+        for(size_t i = 0; i < DEBUG_VALUE_COUNT; i++) debug.debug[i] = _model.state.debug[i];
         r.write(debug);
       }
       break;
@@ -932,6 +932,45 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_VOLTAGE_CONFIG:
+      {
+        VBatConfig& c = _model.config.vbat;
+        if(m.received >= sizeof(EspCmdVoltageConfig))
+        {
+          c.source = m.readU8();
+          c.scale = m.readU16();
+          c.resDiv = m.readU8();
+          c.resMult = m.readU8();
+          c.cellWarning = m.readU8();
+        }
+        EspCmdVoltageConfig res = {
+          .source = c.source,
+          .scale = c.scale,
+          .resDiv = c.resDiv,
+          .resMult = c.resMult,
+          .cellWarning = c.cellWarning,
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_CURRENT_CONFIG:
+      {
+        IBatConfig& c = _model.config.ibat;
+        if(m.received >= sizeof(EspCmdCurrentConfig))
+        {
+          c.source = m.readU8();
+          c.scale = m.readU16();
+          c.offset = m.readU16();
+        }
+        EspCmdCurrentConfig res = {
+          .source = c.source,
+          .scale = c.scale,
+          .offset = c.offset,
+        };
+        r.write(res);
+      }
+
     case ESP_CMD_SENSOR_CONFIG:
       {
         if (m.received >= sizeof(EspCmdSensorConfig))
@@ -1012,6 +1051,69 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_DEBUG_NAMES:
+      {
+        r.writeU8(DEBUG_NONE); r.writeString("NONE"); r.writeU8(0);
+        r.writeU8(DEBUG_ACCELEROMETER); r.writeString("ACCELEROMETER"); r.writeU8(0);
+        r.writeU8(DEBUG_ALTITUDE); r.writeString("ALTITUDE"); r.writeU8(0);
+        r.writeU8(DEBUG_ANGLERATE); r.writeString("ANGLERATE"); r.writeU8(0);
+        r.writeU8(DEBUG_BARO); r.writeString("BAROMETER"); r.writeU8(0);
+        r.writeU8(DEBUG_BATTERY); r.writeString("BATTERY"); r.writeU8(0);
+        r.writeU8(DEBUG_CYCLETIME); r.writeString("CYCLETIME"); r.writeU8(0);
+        r.writeU8(DEBUG_CURRENT_SENSOR); r.writeString("CURRENT_SENSOR"); r.writeU8(0);
+        r.writeU8(DEBUG_DSHOT_RPM_ERRORS); r.writeString("DSHOT_RPM_ERRORS"); r.writeU8(0);
+        r.writeU8(DEBUG_FFT_FREQ); r.writeString("FFT_FREQUENCY"); r.writeU8(0);
+        r.writeU8(DEBUG_FFT_TIME); r.writeString("FFT_TIME"); r.writeU8(0);
+        r.writeU8(DEBUG_PIDLOOP); r.writeString("PIDLOOP"); r.writeU8(0);
+        r.writeU8(DEBUG_RX_TIMING); r.writeString("RX_TIMING"); r.writeU8(0);
+        r.writeU8(DEBUG_RC_SMOOTHING); r.writeString("RC_SMOOTHING_RATE"); r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_BLACKBOX_NAMES:
+      {
+        r.writeU8(BLACKBOX_FIELD_PID); r.writeString("PID"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_RC_COMMANDS); r.writeString("RC_COMMAND"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_SETPOINT); r.writeString("SETPOINT"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_BATTERY); r.writeString("BATTERY"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_MAG); r.writeString("MAGNETOMETER"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_ALTITUDE); r.writeString("ALTITUDE"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_RSSI); r.writeString("RSSI"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_GYRO); r.writeString("GYRO"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_ACC); r.writeString("ACCELEROMETER"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_DEBUG_LOG); r.writeString("DEBUG"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_MOTOR); r.writeString("MOTOR"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_GPS); r.writeString("GPS"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_RPM); r.writeString("RPM"); r.writeU8(0);
+        r.writeU8(BLACKBOX_FIELD_GYROUNFILT); r.writeString("GYRO_RAW"); r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_BLACKBOX_CONFIG:
+      {
+        BlackboxConfig& c = _model.config.blackbox;
+        DebugConfig& d = _model.config.debug;
+        if(m.received >= sizeof(EspCmdBlackboxConfig))
+        {
+          c.dev = m.readU8();
+          c.pDenom = m.readU8();
+          c.mode = m.readU8();
+          c.fieldsMask = m.readU8();
+          d.mode = m.readU8();
+          d.axis = m.readU8();
+        }
+        EspCmdBlackboxConfig res = {
+          .device = c.dev,
+          .denom = (uint8_t)c.pDenom,
+          .mode = c.mode,
+          .fieldMask = c.fieldsMask,
+          .debugMode = d.mode,
+          .debugAxis = d.axis,
+        };
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_MIXER_NAMES:
       {
         r.writeU8(MIXER_QUADX); r.writeString("Quad X"); r.writeU8(0);
@@ -1034,6 +1136,63 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           .sync = (uint8_t)_model.config.mixerSync,
         };
         r.write(ret);
+      }
+      break;
+
+    case ESP_CMD_FLASH_STATUS:
+      {
+        EspCmdFlashStatus res = {
+#ifdef USE_FLASHFS
+          .totalSize = flashfsGetSize(),
+          .usedSize = flashfsGetOffset(),
+#endif
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_FLASH_READ:
+      {
+#ifdef USE_FLASHFS
+        EspCmdFlashReadRequest req;
+        if (m.received >= sizeof(EspCmdFlashReadRequest))
+        {
+          // load request data
+          m.readTo(req);
+
+          // calc allowed read length
+          const uint32_t allowedToRead = r.remain() - sizeof(EspCmdFlashReadResponse) - 16;
+          const uint32_t flashLeft = flashfsGetSize() - req.address;
+          const auto readLen = std::min(std::min((uint32_t)req.size, allowedToRead), flashLeft);
+
+          // calc write pointers
+          auto resPtr = reinterpret_cast<uint8_t*>(&r.data[r.len]); 
+          r.advance(sizeof(EspCmdFlashReadResponse));
+          auto dstPtr = reinterpret_cast<uint8_t*>(&r.data[r.len]); 
+
+          // init response header
+          EspCmdFlashReadResponse res;
+          res.address = req.address;
+          res.flags = 0;
+
+          // read flash data
+          res.size = flashfsReadAbs(req.address, dstPtr, readLen);
+
+          // fill response headers
+          std::memcpy(resPtr, &res, sizeof(res));
+
+          // advance read data size in response
+          r.advance(res.size);
+        }
+#endif
+      }
+      break;
+
+    case ESP_CMD_FLASH_ERASE:
+      {
+#ifdef USE_FLASHFS
+        blackboxEraseAll();
+#endif
       }
       break;
 
