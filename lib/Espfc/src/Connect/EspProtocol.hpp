@@ -27,6 +27,7 @@ enum EspCommand : uint8_t
   ESP_CMD_SERIAL_NAMES = 0x13,
   ESP_CMD_PID_NAMES = 0x14,
   ESP_CMD_MIXER_NAMES = 0x15,
+  ESP_CMD_BLACKBOX_NAMES = 0x16,
 
   ESP_CMD_INPUT_CONFIG = 0x20,
   ESP_CMD_INPUT_CHANNEL_CONFIG = 0x21,
@@ -181,7 +182,7 @@ struct EspCmdOutput
 struct EspCmdVoltage
 {
   uint16_t voltage; // in 0.01V units
-  uint8_t cellCount; // number of cells in the battery
+  int8_t cellCount; // number of cells in the battery
 } __attribute__((packed));
 
 struct EspCmdCurrent
@@ -227,7 +228,7 @@ struct EspCmdRpmtlm
 
 struct EspCmdDebug
 {
-  uint16_t debug[8];
+  int16_t debug[DEBUG_VALUE_COUNT];
 } __attribute__((packed));
 
 struct EspCmdNames
@@ -353,19 +354,17 @@ struct EspCmdSerialConfigResponse
 
 struct EspCmdVoltageConfig
 {
-  uint8_t source;
+  int8_t source;
   uint16_t scale; // scale factor
-  uint16_t offset; // offset value
   uint8_t resDiv; // resistor divider value
   uint8_t resMult; // resistor multiplier value
-  uint16_t cellWarning; // cell warning threshold
-  uint16_t cellCritical; // cell critical threshold
+  int16_t cellWarning; // cell warning threshold
 } __attribute__((packed));
 
 struct EspCmdCurrentConfig
 {
-  uint8_t source;
-  uint16_t scale; // scale factor
+  int8_t source;
+  int16_t scale; // scale factor
   int16_t offset; // offset value
 } __attribute__((packed));
 
@@ -424,11 +423,11 @@ struct EspCmdFailsafeConfig
 
 struct EspCmdBlackboxConfig
 {
-  uint8_t device; // blackbox device
+  int8_t device; // blackbox device
   uint8_t denom; // blackbox rate denominator
-  uint8_t mode; // blackbox mode
-  uint32_t fieldMask; // blackbox field mask
-  uint8_t debugMode; // debug mode
+  int8_t mode; // blackbox mode
+  int32_t fieldMask; // blackbox field mask
+  int8_t debugMode; // debug mode
   uint8_t debugAxis; // debug axis
 } __attribute__((packed));
 
@@ -491,20 +490,20 @@ struct EspCmdFlashStatus
 {
   uint32_t totalSize; // total flash size
   uint32_t usedSize; // used flash size
-  uint32_t freeSize; // free flash size
 } __attribute__((packed));
 
 struct EspCmdFlashReadRequest
 {
   uint32_t address; // flash address to read from
-  uint32_t size; // size of data to read
+  uint16_t size; // size of data to read
 } __attribute__((packed));
 
 struct EspCmdFlashReadResponse
 {
   uint32_t address; // flash address read from
-  uint32_t size; // size of data read
-  uint8_t data[1]; // data read from flash (variable length)
+  uint16_t size; // size of data read
+  uint16_t flags; // format flags
+  //uint8_t data[1]; // data read from flash (variable length)
 } __attribute__((packed));
 
 enum EspCmdInputType: uint8_t
