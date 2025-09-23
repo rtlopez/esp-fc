@@ -302,6 +302,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
         EspCmdStatus status = {
           .sensors = 0,
           .gyroTimeUs = (uint16_t)_model.state.gyro.timer.interval,
+          .loopTimeUs = (uint16_t)_model.state.loopTimer.interval,
           .modeSwitchMask = _model.state.mode.maskSwitch,
           .modeActiveMask = _model.state.mode.mask,
           .armingDisableFlags = _model.state.mode.armingDisabledFlags,
@@ -1098,7 +1099,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           c.dev = m.readU8();
           c.pDenom = m.readU8();
           c.mode = m.readU8();
-          c.fieldsMask = m.readU8();
+          c.fieldsMask = m.readU32();
           d.mode = m.readU8();
           d.axis = m.readU8();
         }
