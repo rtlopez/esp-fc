@@ -133,6 +133,7 @@ struct EspCmdStatus
 {
   uint16_t sensors;
   uint16_t gyroTimeUs;
+  uint16_t loopTimeUs;
   uint32_t modeSwitchMask;
   uint32_t modeActiveMask;
   uint32_t armingDisableFlags;
