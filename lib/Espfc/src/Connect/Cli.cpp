@@ -1426,6 +1426,104 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     }
   }
 #endif
+  else if(strcmp_P(cmd.args[0], PSTR("mmix")) == 0)
+  {
+    if(cmd.args[1] && strcmp_P(cmd.args[1], PSTR("reset")) == 0) {
+      for(int i = 0; i < MIXER_RULE_MAX; i++) {
+        _model.config.customMixes[i].src = MIXER_SOURCE_NULL;
+        _model.config.customMixes[i].dst = 0;
+        _model.config.customMixes[i].rate = 0;
+      }
+      _model.config.customMixerCount = 0;
+      s.println(F("mmix reset: all custom mixer entries cleared"));
+    }
+    else if(cmd.args[1] && strcmp_P(cmd.args[1], PSTR("load")) == 0 && cmd.args[2]) {
+      String preset = String(cmd.args[2]);
+      if(preset == "airplane") {
+        _model.config.mixer.type = FC_MIXER_AIRPLANE;
+        _model.config.customMixerCount = 4;
+        _model.config.customMixes[0] = MixerEntry(MIXER_SOURCE_THRUST, 0, 100); // Motor
+        _model.config.customMixes[1] = MixerEntry(MIXER_SOURCE_ROLL, 1, 100);   // Aileron
+        _model.config.customMixes[2] = MixerEntry(MIXER_SOURCE_PITCH, 2, 100);  // Elevator
+        _model.config.customMixes[3] = MixerEntry(MIXER_SOURCE_YAW, 3, 100);    // Rudder
+        s.println(F("mmix loaded: airplane mixer preset"));
+      } else if(preset == "singlecopter") {
+        _model.config.mixer.type = FC_MIXER_SINGLECOPTER;
+        _model.config.customMixerCount = 5;
+        _model.config.customMixes[0] = MixerEntry(MIXER_SOURCE_THRUST, 0, 100);
+        _model.config.customMixes[1] = MixerEntry(MIXER_SOURCE_ROLL, 1, 100);
+        _model.config.customMixes[2] = MixerEntry(MIXER_SOURCE_ROLL, 2, -100);
+        _model.config.customMixes[3] = MixerEntry(MIXER_SOURCE_PITCH, 3, 100);
+        _model.config.customMixes[4] = MixerEntry(MIXER_SOURCE_PITCH, 4, -100);
+        s.println(F("mmix loaded: singlecopter mixer preset"));
+      } else if(preset == "quad") {
+        _model.config.mixer.type = FC_MIXER_QUADX;
+        _model.config.customMixerCount = 4;
+        _model.config.customMixes[0] = MixerEntry(MIXER_SOURCE_THRUST, 0, 100);
+        _model.config.customMixes[1] = MixerEntry(MIXER_SOURCE_THRUST, 1, 100);
+        _model.config.customMixes[2] = MixerEntry(MIXER_SOURCE_THRUST, 2, 100);
+        _model.config.customMixes[3] = MixerEntry(MIXER_SOURCE_THRUST, 3, 100);
+        s.println(F("mmix loaded: quad mixer preset"));
+      } else {
+        s.print(F("mmix load: unknown preset: "));
+        s.println(preset);
+      }
+    }
+    else if(cmd.args[1] && cmd.args[2] && cmd.args[3] && cmd.args[4]) {
+      int idx = String(cmd.args[1]).toInt();
+      int src = String(cmd.args[2]).toInt();
+      int dst = String(cmd.args[3]).toInt();
+      int rate = String(cmd.args[4]).toInt();
+      if(idx >= 0 && idx < MIXER_RULE_MAX) {
+        _model.config.customMixes[idx].src = src;
+        _model.config.customMixes[idx].dst = dst;
+        _model.config.customMixes[idx].rate = rate;
+        if(idx + 1 > _model.config.customMixerCount) _model.config.customMixerCount = idx + 1;
+        s.print(F("mmix updated: "));
+        s.print(idx); s.print(' ');
+        s.print(src); s.print(' ');
+        s.print(dst); s.print(' ');
+        s.print(rate); s.println();
+      } else {
+        s.println(F("mmix index out of range"));
+      }
+    } else {
+      s.println(F("mmix usage: mmix <index> <src> <dst> <rate> | mmix load <preset> | mmix reset"));
+    }
+  }
+  else if(strcmp_P(cmd.args[0], PSTR("smix")) == 0)
+  {
+    if(cmd.args[1] && strcmp_P(cmd.args[1], PSTR("reset")) == 0) {
+      for(int i = 0; i < MIXER_RULE_MAX; i++) {
+        _model.config.customMixes[i].src = MIXER_SOURCE_NULL;
+        _model.config.customMixes[i].dst = 0;
+        _model.config.customMixes[i].rate = 0;
+      }
+      _model.config.customMixerCount = 0;
+      s.println(F("smix reset: all custom mixer entries cleared"));
+    }
+    else if(cmd.args[1] && cmd.args[2] && cmd.args[3] && cmd.args[4]) {
+      int idx = String(cmd.args[1]).toInt();
+      int src = String(cmd.args[2]).toInt();
+      int dst = String(cmd.args[3]).toInt();
+      int rate = String(cmd.args[4]).toInt();
+      if(idx >= 0 && idx < MIXER_RULE_MAX) {
+        _model.config.customMixes[idx].src = src;
+        _model.config.customMixes[idx].dst = dst;
+        _model.config.customMixes[idx].rate = rate;
+        if(idx + 1 > _model.config.customMixerCount) _model.config.customMixerCount = idx + 1;
+        s.print(F("smix updated: "));
+        s.print(idx); s.print(' ');
+        s.print(src); s.print(' ');
+        s.print(dst); s.print(' ');
+        s.print(rate); s.println();
+      } else {
+        s.println(F("smix index out of range"));
+      }
+    } else {
+      s.println(F("smix usage: smix <index> <src> <dst> <rate> | smix reset"));
+    }
+  }
   else
   {
     s.print(F("unknown command: "));

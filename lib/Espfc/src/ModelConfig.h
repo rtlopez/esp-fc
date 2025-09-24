@@ -827,6 +827,13 @@ class ModelConfig
       wireless.pass[0] = 0;
       modelName[0] = 0;
 
+      // Custom mixer setup
+      // customMixerCount = 5;
+      // for(int i = 0; i < customMixerCount; i++) {
+      //   customMixes[i] = singlecopterMix[i];
+      // }
+      // mixer.type = FC_MIXER_CUSTOM;
+
 // development settings
 #if !defined(ESPFC_REVISION)
       devPreset();

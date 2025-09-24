@@ -136,6 +136,8 @@ If you like this project and you want it to be still developed, you can support 
 In order to use the UART Base cli command issue use the following command
 * pio device monitor --baud 115200
 
+In order to use the UART cli as betaflight cli after the above command to enter UART cli type in `exit` and press enter now you should have entered beatflight cli
+
 Also to compile_upload
 * pio run -e esp32 -t upload
 
@@ -150,3 +152,27 @@ Also for CSRF set the
 * set serial_2_0_function_mask 64    # Enable RX_SERIAL on Serial2
 * set serialrx_provider 6           # Set to CRSF (6 = CRSF)
 * save
+
+For the servo mixer here are the value to set via the betaflight cli
+
+    # smix script for singlecopter
+    mixer custom
+
+    mmix load airplane    # Motor1 as ESC output
+
+    # smix
+    smix reset
+    smix 0 3 0  100 0 0 100 0
+    smix 1 2 0 -100 0 0 100 0
+    smix 2 4 1  100 0 0 100 0
+    smix 3 5 1 -100 0 0 100 0
+    smix 4 3 2 50 0 0 100 0
+    smix 5 2 2 50 0 0 100 0
+    smix 6 4 2 50 0 0 100 0
+    smix 7 5 2 50 0 0 100 0
+
+Now for the servo update value use a lower refresh rate
+
+    set servo_lowpass_hz = 20
+    set servo_pwm_rate = 250
+    save

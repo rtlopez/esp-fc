@@ -8,7 +8,7 @@
 #define ESPFC_OUTPUT_1 25
 #define ESPFC_OUTPUT_2 4
 #define ESPFC_OUTPUT_3 12
-#define ESPFC_OUTPUT_4 -1
+#define ESPFC_OUTPUT_4 15
 #define ESPFC_OUTPUT_5 -1
 #define ESPFC_OUTPUT_6 -1
 #define ESPFC_OUTPUT_7 -1
