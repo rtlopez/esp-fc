@@ -530,7 +530,7 @@ struct FailsafeConfig
 struct BlackboxConfig
 {
   int8_t dev = 0;
-  int16_t pDenom = 32; // 1k
+  int16_t pDenom = 2; // 1:2 of pid rate (32 for static 1k)
   int32_t fieldsMask = 0xffff;
   int8_t mode = 0;
 };
