@@ -1155,8 +1155,8 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           res.logs[i].size = it.logEnd > it.logBegin ? it.logEnd - it.logBegin : 0;
         }
         r.write(res);
-      }
 #endif
+      }
       break;
 
     case ESP_CMD_FLASH_READ:
