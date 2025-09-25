@@ -1140,16 +1140,23 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
-    case ESP_CMD_FLASH_STATUS:
+    case ESP_CMD_FLASH_LOGS:
       {
-        EspCmdFlashStatus res = {
 #ifdef USE_FLASHFS
+        EspCmdFlashLogs res = {
           .totalSize = flashfsGetSize(),
           .usedSize = flashfsGetOffset(),
-#endif
         };
+        const FlashfsRuntime* flashfs = flashfsGetRuntime();
+        for (size_t i = 0; i < 16; ++i)
+        {
+          const auto& it = flashfs->journal[i];
+          res.logs[i].address = it.logBegin;
+          res.logs[i].size = it.logEnd > it.logBegin ? it.logEnd - it.logBegin : 0;
+        }
         r.write(res);
       }
+#endif
       break;
 
     case ESP_CMD_FLASH_READ:

@@ -59,7 +59,7 @@ enum EspCommand : uint8_t
   ESP_CMD_SENSOR_CONFIG = 0x3b,
   ESP_CMD_PID_TUNING = 0x3c,
 
-  ESP_CMD_FLASH_STATUS = 0x40,
+  ESP_CMD_FLASH_LOGS = 0x40,
   ESP_CMD_FLASH_READ = 0x41,
   ESP_CMD_FLASH_ERASE = 0x42,
 
@@ -487,10 +487,14 @@ struct EspCmdAlignmentConfig
   uint8_t align[3]; // gyro alignment
 } __attribute__((packed));
 
-struct EspCmdFlashStatus
+struct EspCmdFlashLogs
 {
   uint32_t totalSize; // total flash size
   uint32_t usedSize; // used flash size
+  struct {
+    uint32_t address;
+    uint32_t size;
+  } logs[16];
 } __attribute__((packed));
 
 struct EspCmdFlashReadRequest
