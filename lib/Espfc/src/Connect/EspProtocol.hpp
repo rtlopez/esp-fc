@@ -63,6 +63,8 @@ enum EspCommand : uint8_t
   ESP_CMD_FLASH_READ = 0x41,
   ESP_CMD_FLASH_ERASE = 0x42,
 
+  ESP_CMD_OUTPUT_OVERRIDE = 0x4a,
+
   ESP_CMD_DISABLE_ARM = 0xf0,
   ESP_CMD_DEFAULTS = 0xf1,
   ESP_CMD_SAVE = 0xf2,
@@ -177,7 +179,7 @@ struct EspCmdInput
 struct EspCmdOutput
 {
   uint8_t channelCount; // number of output channels
-  uint16_t channels[8];  // up to 8 channels
+  uint16_t channels[OUTPUT_CHANNELS];  // up to 8 channels
 } __attribute__((packed));
 
 struct EspCmdVoltage
@@ -294,6 +296,12 @@ struct EspCmdOutputChannelConfigResponse
 {
   uint8_t count;
   EspCmdOutputChannelConfig configs[OUTPUT_CHANNELS]; // up to 8 channels
+} __attribute__((packed));
+
+struct EspCmdOutputOverride
+{
+  uint8_t count;
+  uint16_t overrides[OUTPUT_CHANNELS];
 } __attribute__((packed));
 
 struct EspCmdLpfConfig {

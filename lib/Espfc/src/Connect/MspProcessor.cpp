@@ -1200,7 +1200,29 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       {
 #ifdef USE_FLASHFS
         blackboxEraseAll();
+        r.write(1);
 #endif
+      }
+      break;
+
+    case ESP_CMD_OUTPUT_OVERRIDE:
+      {
+        EspCmdOutputOverride req;
+        if (m.received >= sizeof(EspCmdOutputOverride))
+        {
+          m.readTo(req);
+          for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+          {
+            _model.state.output.disarmed[i] = req.overrides[i];
+          }
+          _model.state.output.overrideTimeout = millis() + 2000;
+        }
+        req.count = OUTPUT_CHANNELS;
+        for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+        {
+          req.overrides[i] = (uint16_t)_model.state.output.disarmed[i];
+        }
+        r.write(req);
       }
       break;
 
