@@ -86,6 +86,7 @@ int FAST_CODE_ATTR Mixer::update()
   float outputs[OUTPUT_CHANNELS];
   const MixerConfig& mixer = _model.state.currentMixer;
 
+  overrideTimeout();
   readTelemetry();
   updateMixer(mixer, outputs);
   writeOutput(mixer, outputs);
@@ -378,6 +379,19 @@ bool Mixer::_stop(void)
   if(!_model.isModeActive(MODE_ARMED)) return true;
   if(_model.isFeatureActive(FEATURE_MOTOR_STOP) && _model.isThrottleLow()) return true;
   return false;
+}
+
+void Mixer::overrideTimeout()
+{
+  if(_model.state.output.overrideTimeout == 0 || _model.state.output.overrideTimeout > millis()) return;
+
+  for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+  {
+    const OutputChannelConfig& och = _model.config.output.channel[i];
+    _model.state.output.disarmed[i] = och.servo ? och.neutral : _model.config.output.minCommand;
+  }
+  
+  _model.state.output.overrideTimeout = 0;
 }
 
 }
