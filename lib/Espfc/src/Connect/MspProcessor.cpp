@@ -980,12 +980,20 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           _model.config.accel.dev = m.readU8();
           _model.config.baro.dev = m.readU8();
           _model.config.mag.dev = m.readU8();
+          _model.config.boardAlignment[0] = m.readU16();
+          _model.config.boardAlignment[1] = m.readU16();
+          _model.config.boardAlignment[2] = m.readU16();
         }
         EspCmdSensorConfig ret = {
           .loopSync = (uint8_t)_model.config.loopSync,
           .accelDev = (uint8_t)_model.config.accel.dev,
           .baroDev = (uint8_t)_model.config.baro.dev,
           .magDev = (uint8_t)_model.config.mag.dev,
+          .alignment = {
+            [0] = _model.config.boardAlignment[0],
+            [1] = _model.config.boardAlignment[1],
+            [2] = _model.config.boardAlignment[2],
+          }
         };
         r.write(ret);
       }

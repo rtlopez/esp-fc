@@ -545,6 +545,7 @@ struct EspCmdSensorConfig
   uint8_t accelDev;
   uint8_t baroDev;
   uint8_t magDev;
+  int16_t alignment[3];
 };
 
 enum EspCmdPidTuningMode: uint8_t {
