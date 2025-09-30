@@ -1123,6 +1123,23 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_CALIBRATE:
+      {
+        uint8_t result = 0;
+        if(m.received > 0)
+        {
+          const uint8_t mode = m.readU8();
+          if(!_model.isModeActive(MODE_ARMED))
+          {
+            if(mode == 1) _model.calibrateGyro();
+            if(mode == 2) _model.calibrateMag();
+            result = mode;
+          }
+        }
+        r.writeU8(result);
+      }
+      break;
+
     case ESP_CMD_MIXER_NAMES:
       {
         r.writeU8(MIXER_QUADX); r.writeString("Quad X"); r.writeU8(0);
