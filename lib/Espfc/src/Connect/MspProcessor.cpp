@@ -1294,6 +1294,7 @@ void MspProcessor::processCommandBF(MspMessage& m, MspResponse& r, Device::Seria
       r.writeU8(MSP_PROTOCOL_VERSION);
       r.writeU8(API_VERSION_MAJOR);
       r.writeU8(API_VERSION_MINOR);
+      r.writeU8(0xff);
       break;
 
     case MSP_FC_VARIANT:
