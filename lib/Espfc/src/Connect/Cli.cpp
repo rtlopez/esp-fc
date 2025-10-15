@@ -993,12 +993,14 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   }
   else if(strcmp_P(cmd.args[0], PSTR("dump")) == 0)
   {
+    s.println(F("#dump begin"));
     s.println(F("defaults"));
     for(size_t i = 0; _params[i].name; ++i)
     {
       print(_params[i], s);
     }
     s.println(F("save"));
+    s.println(F("#dump end"));
   }
   else if(strcmp_P(cmd.args[0], PSTR("cal")) == 0)
   {
