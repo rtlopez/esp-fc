@@ -277,11 +277,11 @@ enum PinFunction {
   PIN_I2C_0_SCL,
   PIN_I2C_0_SDA,
 #endif
-#ifdef ESPFC_ADC_0
-  PIN_INPUT_ADC_0,
+#ifdef ESPFC_ADC_VBAT
+  PIN_INPUT_ADC_VBAT,
 #endif
-#ifdef ESPFC_ADC_1
-  PIN_INPUT_ADC_1,
+#ifdef ESPFC_ADC_IBAT
+  PIN_INPUT_ADC_IBAT,
 #endif
 #ifdef ESPFC_SPI_0
   PIN_SPI_0_SCK,
@@ -766,11 +766,11 @@ class ModelConfig
       [PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL,
       [PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA,
 #endif
-#ifdef ESPFC_ADC_0
-      [PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN,
+#ifdef ESPFC_ADC_VBAT
+      [PIN_INPUT_ADC_VBAT] = ESPFC_ADC_VBAT_PIN,
 #endif
-#ifdef ESPFC_ADC_1
-      [PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN,
+#ifdef ESPFC_ADC_IBAT
+      [PIN_INPUT_ADC_IBAT] = ESPFC_ADC_IBAT_PIN,
 #endif
 #ifdef ESPFC_SPI_0
       [PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK,

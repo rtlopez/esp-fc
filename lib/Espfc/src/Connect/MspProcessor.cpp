@@ -749,9 +749,9 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
               _model.config.pin[PIN_SPI_0_SCK + index] = pin;
               break;
 #endif
-#ifdef ESPFC_ADC_0
+#ifdef ESPFC_ADC_VBAT
             case ESP_PIN_ADC:
-              _model.config.pin[PIN_INPUT_ADC_0 + index] = pin;
+              _model.config.pin[PIN_INPUT_ADC_VBAT + index] = pin;
               break;
 #endif
             case ESP_PIN_BUTTON:
@@ -819,13 +819,13 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
 #endif
         r.writeU8(ESP_PIN_BUTTON | ESP_PIN_0);
         r.writeU8(_model.config.pin[PIN_BUTTON]);
-#ifdef ESPFC_ADC_0
+#ifdef ESPFC_ADC_VBAT
         r.writeU8(ESP_PIN_ADC | ESP_PIN_0);
-        r.writeU8(_model.config.pin[PIN_INPUT_ADC_0]);
+        r.writeU8(_model.config.pin[PIN_INPUT_ADC_VBAT]);
 #endif
-#ifdef ESPFC_ADC_1
+#ifdef ESPFC_ADC_IBAT
         r.writeU8(ESP_PIN_ADC | ESP_PIN_1);
-        r.writeU8(_model.config.pin[PIN_INPUT_ADC_1]);
+        r.writeU8(_model.config.pin[PIN_INPUT_ADC_IBAT]);
 #endif
 #ifdef ESPFC_I2C_0
         r.writeU8(ESP_PIN_I2C | ESP_PIN_SCL);

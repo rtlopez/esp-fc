@@ -66,11 +66,11 @@
 #define ESPFC_BUTTON_PIN 0
 #define ESPFC_LED_PIN 2
 
-#define ESPFC_ADC_0
-#define ESPFC_ADC_0_PIN 36
+#define ESPFC_ADC_VBAT
+#define ESPFC_ADC_VBAT_PIN 36
 
-#define ESPFC_ADC_1
-#define ESPFC_ADC_1_PIN 39
+#define ESPFC_ADC_IBAT
+#define ESPFC_ADC_IBAT_PIN 39
 
 #define ESPFC_ADC_SCALE (3.3f / 4096)
 
