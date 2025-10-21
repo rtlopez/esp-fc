@@ -184,14 +184,22 @@ struct EspCmdOutput
 
 struct EspCmdVoltage
 {
-  uint16_t voltage; // in 0.01V units
-  int8_t cellCount; // number of cells in the battery
+  uint8_t count;
+  struct __attribute__((packed)){
+    int8_t source; // voltage source
+    uint16_t voltage; // in 0.01V units
+    int8_t cellCount; // number of cells in the battery
+  } items[1];
 } __attribute__((packed));
 
 struct EspCmdCurrent
 {
-  uint16_t current; // in 0.01A units
-  uint32_t consumption; // in mAh
+  uint8_t count;
+  struct __attribute__((packed)) {
+    int8_t source; // voltage source
+    uint16_t current; // in 0.01A units
+    uint32_t consumption; // in mAh
+  } items[1];
 } __attribute__((packed));
 
 struct EspCmdGps
@@ -202,14 +210,14 @@ struct EspCmdGps
   int32_t latitude; // in degrees * 1e7
   int32_t longitude; // in degrees * 1e7
   int32_t altitude; // in meters * 1000
-  int16_t speed; // in cm/s
-  int16_t course; // in degrees * 100
+  int32_t speed; // in cm/s
+  int32_t course; // in degrees * 100
 } __attribute__((packed));
 
 struct EspCmdGpsInfo
 {
   uint8_t numSats;
-  struct SvInfo {
+  struct __attribute__((packed)) SvInfo {
     uint8_t gnssId;
     uint8_t id;
     uint8_t quality;
@@ -217,15 +225,15 @@ struct EspCmdGpsInfo
   } svs[32]; // up to 32 SVs
 } __attribute__((packed));
 
-struct EspCmdRpmtlm
+struct EspCmdRpmTlm
 {
   uint8_t channelCount;
-  struct Channel {
+  struct __attribute__((packed)) Channel {
     uint32_t rpm; // in RPM
-    uint16_t invalidPct; // percentage of invalid samples
-    uint8_t temperature; // in degrees Celsius
-    uint16_t voltage; // in 0.01V units
-    uint16_t current; // in 0.01A units
+    uint8_t errors; // percentage of invalid samples
+    int8_t temperature; // in degrees Celsius
+    int8_t voltage; // in 0.1V units
+    int8_t current; // in 0.1A units
   } channels[4]; // up to 4 channels
 } __attribute__((packed));
 
@@ -363,18 +371,22 @@ struct EspCmdSerialConfigResponse
 
 struct EspCmdVoltageConfig
 {
-  int8_t source;
-  uint16_t scale; // scale factor
-  uint8_t resDiv; // resistor divider value
-  uint8_t resMult; // resistor multiplier value
-  int16_t cellWarning; // cell warning threshold
+  uint8_t count;
+  struct __attribute__((packed)) {
+    int8_t source;
+    uint16_t scale; // scale factor
+    int16_t cellWarning; // cell warning threshold
+  } items[1];
 } __attribute__((packed));
 
 struct EspCmdCurrentConfig
 {
-  int8_t source;
-  int16_t scale; // scale factor
-  int16_t offset; // offset value
+  uint8_t count;
+  struct __attribute__((packed)) {
+    int8_t source;
+    int16_t scale; // scale factor
+    int16_t offset; // offset value
+  } items[1];
 } __attribute__((packed));
 
 struct EspCmdPidConfig
@@ -417,7 +429,7 @@ struct EspCmdPidCommonConfig
 struct EspCmdModesConfig
 {
   uint8_t modeCount;
-  struct Mode {
+  struct __attribute__((packed)) Mode {
     uint8_t id; // mode ID
     uint8_t ch; // channel
     uint16_t min; // rate limit
@@ -499,7 +511,7 @@ struct EspCmdFlashLogs
 {
   uint32_t totalSize; // total flash size
   uint32_t usedSize; // used flash size
-  struct {
+  struct __attribute__((packed)) {
     uint32_t address;
     uint32_t size;
   } logs[16];

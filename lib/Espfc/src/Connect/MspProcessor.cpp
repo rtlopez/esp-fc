@@ -399,8 +399,14 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_VOLTAGE:
       {
         EspCmdVoltage voltage = {
-          .voltage = (uint16_t)std::clamp(lrintf(_model.state.battery.voltage * 100.0f), 0l, (long)UINT16_MAX),
-          .cellCount = _model.state.battery.cells,
+          .count = 1,
+          .items = {
+            {
+              .source = _model.config.vbat.source,
+              .voltage = (uint16_t)std::clamp(lrintf(_model.state.battery.voltage * 100.0f), 0l, (long)UINT16_MAX),
+              .cellCount = _model.state.battery.cells,
+            }
+          }
         };
         r.write(voltage);
       }
@@ -409,10 +415,67 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_CURRENT:
       {
         EspCmdCurrent current = {
-          .current = (uint16_t)std::clamp(lrintf(_model.state.battery.current * 100.0f), 0l, (long)UINT16_MAX),
-          .consumption = (uint32_t)lrintf(_model.state.battery.consumption),
+          .count = 1,
+          .items = {
+            {
+              .source = _model.config.ibat.source,
+              .current = (uint16_t)std::clamp(lrintf(_model.state.battery.current * 100.0f), 0l, (long)UINT16_MAX),
+              .consumption = (uint32_t)lrintf(_model.state.battery.consumption),
+            }
+          }
         };
         r.write(current);
+      }
+      break;
+
+    case ESP_CMD_GPS:
+      {
+        EspCmdGps gps = {
+          .time = 0,
+          .fixType = _model.state.gps.fixType,
+          .sats = _model.state.gps.numSats,
+          .latitude = _model.state.gps.location.raw.lat,
+          .longitude = _model.state.gps.location.raw.lon,
+          .altitude = _model.state.gps.location.raw.height,
+          .speed = _model.state.gps.velocity.raw.groundSpeed,
+          .course = _model.state.gps.velocity.raw.heading,
+        };
+        r.write(gps);
+      }
+      break;
+
+    case ESP_CMD_GPS_INFO:
+      {
+        EspCmdGpsInfo info = {
+          .numSats = _model.state.gps.numCh,
+          .svs = {}
+        };
+        for(size_t i = 0; i < std::min((size_t)_model.state.gps.numCh, std::size(info.svs)); i++)
+        {
+          info.svs[i].gnssId = _model.state.gps.svinfo[i].gnssId;
+          info.svs[i].id = _model.state.gps.svinfo[i].id;
+          info.svs[i].quality = static_cast<uint8_t>(_model.state.gps.svinfo[i].quality.value & 0xff);
+          info.svs[i].cno = _model.state.gps.svinfo[i].cno;
+        }
+        r.write(info);
+      }
+      break;
+
+    case ESP_CMD_RPM_TLM:
+      {
+        EspCmdRpmTlm rpm = {
+          .channelCount = 4,
+          .channels = {0}
+        };
+        for(size_t i = 0; i < 4; i++)
+        {
+          rpm.channels[i].rpm = lrintf(_model.state.output.telemetry.rpm[i]);
+          rpm.channels[i].errors = _model.state.output.telemetry.errors[i] * 2 / 100;
+          rpm.channels[i].temperature = _model.state.output.telemetry.temperature[i];
+          rpm.channels[i].voltage = _model.state.output.telemetry.voltage[i];
+          rpm.channels[i].current = _model.state.output.telemetry.current[i];
+        }
+        r.write(rpm);
       }
       break;
 
@@ -936,20 +999,25 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_VOLTAGE_CONFIG:
       {
         VBatConfig& c = _model.config.vbat;
+        EspCmdVoltageConfig res;
         if(m.received >= sizeof(EspCmdVoltageConfig))
         {
-          c.source = m.readU8();
-          c.scale = m.readU16();
-          c.resDiv = m.readU8();
-          c.resMult = m.readU8();
-          c.cellWarning = m.readU8();
+          m.readTo(res);
+          c.source = res.items[0].source;
+          c.scale = res.items[0].scale;
+          c.resDiv = 1; //res.items[0].resDiv;
+          c.resMult = 1; //res.items[0].resMult;
+          c.cellWarning = res.items[0].cellWarning;
         }
-        EspCmdVoltageConfig res = {
-          .source = c.source,
-          .scale = c.scale,
-          .resDiv = c.resDiv,
-          .resMult = c.resMult,
-          .cellWarning = c.cellWarning,
+        res = {
+          .count = 1,
+          .items = {
+            {
+              .source = c.source,
+              .scale = c.scale,
+              .cellWarning = c.cellWarning,
+            }
+          }
         };
         r.write(res);
       }
@@ -958,19 +1026,27 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_CURRENT_CONFIG:
       {
         IBatConfig& c = _model.config.ibat;
+        EspCmdCurrentConfig res;
         if(m.received >= sizeof(EspCmdCurrentConfig))
         {
-          c.source = m.readU8();
-          c.scale = m.readU16();
-          c.offset = m.readU16();
+          m.readTo(res);
+          c.source = res.items[0].source;
+          c.scale = res.items[0].scale;
+          c.offset = res.items[0].offset;
         }
-        EspCmdCurrentConfig res = {
-          .source = c.source,
-          .scale = c.scale,
-          .offset = c.offset,
+        res = {
+          .count = 1,
+          .items = {
+            {
+              .source = c.source,
+              .scale = c.scale,
+              .offset = c.offset,
+            }
+          }
         };
         r.write(res);
       }
+      break;
 
     case ESP_CMD_SENSOR_CONFIG:
       {
