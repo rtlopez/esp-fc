@@ -22,13 +22,15 @@ uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t a)
   return crc;
 }
 
-uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t *data, size_t len)
+uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t *data, int length)
 {
-  while (len-- > 0)
-  {
-    crc = crc8_dvb_s2(crc, *data++);
-  }
-  return crc;
+    while (length--) {
+        crc ^= *data++;
+        for (int i = 0; i < 8; i++) {
+            crc = (crc & 0x80) ? ((crc << 1) ^ 0xD5) : (crc << 1);
+        }
+    }
+    return crc;
 }
 
 uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t a)

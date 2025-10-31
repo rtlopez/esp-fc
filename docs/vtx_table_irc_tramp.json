@@ -15,7 +15,7 @@
                     5785,
                     5765,
                     5745,
-                    0
+                    5725
                 ]
             },
             {
@@ -34,6 +34,21 @@
                 ]
             },
             {
+                "name": "BOSCAM_E",
+                "letter": "E",
+                "is_factory_band": false,
+                "frequencies": [
+                    5705,
+                    5685,
+                    5665,
+                    5645,
+                    5885,
+                    5905,
+                    5925,
+                    5945
+                ]
+            },
+            {
                 "name": "FATSHARK",
                 "letter": "F",
                 "is_factory_band": false,
@@ -45,7 +60,7 @@
                     5820,
                     5840,
                     5860,
-                    0
+                    5880
                 ]
             },
             {
@@ -53,29 +68,74 @@
                 "letter": "R",
                 "is_factory_band": false,
                 "frequencies": [
-                    0,
-                    0,
+                    5658,
+                    5695,
                     5732,
                     5769,
                     5806,
                     5843,
-                    0,
-                    0
+                    5880,
+                    5917
+                ]                 
+            },
+            {
+                "name": "U",
+                "letter": "U",
+                "is_factory_band": false,
+                "frequencies": [
+                    5325,
+                    5348,
+                    5366,
+                    5384,
+                    5402,
+                    5420,
+                    5438,
+                    5456
                 ]
             },
             {
-                "name": "IMD6",
-                "letter": "I",
+                "name": "O",
+                "letter": "O",
                 "is_factory_band": false,
                 "frequencies": [
-                    5732,
-                    5765,
-                    5828,
-                    5840,
-                    5866,
-                    5740,
-                    0,
-                    0
+                    5474,
+                    5492,
+                    5510,
+                    5528,
+                    5546,
+                    5564,
+                    5582,
+                    5600
+                ]
+            },
+            {
+                "name": "L",
+                "letter": "L",
+                "is_factory_band": false,
+                "frequencies": [
+                    5333,
+                    5373,
+                    5413,
+                    5453,
+                    5493,
+                    5533,
+                    5573,
+                    5613
+                ]
+            },
+            {
+                "name": "H",
+                "letter": "H",
+                "is_factory_band": false,
+                "frequencies": [
+                    5653,
+                    5693,
+                    5733,
+                    5773,
+                    5813,
+                    5853,
+                    5893,
+                    5933
                 ]
             }
         ],
@@ -93,12 +153,12 @@
                 "label": "200 "
             },
             {
-                "value": 400,
-                "label": "400 "
+                "value": 350,
+                "label": "350 "
             },
             {
-                "value": 600,
-                "label": "600 "
+                "value": 400,
+                "label": "400 "
             }
         ]
     }
