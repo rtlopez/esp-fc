@@ -21,8 +21,8 @@
 
 namespace Espfc {
 
-SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _current(0), _msp(model), _cli(model), _vtx(model),
-  _telemetry(telemetry), _gps(model)
+SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _current(0), _msp(model), _cli(model), 
+  _vtx_smartaudio(model), _vtx_tramp(model), _telemetry(telemetry), _gps(model)
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
   , _wireless(model)
 #endif
@@ -104,6 +104,17 @@ int SerialManager::begin()
       sdc.parity = SDC_SERIAL_PARITY_NONE;
       sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
       sdc.data_bits = 8;
+
+      _model.state.vtx.protocol = _vtx_smartaudio.type;
+    }
+    else if(spc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      sdc.baud = 9600;
+      sdc.parity = SDC_SERIAL_PARITY_NONE;
+      sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+      sdc.data_bits = 8;
+
+      _model.state.vtx.protocol = _vtx_tramp.type;
     }
 
     if(!sdc.baud)
@@ -124,7 +135,11 @@ int SerialManager::begin()
     }
     if(spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
     {
-      _vtx.begin(port);
+      _vtx_smartaudio.begin(port);
+    }
+    if(spc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      _vtx_tramp.begin(port);
     }
     if(spc.functionMask & SERIAL_FUNCTION_GPS)
     {
@@ -163,7 +178,11 @@ int FAST_CODE_ATTR SerialManager::update()
     }
     if(sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
     {
-      _vtx.update();
+      _vtx_smartaudio.update();
+    }
+    if(sc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      _vtx_tramp.update();
     }
     if(sc.functionMask & SERIAL_FUNCTION_GPS)
     {
