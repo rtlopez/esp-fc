@@ -431,7 +431,7 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
     case ESP_CMD_GPS:
       {
         EspCmdGps gps = {
-          .time = 0,
+          .time = _model.state.gps.dateTime.toUnixTimestamp(),
           .fixType = _model.state.gps.fixType,
           .sats = _model.state.gps.numSats,
           .latitude = _model.state.gps.location.raw.lat,
