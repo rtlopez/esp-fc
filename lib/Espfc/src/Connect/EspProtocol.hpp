@@ -391,22 +391,17 @@ struct EspCmdCurrentConfig
 
 struct EspCmdPidConfig
 {
+  uint8_t index; // Pid index
   uint8_t p; // P value
   uint8_t i; // I value
   uint8_t d; // D value
-  uint16_t f; // F value
-} __attribute__((packed));
-
-struct EspCmdPidConfigRequest
-{
-  uint8_t pidIndex;
-  EspCmdPidConfig config;
+  int16_t f; // F value
 } __attribute__((packed));
 
 struct EspCmdPidConfigResponse
 {
   uint8_t pidCount;
-  EspCmdPidConfig config[8];
+  EspCmdPidConfig config[FC_PID_ITEM_COUNT - FC_PID_ALT];
 } __attribute__((packed));
 
 struct EspCmdPidCommonConfig
@@ -565,6 +560,15 @@ enum EspCmdPidTuningMode: uint8_t {
   ESP_CMD_PID_TUNING_MODE_SAVE = 0x80,
 };
 
+struct EspCmdPidTuningItem
+{
+  uint8_t p; // P value
+  uint8_t i; // I value
+  uint8_t d; // D value
+  int16_t f; // F value
+} __attribute__((packed));
+
+
 struct EspCmdPidTuning
 {
   uint8_t mode; // bits: 0=calc, 7=save
@@ -574,7 +578,7 @@ struct EspCmdPidTuning
   uint8_t rpBalance; // roll/pitch balance
   uint8_t yawGain; // yaw gain
   uint8_t yawStability; // stability
-  EspCmdPidConfig pids[3];
+  EspCmdPidTuningItem pids[3];
 } __attribute__((packed));
 
 }

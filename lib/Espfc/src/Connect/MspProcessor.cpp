@@ -1075,6 +1075,76 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_PID_NAMES:
+      {
+        r.writeU8(FC_PID_ROLL);
+        r.writeString("Roll");
+        r.writeU8(0);
+        r.writeU8(FC_PID_PITCH);
+        r.writeString("Pitch");
+        r.writeU8(0);
+        r.writeU8(FC_PID_YAW);
+        r.writeString("Yaw");
+        r.writeU8(0);
+        r.writeU8(FC_PID_ALT);
+        r.writeString("Alt Hold");
+        r.writeU8(0);
+        r.writeU8(FC_PID_POS);
+        r.writeString("Pos");
+        r.writeU8(0);
+        r.writeU8(FC_PID_POSR);
+        r.writeString("Pos Rate");
+        r.writeU8(0);
+        r.writeU8(FC_PID_NAVR);
+        r.writeString("Nav Rate");
+        r.writeU8(0);
+        r.writeU8(FC_PID_LEVEL);
+        r.writeString("Angle");
+        r.writeU8(0);
+        r.writeU8(FC_PID_MAG);
+        r.writeString("Mag");
+        r.writeU8(0);
+        r.writeU8(FC_PID_VEL);
+        r.writeString("Vel");
+        r.writeU8(0);
+      }
+      break;
+
+    case ESP_CMD_PID_CONFIG:
+      {
+        EspCmdPidConfigResponse res;
+        if (m.received >= sizeof(EspCmdPidConfigResponse))
+        {
+          m.readTo(res);
+          for (size_t i = 0; i < res.pidCount; i++)
+          {
+            const auto& pid = res.config[i];
+            const size_t idx = pid.index;
+            if (idx < FC_PID_ITEM_COUNT)
+            {
+              _model.config.pid[idx].P = pid.p;
+              _model.config.pid[idx].I = pid.i;
+              _model.config.pid[idx].D = pid.d;
+              _model.config.pid[idx].F = pid.f;
+            }
+          }
+        }
+        const size_t count = std::size(res.config);
+        res.pidCount = count;
+        for (size_t i = 0; i < count; i++)
+        {
+          const size_t idx = i + FC_PID_ALT;
+          auto& pid = res.config[i];
+          pid.index = static_cast<uint8_t>(idx);
+          pid.p = _model.config.pid[idx].P;
+          pid.i = _model.config.pid[idx].I;
+          pid.d = _model.config.pid[idx].D;
+          pid.f = _model.config.pid[idx].F;
+        }
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_PID_TUNING:
       {
         EspCmdPidTuning res = { .mode = 0 };
