@@ -8,7 +8,7 @@
 #include "Device/GyroBMI160.h"
 #include "Device/MagHMC5338L.h"
 #include "Device/MagQMC5338L.h"
-#include "device/MagQMC5338P.h"
+#include "Device/MagQMC5338P.h"
 #include "Device/MagAK8963.h"
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
