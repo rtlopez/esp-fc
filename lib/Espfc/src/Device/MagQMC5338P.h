@@ -4,11 +4,11 @@
 #include "MagDevice.h"
 #include "BusDevice.h"
 
-// العنوان الصحيح لـ QMC5883P
+// address for QMC5883P
 #define QMC5883P_ADDRESS            0x2C
 #define QMC5883P_DEFAULT_ADDRESS    0x2C
 
-// سجلات QMC5883P حسب مواصفات Adafruit
+// QMC5883P records according to Adafruit specifications
 #define QMC5883P_REG_CHIPID         0x00
 #define QMC5883P_REG_XOUT_LSB       0x01
 #define QMC5883P_REG_XOUT_MSB       0x02
@@ -45,18 +45,18 @@ public:
 
         if (!testConnection()) return 0;
 
-        // نستخدم ±8G (0x02) كنطاق افتراضي للدرون
+        // We use ±8G (0x02) as the default range for the drone.
         _currentRange = QMC5883P_RANGE_8G;
         setMode(_currentRange);
 
-        // وضع التشغيل المستمر
+        // Continuous operating mode
         uint8_t ctrl1 = (QMC5883P_MODE_CONTINUOUS) |        // bits [1:0]
                         (0x02 << 2) |                        // ODR = 100Hz (0x02)
-                        (0x03 << 4) |                        // OSR = 1 (0x03) ← أسرع
+                        (0x03 << 4) |                        // OSR = 1 (0x03) ← faster
                         (0x00 << 6);                         // DSR = 1
         _bus->writeByte(_addr, QMC5883P_REG_CONTROL1, ctrl1);
 
-        // قراءة أولية
+        // Initial reading
         uint8_t buffer[6];
         _bus->read(_addr, QMC5883P_REG_XOUT_LSB, 6, buffer);
 
@@ -69,7 +69,7 @@ public:
             return 0;
         }
 
-        // في QMC5883P: X = [MSB=0x02, LSB=0x01] → buffer[1], buffer[0]
+        // in QMC5883P: X = [MSB=0x02, LSB=0x01] → buffer[1], buffer[0]
         v.x = (int16_t)((buffer[1] << 8) | buffer[0]);
         v.y = (int16_t)((buffer[3] << 8) | buffer[2]);
         v.z = (int16_t)((buffer[5] << 8) | buffer[4]);
@@ -91,7 +91,7 @@ public:
     }
 
     int getRate() const override {
-        return 100; // بناءً على ODR = 100Hz
+        return 100; // Based on ODR = 100Hz
     }
 
     virtual MagDeviceType getType() const override {
@@ -100,7 +100,7 @@ public:
 
     void setMode(uint8_t range) {
         _currentRange = range;
-        // اضبط البتات [3:2] في CONTROL2
+        // Set the bits to [3:2] in CONTROL2
         uint8_t ctrl2 = (range << 2);
         _bus->writeByte(_addr, QMC5883P_REG_CONTROL2, ctrl2);
     }
@@ -110,14 +110,14 @@ public:
         if (_bus->read(_addr, QMC5883P_REG_CHIPID, 1, &chip_id) != 1) {
             return false;
         }
-        return chip_id == 0x80; // كما في مكتبة Adafruit
+        return chip_id == 0x80; 
     }
 
 private:
     uint8_t _currentRange = QMC5883P_RANGE_8G;
 };
 
-} // namespace Device
-} // namespace Espfc
+} 
+} 
 
 #endif
