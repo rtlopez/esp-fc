@@ -90,7 +90,7 @@ After flashing you need to configure few things first:
 
  * Gyro: MPU6050, MPU6000, MPU6500, MPU9250, ICM20602, BMI160
  * Barometers: BMP180, BMP280, SPL06
- * Magnetometers: HMC5883, QMC5883, AK8963
+ * Magnetometers: HMC5883, QMC5883, AK8963, QMC5883P
  * Receivers: PPM, SBUS, IBUS, CRSF/ELRS
  * Esc Protocols: PWM, BRUSHED, ONESHOT125, ONESHOT42, MULTISHOT, DSHOT150, DSHOT300, DSHOT600
  * Other protocols: MSP, CLI, BLACKBOX, ESPNOW

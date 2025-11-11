@@ -8,6 +8,7 @@
 #include "Device/GyroBMI160.h"
 #include "Device/MagHMC5338L.h"
 #include "Device/MagQMC5338L.h"
+#include "Device/MagQMC5338P.h"
 #include "Device/MagAK8963.h"
 #include "Device/BaroDevice.h"
 #include "Device/BaroBMP085.h"
@@ -40,6 +41,7 @@ namespace {
   static Espfc::Device::GyroBMI160 bmi160;
   static Espfc::Device::MagHMC5338L hmc5883l;
   static Espfc::Device::MagQMC5338L qmc5883l;
+  static Espfc::Device::MagQMC5338P qmc5883p;
   static Espfc::Device::MagAK8963 ak8963;
   static Espfc::Device::BaroBMP085 bmp085;
   static Espfc::Device::BaroBMP280 bmp280;
@@ -128,6 +130,7 @@ void Hardware::detectMag()
     if(!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
     if(!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
     if(!detectedMag && detectDevice(qmc5883l, i2cBus)) detectedMag = &qmc5883l;
+    if(!detectedMag && detectDevice(qmc5883p, i2cBus)) detectedMag = &qmc5883p;
   }
 #endif
   if(gyroSlaveBus.getBus())
@@ -135,6 +138,7 @@ void Hardware::detectMag()
     if(!detectedMag && detectDevice(ak8963, gyroSlaveBus)) detectedMag = &ak8963;
     if(!detectedMag && detectDevice(hmc5883l, gyroSlaveBus)) detectedMag = &hmc5883l;
     if(!detectedMag && detectDevice(qmc5883l, gyroSlaveBus)) detectedMag = &qmc5883l;
+    if(!detectedMag && detectDevice(qmc5883p, gyroSlaveBus)) detectedMag = &qmc5883p;
     
   }
   _model.state.mag.dev = detectedMag;
