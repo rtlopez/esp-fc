@@ -6,7 +6,7 @@ namespace Espfc::Device {
 
 const char ** BusDevice::getNames()
 {
-    static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("HMC5883L"), PSTR("AK8975"), PSTR("AK8963"), PSTR("QMC5883L"), PSTR("QMC5883P"),NULL };
+    static const char* busDevChoices[] = { PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), PSTR("SLV"), NULL };
     return busDevChoices;
 }
 
