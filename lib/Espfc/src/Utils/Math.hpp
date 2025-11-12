@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 namespace Espfc {
 
@@ -51,6 +52,15 @@ public:
     if(value > max) return max;
     if(value < min) return min;
     return value;
+  }
+
+  template<typename T>
+  T fcast(const float value)
+  {
+    long v = lrintf(value);
+    if (v >= std::numeric_limits<T>::max()) return std::numeric_limits<T>::max();
+    else if (v <= std::numeric_limits<T>::min()) return std::numeric_limits<T>::min();
+    return static_cast<T>(v);
   }
 
   inline int alignToClock(uint32_t clock, uint32_t maxFreq)

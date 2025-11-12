@@ -19,6 +19,8 @@ enum EspCommand : uint8_t
   ESP_CMD_GPS = 0x0a,
   ESP_CMD_GPS_INFO = 0x0b,
   ESP_CMD_RPM_TLM = 0x0c,
+  ESP_CMD_PID_INNER = 0x0d,
+  ESP_CMD_PID_OUTER = 0x0e,
   ESP_CMD_DEBUG = 0x0f,
 
   ESP_CMD_MODE_NAMES = 0x10,
@@ -168,6 +170,27 @@ struct EspCmdSensors
   int16_t accel[3];
   int16_t mag[3];
   int16_t baroAlt;
+} __attribute__((packed));
+
+struct EspCmdPidTerm {
+  int16_t p;
+  int16_t i;
+  int16_t d;
+  int16_t f;
+} __attribute__((packed));
+
+struct EspCmdPidInner
+{
+  EspCmdPidTerm roll;
+  EspCmdPidTerm pitch;
+  EspCmdPidTerm yaw;
+  EspCmdPidTerm alt;
+} __attribute__((packed));
+
+struct EspCmdPidOuter
+{
+  EspCmdPidTerm roll;
+  EspCmdPidTerm pitch;
 } __attribute__((packed));
 
 struct EspCmdInput
