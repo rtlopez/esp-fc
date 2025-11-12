@@ -260,13 +260,14 @@ void Actuator::updateRescueConfig()
 
 void Actuator::updateLed()
 {
-  if(_model.armingDisabled())
+  if(_model.isModeActive(MODE_ARMED) || _model.state.mode.isLongClickActive())
+  {
+    if(_model.state.mode.isLongClickActive()) _model.setGpsHome();
+    _model.state.led.setStatus(Connect::LED_ON);
+  }
+  else if(_model.armingDisabled())
   {
     _model.state.led.setStatus(Connect::LED_ERROR);
-  }
-  else if(_model.isModeActive(MODE_ARMED) || _model.state.mode.isLongClickActive())
-  {
-    _model.state.led.setStatus(Connect::LED_ON);
   }
   else
   {

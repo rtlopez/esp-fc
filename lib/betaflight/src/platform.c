@@ -62,7 +62,7 @@ float motor_disarmed[MAX_SUPPORTED_MOTORS];
 uint32_t targetPidLooptime;
 float rcCommand[4];
 
-int32_t GPS_home[2];
+int32_t GPS_home[2] = { 0, 0 };
 gpsSolutionData_t gpsSol;
 
 const char* const lookupTableMixerType[] = {
