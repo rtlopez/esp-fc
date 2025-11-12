@@ -479,6 +479,60 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
       }
       break;
 
+    case ESP_CMD_PID_INNER:
+      {
+        const auto& inner = _model.state.innerPid;
+        EspCmdPidInner res = {
+          .roll = {
+            .p = Utils::fcast<int16_t>(inner[AXIS_ROLL].pTerm * 1000.0f),
+            .i = Utils::fcast<int16_t>(inner[AXIS_ROLL].iTerm * 1000.0f),
+            .d = Utils::fcast<int16_t>(inner[AXIS_ROLL].dTerm * 1000.0f),
+            .f = Utils::fcast<int16_t>(inner[AXIS_ROLL].fTerm * 1000.0f),
+          },
+          .pitch = {
+            .p = Utils::fcast<int16_t>(inner[AXIS_PITCH].pTerm * 1000.0f),
+            .i = Utils::fcast<int16_t>(inner[AXIS_PITCH].iTerm * 1000.0f),
+            .d = Utils::fcast<int16_t>(inner[AXIS_PITCH].dTerm * 1000.0f),
+            .f = Utils::fcast<int16_t>(inner[AXIS_PITCH].fTerm * 1000.0f),
+          },
+          .yaw = {
+            .p = Utils::fcast<int16_t>(inner[AXIS_YAW].pTerm * 1000.0f),
+            .i = Utils::fcast<int16_t>(inner[AXIS_YAW].iTerm * 1000.0f),
+            .d = Utils::fcast<int16_t>(inner[AXIS_YAW].dTerm * 1000.0f),
+            .f = Utils::fcast<int16_t>(inner[AXIS_YAW].fTerm * 1000.0f),
+          },
+          .alt = {
+            .p = Utils::fcast<int16_t>(inner[AXIS_THRUST].pTerm * 1000.0f),
+            .i = Utils::fcast<int16_t>(inner[AXIS_THRUST].iTerm * 1000.0f),
+            .d = Utils::fcast<int16_t>(inner[AXIS_THRUST].dTerm * 1000.0f),
+            .f = Utils::fcast<int16_t>(inner[AXIS_THRUST].fTerm * 1000.0f),
+          }
+        };
+        r.write(res);
+      }
+      break;
+
+    case ESP_CMD_PID_OUTER:
+      {
+        const auto& outer = _model.state.outerPid;
+        EspCmdPidOuter res{
+          .roll = {
+            .p = Utils::fcast<int16_t>(outer[AXIS_ROLL].pTerm * 1000.0f),
+            .i = Utils::fcast<int16_t>(outer[AXIS_ROLL].iTerm * 1000.0f),
+            .d = Utils::fcast<int16_t>(outer[AXIS_ROLL].dTerm * 1000.0f),
+            .f = Utils::fcast<int16_t>(outer[AXIS_ROLL].fTerm * 1000.0f),
+          },
+          .pitch = {
+            .p = Utils::fcast<int16_t>(outer[AXIS_PITCH].pTerm * 1000.0f),
+            .i = Utils::fcast<int16_t>(outer[AXIS_PITCH].iTerm * 1000.0f),
+            .d = Utils::fcast<int16_t>(outer[AXIS_PITCH].dTerm * 1000.0f),
+            .f = Utils::fcast<int16_t>(outer[AXIS_PITCH].fTerm * 1000.0f),
+          },
+        };
+        r.write(res);
+      }
+      break;
+
     case ESP_CMD_DEBUG:
       {
         EspCmdDebug debug = {};

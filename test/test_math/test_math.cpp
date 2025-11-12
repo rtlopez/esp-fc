@@ -41,6 +41,46 @@ void test_math_map3()
   TEST_ASSERT_FLOAT_WITHIN(1.f, -500.f, Utils::map3(-50.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
 }
 
+void test_math_fcast()
+{
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int8_t>(0.0f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int8_t>(0.1f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int8_t>(0.5f));
+  TEST_ASSERT_EQUAL_INT32(     1, Utils::fcast<int8_t>(0.501f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int8_t>(-0.5f));
+  TEST_ASSERT_EQUAL_INT32(    -1, Utils::fcast<int8_t>(-0.51f));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::fcast<int8_t>(127.0f));
+  TEST_ASSERT_EQUAL_INT32(  -128, Utils::fcast<int8_t>(-128.0f));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::fcast<int8_t>(32767.0f));
+  TEST_ASSERT_EQUAL_INT32(  -128, Utils::fcast<int8_t>(-32768.0f));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::fcast<int8_t>(50000.0f));
+  TEST_ASSERT_EQUAL_INT32(  -128, Utils::fcast<int8_t>(-50000.0f));
+
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<uint8_t>(0.0f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<uint8_t>(0.5f));
+  TEST_ASSERT_EQUAL_INT32(     1, Utils::fcast<uint8_t>(0.501f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<uint8_t>(-0.5f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<uint8_t>(-0.51f));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::fcast<uint8_t>(127.0f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<uint8_t>(-128.0f));
+  TEST_ASSERT_EQUAL_INT32(   255, Utils::fcast<uint8_t>(32767.0f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<uint8_t>(-32768.0f));
+  TEST_ASSERT_EQUAL_INT32(   255, Utils::fcast<uint8_t>(50000.0f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<uint8_t>(-50000.0f));
+
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int16_t>(0.0f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int16_t>(0.5f));
+  TEST_ASSERT_EQUAL_INT32(     1, Utils::fcast<int16_t>(0.501f));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int16_t>(-0.5f));
+  TEST_ASSERT_EQUAL_INT32(    -1, Utils::fcast<int16_t>(-0.6f));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::fcast<int16_t>(127.0f));
+  TEST_ASSERT_EQUAL_INT32(  -128, Utils::fcast<int16_t>(-128.0f));
+  TEST_ASSERT_EQUAL_INT32( 32767, Utils::fcast<int16_t>(32767.0f));
+  TEST_ASSERT_EQUAL_INT32(-32768, Utils::fcast<int16_t>(-32768.0f));
+  TEST_ASSERT_EQUAL_INT32( 32767, Utils::fcast<int16_t>(50000.0f));
+  TEST_ASSERT_EQUAL_INT32(-32768, Utils::fcast<int16_t>(-50000.0f));
+}
+
 void test_math_baro_altitude()
 {
   TEST_ASSERT_FLOAT_WITHIN(0.1f,   0.0f, Utils::toAltitude(101325.f)); // sea level
@@ -1307,6 +1347,7 @@ int main(int argc, char **argv)
   RUN_TEST(test_math_map);
   RUN_TEST(test_math_map3);
   RUN_TEST(test_math_deadband);
+  RUN_TEST(test_math_fcast);
 
   RUN_TEST(test_math_bit);
   RUN_TEST(test_math_bitmask);
