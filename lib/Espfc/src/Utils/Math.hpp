@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 namespace Espfc {
 
@@ -51,6 +52,34 @@ public:
     if(value > max) return max;
     if(value < min) return min;
     return value;
+  }
+
+  // saturate cast
+  template <typename T, typename S>
+  constexpr T scast(S value)
+  {
+    static_assert(std::is_integral_v<T>, "Target must be an integral type");
+    static_assert(std::is_integral_v<S>, "Source must be an integral type");
+
+    if constexpr (sizeof(T) >= sizeof(S))
+    {
+      return static_cast<T>(value);
+    }
+
+    constexpr auto min_val = std::numeric_limits<T>::min();
+    constexpr auto max_val = std::numeric_limits<T>::max();
+
+    if (value < static_cast<S>(min_val)) return min_val;
+    if (value > static_cast<S>(max_val)) return max_val;
+
+    return static_cast<T>(value);
+  }
+
+  template<typename T>
+  T fcast(const float value)
+  {
+    const auto v = lrintf(value);
+    return scast<T>(v);
   }
 
   inline int alignToClock(uint32_t clock, uint32_t maxFreq)
