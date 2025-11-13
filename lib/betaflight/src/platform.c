@@ -6,6 +6,7 @@ const char * const shortGitRevision = STR(ESPFC_REVISION);
 const char * const buildTime = __TIME__;
 const char * const buildDate = __DATE__;
 const char * flightControllerIdentifier = "BTFL";
+//const char * flightControllerIdentifier = "ESPF";
 const char * boardIdentifier = "ESPF";
 
 PG_RESET_TEMPLATE_DEF(serialConfig_t, serialConfig);

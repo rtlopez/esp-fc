@@ -397,7 +397,7 @@ struct GpsAccuracy
   uint32_t vertical = 0; // mm (1e3)
   uint32_t speed = 0; // mm/s (1e3)
   uint32_t heading = 0; // deg * 1e5
-  uint32_t pDop = 0; // (1e2)
+  uint16_t pDop = 0; // (1e2)
 };
 
 struct GpsSatelite

@@ -235,6 +235,9 @@ struct EspCmdGps
   int32_t altitude; // in meters * 1000
   int32_t speed; // in cm/s
   int32_t course; // in degrees * 100
+  uint16_t pDop; // * 100
+  uint16_t hAccu; // dm
+  uint16_t vAccu; // dm
 } __attribute__((packed));
 
 struct EspCmdGpsInfo

@@ -54,13 +54,32 @@ public:
     return value;
   }
 
+  // saturate cast
+  template <typename T, typename S>
+  constexpr T scast(S value)
+  {
+    static_assert(std::is_integral_v<T>, "Target must be an integral type");
+    static_assert(std::is_integral_v<S>, "Source must be an integral type");
+
+    if constexpr (sizeof(T) >= sizeof(S))
+    {
+      return static_cast<T>(value);
+    }
+
+    constexpr auto min_val = std::numeric_limits<T>::min();
+    constexpr auto max_val = std::numeric_limits<T>::max();
+
+    if (value < static_cast<S>(min_val)) return min_val;
+    if (value > static_cast<S>(max_val)) return max_val;
+
+    return static_cast<T>(value);
+  }
+
   template<typename T>
   T fcast(const float value)
   {
-    long v = lrintf(value);
-    if (v >= std::numeric_limits<T>::max()) return std::numeric_limits<T>::max();
-    else if (v <= std::numeric_limits<T>::min()) return std::numeric_limits<T>::min();
-    return static_cast<T>(v);
+    const auto v = lrintf(value);
+    return scast<T>(v);
   }
 
   inline int alignToClock(uint32_t clock, uint32_t maxFreq)

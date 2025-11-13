@@ -5,6 +5,7 @@
 #include "Device/GyroDevice.h"
 #include "Hal/Pgm.h"
 #include "msp/msp_protocol.h"
+#include "Connect/EspProtocol.hpp"
 
 #ifdef USE_FLASHFS
 #include "Device/FlashDevice.h"
@@ -1584,9 +1585,9 @@ void Cli::printVersion(Stream& s) const
   s.print(' ');
   s.print(buildTime);
   s.print(" api=");
-  s.print(API_VERSION_MAJOR);
+  s.print(ESP_API_VERSION_MAJOR);
   s.print('.');
-  s.print(API_VERSION_MINOR);
+  s.print(ESP_API_VERSION_MINOR);
   s.print(" gcc=");
   s.print(__VERSION__);
   s.print(" std=");
