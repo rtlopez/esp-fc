@@ -439,6 +439,9 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
           .altitude = _model.state.gps.location.raw.height,
           .speed = _model.state.gps.velocity.raw.groundSpeed,
           .course = _model.state.gps.velocity.raw.heading,
+          .pDop = _model.state.gps.accuracy.pDop,
+          .hAccu = Utils::scast<uint16_t>(_model.state.gps.accuracy.horizontal / 10),
+          .vAccu = Utils::scast<uint16_t>(_model.state.gps.accuracy.vertical / 10),
         };
         r.write(gps);
       }
@@ -1342,9 +1345,9 @@ void MspProcessor::processCommandESP(MspMessage& m, MspResponse& r, Device::Seri
 
     case ESP_CMD_MIXER_NAMES:
       {
-        r.writeU8(MIXER_QUADX); r.writeString("Quad X"); r.writeU8(0);
-        r.writeU8(MIXER_TRI); r.writeString("Tricopter"); r.writeU8(0);
-        r.writeU8(MIXER_CUSTOM); r.writeString("Custom"); r.writeU8(0);
+        r.writeU8(FC_MIXER_QUADX); r.writeString("Quad X"); r.writeU8(0);
+        r.writeU8(FC_MIXER_TRI); r.writeString("Tricopter"); r.writeU8(0);
+        r.writeU8(FC_MIXER_CUSTOM); r.writeString("Custom"); r.writeU8(0);
       }
       break;
 
