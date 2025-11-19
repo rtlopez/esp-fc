@@ -657,6 +657,7 @@ struct VtxConfig
   uint8_t band = 0x1;
   uint8_t power = 0;
   uint8_t lowPowerDisarm = 0;
+  uint8_t pitMode = 0;
 };
 
 struct GpsConfig

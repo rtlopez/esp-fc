@@ -3,7 +3,8 @@
 #include "Model.h"
 #include "Device/SerialDevice.h"
 #include "Connect/MspProcessor.hpp"
-#include "Connect/Vtx.hpp"
+#include "Connect/VtxSmartAudio.hpp"
+#include "Connect/VtxTramp.hpp"
 #include "Connect/Cli.hpp"
 #include "TelemetryManager.h"
 #include "Output/OutputIBUS.hpp"
@@ -37,7 +38,8 @@ private:
 
   Connect::MspProcessor _msp;
   Connect::Cli _cli;
-  Connect::Vtx _vtx;
+  Connect::VtxSmartAudio _vtx_smartaudio;
+  Connect::VtxTramp _vtx_tramp;
   TelemetryManager& _telemetry;
   Output::OutputIBUS _ibus;
   Sensor::GpsSensor _gps;

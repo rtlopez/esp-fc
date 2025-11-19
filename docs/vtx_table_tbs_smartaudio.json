@@ -1,0 +1,104 @@
+{
+    "description": "ESPFC VTX Config file for SmartAudio 2.0",
+    "version": "1.0",
+    "vtx_table": {
+        "bands_list": [
+            {
+                "name": "BOSCAM_A",
+                "letter": "A",
+                "is_factory_band": true,
+                "frequencies": [
+                    5865,
+                    5845,
+                    5825,
+                    5805,
+                    5785,
+                    5765,
+                    5745,
+                    0
+                ]
+            },
+            {
+                "name": "BOSCAM_B",
+                "letter": "B",
+                "is_factory_band": true,
+                "frequencies": [
+                    5733,
+                    5752,
+                    5771,
+                    5790,
+                    5809,
+                    5828,
+                    5847,
+                    5866
+                ]
+            },
+            {
+                "name": "UNKNOWN",
+                "letter": "U",
+                "is_factory_band": true,
+                "frequencies": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "FATSHARK",
+                "letter": "F",
+                "is_factory_band": true,
+                "frequencies": [
+                    5740,
+                    5760,
+                    5780,
+                    5800,
+                    5820,
+                    5840,
+                    5860,
+                    0
+                ]
+            },
+            {
+                "name": "RACEBAND",
+                "letter": "R",
+                "is_factory_band": true,
+                "frequencies": [
+                    0,
+                    0,
+                    5732,
+                    5769,
+                    5806,
+                    5843,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "IMD6",
+                "letter": "I",
+                "is_factory_band": false,
+                "frequencies": [
+                    5732,
+                    5765,
+                    5828,
+                    5840,
+                    5866,
+                    5740,
+                    0,
+                    0
+                ]
+            }
+        ],
+        "powerlevels_list": [
+            {
+                "value": 0,
+                "label": "25 "
+            }
+        ]
+    }
+}
