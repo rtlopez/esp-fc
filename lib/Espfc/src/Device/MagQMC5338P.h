@@ -28,7 +28,7 @@
 namespace Espfc {
 namespace Device {
 
-class MagQMC5883P : public MagDevice 
+class MagQMC5338P : public MagDevice 
 {
 public:
     int begin(BusDevice* bus) override 
@@ -123,4 +123,5 @@ private:
 } 
 
 #endif
+
 
