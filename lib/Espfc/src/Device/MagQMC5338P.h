@@ -1,5 +1,5 @@
-#ifndef _ESPFC_DEVICE_MAG_QMC5883P_H_
-#define _ESPFC_DEVICE_MAG_QMC5883P_H_
+#ifndef _ESPFC_DEVICE_MAG_QMC5338P_H_
+#define _ESPFC_DEVICE_MAG_QMC5338P_H_
 
 #include "MagDevice.h"
 #include "BusDevice.h"
@@ -123,3 +123,4 @@ private:
 } 
 
 #endif
+
