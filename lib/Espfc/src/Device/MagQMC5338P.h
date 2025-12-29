@@ -41,14 +41,14 @@ public:
 
         if (!testConnection()) return 0;
 
-        // 🔑 Step 1: Enable Set/Reset (write 0x29 to Z_MSB)
+        //  Step 1: Enable Set/Reset (write 0x29 to Z_MSB)
         _bus->writeByte(_addr, QMC5883P_REG_ZOUT_MSB, 0x29);
 
-        // 🔑 Step 2: Set Range in CONTROL2[3:2] (Adafruit style)
+        //  Step 2: Set Range in CONTROL2[3:2] (Adafruit style)
         _currentRange = QMC5883P_RANGE_8G;
         setMode(_currentRange); // This will write to CONTROL2
 
-        // 🔑 Step 3: Configure CONTROL1
+        //  Step 3: Configure CONTROL1
         uint8_t ctrl1 = 
             QMC5883P_MODE_CONTINUOUS |  // [1:0]
             (0x02 << 2) |               // ODR = 100Hz [3:2]
@@ -69,7 +69,7 @@ public:
             return 0;
         }
 
-        // 🔑 Read raw values EXACTLY like Adafruit (no sign flip yet)
+        //  Read raw values EXACTLY like Adafruit (no sign flip yet)
         v.x = (int16_t)((buffer[1] << 8) | buffer[0]);
         v.y = (int16_t)((buffer[3] << 8) | buffer[2]);
         v.z = (int16_t)((buffer[5] << 8) | buffer[4]);
@@ -78,7 +78,7 @@ public:
     }
 
     const VectorFloat convert(const VectorInt16& v) const override {
-        // 🔑 Use Adafruit's conversion factors (based on actual range)
+        //  Use Adafruit's conversion factors (based on actual range)
         float lsb_per_gauss;
         switch (_currentRange) {
             case QMC5883P_RANGE_30G: lsb_per_gauss = 1000.0f;  break;
@@ -99,7 +99,7 @@ public:
         return MAG_QMC5883P;
     }
 
-    // 🔑 CORRECT setMode: writes range to CONTROL2[3:2]
+    //  CORRECT setMode: writes range to CONTROL2[3:2]
     void setMode(uint8_t range) {
         _currentRange = range;
         // Range is in bits [3:2] of CONTROL2
@@ -123,5 +123,6 @@ private:
 } 
 
 #endif
+
 
 
