@@ -328,6 +328,7 @@ struct ModeState
 struct VtxState
 {
   uint8_t active = false;
+  uint8_t protocol = 0;
 };
 
 enum GpsDeviceVersion

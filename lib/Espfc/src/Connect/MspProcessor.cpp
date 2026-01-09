@@ -1403,29 +1403,29 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         r.writeU8(0); // ready
         r.writeU8(0); // low power disarm
       } else {
-        r.writeU8(3 /* SMARTAUDIO */); // vtx type unknown
-        r.writeU8(_model.config.vtx.band);    // band
-        r.writeU8(_model.config.vtx.channel); // channel
-        r.writeU8(_model.config.vtx.power);   // power
-        r.writeU8(0);    // status (looks like 1 means pit mode :shrug:)
+        r.writeU8(_model.state.vtx.protocol); // vtx type
+        r.writeU8(_model.config.vtx.band);     // band
+        r.writeU8(_model.config.vtx.channel);  // channel
+        r.writeU8(_model.config.vtx.power);    // power
+        r.writeU8(0);    // status (1 indicates pit mode)
         r.writeU16(0);   // freq
         r.writeU8(1);    // ready
-        r.writeU8(_model.config.vtx.lowPowerDisarm);    // low power disarm
+        r.writeU8(_model.config.vtx.lowPowerDisarm); // low power disarm
       }
-      // 1.42
+      // API version 1.42
       r.writeU16(0);   // pit mode freq
       r.writeU8(0);    // vtx table available (no)
       r.writeU8(0);    // vtx table bands
       r.writeU8(0);    // vtx table channels
       r.writeU8(0);    // vtx power levels
       break;
-    
+
     case MSP_SET_VTX_CONFIG:
       {
         uint16_t freq = m.readU16();
         if (freq <= VTXCOMMON_MSP_BANDCHAN_CHKVAL) {  // Value is band and channel
-          //const uint8_t newBand = (freq / 8) + 1;
-          //const uint8_t newChannel = (freq % 8) + 1;
+          // const uint8_t newBand = (freq / 8) + 1;
+          // const uint8_t newChannel = (freq % 8) + 1;
         }
 
         if (m.remain() >= 2) {
@@ -1452,7 +1452,6 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         }
       }
       break;
-
 
     case MSP_SET_ARMING_DISABLED:
       {

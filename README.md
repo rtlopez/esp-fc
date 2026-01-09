@@ -95,6 +95,13 @@ After flashing you need to configure few things first:
  * Esc Protocols: PWM, BRUSHED, ONESHOT125, ONESHOT42, MULTISHOT, DSHOT150, DSHOT300, DSHOT600
  * Other protocols: MSP, CLI, BLACKBOX, ESPNOW
 
+## Supported VTX devices
+
+| Device            | ESP8266 | ESP32 | RP2040 |
+|------------------:|--------:|------:|-------:|
+| [TBS SmartAudio](/docs/vtx_table_tbs_smartaudio.json)    | Yes     |   Yes |    Yes |
+| [IRC Tramp](/docs/vtx_table_irc_tramp.json)         | Yes     |   Yes |    Yes |
+
 ## Issues
 
 You can report issues using Github [tracker](https://github.com/rtlopez/esp-fc/issues). 
