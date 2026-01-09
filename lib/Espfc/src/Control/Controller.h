@@ -2,10 +2,9 @@
 
 #include "Model.h"
 #include "Control/Rates.h"
+#include "Control/Altitude.hpp"
 
-namespace Espfc {
-
-namespace Control {
+namespace Espfc::Control {
 
 class Controller
 {
@@ -21,14 +20,17 @@ class Controller
 
     inline float getTpaFactor() const;
     inline void resetIterm();
-    float calculateSetpointRate(int axis, float input);
+    float calculateSetpointRate(int axis, float input) const;
+    float calcualteAltHoldSetpoint() const;
 
   private:
+    void beginAltHold();
+    void beginInnerLoop(size_t axis);
+    void beginOuterLoop(size_t axis);
+
     Model& _model;
     Rates _rates;
     Utils::Filter _speedFilter;
 };
-
-}
 
 }

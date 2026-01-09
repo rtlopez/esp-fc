@@ -153,6 +153,9 @@ void test_model_inner_pid_init()
   model.config.pid[FC_PID_YAW]   = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.begin();
 
+  Control::Controller controller(model);
+  controller.begin();
+
   TEST_ASSERT_FLOAT_WITHIN(   0.1f, 1000.0f, model.state.innerPid[FC_PID_ROLL].rate);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.1835f, model.state.innerPid[FC_PID_ROLL].Kp);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.4002f, model.state.innerPid[FC_PID_ROLL].Ki);
@@ -182,6 +185,9 @@ void test_model_outer_pid_init()
   model.config.mixer.type = FC_MIXER_QUADX;
   model.config.pid[FC_PID_LEVEL]  = { .P = 100u, .I = 100u, .D = 100u, .F = 100 };
   model.begin();
+
+  Control::Controller controller(model);
+  controller.begin();
 
   TEST_ASSERT_FLOAT_WITHIN(   0.1f, 2000.0f, model.state.outerPid[FC_PID_ROLL].rate);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f,   10.0f, model.state.outerPid[FC_PID_ROLL].Kp);

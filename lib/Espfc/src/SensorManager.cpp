@@ -2,7 +2,11 @@
 
 namespace Espfc {
 
-SensorManager::SensorManager(Model& model): _model(model), _gyro(model), _accel(model), _mag(model), _baro(model), _voltage(model), _fusion(model), _fusionUpdate(false) {}
+SensorManager::SensorManager(Model& model):
+  _model(model), _gyro(model), _accel(model), _mag(model), _baro(model),
+  _voltage(model), _fusion(model), _altitude(model), _fusionUpdate(false)
+{
+}
 
 int SensorManager::begin()
 {
@@ -12,6 +16,7 @@ int SensorManager::begin()
   _baro.begin();
   _voltage.begin();
   _fusion.begin();
+  _altitude.begin();
   _button.begin(_model.config.pin[PIN_BUTTON]);
 
   return 1;
@@ -62,7 +67,9 @@ int SensorManager::postLoop()
 
 int FAST_CODE_ATTR SensorManager::fusion()
 {
-  return _fusion.update();
+  _fusion.update();
+  _altitude.update();
+  return 1;
 }
 
 // main task
@@ -90,7 +97,7 @@ int SensorManager::updateDelayed()
   if(_fusionUpdate)
   {
     _fusionUpdate = false;
-    _fusion.update();
+    fusion();
   }
   _fusionUpdate = status;
 

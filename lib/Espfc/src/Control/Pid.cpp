@@ -1,24 +1,31 @@
 #include "Pid.h"
 #include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
+#include <algorithm>
 
 namespace Espfc {
 
 namespace Control {
 
 Pid::Pid():
-  rate(1.0f), dt(1.0f), Kp(0.1), Ki(0.f), Kd(0.f), Kf(0.0f), iLimit(0.3f), oLimit(1.f),
+  rate(1.0f), dt(1.0f), Kp(0.1), Ki(0.f), Kd(0.f), Kf(0.0f),
+  iLimitLow(-0.3f), iLimitHigh(0.3f), iReset(0.0f), oLimitLow(-1.f), oLimitHigh(1.f),
   pScale(1.f), iScale(1.f), dScale(1.f), fScale(1.f),
   error(0.f), iTermError(0.f),
   pTerm(0.f), iTerm(0.f), dTerm(0.f), fTerm(0.f),
   prevMeasurement(0.f), prevError(0.f), prevSetpoint(0.f),
-  outputSaturated(false),
+  ftermDerivative(true), outputSaturated(false),
   itermRelax(ITERM_RELAX_OFF), itermRelaxFactor(1.0f), itermRelaxBase(0.f)
   {}
 
 void Pid::begin()
 {
   dt = 1.f / rate;
+}
+
+void Pid::resetIterm()
+{
+  iTerm = iReset;
 }
 
 float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
@@ -45,7 +52,7 @@ float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
         if(!incrementOnly || increasing) iTermError *= itermRelaxFactor;
       }
       iTerm += Ki * iScale * iTermError * dt;
-      iTerm = Utils::clamp(iTerm, -iLimit, iLimit);
+      iTerm = std::clamp(iTerm, iLimitLow, iLimitHigh);
     }
   }
   else
@@ -70,7 +77,14 @@ float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
   // F-term
   if(Kf > 0.f && fScale > 0.f)
   {
-    fTerm = Kf * fScale * (setpoint - prevSetpoint) * rate;
+    if(ftermDerivative)
+    {
+      fTerm = Kf * fScale * (setpoint - prevSetpoint) * rate;
+    }
+    else
+    {
+      fTerm = Kf * fScale * setpoint;
+    }
     fTerm = ftermFilter.update(fTerm);
   }
   else
@@ -82,7 +96,7 @@ float FAST_CODE_ATTR Pid::update(float setpoint, float measurement)
   prevError = error;
   prevSetpoint = setpoint;
 
-  return Utils::clamp(pTerm + iTerm + dTerm + fTerm, -oLimit, oLimit);
+  return std::clamp(pTerm + iTerm + dTerm + fTerm, oLimitLow, oLimitHigh);
 }
 
 }

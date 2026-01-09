@@ -81,8 +81,9 @@ struct FusionConfig
 
 enum FlightMode {
   MODE_ARMED,
-  MODE_ANGLE,
   MODE_AIRMODE,
+  MODE_ANGLE,
+  MODE_ALTHOLD,
   MODE_BUZZER,
   MODE_FAILSAFE,
   MODE_BLACKBOX,
@@ -414,8 +415,8 @@ struct InputConfig
   int8_t ppmMode = PPM_MODE_NORMAL;
   uint8_t serialRxProvider = SERIALRX_SBUS;
 
-  int16_t maxCheck = 1050;
-  int16_t minCheck = 1900;
+  int16_t minCheck = 1050;
+  int16_t maxCheck = 1900;
   int16_t minRc = 885;
   int16_t midRc = 1500;
   int16_t maxRc = 2115;
@@ -639,6 +640,12 @@ struct LevelConfig
   int16_t rateLimit = 300;
 };
 
+struct AltHoldConfig
+{
+  uint8_t itermCenter = 50;
+  uint8_t itermRange = 50;
+};
+
 struct MixerConfiguration
 {
   int8_t type = FC_MIXER_QUADX;
@@ -696,18 +703,19 @@ class ModelConfig
       [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
       [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
       [FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 },  // YAW
-      [FC_PID_ALT]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // ALT
+      [FC_PID_ALT]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // ALTHOLD POS
       [FC_PID_POS]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_P * 100, POSHOLD_I * 100,
       [FC_PID_POSR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
       [FC_PID_NAVR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
-      [FC_PID_LEVEL] = { .P = 45, .I =  0, .D =  0, .F =  0 },  // LEVEL
+      [FC_PID_LEVEL] = { .P = 45, .I =  0, .D =  0, .F =  0 },  // ANGLE/LEVEL
       [FC_PID_MAG]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // MAG
-      [FC_PID_VEL]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // VEL
+      [FC_PID_VEL]   = { .P = 80, .I = 60, .D = 40, .F = 20 },  // ALTHOLD VEL
     };
     YawConfig yaw;
     LevelConfig level;
     DtermConfig dterm;
     ItermConfig iterm;
+    AltHoldConfig altHold;
     ControllerConfig controller;
     // hardware
     int8_t pin[PIN_COUNT] = {
@@ -828,7 +836,7 @@ class ModelConfig
       wireless.pass[0] = 0;
       modelName[0] = 0;
 
-// development settings
+// only local development settings
 #if !defined(ESPFC_REVISION)
       devPreset();
 #endif
@@ -836,12 +844,17 @@ class ModelConfig
 
     void devPreset()
     {
-#ifdef ESPFC_DEV_PRESET_BLACKBOX
+#ifdef ESPFC_DEV_PRESET_BLACKBOX_SERIAL
       blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
       debug.mode = DEBUG_GYRO_SCALED;
-      serial[ESPFC_DEV_PRESET_BLACKBOX].functionMask |= SERIAL_FUNCTION_BLACKBOX;
-      serial[ESPFC_DEV_PRESET_BLACKBOX].blackboxBaud = SERIAL_SPEED_250000;
-      serial[ESPFC_DEV_PRESET_BLACKBOX].baud = SERIAL_SPEED_250000;
+      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].functionMask |= SERIAL_FUNCTION_BLACKBOX;
+      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].blackboxBaud = SERIAL_SPEED_250000;
+      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].baud = SERIAL_SPEED_250000;
+#endif
+
+#ifdef ESPFC_DEV_PRESET_BLACKBOX_FLASH
+      blackbox.dev = BLACKBOX_DEV_FLASH; // flash
+      blackbox.pDenom = 16; // 500Hz
 #endif
 
 #ifdef ESPFC_DEV_PRESET_MODES
@@ -852,19 +865,26 @@ class ModelConfig
       conditions[0].logicMode = 0;
       conditions[0].linkId = 0;
 
-      conditions[1].id = MODE_ANGLE;
+      conditions[1].id = MODE_AIRMODE;
       conditions[1].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[1].min = 1700;
+      conditions[1].min = 1300;
       conditions[1].max = 2100;
       conditions[1].logicMode = 0;
       conditions[1].linkId = 0;
 
-      conditions[2].id = MODE_AIRMODE;
-      conditions[2].ch = AXIS_AUX_1 + 0; // aux1
+      conditions[2].id = MODE_ANGLE;
+      conditions[2].ch = AXIS_AUX_1 + 1; // aux2
       conditions[2].min = 1300;
       conditions[2].max = 2100;
       conditions[2].logicMode = 0;
       conditions[2].linkId = 0;
+
+      conditions[3].id = MODE_ALTHOLD;
+      conditions[3].ch = AXIS_AUX_1 + 1; // aux2
+      conditions[3].min = 1700;
+      conditions[3].max = 2100;
+      conditions[3].logicMode = 0;
+      conditions[3].linkId = 0;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_SCALER
@@ -878,6 +898,12 @@ class ModelConfig
 
 #ifdef ESPFC_DEV_PRESET_DSHOT
       output.protocol = ESC_PROTOCOL_DSHOT300;
+#endif
+
+#ifdef ESPFC_DEV_PRESET_BRUSHED
+      output.protocol = ESC_PROTOCOL_BRUSHED;
+      output.async = true;
+      output.rate = 3000;
 #endif
     }
 
