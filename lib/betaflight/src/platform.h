@@ -1314,6 +1314,7 @@ typedef struct
 const FlashfsRuntime * flashfsGetRuntime();
 
 void flashfsJournalLoad(FlashfsJournalItem * data, size_t start, size_t num);
+void flashfsJournalFix(FlashfsJournalItem * data, size_t num);
 
 int flashfsInit(void);
 uint32_t flashfsGetSize(void);

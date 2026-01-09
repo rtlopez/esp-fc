@@ -19,7 +19,7 @@ int Espfc::load()
 
 int Espfc::begin()
 {
-  _model.state.led.begin(_model.config.pin[PIN_LED_BLINK], _model.config.led.invert);
+  _model.state.led.begin(_model.config.pin[PIN_LED_BLINK], _model.config.led.type, _model.config.led.invert);
 
   _serial.begin();      // requires _model.load()
   //_model.logStorageResult();
