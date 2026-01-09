@@ -60,30 +60,47 @@ void test_timer_check()
 
   TEST_ASSERT_EQUAL_UINT32(1000, timer.rate);
   TEST_ASSERT_EQUAL_UINT32(1000, timer.interval);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 1000.f, timer.realRate);
 
   TEST_ASSERT_TRUE( timer.check(1000));
   TEST_ASSERT_EQUAL_UINT32(1, timer.iteration);
   TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 1000.f, timer.realRate);
 
   TEST_ASSERT_FALSE(timer.check(1500));
   TEST_ASSERT_EQUAL_UINT32(1, timer.iteration);
   TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 1000.f, timer.realRate);
   
   TEST_ASSERT_TRUE( timer.check(2000));
   TEST_ASSERT_EQUAL_UINT32(2, timer.iteration);
   TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 1000.f, timer.realRate);
   
   TEST_ASSERT_TRUE( timer.check(3000));
   TEST_ASSERT_EQUAL_UINT32(3, timer.iteration);
   TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 1000.f, timer.realRate);
   
   TEST_ASSERT_FALSE(timer.check(3999));
   TEST_ASSERT_EQUAL_UINT32(3, timer.iteration);
   TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 1000.f, timer.realRate);
   
   TEST_ASSERT_TRUE( timer.check(4050));
   TEST_ASSERT_EQUAL_UINT32(4, timer.iteration);
   TEST_ASSERT_EQUAL_UINT32(1050, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 995.f, timer.realRate);
+
+  TEST_ASSERT_TRUE( timer.check(5100));
+  TEST_ASSERT_EQUAL_UINT32(5, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1050, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 990.f, timer.realRate);
+
+  TEST_ASSERT_TRUE( timer.check(6150));
+  TEST_ASSERT_EQUAL_UINT32(6, timer.iteration);
+  TEST_ASSERT_EQUAL_UINT32(1050, timer.delta);
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 987.f, timer.realRate);
 }
 
 void test_timer_check_micros()
