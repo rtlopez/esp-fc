@@ -24,6 +24,8 @@ class Mixer
     bool inline _stop(void);
 
   private:
+    void overrideTimeout();
+
     Model& _model;
     EscDriver * _motor;
     EscDriver * _servo;

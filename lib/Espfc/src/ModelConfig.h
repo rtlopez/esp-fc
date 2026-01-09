@@ -277,18 +277,16 @@ enum PinFunction {
   PIN_I2C_0_SCL,
   PIN_I2C_0_SDA,
 #endif
-#ifdef ESPFC_ADC_0
-  PIN_INPUT_ADC_0,
+#ifdef ESPFC_ADC_VBAT
+  PIN_INPUT_ADC_VBAT,
 #endif
-#ifdef ESPFC_ADC_1
-  PIN_INPUT_ADC_1,
+#ifdef ESPFC_ADC_IBAT
+  PIN_INPUT_ADC_IBAT,
 #endif
 #ifdef ESPFC_SPI_0
   PIN_SPI_0_SCK,
   PIN_SPI_0_MOSI,
   PIN_SPI_0_MISO,
-#endif
-#ifdef ESPFC_SPI_0
   PIN_SPI_CS0,
   PIN_SPI_CS1,
   PIN_SPI_CS2,
@@ -532,7 +530,7 @@ struct FailsafeConfig
 struct BlackboxConfig
 {
   int8_t dev = 0;
-  int16_t pDenom = 32; // 1k
+  int16_t pDenom = 2; // 1:2 of pid rate (32 for static 1k)
   int32_t fieldsMask = 0xffff;
   int8_t mode = 0;
 };
@@ -678,6 +676,17 @@ struct LedConfig
   int8_t type = 0;
 };
 
+struct PidTuningConfig
+{
+  uint8_t mode = 0; // 0: slider, 1: manual
+  uint8_t rpGain = 100; // roll/pitch gain
+  uint8_t rpStability = 100; // roll/pitch stability
+  uint8_t rpAgility = 100; // roll/pitch agility
+  uint8_t rpBalance = 100; // roll/pitch balance
+  uint8_t yawGain = 100; // yaw gain
+  uint8_t yawStability = 100; // stability
+} __attribute__((packed));
+
 // persistent data
 class ModelConfig
 {
@@ -757,11 +766,11 @@ class ModelConfig
       [PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL,
       [PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA,
 #endif
-#ifdef ESPFC_ADC_0
-      [PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN,
+#ifdef ESPFC_ADC_VBAT
+      [PIN_INPUT_ADC_VBAT] = ESPFC_ADC_VBAT_PIN,
 #endif
-#ifdef ESPFC_ADC_1
-      [PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN,
+#ifdef ESPFC_ADC_IBAT
+      [PIN_INPUT_ADC_IBAT] = ESPFC_ADC_IBAT_PIN,
 #endif
 #ifdef ESPFC_SPI_0
       [PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK,
@@ -812,6 +821,8 @@ class ModelConfig
     uint8_t rescueConfigDelay = 30;
     int16_t boardAlignment[3] = {0, 0, 0};
     char modelName[MODEL_NAME_LEN + 1];
+
+    PidTuningConfig pidTuning;
 
     ModelConfig()
     {

@@ -104,6 +104,7 @@ class BatteryState
     int8_t cells;
     int8_t samples;
     Utils::Timer timer;
+    float consumption; // in mAh
 };
 
 enum CalibrationState {
@@ -165,6 +166,7 @@ struct OutputState
   int16_t disarmed[OUTPUT_CHANNELS];
   bool saturated;
   OutputTelemetryState telemetry;
+  uint32_t overrideTimeout;
 };
 
 struct InputState
@@ -395,7 +397,7 @@ struct GpsAccuracy
   uint32_t vertical = 0; // mm (1e3)
   uint32_t speed = 0; // mm/s (1e3)
   uint32_t heading = 0; // deg * 1e5
-  uint32_t pDop = 0; // (1e2)
+  uint16_t pDop = 0; // (1e2)
 };
 
 struct GpsSatelite
@@ -438,6 +440,33 @@ struct GpsDateTime
   uint8_t minute; // 0-59
   uint8_t second; // 0-59
   uint16_t msec; // 0-999
+
+  inline bool isLeap(uint32_t y) const
+  {
+    return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
+  }
+
+  uint32_t toUnixTimestamp() const
+  {
+    static const uint16_t daysBeforeMonth[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    
+    const uint32_t y = year;
+    const uint32_t yearsSince1970 = y - 1970;
+    const uint32_t leaps = ((y - 1) / 4 - (y - 1) / 100 + (y - 1) / 400) 
+                          - ((1969) / 4 - (1969)  / 100 +  (1969) / 400);
+
+    uint32_t days = yearsSince1970 * 365 + leaps;
+    days += daysBeforeMonth[month - 1] + day - 1;
+    if (month > 2 && isLeap(y)) days += 1;
+
+    uint32_t seconds =
+      days * 86400UL +
+      hour * 3600UL +
+      minute * 60UL +
+      second;
+
+    return seconds;
+  }
 };
 
 static constexpr size_t SAT_MAX = 32u;

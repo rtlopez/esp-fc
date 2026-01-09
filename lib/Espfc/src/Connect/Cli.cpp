@@ -5,6 +5,7 @@
 #include "Device/GyroDevice.h"
 #include "Hal/Pgm.h"
 #include "msp/msp_protocol.h"
+#include "Connect/EspProtocol.hpp"
 
 #ifdef USE_FLASHFS
 #include "Device/FlashDevice.h"
@@ -474,6 +475,9 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("input_mid"), &c.input.midRc),
     Param(PSTR("input_max"), &c.input.maxRc),
 
+    Param(PSTR("input_min_check"), &c.input.minCheck),
+    Param(PSTR("input_max_check"), &c.input.maxCheck),
+
     Param(PSTR("input_interpolation"), &c.input.interpolationMode, interpolChoices),
     Param(PSTR("input_interpolation_interval"), &c.input.interpolationInterval),
 
@@ -670,11 +674,11 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("pin_i2c_scl"), &c.pin[PIN_I2C_0_SCL]),
     Param(PSTR("pin_i2c_sda"), &c.pin[PIN_I2C_0_SDA]),
 #endif
-#ifdef ESPFC_ADC_0
-    Param(PSTR("pin_input_adc_0"), &c.pin[PIN_INPUT_ADC_0]),
+#ifdef ESPFC_ADC_VBAT
+    Param(PSTR("pin_input_adc_vbat"), &c.pin[PIN_INPUT_ADC_VBAT]),
 #endif
-#ifdef ESPFC_ADC_1
-    Param(PSTR("pin_input_adc_1"), &c.pin[PIN_INPUT_ADC_1]),
+#ifdef ESPFC_ADC_IBAT
+    Param(PSTR("pin_input_adc_ibat"), &c.pin[PIN_INPUT_ADC_IBAT]),
 #endif
 #ifdef ESPFC_SPI_0
     Param(PSTR("pin_spi_0_sck"), &c.pin[PIN_SPI_0_SCK]),
@@ -990,12 +994,14 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   }
   else if(strcmp_P(cmd.args[0], PSTR("dump")) == 0)
   {
+    s.println(F("#dump begin"));
     s.println(F("defaults"));
     for(size_t i = 0; _params[i].name; ++i)
     {
       print(_params[i], s);
     }
     s.println(F("save"));
+    s.println(F("#dump end"));
   }
   else if(strcmp_P(cmd.args[0], PSTR("cal")) == 0)
   {
@@ -1579,9 +1585,9 @@ void Cli::printVersion(Stream& s) const
   s.print(' ');
   s.print(buildTime);
   s.print(" api=");
-  s.print(API_VERSION_MAJOR);
+  s.print(ESP_API_VERSION_MAJOR);
   s.print('.');
-  s.print(API_VERSION_MINOR);
+  s.print(ESP_API_VERSION_MINOR);
   s.print(" gcc=");
   s.print(__VERSION__);
   s.print(" std=");
