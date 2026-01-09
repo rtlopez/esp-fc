@@ -359,7 +359,7 @@ class Model
         // for synced and standard PWM limit loop rate and pwm pulse width
         if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
         {
-          config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 499) / 500)); // align loop rate to lower than 500Hz
+          config.loopSync = std::max(config.loopSync, (int8_t)((state.gyroRate + 499) / 500)); // align loop rate to lower than 500Hz
           state.loopRate = state.gyroRate / config.loopSync;
           if(state.loopRate > 480 && config.output.maxThrottle > 1940)
           {
@@ -369,7 +369,7 @@ class Model
         // for onshot125 limit loop rate to 2kHz
         if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
         {
-          config.loopSync = std::max(config.loopSync, (int8_t)((state.loopRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
+          config.loopSync = std::max(config.loopSync, (int8_t)((state.gyroRate + 1999) / 2000)); // align loop rate to lower than 2000Hz
           state.loopRate = state.gyroRate / config.loopSync;
         }
       }
