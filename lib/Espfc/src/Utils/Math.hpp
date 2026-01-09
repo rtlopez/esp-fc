@@ -54,7 +54,7 @@ public:
     return value;
   }
 
-  // saturate cast
+  // saturating cast
   template <typename T, typename S>
   constexpr T scast(S value)
   {
@@ -75,11 +75,11 @@ public:
     return static_cast<T>(value);
   }
 
+  // float saturating cast
   template<typename T>
   T fcast(const float value)
   {
-    const auto v = lrintf(value);
-    return scast<T>(v);
+    return scast<T>(lrintf(value));
   }
 
   inline int alignToClock(uint32_t clock, uint32_t maxFreq)

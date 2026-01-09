@@ -41,6 +41,54 @@ void test_math_map3()
   TEST_ASSERT_FLOAT_WITHIN(1.f, -500.f, Utils::map3(-50.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
 }
 
+void test_math_scast()
+{
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<int8_t>(0));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::scast<int8_t>(127));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::scast<int8_t>(128));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::scast<int8_t>(1000));
+  TEST_ASSERT_EQUAL_INT32(    -1, Utils::scast<int8_t>(-1));
+  TEST_ASSERT_EQUAL_INT32(  -127, Utils::scast<int8_t>(-127));
+  TEST_ASSERT_EQUAL_INT32(  -128, Utils::scast<int8_t>(-128));
+  TEST_ASSERT_EQUAL_INT32(  -128, Utils::scast<int8_t>(-129));
+  TEST_ASSERT_EQUAL_INT32(  -128, Utils::scast<int8_t>(-1000));
+
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint8_t>(0));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::scast<uint8_t>(127));
+  TEST_ASSERT_EQUAL_INT32(   128, Utils::scast<uint8_t>(128));
+  TEST_ASSERT_EQUAL_INT32(   255, Utils::scast<uint8_t>(1000));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint8_t>(-1));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint8_t>(-127));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint8_t>(-128));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint8_t>(-129));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint8_t>(-1000));
+
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<int16_t>(0));
+  TEST_ASSERT_EQUAL_INT32( 32000, Utils::scast<int16_t>(32000));
+  TEST_ASSERT_EQUAL_INT32( 32767, Utils::scast<int16_t>(32767));
+  TEST_ASSERT_EQUAL_INT32( 32767, Utils::scast<int16_t>(32768));
+  TEST_ASSERT_EQUAL_INT32( 32767, Utils::scast<int16_t>(32769));
+  TEST_ASSERT_EQUAL_INT32( 32767, Utils::scast<int16_t>(40000));
+  TEST_ASSERT_EQUAL_INT32(    -1, Utils::scast<int16_t>(-1));
+  TEST_ASSERT_EQUAL_INT32(-32767, Utils::scast<int16_t>(-32767));
+  TEST_ASSERT_EQUAL_INT32(-32768, Utils::scast<int16_t>(-32768));
+  TEST_ASSERT_EQUAL_INT32(-32768, Utils::scast<int16_t>(-32769));
+  TEST_ASSERT_EQUAL_INT32(-32768, Utils::scast<int16_t>(-50000));
+
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint16_t>(0));
+  TEST_ASSERT_EQUAL_INT32(   127, Utils::scast<uint16_t>(127));
+  TEST_ASSERT_EQUAL_INT32( 32767, Utils::scast<uint16_t>(32767));
+  TEST_ASSERT_EQUAL_INT32( 32768, Utils::scast<uint16_t>(32768));
+  TEST_ASSERT_EQUAL_INT32( 65535, Utils::scast<uint16_t>(65535));
+  TEST_ASSERT_EQUAL_INT32( 65535, Utils::scast<uint16_t>(65536));
+  TEST_ASSERT_EQUAL_INT32( 65535, Utils::scast<uint16_t>(100000));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint16_t>(-1));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint16_t>(-127));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint16_t>(-128));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint16_t>(-129));
+  TEST_ASSERT_EQUAL_INT32(     0, Utils::scast<uint16_t>(-1000));
+}
+
 void test_math_fcast()
 {
   TEST_ASSERT_EQUAL_INT32(     0, Utils::fcast<int8_t>(0.0f));
@@ -1347,6 +1395,7 @@ int main(int argc, char **argv)
   RUN_TEST(test_math_map);
   RUN_TEST(test_math_map3);
   RUN_TEST(test_math_deadband);
+  RUN_TEST(test_math_scast);
   RUN_TEST(test_math_fcast);
 
   RUN_TEST(test_math_bit);
