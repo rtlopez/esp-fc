@@ -104,7 +104,7 @@ void Fusion::experimentalFusion()
 
 void Fusion::simpleFusion()
 {
-  _model.state.pose = _model.state.accel.adc.accelToEuler();
+  _model.state.pose = getAccelEulerWithTrim();
   _model.state.attitude.euler.x = _model.state.pose.x;
   _model.state.attitude.euler.y = _model.state.pose.y;
   _model.state.attitude.euler.z += _model.state.gyro.timer.intervalf * _model.state.gyro.adc.z;
@@ -114,7 +114,7 @@ void Fusion::simpleFusion()
 
 void Fusion::kalmanFusion()
 {
-  _model.state.pose = _model.state.accel.adc.accelToEuler();
+  _model.state.pose = getAccelEulerWithTrim();
   _model.state.pose.z = _model.state.attitude.euler.z;
   const float dt = _model.state.gyro.timer.intervalf;
   for(size_t i = 0; i < 3; i++)
@@ -128,7 +128,7 @@ void Fusion::kalmanFusion()
 
 void Fusion::complementaryFusion()
 {
-  _model.state.pose = _model.state.accel.adc.accelToEuler();
+  _model.state.pose = getAccelEulerWithTrim();
   _model.state.pose.z = _model.state.attitude.euler.z;
   const float dt = _model.state.gyro.timer.intervalf;
   const float alpha = 0.002f;
@@ -147,7 +147,7 @@ void Fusion::complementaryFusionOld()
 {
   const float alpha = 0.01f;
   const float dt = _model.state.gyro.timer.intervalf;
-  _model.state.pose = _model.state.accel.adc.accelToEuler();
+  _model.state.pose = getAccelEulerWithTrim();
   _model.state.pose.z = _model.state.attitude.euler.z;
   _model.state.attitude.euler = (_model.state.attitude.euler + _model.state.gyro.adc * dt) * (1.f - alpha) + _model.state.pose * alpha;
   _model.state.attitude.quaternion = _model.state.attitude.euler.eulerToQuaternion();
@@ -213,9 +213,27 @@ void Fusion::rtqfFusion()
   _model.state.attitude.euler.eulerFromQuaternion(fusionQPose);
 }
 
+VectorFloat Fusion::getAccelEulerWithTrim() const
+{
+  VectorFloat euler = _model.state.accel.adc.accelToEuler();
+  // Euler ordering and aircraft axes mapping:
+  //   euler.x -> roll  (rotation about body X)
+  //   euler.y -> pitch (rotation about body Y)
+  //   euler.z -> yaw   (rotation about body Z)
+  //
+  // Accelerometer trim values are stored in 0.1 degree units:
+  //   trim[0] = pitch trim, applied to euler.y
+  //   trim[1] = roll  trim, applied to euler.x
+  //
+  // Convert trim from 0.1 degrees to radians and apply.
+  euler.y += _model.config.accel.trim[0] * 0.1f * (PI / 180.0f); // pitch trim
+  euler.x += _model.config.accel.trim[1] * 0.1f * (PI / 180.0f); // roll trim
+  return euler;
+}
+
 void Fusion::updatePoseFromAccelMag()
 {
-  _model.state.pose = _model.state.accel.adc.accelToEuler();
+  _model.state.pose = getAccelEulerWithTrim();
   //_model.state.accelPose = _model.state.pose;
 
   if(_model.magActive())
@@ -274,7 +292,7 @@ void Fusion::lerpFusion()
 {
   float correctionAlpha = 0.001f; // 0 - 1 => gyro - accel
 
-  _model.state.accelPose = _model.state.accel.adc.accelToEuler();
+  _model.state.accelPose = getAccelEulerWithTrim();
   _model.state.accelPoseQ = _model.state.accelPose.eulerToQuaternion();
 
   if(_model.magActive())
