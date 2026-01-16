@@ -30,6 +30,7 @@ class Fusion
     void mahonyFusion();
 
   private:
+    VectorFloat getAccelEulerWithTrim() const;
     Model& _model;
     bool _first;
     Madgwick _madgwick;
