@@ -529,6 +529,13 @@ struct FailsafeConfig
   uint8_t killSwitch = 0;
 };
 
+struct ArmingConfig
+{
+  uint8_t autoDisarmDelay = 5;
+  uint8_t disarmKillSwitch = 0;
+  uint8_t smallAngle = 25;  // Maximum arm angle in degrees (set to 180 to disable)
+};
+
 struct BlackboxConfig
 {
   int8_t dev = 0;
@@ -799,6 +806,7 @@ class ModelConfig
     MixerEntry customMixes[MIXER_RULE_MAX];
     MixerConfiguration mixer;
     OutputConfig output;
+    ArmingConfig arming;
     BlackboxConfig blackbox;
     DebugConfig debug;
 
