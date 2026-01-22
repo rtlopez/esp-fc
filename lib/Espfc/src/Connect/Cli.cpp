@@ -356,6 +356,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
   static const char* currentSourceChoices[] = { PSTR("NONE"), PSTR("ADC"), NULL };
   static const char* blackboxDevChoices[] = { PSTR("NONE"), PSTR("FLASH"), PSTR("SD_CARD"), PSTR("SERIAL"), NULL };
   static const char* blackboxModeChoices[] = { PSTR("NORMAL"), PSTR("TEST"), PSTR("ALWAYS"), NULL };
+  static const char* buzzerTypeChoices[] = { PSTR("ACTIVE"), PSTR("PASSIVE"), NULL };
   static const char* ledTypeChoices[] = { PSTR("SIMPLE"), PSTR("STRIP"), NULL };
 
   size_t i = 0;
@@ -685,6 +686,8 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("pin_spi_cs_2"), &c.pin[PIN_SPI_CS2]),
 #endif
     Param(PSTR("pin_buzzer_invert"), &c.buzzer.inverted),
+    Param(PSTR("pin_buzzer_type"), &c.buzzer.type, buzzerTypeChoices),
+    Param(PSTR("pin_passive_buzzer_freq"), &c.buzzer.frequency),
     Param(PSTR("pin_led_invert"), &c.led.invert),
     Param(PSTR("pin_led_type"), &c.led.type, ledTypeChoices),
 
