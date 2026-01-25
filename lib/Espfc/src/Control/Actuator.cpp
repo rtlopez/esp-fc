@@ -1,5 +1,7 @@
 #include "Control/Actuator.h"
 #include "Utils/Math.hpp"
+#include <algorithm>
+#include <cmath>
 
 namespace Espfc::Control {
 
@@ -96,6 +98,19 @@ void Actuator::updateArmingDisabled()
   _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,     _model.calibrationActive());
   _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL,  _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
   _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.mode.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
+  
+  // Check small angle - prevent arming if tilted beyond configured angle
+  if(_model.config.arming.smallAngle < 180 && _model.accelActive())
+  {
+    const float maxTiltRad = Utils::toRad(_model.config.arming.smallAngle);
+    const float currentTilt = std::max(std::abs(_model.state.attitude.euler[AXIS_PITCH]), 
+                                        std::abs(_model.state.attitude.euler[AXIS_ROLL]));
+    _model.setArmingDisabled(ARMING_DISABLED_ANGLE, currentTilt > maxTiltRad);
+  }
+  else
+  {
+    _model.setArmingDisabled(ARMING_DISABLED_ANGLE, false);
+  }
   if(_model.isFeatureActive(FEATURE_GPS))
   {
     _model.setArmingDisabled(ARMING_DISABLED_GPS, !_model.state.gps.present || _model.state.gps.numSats < _model.config.gps.minSats);

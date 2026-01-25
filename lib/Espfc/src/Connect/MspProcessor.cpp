@@ -504,8 +504,13 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_ACC_TRIM:
-      r.writeU16(0); // pitch
-      r.writeU16(0); // roll
+      r.writeU16(_model.config.accel.trim[0]); // pitch
+      r.writeU16(_model.config.accel.trim[1]); // roll
+      break;
+
+    case MSP_SET_ACC_TRIM:
+      _model.config.accel.trim[0] = m.readU16(); // pitch
+      _model.config.accel.trim[1] = m.readU16(); // roll
       break;
 
     case MSP_MIXER_CONFIG:
@@ -768,9 +773,15 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_ARMING_CONFIG:
-      r.writeU8(5); // auto_disarm delay
-      r.writeU8(0);  // disarm kill switch
-      r.writeU8(180); // small angle
+      r.writeU8(_model.config.arming.autoDisarmDelay); // auto_disarm delay
+      r.writeU8(_model.config.arming.disarmKillSwitch);  // disarm kill switch
+      r.writeU8(_model.config.arming.smallAngle); // small angle
+      break;
+
+    case MSP_SET_ARMING_CONFIG:
+      _model.config.arming.autoDisarmDelay = m.readU8(); // auto_disarm delay
+      _model.config.arming.disarmKillSwitch = m.readU8(); // disarm kill switch
+      _model.config.arming.smallAngle = m.readU8(); // small angle
       break;
 
     case MSP_RC_DEADBAND:
