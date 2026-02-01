@@ -73,6 +73,18 @@ int FAST_CODE_ATTR AccelSensor::filter()
 
   calibrate();
 
+  if(_model.state.accel.calibrationState == CALIBRATION_IDLE)
+  {
+    const float trimPitch = Utils::toRad(_model.config.accel.trim[0] * 0.1f);
+    const float trimRoll = Utils::toRad(_model.config.accel.trim[1] * 0.1f);
+    if(trimPitch != 0.f || trimRoll != 0.f)
+    {
+      RotationMatrixFloat trimRotation;
+      trimRotation.init(VectorFloat(trimRoll, trimPitch, 0.f));
+      _model.state.accel.adc = trimRotation.apply(_model.state.accel.adc);
+    }
+  }
+
   return 1;
 }
 
