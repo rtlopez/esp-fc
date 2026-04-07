@@ -133,14 +133,32 @@ public:
   void flightMode(Rc::CrsfMessage& msg) const
   {
     msg.prepare(Rc::CRSF_FRAMETYPE_FLIGHT_MODE);
+    char buf[20] = ""; 
+    
+    if(_model.isModeActive(MODE_FAILSAFE))
+    {
+      strcpy(buf, "FAILSAFE");
+    }    
+    else if (!_model.isModeActive(MODE_ARMED))
+    {
+      strcpy(buf, "DISARM");
+    }     
+    else {
+      strcpy(buf, "ARM");      
+      if (_model.isModeActive(MODE_AIRMODE)) 
+      {
+        strcat(buf, "-AIR");
+      }     
+      if (_model.isModeActive(MODE_ANGLE)) 
+      {
+        strcat(buf, "-ANGL");
+      } else {
+        strcat(buf, "-ACRO");
+      }
+    }
 
-    if(_model.armingDisabled()) msg.writeString("!DIS");
-    if(_model.isModeActive(MODE_FAILSAFE)) msg.writeString("!FS,");
-    if(_model.isModeActive(MODE_ARMED)) msg.writeString("ARM,");
-    if(_model.isModeActive(MODE_AIRMODE)) msg.writeString("AIR,");
-    if(_model.isModeActive(MODE_ANGLE)) msg.writeString("STAB,");
-    msg.writeU8(0);
-
+    msg.writeString(buf);
+    msg.writeU8(0); 
     msg.finalize();
   }
 

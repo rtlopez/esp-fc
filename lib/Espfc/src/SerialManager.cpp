@@ -146,31 +146,41 @@ int FAST_CODE_ATTR SerialManager::update()
   const SerialPortConfig& sc = _model.config.serial[_current];
   SerialPortState& ss = _model.state.serial[_current];
 
-  if(ss.stream && !(sc.functionMask & SERIAL_FUNCTION_RX_SERIAL))
+  if(ss.stream)
   {
-    Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
-    if (sc.functionMask & SERIAL_FUNCTION_MSP)
+    if((sc.functionMask & SERIAL_FUNCTION_RX_SERIAL) && _model.config.input.serialRxProvider == SERIALRX_CRSF)
     {
-      processMsp(ss);
+      if(_model.config.featureMask & FEATURE_TELEMETRY)
+      {
+        _telemetry.process(*ss.stream, TELEMETRY_PROTOCOL_CRSF);
+      }
     }
-    if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
+
+    if(ss.stream && !(sc.functionMask & SERIAL_FUNCTION_RX_SERIAL))
     {
-      _telemetry.process(*ss.stream, TELEMETRY_PROTOCOL_TEXT);
-    }
-    if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
-    {
-      _ibus.update();
-    }
-    if(sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
-    {
-      _vtx.update();
-    }
-    if(sc.functionMask & SERIAL_FUNCTION_GPS)
-    {
-      _gps.update();
+      Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
+      if(sc.functionMask & SERIAL_FUNCTION_MSP)
+      {
+        processMsp(ss);
+      }
+      if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
+      {
+        _telemetry.process(*ss.stream, TELEMETRY_PROTOCOL_TEXT);
+      }
+      if(sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
+      {
+        _ibus.update();
+      }
+      if(sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
+      {
+        _vtx.update();
+      }
+      if(sc.functionMask & SERIAL_FUNCTION_GPS)
+      {
+        _gps.update();
+      }
     }
   }
-
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
   if(_current == SERIAL_SOFT_0)
   {
