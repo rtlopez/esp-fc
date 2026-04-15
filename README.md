@@ -6,6 +6,7 @@ The mini, DIY, Low cost, ESP32 based, high performance flight controller for hob
 ![releases](https://img.shields.io/badge/releases-v0.2.1-blue)
 ![Betaflight](https://img.shields.io/badge/Betaflight-v4.2-green)
 
+
 # Features
 
 * Espressif targets (ESP32, ESP32-S3)
