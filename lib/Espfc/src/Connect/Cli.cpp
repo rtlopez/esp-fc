@@ -1601,11 +1601,11 @@ void Cli::printGpsStatus(Stream& s, bool full) const
     s.println(F(")"));
 
     s.print(F("  Dist: "));
-    s.print(_model.state.gps.distanceToHome);
+    s.print(Utils::toDeg(_model.state.gps.distanceToHome), 2);
     s.println(F(" m"));
 
     s.print(F("  Bear: "));
-    s.print(_model.state.gps.directionToHome);
+    s.print(Utils::toDeg(_model.state.gps.directionToHome), 2);
     s.println(F(" deg"));
   }
   else

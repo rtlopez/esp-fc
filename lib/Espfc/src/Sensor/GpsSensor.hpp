@@ -46,7 +46,7 @@ private:
   void onMessage();
 
   template<typename MsgType>
-  void send(const MsgType m, State ackState, State timeoutState = ERROR)
+  void send(const MsgType& m, State ackState, State timeoutState = ERROR)
   {
     Gps::UbxFrame<MsgType> frame{m};
     const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&frame);
@@ -64,7 +64,6 @@ private:
   void handleVersion() const;
   void checkSupport(const char* payload) const;
   void configureGnss();
-  void configureGnssValset();
 
   static constexpr uint32_t TIMEOUT = 300000;
   static constexpr uint32_t DETECT_TIMEOUT = 2200000;

@@ -1537,8 +1537,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
   case MSP_COMP_GPS:
-    r.writeU16(_model.state.gps.distanceToHome); // meters
-    r.writeU16(_model.state.gps.directionToHome / 10); // deg * 10
+    r.writeU16(std::clamp((uint16_t)lrintf(_model.state.gps.distanceToHome), (uint16_t)0, (uint16_t)std::numeric_limits<uint16_t>::max())); // meters
+    r.writeU16((int16_t)lrintf(Utils::toDeg(_model.state.gps.directionToHome))); // deg
     r.writeU8(_model.state.gps.homeSet ? 1 : 0);  // GPS update
     break;
 

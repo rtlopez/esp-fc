@@ -464,8 +464,8 @@ struct GpsState
   GpsAccuracy accuracy;
   GpsDateTime dateTime;
   GpsSatelite svinfo[SAT_MAX];
-  uint16_t distanceToHome = 0;
-  int16_t directionToHome = 0;
+  float distanceToHome = 0;
+  float directionToHome = 0;
   bool isHomeValid() const { return homeSet && fix && fixType >= 2; }
 };
 

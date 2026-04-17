@@ -265,7 +265,7 @@ public:
   UbxCfgGnssBlock blocks[7];
 } __attribute__((packed));
 
-// CFG-SIGNAL key IDs for UBX-CFG-VALSET (PROTVER > 23.01, u-blox Interface Description UBX-23001092)
+// CFG-SIGNAL key IDs for UBX-CFG-VALSET (PROTVER > 27.00, u-blox Interface Description UBX-23001092)
 constexpr uint32_t CFG_SIGNAL_GPS_ENA  = 0x10310001; // GPS enable
 constexpr uint32_t CFG_SIGNAL_GPS_L5   = 0x10310004; // GPS L5 signal enable (M10 dual-band)
 constexpr uint32_t CFG_SIGNAL_SBAS_ENA = 0x10310020; // SBAS enable

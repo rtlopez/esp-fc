@@ -1,5 +1,5 @@
 #include "Sensor/GpsSensor.hpp"
-#include <GpsProtocol.hpp>
+#include <Gps.hpp>
 #include <Arduino.h>
 #include <cmath>
 #include <cstdlib>
@@ -238,7 +238,9 @@ void GpsSensor::handle()
 
     case SET_RATE:
     {
-      const uint16_t mRate = _currentBaud > 100000 ? 100 : 200;
+      uint16_t mRate = 200;
+      if (_currentBaud > 100000) mRate = 100;
+      if (_model.state.gps.support.version == GPS_M10 && _currentBaud > 200000) mRate = 40;
       const uint16_t nRate = 1;
       const Gps::UbxCfgRate6 m{
         .measRate = mRate,
@@ -246,7 +248,7 @@ void GpsSensor::handle()
         .timeRef = 0, // utc
       };
       send(m, RECEIVE);
-      _model.logger.info().log(F("GPS RATE")).log(mRate).logln(nRate);
+      _model.logger.info().log(F("GPS RATE")).log(mRate).log(nRate).logln(1000 / mRate);
     }
     break;
 
@@ -272,6 +274,7 @@ void GpsSensor::handle()
         else if (_ubxMsg.isNak())
         {
           _state = _timeoutState;
+          _model.logger.err().log(F("GPS NAK")).log(_ubxMsg.payload[0]).logln(_ubxMsg.payload[1]);
         }
         else if (_ubxMsg.isResponse(Gps::UbxMonVer::ID))
         {
@@ -293,6 +296,7 @@ void GpsSensor::handle()
         // timeout
         _state = _timeoutState;
         _model.state.gps.present = false;
+        _model.logger.err().logln(F("GPS TIMEOUT"));
       }
       break;
   }
@@ -326,10 +330,12 @@ void GpsSensor::handleError() const
   _model.state.gps.present = false;
 }
 
-void GpsSensor::configureGnssValset()
+void GpsSensor::configureGnss()
 {
+  // UBX-CFG-GNSS is deprecated in procol version 23.01.
+  // Use UBX-CFG-VALSET, UBX-CFGVALGET, UBX-CFG-VALDEL instead since protocol 27.00
+  const bool legacy = _model.state.gps.support.protVerMajor < 27;
   const bool useDualBand = _model.config.gps.enableDualBand && _model.state.gps.support.dualBand;
-
   bool enableGPS  = _model.config.gps.enableGPS;
   bool enableGLO  = _model.config.gps.enableGLONASS;
   bool enableGAL  = _model.config.gps.enableGalileo;
@@ -346,114 +352,80 @@ void GpsSensor::configureGnssValset()
     case 5: enableGPS = enableGLO = enableGAL = enableBDS = enableQZSS = true; break;
   }
 
-  Gps::UbxCfgValset<8> msg{};
-  msg.version = 0;
-  msg.layers  = 0x01; // RAM only
-  msg.kv[0] = { Gps::CFG_SIGNAL_GPS_ENA,  (uint8_t)(enableGPS  ? 1 : 0) };
-  msg.kv[1] = { Gps::CFG_SIGNAL_SBAS_ENA, (uint8_t)(enableSBAS ? 1 : 0) };
-  msg.kv[2] = { Gps::CFG_SIGNAL_GAL_ENA,  (uint8_t)(enableGAL  ? 1 : 0) };
-  msg.kv[3] = { Gps::CFG_SIGNAL_BDS_ENA,  (uint8_t)(enableBDS  ? 1 : 0) };
-  msg.kv[4] = { Gps::CFG_SIGNAL_QZSS_ENA, (uint8_t)(enableQZSS ? 1 : 0) };
-  msg.kv[5] = { Gps::CFG_SIGNAL_GLO_ENA,  (uint8_t)(enableGLO  ? 1 : 0) };
-  msg.kv[6] = { Gps::CFG_SIGNAL_GPS_L5,   (uint8_t)(useDualBand ? 1 : 0) };
-  msg.kv[7] = { Gps::CFG_SIGNAL_BDS_B2A,  (uint8_t)(useDualBand ? 1 : 0) };
-
-  _model.logger.info().log(F("GPS VALSET "));
-  if (useDualBand) _model.logger.info().log(F("L1+L5 "));
-  _model.logger.info().log(F("["));
-  if (enableGPS)  _model.logger.info().log(F("GPS "));
-  if (enableGLO)  _model.logger.info().log(F("GLO "));
-  if (enableGAL)  _model.logger.info().log(F("GAL "));
-  if (enableBDS)  _model.logger.info().log(F("BDS "));
-  if (enableQZSS) _model.logger.info().log(F("QZSS "));
-  if (enableSBAS) _model.logger.info().log(F("SBAS"));
-  _model.logger.info().logln(F("]"));
-
-  send(msg, SET_RATE, SET_RATE);
-}
-
-void GpsSensor::configureGnss()
-{
-  if (_model.state.gps.support.protVerMajor >= 27)
+  if (legacy)
   {
-    configureGnssValset();
-    return;
+    const Gps::UbxCfgGnss7 gnss{
+      .msgVer = 0,
+      .numTrkChHw = 0,
+      .numTrkChUse = 0xFF,
+      .numConfigBlocks = 7,
+      .blocks = {
+        // GPS: L1C/A or L1+L5
+        { 0x00, 0x08, 0x10, 0x00, (uint8_t)(enableGPS  ? 0x01 : 0x00), 0x00, (uint8_t)(useDualBand ? 0x03 : 0x01), 0x01 },
+        // SBAS: L1C/A
+        { 0x01, 0x01, 0x03, 0x00, (uint8_t)(enableSBAS ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
+        // Galileo: E1 or E1+E5a
+        { 0x02, 0x04, 0x08, 0x00, (uint8_t)(enableGAL  ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
+        // BeiDou: B1I or B1I+B2a
+        { 0x03, 0x08, 0x10, 0x00, (uint8_t)(enableBDS  ? 0x01 : 0x00), 0x00, (uint8_t)(useDualBand ? 0x03 : 0x01), 0x01 },
+        // IMES: disabled
+        { 0x04, 0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x01 },
+        // QZSS: L1C/A or L1+L5
+        { 0x05, 0x00, 0x03, 0x00, (uint8_t)(enableQZSS ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
+        // GLONASS: L1
+        { 0x06, 0x08, 0x0E, 0x00, (uint8_t)(enableGLO  ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
+      },
+    };
+    send(gnss, SET_RATE);
+  }
+  else
+  {
+    if(useDualBand)
+    {
+      Gps::UbxCfgValset<8> msg{};
+      msg.version = 0;
+      msg.layers  = 0x01; // RAM only
+      msg.kv[0] = { Gps::CFG_SIGNAL_GPS_ENA,  (uint8_t)(enableGPS  ? 1 : 0) };
+      msg.kv[1] = { Gps::CFG_SIGNAL_SBAS_ENA, (uint8_t)(enableSBAS ? 1 : 0) };
+      msg.kv[2] = { Gps::CFG_SIGNAL_GAL_ENA,  (uint8_t)(enableGAL  ? 1 : 0) };
+      msg.kv[3] = { Gps::CFG_SIGNAL_BDS_ENA,  (uint8_t)(enableBDS  ? 1 : 0) };
+      msg.kv[4] = { Gps::CFG_SIGNAL_QZSS_ENA, (uint8_t)(enableQZSS ? 1 : 0) };
+      msg.kv[5] = { Gps::CFG_SIGNAL_GLO_ENA,  (uint8_t)(enableGLO  ? 1 : 0) };
+      msg.kv[6] = { Gps::CFG_SIGNAL_GPS_L5,   (uint8_t)(useDualBand ? 1 : 0) };
+      msg.kv[7] = { Gps::CFG_SIGNAL_BDS_B2A,  (uint8_t)(useDualBand ? 1 : 0) };
+      send(msg, SET_RATE);
+    }
+    else
+    {
+      Gps::UbxCfgValset<6> msg{};
+      msg.version = 0;
+      msg.layers  = 0x01; // RAM only
+      msg.kv[0] = { Gps::CFG_SIGNAL_GPS_ENA,  (uint8_t)(enableGPS  ? 1 : 0) };
+      msg.kv[1] = { Gps::CFG_SIGNAL_SBAS_ENA, (uint8_t)(enableSBAS ? 1 : 0) };
+      msg.kv[2] = { Gps::CFG_SIGNAL_GAL_ENA,  (uint8_t)(enableGAL  ? 1 : 0) };
+      msg.kv[3] = { Gps::CFG_SIGNAL_BDS_ENA,  (uint8_t)(enableBDS  ? 1 : 0) };
+      msg.kv[4] = { Gps::CFG_SIGNAL_QZSS_ENA, (uint8_t)(enableQZSS ? 1 : 0) };
+      msg.kv[5] = { Gps::CFG_SIGNAL_GLO_ENA,  (uint8_t)(enableGLO  ? 1 : 0) };
+      send(msg, SET_RATE);
+    }
   }
 
-  const auto version = _model.state.gps.support.version;
-  const bool useDualBand = (_model.config.gps.enableDualBand && version == GPS_M10);
+  String enabledGnss = "";
+  if (useDualBand) enabledGnss += "L1+L5 ";
+  if (enableGPS)  enabledGnss += "GPS ";
+  if (enableGLO)  enabledGnss += "GLO ";
+  if (enableGAL)  enabledGnss += "GAL ";
+  if (enableBDS)  enabledGnss += "BDS ";
+  if (enableSBAS) enabledGnss += "SBAS ";
+  if (enableQZSS) enabledGnss += "QZSS ";
 
-  bool enableGPS  = _model.config.gps.enableGPS;
-  bool enableGLO  = _model.config.gps.enableGLONASS;
-  bool enableGAL  = _model.config.gps.enableGalileo;
-  bool enableBDS  = _model.config.gps.enableBeiDou;
-  bool enableQZSS = _model.config.gps.enableQZSS;
-  bool enableSBAS = _model.config.gps.enableSBAS;
-
-  switch (_model.config.gps.gnssMode)
-  {
-    case 1: // GPS only
-      enableGPS = true;
-      enableGLO = enableGAL = enableBDS = enableQZSS = false;
-      break;
-    case 2: // GPS + GLONASS
-      enableGPS = enableGLO = true;
-      enableGAL = enableBDS = enableQZSS = false;
-      break;
-    case 3: // GPS + Galileo
-      enableGPS = enableGAL = true;
-      enableGLO = enableBDS = enableQZSS = false;
-      break;
-    case 4: // GPS + BeiDou
-      enableGPS = enableBDS = true;
-      enableGLO = enableGAL = enableQZSS = false;
-      break;
-    case 5: // All constellations
-      enableGPS = enableGLO = enableGAL = enableBDS = enableQZSS = true;
-      break;
-    // case 0: Auto - use individual enable flags
-  }
-
-  const Gps::UbxCfgGnss7 gnss{
-    .msgVer = 0,
-    .numTrkChHw = 0,
-    .numTrkChUse = 0xFF,
-    .numConfigBlocks = 7,
-    .blocks = {
-      // GPS: L1C/A or L1+L5
-      { 0x00, 0x08, 0x10, 0x00, (uint8_t)(enableGPS  ? 0x01 : 0x00), 0x00, (uint8_t)(useDualBand ? 0x03 : 0x01), 0x01 },
-      // SBAS: L1C/A
-      { 0x01, 0x01, 0x03, 0x00, (uint8_t)(enableSBAS ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
-      // Galileo: E1 or E1+E5a
-      { 0x02, 0x04, 0x08, 0x00, (uint8_t)(enableGAL  ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
-      // BeiDou: B1I or B1I+B2a
-      { 0x03, 0x08, 0x10, 0x00, (uint8_t)(enableBDS  ? 0x01 : 0x00), 0x00, (uint8_t)(useDualBand ? 0x03 : 0x01), 0x01 },
-      // IMES: disabled
-      { 0x04, 0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x01 },
-      // QZSS: L1C/A or L1+L5
-      { 0x05, 0x00, 0x03, 0x00, (uint8_t)(enableQZSS ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
-      // GLONASS: L1
-      { 0x06, 0x08, 0x0E, 0x00, (uint8_t)(enableGLO  ? 0x01 : 0x00), 0x00, 0x01, 0x01 },
-    },
-  };
-
-  _model.logger.info().log(F("GPS GNSS "));
-  if (useDualBand) _model.logger.info().log(F("L1+L5 "));
-  _model.logger.info().log(F("["));
-  if (enableGPS)  _model.logger.info().log(F("GPS "));
-  if (enableGLO)  _model.logger.info().log(F("GLO "));
-  if (enableGAL)  _model.logger.info().log(F("GAL "));
-  if (enableBDS)  _model.logger.info().log(F("BDS "));
-  if (enableQZSS) _model.logger.info().log(F("QZSS "));
-  if (enableSBAS) _model.logger.info().log(F("SBAS"));
-  _model.logger.info().logln(F("]"));
-
-  send(gnss, SET_RATE);
+  _model.logger.info().log(F("GPS GNSS")).logln(enabledGnss);
 }
 
 void GpsSensor::calculateHomeVector() const
 {
-  if (!_model.state.gps.homeSet || !_model.state.gps.fix) {
+  if (!_model.state.gps.isHomeValid())
+  {
     _model.state.gps.distanceToHome = 0;
     _model.state.gps.directionToHome = 0;
     return;
@@ -464,16 +436,10 @@ void GpsSensor::calculateHomeVector() const
   const int32_t lat2 = _model.state.gps.location.raw.lat;
   const int32_t lon2 = _model.state.gps.location.raw.lon;
 
-  // Equirectangular approximation (valid for short distances < few km)
-  const float LAT_TO_M = 1.113e-2f; // deg*1e-7 to meters (111300 m/deg / 1e7)
-  const float dlat = (lat2 - lat1) * LAT_TO_M;
-  const float dlon = (lon2 - lon1) * LAT_TO_M * cosf(lat1 * 1e-7f * (float)M_PI / 180.0f);
+  const auto [distance, bearing] = Gps::calculateDistanceAndBearing(lat1, lon1, lat2, lon2);
 
-  _model.state.gps.distanceToHome = (uint16_t)sqrtf(dlat * dlat + dlon * dlon);
-
-  float bearing = atan2f(dlon, dlat) * (180.0f / (float)M_PI);
-  if (bearing < 0.0f) bearing += 360.0f;
-  _model.state.gps.directionToHome = (int16_t)bearing;
+  _model.state.gps.distanceToHome = distance;
+  _model.state.gps.directionToHome = bearing;
 }
 
 void GpsSensor::handleNavPvt() const
@@ -569,7 +535,9 @@ void GpsSensor::handleVersion() const
   else if (std::strcmp(payload + 30, "000A0000") == 0)
   {
     _model.state.gps.support.version = GPS_M10;
-    _model.state.gps.support.dualBand = true;
+    // none of M10 actually support dual-band, 
+    // we need to call ubx-cfg-getval to test config layer
+    // _model.state.gps.support.dualBand = true;
   }
 
   if (_ubxMsg.length >= 70)
