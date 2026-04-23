@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <type_traits>
+#include <algorithm>
 
 namespace Gps {
 
@@ -45,6 +46,7 @@ enum MsgId: uint16_t
   UBX_CFG_NAV5     = 0x24 << 8 | UBX_CFG,  // Navigation engine settings
   UBX_CFG_GNSS     = 0x3E << 8 | UBX_CFG,  // GNSS system configuration (deprecated >PROTVER 23.01)
   UBX_CFG_VALSET   = 0x8A << 8 | UBX_CFG,  // Configuration input (Generation 9+, replaces legacy CFG-* messages)
+  UBX_CFG_VALGET   = 0x8B << 8 | UBX_CFG,  // Configuration output (Generation 9+, replaces legacy CFG-* messages)
 
   UBX_NAV_HPOSECEF = 0x13 << 8 | UBX_NAV,  // High precision position solution in ECEF (28 Bytes)
   UBX_NAV_HPOSLLH  = 0x14 << 8 | UBX_NAV,  // High precision geodetic position solution (36 Bytes)
@@ -147,6 +149,36 @@ public:
   bool isNak(MsgId id) const { return isNak() && id == (payload[1] << 8 | payload[0]); }
 };
 
+class UbxRequest
+{
+public:
+  UbxRequest(uint16_t msgId): msgId(msgId), length(0) {}
+
+  UbxRequest() = delete;
+  UbxRequest(const UbxRequest& m) = delete;
+  UbxRequest& operator=(const UbxRequest& m) = delete;
+  UbxRequest(UbxRequest&& m) = delete;
+  UbxRequest& operator=(UbxRequest&& m) = delete;
+
+  size_t write(const uint8_t * buff, size_t len)
+  {
+    if(length + len > sizeof(payload) - 2) return 0;
+    std::copy(buff, buff + len, payload + length);
+    length += len;
+    return len;
+  }
+
+  template<typename T>
+  size_t write(const T& data)
+  {
+    return write(reinterpret_cast<const uint8_t*>(&data), sizeof(T));
+  }
+
+  uint16_t msgId;
+  uint16_t length = 0;
+  uint8_t payload[72] = {0};
+};
+
 // -----------------------------------------------------------------
 
 enum NmeaState: uint8_t
@@ -177,6 +209,11 @@ public:
   static constexpr MsgId ID = UBX_MON_VER;
 } __attribute__((packed));
 
+/**
+ * Used to get message rate
+ * @deprecated UBX-CFG-MSG is deprecated in favor of UBX-CFG-VALSET with CFG-MSGOUT-* keys
+ * kept for older firmware versions
+ */
 class UbxCfgMsg2
 {
 public:
@@ -184,14 +221,32 @@ public:
   uint16_t msgId;
 } __attribute__((packed));
 
+/**
+ * Used to enable UBX and disable NMEA  messages
+ * @deprecated UBX-CFG-MSG is deprecated in favor of UBX-CFG-VALSET with CFG-MSGOUT-* keys
+ * kept for older firmware versions
+ */
 class UbxCfgMsg3
 {
 public:
   static constexpr MsgId ID = UBX_CFG_MSG;
   uint16_t msgId;
-  uint8_t rate;
+  uint8_t rate; // message output rate (0=disables, 1=every navigation solution, 2=every 2nd solution etc.)
 } __attribute__((packed));
 
+constexpr uint32_t CFG_MSGOUT_NMEA_GGA_UART1 = 0x209100bb; // NMEA GGA message output rate
+constexpr uint32_t CFG_MSGOUT_NMEA_GLL_UART1 = 0x209100ca; // NMEA GLL message output rate
+constexpr uint32_t CFG_MSGOUT_NMEA_GSA_UART1 = 0x209100c0; // NMEA GSA message output rate
+constexpr uint32_t CFG_MSGOUT_NMEA_GSV_UART1 = 0x209100c5; // NMEA GSV message output rate
+constexpr uint32_t CFG_MSGOUT_NMEA_RMC_UART1 = 0x209100e8; // NMEA RMC message output rate
+constexpr uint32_t CFG_MSGOUT_NMEA_VTG_UART1 = 0x209100b1; // NMEA VTG message output rate
+constexpr uint32_t CFG_MSGOUT_UBX_NAV_PVT_UART1 = 0x20910007; // UBX-NAV-PVT message output rate
+constexpr uint32_t CFG_MSGOUT_UBX_NAV_SAT_UART1 = 0x20910016; // UBX-NAV-SAT message output rate
+
+/**
+ * @deprecated UBX-CFG-MSG is deprecated in favor of UBX-CFG-VALSET with CFG-MSGOUT-* keys
+ * kept for older firmware versions
+ */
 class UbxCfgMsg8
 {
 public:
@@ -200,6 +255,11 @@ public:
   uint8_t channels[6];
 } __attribute__((packed));
 
+/**
+ * Used to interface interface baud rate
+ * @deprecated UBX-CFG-PRT is deprecated in favor of UBX-CFG-VALSET with CFG-UART1-* keys
+ * kept for older firmware versions
+ */
 class UbxCfgPrt1
 {
 public:
@@ -207,6 +267,12 @@ public:
   uint8_t portId;
 } __attribute__((packed));
 
+/**
+ * Used to set interface baud rate
+ * @deprecated UBX-CFG-PRT is deprecated in favor of UBX-CFG-VALSET with 
+ * CFG-UART1-* keys
+ * kept for older firmware versions
+ */
 class UbxCfgPrt20
 {
 public:
@@ -222,6 +288,22 @@ public:
   uint16_t resered2;
 } __attribute__((packed));
 
+constexpr uint32_t CFG_UART1_BAUDRATE = 0x40520001; // (?->target) UART1 baud rate (e.g. 9600, 115200)
+constexpr uint32_t CFG_UART1_STOPBITS = 0x20520002; // (1) UART1 stop bits (0=half, 1=1, 2=1.5, 3=2)
+constexpr uint32_t CFG_UART1_DATABITS = 0x20520003; // (8) UART1 data bits (0=8bits, 1=7bits)
+constexpr uint32_t CFG_UART1_PARITY = 0x20520004; // (0) UART1 parity (0=none, 1=odd, 2=even)
+constexpr uint32_t CFG_UART1_ENABLED = 0x10520005; // (1) UART1 enabled (0=disabled, 1=enabled)
+constexpr uint32_t CFG_UART1_INPROT_UBX = 0x10730001; // (1) UART1 input protocol ubx
+constexpr uint32_t CFG_UART1_INPROT_NMEA = 0x10730002; // (1) UART1 input protocol nmea
+constexpr uint32_t CFG_UART1_OUTPROT_UBX = 0x10740001; // (1) UART1 output protocol ubx
+constexpr uint32_t CFG_UART1_OUTPROT_NMEA = 0x10740002; // (1) UART1 output protocol nmea
+
+/**
+ * Used to set measurement, navigation rate and time reference
+ * @deprecated UBX-CFG-RATE is deprecated in favor of UBX-CFG-VALSET with
+ * CFG_RATE-MEAS, CFG-RATE-NAV and CFG-RATE-TIMEREF keys
+ * kept for older firmware versions
+ */
 class UbxCfgRate6
 {
 public:
@@ -231,6 +313,16 @@ public:
   uint16_t timeRef;  // 0-utc, 1-gps, 2-glonass (18+), 3-BeiDou (18+), 4-Galileo (18+), 5-NavIC (29+)
 } __attribute__((packed));
 
+constexpr uint32_t CFG_RATE_MEAS = 0x30210001; // (1000->mRate) Measurement rate in ms
+constexpr uint32_t CFG_RATE_NAV = 0x30210002;  // (1) Navigation rate (number of measurement cycles)
+constexpr uint32_t CFG_RATE_TIMEREF = 0x20210003; // (1->0) Time reference (0-utc, 1-gps, 2-glonass, 3-BeiDou (18+), 4-Galileo (18+), 5-NavIC (29+))
+
+/**
+ * Used to set SBAS parameters
+ * @deprecated UBX-CFG-SBAS is deprecated in favor of UBX-CFG-VALSET with CFG-SBAS-* keys
+ * enablement should be done via CFG-SIGNAL-SBAS_ENA key
+ * kept for older firmware versions
+ */
 class UbxCfgSbas8
 {
 public:
@@ -239,8 +331,14 @@ public:
   uint8_t usage;  // SBAS usage flags
   uint8_t maxSbas;  // Maximum number of SBAS prioritized tracking channels (valid range: 0 - 3) to use
   uint8_t scanmode2; // Continuation of scanmode bitmask
-  uint32_t scanmode1; // Which SBAS PRN numbers to search for (bitmask).If all bits are set to zero, auto-scan (i.e. allvalid PRNs) are searched. Every bit corresponds to a PRN number
+  uint32_t scanmode1; // Which SBAS PRN numbers to search for (bitmask). If all bits are set to zero, auto-scan (i.e. allvalid PRNs) are searched. Every bit corresponds to a PRN number
 } __attribute__((packed));
+
+constexpr uint32_t CFG_SBAS_TESTMODE = 0x10360002; // SBAS test mode
+constexpr uint32_t CFG_SBAS_RANGING = 0x10360003; // SBAS ranging source
+constexpr uint32_t CFG_SBAS_DIFFCORR = 0x10360004; // SBAS differential corrections
+constexpr uint32_t CFG_SBAS_INTEGRITY = 0x10360005; // SBAS integrity information
+constexpr uint32_t CFG_SBAS_PRNSCANMASK = 0x50360006; // (0x72bc8 -> 0) Which SBAS PRN numbers to search for (bitmask). If all bits are set to zero, auto-scan (i.e. allvalid PRNs) are searched. Every bit corresponds to a PRN number
 
 struct UbxCfgGnssBlock
 {
@@ -250,10 +348,15 @@ struct UbxCfgGnssBlock
   uint8_t reserved1;
   uint8_t flagsEnable;  // bit 0: enable GNSS system
   uint8_t flagsReserved;
-  uint8_t sigCfgMask;   // signal config: 0x01=L1, 0x03=L1+L5 (M10 dual-band)
+  uint8_t sigCfgMask;   // signal config: 0x01=L1, 0x20=L1+L5 (dual-band)
   uint8_t flagsHigh;
 } __attribute__((packed));
 
+/**
+ * Used to set enabled GNSS systems and signals
+ * @deprecated UBX-CFG-GNSS is deprecated in favor of UBX-CFG-VALSET with CFG-SIGNAL-* keys
+ * kept for older firmware versions
+ */
 class UbxCfgGnss7
 {
 public:
@@ -263,6 +366,15 @@ public:
   uint8_t numTrkChUse;
   uint8_t numConfigBlocks;
   UbxCfgGnssBlock blocks[7];
+} __attribute__((packed));
+
+class UbxCfgGnssHeader
+{
+public:
+  uint8_t msgVer;
+  uint8_t numTrkChHw;
+  uint8_t numTrkChUse;
+  uint8_t numConfigBlocks;
 } __attribute__((packed));
 
 // CFG-SIGNAL key IDs for UBX-CFG-VALSET (PROTVER > 27.00, u-blox Interface Description UBX-23001092)
@@ -292,6 +404,40 @@ public:
   UbxCfgValsetKV kv[Size];
 } __attribute__((packed));
 
+template<uint32_t K, typename T>
+struct UbxCfgValsetItem
+{
+  explicit constexpr UbxCfgValsetItem(T v): key(K), value(v)
+  {
+    constexpr size_t size = (K >> 28) & 0x07u;
+    if constexpr (size == 1 || size == 2) {
+      static_assert((sizeof(T)) == 1, "Invalid value size for key, expected byte");
+    } else if constexpr (size == 3) {
+      static_assert((sizeof(T)) == 2, "Invalid value size for key, expected word");
+    } else if constexpr (size == 4) {
+      static_assert((sizeof(T)) == 4, "Invalid value size for key, expected dword");
+    } else if constexpr (size == 5) {
+      static_assert((sizeof(T)) == 8, "Invalid value size for key, expected qword");
+    }
+  }
+
+  uint32_t key;
+  T  value;
+} __attribute__((packed));
+
+class UbxCfgValsetHeader
+{
+public:
+  uint8_t version = 0;      // 0
+  uint8_t layers = 0x01;    // 0x01 = RAM only
+  uint16_t position = 0;    //
+} __attribute__((packed));
+
+/**
+ * Used to set enabled NAV5 parameters
+ * @deprecated UBX-CFG-NAV5 is deprecated in favor of UBX-CFG-VALSET with CFG-NAVSPG-* keys
+ * kept for older firmware versions
+ */
 class UbxCfgNav5
 {
 public:
@@ -332,6 +478,26 @@ public:
   uint8_t reserved1[5];
 } __attribute__((packed));
 
+constexpr uint32_t CFG_NAVSPG_DYNMODEL = 0x20110021; // (0->8) Dynamic platform model, 0:portable, 2:stationary, 3:pedestrian, 4:automotive, 5:sea, 6:airbone<1g, 7:airbone<2g, 8: airbone<4g, 9:wrist watch, 10:motorbike, 11: lawnmower, 12: electric scooter
+constexpr uint32_t CFG_NAVSPG_FIXMODE = 0x20110011; // (3) Position fixing mode, 1: 2D only, 2: 3D only, 3: auto 2D/3D
+constexpr uint32_t CFG_NAVSPG_CONSTR_DGNSSTO = 0x201100c4; // (60) DGNSS timeout [s] 60
+constexpr uint32_t CFG_NAVSPG_CONSTR_ALT = 0x401100c1; // (0) Fixed altitude (mean sea level) for 2D fix mode
+constexpr uint32_t CFG_NAVSPG_CONSTR_ALTVAR = 0x401100c2; // (10000) Fixed altitude variance for 2D mode
+constexpr uint32_t CFG_NAVSPG_INFIL_CNOTHRS = 0x201100ab; // (0) C/N0 threshold for deciding whether to attempt a fix
+constexpr uint32_t CFG_NAVSPG_INFIL_NCNOTHRS = 0x201100aa; // (0) Number of satellites required to have C/N0 above CFG-NAVSPG-INFIL_CNOTHRS for a fix to be attempted
+constexpr uint32_t CFG_NAVSPG_INFIL_MINELEV = 0x201100a4; // (5) Minimum elevation for a GNSS satellite to be used in navigation
+constexpr uint32_t CFG_NAVSPG_OUTFIL_PDOP = 0x301100b1; // (250) Output filter position DOP mask (threshold)
+constexpr uint32_t CFG_NAVSPG_OUTFIL_TDOP = 0x301100b2; // (250) Output filter time DOP mask (threshold)
+constexpr uint32_t CFG_NAVSPG_OUTFIL_PACC = 0x301100b3; // (100) Output filter position accuracy mask (threshold)
+constexpr uint32_t CFG_NAVSPG_OUTFIL_TACC = 0x301100b4; // (350 -> 300?) Output filter time accuracy mask (threshold)
+constexpr uint32_t CFG_NAVSPG_OUTFIL_FACC = 0x301100b5; // (150) Output filter frequency accuracy mask (threshold)
+constexpr uint32_t CFG_NAVSPG_UTCSTANDARD = 0x2011001c; // (0) UTC standard 0:auto, 3:USNaval Obs, 5: EURLabs, 6:Soviet, 7: NTSC (China), 8: NTPL (India)
+constexpr uint32_t CFG_MOT_GNSSSPEED_THRS = 0x20250038; // (0) GNSS speed threshold below which platform is considered as stationary (a.k.a. static hold threshold)
+constexpr uint32_t CFG_MOT_GNSSDIST_THRS = 0x3025003b; //  (0) Distance above which GNSS-based stationary motion is exit (a.k.a. static hold distance threshold)
+
+/**
+ * Used to receive high rate PVT solution
+ */
 class UbxNavPvt92
 {
 public:
@@ -402,6 +568,9 @@ public:
   uint16_t magAcc;     // Magnetic declination accuracy (deg x 1e-2), only in ADR4.10+
 } __attribute__((packed));
 
+/**
+ * Used to receive satellite information
+ */
 class UbxNavSat
 {
 public:
@@ -444,7 +613,6 @@ public:
   } sats[];
 } __attribute__((packed));
 
-
 // ----------------------------------------------------------------------------------------
 
 template<typename MsgType, typename Enable = void>
@@ -481,5 +649,31 @@ public:
   const uint16_t length = 0;
   uint16_t crc;
 } __attribute__((packed));
+
+// specialization for UbxRequest, which has variable length payload
+template<>
+class UbxFrame<UbxRequest>
+{
+public:
+  UbxFrame(const UbxRequest& m)
+  {
+    auto ptr = std::copy_n(reinterpret_cast<const uint8_t*>(&m.msgId), 2, data); // msgId
+    ptr = std::copy_n(reinterpret_cast<const uint8_t*>(&m.length), 2, ptr); // length
+    ptr = std::copy_n(m.payload, m.length, ptr); // payload
+
+    const uint8_t* it = reinterpret_cast<const uint8_t*>(this) + 2; // start after sync headers
+    uint16_t crc = ubxChecksum(0, it, m.length + 4); // plus msgClass + msgId + length + payload
+    data[m.length + 4] = crc & 0xff; // crc low byte
+    data[m.length + 5] = crc >> 8; // crc high byte
+  }
+
+  uint16_t size() const
+  {
+    return ((uint16_t)data[2] | ((uint16_t)data[3] << 8)) + 8; // header(2) + msgId(2) + length(2) + payload + crc(2)
+  }
+
+  const uint16_t hdr = UBX_SYNC;
+  uint8_t data[80] = {0};
+};
 
 }

@@ -354,12 +354,14 @@ enum GpsDeviceVersion
 struct GpsSupportState
 {
   GpsDeviceVersion version = GPS_UNKNOWN;
+  bool gps = false;
   bool glonass = false;
   bool galileo = false;
   bool beidou = false;
   bool sbas = false;
   bool qzss = false;
-  bool dualBand = false;
+  bool gpsL5 = false;
+  bool imes = false;
   uint8_t protVerMajor = 0; // parsed from MON-VER "PROTVER=XX.XX" ext string
 };
 
