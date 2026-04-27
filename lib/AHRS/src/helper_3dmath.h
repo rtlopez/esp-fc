@@ -13,9 +13,9 @@ inline float invSqrt(float x)
 #pragma GCC diagnostic ignored "-Wuninitialized"
   float halfx = 0.5f * x;
   float y = x;
-  long i = *(long *)&y;
+  long i = *(long*)&y;
   i = 0x5f3759df - (i >> 1);
-  y = *(float *)&i;
+  y = *(float*)&i;
   y = y * (1.5f - (halfx * y * y));
   y = y * (1.5f - (halfx * y * y));
 #pragma GCC diagnostic pop
@@ -35,7 +35,7 @@ public:
 
   Quaternion() = default;
 
-  Quaternion(float nw, float nx, float ny, float nz) : w(nw), x(nx), y(ny), z(nz) {}
+  Quaternion(float nw, float nx, float ny, float nz): w(nw), x(nx), y(ny), z(nz) {}
 
   Quaternion getProduct(const Quaternion& q) const
   {
@@ -44,11 +44,10 @@ public:
     //     (Q1 * Q2).x = (w1x2 + x1w2 + y1z2 - z1y2)
     //     (Q1 * Q2).y = (w1y2 - x1z2 + y1w2 + z1x2)
     //     (Q1 * Q2).z = (w1z2 + x1y2 - y1x2 + z1w2)
-    return Quaternion(
-        w * q.w - x * q.x - y * q.y - z * q.z,  // new w
-        w * q.x + x * q.w + y * q.z - z * q.y,  // new x
-        w * q.y - x * q.z + y * q.w + z * q.x,  // new y
-        w * q.z + x * q.y - y * q.x + z * q.w); // new z
+    return Quaternion(w * q.w - x * q.x - y * q.y - z * q.z,  // new w
+                      w * q.x + x * q.w + y * q.z - z * q.y,  // new x
+                      w * q.y - x * q.z + y * q.w + z * q.x,  // new y
+                      w * q.z + x * q.y - y * q.x + z * q.w); // new z
   }
 
   Quaternion operator*(const Quaternion& q) const
@@ -175,7 +174,7 @@ public:
   }
 
   template<typename T>
-  void toAngleVector(float &angle, VectorBase<T>& v) const
+  void toAngleVector(float& angle, VectorBase<T>& v) const
   {
     float halfTheta = acosf(w);
     float sinHalfTheta = sinf(halfTheta);
@@ -223,22 +222,30 @@ public:
 
   VectorBase() = default;
   VectorBase(const VectorBase& o) = default;
-  VectorBase(T nx, T ny, T nz) : x{nx}, y{ny}, z{nz} {}
+  VectorBase(T nx, T ny, T nz): x{nx}, y{ny}, z{nz} {}
 
   VectorBase& operator=(const VectorBase& o)
   {
-    if (this == &o)
-      return *this;
+    if (this == &o) return *this;
     x = o.x;
     y = o.y;
     z = o.z;
     return *this;
   }
 
-  T get(size_t i) const { return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T())); }
-  T operator[](size_t i) const { return get(i); }
+  T get(size_t i) const
+  {
+    return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T()));
+  }
+  T operator[](size_t i) const
+  {
+    return get(i);
+  }
 
-  void set(size_t i, T v) { i == 0 ? x = v : (i == 1 ? y = v : (i == 2 ? z = v : false)); }
+  void set(size_t i, T v)
+  {
+    i == 0 ? x = v : (i == 1 ? y = v : (i == 2 ? z = v : false));
+  }
 
   operator VectorBase<float>() const
   {
@@ -269,7 +276,8 @@ public:
     // http://www.cprogramming.com/tutorial/3d/quaternions.html
     // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
     // http://content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation
-    // ^ or: http://webcache.googleusercontent.com/search?q=cache:xgJAp3bDNhQJ:content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation&hl=en&gl=us&strip=1
+    // ^ or:
+    // http://webcache.googleusercontent.com/search?q=cache:xgJAp3bDNhQJ:content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation&hl=en&gl=us&strip=1
 
     // P_out = q * P_in * conj(q)
     // - P_out is the output vector
@@ -326,10 +334,10 @@ public:
   VectorBase<T> accelToEuler() const
   {
     VectorBase<T> na = getNormalized();
-    T x = atan2f(na.y, na.z);
-    T y = -atan2f(na.x, sqrt(na.y * na.y + na.z * na.z));
-    T z = 0.f;
-    return VectorBase<T>(x, y, z);
+    T tx = atan2f(na.y, na.z);
+    T ty = -atan2f(na.x, sqrt(na.y * na.y + na.z * na.z));
+    T tz = 0.f;
+    return VectorBase<T>(tx, ty, tz);
   }
 
   Quaternion accelToQuaternion() const
@@ -505,9 +513,9 @@ public:
 
 private:
   T _m[3][3] = {
-    {T{1}, T{0}, T{0}},
-    {T{0}, T{1}, T{0}},
-    {T{0}, T{0}, T{1}},
+      {T{1}, T{0}, T{0}},
+      {T{0}, T{1}, T{0}},
+      {T{0}, T{0}, T{1}},
   };
 };
 

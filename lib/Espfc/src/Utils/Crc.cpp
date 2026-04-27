@@ -1,9 +1,7 @@
 #include "Utils/Crc.hpp"
 #include "Utils/MemoryHelper.h"
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t a)
 {
@@ -22,7 +20,7 @@ uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t a)
   return crc;
 }
 
-uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t *data, size_t len)
+uint8_t FAST_CODE_ATTR crc8_dvb_s2(uint8_t crc, const uint8_t* data, size_t len)
 {
   while (len-- > 0)
   {
@@ -36,7 +34,7 @@ uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t a)
   return checksum ^ a;
 }
 
-uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t *data, size_t len)
+uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t* data, size_t len)
 {
   while (len-- > 0)
   {
@@ -45,6 +43,4 @@ uint8_t FAST_CODE_ATTR crc8_xor(uint8_t checksum, const uint8_t *data, size_t le
   return checksum;
 }
 
-}
-
-}
+} // namespace Espfc::Utils

@@ -1,14 +1,11 @@
 #include <Arduino.h>
-#include "Utils/Timer.h"
+
 #include "Utils/MemoryHelper.h"
+#include "Utils/Timer.h"
 
-namespace Espfc {
+namespace Espfc::Utils {
 
-namespace Utils {
-
-Timer::Timer(): interval(0), last(0), next(0), iteration(0), delta(0)
-{
-}
+Timer::Timer(): interval(0), last(0), next(0), iteration(0), delta(0) {}
 
 int Timer::setInterval(uint32_t interval)
 {
@@ -44,8 +41,8 @@ int FAST_CODE_ATTR Timer::update()
 
 bool FAST_CODE_ATTR Timer::check(uint32_t now)
 {
-  if(interval == 0) return false;
-  if(now < next) return false;
+  if (interval == 0) return false;
+  if (now < next) return false;
   return update(now);
 }
 
@@ -60,15 +57,13 @@ int FAST_CODE_ATTR Timer::update(uint32_t now)
 
 bool FAST_CODE_ATTR Timer::syncTo(const Timer& t, uint32_t slot)
 {
-  if(denom > 0)
+  if (denom > 0)
   {
-    if(slot > denom - 1) slot = denom - 1;
-    if(t.iteration % denom != slot) return false;
+    if (slot > denom - 1) slot = denom - 1;
+    if (t.iteration % denom != slot) return false;
     return update(micros());
   }
   return check(micros());
 }
 
-}
-
-}
+} // namespace Espfc::Utils

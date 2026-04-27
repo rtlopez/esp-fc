@@ -38,3 +38,5 @@
 /tmp
 .vscode/
 .pio/
+.cache/
+compile_commands.json

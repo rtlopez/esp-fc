@@ -1,11 +1,13 @@
 #pragma once
 
-#include "Utils/Timer.h"
 #include <cstdint>
+
+#include "Utils/Timer.h"
 
 namespace Espfc {
 
-enum StatCounter {
+enum StatCounter
+{
   COUNTER_GYRO_READ,
   COUNTER_GYRO_FILTER,
   COUNTER_GYRO_FFT,
@@ -41,59 +43,60 @@ namespace Utils {
 
 class Stats
 {
+public:
+  class Measure
+  {
   public:
-    class Measure
+    inline Measure(Stats& stats, StatCounter counter): _stats(stats), _counter(counter)
     {
-      public:
-        inline Measure(Stats& stats, StatCounter counter): _stats(stats), _counter(counter)
-        {
-          _stats.start(_counter);
-        }
-        inline ~Measure()
-        {
-          _stats.end(_counter);
-        }
-      private:
-        Stats& _stats;
-        StatCounter _counter;
-    };
-
-    Stats();
-
-    void start(StatCounter c);
-    void end(StatCounter c);
-
-    void update();
-    
-    void loopTick();
-    uint32_t loopTime() const;
-    float getLoad(StatCounter c) const;
-
-    /**
-     * @brief Get the Time of counter normalized to 1 ms
-     */
-    float getTime(StatCounter c) const;
-    float getReal(StatCounter c) const;
-    float getFreq(StatCounter c) const;
-    float getTotalLoad() const;
-    float getTotalTime() const;
-    float getCpuLoad() const;
-    float getCpuTime() const;
-    const char * getName(StatCounter c) const;
-
-    Utils::Timer timer;
+      _stats.start(_counter);
+    }
+    inline ~Measure()
+    {
+      _stats.end(_counter);
+    }
 
   private:
-    uint32_t _start[COUNTER_COUNT];
-    uint32_t _sum[COUNTER_COUNT];
-    uint32_t _count[COUNTER_COUNT];
-    float _avg[COUNTER_COUNT];
-    float _freq[COUNTER_COUNT];
-    float _real[COUNTER_COUNT];
-    uint32_t _loop_last;
-    int32_t _loop_time;
+    Stats& _stats;
+    StatCounter _counter;
+  };
+
+  Stats();
+
+  void start(StatCounter c);
+  void end(StatCounter c);
+
+  void update();
+
+  void loopTick();
+  uint32_t loopTime() const;
+  float getLoad(StatCounter c) const;
+
+  /**
+   * @brief Get the Time of counter normalized to 1 ms
+   */
+  float getTime(StatCounter c) const;
+  float getReal(StatCounter c) const;
+  float getFreq(StatCounter c) const;
+  float getTotalLoad() const;
+  float getTotalTime() const;
+  float getCpuLoad() const;
+  float getCpuTime() const;
+  const char* getName(StatCounter c) const;
+
+  Utils::Timer timer;
+
+private:
+  uint32_t _start[COUNTER_COUNT];
+  uint32_t _sum[COUNTER_COUNT];
+  uint32_t _count[COUNTER_COUNT];
+  float _avg[COUNTER_COUNT];
+  float _freq[COUNTER_COUNT];
+  float _real[COUNTER_COUNT];
+  uint32_t _loop_last;
+  int32_t _loop_time;
 };
 
-}
+} // namespace Utils
 
-}
+} // namespace Espfc
