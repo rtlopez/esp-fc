@@ -16,8 +16,10 @@ enum GyroDeviceType {
   GYRO_LSM6DSO = 6,
   GYRO_ICM20602 = 7,
   GYRO_BMI160 = 8,
+  GYRO_ICM42670P = 9,
   GYRO_MAX
 };
+
 
 namespace Device {
 
