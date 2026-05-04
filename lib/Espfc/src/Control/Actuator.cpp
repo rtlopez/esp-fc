@@ -1,5 +1,7 @@
 #include "Control/Actuator.h"
 #include "Utils/Math.hpp"
+#include <algorithm>
+#include <cmath>
 
 namespace Espfc::Control {
 
@@ -102,7 +104,7 @@ void Actuator::updateArmingDisabled()
     const float maxTiltRad = Utils::toRad(_model.config.arming.smallAngle);
     const float roll = _model.state.attitude.euler[AXIS_ROLL];
     const float pitch = _model.state.attitude.euler[AXIS_PITCH];
-    const float currentTilt = acosf(cosf(roll) * cosf(pitch));
+    const float currentTilt = std::max(std::abs(roll), std::abs(pitch));
     _model.setArmingDisabled(ARMING_DISABLED_ANGLE, currentTilt > maxTiltRad);
   }
   else
