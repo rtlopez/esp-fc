@@ -7,11 +7,11 @@
 namespace Espfc::Sensor
 {
 
-class AccelSensor: public BaseSensor
-{
+  class AccelSensor : public BaseSensor
+  {
   public:
-    AccelSensor(Model& model);
-    
+    AccelSensor(Model &model);
+
     int begin();
     int update();
     int read();
@@ -21,9 +21,9 @@ class AccelSensor: public BaseSensor
   private:
     void calibrate();
 
-    Model& _model;
-    Device::GyroDevice * _gyro;
+    Model &_model;
+    Device::GyroDevice *_gyro;
     Utils::Filter _filter[AXIS_COUNT_RPY];
-};
+  };
 
 }
