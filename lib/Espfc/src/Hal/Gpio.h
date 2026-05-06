@@ -4,11 +4,11 @@
 #include <cstdint>
 
 #if defined(ARCH_RP2040)
-  using pin_status_t = PinStatus;
-  using pin_mode_t = PinMode;
+using pin_status_t = PinStatus;
+using pin_mode_t = PinMode;
 #else
-  using pin_status_t = uint8_t;
-  using pin_mode_t = uint8_t;
+using pin_status_t = uint8_t;
+using pin_mode_t = uint8_t;
 #endif
 
 namespace Espfc {
@@ -23,6 +23,6 @@ public:
   static void pinMode(uint8_t pin, pin_mode_t mode);
 };
 
-}
+} // namespace Hal
 
-}
+} // namespace Espfc

@@ -18,8 +18,13 @@
 #define F(s) (s)
 #endif
 
-#define PGM_P                 const char *
-#define pgm_read_byte(addr)   (*(const unsigned char *)(addr))
+#ifndef PGM_P
+#define PGM_P const char*
+#endif
+
+#ifndef pgm_read_byte
+#define pgm_read_byte(addr) (*(const unsigned char*)(addr))
+#endif
 
 #endif // UNIT_TEST
 

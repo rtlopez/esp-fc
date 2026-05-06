@@ -9,7 +9,7 @@ constexpr float RC_RATE_INCREMENTAL = 14.54f;
 void Rates::begin(const InputConfig& config)
 {
   rateType = (RateType)config.rateType;
-  for(size_t i = 0; i < 3; i++)
+  for (size_t i = 0; i < 3; i++)
   {
     rcExpo[i] = config.expo[i];
     rcRates[i] = config.rate[i];
@@ -23,18 +23,13 @@ float FAST_CODE_ATTR Rates::getSetpoint(const int axis, float input) const
   input = Utils::clamp(input, -0.995f, 0.995f); // limit input
   const float inputAbs = fabsf(input);
   float result = 0;
-  switch(rateType)
+  switch (rateType)
   {
-    case RATES_TYPE_BETAFLIGHT:
-      result = betaflight(axis, input, inputAbs);
-    case RATES_TYPE_RACEFLIGHT:
-      result = raceflight(axis, input, inputAbs);
-    case RATES_TYPE_KISS:
-      result = kiss(axis, input, inputAbs);
-    case RATES_TYPE_ACTUAL:
-      result = actual(axis, input, inputAbs);
-    case RATES_TYPE_QUICK:
-      result = quick(axis, input, inputAbs);
+    case RATES_TYPE_BETAFLIGHT: result = betaflight(axis, input, inputAbs);
+    case RATES_TYPE_RACEFLIGHT: result = raceflight(axis, input, inputAbs);
+    case RATES_TYPE_KISS: result = kiss(axis, input, inputAbs);
+    case RATES_TYPE_ACTUAL: result = actual(axis, input, inputAbs);
+    case RATES_TYPE_QUICK: result = quick(axis, input, inputAbs);
   }
   return Utils::toRad(Utils::clamp(result, -(float)rateLimit[axis], (float)rateLimit[axis]));
 }
@@ -55,7 +50,8 @@ float FAST_CODE_ATTR Rates::betaflight(const int axis, float rcCommandf, const f
   float angleRate = 200.0f * rcRate * rcCommandf;
   if (this->rates[axis])
   {
-    const float rcSuperfactor = 1.0f / (constrainf(1.0f - (rcCommandfAbs * (this->rates[axis] / 100.0f)), 0.01f, 1.00f));
+    const float rcSuperfactor =
+        1.0f / (constrainf(1.0f - (rcCommandfAbs * (this->rates[axis] / 100.0f)), 0.01f, 1.00f));
     angleRate *= rcSuperfactor;
   }
 
@@ -78,8 +74,10 @@ float FAST_CODE_ATTR Rates::kiss(const int axis, float rcCommandf, const float r
   const float rcCurvef = this->rcExpo[axis] / 100.0f;
 
   float kissRpyUseRates = 1.0f / (constrainf(1.0f - (rcCommandfAbs * (this->rates[axis] / 100.0f)), 0.01f, 1.00f));
-  float kissRcCommandf = (power3(rcCommandf) * rcCurvef + rcCommandf * (1 - rcCurvef)) * (this->rcRates[axis] / 1000.0f);
-  float kissAngle = constrainf(((2000.0f * kissRpyUseRates) * kissRcCommandf), -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT);
+  float kissRcCommandf =
+      (power3(rcCommandf) * rcCurvef + rcCommandf * (1 - rcCurvef)) * (this->rcRates[axis] / 1000.0f);
+  float kissAngle =
+      constrainf(((2000.0f * kissRpyUseRates) * kissRcCommandf), -SETPOINT_RATE_LIMIT, SETPOINT_RATE_LIMIT);
 
   return kissAngle;
 }
@@ -110,4 +108,4 @@ float FAST_CODE_ATTR Rates::quick(const int axis, float rcCommandf, const float 
   return angleRate;
 }
 
-}
+} // namespace Espfc::Control

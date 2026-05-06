@@ -1,13 +1,11 @@
-#include <Arduino.h>
 #include "Gpio.h"
 #include "Utils/MemoryHelper.h"
+#include <Arduino.h>
 #if defined(ESP32)
 #include "hal/gpio_ll.h"
 #endif
 
-namespace Espfc {
-
-namespace Hal {
+namespace Espfc::Hal {
 
 void FAST_CODE_ATTR Gpio::digitalWrite(uint8_t pin, pin_status_t val)
 {
@@ -15,16 +13,24 @@ void FAST_CODE_ATTR Gpio::digitalWrite(uint8_t pin, pin_status_t val)
   if (pin < 16)
   {
     if (val)
+    {
       GPOS = (1 << pin);
+    }
     else
+    {
       GPOC = (1 << pin);
+    }
   }
   else if (pin == 16)
   {
     if (val)
+    {
       GP16O |= 1;
+    }
     else
+    {
       GP16O &= ~1;
+    }
   }
 #elif defined(ESP32)
   //::gpio_set_level((gpio_num_t)pin, val);
@@ -69,6 +75,4 @@ void FAST_CODE_ATTR Gpio::pinMode(uint8_t pin, pin_mode_t mode)
 #endif
 }
 
-}
-
-}
+} // namespace Espfc::Hal
