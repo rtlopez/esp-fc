@@ -1,7 +1,6 @@
 #ifndef _ESPFC_DEVICE_GYRO_LSM6DSO_H_
 #define _ESPFC_DEVICE_GYRO_LSM6DSO_H_
 
-#include "BusDevice.h"
 #include "GyroDevice.h"
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"

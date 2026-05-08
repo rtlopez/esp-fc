@@ -3,7 +3,7 @@
 // https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.cpp#L1501
 // https://github.com/guywithaview/Arduino-Test/blob/master/GY87/GY87.ino
 
-#include "BusDevice.h"
+#include "BusDevice.hpp"
 #include "Debug_Espfc.h"
 #include "GyroDevice.h"
 #include "ModelConfig.h"

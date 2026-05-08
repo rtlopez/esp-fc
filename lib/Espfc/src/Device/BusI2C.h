@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BusDevice.h"
+#include "BusDevice.hpp"
 
 namespace Espfc {
 

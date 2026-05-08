@@ -9,10 +9,10 @@
 #include "Device/GyroMPU6050.h"
 #include "Device/GyroMPU6500.h"
 #include "Device/GyroMPU9250.h"
-#include "Device/MagAK8963.h"
-#include "Device/MagHMC5338L.h"
-#include "Device/MagQMC5338L.h"
-#include "Device/MagQMC5338P.h"
+#include "Device/Mag/MagAK8963.hpp"
+#include "Device/Mag/MagHMC5883L.hpp"
+#include "Device/Mag/MagQMC5883L.hpp"
+#include "Device/Mag/MagQMC5883P.hpp"
 #include "Hal/Gpio.h"
 #include "Hardware.h"
 #if defined(ESPFC_WIFI_ALT)
@@ -40,10 +40,10 @@ static Espfc::Device::GyroMPU9250 mpu9250;
 static Espfc::Device::GyroLSM6DSO lsm6dso;
 static Espfc::Device::GyroICM20602 icm20602;
 static Espfc::Device::GyroBMI160 bmi160;
-static Espfc::Device::MagHMC5338L hmc5883l;
-static Espfc::Device::MagQMC5338L qmc5883l;
-static Espfc::Device::MagQMC5338P qmc5883p;
-static Espfc::Device::MagAK8963 ak8963;
+static Espfc::Device::Mag::MagHMC5883L hmc5883l;
+static Espfc::Device::Mag::MagQMC5883L qmc5883l;
+static Espfc::Device::Mag::MagQMC5883P qmc5883p;
+static Espfc::Device::Mag::MagAK8963 ak8963;
 static Espfc::Device::BaroBMP085 bmp085;
 static Espfc::Device::BaroBMP280 bmp280;
 static Espfc::Device::BaroSPL06 spl06;

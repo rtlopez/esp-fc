@@ -1,8 +1,8 @@
 #pragma once
 
 #include <helper_3dmath.h>
-#include "BusDevice.h"
-#include "BusAwareDevice.h"
+#include "BusDevice.hpp"
+#include "BusAwareDevice.hpp"
 
 namespace Espfc {
 

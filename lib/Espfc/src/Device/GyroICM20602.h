@@ -1,7 +1,6 @@
 #ifndef _ESPFC_DEVICE_GYRO_ICM20602_H_
 #define _ESPFC_DEVICE_GYRO_ICM20602_H_
 
-#include "BusDevice.h"
 #include "GyroMPU6050.h"
 #include "helper_3dmath.h"
 #include "Debug_Espfc.h"

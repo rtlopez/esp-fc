@@ -1,7 +1,7 @@
 #ifndef _ESPFC_DEVICE_BUSSPI_H_
 #define _ESPFC_DEVICE_BUSSPI_H_
 
-#include "BusDevice.h"
+#include "BusDevice.hpp"
 
 namespace Espfc {
 

@@ -1,33 +1,29 @@
 #pragma once
 
-#include "Model.h"
 #include "BaseSensor.h"
-#include "Device/MagDevice.h"
+#include "Device/MagDevice.hpp"
+#include "Model.h"
 
-namespace Espfc {
+namespace Espfc::Sensor {
 
-namespace Sensor {
-
-class MagSensor: public BaseSensor
+class MagSensor : public BaseSensor
 {
-  public:
-    MagSensor(Model& model);
+public:
+  MagSensor(Model& model);
 
-    int begin();
-    int update();
-    int read();
-    int filter();
+  int begin();
+  int update();
+  int read();
+  int filter();
 
-  private:
-    void calibrate();
-    void resetCalibration();
-    void updateCalibration();
-    void applyCalibration();
+private:
+  void calibrate();
+  void resetCalibration();
+  void updateCalibration();
+  void applyCalibration();
 
-    Model& _model;
-    Device::MagDevice * _mag;
+  Model& _model;
+  Device::MagDevice* _mag;
 };
 
-}
-
-}
+} // namespace Espfc::Sensor

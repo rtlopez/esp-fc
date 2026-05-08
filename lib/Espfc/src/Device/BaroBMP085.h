@@ -1,7 +1,6 @@
 #ifndef _ESPFC_DEVICE_BARO_BMP085_H_
 #define _ESPFC_DEVICE_BARO_BMP085_H_
 
-#include "BusDevice.h"
 #include "BaroDevice.h"
 #include "Debug_Espfc.h"
 
