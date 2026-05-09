@@ -57,11 +57,19 @@ int Vtx::update()
       _model.state.vtx.active = true;
       break;
     case State::SET_POWER:
-      setPower();
+      if (type == VTXDEV_TRAMP) {
+        setTrampPower();
+      } else {
+        setPower();
+      }
       _state = State::IDLE;
       break;
     case State::SET_CHANNEL:
-      setChannel();
+      if (type == VTXDEV_TRAMP) {
+        setTrampChannel();
+      } else {
+        setChannel();
+      }
       _state = State::SET_POWER;
       break;
     case State::IDLE:
@@ -95,6 +103,26 @@ int Vtx::setPower()
   uint8_t vtxCommand[6] = { 0xAA, 0x55, 0x05, 0x01, (uint8_t)((!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? _model.config.vtx.power - 1 : 0) };
   vtxCommand[5] = crc8(vtxCommand, 5);
   _serial->write(dummyByte, 1);
+  _serial->write(vtxCommand, 6);
+  _serial->flush();
+
+  return 1;
+}
+
+int Vtx::setTrampChannel()
+{
+  uint8_t vtxCommand[6] = { 0x0F, 0x55, 0xAA, 0x03, (uint8_t)((_model.config.vtx.band - 1) * 8 + _model.config.vtx.channel - 1) };
+  vtxCommand[5] = crc8(vtxCommand, 5);
+  _serial->write(vtxCommand, 6);
+  _serial->flush();
+
+  return 1;
+}
+
+int Vtx::setTrampPower()
+{
+  uint8_t vtxCommand[6] = { 0x0F, 0x55, 0xAA, 0x02, (uint8_t)((!_model.config.vtx.lowPowerDisarm || _model.isModeActive(MODE_ARMED)) ? _model.config.vtx.power - 1 : 0) };
+  vtxCommand[5] = crc8(vtxCommand, 5);
   _serial->write(vtxCommand, 6);
   _serial->flush();
 
