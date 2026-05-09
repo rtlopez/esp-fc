@@ -5,8 +5,8 @@
 #include "Control/Altitude.hpp"
 #include "Sensor/GyroSensor.h"
 #include "Sensor/AccelSensor.h"
-#include "Sensor/MagSensor.h"
-#include "Sensor/BaroSensor.h"
+#include "Sensor/MagSensor.hpp"
+#include "Sensor/BaroSensor.hpp"
 #include "Sensor/VoltageSensor.h"
 #include "Device/Input/InputButton.hpp"
 
