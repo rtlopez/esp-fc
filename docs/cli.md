@@ -1,6 +1,7 @@
 # ESP-FC CLI Reference
 
 ## Help
+
 ```
 help
 available commands:
@@ -29,6 +30,7 @@ ESPF ESP32S3 v0.0.0 0000000 Mar 13 2025 23:16:36 api=1.43 gcc=8.4.0 std=201703
 ```
 
 ### Status
+
 ```
 status
 ESPF ESP32S3 v0.0.0 0000000 Mar 13 2025 23:16:36 api=1.43 gcc=8.4.0 std=201703
@@ -52,6 +54,7 @@ STATUS:
 ### Statisticss
 
 Ensure that total CPU usage doesn't exceed 60-70%
+
 ```
 stats
 ESPF ESP32S3 v0.0.0 0000000 Mar 13 2025 23:16:36 api=1.43 gcc=8.4.0 std=201703
@@ -87,30 +90,32 @@ serial:   6us,    6us/i,   0.6%,   962 Hz
 
 ## Configuration
 
- - **defaults** - restore defaults
- - **save** - persist configuration after changes
- - **reboot** - reboot board
+* **defaults** - restore defaults
+* **save** - persist configuration after changes
+* **reboot** - reboot board
 
 > [!IMPORTANT]
 > if you change any parameter, remember to apply `save` and `reboot`. Without that some changes might not take effect.
 
 ## Configuration parameters
 
- - **dump** - dump all parameters
- - **get parameter_name** - get paramter value, list matching patameters with current values
- - **set paramter value1 [value2] [value3]** - set parameter to new value (some parameters store multiple values, ex. input)
+* **dump** - dump all parameters
+* **get parameter_name** - get paramter value, list matching patameters with current values
+* **set paramter value1 [value2] [value3]** - set parameter to new value (some parameters store multiple values, ex. input)
 
 Many parameters have similar name and meaning like Betaflight.
 
 ### Configuration examples
 
 Get single value
+
 ```
 # get gyro_lpf_type
 set gyro_lpf_type PT1
 ```
 
 Get multiple values
+
 ```
 # get output_
 set mixer_output_limit 100
@@ -133,16 +138,20 @@ set pin_output_3 15
 ```
 
 Setting single value
+
 ```
 set pin_output_0 0
 ```
+
 > [!NOTE]
 > You don't need to use `=` character for assignment
 
 Setting milti-argument values
+
 ```
 set output_0 S R
 ```
+
 Note that you don't have to enter all values, you can ommit last values if they are not changed.
 
 ## Specific parameters reference
@@ -150,6 +159,7 @@ Note that you don't have to enter all values, you can ommit last values if they 
 ### Pin functions
 
 Default pin assignments for ESP32-S3 is listed below
+
 ```
 set pin_input_rx 6
 set pin_output_0 39
@@ -189,59 +199,94 @@ reboot
 ```
 
 ### Input channel config
+
 ```
 set input_0 0 1000 1500 2000 A 1500
 set input_{channel} {map} {min} {neutral} {max} {fs_mode} {fs_value}
 ```
- - `{channel}`: raw rc channel (0-index)
- - `{map}`: map raw channel to input channel (0-index)
- - `{min/neutral/max}`: same as `rxrange` to adjust radio endpoints, scale rx input range to 1000/1500/2000, enter your min/mid/max values transmitted by radio.
- - `{fs_mode}`: fail safe mode, can be A: auto, H: hold, S: set
- - `{fs_value}`: value to use when fsMode is S(set)
+
+* `{channel}`: raw rc channel (0-index)
+* `{map}`: map raw channel to input channel (0-index)
+* `{min/neutral/max}`: same as `rxrange` to adjust radio endpoints, scale rx input range to 1000/1500/2000, enter your min/mid/max values transmitted by radio.
+* `{fs_mode}`: fail safe mode, can be A: auto, H: hold, S: set
+* `{fs_value}`: value to use when fsMode is S(set)
+
+### PWM Receiver Input
+
+Enable parallel PWM receiver and assign GPIO pins per channel:
+
+```
+set feature_rx_serial 0
+set feature_rx_ppm 0
+set feature_rx_spi 0
+set feature_rx_pwm 1
+set pin_input_pwm_0 27
+set pin_input_pwm_1 26
+set pin_input_pwm_2 25
+set pin_input_pwm_3 14
+set pin_input_pwm_4 13
+set pin_input_pwm_5 12
+set pin_input_pwm_6 -1
+set pin_input_pwm_7 -1
+save
+```
+
+* Up to 8 channels supported (indices 0–7)
+* Set unused channels to `-1`
+* PWM pins must not overlap with motor outputs, serial RX/TX, buzzer, or other active peripherals
+* Only one receiver feature flag should be active at a time
 
 ### Output channel config
+
 ```
 set output_0 M N 1000 1500 2000
 set output_{channel} {type} {inverse} {min} {neutral} {max}
 ```
- - `{channel}`: output channel (0-index)
- - `{type}`: output type, can be M: motor, S: servo
- - `{inverse}`: inverse output, can be set to N: normal, R: reversed
- - `{min/neutral/max}`: limit/adjust output
+
+* `{channel}`: output channel (0-index)
+* `{type}`: output type, can be M: motor, S: servo
+* `{inverse}`: inverse output, can be set to N: normal, R: reversed
+* `{min/neutral/max}`: limit/adjust output
 
 ### Mode conditions
+
 ```
 set mode_{index} {id} {channel} {min} {max} {logic_mode} {link_id}
 set mode_0 0 4 1300 2100 0 0
 ```
- - `{index}`: mode activator index
- - `{id}`: mode Id
- - `{channel}`: observed input channel (0-index, must be greather than 3)
- - `{min/max}`: activation range, if both are set to 900, it means inactive
- - `{logic_mode}`: NOT IMPLEMENTED, used by configurator but ignored by firmare
- - `{link_id}` - NOT IMPLEMENTED, used by configurator but ignored by firmare
+
+* `{index}`: mode activator index
+* `{id}`: mode Id
+* `{channel}`: observed input channel (0-index, must be greather than 3)
+* `{min/max}`: activation range, if both are set to 900, it means inactive
+* `{logic_mode}`: NOT IMPLEMENTED, used by configurator but ignored by firmare
+* `{link_id}` - NOT IMPLEMENTED, used by configurator but ignored by firmare
 
 Mode IDs:
- - 0: arming
- - 1: angle
- - 2: air mode
- - 3: buzzer
- - 4: failsafe
+
+* 0: arming
+* 1: angle
+* 2: air mode
+* 3: buzzer
+* 4: failsafe
 
 ### Serial port configuration
+
 ```
 set serial_0 1 115200 0
 set serial_{index} {function} {msp_baud} {blackbox_baud}
 ```
- - `{index}`: port number (0-index)
- - `{function}`: function id
- - `{msp_baud}`: msp baud rate
- - `{blackbox_baud}`: blackbox baud rate (unused)
+
+* `{index}`: port number (0-index)
+* `{function}`: function id
+* `{msp_baud}`: msp baud rate
+* `{blackbox_baud}`: blackbox baud rate (unused)
 
 Serial Functions:
- - 0: none
- - 1: msp
- - 128: blackbox
+
+* 0: none
+* 1: msp
+* 128: blackbox
 
 ### Scaler configuration
 
@@ -252,23 +297,24 @@ set scaler_0 769 5 20 400
 set scaler_{index} {dimensions} {channel} {min_scale} {max_scale}
 ```
 
- - `{index}`: scaler instance (0-3)
- - `{dimensions}`: combination of dimentions
- - `{channel}`: observed iput channel (0-index, must be greather than 3)
- - `{min_scale/max_scale}`: min and max scale in percent
+* `{index}`: scaler instance (0-3)
+* `{dimensions}`: combination of dimentions
+* `{channel}`: observed iput channel (0-index, must be greather than 3)
+* `{min_scale/max_scale}`: min and max scale in percent
 
 Scaler Dimensions:
- - 1: PID P component of inner loop
- - 2: PID I component of inner loop
- - 4: PID D component of inner loop
- - 8: PID F component of inner loop
- - 16: PID P component of outer loop
- - 32: PID I component of outer loop
- - 64: PID D component of outer loop
- - 128: PID F component of outer loop
- - 256: Roll Axis
- - 512: Pitch Axis
- - 1024: Yaw Axis
+
+* 1: PID P component of inner loop
+* 2: PID I component of inner loop
+* 4: PID D component of inner loop
+* 8: PID F component of inner loop
+* 16: PID P component of outer loop
+* 32: PID I component of outer loop
+* 64: PID D component of outer loop
+* 128: PID F component of outer loop
+* 256: Roll Axis
+* 512: Pitch Axis
+* 1024: Yaw Axis
 
 **Note 1**: To apply scaling you need to combine at least one PID component and Axis. You can also control multiple parameters by single channels. For example to control inner P and D on Pitch and Roll axes you need to use value 771 as dimentions (1 + 2 + 256 + 521),
 
@@ -285,9 +331,10 @@ set mixer_type QUADX
 ```
 
 Currently allowed are only:
- - QUADX (default)
- - QUAD1234 (untested)
- - TRI (untested)
+
+* QUADX (default)
+* QUAD1234 (untested)
+* TRI (untested)
 
 You can debug mixer configuration with `mixer` command
 
@@ -323,31 +370,34 @@ set mix_outputs 4
 ```
 
 Then apply your custom rules
+
 ```
 set mix_0 0 0 0
 set mix_{index} {src} {dst} {rate}
 ```
- - `{index}`: rule index
- - `{src}`: mixer source channel
- - `{dst}`: output channel (0-index)
- - `{rate}`: mix rate in percent
+
+* `{index}`: rule index
+* `{src}`: mixer source channel
+* `{dst}`: output channel (0-index)
+* `{rate}`: mix rate in percent
 
 > [!IMPORTANT]
 > You need to add a termination rule at the end, to inform mixer to stop processing. In this case set `src` argument to 0. When mixer encounters such a rule, it stops processing and ignore next rules. You can add maximum 64 rules.
 
 Mixer Sources:
- - 0: null for termination rule
- - 1: stabilized roll
- - 2: stabilized pitch
- - 3: stabilized yaw
- - 4: thrust
- - 5: rc roll
- - 6: rc pitch
- - 7: rc yaw
- - 8: rc thrust
- - 9: rc aux 1
- - 10: rc aux 2
- - 11: rc aux 3
+
+* 0: null for termination rule
+* 1: stabilized roll
+* 2: stabilized pitch
+* 3: stabilized yaw
+* 4: thrust
+* 5: rc roll
+* 6: rc pitch
+* 7: rc yaw
+* 8: rc thrust
+* 9: rc aux 1
+* 10: rc aux 2
+* 11: rc aux 3
 
 ## All supported parameters
 
@@ -358,6 +408,7 @@ set feature_gps 0
 set feature_dyn_notch 0
 set feature_motor_stop 0
 set feature_rx_ppm 0
+set feature_rx_pwm 0
 set feature_rx_serial 1
 set feature_rx_spi 0
 set feature_soft_serial 0
@@ -572,6 +623,14 @@ set pin_i2c_scl 13
 set pin_i2c_sda 12
 set pin_input_adc_0 1
 set pin_input_adc_1 4
+set pin_input_pwm_0 -1
+set pin_input_pwm_1 -1
+set pin_input_pwm_2 -1
+set pin_input_pwm_3 -1
+set pin_input_pwm_4 -1
+set pin_input_pwm_5 -1
+set pin_input_pwm_6 -1
+set pin_input_pwm_7 -1
 set pin_spi_0_sck -1
 set pin_spi_0_mosi -1
 set pin_spi_0_miso -1

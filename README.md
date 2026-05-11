@@ -6,7 +6,7 @@ The mini, DIY, Low cost, ESP32 based, high performance flight controller for hob
 
 * Espressif targets (ESP32, ESP32-S3)
 * ESC protocols (PWM, Oneshot125/42, Multishot, Brushed, Dshot150/300/600 bidirectional)
-* PPM, SBUS, IBUS and CRSF Receivers
+* PPM, SBUS, IBUS and CRSF Receivers, Parallel PWM Receivers
 * Builtin ESP-NOW receiver and WiFi configuration [read more...](/docs/wireless.md)
 * SPI and I2C gyro modules support (MPU6050, MPU9250, ICM20602, BMI160)
 * Flight modes (ACRO, ANGLE, AIRMODE)
@@ -91,7 +91,7 @@ After flashing you need to configure few things first:
  * Gyro: MPU6050, MPU6000, MPU6500, MPU9250, ICM20602, BMI160
  * Barometers: BMP180, BMP280, SPL06
  * Magnetometers: HMC5883, QMC5883, AK8963, QMC5883P
- * Receivers: PPM, SBUS, IBUS, CRSF/ELRS
+ * Receivers: PPM, SBUS, IBUS, CRSF/ELRS, Parallel PWM
  * Esc Protocols: PWM, BRUSHED, ONESHOT125, ONESHOT42, MULTISHOT, DSHOT150, DSHOT300, DSHOT600
  * GPS: M8, M9, F9 & M10(dual band, all constellations configurable by cli)
  * Other protocols: MSP, CLI, BLACKBOX, ESPNOW
