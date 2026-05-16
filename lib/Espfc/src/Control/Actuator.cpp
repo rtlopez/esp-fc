@@ -96,6 +96,12 @@ void Actuator::updateArmingDisabled()
   _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING,     _model.calibrationActive());
   _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL,  _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
   _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.mode.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
+  if(_model.accelActive())
+  {
+    const float maxAngle = Utils::toRad(_model.config.level.armingMaxAngle);
+    const float angle = std::max(abs(_model.state.attitude.euler[AXIS_PITCH]), abs(_model.state.attitude.euler[AXIS_ROLL]));
+    _model.setArmingDisabled(ARMING_DISABLED_ANGLE, angle > maxAngle);
+  }
   if(_model.isFeatureActive(FEATURE_GPS))
   {
     _model.setArmingDisabled(ARMING_DISABLED_GPS, !_model.state.gps.present || _model.state.gps.numSats < _model.config.gps.minSats);

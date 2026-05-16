@@ -638,6 +638,7 @@ struct LevelConfig
   FilterConfig ptermFilter{FILTER_PT1, 90};
   int8_t angleLimit = 55;
   int16_t rateLimit = 300;
+  uint8_t armingMaxAngle = 25; // max attitude (deg) allowed while arming; matches Betaflight small_angle default
 };
 
 struct AltHoldConfig

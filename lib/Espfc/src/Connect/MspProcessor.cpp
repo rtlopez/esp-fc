@@ -770,7 +770,13 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     case MSP_ARMING_CONFIG:
       r.writeU8(5); // auto_disarm delay
       r.writeU8(0);  // disarm kill switch
-      r.writeU8(180); // small angle
+      r.writeU8(_model.config.level.armingMaxAngle); // small angle
+      break;
+
+    case MSP_SET_ARMING_CONFIG:
+      m.readU8(); // auto_disarm delay (unused)
+      m.readU8(); // disarm kill switch (unused)
+      if(m.remain()) _model.config.level.armingMaxAngle = m.readU8();
       break;
 
     case MSP_RC_DEADBAND:

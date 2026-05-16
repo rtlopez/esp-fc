@@ -576,6 +576,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("pid_level_rate_limit"), &c.level.rateLimit),
     Param(PSTR("pid_level_lpf_type"), &c.level.ptermFilter.type, filterTypeChoices),
     Param(PSTR("pid_level_lpf_freq"), &c.level.ptermFilter.freq),
+    Param(PSTR("small_angle"), &c.level.armingMaxAngle),
 
     Param(PSTR("pid_althold_vel_p"), &c.pid[FC_PID_VEL].P),
     Param(PSTR("pid_althold_vel_i"), &c.pid[FC_PID_VEL].I),
