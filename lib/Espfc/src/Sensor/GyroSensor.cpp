@@ -180,7 +180,7 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
     {
       weight *= freqMargin * _rpm_fade_inv;
     }
-    _model.state.gyro.rpmFilter[_rpm_motor_index][n][0].reconfigure(freq, freq, _rpm_q, weight);
+    _model.state.gyro.rpmFilter[_rpm_motor_index][n][0].reconfigure(freq, freq, _rpm_q, weight, lrintf(_model.state.loopTimer.realRate));
     for (size_t i = 1; i < AXIS_COUNT_RPY; ++i)
     {
       // copy coefs from roll to pitch and yaw
@@ -237,7 +237,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
             float freq = _fft[i].peaks[p].freq;
             if (freq >= _model.config.gyro.dynamicFilter.min_freq && freq <= _model.config.gyro.dynamicFilter.max_freq)
             {
-              _model.state.gyro.dynNotchFilter[p][i].reconfigure(freq, freq, q);
+              _model.state.gyro.dynNotchFilter[p][i].reconfigure(freq, freq, q, 1.0f, lrintf(_model.state.loopTimer.realRate));
             }
           }
         }
@@ -267,7 +267,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
               size_t x = (p + i) % 3;
               int harmonic = (p / 3) + 1;
               int16_t f = Utils::clamp((int16_t)lrintf(freq * harmonic), _model.config.gyro.dynamicFilter.min_freq, _model.config.gyro.dynamicFilter.max_freq);
-              _model.state.gyro.dynNotchFilter[p][x].reconfigure(f, f, q);
+              _model.state.gyro.dynNotchFilter[p][x].reconfigure(f, f, q, 1.0f, lrintf(_model.state.loopTimer.realRate));
             }
           }
         }
