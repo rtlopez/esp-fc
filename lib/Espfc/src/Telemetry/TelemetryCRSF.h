@@ -51,19 +51,21 @@ public:
       case CRSF_TELEMETRY_STATE_FM:
         flightMode(f);
         send(f, s);
-        _current = CRSF_TELEMETRY_STATE_GPS;
+        // If no GPS don't waste time sending empty messages
+        _current = _model.gpsActive() ? CRSF_TELEMETRY_STATE_GPS : (_model.baroActive() ? CRSF_TELEMETRY_STATE_BARO : CRSF_TELEMETRY_STATE_HB);
         break;
       case CRSF_TELEMETRY_STATE_GPS:
         gps(f);
         send(f, s);
-        _current = CRSF_TELEMETRY_STATE_BARO;
+        // If no barometer don't send the message
+        _current = _model.baroActive() ? CRSF_TELEMETRY_STATE_BARO : CRSF_TELEMETRY_STATE_HB;
         break;
       case CRSF_TELEMETRY_STATE_BARO:
         vario(f);
         send(f, s);
         _current = CRSF_TELEMETRY_STATE_HB;
         break;
-      case CRSF_TELEMETRY_STATE_HB:
+      default:    // In case of an invalid state, send heartbeat and continue loop
         heartbeat(f);
         send(f, s);
         _current = CRSF_TELEMETRY_STATE_ATTI;
@@ -171,8 +173,9 @@ public:
     // https://github.com/crsf-wg/crsf/wiki/CRSF_FRAMETYPE_BARO_ALTITUDE
     msg.prepare(Rc::CRSF_FRAMETYPE_BARO_ALTITUDE);
 
-    msg.writeU16(Utils::toBigEndian16(0)); // (cm + 10000) or (m + 0 | 0x8000)
-    msg.writeU16(Utils::toBigEndian16(0)); // cm/s
+    // Send barometer data
+    msg.writeU16(Utils::toBigEndian16((_model.state.baro.altitude * 10.0f) + 10000 )); // (dm + 10000) or (m + 0 | 0x8000)
+    msg.writeU16(Utils::toBigEndian16(_model.state.baro.vario * 100.0f)); // cm
 
     msg.finalize();
   }
