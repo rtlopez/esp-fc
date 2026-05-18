@@ -1,7 +1,7 @@
-#include "Device/BaroBMP085.h"
-#include "Device/BaroBMP280.h"
-#include "Device/BaroDevice.h"
-#include "Device/BaroSPL06.h"
+#include "Device/Baro/BaroBMP085.hpp"
+#include "Device/Baro/BaroBMP280.hpp"
+#include "Device/Baro/BaroSPL06.hpp"
+#include "Device/BaroDevice.hpp"
 #include "Device/GyroBMI160.h"
 #include "Device/GyroDevice.h"
 #include "Device/GyroICM20602.h"
@@ -44,9 +44,9 @@ static Espfc::Device::Mag::MagHMC5883L hmc5883l;
 static Espfc::Device::Mag::MagQMC5883L qmc5883l;
 static Espfc::Device::Mag::MagQMC5883P qmc5883p;
 static Espfc::Device::Mag::MagAK8963 ak8963;
-static Espfc::Device::BaroBMP085 bmp085;
-static Espfc::Device::BaroBMP280 bmp280;
-static Espfc::Device::BaroSPL06 spl06;
+static Espfc::Device::Baro::BaroBMP085 bmp085;
+static Espfc::Device::Baro::BaroBMP280 bmp280;
+static Espfc::Device::Baro::BaroSPL06 spl06;
 } // namespace
 
 namespace Espfc {

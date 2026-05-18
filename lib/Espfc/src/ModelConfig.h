@@ -7,7 +7,7 @@
 #include "Device/BusDevice.hpp"
 #include "Device/GyroDevice.h"
 #include "Device/MagDevice.hpp"
-#include "Device/BaroDevice.h"
+#include "Device/BaroDevice.hpp"
 #include "Device/SerialDevice.h"
 #include "Device/InputPPM.h"
 #include "Output/Mixers.h"
