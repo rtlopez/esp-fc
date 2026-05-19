@@ -509,8 +509,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_ACC_TRIM:
-      _model.config.accel.trim[0] = m.readU16(); // pitch
-      _model.config.accel.trim[1] = m.readU16(); // roll
+      _model.config.accel.trim[0] = std::min<uint16_t>(300u, m.readU16()); // pitch
+      _model.config.accel.trim[1] = std::min<uint16_t>(300u, m.readU16()); // roll
       _model.onAccChange();
       break;
 
@@ -782,7 +782,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     case MSP_SET_ARMING_CONFIG:
       m.readU8(); // auto_disarm delay
       m.readU8(); // disarm kill switch
-      _model.config.arming.smallAngle = m.readU8(); // small angle
+      _model.config.arming.smallAngle = std::min<uint8_t>(180, m.readU8()); // small angle
       break;
 
     case MSP_RC_DEADBAND:

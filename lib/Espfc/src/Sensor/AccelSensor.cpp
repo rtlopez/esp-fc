@@ -6,7 +6,7 @@ namespace Espfc::Sensor {
 static constexpr float ESPFC_FUZZY_ACCEL_ZERO = 0.05f;
 static constexpr float ESPFC_FUZZY_GYRO_ZERO = 0.20f;
 
-AccelSensor::AccelSensor(Model& model) : _model(model) {}
+AccelSensor::AccelSensor(Model& model): _model(model) {}
 
 int AccelSensor::begin()
 {
@@ -97,33 +97,33 @@ void FAST_CODE_ATTR AccelSensor::calibrate()
 {
   switch (_model.state.accel.calibrationState)
   {
-  case CALIBRATION_IDLE:
-    _model.state.accel.adc -= _model.state.accel.bias;
-    break;
-  case CALIBRATION_START:
-    _model.state.accel.bias = VectorFloat(0, 0, ACCEL_G);
-    _model.state.accel.biasSamples = 2 * _model.state.accel.timer.rate;
-    _model.state.accel.calibrationState = CALIBRATION_UPDATE;
-    break;
-  case CALIBRATION_UPDATE:
-    _model.state.accel.bias += (_model.state.accel.adc - _model.state.accel.bias) * _model.state.accel.biasAlpha;
-    _model.state.accel.biasSamples--;
-    if (_model.state.accel.biasSamples <= 0)
-    {
-      _model.state.accel.calibrationState = CALIBRATION_APPLY;
-    }
-    break;
-  case CALIBRATION_APPLY:
-    _model.state.accel.bias.z -= ACCEL_G;
-    _model.state.accel.calibrationState = CALIBRATION_SAVE;
-    break;
-  case CALIBRATION_SAVE:
-    _model.finishCalibration();
-    _model.state.accel.calibrationState = CALIBRATION_IDLE;
-    break;
-  default:
-    _model.state.accel.calibrationState = CALIBRATION_IDLE;
-    break;
+    case CALIBRATION_IDLE:
+      _model.state.accel.adc -= _model.state.accel.bias;
+      break;
+    case CALIBRATION_START:
+      _model.state.accel.bias = VectorFloat(0, 0, ACCEL_G);
+      _model.state.accel.biasSamples = 2 * _model.state.accel.timer.rate;
+      _model.state.accel.calibrationState = CALIBRATION_UPDATE;
+      break;
+    case CALIBRATION_UPDATE:
+      _model.state.accel.bias += (_model.state.accel.adc - _model.state.accel.bias) * _model.state.accel.biasAlpha;
+      _model.state.accel.biasSamples--;
+      if (_model.state.accel.biasSamples <= 0)
+      {
+        _model.state.accel.calibrationState = CALIBRATION_APPLY;
+      }
+      break;
+    case CALIBRATION_APPLY:
+      _model.state.accel.bias.z -= ACCEL_G;
+      _model.state.accel.calibrationState = CALIBRATION_SAVE;
+      break;
+    case CALIBRATION_SAVE:
+      _model.finishCalibration();
+      _model.state.accel.calibrationState = CALIBRATION_IDLE;
+      break;
+    default:
+      _model.state.accel.calibrationState = CALIBRATION_IDLE;
+      break;
   }
 }
 

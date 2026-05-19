@@ -105,7 +105,7 @@ void Actuator::updateArmingDisabled()
     const float maxTiltRad = Utils::toRad(_model.config.arming.smallAngle);
     const float roll = _model.state.attitude.euler[AXIS_ROLL];
     const float pitch = _model.state.attitude.euler[AXIS_PITCH];
-    const float currentTilt = std::max(abs(roll), abs(pitch));
+    const float currentTilt = std::max(std::fabs(roll), std::fabs(pitch));
     _model.setArmingDisabled(ARMING_DISABLED_ANGLE, currentTilt > maxTiltRad);
   }
   else
