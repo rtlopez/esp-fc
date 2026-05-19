@@ -14,7 +14,9 @@ int AccelSensor::begin()
 
   _gyro = _model.state.gyro.dev;
   if (!_gyro)
+  {
     return 0;
+  }
 
   _model.state.accel.scale = 16.f * ACCEL_G / 32768.f;
 
@@ -27,7 +29,9 @@ int AccelSensor::begin()
   _model.state.accel.biasAlpha = 5.0f / _model.state.accel.timer.rate;
   _model.state.accel.calibrationState = CALIBRATION_IDLE;
 
-  updateTrimRotation();
+  const float trimPitch = Utils::toRad(_model.config.accel.trim[0] * 0.1f);
+  const float trimRoll = Utils::toRad(_model.config.accel.trim[1] * 0.1f);
+  _model.state.trimRotation.init(VectorFloat(trimRoll, trimPitch, 0.f));
 
   _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.state.accel.timer.rate).log(_model.state.accel.timer.interval).logln(_model.state.accel.present);
 
@@ -39,7 +43,9 @@ int FAST_CODE_ATTR AccelSensor::update()
   int status = read();
 
   if (status)
+  {
     filter();
+  }
 
   return status;
 }
@@ -58,7 +64,9 @@ int FAST_CODE_ATTR AccelSensor::read()
 int FAST_CODE_ATTR AccelSensor::filter()
 {
   if (!_model.accelActive())
+  {
     return 0;
+  }
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
@@ -103,7 +111,9 @@ void FAST_CODE_ATTR AccelSensor::calibrate()
     _model.state.accel.bias += (_model.state.accel.adc - _model.state.accel.bias) * _model.state.accel.biasAlpha;
     _model.state.accel.biasSamples--;
     if (_model.state.accel.biasSamples <= 0)
+    {
       _model.state.accel.calibrationState = CALIBRATION_APPLY;
+    }
     break;
   case CALIBRATION_APPLY:
     _model.state.accel.bias.z -= ACCEL_G;
@@ -116,20 +126,6 @@ void FAST_CODE_ATTR AccelSensor::calibrate()
   default:
     _model.state.accel.calibrationState = CALIBRATION_IDLE;
     break;
-  }
-}
-
-void AccelSensor::updateTrimRotation()
-{
-  const float trimPitch = Utils::toRad(_model.config.accel.trim[0] * 0.1f);
-  const float trimRoll = Utils::toRad(_model.config.accel.trim[1] * 0.1f);
-  if (trimPitch != 0.f || trimRoll != 0.f)
-  {
-    _model.state.trimRotation.init(VectorFloat(trimRoll, trimPitch, 0.f));
-  }
-  else
-  {
-    _model.state.trimRotation.init(VectorFloat(0.f, 0.f, 0.f));
   }
 }
 
