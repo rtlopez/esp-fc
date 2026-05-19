@@ -449,6 +449,7 @@ class Model
       }
 
       state.boardAlignment.init(VectorFloat(Utils::toRad(config.boardAlignment[0]), Utils::toRad(config.boardAlignment[1]), Utils::toRad(config.boardAlignment[2])));
+      onAccChange();
 
       const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
       const uint32_t gyroFilterRate = state.loopTimer.rate;
@@ -516,6 +517,11 @@ class Model
 
       // override temporary
       //state.telemetryTimer.setRate(100);
+    }
+
+    void onAccChange()
+    {
+      state.trimRotation.init(VectorFloat{Utils::toRad(config.accel.trim[1]) * 0.1f, Utils::toRad(config.accel.trim[0]) * 0.1f, 0.0f});
     }
 
     void postLoad()

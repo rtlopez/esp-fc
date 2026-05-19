@@ -485,6 +485,7 @@ struct ModelState
 
   AttitudeState attitude;
   RotationMatrixFloat boardAlignment;
+  RotationMatrixFloat trimRotation;
 
   AltitudeState altitude;
 

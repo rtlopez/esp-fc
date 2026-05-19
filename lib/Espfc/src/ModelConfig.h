@@ -591,6 +591,7 @@ struct AccelConfig
   int8_t bus = BUS_AUTO;
   int8_t dev = GYRO_AUTO;
   int16_t bias[3] = { 0, 0, 0 };
+  int16_t trim[2] = { 0, 0 };
   FilterConfig filter{FILTER_BIQUAD, 15};
 };
 
@@ -688,6 +689,11 @@ struct LedConfig
   int8_t type = 0;
 };
 
+struct ArmingConfig
+{
+  uint8_t smallAngle = 25;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -704,6 +710,7 @@ class ModelConfig
     IBatConfig ibat;
     VtxConfig vtx;
     GpsConfig gps;
+    ArmingConfig arming;
 
     ActuatorCondition conditions[ACTUATOR_CONDITIONS];
     ScalerConfig scaler[SCALER_COUNT];

@@ -13,11 +13,14 @@ int AccelSensor::begin()
   _model.state.accel.adc.z = ACCEL_G;
 
   _gyro = _model.state.gyro.dev;
-  if(!_gyro) return 0;
+  if (!_gyro)
+  {
+    return 0;
+  }
 
   _model.state.accel.scale = 16.f * ACCEL_G / 32768.f;
 
-  for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
+  for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
     _filter[i].begin(FilterConfig(FILTER_FIR2, 1), _model.state.accel.timer.rate);
     _model.state.accel.filter[i].begin(_model.config.accel.filter, _model.state.accel.timer.rate);
@@ -35,14 +38,20 @@ int FAST_CODE_ATTR AccelSensor::update()
 {
   int status = read();
 
-  if (status) filter();
+  if (status)
+  {
+    filter();
+  }
 
   return status;
 }
 
 int FAST_CODE_ATTR AccelSensor::read()
 {
-  if(!_model.accelActive()) return 0;
+  if (!_model.accelActive())
+  {
+    return 0;
+  }
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
   _gyro->readAccel(_model.state.accel.raw);
@@ -52,7 +61,10 @@ int FAST_CODE_ATTR AccelSensor::read()
 
 int FAST_CODE_ATTR AccelSensor::filter()
 {
-  if(!_model.accelActive()) return 0;
+  if (!_model.accelActive())
+  {
+    return 0;
+  }
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
@@ -61,9 +73,9 @@ int FAST_CODE_ATTR AccelSensor::filter()
   align(_model.state.accel.adc, _model.config.gyro.align);
   _model.state.accel.adc = _model.state.boardAlignment.apply(_model.state.accel.adc);
 
-  for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
+  for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
-    if(_model.config.debug.mode == DEBUG_ACCELEROMETER)
+    if (_model.config.debug.mode == DEBUG_ACCELEROMETER)
     {
       _model.state.debug[i] = _model.state.accel.raw[i];
     }
@@ -73,12 +85,17 @@ int FAST_CODE_ATTR AccelSensor::filter()
 
   calibrate();
 
+  if (_model.state.accel.calibrationState == CALIBRATION_IDLE)
+  {
+    _model.state.accel.adc = _model.state.trimRotation.apply(_model.state.accel.adc);
+  }
+
   return 1;
 }
 
 void FAST_CODE_ATTR AccelSensor::calibrate()
 {
-  switch(_model.state.accel.calibrationState)
+  switch (_model.state.accel.calibrationState)
   {
     case CALIBRATION_IDLE:
       _model.state.accel.adc -= _model.state.accel.bias;
@@ -91,7 +108,10 @@ void FAST_CODE_ATTR AccelSensor::calibrate()
     case CALIBRATION_UPDATE:
       _model.state.accel.bias += (_model.state.accel.adc - _model.state.accel.bias) * _model.state.accel.biasAlpha;
       _model.state.accel.biasSamples--;
-      if(_model.state.accel.biasSamples <= 0) _model.state.accel.calibrationState = CALIBRATION_APPLY;
+      if (_model.state.accel.biasSamples <= 0)
+      {
+        _model.state.accel.calibrationState = CALIBRATION_APPLY;
+      }
       break;
     case CALIBRATION_APPLY:
       _model.state.accel.bias.z -= ACCEL_G;

@@ -1,27 +1,28 @@
 #pragma once
 
-#include "Model.h"
 #include "BaseSensor.h"
 #include "Device/GyroDevice.h"
+#include "Model.h"
 
 namespace Espfc::Sensor {
 
-class AccelSensor: public BaseSensor
+class AccelSensor : public BaseSensor
 {
-  public:
-    AccelSensor(Model& model);
-    
-    int begin();
-    int update();
-    int read();
-    int filter();
+public:
+  AccelSensor(Model& model);
 
-  private:
-    void calibrate();
+  int begin();
+  int update();
+  int read();
+  int filter();
+  void updateTrimRotation();
 
-    Model& _model;
-    Device::GyroDevice * _gyro;
-    Utils::Filter _filter[AXIS_COUNT_RPY];
+private:
+  void calibrate();
+
+  Model& _model;
+  Device::GyroDevice* _gyro;
+  Utils::Filter _filter[AXIS_COUNT_RPY];
 };
 
-}
+} // namespace Espfc::Sensor
