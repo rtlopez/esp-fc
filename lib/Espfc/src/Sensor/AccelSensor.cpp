@@ -6,7 +6,7 @@ namespace Espfc::Sensor {
 static constexpr float ESPFC_FUZZY_ACCEL_ZERO = 0.05f;
 static constexpr float ESPFC_FUZZY_GYRO_ZERO = 0.20f;
 
-AccelSensor::AccelSensor(Model &model) : _model(model) {}
+AccelSensor::AccelSensor(Model& model) : _model(model) {}
 
 int AccelSensor::begin()
 {
@@ -29,10 +29,6 @@ int AccelSensor::begin()
   _model.state.accel.biasAlpha = 5.0f / _model.state.accel.timer.rate;
   _model.state.accel.calibrationState = CALIBRATION_IDLE;
 
-  const float trimPitch = Utils::toRad(_model.config.accel.trim[0] * 0.1f);
-  const float trimRoll = Utils::toRad(_model.config.accel.trim[1] * 0.1f);
-  _model.state.trimRotation.init(VectorFloat(trimRoll, trimPitch, 0.f));
-
   _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.state.accel.timer.rate).log(_model.state.accel.timer.interval).logln(_model.state.accel.present);
 
   return 1;
@@ -53,7 +49,9 @@ int FAST_CODE_ATTR AccelSensor::update()
 int FAST_CODE_ATTR AccelSensor::read()
 {
   if (!_model.accelActive())
+  {
     return 0;
+  }
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_READ);
   _gyro->readAccel(_model.state.accel.raw);
@@ -87,7 +85,7 @@ int FAST_CODE_ATTR AccelSensor::filter()
 
   calibrate();
 
-  if (_gyro && _model.state.accel.calibrationState == CALIBRATION_IDLE)
+  if (_model.state.accel.calibrationState == CALIBRATION_IDLE)
   {
     _model.state.accel.adc = _model.state.trimRotation.apply(_model.state.accel.adc);
   }

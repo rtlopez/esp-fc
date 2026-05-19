@@ -413,6 +413,8 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("accel_offset_x"), &c.accel.bias[0]),
     Param(PSTR("accel_offset_y"), &c.accel.bias[1]),
     Param(PSTR("accel_offset_z"), &c.accel.bias[2]),
+    Param(PSTR("accel_trim_roll"), &c.accel.trim[1]),
+    Param(PSTR("accel_trim_pitch"), &c.accel.trim[0]),
 
     Param(PSTR("mag_bus"), &c.mag.bus, busDevChoices),
     Param(PSTR("mag_dev"), &c.mag.dev, magDevChoices),
