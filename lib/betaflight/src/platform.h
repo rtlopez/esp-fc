@@ -47,7 +47,7 @@
 #endif
 
 #ifndef ESPFC_VERSION
-#define ESPFC_VERSION v0.0.0
+#define ESPFC_VERSION v0.3.0-dev
 #endif
 
 #define MAX_SUPPORTED_MOTORS 8

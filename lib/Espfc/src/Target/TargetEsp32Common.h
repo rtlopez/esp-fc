@@ -103,4 +103,9 @@ inline uint32_t targetFreeHeap()
   return ESP.getFreeHeap();
 }
 
+inline uint32_t targetTotalHeap()
+{
+  return ESP.getHeapSize();
+}
+
 };

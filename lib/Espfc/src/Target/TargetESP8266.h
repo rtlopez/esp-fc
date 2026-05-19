@@ -45,8 +45,8 @@
 #define ESPFC_BUTTON_PIN -1
 #define ESPFC_LED_PIN -1
 
-#define ESPFC_ADC_0
-#define ESPFC_ADC_0_PIN 17   // A0
+#define ESPFC_ADC_VBAT
+#define ESPFC_ADC_VBAT_PIN 17   // A0
 
 #define ESPFC_ADC_SCALE (1.0f / 1024)
 
@@ -145,6 +145,11 @@ inline uint32_t targetCpuFreq()
 inline uint32_t targetFreeHeap()
 {
   return ESP.getFreeHeap();
+}
+
+inline uint32_t targetTotalHeap()
+{
+  return ESP.getMaxFreeBlockSize();
 }
 
 /*

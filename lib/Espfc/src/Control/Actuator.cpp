@@ -114,6 +114,7 @@ void Actuator::updateModeMask()
     int16_t max = c->max; // * 25 + 900;
     size_t ch = c->ch;    // + AXIS_AUX_1;
     if(ch < AXIS_AUX_1 || ch >= AXIS_COUNT) continue; // invalid channel
+    if(c->id >= MODE_COUNT) continue; // invalid id
 
     int16_t val = _model.state.input.us[ch];
     if(val > min && val < max)

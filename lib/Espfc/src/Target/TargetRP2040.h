@@ -59,11 +59,11 @@
 #define ESPFC_LED_PIN -1
 
 
-#define ESPFC_ADC_0
-#define ESPFC_ADC_0_PIN 26
+#define ESPFC_ADC_VBAT
+#define ESPFC_ADC_VBAT_PIN 26
 
-#define ESPFC_ADC_1
-#define ESPFC_ADC_1_PIN 27
+#define ESPFC_ADC_IBAT
+#define ESPFC_ADC_IBAT_PIN 27
 
 #define ESPFC_ADC_SCALE (3.3f / 4096)
 
@@ -182,6 +182,11 @@ inline uint32_t targetCpuFreq()
 inline uint32_t targetFreeHeap()
 {
   return rp2040.getFreeHeap();
+}
+
+inline uint32_t targetTotalHeap()
+{
+  return rp2040.getTotalHeap();
 }
 
 };

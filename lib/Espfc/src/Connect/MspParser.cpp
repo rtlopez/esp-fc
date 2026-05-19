@@ -20,17 +20,26 @@ void MspParser::parse(char c, MspMessage& msg)
       msg.received = 0;
       msg.checksum = 0;
       msg.checksum2 = 0;
-      if(c == 'M')
+      switch(c)
       {
-        msg.version = MSP_V1;
-        msg.state = MSP_STATE_HEADER_M;
+        case 'M':
+          msg.version = MSP_V1;
+          msg.variant = MSP_BF;
+          msg.state = MSP_STATE_HEADER_M;
+          break;
+        case 'E':
+          msg.version = MSP_V1;
+          msg.variant = MSP_ESP;
+          msg.state = MSP_STATE_HEADER_M;
+          break;
+        case 'X':
+          msg.version = MSP_V2;
+          msg.variant = MSP_BF;
+          msg.state = MSP_STATE_HEADER_X;
+          break;
+        default:
+          msg.state = MSP_STATE_IDLE;
       }
-      else if(c == 'X')
-      {
-        msg.version = MSP_V2;
-        msg.state = MSP_STATE_HEADER_X;
-      }
-      else msg.state = MSP_STATE_IDLE;
       break;
 
     case MSP_STATE_HEADER_M:               // type '<','>','!'

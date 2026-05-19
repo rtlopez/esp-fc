@@ -111,7 +111,7 @@ int SerialManager::begin()
       continue;
     }
 
-    port->begin(sdc);   
+    port->begin(sdc);
     _model.state.serial[i].stream = port;
 
     if(i == ESPFC_SERIAL_DEBUG_PORT)
