@@ -509,8 +509,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_ACC_TRIM:
-      _model.config.accel.trim[0] = std::min<uint16_t>(300u, m.readU16()); // pitch
-      _model.config.accel.trim[1] = std::min<uint16_t>(300u, m.readU16()); // roll
+      _model.config.accel.trim[0] = std::clamp<int16_t>(m.readU16(), -300, 300); // pitch
+      _model.config.accel.trim[1] = std::clamp<int16_t>(m.readU16(), -300, 300); // roll
       _model.onAccChange();
       break;
 
