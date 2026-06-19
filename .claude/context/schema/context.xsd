@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <!--
+    Context XML schema (XSD 1.0)
+    Scope: .claude/context/**/*.xml
+  -->
+
+  <xs:simpleType name="date_yyyy_mm_dd">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{4}-\d{2}-\d{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="status_t">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="active"/>
+      <xs:enumeration value="deprecated"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="file_kind_t">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="manifest"/>
+      <xs:enumeration value="ruleset"/>
+      <xs:enumeration value="glossary"/>
+      <xs:enumeration value="playbook"/>
+      <xs:enumeration value="other"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="id_token_t">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z0-9][A-Za-z0-9._:-]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="rule_id_t">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Z]{1,2}\d{3}-[A-Z0-9-]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:attributeGroup name="root_meta">
+    <xs:attribute name="id" type="id_token_t" use="required"/>
+    <xs:attribute name="title" type="xs:string" use="required"/>
+    <xs:attribute name="kind" type="file_kind_t" use="required"/>
+    <xs:attribute name="version" type="xs:positiveInteger" use="required"/>
+    <xs:attribute name="updated" type="date_yyyy_mm_dd" use="required"/>
+    <xs:attribute name="status" type="status_t" use="required"/>
+  </xs:attributeGroup>
+
+  <!-- Shared leaf nodes -->
+  <xs:element name="doc_ref">
+    <xs:complexType>
+      <xs:attribute name="path" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ref">
+    <xs:complexType>
+      <xs:attribute name="id" type="rule_id_t" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="todo">
+    <xs:complexType mixed="true">
+      <xs:attribute name="kind" type="xs:string" use="required"/>
+      <xs:attribute name="target" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="code">
+    <xs:complexType mixed="true">
+      <xs:attribute name="lang" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="text_block_t" mixed="true">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="ref"/>
+        <xs:element ref="code"/>
+        <xs:element ref="todo"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ruleset -->
+  <xs:element name="rules">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="rule" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="root_meta"/>
+      <xs:attribute name="source" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="rule_t">
+    <xs:sequence>
+      <xs:element name="desc" type="xs:string"/>
+      <xs:element name="better" type="text_block_t" minOccurs="0"/>
+      <xs:element name="why_bad" type="text_block_t" minOccurs="0"/>
+      <xs:element name="when_to_use" type="text_block_t" minOccurs="0"/>
+      <xs:element name="exceptions" type="text_block_t" minOccurs="0"/>
+      <xs:element name="rationale" type="text_block_t" minOccurs="0"/>
+      <xs:element name="examples" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="example" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="related" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element ref="ref" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="tool_support" type="text_block_t" minOccurs="0"/>
+      <xs:element name="keywords" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="kw" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="notes" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="note" minOccurs="1" maxOccurs="unbounded">
+              <xs:complexType mixed="true">
+                <xs:attribute name="title" type="xs:string" use="required"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element ref="todo" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="rule_id_t" use="required"/>
+    <xs:attribute name="anchor" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:element name="rule" type="rule_t"/>
+
+  <xs:complexType name="example_t" mixed="true">
+    <xs:sequence>
+      <xs:element ref="code" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element ref="ref" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element ref="todo" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="kind" use="required">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="good"/>
+          <xs:enumeration value="bad"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:element name="example" type="example_t"/>
+
+  <!-- index / manifest -->
+  <xs:element name="index">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="section" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="root_meta"/>
+      <xs:attribute name="source" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="section_t">
+    <xs:sequence>
+      <xs:element name="entry" type="entry_t" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="title" type="xs:string" use="optional"/>
+    <xs:attribute name="kind" type="xs:string" use="optional"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:attribute name="label" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:element name="section" type="section_t"/>
+
+  <xs:complexType name="entry_t">
+    <xs:sequence>
+      <xs:element ref="doc_ref" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="id_token_t" use="required"/>
+    <xs:attribute name="label" type="xs:string" use="optional"/>
+    <xs:attribute name="title" type="xs:string" use="optional"/>
+    <xs:attribute name="kind" type="xs:string" use="optional"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:element name="entry" type="entry_t"/>
+
+  <!-- catalog -->
+  <xs:element name="catalog">
+    <xs:complexType>
+      <xs:sequence>
+        <!-- Catalog internals are generated and intentionally skipped by XSD. -->
+        <xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="root_meta"/>
+      <xs:attribute name="language" type="xs:string" use="required"/>
+      <xs:attribute name="sourceRoot" type="xs:string" use="required"/>
+      <xs:attribute name="entrypoint" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

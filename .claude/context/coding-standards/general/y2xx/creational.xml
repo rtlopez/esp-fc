@@ -1,0 +1,46 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y2XX-CREATIONAL" title="Creational" kind="ruleset" version="2" updated="2026-02-20" status="active" source="creational.md">
+  <rule id="Y200-FACTORY-METHOD">
+    <desc>Define interface for creating objects, let subclasses decide which class to instantiate.</desc>
+    <examples>
+      <example kind="good">`Parser.create(format="csv")` returns `CsvParser` or `JsonParser`.</example>
+    </examples>
+  </rule>
+  <rule id="Y201-ABSTRACT-FACTORY">
+    <desc>Create families of related objects without specifying concrete classes.</desc>
+    <examples>
+      <example kind="good">`BankingFactory` creates matching parser, validator, and producer for a bank type.</example>
+    </examples>
+  </rule>
+  <rule id="Y202-BUILDER-PATTERN">
+    <desc>Construct complex objects step by step.</desc>
+    <examples>
+      <example kind="good">`TransactionBuilder().with_date(...).with_amount(...).build()`.</example>
+    </examples>
+  </rule>
+  <rule id="Y203-SINGLETON-PATTERN">
+    <desc>Ensure class has only one instance. Use sparingly.</desc>
+    <exceptions>Often better as module-level instance or dependency injection.</exceptions>
+    <examples>
+      <example kind="good">Database connection pool, configuration manager.</example>
+    </examples>
+  </rule>
+  <rule id="Y204-PROTOTYPE-PATTERN">
+    <desc>Clone objects instead of creating new ones.</desc>
+    <examples>
+      <example kind="good">`copy.copy()` or `copy.deepcopy()` for cloning.</example>
+    </examples>
+  </rule>
+  <rule id="Y205-OBJECT-POOL">
+    <desc>Reuse expensive objects from pool.</desc>
+    <examples>
+      <example kind="good">Database connection pool.</example>
+    </examples>
+  </rule>
+  <rule id="Y206-LAZY-INITIALIZATION">
+    <desc>Defer expensive object creation until needed.</desc>
+    <examples>
+      <example kind="good">`@cached_property` for expensive computed attributes.</example>
+    </examples>
+    <tool_support>`functools.cached_property`.</tool_support>
+  </rule>
+</rules>

@@ -1,0 +1,8 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Z2XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Source" kind="other" desc=""/>
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Z20x" kind="tens" desc="Abstraction mistakes and design smells." label="Poor Abstractions">
+      <doc_ref path="./z2xx-poor-abstractions.xml"/>
+    </entry>
+  </section>
+</index>

@@ -1,0 +1,10 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Y1XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Y10x" kind="tens" desc="SRP, boundaries, cohesion, and coupling." label="Principles">
+      <doc_ref path="./principles.xml"/>
+    </entry>
+    <entry id="Y11x" kind="tens" desc="Module layout, constants, composition patterns." label="Structure and Patterns">
+      <doc_ref path="./structure-and-patterns.xml"/>
+    </entry>
+  </section>
+</index>

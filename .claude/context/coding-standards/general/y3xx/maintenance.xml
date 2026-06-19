@@ -1,0 +1,36 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y3XX-MAINTENANCE" title="Maintenance and Readability" kind="ruleset" version="2" updated="2026-02-20" status="active" source="maintenance.md">
+  <rule id="Y310-REMOVE-DEAD-CODE">
+    <desc>Delete commented-out code. Use version control history.</desc>
+  </rule>
+  <rule id="Y311-TODO-COMMENTS">
+    <desc>Use `TODO: description` for temporary markers.</desc>
+    <exceptions>Reference issue numbers when available.</exceptions>
+    <examples>
+      <example kind="good">`// TODO: Handle edge case when amount is zero`.</example>
+    </examples>
+  </rule>
+  <rule id="Y312-CONSTANTS-NAMING">
+    <desc>Constants use `UPPER_CASE_WITH_UNDERSCORES`.</desc>
+    <examples>
+      <example kind="good">`MAX_RETRIES`, `DEFAULT_TIMEOUT`.</example>
+    </examples>
+  </rule>
+  <rule id="Y313-SELF-DOCUMENTING">
+    <desc>Write code that explains itself. Reduce need for comments.</desc>
+    <examples>
+      <example kind="good">`is_valid_transaction()` better than `check()` with a comment.</example>
+    </examples>
+  </rule>
+  <rule id="Y314-MAGIC-NUMBERS">
+    <desc>Extract magic numbers to named constants.</desc>
+    <examples>
+      <example kind="good">`TAX_RATE = 0.19; tax = amount * TAX_RATE` not `tax = amount * 0.19`.</example>
+    </examples>
+  </rule>
+  <rule id="Y315-ASSERTION-MESSAGES">
+    <desc>Include messages in assertions explaining what failed.</desc>
+    <examples>
+      <example kind="good">`assert amount &gt; 0, "amount must be positive"`.</example>
+    </examples>
+  </rule>
+</rules>

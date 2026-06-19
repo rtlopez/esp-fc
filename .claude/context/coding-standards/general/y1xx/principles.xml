@@ -1,0 +1,105 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y1XX-PRINCIPLES" title="Principles" kind="ruleset" version="2" updated="2026-02-20" status="active" source="principles.md">
+  <rule id="Y100-SINGLE-RESPONSIBILITY">
+    <desc>Each class/module should have one reason to change (SRP).</desc>
+    <examples>
+      <example kind="good">Separate `Parser` (reads data) from `Validator` (checks data) from
+`Transformer` (converts data).
+</example>
+    </examples>
+    <related>
+      <ref id="Y102-SEPARATION-OF-CONCERNS"/>
+      <ref id="Z102-GOD-OBJECTS"/>
+    </related>
+  </rule>
+  <rule id="Y101-INTERFACE-SEGREGATION">
+    <desc>Many small, specific interfaces are better than one large one.</desc>
+    <examples>
+      <example kind="good">`Readable`, `Writable`, `Seekable` interfaces instead of one `File`.</example>
+    </examples>
+    <related>
+      <ref id="Y103-DEPENDENCY-INJECTION"/>
+    </related>
+  </rule>
+  <rule id="Y102-SEPARATION-OF-CONCERNS">
+    <desc>Separate business logic, data access, presentation, and infrastructure.</desc>
+    <examples>
+      <example kind="good">`TransactionRepository` (data), `TransactionService` (logic),
+`TransactionAPI` (presentation).
+</example>
+    </examples>
+    <related>
+      <ref id="Y100-SINGLE-RESPONSIBILITY"/>
+    </related>
+  </rule>
+  <rule id="Y103-DEPENDENCY-INJECTION">
+    <desc>Pass dependencies as parameters, do not create them internally.</desc>
+    <examples>
+      <example kind="good">`DataProcessor(parser, producer)` rather than a constructor that
+instantiates its own dependencies.
+</example>
+    </examples>
+    <related>
+      <ref id="Y101-INTERFACE-SEGREGATION"/>
+      <ref id="Y220-STRATEGY-PATTERN"/>
+    </related>
+  </rule>
+  <rule id="Y104-DEPENDENCY-INVERSION">
+    <desc>Depend on abstractions (interfaces), not concrete classes.</desc>
+    <examples>
+      <example kind="good">`process(parser: Parser)` rather than `process(parser: CsvParser)`.</example>
+    </examples>
+    <related>
+      <ref id="Y101-INTERFACE-SEGREGATION"/>
+    </related>
+  </rule>
+  <rule id="Y105-OPEN-CLOSED">
+    <desc>Open for extension, closed for modification.</desc>
+    <examples>
+      <example kind="good">Extend behavior with new implementations instead of editing existing
+code.
+</example>
+    </examples>
+    <related>
+      <ref id="Y220-STRATEGY-PATTERN"/>
+      <ref id="Y223-TEMPLATE-METHOD"/>
+    </related>
+  </rule>
+  <rule id="Y106-MODULE-STRUCTURE">
+    <desc>Organize modules by feature/domain, not by type.</desc>
+    <examples>
+      <example kind="good">`users/auth/`, `users/profile/` not `models/`, `parsers/`.</example>
+    </examples>
+    <related>
+      <ref id="Y100-SINGLE-RESPONSIBILITY"/>
+    </related>
+  </rule>
+  <rule id="Y107-COHESION">
+    <desc>Keep related functionality together. High cohesion within modules.</desc>
+    <examples>
+      <example kind="good">All CSV parsing logic lives in one module, not scattered across
+multiple files.
+</example>
+    </examples>
+    <related>
+      <ref id="Y100-SINGLE-RESPONSIBILITY"/>
+    </related>
+  </rule>
+  <rule id="Y108-COUPLING">
+    <desc>Minimize dependencies between modules. Loose coupling preferred.</desc>
+    <examples>
+      <example kind="good">Use events or callbacks instead of direct cross-module calls.</example>
+    </examples>
+    <related>
+      <ref id="Y103-DEPENDENCY-INJECTION"/>
+      <ref id="Z100-TIGHT-COUPLING"/>
+    </related>
+  </rule>
+  <rule id="Y109-FLAT-OVER-NESTED">
+    <desc>Prefer flat module structure over deep nesting.</desc>
+    <examples>
+      <example kind="good">`user_auth` and `user_profile` modules instead of 5+ levels of
+folders.
+</example>
+    </examples>
+  </rule>
+</rules>

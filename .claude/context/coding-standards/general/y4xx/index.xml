@@ -1,0 +1,10 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Y4XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Y40x" kind="tens" desc="Naming, AAA, fixtures, parameterization." label="Structure">
+      <doc_ref path="./structure.xml"/>
+    </entry>
+    <entry id="Y41x" kind="tens" desc="Isolation, speed, helpers, TDD, coverage." label="Quality">
+      <doc_ref path="./quality.xml"/>
+    </entry>
+  </section>
+</index>

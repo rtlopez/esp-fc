@@ -1,0 +1,68 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y2XX-BEHAVIORAL" title="Behavioral" kind="ruleset" version="2" updated="2026-02-20" status="active" source="behavioral.md">
+  <rule id="Y220-STRATEGY-PATTERN">
+    <desc>Define family of algorithms, make them interchangeable.</desc>
+    <examples>
+      <example kind="good">Different `Parser` implementations, selected at runtime via `DataProcessor(parser=...)`.</example>
+    </examples>
+    <related>
+      <ref id="Y103-DEPENDENCY-INJECTION"/>
+    </related>
+  </rule>
+  <rule id="Y221-OBSERVER-PATTERN">
+    <desc>Define subscription mechanism to notify multiple objects of events.</desc>
+    <examples>
+      <example kind="good">Event system where `TransactionProcessor` notifies listeners of completed transactions.</example>
+    </examples>
+  </rule>
+  <rule id="Y222-COMMAND-PATTERN">
+    <desc>Encapsulate request as object, enabling queuing, logging, undo.</desc>
+    <examples>
+      <example kind="good">`ParseCommand`, `ValidateCommand`, `TransformCommand` with `.execute()` method.</example>
+    </examples>
+  </rule>
+  <rule id="Y223-TEMPLATE-METHOD">
+    <desc>Define algorithm skeleton, let subclasses override steps.</desc>
+    <examples>
+      <example kind="good">ABC `Parser` with `parse()` that calls abstract `parse_line()`, `validate_line()`.</example>
+    </examples>
+    <related>
+      <ref id="Y105-OPEN-CLOSED"/>
+    </related>
+  </rule>
+  <rule id="Y224-ITERATOR-PATTERN">
+    <desc>Access elements sequentially without exposing representation.</desc>
+    <examples>
+      <example kind="good">`Parser` yields transactions one at a time with `yield`.</example>
+    </examples>
+  </rule>
+  <rule id="Y225-STATE-PATTERN">
+    <desc>Change behavior when internal state changes.</desc>
+    <examples>
+      <example kind="good">`Connection` with states: `Connected`, `Disconnected`, `Connecting`.</example>
+    </examples>
+  </rule>
+  <rule id="Y226-CHAIN-OF-RESPONSIBILITY">
+    <desc>Pass request along chain until handled.</desc>
+    <examples>
+      <example kind="good">Validation pipeline where each validator checks and passes to next.</example>
+    </examples>
+  </rule>
+  <rule id="Y227-MEDIATOR-PATTERN">
+    <desc>Encapsulate how objects interact.</desc>
+    <examples>
+      <example kind="good">`EventBus` mediates communication between publishers and subscribers.</example>
+    </examples>
+  </rule>
+  <rule id="Y228-MEMENTO-PATTERN">
+    <desc>Capture and restore object state.</desc>
+    <examples>
+      <example kind="good">Transaction history with undo/redo using snapshots.</example>
+    </examples>
+  </rule>
+  <rule id="Y229-VISITOR-PATTERN">
+    <desc>Separate algorithm from object structure.</desc>
+    <examples>
+      <example kind="good">`TransactionVisitor` with `visit_debit()`, `visit_credit()` methods.</example>
+    </examples>
+  </rule>
+</rules>

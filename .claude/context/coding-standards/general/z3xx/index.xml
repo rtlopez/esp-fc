@@ -1,0 +1,8 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Z3XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Source" kind="other" desc=""/>
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Z30x" kind="tens" desc="Common testing pitfalls." label="Testing Anti-patterns">
+      <doc_ref path="./z3xx-testing-antipatterns.xml"/>
+    </entry>
+  </section>
+</index>

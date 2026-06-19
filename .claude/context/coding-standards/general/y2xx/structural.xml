@@ -1,0 +1,51 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y2XX-STRUCTURAL" title="Structural" kind="ruleset" version="2" updated="2026-02-20" status="active" source="structural.md">
+  <rule id="Y210-ADAPTER-PATTERN">
+    <desc>Convert one interface to another clients expect.</desc>
+    <examples>
+      <example kind="good">Adapt pandas DataFrame to `Sequence[Transaction]` protocol.</example>
+    </examples>
+    <related>
+      <ref id="Y114-ADAPTER-PATTERN"/>
+    </related>
+  </rule>
+  <rule id="Y211-FACADE-PATTERN">
+    <desc>Unified interface to set of interfaces in subsystem.</desc>
+    <examples>
+      <example kind="good">`BankingAPI` hides complexity of parsing, validation, conversion.</example>
+    </examples>
+    <related>
+      <ref id="Y112-FACADE-PATTERN"/>
+    </related>
+  </rule>
+  <rule id="Y212-DECORATOR-PATTERN">
+    <desc>Add behavior to objects dynamically.</desc>
+    <examples>
+      <example kind="good">`@log_calls`, `@retry`, `@cache` decorators that wrap functions.</example>
+    </examples>
+  </rule>
+  <rule id="Y213-PROXY-PATTERN">
+    <desc>Provide placeholder/surrogate for another object.</desc>
+    <examples>
+      <example kind="good">Lazy-loading proxy that loads data only when first accessed.</example>
+    </examples>
+  </rule>
+  <rule id="Y214-COMPOSITE-PATTERN">
+    <desc>Compose objects into tree structures.</desc>
+    <examples>
+      <example kind="good">`CompositeValidator` contains multiple validators, validates all.</example>
+    </examples>
+  </rule>
+  <rule id="Y215-FLYWEIGHT-PATTERN">
+    <desc>Share common state to support large numbers of objects.</desc>
+    <exceptions>Python does this automatically for small ints/strings.</exceptions>
+    <examples>
+      <example kind="good">String interning, cached immutable objects.</example>
+    </examples>
+  </rule>
+  <rule id="Y216-BRIDGE-PATTERN">
+    <desc>Decouple abstraction from implementation.</desc>
+    <examples>
+      <example kind="good">Separate `Parser` (abstraction) from `LineReader` (implementation).</example>
+    </examples>
+  </rule>
+</rules>

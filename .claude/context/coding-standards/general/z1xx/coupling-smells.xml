@@ -1,0 +1,64 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Z1XX-COUPLING-SMELLS" title="Coupling Smells" kind="ruleset" version="2" updated="2026-02-20" status="active" source="coupling-smells.md">
+  <rule id="Z100-TIGHT-COUPLING">
+    <desc>Classes/modules directly depend on concrete implementations.</desc>
+    <better>
+      <ref id="Y103-DEPENDENCY-INJECTION"/>
+      <ref id="Y104-DEPENDENCY-INVERSION"/>
+    </better>
+    <why_bad>Changes ripple through system, hard to test, inflexible.</why_bad>
+  </rule>
+  <rule id="Z101-CIRCULAR-DEPS">
+    <desc>Module A imports B, B imports A.</desc>
+    <better>Break dependency cycles with clear interfaces and layering.</better>
+    <why_bad>Import errors, unclear dependencies, fragile.</why_bad>
+  </rule>
+  <rule id="Z102-GOD-OBJECTS">
+    <desc>One class does everything.</desc>
+    <better>
+      <ref id="Y100-SINGLE-RESPONSIBILITY"/>
+      <ref id="Y102-SEPARATION-OF-CONCERNS"/>
+    </better>
+    <why_bad>Hard to understand, test, maintain. Violates SRP.</why_bad>
+  </rule>
+  <rule id="Z103-FEATURE-ENVY">
+    <desc>Method uses another class's data more than its own.</desc>
+    <better>Move method to the class it envies.</better>
+    <why_bad>Wrong responsibility placement, tight coupling.</why_bad>
+  </rule>
+  <rule id="Z104-INAPPROPRIATE-INTIMACY">
+    <desc>Classes know too much about each other's internals.</desc>
+    <better>
+      <ref id="Y101-INTERFACE-SEGREGATION"/>
+      <ref id="Y112-FACADE-PATTERN"/>
+    </better>
+    <why_bad>Breaks encapsulation, fragile to changes.</why_bad>
+  </rule>
+  <rule id="Z105-MESSAGE-CHAINS">
+    <desc>Long chains like `a.b.c.d.e()`.</desc>
+    <better>Add methods to intermediate objects.</better>
+    <why_bad>Fragile, violates Law of Demeter.</why_bad>
+  </rule>
+  <rule id="Z106-MIDDLE-MAN">
+    <desc>Class just delegates to another class.</desc>
+    <better>Remove middle man or give it real responsibility.</better>
+    <why_bad>Unnecessary indirection.</why_bad>
+  </rule>
+  <rule id="Z107-DATA-CLUMPS">
+    <desc>Same group of parameters passed together everywhere.</desc>
+    <better>Introduce a parameter object or value object.</better>
+    <why_bad>Should be an object.</why_bad>
+  </rule>
+  <rule id="Z108-PRIMITIVE-OBSESSION">
+    <desc>Using primitives instead of small objects.</desc>
+    <better>Introduce value objects or enums instead of primitives.</better>
+    <why_bad>Loses type safety, business meaning.</why_bad>
+  </rule>
+  <rule id="Z109-SHOTGUN-SURGERY">
+    <desc>Single change requires modifying many classes.</desc>
+    <better>
+      <ref id="Y100-SINGLE-RESPONSIBILITY"/>
+      <ref id="Y107-COHESION"/>
+    </better>
+    <why_bad>Error-prone, indicates poor design.</why_bad>
+  </rule>
+</rules>

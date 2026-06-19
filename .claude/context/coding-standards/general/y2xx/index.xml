@@ -1,0 +1,16 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Y2XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Y20x" kind="tens" desc="Object creation and lifecycle choices." label="Creational">
+      <doc_ref path="./creational.xml"/>
+    </entry>
+    <entry id="Y21x" kind="tens" desc="Composition, wrappers, interface adaptation." label="Structural">
+      <doc_ref path="./structural.xml"/>
+    </entry>
+    <entry id="Y22x" kind="tens" desc="Algorithms and object interaction patterns." label="Behavioral">
+      <doc_ref path="./behavioral.xml"/>
+    </entry>
+    <entry id="Y23x" kind="tens" desc="System-level patterns and data access." label="Architectural">
+      <doc_ref path="./architectural.xml"/>
+    </entry>
+  </section>
+</index>

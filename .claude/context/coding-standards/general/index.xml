@@ -1,0 +1,30 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Guidelines" kind="guidelines" desc="Normative rules to follow.">
+    <entry id="Y1xx" kind="hundreds" desc="Structure, modularity, and boundaries." label="Code Organization &amp; Modularity">
+      <doc_ref path="./y1xx/index.xml"/>
+    </entry>
+    <entry id="Y2xx" kind="hundreds" desc="Pattern catalog by category." label="Design Patterns">
+      <doc_ref path="./y2xx/index.xml"/>
+    </entry>
+    <entry id="Y3xx" kind="hundreds" desc="Naming, comments, and clarity." label="Documentation &amp; Readability">
+      <doc_ref path="./y3xx/index.xml"/>
+    </entry>
+    <entry id="Y4xx" kind="hundreds" desc="Testing structure and quality." label="Testing">
+      <doc_ref path="./y4xx/index.xml"/>
+    </entry>
+  </section>
+  <section title="Anti-Patterns" kind="antipatterns" desc="Patterns to avoid.">
+    <entry id="Z1xx" kind="hundreds" desc="Coupling smells and change pain." label="Coupling Issues">
+      <doc_ref path="./z1xx/index.xml"/>
+    </entry>
+    <entry id="Z2xx" kind="hundreds" desc="Abstraction mistakes and design smells." label="Poor Abstractions">
+      <doc_ref path="./z2xx/index.xml"/>
+    </entry>
+    <entry id="Z3xx" kind="hundreds" desc="Common testing pitfalls." label="Testing Anti-patterns">
+      <doc_ref path="./z3xx/index.xml"/>
+    </entry>
+    <entry id="Z4xx" kind="hundreds" desc="Other general anti-patterns." label="Miscellaneous">
+      <doc_ref path="./z4xx/index.xml"/>
+    </entry>
+  </section>
+</index>

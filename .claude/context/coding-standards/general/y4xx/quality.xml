@@ -1,0 +1,42 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y4XX-QUALITY" title="Quality" kind="ruleset" version="2" updated="2026-02-20" status="active" source="quality.md">
+  <rule id="Y410-ISOLATION">
+    <desc>Tests should be independent and runnable in any order.</desc>
+    <examples>
+      <example kind="good">No shared mutable state across tests.</example>
+    </examples>
+  </rule>
+  <rule id="Y411-FAST-TESTS">
+    <desc>Unit tests should be fast (&lt;1s each).</desc>
+    <examples>
+      <example kind="good">Stub slow network or disk operations.</example>
+    </examples>
+  </rule>
+  <rule id="Y412-TEST-HELPERS">
+    <desc>Extract common test utilities to helper functions or fixtures.</desc>
+    <examples>
+      <example kind="good">`make_transaction()` factory for tests.</example>
+    </examples>
+  </rule>
+  <rule id="Y413-DOCTEST">
+    <desc>Use doc-tests where supported to validate examples.</desc>
+    <examples>
+      <example kind="good">Run examples in documentation as tests.</example>
+    </examples>
+  </rule>
+  <rule id="Y414-PROPERTY-TESTING">
+    <desc>Consider property-based testing for complex logic.</desc>
+    <examples>
+      <example kind="good">Generate random inputs to validate invariants.</example>
+    </examples>
+  </rule>
+  <rule id="Y415-TDD">
+    <desc>Write tests before implementation (Test-Driven Development).</desc>
+    <examples>
+      <example kind="good">Red (failing test) → Green (make it pass) → Refactor.</example>
+    </examples>
+  </rule>
+  <rule id="Y416-TEST-COVERAGE">
+    <desc>Aim for high coverage of business logic (80%+).</desc>
+    <exceptions>Prioritize critical paths over trivial getters/setters.</exceptions>
+  </rule>
+</rules>

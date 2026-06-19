@@ -1,0 +1,10 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Y3XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Y30x" kind="tens" desc="Names, booleans, and comment intent." label="Naming and Comments">
+      <doc_ref path="./naming.xml"/>
+    </entry>
+    <entry id="Y31x" kind="tens" desc="Cleanup, TODOs, constants, assertions." label="Maintenance and Readability">
+      <doc_ref path="./maintenance.xml"/>
+    </entry>
+  </section>
+</index>

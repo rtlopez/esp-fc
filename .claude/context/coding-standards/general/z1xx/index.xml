@@ -1,0 +1,10 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Z1XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Z10x" kind="tens" desc="Tight coupling, message chains, data clumps." label="Coupling Smells">
+      <doc_ref path="./coupling-smells.xml"/>
+    </entry>
+    <entry id="Z11x" kind="tens" desc="Divergent change, parallel inheritance, temporary fields." label="Change Smells">
+      <doc_ref path="./change-smells.xml"/>
+    </entry>
+  </section>
+</index>

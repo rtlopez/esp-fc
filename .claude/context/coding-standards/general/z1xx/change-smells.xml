@@ -1,0 +1,33 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Z1XX-CHANGE-SMELLS" title="Change Smells" kind="ruleset" version="2" updated="2026-02-20" status="active" source="change-smells.md">
+  <rule id="Z110-DIVERGENT-CHANGE">
+    <desc>Class changes for multiple different reasons.</desc>
+    <better>
+      <ref id="Y100-SINGLE-RESPONSIBILITY"/>
+    </better>
+    <why_bad>Violates SRP, hard to maintain.</why_bad>
+  </rule>
+  <rule id="Z111-REFUSED-BEQUEST">
+    <desc>Subclass doesn't use parent's methods.</desc>
+    <better>
+      <ref id="Y113-COMPOSITION-OVER-INHERITANCE"/>
+    </better>
+    <why_bad>Wrong inheritance hierarchy.</why_bad>
+  </rule>
+  <rule id="Z112-PARALLEL-INHERITANCE">
+    <desc>Adding subclass in one hierarchy requires adding in another.</desc>
+    <better>
+      <ref id="Y113-COMPOSITION-OVER-INHERITANCE"/>
+    </better>
+    <why_bad>Maintenance burden, duplication.</why_bad>
+  </rule>
+  <rule id="Z113-SPECULATIVE-GENERALITY">
+    <desc>Code for future features that aren't needed yet.</desc>
+    <better>Build what you need now.</better>
+    <why_bad>Complexity without benefit, YAGNI violation.</why_bad>
+  </rule>
+  <rule id="Z114-TEMPORARY-FIELD">
+    <desc>Instance variable only used in some methods.</desc>
+    <better>Pass as parameter or extract class.</better>
+    <why_bad>Confusing, suggests wrong abstraction.</why_bad>
+  </rule>
+</rules>

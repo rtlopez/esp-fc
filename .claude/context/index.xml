@@ -1,0 +1,31 @@
+<index id="CTX-INDEX" title="Context index" kind="manifest" version="1" updated="2026-03-12" status="active">
+  <section title="Entry Points" kind="entrypoints" desc="Primary context entry points.">
+    <entry id="CODING-STANDARDS-MD" title="Coding standards (entrypoint)" kind="doc" desc="Human entrypoint to the standards packs.">
+      <doc_ref path="./coding-standards.md"/>
+    </entry>
+    <entry id="CS-GENERAL-CATALOG" title="General standards catalog" kind="doc" desc="Full general rule catalog.">
+      <doc_ref path="./coding-standards/general/index-catalog.xml"/>
+    </entry>
+    <entry id="CS-GENERAL-INDEX" title="General standards index" kind="doc" desc="Navigation index for general standards.">
+      <doc_ref path="./coding-standards/general/index.xml"/>
+    </entry>
+    <entry id="CS-JAVA-CATALOG" title="Java standards catalog" kind="doc" desc="Full Java rule catalog.">
+      <doc_ref path="./coding-standards/java/index-catalog.xml"/>
+    </entry>
+    <entry id="CS-JAVA-INDEX" title="Java standards index" kind="doc" desc="Navigation index for Java standards.">
+      <doc_ref path="./coding-standards/java/index.xml"/>
+    </entry>
+    <entry id="CS-PYTHON-CATALOG" title="Python standards catalog" kind="doc" desc="Full Python rule catalog.">
+      <doc_ref path="./coding-standards/python/index-catalog.xml"/>
+    </entry>
+    <entry id="CS-PYTHON-INDEX" title="Python standards index" kind="doc" desc="Navigation index for Python standards.">
+      <doc_ref path="./coding-standards/python/index.xml"/>
+    </entry>
+    <entry id="CS-TYPESCRIPT-CATALOG" title="TypeScript standards catalog" kind="doc" desc="Full TypeScript rule catalog.">
+      <doc_ref path="./coding-standards/typescript/index-catalog.xml"/>
+    </entry>
+    <entry id="CS-TYPESCRIPT-INDEX" title="TypeScript standards index" kind="doc" desc="Navigation index for TypeScript standards.">
+      <doc_ref path="./coding-standards/typescript/index.xml"/>
+    </entry>
+  </section>
+</index>

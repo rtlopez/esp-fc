@@ -1,0 +1,56 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Z3XX-Z3XX-TESTING-ANTIPATTERNS" title="Testing Anti-patterns" kind="ruleset" version="2" updated="2026-02-20" status="active" source="z3xx-testing-antipatterns.md">
+  <rule id="Z300-TESTING-IMPLEMENTATION">
+    <desc>Tests know too much about implementation details.</desc>
+    <better>Test behavior, not implementation.</better>
+    <why_bad>Brittle, refactoring breaks tests.</why_bad>
+  </rule>
+  <rule id="Z301-BRITTLE-TESTS">
+    <desc>Tests break on unrelated changes.</desc>
+    <better>Y410-ISOLATION, test public interface.</better>
+    <why_bad>False negatives, maintenance burden.</why_bad>
+  </rule>
+  <rule id="Z302-TEST-INTERDEPENDENCE">
+    <desc>Tests depend on each other, must run in order.</desc>
+    <better>
+      <ref id="Y410-ISOLATION"/>
+    </better>
+    <why_bad>Can't run individually, hard to debug.</why_bad>
+  </rule>
+  <rule id="Z303-OVER-MOCKING">
+    <desc>Mocking everything including internal logic.</desc>
+    <better>Y405-MOCKING only external dependencies.</better>
+    <why_bad>Tests don't test real code.</why_bad>
+  </rule>
+  <rule id="Z304-MISSING-EDGE-CASES">
+    <desc>Only happy path tested.</desc>
+    <better>Y407-TEST-DATA with edge cases.</better>
+    <why_bad>Bugs in error handling.</why_bad>
+  </rule>
+  <rule id="Z305-SLOW-TESTS">
+    <desc>Unit tests take minutes to run.</desc>
+    <better>Y411-FAST-TESTS, use mocks.</better>
+    <why_bad>Developers don't run them.</why_bad>
+  </rule>
+  <rule id="Z306-TESTING-PRIVATE-METHODS">
+    <desc>Tests call private methods directly.</desc>
+    <better>Test through public interface.</better>
+    <why_bad>Couples tests to implementation.</why_bad>
+  </rule>
+  <rule id="Z307-ASSERTION-ROULETTE">
+    <desc>Multiple unrelated asserts, unclear which failed.</desc>
+    <better>
+      <ref id="Y402-ONE-ASSERT-CONCEPT"/>
+    </better>
+    <why_bad>Hard to debug failures.</why_bad>
+  </rule>
+  <rule id="Z308-TEST-CODE-IN-PRODUCTION">
+    <desc>Test utilities, fixtures in production code.</desc>
+    <better>Separate test code.</better>
+    <why_bad>Bloat, security risk.</why_bad>
+  </rule>
+  <rule id="Z309-IGNORING-FAILURES">
+    <desc>Commented-out failing tests.</desc>
+    <better>Fix or remove tests.</better>
+    <why_bad>Technical debt, false confidence.</why_bad>
+  </rule>
+</rules>

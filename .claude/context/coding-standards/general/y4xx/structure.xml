@@ -1,0 +1,58 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y4XX-STRUCTURE" title="Structure" kind="ruleset" version="2" updated="2026-02-20" status="active" source="structure.md">
+  <rule id="Y400-TEST-NAMING">
+    <desc>Test names describe what they test and expected behavior.</desc>
+    <examples>
+      <example kind="good">`test_parse_invalid_date_raises_error`.</example>
+    </examples>
+  </rule>
+  <rule id="Y401-AAA-PATTERN">
+    <desc>Tests follow Arrange-Act-Assert structure.</desc>
+    <examples>
+      <example kind="good">
+        <code lang="text"><![CDATA[# Arrange
+input = "2025-01-15,100.00"
+# Act
+result = parse(input)
+# Assert
+assert result.amount == 100.00
+]]></code>
+      </example>
+    </examples>
+  </rule>
+  <rule id="Y402-ONE-ASSERT-CONCEPT">
+    <desc>Each test verifies one concept (multiple asserts OK if related).</desc>
+    <examples>
+      <example kind="good">Test amount parsing separately from date parsing.</example>
+    </examples>
+  </rule>
+  <rule id="Y403-FIXTURES">
+    <desc>Use fixtures or shared setup helpers for reusable test data.</desc>
+    <examples>
+      <example kind="good">`sample_transaction()` helper used across tests.</example>
+    </examples>
+  </rule>
+  <rule id="Y404-PARAMETRIZE">
+    <desc>Use data-driven tests for multiple inputs and outputs. For first-party Python tests, ADR-034 (§2/§10) takes precedence: explicit per-scenario test methods are the default, and parametrize is reserved for a narrow data-driven property/contract suite, not normal behavioural scenarios.</desc>
+    <examples>
+      <example kind="good">A table of inputs and expected results in one test.</example>
+    </examples>
+  </rule>
+  <rule id="Y405-MOCKING">
+    <desc>Mock external dependencies (APIs, databases), not internal logic.</desc>
+    <examples>
+      <example kind="good">Mock HTTP calls in unit tests; keep business logic real.</example>
+    </examples>
+  </rule>
+  <rule id="Y406-INTEGRATION-TESTS">
+    <desc>Test full workflows, not just units.</desc>
+    <examples>
+      <example kind="good">Parser + validator + persistence end-to-end.</example>
+    </examples>
+  </rule>
+  <rule id="Y407-TEST-DATA">
+    <desc>Use realistic test data and include edge cases.</desc>
+    <examples>
+      <example kind="good">Empty strings, max values, negative numbers, invalid formats.</example>
+    </examples>
+  </rule>
+</rules>

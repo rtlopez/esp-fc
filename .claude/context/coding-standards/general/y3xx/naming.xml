@@ -1,0 +1,33 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y3XX-NAMING" title="Naming and Comments" kind="ruleset" version="2" updated="2026-02-20" status="active" source="naming.md">
+  <rule id="Y300-EXPRESSIVE-NAMES">
+    <desc>Use clear, descriptive names. Avoid unnecessary abbreviations.</desc>
+    <exceptions>Common abbreviations are OK when widely understood.</exceptions>
+    <examples>
+      <example kind="good">`transaction_parser` not `txn_prs`.</example>
+    </examples>
+  </rule>
+  <rule id="Y301-VERB-FUNCTIONS">
+    <desc>Function names start with verbs.</desc>
+    <examples>
+      <example kind="good">`parse_transaction()` not `transaction()`.</example>
+    </examples>
+  </rule>
+  <rule id="Y302-NOUN-CLASSES">
+    <desc>Class names are nouns.</desc>
+    <examples>
+      <example kind="good">`TransactionParser` not `ParseTransaction`.</example>
+    </examples>
+  </rule>
+  <rule id="Y303-BOOL-NAMING">
+    <desc>Boolean variables and functions use `is_`, `has_`, `can_`.</desc>
+    <examples>
+      <example kind="good">`is_valid`, `has_errors`, `can_parse`.</example>
+    </examples>
+  </rule>
+  <rule id="Y304-COMMENT-WHY-NOT-WHAT">
+    <desc>Comments explain *why*, not *what* (code shows what).</desc>
+    <examples>
+      <example kind="good">`# Use Decimal to avoid float precision errors`.</example>
+    </examples>
+  </rule>
+</rules>

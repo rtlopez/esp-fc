@@ -1,0 +1,47 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y1XX-STRUCTURE-AND-PATTERNS" title="Structure and Patterns" kind="ruleset" version="2" updated="2026-02-20" status="active" source="structure-and-patterns.md">
+  <rule id="Y110-CONSTANTS-MODULE">
+    <desc>Group many constants in a dedicated module.</desc>
+    <examples>
+      <example kind="good">`config` module with `DATE_FORMAT`, `MAX_RETRIES`, etc.</example>
+    </examples>
+  </rule>
+  <rule id="Y111-UTILS-ANTIPATTERN">
+    <desc>Avoid catch-all `utils` modules. Use specific names.</desc>
+    <examples>
+      <example kind="good">`date_helpers` not `utils`.</example>
+    </examples>
+    <related>
+      <ref id="Y100-SINGLE-RESPONSIBILITY"/>
+      <ref id="Z201-WRONG-ABSTRACTION-LEVEL"/>
+    </related>
+  </rule>
+  <rule id="Y112-FACADE-PATTERN">
+    <desc>Provide a simple interface to a complex subsystem.</desc>
+    <examples>
+      <example kind="good">`BankingAPI` hides parsing, validation, and conversion details.</example>
+    </examples>
+    <related>
+      <ref id="Y211-FACADE-PATTERN"/>
+    </related>
+  </rule>
+  <rule id="Y113-COMPOSITION-OVER-INHERITANCE">
+    <desc>Prefer composition (has-a) over inheritance (is-a).</desc>
+    <examples>
+      <example kind="good">`DataProcessor` has a `Parser` and `Producer` rather than inheriting.</example>
+    </examples>
+    <related>
+      <ref id="Y103-DEPENDENCY-INJECTION"/>
+    </related>
+  </rule>
+  <rule id="Y114-ADAPTER-PATTERN">
+    <desc>Convert the interface of one class to another clients expect.</desc>
+    <examples>
+      <example kind="good">`OrderAdapter` wraps a third-party order object to match an internal
+`OrderSource` interface.
+</example>
+    </examples>
+    <related>
+      <ref id="Y210-ADAPTER-PATTERN"/>
+    </related>
+  </rule>
+</rules>

@@ -1,0 +1,67 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Y2XX-ARCHITECTURAL" title="Architectural" kind="ruleset" version="2" updated="2026-02-20" status="active" source="architectural.md">
+  <rule id="Y230-NULL-OBJECT-PATTERN">
+    <desc>Use object with do-nothing behavior instead of None checks.</desc>
+    <exceptions>Modern Python uses `Optional[T]` and explicit None checks instead.</exceptions>
+    <examples>
+      <example kind="good">`NullLogger` that implements `Logger` but does nothing.</example>
+    </examples>
+  </rule>
+  <rule id="Y231-REGISTRY-PATTERN">
+    <desc>Global registry of objects by key.</desc>
+    <examples>
+      <example kind="good">Parser registry: `register_parser("csv", CsvParser)`.</example>
+    </examples>
+  </rule>
+  <rule id="Y232-DEPENDENCY-CONTAINER">
+    <desc>IoC container managing object creation and dependencies.</desc>
+    <examples>
+      <example kind="good">Simple dict-based container for dependency injection.</example>
+    </examples>
+    <related>
+      <ref id="Y103-DEPENDENCY-INJECTION"/>
+    </related>
+  </rule>
+  <rule id="Y233-REPOSITORY-PATTERN">
+    <desc>Mediates between domain and data mapping layers.</desc>
+    <examples>
+      <example kind="good">`TransactionRepository` with `.find_by_id()`, `.save()` methods.</example>
+    </examples>
+  </rule>
+  <rule id="Y234-SPECIFICATION-PATTERN">
+    <desc>Business rules as composable objects.</desc>
+    <examples>
+      <example kind="good">`AmountGreaterThan(100) &amp; CategoryEquals("Food")` specifications.</example>
+    </examples>
+  </rule>
+  <rule id="Y235-EVENT-SOURCING">
+    <desc>Store state changes as sequence of events.</desc>
+    <examples>
+      <example kind="good">Transaction audit log with all state transitions.</example>
+    </examples>
+  </rule>
+  <rule id="Y236-PLUGIN-ARCHITECTURE">
+    <desc>Load and execute code dynamically.</desc>
+    <examples>
+      <example kind="good">Parser plugins discovered via entry points.</example>
+    </examples>
+  </rule>
+  <rule id="Y237-ACTIVE-RECORD">
+    <desc>Object wraps database row with data access methods.</desc>
+    <exceptions>Prefer repository pattern for better testability (Y233).</exceptions>
+    <examples>
+      <example kind="good">`transaction.save()`, `transaction.delete()`.</example>
+    </examples>
+  </rule>
+  <rule id="Y238-MONOSTATE-PATTERN">
+    <desc>All instances share state (alternative to Singleton).</desc>
+    <examples>
+      <example kind="good">Class where all instances access shared class variables.</example>
+    </examples>
+  </rule>
+  <rule id="Y239-DOUBLE-DISPATCH">
+    <desc>Dynamic dispatch based on two objects' types.</desc>
+    <examples>
+      <example kind="good">Visitor pattern implementation.</example>
+    </examples>
+  </rule>
+</rules>

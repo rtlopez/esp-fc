@@ -1,0 +1,8 @@
+<index id="CTX-CODING-STANDARDS-GENERAL-Z4XX-INDEX" title="index" kind="manifest" version="2" updated="2026-02-20" status="active" source="index.md">
+  <section title="Source" kind="other" desc=""/>
+  <section title="Tens" kind="tens" desc="Tens-level groupings within a hundreds bucket.">
+    <entry id="Z40x" kind="tens" desc="Other general anti-patterns." label="Miscellaneous">
+      <doc_ref path="./z4xx-miscellaneous.xml"/>
+    </entry>
+  </section>
+</index>

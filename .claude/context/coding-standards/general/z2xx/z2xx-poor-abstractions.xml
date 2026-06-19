@@ -1,0 +1,63 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Z2XX-Z2XX-POOR-ABSTRACTIONS" title="Poor Abstractions" kind="ruleset" version="2" updated="2026-02-20" status="active" source="z2xx-poor-abstractions.md">
+  <rule id="Z200-LEAKY-ABSTRACTION">
+    <desc>Implementation details leak through interface.</desc>
+    <better>Hide implementation, stable interface.</better>
+    <why_bad>Users coupled to internals, defeats abstraction.</why_bad>
+  </rule>
+  <rule id="Z201-WRONG-ABSTRACTION-LEVEL">
+    <desc>Mixing high and low-level concepts.</desc>
+    <better>
+      <ref id="Y102-SEPARATION-OF-CONCERNS"/>
+    </better>
+    <why_bad>Hard to understand, change, test.</why_bad>
+    <examples>
+      <example kind="bad">Business logic mixed with SQL queries.</example>
+    </examples>
+  </rule>
+  <rule id="Z202-PREMATURE-ABSTRACTION">
+    <desc>Abstracting before patterns emerge.</desc>
+    <better>Wait for 3rd use case (Rule of Three).</better>
+    <why_bad>Wrong abstraction is worse than duplication.</why_bad>
+  </rule>
+  <rule id="Z203-MISSING-ABSTRACTION">
+    <desc>Duplicated code that should be abstracted.</desc>
+    <better>Extract common code when pattern clear.</better>
+    <why_bad>Maintenance burden, inconsistency.</why_bad>
+  </rule>
+  <rule id="Z204-INCOMPLETE-ABSTRACTION">
+    <desc>Abstraction doesn't cover all cases.</desc>
+    <better>Rethink abstraction or accept limitations.</better>
+    <why_bad>Special cases leak out.</why_bad>
+  </rule>
+  <rule id="Z205-BOOLEAN-PARAMETERS">
+    <desc>Function with boolean flag changing behavior.</desc>
+    <better>Two functions or Y220-STRATEGY-PATTERN.</better>
+    <why_bad>Two functions in one, unclear at call site.</why_bad>
+    <examples>
+      <example kind="bad">`def process(data, strict=True)`</example>
+    </examples>
+  </rule>
+  <rule id="Z206-LONG-PARAMETER-LIST">
+    <desc>Function with many parameters (&gt;5).</desc>
+    <better>Use a parameter object or options struct.</better>
+    <why_bad>Hard to remember, use, test.</why_bad>
+  </rule>
+  <rule id="Z207-OUTPUT-PARAMETER">
+    <desc>Modifying argument to return value.</desc>
+    <better>Return value explicitly.</better>
+    <why_bad>Unclear, violates functional style.</why_bad>
+    <examples>
+      <example kind="bad">`def compute(input, output_list)` modifies `output_list`</example>
+    </examples>
+  </rule>
+  <rule id="Z208-FLAG-ARGUMENT">
+    <desc>Boolean that completely changes function behavior.</desc>
+    <better>Split into two functions.</better>
+    <why_bad>Really two different functions.</why_bad>
+  </rule>
+  <rule id="Z209-TRAIN-WRECK">
+    <desc>Long method chains `a.b().c().d().e()`.</desc>
+    <better>Y112-FACADE-PATTERN or fewer levels.</better>
+    <why_bad>Tight coupling, fragile.</why_bad>
+  </rule>
+</rules>

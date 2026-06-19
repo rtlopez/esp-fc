@@ -1,0 +1,33 @@
+<rules id="CTX-CODING-STANDARDS-GENERAL-Z4XX-Z4XX-MISCELLANEOUS" title="Miscellaneous" kind="ruleset" version="2" updated="2026-02-20" status="active" source="z4xx-miscellaneous.md">
+  <rule id="Z400-MAGIC-NUMBERS">
+    <desc>Unexplained constants in code.</desc>
+    <better>Y314-MAGIC-NUMBERS with named constants.</better>
+    <why_bad>Unclear meaning, hard to maintain.</why_bad>
+    <examples>
+      <example kind="bad">`if age &gt; 65:` what does 65 mean?</example>
+    </examples>
+  </rule>
+  <rule id="Z401-DEEP-NESTING">
+    <desc>Code nested 5+ levels deep.</desc>
+    <better>Use early returns and extract helper functions.</better>
+    <why_bad>Hard to read and understand.</why_bad>
+  </rule>
+  <rule id="Z402-LONG-FUNCTIONS">
+    <desc>Functions &gt; 50 lines.</desc>
+    <better>Extract smaller functions.</better>
+    <why_bad>Hard to understand, test, and reuse.</why_bad>
+  </rule>
+  <rule id="Z403-INCONSISTENT-NAMING">
+    <desc>Similar things named differently.</desc>
+    <better>Y300-EXPRESSIVE-NAMES consistently.</better>
+    <why_bad>Confusing, hard to remember.</why_bad>
+    <examples>
+      <example kind="bad">`get_user`, `fetch_transaction`, `retrieve_account`.</example>
+    </examples>
+  </rule>
+  <rule id="Z404-COMMENTED-OUT-CODE">
+    <desc>Old code left commented out.</desc>
+    <better>Y310-REMOVE-DEAD-CODE, use version control.</better>
+    <why_bad>Clutter and confusion about whether to use it.</why_bad>
+  </rule>
+</rules>
