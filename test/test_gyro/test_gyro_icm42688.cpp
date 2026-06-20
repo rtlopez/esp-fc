@@ -6,13 +6,10 @@
 using namespace Espfc;
 using namespace Espfc::Device;
 
-// Minimal BusDevice mock for unit testing the ICM-42688-P driver.
-// Implements only the three pure-virtual methods; readByte/writeByte are
-// inherited non-virtual helpers that delegate to read()/write().
 class MockBusDevice : public BusDevice
 {
 public:
-  uint8_t readRegs[256] = {};   // registers returned by read/readFast
+  uint8_t readRegs[256] = {};   // registers ret
   uint8_t writeRegs[256] = {};  // registers captured by write
   int writeCalls = 0;
 
@@ -37,7 +34,6 @@ public:
   }
 };
 
-// U001: testConnection() returns true when WHO_AM_I == 0x47
 void test_whoami_match()
 {
   MockBusDevice bus;
@@ -47,7 +43,6 @@ void test_whoami_match()
   TEST_ASSERT_TRUE(dev.testConnection());
 }
 
-// U002: testConnection() returns false when WHO_AM_I != 0x47
 void test_whoami_mismatch()
 {
   MockBusDevice bus;
@@ -57,7 +52,6 @@ void test_whoami_mismatch()
   TEST_ASSERT_FALSE(dev.testConnection());
 }
 
-// U003: begin() returns 0 and issues no register writes when testConnection() fails
 void test_begin_aborts_on_failed_connection()
 {
   MockBusDevice bus;
@@ -68,11 +62,10 @@ void test_begin_aborts_on_failed_connection()
   TEST_ASSERT_EQUAL_INT(0, bus.writeCalls);
 }
 
-// U004: readGyro() decodes big-endian 6-byte buffer correctly
 void test_read_gyro_decoding()
 {
   MockBusDevice bus;
-  // gyro data registers start at 0x25; set big-endian pairs
+  // gyro data registers start at 0x25
   bus.readRegs[0x25] = 0x01; bus.readRegs[0x26] = 0x00; // X = 256
   bus.readRegs[0x27] = 0x02; bus.readRegs[0x28] = 0x00; // Y = 512
   bus.readRegs[0x29] = 0x03; bus.readRegs[0x2A] = 0x00; // Z = 768
@@ -85,7 +78,6 @@ void test_read_gyro_decoding()
   TEST_ASSERT_EQUAL_INT16(768, v.z);
 }
 
-// U005: readAccel() decodes big-endian 6-byte buffer correctly (incl. negative values)
 void test_read_accel_decoding()
 {
   MockBusDevice bus;
@@ -102,21 +94,18 @@ void test_read_accel_decoding()
   TEST_ASSERT_EQUAL_INT16(32767, v.z);
 }
 
-// U006: getType() returns GYRO_ICM42688
 void test_get_type()
 {
   GyroICM42688 dev;
   TEST_ASSERT_EQUAL_INT(GYRO_ICM42688, dev.getType());
 }
 
-// U007: getRate() returns 8000
 void test_get_rate()
 {
   GyroICM42688 dev;
   TEST_ASSERT_EQUAL_INT(8000, dev.getRate());
 }
 
-// U008: enum value and GYRO_MAX are correct at compile time
 void test_enum_values()
 {
   static_assert(GYRO_ICM42688 == 9, "GYRO_ICM42688 must equal 9 (append-only rule)");
@@ -124,7 +113,6 @@ void test_enum_values()
   TEST_PASS();
 }
 
-// U009: getName() returns "ICM42688" for GYRO_ICM42688
 void test_name_table()
 {
   const char* name = GyroDevice::getName(GYRO_ICM42688);
