@@ -1,5 +1,6 @@
 #include "Buzzer.hpp"
 #include "Hal/Gpio.h"
+#include "driver/ledc.h"
 
 namespace Espfc {
 
@@ -10,8 +11,38 @@ Buzzer::Buzzer(Model& model): _model(model), _status(BUZZER_STATUS_IDLE), _wait(
 int Buzzer::begin()
 {
   if(_model.config.pin[PIN_BUZZER] == -1) return 0;
-  Hal::Gpio::pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
-  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)_model.config.buzzer.inverted);
+
+  switch(_model.config.buzzer.type)
+  {
+    case 0:
+      Hal::Gpio::pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
+      Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)_model.config.buzzer.inverted);
+      break;
+    case 1:
+      ledc_timer_config_t ledc_timer = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .duty_resolution = LEDC_TIMER_13_BIT,
+        .timer_num = LEDC_TIMER_0,
+        .freq_hz = static_cast<uint32_t>(_model.config.buzzer.frequency),
+        .clk_cfg = LEDC_AUTO_CLK
+      };
+      ledc_timer_config(&ledc_timer);
+
+      ledc_channel_config_t ledc_channel = {
+        .gpio_num = _model.config.pin[PIN_BUZZER],
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel = LEDC_CHANNEL_0,
+        .intr_type = LEDC_INTR_DISABLE,
+        .timer_sel = LEDC_TIMER_0,
+        .duty = 0,
+        .hpoint = 0
+      };
+      ledc_channel_config(&ledc_channel);
+
+      gpio_set_drive_capability((gpio_num_t)_model.config.pin[PIN_BUZZER], GPIO_DRIVE_CAP_3);
+      break;
+  }
+
   _model.state.buzzer.timer.setRate(100);
 
   return 1;
@@ -70,7 +101,16 @@ void Buzzer::_play(bool v, int time, BuzzerPlayStatus s)
 
 void Buzzer::_write(bool v)
 {
-  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)(_model.config.buzzer.inverted ? !v : v));
+  switch(_model.config.buzzer.type)
+  {
+    case 0:
+      Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)(_model.config.buzzer.inverted ? !v : v));
+      break;
+    case 1:
+      ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, v ? 4096 : 0);
+      ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+      break;
+  }
 }
 
 void Buzzer::_delay(int time)
