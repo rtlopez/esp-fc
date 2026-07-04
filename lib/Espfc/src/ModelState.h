@@ -226,8 +226,7 @@ struct MagState
   VectorFloat calibrationMax;
   VectorFloat calibrationScale;
   VectorFloat calibrationOffset;
-
-  VectorFloat pose;
+  // VectorFloat pose;
 };
 
 struct BaroState
@@ -523,16 +522,6 @@ struct ModelState
   Utils::Timer serialTimer;
 
   Target::Queue appQueue;
-
-  // other state
-  Kalman kalman[AXIS_COUNT_RPYT];
-  VectorFloat gyroPose;
-  Quaternion gyroPoseQ;
-  VectorFloat accelPose;
-  VectorFloat accelPose2;
-  Quaternion accelPoseQ;
-  VectorFloat pose;
-  Quaternion poseQ;
 };
 
 }

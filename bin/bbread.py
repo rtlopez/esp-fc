@@ -34,7 +34,8 @@ signal.signal(signal.SIGINT, handler)
 print("Press CTRL^C to stop")
 
 while True:
-    if stopProcessing: break
+    if stopProcessing:
+        break
     x = ser.read()
     f.write(x)
 

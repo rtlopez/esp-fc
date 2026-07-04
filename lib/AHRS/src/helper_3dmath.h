@@ -118,6 +118,15 @@ public:
     return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
   }
 
+  Quaternion static ensureSign(const Quaternion& q, const Quaternion& reference)
+  {
+    if(dot(q, reference) < 0.0f)
+    {
+      return {-q.w, -q.x, -q.y, -q.z};
+    }
+    return q;
+  }
+
   /**
    * Linear interpolation
    * actually it is nlerp (normalised lerp)

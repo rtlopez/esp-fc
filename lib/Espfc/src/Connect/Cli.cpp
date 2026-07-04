@@ -462,6 +462,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("fusion_mode"), &c.fusion.mode, fusionModeChoices),
     Param(PSTR("fusion_gain_p"), &c.fusion.gain),
     Param(PSTR("fusion_gain_i"), &c.fusion.gainI),
+    Param(PSTR("fusion_use_mag"), &c.fusion.useMag),
 
     Param(PSTR("input_rate_type"), &c.input.rateType, inputRateTypeChoices),
 

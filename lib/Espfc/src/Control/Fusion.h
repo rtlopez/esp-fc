@@ -3,6 +3,8 @@
 #include "Model.h"
 #include <Madgwick.h>
 #include <Mahony.h>
+#include <Rtqf.hpp>
+#include "Utils/Filter.h"
 
 namespace Espfc {
 
@@ -16,24 +18,18 @@ class Fusion
     void restoreGain();
     int update();
 
-    void experimentalFusion();
-    void simpleFusion();
-    void kalmanFusion();
-    void complementaryFusion();
-    void complementaryFusionOld();
-    void rtqfFusion();
-    void updatePoseFromAccelMag();
-
-    // experimental
-    void lerpFusion();
-    void madgwickFusion();
-    void mahonyFusion();
-
   private:
+    Quaternion madgwickFusion(VectorFloat g, VectorFloat a, VectorFloat m);
+    Quaternion mahonyFusion(VectorFloat g, VectorFloat a, VectorFloat m);
+    Quaternion rtqfFusion(VectorFloat g, VectorFloat a, VectorFloat m);
+    Quaternion filterQuaternion(const Quaternion& q);
+
     Model& _model;
-    bool _first;
     Madgwick _madgwick;
     Mahony _mahony;
+    Rtqf _rtqf;
+    Utils::Filter _qFilter[4];
+    bool _useMag;
 };
 
 }
