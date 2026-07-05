@@ -113,7 +113,7 @@ void BaroSensor::readPressure()
 
 void BaroSensor::updateAltitude()
 {
-  Espfc::BaroState& baro = _model.state.baro;
+  auto& baro = _model.state.baro;
 
   baro.altitudeRaw = Utils::toAltitude(baro.pressure);
   baro.altitude = _altitudeFilter.update(baro.altitudeRaw);

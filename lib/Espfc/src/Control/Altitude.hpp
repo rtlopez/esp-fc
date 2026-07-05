@@ -2,6 +2,7 @@
 
 #include "Model.h"
 #include "Utils/Filter.h"
+#include <Complementary.h>
 
 namespace Espfc::Control {
 
@@ -17,14 +18,21 @@ public:
 
     _altitudeFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
     _varioFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
+    _varioFusion.begin(_model.state.accel.timer.rate, _model.config.altHold.baroTau * 0.1f);
 
     return 1;
   }
 
   int update()
   {
-    _model.state.altitude.height = _altitudeFilter.update(_model.state.baro.altitudeGround);
-    _model.state.altitude.vario = _varioFilter.update(_model.state.baro.vario);
+    // upsampling filter to match imu rate
+    auto baroAlt = _altitudeFilter.update(_model.state.baro.altitudeGround);
+    auto baroVario = _varioFilter.update(_model.state.baro.vario);
+    
+    // complementary filter to fuse baro and accel
+    auto accZ = _model.state.accel.world.z;
+    _model.state.altitude.vario = _varioFusion.update(accZ, baroVario);
+    _model.state.altitude.height = baroAlt;
 
     if(_model.config.debug.mode == DEBUG_ALTITUDE)
     {
@@ -41,6 +49,7 @@ private:
   Model& _model;
   Utils::Filter _altitudeFilter;
   Utils::Filter _varioFilter;
+  Complementary _varioFusion;
 };
 
 }

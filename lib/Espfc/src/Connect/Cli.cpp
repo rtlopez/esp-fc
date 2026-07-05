@@ -588,6 +588,7 @@ const Cli::Param * Cli::initialize(ModelConfig& c)
     Param(PSTR("pid_althold_vel_f"), &c.pid[FC_PID_VEL].F),
     Param(PSTR("pid_althold_iterm_center"), &c.altHold.itermCenter),
     Param(PSTR("pid_althold_iterm_range"), &c.altHold.itermRange),
+    Param(PSTR("pid_althold_baro_tau"), &c.altHold.baroTau),
 
     Param(PSTR("pid_yaw_lpf_type"), &c.yaw.filter.type, filterTypeChoices),
     Param(PSTR("pid_yaw_lpf_freq"), &c.yaw.filter.freq),

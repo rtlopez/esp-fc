@@ -638,6 +638,7 @@ struct AltHoldConfig
 {
   uint8_t itermCenter = 50;
   uint8_t itermRange = 50;
+  uint8_t baroTau = 20; // tau = time constant in seconds / 10
 };
 
 struct MixerConfiguration
