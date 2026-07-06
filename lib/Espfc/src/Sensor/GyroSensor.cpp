@@ -291,8 +291,9 @@ void FAST_CODE_ATTR GyroSensor::calibrate()
     break;
   case CALIBRATION_UPDATE:
   {
-    VectorFloat deltaAccel = _model.state.accel.adc - _model.state.accel.prev;
-    _model.state.accel.prev = _model.state.accel.adc;
+    auto accel = _model.state.accel.adc.fetch();
+    VectorFloat deltaAccel = accel - _model.state.accel.prev;
+    _model.state.accel.prev = accel;
     if (deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO && _model.state.gyro.adc.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
     {
       _model.state.gyro.bias += (_model.state.gyro.adc - _model.state.gyro.bias) * _model.state.gyro.biasAlpha;

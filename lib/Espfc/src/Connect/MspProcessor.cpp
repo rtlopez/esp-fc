@@ -1278,10 +1278,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.reload();
       break;
 
-    case MSP_RAW_IMU:
+    case MSP_RAW_IMU: {
+      auto accel = _model.state.accel.adc.fetch();
       for (int i = 0; i < AXIS_COUNT_RPY; i++)
       {
-        r.writeU16(lrintf(_model.state.accel.adc[i] * ACCEL_G_INV * 2048.f));
+        r.writeU16(lrintf(accel[i] * ACCEL_G_INV * 2048.f));
       }
       for (int i = 0; i < AXIS_COUNT_RPY; i++)
       {
@@ -1292,6 +1293,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         r.writeU16(lrintf(_model.state.mag.adc[i] * 1090));
       }
       break;
+    }
 
     case MSP_MOTOR:
       for (size_t i = 0; i < 8; i++)

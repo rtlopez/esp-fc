@@ -49,7 +49,7 @@ int FAST_CODE_ATTR Fusion::update()
   if (_model.accelActive())
   {
     const auto& g = _model.state.attitude.rate;
-    const auto& a = _model.state.accel.adc;
+    const auto a = _model.state.accel.adc.fetch();
     const auto& m = _model.state.mag.adc;
     Quaternion q;
 
@@ -68,7 +68,7 @@ int FAST_CODE_ATTR Fusion::update()
     // filter quaternion to align delay with accelerometer filtering
     const auto fq = filterQuaternion(_model.state.attitude.quaternion);
 
-    _model.state.accel.world = _model.state.accel.adc.getRotated(fq);
+    _model.state.accel.world = a.getRotated(fq);
     _model.state.accel.world.z -= ACCEL_G; // remove gravity
 
     _model.state.attitude.cosTheta = 1.0f - 2.0f * (fq.x * fq.x + fq.y * fq.y);

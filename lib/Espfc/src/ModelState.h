@@ -15,6 +15,7 @@
 #include "Device/SerialDevice.h"
 #include "Connect/Msp.hpp"
 #include "Connect/StatusLed.hpp"
+#include "Utils/SeqLockWrapper.hpp"
 
 namespace Espfc {
 
@@ -285,7 +286,7 @@ struct AccelState
 {
   bool present;
   VectorInt16 raw;
-  VectorFloat adc;
+  Utils::SeqLockWrapper<VectorFloat> adc;
   VectorFloat prev;
   Utils::Filter filter[AXIS_COUNT_RPY];
   Utils::Timer timer;

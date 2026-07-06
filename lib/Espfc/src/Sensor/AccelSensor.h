@@ -15,10 +15,9 @@ public:
   int update();
   int read();
   int filter();
-  void updateTrimRotation();
 
 private:
-  void calibrate();
+  void calibrate(VectorFloat& accel);
 
   Model& _model;
   Device::GyroDevice* _gyro;

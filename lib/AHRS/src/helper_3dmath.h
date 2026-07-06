@@ -34,6 +34,11 @@ public:
   float z = 0.f;
 
   Quaternion() = default;
+  Quaternion(const Quaternion&) = default;
+  Quaternion(Quaternion&&) noexcept = default;
+  Quaternion& operator=(const Quaternion&) = default;
+  Quaternion& operator=(Quaternion&&) noexcept = default;
+  ~Quaternion() = default;
 
   Quaternion(float nw, float nx, float ny, float nz): w(nw), x(nx), y(ny), z(nz) {}
 
@@ -231,16 +236,12 @@ public:
 
   VectorBase() = default;
   VectorBase(const VectorBase& o) = default;
-  VectorBase(T nx, T ny, T nz): x{nx}, y{ny}, z{nz} {}
+  VectorBase(VectorBase&& o) noexcept = default;
+  VectorBase& operator=(const VectorBase& o) = default;
+  VectorBase& operator=(VectorBase&& o) noexcept = default;
+  ~VectorBase() = default;
 
-  VectorBase& operator=(const VectorBase& o)
-  {
-    if (this == &o) return *this;
-    x = o.x;
-    y = o.y;
-    z = o.z;
-    return *this;
-  }
+  VectorBase(T nx, T ny, T nz): x{nx}, y{ny}, z{nz} {}
 
   T get(size_t i) const
   {
