@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "Hardware.h"
 #include "Device/GyroDevice.h"
+#include "Utils/Filter.h"
 #include "Hal/Pgm.h"
 #include "msp/msp_protocol.h"
 
@@ -1273,6 +1274,30 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     }
     s.println();
 
+
+    const auto gRate = _model.state.gyro.timer.rate;
+    const auto lRate = _model.state.loopTimer.rate;
+    const auto aRate = _model.state.accel.timer.rate;
+
+    float gyroDelay = Utils::estimateFilterDelay(_model.config.gyro.filter, lRate) +
+                      Utils::estimateFilterDelay(_model.config.gyro.filter2, lRate) +
+                      Utils::estimateFilterDelay(_model.config.gyro.filter3, gRate);
+    float imuDelay = gyroDelay +
+                     Utils::estimateFilterDelay(FilterConfig(FILTER_PT1, aRate / 3), aRate);
+    float accelDelay = Utils::estimateFilterDelay(_model.config.accel.filter, aRate);
+    float qDelay = Utils::estimateFilterDelay(FilterConfig(FILTER_BIQUAD, 20), aRate);
+
+    s.print(F("     filters: "));
+    s.print(F("gyro: "));
+    s.print(gyroDelay * 1000.f, 1);
+    s.print(F(" ms, accel: "));
+    s.print(accelDelay * 1000.f, 1);
+    s.print(F(" ms, imu: "));
+    s.print(imuDelay * 1000.f, 1);
+    s.print(F(" ms, q: "));
+    s.print(qDelay * 1000.f, 1);
+    s.println();
+
     s.print(F("       input: "));
     s.print(_model.state.input.frameRate);
     s.print(F(" Hz, "));
@@ -1289,7 +1314,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       PSTR("RPMFILTER"), PSTR("REBOOT_REQUIRED"), PSTR("DSHOT_BITBANG"), PSTR("ACC_CALIBRATION"),
       PSTR("MOTOR_PROTOCOL"), PSTR("ARM_SWITCH")
     };
-    const size_t armingDisableNamesLength = sizeof(armingDisableNames) / sizeof(armingDisableNames[0]);
+    const size_t armingDisableNamesLength = std::size(armingDisableNames);
 
     s.print(F("   arm flags:"));
     for(size_t i = 0; i < armingDisableNamesLength; i++)

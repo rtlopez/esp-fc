@@ -1,6 +1,6 @@
-#include <cmath>
 #include "Utils/Filter.h"
 #include "Utils/MemoryHelper.h"
+#include <cmath>
 
 namespace Espfc {
 
@@ -11,11 +11,11 @@ FilterConfig FAST_CODE_ATTR FilterConfig::sanitize(int rate) const
 {
   const int halfRate = rate * 0.49f;
   FilterType t = (FilterType)type;
-  int16_t f = Utils::clamp((int)freq, 0, halfRate);   // adj cut freq below nyquist rule
-  int16_t c = Utils::clamp((int)cutoff, 0, (int)(f * 0.98f));      // sanitize cutoff to be slightly below filter freq
+  int16_t f = std::clamp((int)freq, 0, halfRate);           // adj cut freq below nyquist rule
+  int16_t c = std::clamp((int)cutoff, 0, (int)(f * 0.98f)); // sanitize cutoff to be slightly below filter freq
 
   bool biquad = type == FILTER_NOTCH || type == FILTER_NOTCH_DF1 || type == FILTER_BPF;
-  if(f == 0 || (biquad && c == 0)) t = FILTER_NONE; // if freq is zero or cutoff for biquad, turn off
+  if (f == 0 || (biquad && c == 0)) t = FILTER_NONE; // if freq is zero or cutoff for biquad, turn off
 
   return FilterConfig(t, f, c);
 }
@@ -48,13 +48,9 @@ void FilterStateFir2::reset()
   v[0] = v[1] = 0.0f;
 }
 
-void FilterStateFir2::init()
-{
-}
+void FilterStateFir2::init() {}
 
-void FAST_CODE_ATTR FilterStateFir2::reconfigure(const FilterStateFir2& from)
-{
-}
+void FAST_CODE_ATTR FilterStateFir2::reconfigure(const FilterStateFir2& from) {}
 
 float FAST_CODE_ATTR FilterStateFir2::update(float n)
 {
@@ -79,27 +75,27 @@ void FilterStateBiquad::init(BiquadFilterType filterType, float rate, float freq
   {
     case BIQUAD_FILTER_LPF:
       b0 = (1.f - cs) * 0.5f;
-      b1 =  1.f - cs;
+      b1 = 1.f - cs;
       b2 = (1.f - cs) * 0.5f;
-      a0 =  1.f + alpha;
+      a0 = 1.f + alpha;
       a1 = -2.f * cs;
-      a2 =  1.f - alpha;
+      a2 = 1.f - alpha;
       break;
     case BIQUAD_FILTER_NOTCH:
-      b0 =  1.f;
+      b0 = 1.f;
       b1 = -2.f * cs;
-      b2 =  1.f;
-      a0 =  1.f + alpha;
+      b2 = 1.f;
+      a0 = 1.f + alpha;
       a1 = -2.f * cs;
-      a2 =  1.f - alpha;
+      a2 = 1.f - alpha;
       break;
     case BIQUAD_FILTER_BPF:
-      b0 =  alpha;
-      b1 =  0;
+      b0 = alpha;
+      b1 = 0;
       b2 = -alpha;
-      a0 =  1.f + alpha;
+      a0 = 1.f + alpha;
       a1 = -2.f * cs;
-      a2 =  1.f - alpha;
+      a2 = 1.f - alpha;
       break;
   }
 
@@ -135,10 +131,12 @@ float FAST_CODE_ATTR FilterStateBiquad::updateDF1(float n)
   const float result = b0 * n + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
 
   /* shift x1 to x2, input to x1 */
-  x2 = x1; x1 = n;
+  x2 = x1;
+  x1 = n;
 
   /* shift y1 to y2, result to y1 */
-  y2 = y1; y1 = result;
+  y2 = y1;
+  y1 = result;
 
   return result;
 }
@@ -192,30 +190,38 @@ void FilterStateMedian::reset()
   v[0] = v[1] = v[2] = 0.f;
 }
 
-void FilterStateMedian::init()
-{
-}
+void FilterStateMedian::init() {}
 
-void FAST_CODE_ATTR FilterStateMedian::reconfigure(const FilterStateMedian& from)
-{
-}
+void FAST_CODE_ATTR FilterStateMedian::reconfigure(const FilterStateMedian& from) {}
 
 // Quick median filter implementation
 // (c) N. Devillard - 1998
 // http://ndevilla.free.fr/median/median.pdf
-//#define QMF_SORT(a,b) { if ((a)>(b)) QMF_SWAP((a),(b)); }
-//#define QMF_SWAP(a,b) { int32_t temp=(a);(a)=(b);(b)=temp; }
-//#define QMF_COPY(p,v,n) { for (size_t i=0; i<n; i++) p[i]=v[i]; }
-//#define QMF_SORTF(a,b) { if ((a)>(b)) QMF_SWAPF((a),(b)); }
-//#define QMF_SWAPF(a,b) { float temp=(a);(a)=(b);(b)=temp; }
+// #define QMF_SORT(a,b) { if ((a)>(b)) QMF_SWAP((a),(b)); }
+// #define QMF_SWAP(a,b) { int32_t temp=(a);(a)=(b);(b)=temp; }
+// #define QMF_COPY(p,v,n) { for (size_t i=0; i<n; i++) p[i]=v[i]; }
+// #define QMF_SORTF(a,b) { if ((a)>(b)) QMF_SWAPF((a),(b)); }
+// #define QMF_SWAPF(a,b) { float temp=(a);(a)=(b);(b)=temp; }
 
 template<typename T>
-static inline void QMF_SORT(T& a, T& b) { if (a > b) std::swap(a, b); }
+static inline void QMF_SORT(T& a, T& b)
+{
+  if (a > b) std::swap(a, b);
+}
 
 template<typename T>
-static inline void QMF_COPY(T* p, T* v, size_t n) { for(size_t i = 0; i < n; i++) p[i] = v[i]; }
+static inline void QMF_COPY(T* p, T* v, size_t n)
+{
+  for (size_t i = 0; i < n; i++)
+  {
+    p[i] = v[i];
+  }
+}
 
-static inline void QMF_SORTF(float& a, float& b) { QMF_SORT(a, b); }
+static inline void QMF_SORTF(float& a, float& b)
+{
+  QMF_SORT(a, b);
+}
 
 float FAST_CODE_ATTR FilterStateMedian::update(float n)
 {
@@ -292,7 +298,7 @@ void Filter::begin(const FilterConfig& config, int rate)
 
 float FAST_CODE_ATTR Filter::update(float v)
 {
-  switch(_conf.type)
+  switch (_conf.type)
   {
     case FILTER_PT1:
       return _state.pt1.update(v);
@@ -320,7 +326,7 @@ float FAST_CODE_ATTR Filter::update(float v)
 
 void Filter::reset()
 {
-  switch(_conf.type)
+  switch (_conf.type)
   {
     case FILTER_PT1:
       _state.pt1.reset();
@@ -345,7 +351,7 @@ void Filter::reset()
       return _state.fo.reset();
     case FILTER_NONE:
     default:
-      ;
+      break;
   }
 }
 
@@ -363,7 +369,7 @@ void FAST_CODE_ATTR Filter::reconfigure(const FilterConfig& config, int rate)
 {
   _rate = rate;
   _conf = config.sanitize(_rate);
-  switch(_conf.type)
+  switch (_conf.type)
   {
     case FILTER_BIQUAD:
       reconfigure(config, rate, 0.70710678118f, 1.0f); // 1.0f / sqrtf(2.0f); // quality factor for butterworth lpf
@@ -383,7 +389,7 @@ void FAST_CODE_ATTR Filter::reconfigure(const FilterConfig& config, int rate, fl
   _rate = rate;
   _conf = config.sanitize(_rate);
   setWeight(weight);
-  switch(_conf.type)
+  switch (_conf.type)
   {
     case FILTER_PT1:
       _state.pt1.init(_rate, _conf.freq);
@@ -415,7 +421,7 @@ void FAST_CODE_ATTR Filter::reconfigure(const FilterConfig& config, int rate, fl
       break;
     case FILTER_NONE:
     default:
-      ;
+      break;
   }
 }
 
@@ -425,7 +431,7 @@ void FAST_CODE_ATTR Filter::reconfigure(const Filter& filter)
   _conf = filter._conf;
   _output_weight = filter._output_weight;
   _input_weight = filter._input_weight;
-  switch(_conf.type)
+  switch (_conf.type)
   {
     case FILTER_PT1:
       _state.pt1.reconfigure(filter._state.pt1);
@@ -452,7 +458,7 @@ void FAST_CODE_ATTR Filter::reconfigure(const Filter& filter)
       break;
     case FILTER_NONE:
     default:
-      ;
+      break;
   }
 }
 
@@ -473,6 +479,47 @@ float FAST_CODE_ATTR Filter::getNotchQ(float freq, float cutoff)
   return sqrtf(std::pow(2.f, octaves)) / (std::pow(2.f, octaves) - 1);
 }
 
+float estimateFilterDelay(const FilterConfig& config, int rate)
+{
+  if (config.freq <= 0 || rate <= 0) return 0.0f;
+
+  const float fc = (float)config.freq;
+  const float dt = 1.0f / (float)rate;
+  const float tau = 1.0f / (2.0f * Utils::pi() * fc);
+
+  switch (config.type)
+  {
+    case FILTER_PT1:
+      return tau;
+    case FILTER_FO:
+      return tau;
+    case FILTER_BIQUAD:
+      return 2.0f * tau; // second-order lowpass has roughly twice the first-order delay at low frequency
+    case FILTER_NOTCH:
+    case FILTER_NOTCH_DF1:
+    case FILTER_BPF: {
+      const float cutoff = std::clamp((float)config.cutoff, 0.0f, rate * 0.98f);
+      if (cutoff <= 0.0f || cutoff >= fc)
+      {
+        return 2.0f * tau;
+      }
+      const float q = std::clamp((cutoff * fc) / ((fc - cutoff) * (fc + cutoff)), 0.0f, 100.0f);
+      return 2.0f * q * tau;
+    }
+    case FILTER_FIR2:
+      return 0.5f * dt; // two-sample moving average has half-sample delay
+    case FILTER_MEDIAN3:
+      return 1.0f * dt; // median3 is centered on the middle of three samples
+    case FILTER_PT2:
+      return 2.0f * tau;
+    case FILTER_PT3:
+      return 3.0f * tau;
+    case FILTER_NONE:
+    default:
+      return 0.0f;
+  }
 }
 
-}
+} // namespace Utils
+
+} // namespace Espfc

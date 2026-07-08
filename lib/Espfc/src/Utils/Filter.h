@@ -174,6 +174,8 @@ class Filter
     float _output_weight;
 };
 
+float estimateFilterDelay(const FilterConfig& config, int rate);
+
 }
 
 }

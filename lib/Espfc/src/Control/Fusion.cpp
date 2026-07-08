@@ -28,7 +28,7 @@ int Fusion::begin()
 
   for (size_t i = 0; i < 4; i++)
   {
-    _qFilter[i].begin(FilterConfig(FILTER_BIQUAD, 25), _model.state.accel.timer.rate);
+    _qFilter[i].begin(FilterConfig(FILTER_BIQUAD, 20), _model.state.accel.timer.rate);
   }
 
   return 1;
