@@ -579,6 +579,8 @@ struct GyroConfig
   RpmFilterConfig rpmFilter;
 };
 
+static constexpr size_t GYRO_FUSION_LPF_DIV = 3;
+
 struct AccelConfig
 {
   int8_t bus = BUS_AUTO;

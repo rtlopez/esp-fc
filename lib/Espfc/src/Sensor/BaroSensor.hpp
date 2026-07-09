@@ -38,6 +38,7 @@ private:
   uint32_t _wait;
   int32_t _counter;
   float _biasAlpha;
+  bool _first{true};
 };
 
 } // namespace Espfc::Sensor

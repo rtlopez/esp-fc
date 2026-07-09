@@ -66,11 +66,12 @@ int FAST_CODE_ATTR Fusion::update()
     _model.state.attitude.euler.eulerFromQuaternion(_model.state.attitude.quaternion);
 
     // filter quaternion to align delay with accelerometer filtering
-    const auto fq = filterQuaternion(_model.state.attitude.quaternion);
+    const auto fq = filterQuaternion(_model.state.attitude.quaternion).getNormalized();
 
-    _model.state.accel.world = a.getRotated(fq);
-    _model.state.accel.world.z -= ACCEL_G; // remove gravity
+    auto world = a.getRotated(fq);
+    world.z -= ACCEL_G; // remove gravity
 
+    _model.state.accel.world = world;
     _model.state.attitude.cosTheta = 1.0f - 2.0f * (fq.x * fq.x + fq.y * fq.y);
   }
 

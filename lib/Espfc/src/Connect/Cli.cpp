@@ -1,11 +1,12 @@
 #include "Connect/Cli.hpp"
 #include <platform.h>
-#include <algorithm>
 #include "Hardware.h"
 #include "Device/GyroDevice.h"
 #include "Utils/Filter.h"
 #include "Hal/Pgm.h"
 #include "msp/msp_protocol.h"
+#include <algorithm>
+#include <iterator>
 
 #ifdef USE_FLASHFS
 #include "Device/FlashDevice.h"
@@ -1283,7 +1284,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
                       Utils::estimateFilterDelay(_model.config.gyro.filter2, lRate) +
                       Utils::estimateFilterDelay(_model.config.gyro.filter3, gRate);
     float imuDelay = gyroDelay +
-                     Utils::estimateFilterDelay(FilterConfig(FILTER_PT1, aRate / 3), aRate);
+                     Utils::estimateFilterDelay(FilterConfig(FILTER_PT1, aRate / GYRO_FUSION_LPF_DIV), aRate);
     float accelDelay = Utils::estimateFilterDelay(_model.config.accel.filter, aRate);
     float qDelay = Utils::estimateFilterDelay(FilterConfig(FILTER_BIQUAD, 20), aRate);
 

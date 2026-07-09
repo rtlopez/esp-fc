@@ -128,6 +128,11 @@ void BaroSensor::updateAltitude()
 
   baro.altitudeGround = altitude - baro.altitudeBias;
   baro.altitude = altitude;
+  if (_first)
+  {
+    baro.altitudePrev = altitude;
+    _first = false;
+  }
   baro.vario = _varioFilter.update((altitude - baro.altitudePrev) * baro.rate);
   baro.altitudePrev = altitude;
 

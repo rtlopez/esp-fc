@@ -1,6 +1,7 @@
 #pragma once
 
 #include "helper_3dmath.h"
+#include <algorithm>
 #include <cmath>
 
 // https://github.com/smukkejohan/RTIMULib/tree/master/RTIMULib
@@ -95,7 +96,7 @@ private:
     rotationError.normalize();
 
     // take it to the power (0 to 1) to give the desired amount of correction
-    float theta = acos(rotationError.w);
+    float theta = acos(std::clamp(rotationError.w, -1.0f, 1.0f));
     float sinPowerTheta = sin(theta * _slerpPower);
     float cosPowerTheta = cos(theta * _slerpPower);
 
