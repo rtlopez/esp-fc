@@ -406,8 +406,14 @@ class Model
 
       config.featureMask &= featureAllowMask;
 
-      for(int i = 0; i < SERIAL_UART_COUNT; i++) {
+      for(int i = 0; i < SERIAL_UART_COUNT; i++)
+      {
         config.serial[i].functionMask &= serialFunctionAllowedMask;
+      }
+
+      if (config.fusion.mode >= FUSION_MAX)
+      {
+        config.fusion.mode = FUSION_MAHONY;
       }
 
       // only few beeper modes allowed

@@ -73,8 +73,8 @@ private:
       return;
     }
 
-    Quaternion q = _quaternion;
-    VectorFloat gyro = VectorFloat{gx, gy, gz};
+    auto q = _quaternion;
+    auto gyro = VectorFloat{gx, gy, gz};
 
     float qw = q.w;
     float qx = q.x;
@@ -92,27 +92,34 @@ private:
     q.z = qz + (gz2 * qw + gy2 * qx - gx2 * qy) * _dt;
 
     // calculate rotation delta
-    Quaternion rotationError = q.getConjugate() * _poseQ;
-    rotationError.normalize();
+    auto rotationError = q.getConjugate() * _poseQ;
+    Quaternion rotationPower{1.0f, 0.0f, 0.0f, 0.0f};
 
-    // take it to the power (0 to 1) to give the desired amount of correction
-    float theta = acos(std::clamp(rotationError.w, -1.0f, 1.0f));
-    float sinPowerTheta = sin(theta * _slerpPower);
-    float cosPowerTheta = cos(theta * _slerpPower);
+    // skip rotation if the error is too small, to avoid numerical issues
+    auto mag =
+        rotationError.x * rotationError.x + rotationError.y * rotationError.y + rotationError.z * rotationError.z;
+    if (mag > 1e-9f)
+    {
+      rotationError.normalize();
 
-    VectorFloat rotationVector(rotationError.x, rotationError.y, rotationError.z);
-    rotationVector.normalize();
+      // take it to the power (0 to 1) to give the desired amount of correction
+      float theta = acos(std::clamp(rotationError.w, -1.0f, 1.0f));
+      float sinPowerTheta = sin(theta * _slerpPower);
+      float cosPowerTheta = cos(theta * _slerpPower);
 
-    Quaternion rotationPower;
-    rotationPower.w = cosPowerTheta;
-    rotationPower.x = sinPowerTheta * rotationVector.x;
-    rotationPower.y = sinPowerTheta * rotationVector.y;
-    rotationPower.z = sinPowerTheta * rotationVector.z;
-    rotationPower.normalize();
+      VectorFloat rotationVector(rotationError.x, rotationError.y, rotationError.z);
+      rotationVector.normalize();
 
-    //  multiple this by predicted value to get result
-    q = q * rotationPower;
-    q.normalize();
+      rotationPower.w = cosPowerTheta;
+      rotationPower.x = sinPowerTheta * rotationVector.x;
+      rotationPower.y = sinPowerTheta * rotationVector.y;
+      rotationPower.z = sinPowerTheta * rotationVector.z;
+      rotationPower.normalize();
+      
+      //  multiple this by predicted value to get result
+      q = q * rotationPower;
+      q.normalize();
+    }
 
     _quaternion = Quaternion::ensureSign(q, _quaternion);
     _euler.eulerFromQuaternion(_quaternion);
