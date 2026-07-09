@@ -119,10 +119,10 @@ private:
       // clang-format on
 
       //  multiple this by predicted value to get result
-      q = (q * rotationPower).getNormalized();
+      q = q * rotationPower;
     }
 
-    _quaternion = Quaternion::ensureSign(q, _quaternion);
+    _quaternion = Quaternion::ensureSign(q, _quaternion).getNormalized();
   }
 
   bool _first;
