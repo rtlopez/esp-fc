@@ -5,6 +5,7 @@
 #include <cmath>
 
 // https://github.com/smukkejohan/RTIMULib/tree/master/RTIMULib
+// do not use, experimental, not tested enough
 
 class Rtqf
 {
@@ -51,16 +52,16 @@ private:
       float sinX2 = sin(pose.x / 2.0f);
       float cosY2 = cos(pose.y / 2.0f);
       float sinY2 = sin(pose.y / 2.0f);
-      Quaternion q{cosX2 * cosY2, sinX2 * cosY2, cosX2 * sinY2, -sinX2 * sinY2};
-      VectorFloat m = VectorFloat{mx, my, mz}.getRotated(q);
+      const auto q = Quaternion{cosX2 * cosY2, sinX2 * cosY2, cosX2 * sinY2, -sinX2 * sinY2};
+      const auto m = VectorFloat{mx, my, mz}.getRotated(q);
       pose.z = -atan2(m.y, m.x);
     }
     else
     {
-      pose.z = _euler.z;
+      const auto& q = _quaternion;
+      pose.z = atan2f(q.x * q.y + q.w * q.z, 0.5f - q.y * q.y - q.z * q.z);
     }
     _poseQ = Quaternion::ensureSign(pose.eulerToQuaternion(), _poseQ);
-    _pose.eulerFromQuaternion(_poseQ);
   }
 
   void applyRtqf(float gx, float gy, float gz)
@@ -68,68 +69,65 @@ private:
     if (_first)
     {
       _quaternion = _poseQ;
-      _euler.eulerFromQuaternion(_quaternion);
       _first = false;
       return;
     }
 
     auto q = _quaternion;
-    auto gyro = VectorFloat{gx, gy, gz};
+    auto g = VectorFloat{gx, gy, gz} * 0.5f;
 
     float qw = q.w;
     float qx = q.x;
     float qy = q.y;
     float qz = q.z;
 
-    float gx2 = gyro.x / 2.0;
-    float gy2 = gyro.y / 2.0;
-    float gz2 = gyro.z / 2.0;
-
     // Predict new state
-    q.w = qw + (-gx2 * qx - gy2 * qy - gz2 * qz) * _dt;
-    q.x = qx + (gx2 * qw + gz2 * qy - gy2 * qz) * _dt;
-    q.y = qy + (gy2 * qw - gz2 * qx + gx2 * qz) * _dt;
-    q.z = qz + (gz2 * qw + gy2 * qx - gx2 * qy) * _dt;
+    q.w = qw - (g.x * qx + g.y * qy + g.z * qz) * _dt;
+    q.x = qx + (g.x * qw + g.z * qy - g.y * qz) * _dt;
+    q.y = qy + (g.y * qw - g.z * qx + g.x * qz) * _dt;
+    q.z = qz + (g.z * qw + g.y * qx - g.x * qy) * _dt;
 
     // calculate rotation delta
-    auto rotationError = q.getConjugate() * _poseQ;
-    Quaternion rotationPower{1.0f, 0.0f, 0.0f, 0.0f};
+    auto error = q.getConjugate() * _poseQ;
 
     // skip rotation if the error is too small, to avoid numerical issues
-    auto mag =
-        rotationError.x * rotationError.x + rotationError.y * rotationError.y + rotationError.z * rotationError.z;
+    auto mag = error.x * error.x + error.y * error.y + error.z * error.z;
     if (mag > 1e-9f)
     {
-      rotationError.normalize();
+      // Prefer the shorter rotation path to avoid flips near 180° ambiguity.
+      if (error.w < 0.0f)
+      {
+        error = {-error.w, -error.x, -error.y, -error.z};
+      }
+
+      error.normalize();
 
       // take it to the power (0 to 1) to give the desired amount of correction
-      float theta = acos(std::clamp(rotationError.w, -1.0f, 1.0f));
+      float theta = acos(std::clamp(error.w, -1.0f, 1.0f));
       float sinPowerTheta = sin(theta * _slerpPower);
       float cosPowerTheta = cos(theta * _slerpPower);
 
-      VectorFloat rotationVector(rotationError.x, rotationError.y, rotationError.z);
-      rotationVector.normalize();
+      const auto rotationVector = VectorFloat{error.x, error.y, error.z}.getNormalized();
 
-      rotationPower.w = cosPowerTheta;
-      rotationPower.x = sinPowerTheta * rotationVector.x;
-      rotationPower.y = sinPowerTheta * rotationVector.y;
-      rotationPower.z = sinPowerTheta * rotationVector.z;
-      rotationPower.normalize();
-      
+      // clang-format off
+      const auto rotationPower = Quaternion{
+        cosPowerTheta,
+        rotationVector.x * sinPowerTheta,
+        rotationVector.y * sinPowerTheta,
+        rotationVector.z * sinPowerTheta
+      }.getNormalized();
+      // clang-format on
+
       //  multiple this by predicted value to get result
-      q = q * rotationPower;
-      q.normalize();
+      q = (q * rotationPower).getNormalized();
     }
 
     _quaternion = Quaternion::ensureSign(q, _quaternion);
-    _euler.eulerFromQuaternion(_quaternion);
   }
 
   bool _first;
   float _dt;
   float _slerpPower;
   Quaternion _quaternion{};
-  VectorFloat _euler{};
   Quaternion _poseQ{};
-  VectorFloat _pose{};
 };
