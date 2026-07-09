@@ -87,6 +87,8 @@ private:
     q.y = qy + (g.y * qw - g.z * qx + g.x * qz) * _dt;
     q.z = qz + (g.z * qw + g.y * qx - g.x * qy) * _dt;
 
+    q.normalize();
+
     // calculate rotation delta
     auto error = q.getConjugate() * _poseQ;
 
@@ -119,10 +121,10 @@ private:
       // clang-format on
 
       //  multiple this by predicted value to get result
-      q = q * rotationPower;
+      q = (q * rotationPower).getNormalized();
     }
 
-    _quaternion = Quaternion::ensureSign(q, _quaternion).getNormalized();
+    _quaternion = Quaternion::ensureSign(q, _quaternion);
   }
 
   bool _first;
