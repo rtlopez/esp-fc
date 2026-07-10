@@ -48,12 +48,7 @@ enum FusionMode {
   FUSION_NONE,
   FUSION_MADGWICK,
   FUSION_MAHONY,
-  FUSION_COMPLEMENTARY,
-  FUSION_KALMAN,
   FUSION_RTQF,
-  FUSION_LERP,
-  FUSION_SIMPLE,
-  FUSION_EXPERIMENTAL,
   FUSION_MAX,
 };
 
@@ -62,6 +57,7 @@ struct FusionConfig
   int8_t mode = FUSION_MAHONY;
   uint8_t gain = 50;
   uint8_t gainI = 5;
+  uint8_t useMag = 0;
 
   static const char * getModeName(FusionMode mode)
   {
@@ -71,10 +67,7 @@ struct FusionConfig
 
   static const char ** getModeNames()
   {
-    static const char* modeChoices[] = {
-      PSTR("NONE"), PSTR("MADGWICK"), PSTR("MAHONY"), PSTR("COMPLEMENTARY"), PSTR("KALMAN"),
-      PSTR("RTQF"), PSTR("LERP"), PSTR("SIMPLE"), PSTR("EXPERIMENTAL"),
-      NULL };
+    static const char* modeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("MAHONY"), PSTR("RTQF"), NULL };
     return modeChoices;
   }
 };
@@ -586,6 +579,8 @@ struct GyroConfig
   RpmFilterConfig rpmFilter;
 };
 
+static constexpr size_t GYRO_FUSION_LPF_DIV = 3;
+
 struct AccelConfig
 {
   int8_t bus = BUS_AUTO;
@@ -645,6 +640,7 @@ struct AltHoldConfig
 {
   uint8_t itermCenter = 50;
   uint8_t itermRange = 50;
+  uint8_t baroTau = 20; // tau = time constant in seconds / 10
 };
 
 struct MixerConfiguration

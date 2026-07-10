@@ -15,17 +15,18 @@ int BaroSensor::begin()
   const int toGyroRate = (delay / _model.state.gyro.timer.interval) + 1; // number of gyro readings per cycle
   const int interval = _model.state.gyro.timer.interval * toGyroRate;
   const int rate = 1000000 / interval;
-  const int biasSamples = 3 * rate;
-  const auto internalFilter = FILTER_PT1;
-  const auto internalCutoff = std::max((rate + 4) / 8, 1);
+  _model.state.baro.rate = rate;
 
+  const float dt = 1.0f / rate;
+  const float tau = 0.8f;
+  _biasAlpha = 1.0f - expf(-dt / tau);
+  _model.state.baro.altitudeBiasSamples = 3 * rate;
+  
+  const auto internalFilter = FILTER_PT1;
+  const auto internalCutoff = std::max((rate + 2) / 4, 1);
   _temperatureFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
   _pressureFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
-  _altitudeFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
   _varioFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
-
-  _temperatureMedianFilter.begin(FilterConfig(FILTER_MEDIAN3, 0), rate);
-  _pressureMedianFilter.begin(FilterConfig(FILTER_MEDIAN3, 0), rate);
 
   _model.logger.info()
       .log(F("BARO INIT"))
@@ -33,8 +34,6 @@ int BaroSensor::begin()
       .log(rate)
       .logln(internalCutoff);
 
-  _model.state.baro.rate = rate;
-  _model.state.baro.altitudeBiasSamples = biasSamples;
   _baro->setMode(BARO_MODE_TEMP);
 
   return 1;
@@ -100,28 +99,26 @@ int BaroSensor::read()
 void BaroSensor::readTemperature()
 {
   float temp = _model.state.baro.temperatureRaw = _baro->readTemperature();
-  // temp = _temperatureMedianFilter.update(temp);
   _model.state.baro.temperature = _temperatureFilter.update(temp);
 }
 
 void BaroSensor::readPressure()
 {
   float press = _model.state.baro.pressureRaw = _baro->readPressure();
-  // press = _pressureMedianFilter.update(press);
   _model.state.baro.pressure = _pressureFilter.update(press);
 }
 
 void BaroSensor::updateAltitude()
 {
-  Espfc::BaroState& baro = _model.state.baro;
+  auto& baro = _model.state.baro;
 
   baro.altitudeRaw = Utils::toAltitude(baro.pressure);
-  baro.altitude = _altitudeFilter.update(baro.altitudeRaw);
+  float altitude = baro.altitudeRaw;
 
   if (baro.altitudeBiasSamples > 0)
   {
     baro.altitudeBiasSamples--;
-    baro.altitudeBias += (baro.altitude - baro.altitudeBias) * (5.0f / baro.rate);
+    baro.altitudeBias += (altitude - baro.altitudeBias) * _biasAlpha;
   }
   else if (baro.altitudeBiasSamples == 0)
   {
@@ -129,11 +126,15 @@ void BaroSensor::updateAltitude()
     baro.altitudeBiasSamples--;
   }
 
-  baro.altitudeGround = baro.altitude - baro.altitudeBias;
-
-  const float varioAlt = baro.altitude;
-  baro.vario = _varioFilter.update((varioAlt - baro.altitudePrev) * baro.rate);
-  baro.altitudePrev = varioAlt;
+  baro.altitudeGround = altitude - baro.altitudeBias;
+  baro.altitude = altitude;
+  if (_first)
+  {
+    baro.altitudePrev = altitude;
+    _first = false;
+  }
+  baro.vario = _varioFilter.update((altitude - baro.altitudePrev) * baro.rate);
+  baro.altitudePrev = altitude;
 
   if (_model.config.debug.mode == DEBUG_BARO)
   {

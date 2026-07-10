@@ -15,6 +15,7 @@
 #include "Device/SerialDevice.h"
 #include "Connect/Msp.hpp"
 #include "Connect/StatusLed.hpp"
+#include "Utils/SeqLockWrapper.hpp"
 
 namespace Espfc {
 
@@ -226,8 +227,7 @@ struct MagState
   VectorFloat calibrationMax;
   VectorFloat calibrationScale;
   VectorFloat calibrationOffset;
-
-  VectorFloat pose;
+  // VectorFloat pose;
 };
 
 struct BaroState
@@ -286,7 +286,7 @@ struct AccelState
 {
   bool present;
   VectorInt16 raw;
-  VectorFloat adc;
+  Utils::SeqLockWrapper<VectorFloat> adc;
   VectorFloat prev;
   Utils::Filter filter[AXIS_COUNT_RPY];
   Utils::Timer timer;
@@ -523,16 +523,6 @@ struct ModelState
   Utils::Timer serialTimer;
 
   Target::Queue appQueue;
-
-  // other state
-  Kalman kalman[AXIS_COUNT_RPYT];
-  VectorFloat gyroPose;
-  Quaternion gyroPoseQ;
-  VectorFloat accelPose;
-  VectorFloat accelPose2;
-  Quaternion accelPoseQ;
-  VectorFloat pose;
-  Quaternion poseQ;
 };
 
 }

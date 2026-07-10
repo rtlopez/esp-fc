@@ -10,7 +10,7 @@ AccelSensor::AccelSensor(Model& model): _model(model) {}
 
 int AccelSensor::begin()
 {
-  _model.state.accel.adc.z = ACCEL_G;
+  _model.state.accel.adc.store({0.0f, 0.0f, ACCEL_G});
 
   _gyro = _model.state.gyro.dev;
   if (!_gyro)
@@ -19,17 +19,24 @@ int AccelSensor::begin()
   }
 
   _model.state.accel.scale = 16.f * ACCEL_G / 32768.f;
+  const auto& timer = _model.state.accel.timer;
 
   for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
-    _filter[i].begin(FilterConfig(FILTER_FIR2, 1), _model.state.accel.timer.rate);
-    _model.state.accel.filter[i].begin(_model.config.accel.filter, _model.state.accel.timer.rate);
+    _filter[i].begin(FilterConfig(FILTER_FIR2, 1), timer.rate);
+    _model.state.accel.filter[i].begin(_model.config.accel.filter, timer.rate);
   }
 
-  _model.state.accel.biasAlpha = 5.0f / _model.state.accel.timer.rate;
+  _model.state.accel.biasAlpha = 5.0f / timer.rate;
   _model.state.accel.calibrationState = CALIBRATION_IDLE;
 
-  _model.logger.info().log(F("ACCEL INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.state.accel.timer.rate).log(_model.state.accel.timer.interval).logln(_model.state.accel.present);
+  _model.logger.info()
+      .log(F("ACCEL INIT"))
+      .log(FPSTR(Device::GyroDevice::getName(_gyro->getType())))
+      .log(_gyro->getAddress())
+      .log(timer.rate)
+      .log(timer.interval)
+      .logln(_model.state.accel.present);
 
   return 1;
 }
@@ -68,10 +75,10 @@ int FAST_CODE_ATTR AccelSensor::filter()
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACCEL_FILTER);
 
-  _model.state.accel.adc = (VectorFloat)_model.state.accel.raw * _model.state.accel.scale;
+  auto accel = VectorFloat{_model.state.accel.raw} * _model.state.accel.scale;
 
-  align(_model.state.accel.adc, _model.config.gyro.align);
-  _model.state.accel.adc = _model.state.boardAlignment.apply(_model.state.accel.adc);
+  align(accel, _model.config.gyro.align);
+  accel = _model.state.boardAlignment.apply(accel);
 
   for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
@@ -79,34 +86,34 @@ int FAST_CODE_ATTR AccelSensor::filter()
     {
       _model.state.debug[i] = _model.state.accel.raw[i];
     }
-    _model.state.accel.adc.set(i, _filter[i].update(_model.state.accel.adc[i]));
-    _model.state.accel.adc.set(i, _model.state.accel.filter[i].update(_model.state.accel.adc[i]));
+    accel.set(i, _filter[i].update(accel[i]));
+    accel.set(i, _model.state.accel.filter[i].update(accel[i]));
   }
 
-  calibrate();
+  calibrate(accel);
 
   if (_model.state.accel.calibrationState == CALIBRATION_IDLE)
   {
-    _model.state.accel.adc = _model.state.trimRotation.apply(_model.state.accel.adc);
+    accel = _model.state.trimRotation.apply(accel);
   }
+
+  _model.state.accel.adc.store(accel);
 
   return 1;
 }
 
-void FAST_CODE_ATTR AccelSensor::calibrate()
+void FAST_CODE_ATTR AccelSensor::calibrate(VectorFloat& accel)
 {
   switch (_model.state.accel.calibrationState)
   {
-    case CALIBRATION_IDLE:
-      _model.state.accel.adc -= _model.state.accel.bias;
-      break;
+    case CALIBRATION_IDLE: accel -= _model.state.accel.bias; break;
     case CALIBRATION_START:
       _model.state.accel.bias = VectorFloat(0, 0, ACCEL_G);
       _model.state.accel.biasSamples = 2 * _model.state.accel.timer.rate;
       _model.state.accel.calibrationState = CALIBRATION_UPDATE;
       break;
     case CALIBRATION_UPDATE:
-      _model.state.accel.bias += (_model.state.accel.adc - _model.state.accel.bias) * _model.state.accel.biasAlpha;
+      _model.state.accel.bias += (accel - _model.state.accel.bias) * _model.state.accel.biasAlpha;
       _model.state.accel.biasSamples--;
       if (_model.state.accel.biasSamples <= 0)
       {
@@ -121,10 +128,8 @@ void FAST_CODE_ATTR AccelSensor::calibrate()
       _model.finishCalibration();
       _model.state.accel.calibrationState = CALIBRATION_IDLE;
       break;
-    default:
-      _model.state.accel.calibrationState = CALIBRATION_IDLE;
-      break;
+    default: _model.state.accel.calibrationState = CALIBRATION_IDLE; break;
   }
 }
 
-}
+} // namespace Espfc::Sensor

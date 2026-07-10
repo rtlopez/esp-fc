@@ -18,7 +18,7 @@ BraceWrapping:
   AfterEnum: true
 IndentCaseLabels: true
 AllowShortIfStatementsOnASingleLine: true
-AllowShortCaseLabelsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortLambdasOnASingleLine: true
 AlwaysBreakTemplateDeclarations: true

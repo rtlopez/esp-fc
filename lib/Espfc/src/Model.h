@@ -406,8 +406,14 @@ class Model
 
       config.featureMask &= featureAllowMask;
 
-      for(int i = 0; i < SERIAL_UART_COUNT; i++) {
+      for(int i = 0; i < SERIAL_UART_COUNT; i++)
+      {
         config.serial[i].functionMask &= serialFunctionAllowedMask;
+      }
+
+      if (config.fusion.mode >= FUSION_MAX)
+      {
+        config.fusion.mode = FUSION_MAHONY;
       }
 
       // only few beeper modes allowed
@@ -477,7 +483,7 @@ class Model
         }
         state.gyro.filter2[i].begin(config.gyro.filter2, gyroFilterRate);
         state.gyro.filter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / 3), gyroFilterRate);
+        state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / GYRO_FUSION_LPF_DIV), gyroFilterRate);
         for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
         {
           state.gyro.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.gyro.rpmFilter.freqLpf), gyroFilterRate);

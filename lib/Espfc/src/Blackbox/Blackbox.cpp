@@ -239,6 +239,7 @@ int FAST_CODE_ATTR Blackbox::update()
 
 void FAST_CODE_ATTR Blackbox::updateData()
 {
+  auto accel = _model.state.accel.adc.fetch();
   for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
   {
     gyro.gyroADCf[i] = Utils::toDeg(_model.state.gyro.adc[i]);
@@ -249,7 +250,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
     pidData[i].F = _model.state.innerPid[i].fTerm * 1000.f;
     rcCommand[i] = (_model.state.input.buffer[i] - 1500) * (i == AXIS_YAW ? -1 : 1);
     if(_model.accelActive()) {
-      acc.accADC[i] = _model.state.accel.adc[i] * ACCEL_G_INV * acc.dev.acc_1G;
+      acc.accADC[i] = accel[i] * ACCEL_G_INV * acc.dev.acc_1G;
     }
     if(_model.magActive()) {
       mag.magADC[i] = _model.state.mag.adc[i] * 1090;
