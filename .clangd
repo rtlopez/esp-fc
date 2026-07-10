@@ -25,4 +25,5 @@ Diagnostics:
   # <machine/endian.h>; suppress the resulting false positive.
   Suppress:
     - pp_file_not_found
+    - missing_template_arg_list_after_template_kw
 

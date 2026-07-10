@@ -2,6 +2,7 @@
 #include <ArduinoFake.h>
 #include "Device/GyroICM42688.h"
 #include "Device/GyroDevice.h"
+#include <platform.h>
 
 using namespace Espfc;
 using namespace Espfc::Device;
