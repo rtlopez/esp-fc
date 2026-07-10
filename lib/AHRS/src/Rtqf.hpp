@@ -1,7 +1,6 @@
 #pragma once
 
 #include "helper_3dmath.h"
-#include <algorithm>
 #include <cmath>
 
 // https://github.com/smukkejohan/RTIMULib/tree/master/RTIMULib
@@ -87,42 +86,11 @@ private:
     q.y = qy + (g.y * qw - g.z * qx + g.x * qz) * _dt;
     q.z = qz + (g.z * qw + g.y * qx - g.x * qy) * _dt;
 
-    q.normalize();
-
-    // calculate rotation delta
-    auto error = q.getConjugate() * _poseQ;
-
-    // skip rotation if the error is too small, to avoid numerical issues
-    auto mag = error.x * error.x + error.y * error.y + error.z * error.z;
-    if (mag > 1e-9f)
-    {
-      // Prefer the shorter rotation path to avoid flips near 180° ambiguity.
-      if (error.w < 0.0f)
-      {
-        error = {-error.w, -error.x, -error.y, -error.z};
-      }
-
-      error.normalize();
-
-      // take it to the power (0 to 1) to give the desired amount of correction
-      float theta = acos(std::clamp(error.w, -1.0f, 1.0f));
-      float sinPowerTheta = sin(theta * _slerpPower);
-      float cosPowerTheta = cos(theta * _slerpPower);
-
-      const auto rotationVector = VectorFloat{error.x, error.y, error.z}.getNormalized();
-
-      // clang-format off
-      const auto rotationPower = Quaternion{
-        cosPowerTheta,
-        rotationVector.x * sinPowerTheta,
-        rotationVector.y * sinPowerTheta,
-        rotationVector.z * sinPowerTheta
-      }.getNormalized();
-      // clang-format on
-
-      //  multiple this by predicted value to get result
-      q = (q * rotationPower).getNormalized();
-    }
+    // Correct the predicted state towards the measured pose by _slerpPower.
+    // slerp() handles the shorter-path sign flip and degrades gracefully to
+    // nlerp for small angles, avoiding the numerical issues of normalizing a
+    // near-zero rotation axis.
+    q = Quaternion::slerp(q, _poseQ, _slerpPower);
 
     _quaternion = Quaternion::ensureSign(q, _quaternion);
   }
