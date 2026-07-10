@@ -190,7 +190,7 @@ public:
   {
     if(dot(q, reference) < 0.0f)
     {
-      return {-q.w, -q.x, -q.y, -q.z};
+      return q * -1.f;
     }
     return q;
   }
@@ -198,14 +198,14 @@ public:
   /**
    * Linear interpolation
    * actually it is nlerp (normalised lerp)
-   * @param q1 The first quaternion.
-   * @param q2 The second quaternion.
+   * @param q1 The first quaternion (normalized).
+   * @param q2 The second quaternion (normalized).
    * @param t The interpolation parameter.
    * @return Quaternion The interpolated quaternion.
    */
   Quaternion static lerp(const Quaternion& q1, const Quaternion& q2, float t)
   {
-    return (q1 * (1.f - t) + q2 * t).getNormalized();
+    return (q1 * (1.f - t) + ensureSign(q2, q1) * t).getNormalized();
   }
 
   /**
@@ -214,20 +214,19 @@ public:
    * https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/
    * http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
    * https://en.wikipedia.org/wiki/Slerp
-   * @param q1 The first quaternion.
-   * @param q2 The second quaternion.
+   * @param q1 The first quaternion (normalized).
+   * @param q2 The second quaternion (normalized).
    * @param pc The interpolation parameter.
    * @return Quaternion The interpolated quaternion.
    */
   Quaternion static slerp(const Quaternion& q1, const Quaternion& q2, float pc)
   {
-    Quaternion qa = q1.getNormalized();
-    Quaternion qb = q2.getNormalized();
-
+    auto qb = q2;
+    
     // If the dot product is negative, the quaternions
     // have opposite handed-ness and slerp won't take
     // the shorter path. Fix by reversing one quaternion.
-    float cosHalfTheta = dot(qa, qb);
+    float cosHalfTheta = dot(q1, qb);
     if (cosHalfTheta < 0)
     {
       qb = qb * -1.f;
@@ -237,7 +236,7 @@ public:
     // if qa = qb or qa =- qb then theta = 0 and we can return qa
     if (std::fabs(cosHalfTheta) >= 0.995f)
     {
-      return lerp(qa, qb, pc);
+      return lerp(q1, qb, pc);
     }
 
     // Calculate temporary values.
@@ -248,14 +247,14 @@ public:
     // we could rotate around any axis normal to q1 or q2
     if (std::fabs(sinHalfTheta) < 0.001)
     {
-      return (qa + qb) / 2.f;
+      return (q1 + qb) / 2.f;
     }
 
     // calculate result
     float ra = sinf((1.f - pc) * halfTheta) / sinHalfTheta;
     float rb = sinf(pc * halfTheta) / sinHalfTheta;
 
-    return qa * ra + qb * rb;
+    return q1 * ra + qb * rb;
   }
 
   /**

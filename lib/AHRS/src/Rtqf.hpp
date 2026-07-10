@@ -90,7 +90,8 @@ private:
     // slerp() handles the shorter-path sign flip and degrades gracefully to
     // nlerp for small angles, avoiding the numerical issues of normalizing a
     // near-zero rotation axis.
-    q = Quaternion::slerp(q, _poseQ, _slerpPower).getNormalized();
+    // q = Quaternion::slerp(q.getNormalized(), _poseQ, _slerpPower).getNormalized();
+    q = Quaternion::lerp(q.getNormalized(), _poseQ, _slerpPower);
 
     _quaternion = Quaternion::ensureSign(q, _quaternion);
   }
