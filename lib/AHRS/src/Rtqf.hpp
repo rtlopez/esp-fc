@@ -9,7 +9,7 @@
 class Rtqf
 {
 public:
-  Rtqf(): _first(true), _dt(1.0f), _slerpPower(0.001f) {}
+  Rtqf(): _quaternion{}, _poseQ{}, _dt(1.0f), _slerpPower(0.001f), _first(true) {}
 
   void begin(float sampleFrequency)
   {
@@ -47,13 +47,13 @@ private:
     {
       // since Z is always 0, it can be optimized a bit
       // see VectorFloat::eulerToQuaternion() for reference
-      float cosX2 = cos(pose.x / 2.0f);
-      float sinX2 = sin(pose.x / 2.0f);
-      float cosY2 = cos(pose.y / 2.0f);
-      float sinY2 = sin(pose.y / 2.0f);
+      float cosX2 = cosf(pose.x / 2.0f);
+      float sinX2 = sinf(pose.x / 2.0f);
+      float cosY2 = cosf(pose.y / 2.0f);
+      float sinY2 = sinf(pose.y / 2.0f);
       const auto q = Quaternion{cosX2 * cosY2, sinX2 * cosY2, cosX2 * sinY2, -sinX2 * sinY2};
       const auto m = VectorFloat{mx, my, mz}.getRotated(q);
-      pose.z = -atan2(m.y, m.x);
+      pose.z = -atan2f(m.y, m.x);
     }
     else
     {
@@ -90,14 +90,14 @@ private:
     // slerp() handles the shorter-path sign flip and degrades gracefully to
     // nlerp for small angles, avoiding the numerical issues of normalizing a
     // near-zero rotation axis.
-    q = Quaternion::slerp(q, _poseQ, _slerpPower);
+    q = Quaternion::slerp(q, _poseQ, _slerpPower).getNormalized();
 
     _quaternion = Quaternion::ensureSign(q, _quaternion);
   }
 
-  bool _first;
-  float _dt;
-  float _slerpPower;
   Quaternion _quaternion{};
   Quaternion _poseQ{};
+  float _dt;
+  float _slerpPower;
+  bool _first;
 };
