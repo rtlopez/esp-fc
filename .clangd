@@ -5,3 +5,24 @@ CompileFlags:
     - -mlongcalls
     - -fstrict-volatile-bitfields
     - -fno-tree-switch-conversion
+
+  # help clangd resolve includes for files not present in compile_commands.json
+  # (e.g. newly added unit tests under test/)
+  Add:
+    - -Ilib/AHRS/src
+    - -Ilib/betaflight/src
+    - -Ilib/EscDriver/src
+    - -Ilib/Espfc/src
+    - -Ilib/EspWire/src
+    - -Ilib/Gps/src
+    - -Ilib/MultiButton/src
+    - -Ilib/printf/src
+    - -I.pio/libdeps/native/Unity/src
+    - -I.pio/libdeps/native/ArduinoFake/src
+
+Diagnostics:
+  # clangd's bundled clang cannot resolve toolchain/newlib headers like
+  # <machine/endian.h>; suppress the resulting false positive.
+  Suppress:
+    - pp_file_not_found
+

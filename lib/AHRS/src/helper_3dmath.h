@@ -8,12 +8,13 @@
 inline float invSqrt(float x)
 {
 // return 1.f / sqrt(x);
+static_assert(sizeof(float) == sizeof(int32_t));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #pragma GCC diagnostic ignored "-Wuninitialized"
   float halfx = 0.5f * x;
   float y = x;
-  long i = *(long*)&y;
+  int32_t i = *(int32_t*)&y;
   i = 0x5f3759df - (i >> 1);
   y = *(float*)&i;
   y = y * (1.5f - (halfx * y * y));
@@ -42,6 +43,11 @@ public:
 
   Quaternion(float nw, float nx, float ny, float nz): w(nw), x(nx), y(ny), z(nz) {}
 
+  /**
+   * @brief Returns the product of this quaternion and another quaternion.
+   * @param q The other quaternion.
+   * @return Quaternion The product.
+   */
   Quaternion getProduct(const Quaternion& q) const
   {
     // Quaternion multiplication is defined by:
@@ -55,33 +61,58 @@ public:
                       w * q.z + x * q.y - y * q.x + z * q.w); // new z
   }
 
+  /**
+   * @brief Multiplies this quaternion by another quaternion.
+   * @param q The other quaternion.
+   * @return Quaternion The product.
+   */
   Quaternion operator*(const Quaternion& q) const
   {
     return getProduct(q);
   }
 
+  /**
+   * @brief Multiplies this quaternion by another quaternion in place.
+   * @param q The other quaternion.
+   * @return Quaternion& A reference to this quaternion.
+   */
   Quaternion& operator*=(const Quaternion& q)
   {
     *this = getProduct(q);
     return *this;
   }
 
+  /**
+   * @brief Returns the conjugate of this quaternion.
+   * @return Quaternion The conjugate.
+   */
   Quaternion getConjugate() const
   {
     return Quaternion(w, -x, -y, -z);
   }
 
+  /**
+   * @brief Returns the magnitude of this quaternion.
+   * @return float The magnitude.
+   */
   float getMagnitude() const
   {
     return sqrt(w * w + x * x + y * y + z * z);
   }
 
+  /**
+   * @brief Normalizes this quaternion in place.
+   */
   void normalize()
   {
     float m = invSqrt(w * w + x * x + y * y + z * z);
     (*this) *= m;
   }
 
+  /**
+   * @brief Returns a normalized copy of this quaternion.
+   * @return Quaternion The normalized quaternion.
+   */
   Quaternion getNormalized() const
   {
     Quaternion r(w, x, y, z);
@@ -94,11 +125,21 @@ public:
     return i == 0 ? w : (i == 1 ? x : (i == 2 ? y : (i == 3 ? z : 0)));
   }
 
+  /**
+   * @brief Multiplies this quaternion by a scalar.
+   * @param v The scalar.
+   * @return Quaternion The product.
+   */
   Quaternion operator*(float v) const
   {
-    return Quaternion(w * v, x * v, y * v, z * v);
+    return {w * v, x * v, y * v, z * v};
   }
 
+  /**
+   * @brief Multiplies this quaternion by a scalar in place.
+   * @param v The scalar.
+   * @return Quaternion& A reference to this quaternion.
+   */
   Quaternion& operator*=(float v)
   {
     w *= v;
@@ -108,21 +149,43 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Divides this quaternion by a scalar.
+   * @param v The scalar.
+   * @return Quaternion The quotient.
+   */
   Quaternion operator/(float v) const
   {
-    return Quaternion(w / v, x / v, y / v, z / v);
+    return {w / v, x / v, y / v, z / v};
   }
 
+  /**
+   * @brief Adds this quaternion to another quaternion.
+   * @param q The other quaternion.
+   * @return Quaternion The sum.
+   */
   Quaternion operator+(const Quaternion& q) const
   {
-    return Quaternion(w + q.w, x + q.x, y + q.y, z + q.z);
+    return {w + q.w, x + q.x, y + q.y, z + q.z};
   }
 
+  /**
+   * @brief Computes the dot product of two quaternions.
+   * @param q1 The first quaternion.
+   * @param q2 The second quaternion.
+   * @return float The dot product.
+   */
   float static dot(const Quaternion& q1, const Quaternion& q2)
   {
     return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
   }
 
+  /**
+   * @brief Ensures the sign of the quaternion is consistent with the reference quaternion.
+   * @param q The quaternion to check.
+   * @param reference The reference quaternion.
+   * @return Quaternion The quaternion with the correct sign.
+   */
   Quaternion static ensureSign(const Quaternion& q, const Quaternion& reference)
   {
     if(dot(q, reference) < 0.0f)
@@ -135,6 +198,10 @@ public:
   /**
    * Linear interpolation
    * actually it is nlerp (normalised lerp)
+   * @param q1 The first quaternion.
+   * @param q2 The second quaternion.
+   * @param t The interpolation parameter.
+   * @return Quaternion The interpolated quaternion.
    */
   Quaternion static lerp(const Quaternion& q1, const Quaternion& q2, float t)
   {
@@ -147,6 +214,10 @@ public:
    * https://keithmaggio.wordpress.com/2011/02/15/math-magician-lerp-slerp-and-nlerp/
    * http://number-none.com/product/Understanding%20Slerp,%20Then%20Not%20Using%20It/
    * https://en.wikipedia.org/wiki/Slerp
+   * @param q1 The first quaternion.
+   * @param q2 The second quaternion.
+   * @param pc The interpolation parameter.
+   * @return Quaternion The interpolated quaternion.
    */
   Quaternion static slerp(const Quaternion& q1, const Quaternion& q2, float pc)
   {
@@ -187,6 +258,11 @@ public:
     return qa * ra + qb * rb;
   }
 
+  /**
+   * @brief Converts this quaternion to an angle-axis representation.
+   * @param angle The angle in radians.
+   * @param v The axis vector.
+   */
   template<typename T>
   void toAngleVector(float& angle, VectorBase<T>& v) const
   {
@@ -207,6 +283,11 @@ public:
     }
   }
 
+  /**
+   * @brief Creates a quaternion from an angle and axis.
+   * @param angle The angle in radians.
+   * @param v The axis vector.
+   */
   template<typename T>
   void fromAngleVector(float angle, const VectorBase<T>& v)
   {
@@ -218,6 +299,11 @@ public:
     z = v.z * sinHalfTheta;
   }
 
+  /**
+   * @brief Creates a quaternion from an angular velocity vector and time step.
+   * @param v The angular velocity vector.
+   * @param dt The time step.
+   */
   template<typename T>
   void fromAngularVelocity(const VectorBase<T>& v, float dt)
   {
@@ -247,6 +333,7 @@ public:
   {
     return i == 0 ? x : (i == 1 ? y : (i == 2 ? z : T()));
   }
+
   T operator[](size_t i) const
   {
     return get(i);
@@ -262,11 +349,19 @@ public:
     return VectorBase<float>(x, y, z);
   }
 
+  /**
+   * @brief Returns the magnitude of this vector.
+   * @return float The magnitude.
+   */
   float getMagnitude() const
   {
     return sqrtf(x * x + y * y + z * z);
   }
 
+  /**
+   * @brief Normalizes this vector in place.
+   * @return VectorBase<T>& A reference to this vector.
+   */
   VectorBase<T>& normalize()
   {
     float m = invSqrt(x * x + y * y + z * z);
@@ -274,6 +369,10 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Returns a new vector that is normalized.
+   * @return VectorBase<T> The normalized vector.
+   */
   VectorBase<T> getNormalized() const
   {
     VectorBase<T> r(x, y, z);
@@ -281,6 +380,10 @@ public:
     return r;
   }
 
+  /**
+   * @brief Rotates this vector by the given quaternion.
+   * @param q The quaternion to rotate by.
+   */
   void rotate(const Quaternion& q)
   {
     // http://www.cprogramming.com/tutorial/3d/quaternions.html
@@ -310,6 +413,11 @@ public:
     z = p.z;
   }
 
+  /**
+   * @brief Returns a new vector that is rotated by the given quaternion.
+   * @param q The quaternion to rotate by.
+   * @return VectorBase<T> The rotated vector.
+   */
   VectorBase<T> getRotated(const Quaternion& q) const
   {
     VectorBase<T> r(x, y, z);
@@ -317,11 +425,23 @@ public:
     return r;
   }
 
+  /**
+   * @brief Calculates the dot product of two vectors.
+   * @param a The first vector.
+   * @param b The second vector.
+   * @return float The dot product.
+   */
   float static dotProduct(const VectorBase<T>& a, const VectorBase<T>& b)
   {
     return a.x * b.x + a.y * b.y + a.z * b.z;
   }
 
+  /**
+   * @brief Calculates the cross product of two vectors.
+   * @param a The first vector.
+   * @param b The second vector.
+   * @return VectorBase<T> The cross product.
+   */
   VectorBase<T> static crossProduct(const VectorBase<T>& a, const VectorBase<T>& b)
   {
     VectorBase<T> r;
@@ -331,16 +451,30 @@ public:
     return r;
   }
 
+  /**
+   * @brief Calculates the dot product of this vector with another vector.
+   * @param v The other vector.
+   * @return float The dot product.
+   */
   float dot(const VectorBase<T>& v) const
   {
     return dotProduct(*this, v);
   }
 
+  /**
+   * @brief Calculates the cross product of this vector with another vector.
+   * @param v The other vector.
+   * @return VectorBase<T> The cross product.
+   */
   VectorBase<T> cross(const VectorBase<T>& v) const
   {
     return crossProduct(*this, v);
   }
 
+  /**
+   * @brief Converts acceleration vector to Euler angles.
+   * @return VectorBase<T> The Euler angles.
+   */
   VectorBase<T> accelToEuler() const
   {
     VectorBase<T> na = getNormalized();
@@ -350,31 +484,40 @@ public:
     return VectorBase<T>(tx, ty, tz);
   }
 
+  /**
+   * @brief Converts acceleration vector to quaternion.
+   * Uses the shortest arc rotation from the Z-axis to the acceleration vector.
+   * @return Quaternion 
+   */
   Quaternion accelToQuaternion() const
   {
-    /*VectorBase<T> ref(0, 0, 1);
-    VectorBase<T> na = getNormalized();
-    float angle = acosf(ref.dot(na));
-    VectorBase<T> v = na.cross(ref).getNormalized();
-    Quaternion q;
-    q.fromAngleVector(angle, v);
-    q.normalize();
-    return q;*/
-    return diffVectors(VectorBase<T>(T(0), T(0), T(1)), *this, 1.0f);
+    return shortestArc(*this, VectorBase<T>(T(0), T(0), T(1)), 1.0f);
   }
 
-  static Quaternion diffVectors(const VectorBase<T>& src, const VectorBase<T>& dst, float gain = 1.f)
+  /**
+   * @brief Calculates the shortest arc rotation from one vector to another.
+   * @param from The starting vector.
+   * @param to The target vector.
+   * @param gain The gain to apply to the rotation angle.
+   * @return Quaternion The shortest arc rotation.
+   */
+  static Quaternion shortestArc(const VectorBase<T>& from, const VectorBase<T>& to, float gain = 1.f)
   {
-    VectorBase<T> src_n = src.getNormalized();
-    VectorBase<T> dst_n = dst.getNormalized();
-    Quaternion q;
+    auto from_n = from.getNormalized();
+    auto to_n = to.getNormalized();
+    
+    float angle = acosf(from_n.dot(to_n));
+    auto v = from_n.cross(to_n).getNormalized();
 
-    float angle = acosf(dst_n.dot(src_n));
-    VectorBase<T> v = dst_n.cross(src_n).getNormalized();
+    Quaternion q;
     q.fromAngleVector(angle * gain, v);
     return q.getNormalized();
   }
 
+  /**
+   * @brief Converts Euler angles to quaternion.
+   * @return Quaternion 
+   */
   Quaternion eulerToQuaternion() const
   {
     Quaternion q;
@@ -393,6 +536,11 @@ public:
     return q;
   }
 
+  /**
+   * @brief Converts quaternion to Euler angles.
+   * @param q The quaternion to convert.
+   * @return VectorBase<T> The Euler angles.
+   */
   VectorBase<T> eulerFromQuaternion(const Quaternion& q)
   {
     // x = atan2f(2.0f * (q.y * q.z + q.w * q.x), 1.f - 2.0f * (q.x * q.x + q.y * q.y));
