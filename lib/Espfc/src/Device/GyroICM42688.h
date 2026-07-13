@@ -3,7 +3,7 @@
 #include "Debug_Espfc.h"
 #include "GyroDevice.h"
 #include "Utils/MemoryHelper.h"
-#include "helper_3dmath.h"
+#include "helper_3dmath.hpp"
 
 #define ICM42688_REG_WHO_AM_I         0x75
 #define ICM42688_REG_DEVICE_CONFIG    0x11

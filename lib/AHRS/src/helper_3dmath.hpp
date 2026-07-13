@@ -3,12 +3,19 @@
 #include <cmath>
 #include <cstdint>
 
+#ifdef ESP32
+#include <esp_attr.h>
+#define FAST_CODE_IMU_ATTR IRAM_ATTR
+#else
+#define FAST_CODE_IMU_ATTR
+#endif
+
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 inline float invSqrt(float x)
 {
-// return 1.f / sqrt(x);
-static_assert(sizeof(float) == sizeof(int32_t));
+  // return 1.f / sqrt(x);
+  static_assert(sizeof(float) == sizeof(int32_t));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #pragma GCC diagnostic ignored "-Wuninitialized"
@@ -188,7 +195,7 @@ public:
    */
   Quaternion static ensureSign(const Quaternion& q, const Quaternion& reference)
   {
-    if(dot(q, reference) < 0.0f)
+    if (dot(q, reference) < 0.0f)
     {
       return q * -1.f;
     }
@@ -222,7 +229,7 @@ public:
   Quaternion static slerp(const Quaternion& q1, const Quaternion& q2, float pc)
   {
     auto qb = q2;
-    
+
     // If the dot product is negative, the quaternions
     // have opposite handed-ness and slerp won't take
     // the shorter path. Fix by reversing one quaternion.
@@ -486,7 +493,7 @@ public:
   /**
    * @brief Converts acceleration vector to quaternion.
    * Uses the shortest arc rotation from the Z-axis to the acceleration vector.
-   * @return Quaternion 
+   * @return Quaternion
    */
   Quaternion accelToQuaternion() const
   {
@@ -504,7 +511,7 @@ public:
   {
     auto from_n = from.getNormalized();
     auto to_n = to.getNormalized();
-    
+
     float angle = acosf(from_n.dot(to_n));
     auto v = from_n.cross(to_n).getNormalized();
 
@@ -515,7 +522,7 @@ public:
 
   /**
    * @brief Converts Euler angles to quaternion.
-   * @return Quaternion 
+   * @return Quaternion
    */
   Quaternion eulerToQuaternion() const
   {

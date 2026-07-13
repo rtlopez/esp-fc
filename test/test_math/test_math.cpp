@@ -1,6 +1,6 @@
 #include <unity.h>
 #include <EscDriver.h>
-#include <helper_3dmath.h>
+#include <helper_3dmath.hpp>
 #include <platform.h>
 #include "Utils/Math.hpp"
 #include "Utils/Bits.hpp"

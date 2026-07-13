@@ -5,10 +5,11 @@
 #include <IPAddress.h>
 #endif
 
+#include <helper_3dmath.hpp>
+#include <Kalman.hpp>
+
 #include "ModelConfig.h"
-#include "helper_3dmath.h"
 #include "Control/Pid.h"
-#include "Kalman.h"
 #include "Utils/Filter.h"
 #include "Utils/Timer.h"
 #include "Utils/Stats.h"
@@ -286,7 +287,7 @@ struct AccelState
 {
   bool present;
   VectorInt16 raw;
-  Utils::SeqLockWrapper<VectorFloat> adc;
+  Utils::SeqLockWrapper<VectorFloat> adc{};
   VectorFloat prev;
   Utils::Filter filter[AXIS_COUNT_RPY];
   Utils::Timer timer;

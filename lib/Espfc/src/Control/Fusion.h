@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Model.h"
-#include <Madgwick.h>
-#include <Mahony.h>
+#include <Madgwick.hpp>
+#include <Mahony.hpp>
 #include <Rtqf.hpp>
 #include "Utils/Filter.h"
 

@@ -2,7 +2,7 @@
 #define _ESPFC_DEVICE_GYRO_LSM6DSO_H_
 
 #include "GyroDevice.h"
-#include "helper_3dmath.h"
+#include "helper_3dmath.hpp"
 #include "Debug_Espfc.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp

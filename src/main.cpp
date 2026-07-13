@@ -3,9 +3,9 @@
 #include <SPI.h>
 #include <EEPROM.h>
 #include <Espfc.h>
-#include <Kalman.h>
-#include <Madgwick.h>
-#include <Mahony.h>
+#include <Kalman.hpp>
+#include <Madgwick.hpp>
+#include <Mahony.hpp>
 #include <printf.h>
 #include <blackbox/blackbox.h>
 #include <EscDriver.h>
