@@ -37,7 +37,6 @@
 #define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
 
 #define ESPFC_SERIAL_REMAP_PINS
-#define SERIAL_TX_FIFO_SIZE 256
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_USB
 
 #define ESPFC_SPI_0
@@ -79,42 +78,26 @@
 #define ESPFC_MULTI_CORE_RP2040
 
 #include "Device/SerialDevice.h"
-#include "Debug_Espfc.h"
-#include <hardware/gpio.h>
 
 namespace Espfc {
+
+constexpr size_t targetSerialTxBufferSize()
+{
+  return 256u;
+}
+
+uint16_t targetSerialConfigFlags(const SerialDeviceConfig& conf);
 
 template<typename T>
 inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
 {
-  uint16_t sc = 0;
-  switch(conf.data_bits)
-  {
-    case 8:  sc |= SERIAL_DATA_8; break;
-    case 7:  sc |= SERIAL_DATA_7; break;
-    case 6:  sc |= SERIAL_DATA_6; break;
-    case 5:  sc |= SERIAL_DATA_5; break;
-    default: sc |= SERIAL_DATA_8; break;
-  }
-  switch(conf.parity)
-  {
-    case SDC_SERIAL_PARITY_EVEN: sc |= SERIAL_PARITY_EVEN; break;
-    case SDC_SERIAL_PARITY_ODD:  sc |= SERIAL_PARITY_ODD;  break;
-    default: sc |= SERIAL_PARITY_NONE;
-  }
-  switch(conf.stop_bits)
-  {
-    case SDC_SERIAL_STOP_BITS_2:  sc |= SERIAL_STOP_BIT_2;  break;
-    case SDC_SERIAL_STOP_BITS_15: sc |= SERIAL_STOP_BIT_1_5; break;
-    case SDC_SERIAL_STOP_BITS_1:  sc |= SERIAL_STOP_BIT_1;  break;
-    default: break;
-  }
-
-  dev.setFIFOSize(SERIAL_TX_FIFO_SIZE);
+  uint16_t sc = targetSerialConfigFlags(conf);
+  dev.setFIFOSize(targetSerialTxBufferSize());
   dev.setPinout(conf.tx_pin, conf.rx_pin);
-  if(conf.inverted) {
-    //gpio_set_inover(conf.rx_pin, GPIO_OVERRIDE_INVERT);
-    //gpio_set_outover(conf.tx_pin, GPIO_OVERRIDE_INVERT);
+  if (conf.inverted)
+  {
+    // gpio_set_inover(conf.rx_pin, GPIO_OVERRIDE_INVERT);
+    // gpio_set_outover(conf.tx_pin, GPIO_OVERRIDE_INVERT);
     dev.setInvertRX();
     dev.setInvertTX();
   }
@@ -127,7 +110,7 @@ template<>
 inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
 {
   dev.begin(conf.baud);
-  //while(!dev) delay(10);
+  // while(!dev) delay(10);
   return 1;
 }
 
@@ -144,44 +127,20 @@ inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss
 template<typename T>
 inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, uint32_t speed)
 {
-  if(!dev.setSCL(scl)) return -1;
-  if(!dev.setSDA(sda)) return -2;
+  if (!dev.setSCL(scl)) return -1;
+  if (!dev.setSDA(sda)) return -2;
   dev.setClock(speed);
   dev.begin();
   return 1;
 }
 
-inline uint32_t getBoardId0()
-{
-  const char * id = rp2040.getChipID();
-  return id[0] << 24 | id[1] << 16 | id[2] << 8 | id[3];
-}
+void targetReset();
 
-inline uint32_t getBoardId1()
-{
-  const char * id = rp2040.getChipID();
-  return id[4] << 24 | id[5] << 16 | id[6] << 8 | id[7];
-}
+uint32_t getBoardId0();
+uint32_t getBoardId1();
+uint32_t getBoardId2();
 
-inline uint32_t getBoardId2()
-{
-  return 0;
-}
+uint32_t targetCpuFreq();
+uint32_t targetFreeHeap();
 
-inline void targetReset()
-{
-  watchdog_enable(1, 1);
-  while(1) {}
-}
-
-inline uint32_t targetCpuFreq()
-{
-  return rp2040.f_cpu() / 1000000u;
-}
-
-inline uint32_t targetFreeHeap()
-{
-  return rp2040.getFreeHeap();
-}
-
-};
+} // namespace Espfc

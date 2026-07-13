@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Esp.h"
-#include "Debug_Espfc.h"
-
 // pins to avoid:
 // strapping: 0, 3, 45, 46
 // flash/psram: 26-37 (reserved)
@@ -55,7 +52,6 @@
 
 #define ESPFC_SERIAL_REMAP_PINS
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_USB
-#define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_DEV SPI1
@@ -92,10 +88,10 @@
 
 #define ESPFC_FREE_RTOS
 #ifndef CONFIG_FREERTOS_UNICORE
-  #define ESPFC_MULTI_CORE
+#define ESPFC_MULTI_CORE
 #endif
 
-//#define ESPFC_FREE_RTOS_QUEUE
+// #define ESPFC_FREE_RTOS_QUEUE
 #define ESPFC_ATOMIC_QUEUE
 
 #define ESPFC_DSP
@@ -110,9 +106,9 @@ template<>
 inline int targetSerialInit(HWCDC& dev, const SerialDeviceConfig& conf)
 {
   dev.begin(conf.baud);
-  //dev.setTxTimeoutMs(10);
-  //while(!dev) delay(10);
+  // dev.setTxTimeoutMs(10);
+  // while(!dev) delay(10);
   return 1;
 }
 
-}
+} // namespace Espfc

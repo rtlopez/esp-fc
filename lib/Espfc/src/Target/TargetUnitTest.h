@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #define ESPFC_INPUT
@@ -17,16 +18,17 @@
 #define ESPFC_GYRO_I2C_RATE_MAX 2000
 #define ESPFC_GYRO_SPI_RATE_MAX 8000
 
-#define SERIAL_TX_FIFO_SIZE 0xFF
-
 #define ESPFC_SERIAL_DEBUG_PORT 0
 #define ESPFC_BUZZER_PIN -1
 #define ESPFC_BUTTON_PIN -1
 #define ESPFC_LED_PIN -1
 
-inline void targetReset()
+constexpr size_t targetSerialTxBufferSize()
 {
+  return 0xff;
 }
+
+inline void targetReset() {}
 
 inline uint32_t getBoardId0()
 {
