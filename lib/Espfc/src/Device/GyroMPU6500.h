@@ -2,7 +2,7 @@
 #define _ESPFC_DEVICE_GYRO_MPU6500_H_
 
 #include "GyroMPU6050.h"
-#include "helper_3dmath.h"
+#include "helper_3dmath.hpp"
 #include "Debug_Espfc.h"
 
 #define MPU6500_ACCEL_CONF2          0x1D

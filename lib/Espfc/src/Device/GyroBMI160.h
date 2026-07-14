@@ -3,7 +3,7 @@
 #include "Debug_Espfc.h"
 #include "GyroDevice.h"
 #include "Utils/MemoryHelper.h"
-#include "helper_3dmath.h"
+#include "helper_3dmath.hpp"
 
 #define BMI160_ADDRESS_FIRST 0x69
 #define BMI160_ADDRESS_SECOND 0x68

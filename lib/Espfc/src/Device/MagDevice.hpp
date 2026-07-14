@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Device/BusAwareDevice.hpp"
-#include "helper_3dmath.h"
+#include "helper_3dmath.hpp"
 
 namespace Espfc {
 

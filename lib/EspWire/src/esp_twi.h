@@ -21,6 +21,8 @@
 #ifndef ESP_TWI_H
 #define ESP_TWI_H
 
+#include <cstdint>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

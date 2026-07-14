@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Esp.h"
-#include "Debug_Espfc.h"
-
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 6 // ppm
 
@@ -41,7 +38,6 @@
 
 #define ESPFC_SERIAL_REMAP_PINS
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_UART_0
-#define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_SCK 12
@@ -76,12 +72,6 @@
 #define ESPFC_DSHOT_TELEMETRY
 
 #define ESPFC_FREE_RTOS
-#ifndef CONFIG_FREERTOS_UNICORE
-  #define ESPFC_MULTI_CORE
-#endif
-
-//#define ESPFC_FREE_RTOS_QUEUE
-//#define ESPFC_ATOMIC_QUEUE
 
 #define ESPFC_DSP
 
@@ -95,8 +85,8 @@ template<>
 inline int targetSerialInit(USBCDC& dev, const SerialDeviceConfig& conf)
 {
   dev.begin(conf.baud);
-  //while(!dev) delay(10);
+  // while(!dev) delay(10);
   return 1;
 }
 
-}
+} // namespace Espfc

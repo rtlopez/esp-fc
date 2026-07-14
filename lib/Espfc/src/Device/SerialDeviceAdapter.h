@@ -2,6 +2,7 @@
 #define _ESPFC_SERIAL_DEVICE_ADAPTER_H_
 
 #include "Device/SerialDevice.h"
+#include "Target/Target.h"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include <WiFiClient.h>
 #endif
@@ -37,7 +38,7 @@ class SerialDeviceAdapter: public SerialDevice
     size_t write(const uint8_t * c, size_t l) override { return _dev.write(c, l); }
     bool isSoft() const override { return false; };
     int availableForWrite() override { return _dev.availableForWrite(); }
-    bool isTxFifoEmpty() override { return _dev.availableForWrite() >= SERIAL_TX_FIFO_SIZE; }
+    bool isTxFifoEmpty() override { return _dev.availableForWrite() >= static_cast<int>(targetSerialTxBufferSize()); }
     operator bool() const override { return (bool)_dev; }
   private:
     T& _dev;
@@ -53,7 +54,7 @@ inline void SerialDeviceAdapter<WiFiClient>::begin(const SerialDeviceConfig& con
 template<>
 inline int SerialDeviceAdapter<WiFiClient>::availableForWrite()
 {
-  return SERIAL_TX_FIFO_SIZE;
+  return static_cast<int>(targetSerialTxBufferSize());
 }
 
 template<>

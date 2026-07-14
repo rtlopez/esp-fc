@@ -1,12 +1,12 @@
 #include <cmath>
 #include <unity.h>
 
-#include <Complementary.h>
-#include <Kalman.h>
-#include <Madgwick.h>
-#include <Mahony.h>
+#include <Complementary.hpp>
+#include <Kalman.hpp>
+#include <Madgwick.hpp>
+#include <Mahony.hpp>
 #include <Rtqf.hpp>
-#include <helper_3dmath.h>
+#include <helper_3dmath.hpp>
 
 // Test suite for the AHRS sensor fusion module.
 //

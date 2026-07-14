@@ -8,7 +8,7 @@
 #include "GyroDevice.h"
 #include "ModelConfig.h"
 #include "Utils/MemoryHelper.h"
-#include "helper_3dmath.h"
+#include "helper_3dmath.hpp"
 
 #define MPU6050_ADDRESS_FIRST 0x68  // address pin low (GND), default for InvenSense evaluation board
 #define MPU6050_ADDRESS_SECOND 0x69 // address pin high (VCC)

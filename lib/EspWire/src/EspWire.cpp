@@ -21,11 +21,6 @@
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
 */
 
-extern "C" {
-  #include <stdlib.h>
-  #include <string.h>
-  #include <inttypes.h>
-}
 #include "esp_twi.h"
 #include "EspWire.h"
 

@@ -2,7 +2,7 @@
 #define _ESPFC_DEVICE_GYRO_ICM20602_H_
 
 #include "GyroMPU6050.h"
-#include "helper_3dmath.h"
+#include "helper_3dmath.hpp"
 #include "Debug_Espfc.h"
 
 #define ICM20602_RA_ACCEL2_CONFIG     0x1D

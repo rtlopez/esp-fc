@@ -10,7 +10,7 @@ namespace Blackbox {
 class BlackboxSerialBuffer: public Device::SerialDevice
 {
   public:
-    static constexpr size_t SIZE = SERIAL_TX_FIFO_SIZE;//128;
+    static constexpr size_t SIZE = targetSerialTxBufferSize(); // 128;
 
     BlackboxSerialBuffer(): _dev(nullptr), _idx(0), _data(nullptr) {}
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Esp.h"
-#include "Debug_Espfc.h"
 // flash pins: 12-17 (reserved)
 // usb pins: 18,19
 // strapping pins: 2,8,9, must be high on boot
@@ -43,7 +41,6 @@
 
 #define ESPFC_SERIAL_REMAP_PINS
 #define ESPFC_SERIAL_DEBUG_PORT SERIAL_UART_0
-#define SERIAL_TX_FIFO_SIZE 0xFF
 
 #define ESPFC_SPI_0
 #define ESPFC_SPI_0_DEV SPI1
@@ -88,8 +85,8 @@ template<>
 inline int targetSerialInit(HWCDC& dev, const SerialDeviceConfig& conf)
 {
   dev.begin(conf.baud);
-  //while(!dev) delay(10);
+  // while(!dev) delay(10);
   return 1;
 }
 
-}
+} // namespace Espfc

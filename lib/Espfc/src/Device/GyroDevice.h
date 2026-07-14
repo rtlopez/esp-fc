@@ -1,6 +1,6 @@
 #pragma once
 
-#include <helper_3dmath.h>
+#include <helper_3dmath.hpp>
 #include "BusDevice.hpp"
 #include "BusAwareDevice.hpp"
 
