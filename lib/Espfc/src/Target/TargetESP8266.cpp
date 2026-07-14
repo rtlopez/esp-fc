@@ -1,10 +1,10 @@
-#ifdef ESP8266
+#if defined(ESP8266)
 
 #include <Arduino.h>
 #include <Esp.h>
 #include <cstdint>
 
-#include "Device/SerialDevice.h"
+#include "Target/TargetESP8266.h"
 
 namespace Espfc {
 
