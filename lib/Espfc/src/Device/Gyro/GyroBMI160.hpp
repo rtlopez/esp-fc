@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Debug_Espfc.h"
-#include "GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "Utils/MemoryHelper.h"
 #include "helper_3dmath.hpp"
 
@@ -67,7 +67,7 @@
 
 #define BMI160_RA_CMD 0x7E
 
-namespace Espfc::Device {
+namespace Espfc::Device::Gyro {
 
 class GyroBMI160 : public GyroDevice
 {
@@ -235,4 +235,4 @@ public:
   }
 };
 
-} // namespace Espfc::Device
+} // namespace Espfc::Device::Gyro

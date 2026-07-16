@@ -1,16 +1,13 @@
-#ifndef _ESPFC_DEVICE_GYRO_ICM20602_H_
-#define _ESPFC_DEVICE_GYRO_ICM20602_H_
+#pragma once
 
-#include "GyroMPU6050.h"
+#include "GyroMPU6050.hpp"
 #include "helper_3dmath.hpp"
 #include "Debug_Espfc.h"
 
 #define ICM20602_RA_ACCEL2_CONFIG     0x1D
 #define ICM20602_WHOAMI_DEFAULT_VALUE 0x12
 
-namespace Espfc {
-
-namespace Device {
+namespace Espfc::Device::Gyro {
 
 class GyroICM20602: public GyroMPU6050
 {
@@ -35,8 +32,4 @@ class GyroICM20602: public GyroMPU6050
     }
 };
 
-}
-
-}
-
-#endif
+} // namespace Espfc::Device::Gyro

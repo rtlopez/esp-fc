@@ -1,11 +1,12 @@
 #include <unity.h>
 #include <ArduinoFake.h>
-#include "Device/GyroICM42688.h"
-#include "Device/GyroDevice.h"
+#include "Device/Gyro/GyroICM42688.hpp"
+#include "Device/GyroDevice.hpp"
 #include <platform.h>
 
 using namespace Espfc;
 using namespace Espfc::Device;
+using namespace Espfc::Device::Gyro;
 
 class MockBusDevice : public BusDevice
 {

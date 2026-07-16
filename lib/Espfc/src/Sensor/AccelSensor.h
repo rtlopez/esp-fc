@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseSensor.h"
-#include "Device/GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "Model.h"
 
 namespace Espfc::Sensor {

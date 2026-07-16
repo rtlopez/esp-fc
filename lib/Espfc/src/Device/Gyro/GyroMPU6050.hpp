@@ -3,9 +3,9 @@
 // https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.cpp#L1501
 // https://github.com/guywithaview/Arduino-Test/blob/master/GY87/GY87.ino
 
-#include "BusDevice.hpp"
+#include "Device/BusDevice.hpp"
 #include "Debug_Espfc.h"
-#include "GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "ModelConfig.h"
 #include "Utils/MemoryHelper.h"
 #include "helper_3dmath.hpp"
@@ -98,7 +98,7 @@
 #define MPU6050_INT_PIN_CFG 0x37
 #define MPU6050_I2C_BYPASS_EN 0x02
 
-namespace Espfc::Device {
+namespace Espfc::Device::Gyro {
 
 class GyroMPU6050 : public GyroDevice
 {
@@ -255,4 +255,4 @@ public:
   uint8_t _dlpf;
 };
 
-} // namespace Espfc::Device
+} // namespace Espfc::Device::Gyro

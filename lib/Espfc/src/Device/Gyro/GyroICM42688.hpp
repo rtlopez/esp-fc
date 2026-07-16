@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Debug_Espfc.h"
-#include "GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "Utils/MemoryHelper.h"
 #include "helper_3dmath.hpp"
 
@@ -19,7 +19,7 @@
 #define ICM42688_GYRO_2000DPS_8KHZ    0x03
 #define ICM42688_ACCEL_16G_8KHZ       0x03
 
-namespace Espfc::Device {
+namespace Espfc::Device::Gyro {
 
 class GyroICM42688 : public GyroDevice
 {
@@ -91,4 +91,4 @@ public:
   }
 };
 
-}
+} // namespace Espfc::Device::Gyro

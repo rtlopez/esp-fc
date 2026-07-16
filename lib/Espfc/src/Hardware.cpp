@@ -2,14 +2,14 @@
 #include "Device/Baro/BaroBMP280.hpp"
 #include "Device/Baro/BaroSPL06.hpp"
 #include "Device/BaroDevice.hpp"
-#include "Device/GyroBMI160.h"
-#include "Device/GyroDevice.h"
-#include "Device/GyroICM20602.h"
-#include "Device/GyroICM42688.h"
-#include "Device/GyroLSM6DSO.h"
-#include "Device/GyroMPU6050.h"
-#include "Device/GyroMPU6500.h"
-#include "Device/GyroMPU9250.h"
+#include "Device/GyroDevice.hpp"
+#include "Device/Gyro/GyroBMI160.hpp"
+#include "Device/Gyro/GyroICM20602.hpp"
+#include "Device/Gyro/GyroICM42688.hpp"
+#include "Device/Gyro/GyroLSM6DSO.hpp"
+#include "Device/Gyro/GyroMPU6050.hpp"
+#include "Device/Gyro/GyroMPU6500.hpp"
+#include "Device/Gyro/GyroMPU9250.hpp"
 #include "Device/Mag/MagAK8963.hpp"
 #include "Device/Mag/MagHMC5883L.hpp"
 #include "Device/Mag/MagQMC5883L.hpp"
@@ -35,13 +35,13 @@ static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
 static Espfc::Device::BusI2C i2cBus(WireInstance);
 #endif
 static Espfc::Device::BusSlave gyroSlaveBus;
-static Espfc::Device::GyroMPU6050 mpu6050;
-static Espfc::Device::GyroMPU6500 mpu6500;
-static Espfc::Device::GyroMPU9250 mpu9250;
-static Espfc::Device::GyroLSM6DSO lsm6dso;
-static Espfc::Device::GyroICM20602 icm20602;
-static Espfc::Device::GyroICM42688 icm42688;
-static Espfc::Device::GyroBMI160 bmi160;
+static Espfc::Device::Gyro::GyroMPU6050 mpu6050;
+static Espfc::Device::Gyro::GyroMPU6500 mpu6500;
+static Espfc::Device::Gyro::GyroMPU9250 mpu9250;
+static Espfc::Device::Gyro::GyroLSM6DSO lsm6dso;
+static Espfc::Device::Gyro::GyroICM20602 icm20602;
+static Espfc::Device::Gyro::GyroICM42688 icm42688;
+static Espfc::Device::Gyro::GyroBMI160 bmi160;
 static Espfc::Device::Mag::MagHMC5883L hmc5883l;
 static Espfc::Device::Mag::MagQMC5883L qmc5883l;
 static Espfc::Device::Mag::MagQMC5883P qmc5883p;

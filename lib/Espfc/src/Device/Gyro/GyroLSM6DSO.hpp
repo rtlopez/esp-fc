@@ -1,7 +1,6 @@
-#ifndef _ESPFC_DEVICE_GYRO_LSM6DSO_H_
-#define _ESPFC_DEVICE_GYRO_LSM6DSO_H_
+#pragma once
 
-#include "GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "helper_3dmath.hpp"
 #include "Debug_Espfc.h"
 
@@ -60,9 +59,7 @@
 #define LSM6DSO_MASK_CTRL6_C       0x17 // 0b00010111
 #define LSM6DSO_MASK_CTRL9_XL      0x02 // 0b00000010
 
-namespace Espfc {
-
-namespace Device {
+namespace Espfc::Device::Gyro {
 
 class GyroLSM6DSO: public GyroDevice
 {
@@ -158,8 +155,4 @@ class GyroLSM6DSO: public GyroDevice
     }
 };
 
-}
-
-}
-
-#endif
+} // namespace Espfc::Device::Gyro

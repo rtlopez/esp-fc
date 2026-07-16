@@ -1,7 +1,6 @@
-#ifndef _ESPFC_DEVICE_GYRO_MPU6500_H_
-#define _ESPFC_DEVICE_GYRO_MPU6500_H_
+#pragma once
 
-#include "GyroMPU6050.h"
+#include "GyroMPU6050.hpp"
 #include "helper_3dmath.hpp"
 #include "Debug_Espfc.h"
 
@@ -9,9 +8,7 @@
 #define MPU6500_WHOAMI_DEFAULT_VALUE 0x70
 #define MPU6500_WHOAMI_ALT_VALUE     0x75
 
-namespace Espfc {
-
-namespace Device {
+namespace Espfc::Device::Gyro {
 
 class GyroMPU6500: public GyroMPU6050
 {
@@ -36,8 +33,4 @@ class GyroMPU6500: public GyroMPU6050
     }
 };
 
-}
-
-}
-
-#endif
+} // namespace Espfc::Device::Gyro

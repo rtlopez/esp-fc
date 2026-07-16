@@ -2,7 +2,7 @@
 
 #include "BaseSensor.h"
 #include "Model.h"
-#include "Device/GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "Utils/Sma.hpp"
 #ifdef ESPFC_DSP
 #include "Utils/FFTAnalyzer.hpp"
