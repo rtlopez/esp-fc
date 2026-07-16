@@ -1,6 +1,6 @@
 #include "GyroBMI160.hpp"
 
-#include "Debug_Espfc.h"
+#include "Hal/Time.hpp"
 #include "Utils/MemoryHelper.h"
 
 #define BMI160_ADDRESS_FIRST 0x69

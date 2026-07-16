@@ -15,6 +15,7 @@
 #include "Device/Mag/MagQMC5883L.hpp"
 #include "Device/Mag/MagQMC5883P.hpp"
 #include "Hal/Gpio.h"
+#include "Hal/Time.hpp"
 #include "Hardware.h"
 #if defined(ESPFC_WIFI_ALT)
 #include <ESP8266WiFi.h>
@@ -85,7 +86,7 @@ void Hardware::initBus()
 #if defined(ESPFC_I2C_0)
   int i2cResult =
       i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000ul);
-  i2cBus.onError = std::bind(&Hardware::onI2CError, this);
+  i2cBus.onError = [this]() { onI2CError(); };
   _model.logger.info()
       .log(F("I2C"))
       .log(_model.config.pin[PIN_I2C_0_SDA])

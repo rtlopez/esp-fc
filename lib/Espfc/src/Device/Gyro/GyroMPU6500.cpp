@@ -1,7 +1,5 @@
 #include "GyroMPU6500.hpp"
 
-#include "Debug_Espfc.h"
-
 #define MPU6050_RA_WHO_AM_I          0x75
 #define MPU6500_ACCEL_CONF2          0x1D
 #define MPU6500_WHOAMI_DEFAULT_VALUE 0x70
@@ -24,7 +22,6 @@ bool GyroMPU6500::testConnection()
 {
   uint8_t whoami = 0;
   uint8_t len = _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
-  //D("MPU6500:whoami", _addr, whoami);
   return len == 1 && (whoami == MPU6500_WHOAMI_DEFAULT_VALUE || whoami == MPU6500_WHOAMI_ALT_VALUE);
 }
 

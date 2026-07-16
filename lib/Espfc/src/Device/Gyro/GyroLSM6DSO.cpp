@@ -1,6 +1,6 @@
 #include "GyroLSM6DSO.hpp"
 
-#include "Debug_Espfc.h"
+#include "Hal/Time.hpp"
 #include "Utils/MemoryHelper.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp

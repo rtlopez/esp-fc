@@ -1,6 +1,6 @@
 #include "GyroICM42688.hpp"
 
-#include "Debug_Espfc.h"
+#include "Hal/Time.hpp"
 #include "Utils/MemoryHelper.h"
 
 #define ICM42688_REG_WHO_AM_I         0x75
@@ -81,7 +81,6 @@ bool GyroICM42688::testConnection()
 {
   uint8_t whoami = 0;
   _bus->readByte(_addr, ICM42688_REG_WHO_AM_I, &whoami);
-  // D("icm42688:whoami", _addr, whoami);
   return whoami == ICM42688_WHO_AM_I_VALUE;
 }
 

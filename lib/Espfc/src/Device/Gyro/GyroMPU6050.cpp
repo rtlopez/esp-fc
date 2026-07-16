@@ -1,6 +1,6 @@
 #include "GyroMPU6050.hpp"
 
-#include "Debug_Espfc.h"
+#include "Hal/Time.hpp"
 #include "ModelConfig.h"
 #include "Utils/MemoryHelper.h"
 
@@ -108,17 +108,14 @@ int GyroMPU6050::begin(BusDevice* bus, uint8_t addr)
   uint8_t res = 0;
 
   res = _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_RESET);
-  // D("mpu6050:reset", res);
   delay(100);
 
   // disable sleep mode and set clock source
   res = _bus->writeByte(_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_CLOCK_PLL_XGYRO);
-  // D("mpu6050:sleep_pll", res);
   delay(15);
 
   // reset I2C master and sensors signal path
   res = _bus->writeByte(_addr, MPU6050_USER_CTRL, MPU6050_I2C_MST_RESET | MPU6050_SIG_COND_RESET);
-  // D("mpu6050:sig_reset", res);
   delay(15);
 
   // temporary force 1k gyro rate for mag initiation, will be overwritten in GyroSensor
@@ -150,11 +147,9 @@ int GyroMPU6050::begin(BusDevice* bus, uint8_t addr)
 
     // enable I2C master mode, and disable I2C
     res = _bus->writeByte(_addr, MPU6050_USER_CTRL, userCtrl);
-    // D("mpu6050:i2c_master_en", b, res);
 
     // set the I2C bus speed to 400 kHz
     res = _bus->writeByte(_addr, MPU6050_I2C_MST_CTRL, MPU6050_I2C_MST_400);
-    // D("mpu6050:i2c_master_speed", b, res);
 
     // set i2c master delay and enable for slave 0
     res = _bus->writeByte(_addr, MPU6050_I2C_SLV4_CTRL, MPU6050_I2C_MST_DLY_15);
@@ -164,7 +159,6 @@ int GyroMPU6050::begin(BusDevice* bus, uint8_t addr)
   {
     // enable I2C bypass mode
     res = _bus->writeByte(_addr, MPU6050_INT_PIN_CFG, MPU6050_I2C_BYPASS_EN);
-    // D("mpu6050:i2c_bypass", res);
   }
   delay(10);
 
@@ -208,7 +202,6 @@ void GyroMPU6050::setDLPFMode(uint8_t mode)
 {
   _dlpf = mode;
   bool res = _bus->writeByte(_addr, MPU6050_RA_CONFIG, mode);
-  // D("mpu6050:dlpf", mode, res);
   (void)res;
 }
 
@@ -231,7 +224,6 @@ void GyroMPU6050::setRate(int rate)
   // therefore: SMPLRT_DIV = (Gyroscope Output Rate / Sample Rate) - 1
   const uint8_t divider = (getRate() / rate) - 1;
   uint8_t res = _bus->writeByte(_addr, MPU6050_RA_SMPLRT_DIV, divider);
-  // D("mpu6050:rate", rate, divider, res);
   (void)res;
 }
 
@@ -239,7 +231,6 @@ bool GyroMPU6050::testConnection()
 {
   uint8_t whoami = 0;
   uint8_t len = _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
-  // D("mpu6050:whoami", _addr, whoami, len);
   return len == 1 && (whoami == 0x68 || whoami == 0x72);
 }
 
