@@ -1,5 +1,6 @@
-#include "BusSlave.h"
-#include <Arduino.h>
+#include "BusSlave.hpp"
+#include "Hal/Time.hpp"
+#include "Utils/MemoryHelper.h"
 
 #define MPU6050_I2C_SLV0_ADDR 0x25
 #define MPU6050_I2C_SLV0_REG 0x26
@@ -12,7 +13,7 @@ namespace Espfc::Device {
 
 BusSlave::BusSlave() {}
 
-int BusSlave::begin(BusDevice* dev, int addr)
+int BusSlave::begin(BusDevice* dev, uint8_t addr)
 {
   setBus(dev, addr);
 
@@ -52,7 +53,7 @@ int8_t BusSlave::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t*
 }
 
 // readFast() ignores devAddr and regAddr args and read ext sensor data reg from master
-int8_t IRAM_ATTR BusSlave::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
+int8_t FAST_CODE_ATTR BusSlave::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
 {
   return _bus->readFast(_addr, MPU6050_EXT_SENS_DATA_00, length, data);
 }

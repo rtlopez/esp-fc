@@ -1,8 +1,8 @@
+#include "Hardware.h"
 #include "Device/Baro/BaroBMP085.hpp"
 #include "Device/Baro/BaroBMP280.hpp"
 #include "Device/Baro/BaroSPL06.hpp"
 #include "Device/BaroDevice.hpp"
-#include "Device/GyroDevice.hpp"
 #include "Device/Gyro/GyroBMI160.hpp"
 #include "Device/Gyro/GyroICM20602.hpp"
 #include "Device/Gyro/GyroICM42688.hpp"
@@ -10,13 +10,13 @@
 #include "Device/Gyro/GyroMPU6050.hpp"
 #include "Device/Gyro/GyroMPU6500.hpp"
 #include "Device/Gyro/GyroMPU9250.hpp"
+#include "Device/GyroDevice.hpp"
 #include "Device/Mag/MagAK8963.hpp"
 #include "Device/Mag/MagHMC5883L.hpp"
 #include "Device/Mag/MagQMC5883L.hpp"
 #include "Device/Mag/MagQMC5883P.hpp"
 #include "Hal/Gpio.h"
 #include "Hal/Time.hpp"
-#include "Hardware.h"
 #if defined(ESPFC_WIFI_ALT)
 #include <ESP8266WiFi.h>
 #elif defined(ESPFC_WIFI)
