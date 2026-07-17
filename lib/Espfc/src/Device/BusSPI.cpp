@@ -25,19 +25,19 @@ int BusSPI::begin(int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
 
 int8_t BusSPI::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
 {
-  transfer(devAddr, regAddr | SPI_READ, length, NULL, data, SPI_SPEED_NORMAL);
+  transfer(devAddr, regAddr | SPI_READ, length, nullptr, data, SPI_SPEED_NORMAL);
   return length;
 }
 
 int8_t FAST_CODE_ATTR BusSPI::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
 {
-  transfer(devAddr, regAddr | SPI_READ, length, NULL, data, SPI_SPEED_FAST);
+  transfer(devAddr, regAddr | SPI_READ, length, nullptr, data, SPI_SPEED_FAST);
   return length;
 }
 
 bool BusSPI::write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data)
 {
-  transfer(devAddr, regAddr & SPI_WRITE, length, data, NULL, SPI_SPEED_NORMAL);
+  transfer(devAddr, regAddr & SPI_WRITE, length, data, nullptr, SPI_SPEED_NORMAL);
   return true;
 }
 
