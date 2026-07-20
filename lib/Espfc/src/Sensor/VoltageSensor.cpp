@@ -1,12 +1,10 @@
-#include "VoltageSensor.h"
+#include "VoltageSensor.hpp"
 
 #include <algorithm>
 
-namespace Espfc {
+namespace Espfc::Sensor {
 
-namespace Sensor {
-
-VoltageSensor::VoltageSensor(Model &model) : _model(model) {}
+VoltageSensor::VoltageSensor(Model& model): _model(model) {}
 
 int VoltageSensor::begin()
 {
@@ -32,12 +30,12 @@ int VoltageSensor::update()
 
   switch (_state)
   {
-  case VBAT:
-    _state = IBAT;
-    return readVbat();
-  case IBAT:
-    _state = VBAT;
-    return readIbat();
+    case VBAT:
+      _state = IBAT;
+      return readVbat();
+    case IBAT:
+      _state = VBAT;
+      return readIbat();
   }
 
   return 0;
@@ -69,7 +67,8 @@ int VoltageSensor::readVbat()
   }
 
   _model.state.battery.cellVoltage = _model.state.battery.voltage / constrain(_model.state.battery.cells, 1, 6);
-  _model.state.battery.percentage = Utils::clamp(Utils::map(_model.state.battery.cellVoltage, 3.4f, 4.2f, 0.0f, 100.0f), 0.0f, 100.0f);
+  _model.state.battery.percentage =
+      Utils::clamp(Utils::map(_model.state.battery.cellVoltage, 3.4f, 4.2f, 0.0f, 100.0f), 0.0f, 100.0f);
 
   if (_model.config.debug.mode == DEBUG_BATTERY)
   {
@@ -110,6 +109,4 @@ int VoltageSensor::readIbat()
 #endif
 }
 
-}
-
-}
+} // namespace Espfc::Sensor

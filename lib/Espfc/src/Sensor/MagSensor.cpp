@@ -100,7 +100,9 @@ void MagSensor::calibrate()
       _model.finishCalibration();
       _model.state.mag.calibrationState = CALIBRATION_IDLE;
       break;
-    default: _model.state.mag.calibrationState = CALIBRATION_IDLE; break;
+    default:
+      _model.state.mag.calibrationState = CALIBRATION_IDLE;
+      break;
   }
 }
 

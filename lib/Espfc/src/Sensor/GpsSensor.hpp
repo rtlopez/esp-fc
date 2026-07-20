@@ -1,11 +1,9 @@
 #pragma once
 
-#include "Model.h"
 #include "Device/SerialDevice.h"
+#include "Model.h"
 #include "Utils/Timer.h"
 #include <GpsParser.hpp>
-#include <array>
-#include <algorithm>
 #include <cstring>
 
 namespace Espfc::Sensor {
@@ -22,7 +20,8 @@ public:
 private:
   void calculateHomeVector() const;
 
-  enum State {
+  enum State
+  {
     DETECT_BAUD,
     GET_VERSION,
     CONFIGURE_BAUD,
@@ -116,4 +115,4 @@ private:
   Utils::Timer _timer;
 };
 
-}
+} // namespace Espfc::Sensor
