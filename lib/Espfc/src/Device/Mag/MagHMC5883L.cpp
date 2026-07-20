@@ -89,18 +89,22 @@ int MagHMC5883L::begin(BusDevice* bus, uint8_t addr)
 
 int MagHMC5883L::readMag(VectorInt16& v)
 {
-  uint8_t buffer[6];
-  _bus->readFast(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
+  uint8_t buffer[6] = {};
+  auto result = _bus->readFast(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
   if (_mode == HMC5883L_MODE_SINGLE)
   {
     _bus->writeByte(_addr, HMC5883L_RA_MODE,
                     HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
   }
-  v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
-  v.z = (((int16_t)buffer[2]) << 8) | buffer[3];
-  v.y = (((int16_t)buffer[4]) << 8) | buffer[5];
 
-  return 1;
+  if (result == 6)
+  {
+    v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
+    v.z = (((int16_t)buffer[2]) << 8) | buffer[3];
+    v.y = (((int16_t)buffer[4]) << 8) | buffer[5];
+  }
+
+  return result == 6 ? 1 : 0;
 }
 
 const VectorFloat MagHMC5883L::convert(const VectorInt16& v) const
@@ -152,10 +156,9 @@ void MagHMC5883L::setGain(uint8_t gain)
 
 bool MagHMC5883L::testConnection()
 {
-  uint8_t buffer[3] = {0, 0, 0};
-  uint8_t len = _bus->read(_addr, HMC5883L_RA_ID_A, 3, buffer);
-  // D("hmc5883l:whoami", len, buffer[0], buffer[1], buffer[2]);
-  return len == 3 && buffer[0] == 'H' && buffer[1] == '4' && buffer[2] == '3';
+  uint8_t buffer[3] = {};
+  if (_bus->read(_addr, HMC5883L_RA_ID_A, 3, buffer) != 3) return false;
+  return buffer[0] == 'H' && buffer[1] == '4' && buffer[2] == '3';
 }
 
 } // namespace Espfc::Device::Mag

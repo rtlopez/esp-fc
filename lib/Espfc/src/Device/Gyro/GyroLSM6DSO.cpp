@@ -105,9 +105,9 @@ GyroDeviceType GyroLSM6DSO::getType() const
 
 int FAST_CODE_ATTR GyroLSM6DSO::readGyro(VectorInt16& v)
 {
-  int16_t buffer[3];
+  int16_t buffer[3] = {};
 
-  _bus->readFast(_addr, LSM6DSO_REG_OUTX_L_G, 6, (uint8_t*)buffer);
+  if (_bus->readFast(_addr, LSM6DSO_REG_OUTX_L_G, 6, (uint8_t*)buffer) != 6) return 0;
 
   v.x = buffer[0];
   v.y = buffer[1];
@@ -118,9 +118,9 @@ int FAST_CODE_ATTR GyroLSM6DSO::readGyro(VectorInt16& v)
 
 int GyroLSM6DSO::readAccel(VectorInt16& v)
 {
-  int16_t buffer[3];
+  int16_t buffer[3] = {};
 
-  _bus->readFast(_addr, LSM6DSO_REG_OUTX_L_XL, 6, (uint8_t*)buffer);
+  if (_bus->readFast(_addr, LSM6DSO_REG_OUTX_L_XL, 6, (uint8_t*)buffer) != 6) return 0;
 
   v.x = buffer[0];
   v.y = buffer[1];
@@ -145,8 +145,7 @@ void GyroLSM6DSO::setRate(int rate)
 bool GyroLSM6DSO::testConnection()
 {
   uint8_t whoami = 0;
-  _bus->readByte(_addr, LSM6DSO_REG_WHO_AM_I, &whoami);
-  //D("lsm6dso:whoami", _addr, whoami);
+  if (_bus->readByte(_addr, LSM6DSO_REG_WHO_AM_I, &whoami) != 1) return false;
   return whoami == 0x6C || whoami == 0x69;
 }
 

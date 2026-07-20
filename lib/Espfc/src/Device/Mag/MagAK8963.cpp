@@ -64,7 +64,7 @@ int MagAK8963::begin(BusDevice* bus, uint8_t addr)
 
 int MagAK8963::readMag(VectorInt16& v)
 {
-  _bus->readFast(_addr, AK8963_HXL, 7, _buffer);
+  if (_bus->readFast(_addr, AK8963_HXL, 7, _buffer) != 7) return 0;
 
   // align CW90_FLIP (swap X Y, invert Z)
   v.y = ((((int16_t)_buffer[1]) << 8) | _buffer[0]);
@@ -91,9 +91,8 @@ MagDeviceType MagAK8963::getType() const
 
 bool MagAK8963::testConnection()
 {
-  uint8_t res = _bus->read(_addr, AK8963_WHO_AM_I, 1, _buffer);
-  // D("ak8963:whoami", _addr, buffer[0], res);
-  return res == 1 && _buffer[0] == 0x48;
+  if (_bus->read(_addr, AK8963_WHO_AM_I, 1, _buffer) != 1) return false;
+  return _buffer[0] == 0x48;
 }
 
 } // namespace Espfc::Device::Mag

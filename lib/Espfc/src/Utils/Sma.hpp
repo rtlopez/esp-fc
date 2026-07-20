@@ -2,9 +2,7 @@
 
 #include <cstddef>
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 template<typename SampleType, size_t MaxSize>
 class Sma
@@ -22,6 +20,4 @@ private:
   float _inv_count;
 };
 
-}
-
-}
+} // namespace Espfc::Utils

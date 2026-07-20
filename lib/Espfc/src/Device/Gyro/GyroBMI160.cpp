@@ -192,9 +192,9 @@ GyroDeviceType GyroBMI160::getType() const
 
 int FAST_CODE_ATTR GyroBMI160::readGyro(VectorInt16& v)
 {
-  uint8_t buffer[6];
+  uint8_t buffer[6] = {};
 
-  _bus->readFast(_addr, BMI160_RA_GYRO_X_L, 6, buffer);
+  if (_bus->readFast(_addr, BMI160_RA_GYRO_X_L, 6, buffer) != 6) return 0;
 
   v.x = (((int16_t)buffer[1]) << 8) | buffer[0];
   v.y = (((int16_t)buffer[3]) << 8) | buffer[2];
@@ -205,9 +205,9 @@ int FAST_CODE_ATTR GyroBMI160::readGyro(VectorInt16& v)
 
 int GyroBMI160::readAccel(VectorInt16& v)
 {
-  uint8_t buffer[6];
+  uint8_t buffer[6] = {};
 
-  _bus->readFast(_addr, BMI160_RA_ACCEL_X_L, 6, buffer);
+  if (_bus->readFast(_addr, BMI160_RA_ACCEL_X_L, 6, buffer) != 6) return 0;
 
   v.x = (((int16_t)buffer[1]) << 8) | buffer[0];
   v.y = (((int16_t)buffer[3]) << 8) | buffer[2];
@@ -228,8 +228,7 @@ void GyroBMI160::setRate(int rate) {}
 bool GyroBMI160::testConnection()
 {
   uint8_t whoami = 0;
-  _bus->readByte(_addr, BMI160_RA_CHIP_ID, &whoami);
-  // D("bmi160:whoami", _addr, whoami);
+  if (_bus->readByte(_addr, BMI160_RA_CHIP_ID, &whoami) != 1) return false;
   return whoami == BMI160_CHIP_ID_DEFAULT_VALUE;
 }
 

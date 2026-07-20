@@ -49,21 +49,25 @@ GyroDeviceType GyroICM42688::getType() const
 
 int FAST_CODE_ATTR GyroICM42688::readGyro(VectorInt16& v)
 {
-  uint8_t buffer[6];
-  _bus->readFast(_addr, ICM42688_REG_GYRO_DATA_X1, 6, buffer);
+  uint8_t buffer[6] = {};
+  if (_bus->readFast(_addr, ICM42688_REG_GYRO_DATA_X1, 6, buffer) != 6) return 0;
+
   v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
   v.y = (((int16_t)buffer[2]) << 8) | buffer[3];
   v.z = (((int16_t)buffer[4]) << 8) | buffer[5];
+
   return 1;
 }
 
 int FAST_CODE_ATTR GyroICM42688::readAccel(VectorInt16& v)
 {
-  uint8_t buffer[6];
-  _bus->readFast(_addr, ICM42688_REG_ACCEL_DATA_X1, 6, buffer);
+  uint8_t buffer[6] = {};
+  if (_bus->readFast(_addr, ICM42688_REG_ACCEL_DATA_X1, 6, buffer) != 6) return 0;
+
   v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
   v.y = (((int16_t)buffer[2]) << 8) | buffer[3];
   v.z = (((int16_t)buffer[4]) << 8) | buffer[5];
+
   return 1;
 }
 
@@ -80,7 +84,7 @@ void GyroICM42688::setRate(int rate) {}
 bool GyroICM42688::testConnection()
 {
   uint8_t whoami = 0;
-  _bus->readByte(_addr, ICM42688_REG_WHO_AM_I, &whoami);
+  if (_bus->readByte(_addr, ICM42688_REG_WHO_AM_I, &whoami) != 1) return false;
   return whoami == ICM42688_WHO_AM_I_VALUE;
 }
 

@@ -131,14 +131,15 @@ int BaroBMP280::getDelay(BaroDeviceMode mode) const
 bool BaroBMP280::testConnection()
 {
   uint8_t whoami = 0;
-  _bus->read(_addr, BMP280_WHOAMI_REG, 1, &whoami);
+  if (_bus->read(_addr, BMP280_WHOAMI_REG, 1, &whoami) != 1) return false;
   return whoami == BMP280_WHOAMI_ID;
 }
 
 void BaroBMP280::readMesurment()
 {
-  uint8_t buffer[6] = {0, 0, 0, 0, 0, 0};
-  _bus->readFast(_addr, BMP280_PRESSURE_REG, 6, buffer);
+  uint8_t buffer[6] = {};
+  if (_bus->readFast(_addr, BMP280_PRESSURE_REG, 6, buffer) != 6) return;
+
   _raw_pressure = buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
   _raw_temp = buffer[5] | (buffer[4] << 8) | (buffer[3] << 16);
 }

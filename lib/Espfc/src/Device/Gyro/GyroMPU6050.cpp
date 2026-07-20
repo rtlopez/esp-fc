@@ -174,9 +174,9 @@ GyroDeviceType GyroMPU6050::getType() const
 
 int FAST_CODE_ATTR GyroMPU6050::readGyro(VectorInt16& v)
 {
-  uint8_t buffer[6];
+  uint8_t buffer[6] = {};
 
-  _bus->readFast(_addr, MPU6050_RA_GYRO_XOUT_H, 6, buffer);
+  if (_bus->readFast(_addr, MPU6050_RA_GYRO_XOUT_H, 6, buffer) != 6) return 0;
 
   v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
   v.y = (((int16_t)buffer[2]) << 8) | buffer[3];
@@ -187,9 +187,9 @@ int FAST_CODE_ATTR GyroMPU6050::readGyro(VectorInt16& v)
 
 int GyroMPU6050::readAccel(VectorInt16& v)
 {
-  uint8_t buffer[6];
+  uint8_t buffer[6] = {};
 
-  _bus->readFast(_addr, MPU6050_RA_ACCEL_XOUT_H, 6, buffer);
+  if (_bus->readFast(_addr, MPU6050_RA_ACCEL_XOUT_H, 6, buffer) != 6) return 0;
 
   v.x = (((int16_t)buffer[0]) << 8) | buffer[1];
   v.y = (((int16_t)buffer[2]) << 8) | buffer[3];
@@ -230,8 +230,8 @@ void GyroMPU6050::setRate(int rate)
 bool GyroMPU6050::testConnection()
 {
   uint8_t whoami = 0;
-  uint8_t len = _bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami);
-  return len == 1 && (whoami == 0x68 || whoami == 0x72);
+  if (_bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami) != 1) return false;
+  return whoami == 0x68 || whoami == 0x72;
 }
 
 } // namespace Espfc::Device::Gyro

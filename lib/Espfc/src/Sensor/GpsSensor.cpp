@@ -702,8 +702,8 @@ void GpsSensor::handleNavPvt() const
   _model.state.gps.velocity.raw.east = m.velE;
   _model.state.gps.velocity.raw.down = m.velD;
   _model.state.gps.velocity.raw.speed3d =
-      lrintf(std::sqrt(_model.state.gps.velocity.raw.groundSpeed * _model.state.gps.velocity.raw.groundSpeed +
-                       _model.state.gps.velocity.raw.down * _model.state.gps.velocity.raw.down));
+      lrintf(std::hypot(static_cast<float>(_model.state.gps.velocity.raw.groundSpeed),
+                        static_cast<float>(_model.state.gps.velocity.raw.down)));
 
   if (m.valid.validDate && m.valid.validTime)
   {
