@@ -1,7 +1,7 @@
 #include "Connect/Cli.hpp"
 #include <platform.h>
 #include "Hardware.h"
-#include "Device/GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "Utils/Filter.h"
 #include "Hal/Pgm.h"
 #include "msp/msp_protocol.h"

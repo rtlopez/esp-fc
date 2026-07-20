@@ -1,4 +1,4 @@
-#include "Device/GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "Hal/Pgm.h"
 #include <cstddef>
 

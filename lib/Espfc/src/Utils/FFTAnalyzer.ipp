@@ -9,29 +9,28 @@
 #include "esp_heap_caps.h"
 #include <algorithm>
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 template<size_t SAMPLES>
-FFTAnalyzer<SAMPLES>::FFTAnalyzer(): _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0), _in(nullptr), _out(nullptr), _win(nullptr)
+FFTAnalyzer<SAMPLES>::FFTAnalyzer()
+    : _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0), _in(nullptr), _out(nullptr), _win(nullptr)
 {
 }
 
 template<size_t SAMPLES>
 FFTAnalyzer<SAMPLES>::~FFTAnalyzer()
 {
-  if(_in)  heap_caps_free(_in);
-  if(_out) heap_caps_free(_out);
-  if(_win) heap_caps_free(_win);
+  if (_in) heap_caps_free(_in);
+  if (_out) heap_caps_free(_out);
+  if (_win) heap_caps_free(_win);
 }
 
 template<size_t SAMPLES>
 int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config, size_t axis)
 {
-  if(!_in)  _in  = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
-  if(!_out) _out = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
-  if(!_win) _win = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
+  if (!_in) _in = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
+  if (!_out) _out = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
+  if (!_win) _win = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
 
   int16_t nyquistLimit = rate / 2;
   _rate = rate;
@@ -53,8 +52,11 @@ int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config,
 
   clearPeaks();
 
-  for(size_t i = 0; i < SAMPLES; i++) _in[i] = 0;
-  //std::fill(_in, _in + SAMPLES, 0);
+  for (size_t i = 0; i < SAMPLES; i++)
+  {
+    _in[i] = 0;
+  }
+  // std::fill(_in, _in + SAMPLES, 0);
 
   return 1;
 }
@@ -65,13 +67,13 @@ int FFTAnalyzer<SAMPLES>::update(float v)
 {
   _in[_idx] = v;
 
-  if(++_idx >= SAMPLES)
+  if (++_idx >= SAMPLES)
   {
     _idx = 0;
     _phase = PHASE_FFT;
   }
 
-  switch(_phase)
+  switch (_phase)
   {
     case PHASE_COLLECT:
       return 0;
@@ -123,12 +125,13 @@ int FFTAnalyzer<SAMPLES>::update(float v)
 template<size_t SAMPLES>
 void FFTAnalyzer<SAMPLES>::clearPeaks()
 {
-  for(size_t i = 0; i < PEAKS_MAX; i++) peaks[i] = Utils::Peak();
-  //std::fill(peaks, peaks + PEAKS_MAX, Peak());
+  for (size_t i = 0; i < PEAKS_MAX; i++)
+  {
+    peaks[i] = {};
+  }
+  // std::fill(peaks, peaks + PEAKS_MAX, Peak());
 }
 
-}
-
-}
+} // namespace Espfc::Utils
 
 #endif

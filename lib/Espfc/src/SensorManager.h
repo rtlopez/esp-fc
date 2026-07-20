@@ -3,11 +3,11 @@
 #include "Model.h"
 #include "Control/Fusion.h"
 #include "Control/Altitude.hpp"
-#include "Sensor/GyroSensor.h"
-#include "Sensor/AccelSensor.h"
+#include "Sensor/GyroSensor.hpp"
+#include "Sensor/AccelSensor.hpp"
 #include "Sensor/MagSensor.hpp"
 #include "Sensor/BaroSensor.hpp"
-#include "Sensor/VoltageSensor.h"
+#include "Sensor/VoltageSensor.hpp"
 #include "Device/Input/InputButton.hpp"
 
 namespace Espfc {

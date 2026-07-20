@@ -1,10 +1,8 @@
-#include "BaseSensor.h"
+#include "Sensor/BaseSensor.hpp"
 #include "ModelConfig.h"
 #include "Utils/MemoryHelper.h"
 
-namespace Espfc {
-
-namespace Sensor {
+namespace Espfc::Sensor {
 
 void FAST_CODE_ATTR BaseSensor::align(VectorFloat& dest, uint8_t rotation)
 {
@@ -12,7 +10,7 @@ void FAST_CODE_ATTR BaseSensor::align(VectorFloat& dest, uint8_t rotation)
   const float y = dest.y;
   const float z = dest.z;
 
-  switch(rotation)
+  switch (rotation)
   {
     default:
     case ALIGN_CW0_DEG:
@@ -58,13 +56,11 @@ void FAST_CODE_ATTR BaseSensor::align(VectorFloat& dest, uint8_t rotation)
   }
 }
 
-void FAST_CODE_ATTR BaseSensor::toVector(VectorInt16& v, uint8_t * buf)
+void FAST_CODE_ATTR BaseSensor::toVector(VectorInt16& v, uint8_t* buf)
 {
   v.x = (int16_t)(((uint16_t)buf[0] << 8) | (uint16_t)buf[1]);
   v.y = (int16_t)(((uint16_t)buf[2] << 8) | (uint16_t)buf[3]);
   v.z = (int16_t)(((uint16_t)buf[4] << 8) | (uint16_t)buf[5]);
 }
 
-}
-
-}
+} // namespace Espfc::Sensor

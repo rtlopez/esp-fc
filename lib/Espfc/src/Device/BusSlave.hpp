@@ -11,7 +11,7 @@ class BusSlave : public BusDevice, public BusAwareDevice
 public:
   BusSlave();
 
-  int begin(BusDevice* dev, int addr);
+  int begin(BusDevice* dev, uint8_t addr);
 
   BusType getType() const override;
 

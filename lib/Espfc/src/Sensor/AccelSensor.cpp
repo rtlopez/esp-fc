@@ -1,5 +1,4 @@
-#include "Sensor/AccelSensor.h"
-#include "Utils/FilterHelper.h"
+#include "Sensor/AccelSensor.hpp"
 
 namespace Espfc::Sensor {
 
@@ -106,7 +105,9 @@ void FAST_CODE_ATTR AccelSensor::calibrate(VectorFloat& accel)
 {
   switch (_model.state.accel.calibrationState)
   {
-    case CALIBRATION_IDLE: accel -= _model.state.accel.bias; break;
+    case CALIBRATION_IDLE:
+      accel -= _model.state.accel.bias;
+      break;
     case CALIBRATION_START:
       _model.state.accel.bias = VectorFloat(0, 0, ACCEL_G);
       _model.state.accel.biasSamples = 2 * _model.state.accel.timer.rate;
@@ -128,7 +129,9 @@ void FAST_CODE_ATTR AccelSensor::calibrate(VectorFloat& accel)
       _model.finishCalibration();
       _model.state.accel.calibrationState = CALIBRATION_IDLE;
       break;
-    default: _model.state.accel.calibrationState = CALIBRATION_IDLE; break;
+    default:
+      _model.state.accel.calibrationState = CALIBRATION_IDLE;
+      break;
   }
 }
 

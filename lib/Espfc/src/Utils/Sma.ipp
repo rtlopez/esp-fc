@@ -1,10 +1,9 @@
 #pragma once
 
 #include "Utils/Sma.hpp"
+#include <algorithm>
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 template<typename SampleType, size_t MaxSize>
 Sma<SampleType, MaxSize>::Sma(): _idx(0), _count(MaxSize)
@@ -22,7 +21,7 @@ void Sma<SampleType, MaxSize>::begin(size_t count)
 template<typename SampleType, size_t MaxSize>
 SampleType Sma<SampleType, MaxSize>::update(const SampleType& input)
 {
-  if(_count > 1)
+  if (_count > 1)
   {
     _sum -= _samples[_idx];
     _sum += input;
@@ -33,6 +32,4 @@ SampleType Sma<SampleType, MaxSize>::update(const SampleType& input)
   return input;
 }
 
-}
-
-}
+} // namespace Espfc::Utils

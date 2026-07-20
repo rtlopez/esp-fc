@@ -5,7 +5,7 @@
 #include "EscDriver.h"
 #include "Utils/Filter.h"
 #include "Device/BusDevice.hpp"
-#include "Device/GyroDevice.h"
+#include "Device/GyroDevice.hpp"
 #include "Device/MagDevice.hpp"
 #include "Device/BaroDevice.hpp"
 #include "Device/SerialDevice.h"
