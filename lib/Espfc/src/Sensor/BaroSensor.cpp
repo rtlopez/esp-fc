@@ -1,5 +1,4 @@
-#include "BaroSensor.hpp"
-#include <functional>
+#include "Sensor/BaroSensor.hpp"
 
 namespace Espfc::Sensor {
 
@@ -21,7 +20,7 @@ int BaroSensor::begin()
   const float tau = 0.8f;
   _biasAlpha = 1.0f - expf(-dt / tau);
   _model.state.baro.altitudeBiasSamples = 3 * rate;
-  
+
   const auto internalFilter = FILTER_PT1;
   const auto internalCutoff = std::max((rate + 2) / 4, 1);
   _temperatureFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
@@ -90,7 +89,9 @@ int BaroSensor::read()
       }
       return 1;
       break;
-    default: _state = BARO_STATE_INIT; break;
+    default:
+      _state = BARO_STATE_INIT;
+      break;
   }
 
   return 0;

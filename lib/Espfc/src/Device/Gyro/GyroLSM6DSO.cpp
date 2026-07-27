@@ -1,9 +1,7 @@
-#ifndef _ESPFC_DEVICE_GYRO_LSM6DSO_H_
-#define _ESPFC_DEVICE_GYRO_LSM6DSO_H_
+#include "GyroLSM6DSO.hpp"
 
-#include "GyroDevice.h"
-#include "helper_3dmath.hpp"
-#include "Debug_Espfc.h"
+#include "Hal/Time.hpp"
+#include "Utils/MemoryHelper.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp
 #define LSM6DSOX_ADDRESS_FIRST     0x6A
@@ -60,106 +58,95 @@
 #define LSM6DSO_MASK_CTRL6_C       0x17 // 0b00010111
 #define LSM6DSO_MASK_CTRL9_XL      0x02 // 0b00000010
 
-namespace Espfc {
+namespace Espfc::Device::Gyro {
 
-namespace Device {
-
-class GyroLSM6DSO: public GyroDevice
+int GyroLSM6DSO::begin(BusDevice * bus)
 {
-  public:
-    int begin(BusDevice * bus) override
-    {
-      return begin(bus, LSM6DSOX_ADDRESS_FIRST) ? 1 : begin(bus, LSM6DSOX_ADDRESS_SECOND) ? 1 : 0;
-    }
-
-    int begin(BusDevice * bus, uint8_t addr) override
-    {
-      setBus(bus, addr);
-
-      if(!testConnection()) return 0;
-
-      // reset device
-      _bus->writeMask(_addr, LSM6DSO_REG_CTRL3_C, LSM6DSO_MASK_CTRL3_C_RESET, 1);
-      delay(100);
-
-      // Accel, 833hz ODR, 16G scale, use LPF1 output
-      _bus->writeByte(_addr, LSM6DSO_REG_CTRL1_XL, (LSM6DSO_VAL_CTRL1_XL_ODR833 << 4) | (LSM6DSO_VAL_CTRL1_XL_16G << 2) | (LSM6DSO_VAL_CTRL1_XL_LPF1 << 1));
-      delay(1);
-
-      // Gyro, 6664hz ODR, 2000dps scale
-      _bus->writeByte(_addr, LSM6DSO_REG_CTRL2_G, (LSM6DSO_VAL_CTRL2_G_ODR6664 << 4) | (LSM6DSO_VAL_CTRL2_G_2000DPS << 2));
-      delay(1);
-
-      // latch LSB/MSB during reads; set interrupt pins active high; set interrupt pins push/pull; set 4-wire SPI; enable auto-increment burst reads
-      _bus->writeMask(_addr, LSM6DSO_REG_CTRL3_C, LSM6DSO_MASK_CTRL3_C, (LSM6DSO_VAL_CTRL3_C_BDU | LSM6DSO_VAL_CTRL3_C_H_LACTIVE | LSM6DSO_VAL_CTRL3_C_PP_OD | LSM6DSO_VAL_CTRL3_C_SIM | LSM6DSO_VAL_CTRL3_C_IF_INC));
-
-      // enable accelerometer high performane mode; set gyro LPF1 cutoff to 335.5hz
-      _bus->writeMask(_addr, LSM6DSO_REG_CTRL4_C, LSM6DSO_MASK_CTRL4_C, (LSM6DSO_VAL_CTRL4_C_LPF1_SEL_G));
-
-      // enable gyro LPF1
-      _bus->writeMask(_addr, LSM6DSO_REG_CTRL6_C, LSM6DSO_MASK_CTRL6_C, (LSM6DSO_VAL_CTRL6_C_XL_HM_MODE | LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ));
-
-      // disable I3C interface
-      _bus->writeMask(_addr, LSM6DSO_REG_CTRL9_XL, LSM6DSO_MASK_CTRL9_XL, LSM6DSO_VAL_CTRL9_XL_I3C_DISABLE);
-
-      return 1;
-    }
-
-    GyroDeviceType getType() const override
-    {
-      return GYRO_LSM6DSO;
-    }
-
-    int FAST_CODE_ATTR readGyro(VectorInt16& v) override
-    {
-      int16_t buffer[3];
-
-      _bus->readFast(_addr, LSM6DSO_REG_OUTX_L_G, 6, (uint8_t*)buffer);
-
-      v.x = buffer[0];
-      v.y = buffer[1];
-      v.z = buffer[2];
-
-      return 1;
-    }
-
-    int readAccel(VectorInt16& v) override
-    {
-      int16_t buffer[3];
-
-      _bus->readFast(_addr, LSM6DSO_REG_OUTX_L_XL, 6, (uint8_t*)buffer);
-
-      v.x = buffer[0];
-      v.y = buffer[1];
-      v.z = buffer[2];
-
-      return 1;
-    }
-
-    void setDLPFMode(uint8_t mode) override
-    {
-    }
-
-    int getRate() const override
-    {
-      return 6664;
-    }
-
-    void setRate(int rate) override
-    {
-    }
-
-    bool testConnection() override
-    {
-      uint8_t whoami = 0;
-      _bus->readByte(_addr, LSM6DSO_REG_WHO_AM_I, &whoami);
-      //D("lsm6dso:whoami", _addr, whoami);
-      return whoami == 0x6C || whoami == 0x69;
-    }
-};
-
+  return begin(bus, LSM6DSOX_ADDRESS_FIRST) ? 1 : begin(bus, LSM6DSOX_ADDRESS_SECOND) ? 1 : 0;
 }
 
+int GyroLSM6DSO::begin(BusDevice * bus, uint8_t addr)
+{
+  setBus(bus, addr);
+
+  if(!testConnection()) return 0;
+
+  // reset device
+  _bus->writeMask(_addr, LSM6DSO_REG_CTRL3_C, LSM6DSO_MASK_CTRL3_C_RESET, 1);
+  delay(100);
+
+  // Accel, 833hz ODR, 16G scale, use LPF1 output
+  _bus->writeByte(_addr, LSM6DSO_REG_CTRL1_XL, (LSM6DSO_VAL_CTRL1_XL_ODR833 << 4) | (LSM6DSO_VAL_CTRL1_XL_16G << 2) | (LSM6DSO_VAL_CTRL1_XL_LPF1 << 1));
+  delay(1);
+
+  // Gyro, 6664hz ODR, 2000dps scale
+  _bus->writeByte(_addr, LSM6DSO_REG_CTRL2_G, (LSM6DSO_VAL_CTRL2_G_ODR6664 << 4) | (LSM6DSO_VAL_CTRL2_G_2000DPS << 2));
+  delay(1);
+
+  // latch LSB/MSB during reads; set interrupt pins active high; set interrupt pins push/pull; set 4-wire SPI; enable auto-increment burst reads
+  _bus->writeMask(_addr, LSM6DSO_REG_CTRL3_C, LSM6DSO_MASK_CTRL3_C, (LSM6DSO_VAL_CTRL3_C_BDU | LSM6DSO_VAL_CTRL3_C_H_LACTIVE | LSM6DSO_VAL_CTRL3_C_PP_OD | LSM6DSO_VAL_CTRL3_C_SIM | LSM6DSO_VAL_CTRL3_C_IF_INC));
+
+  // enable accelerometer high performane mode; set gyro LPF1 cutoff to 335.5hz
+  _bus->writeMask(_addr, LSM6DSO_REG_CTRL4_C, LSM6DSO_MASK_CTRL4_C, (LSM6DSO_VAL_CTRL4_C_LPF1_SEL_G));
+
+  // enable gyro LPF1
+  _bus->writeMask(_addr, LSM6DSO_REG_CTRL6_C, LSM6DSO_MASK_CTRL6_C, (LSM6DSO_VAL_CTRL6_C_XL_HM_MODE | LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ));
+
+  // disable I3C interface
+  _bus->writeMask(_addr, LSM6DSO_REG_CTRL9_XL, LSM6DSO_MASK_CTRL9_XL, LSM6DSO_VAL_CTRL9_XL_I3C_DISABLE);
+
+  return 1;
 }
 
-#endif
+GyroDeviceType GyroLSM6DSO::getType() const
+{
+  return GYRO_LSM6DSO;
+}
+
+int FAST_CODE_ATTR GyroLSM6DSO::readGyro(VectorInt16& v)
+{
+  int16_t buffer[3] = {};
+
+  if (_bus->readFast(_addr, LSM6DSO_REG_OUTX_L_G, 6, (uint8_t*)buffer) != 6) return 0;
+
+  v.x = buffer[0];
+  v.y = buffer[1];
+  v.z = buffer[2];
+
+  return 1;
+}
+
+int GyroLSM6DSO::readAccel(VectorInt16& v)
+{
+  int16_t buffer[3] = {};
+
+  if (_bus->readFast(_addr, LSM6DSO_REG_OUTX_L_XL, 6, (uint8_t*)buffer) != 6) return 0;
+
+  v.x = buffer[0];
+  v.y = buffer[1];
+  v.z = buffer[2];
+
+  return 1;
+}
+
+void GyroLSM6DSO::setDLPFMode(uint8_t mode)
+{
+}
+
+int GyroLSM6DSO::getRate() const
+{
+  return 6664;
+}
+
+void GyroLSM6DSO::setRate(int rate)
+{
+}
+
+bool GyroLSM6DSO::testConnection()
+{
+  uint8_t whoami = 0;
+  if (_bus->readByte(_addr, LSM6DSO_REG_WHO_AM_I, &whoami) != 1) return false;
+  return whoami == 0x6C || whoami == 0x69;
+}
+
+} // namespace Espfc::Device::Gyro

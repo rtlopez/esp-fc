@@ -2,7 +2,8 @@
 
 #if defined(ESPFC_I2C_0)
 
-#include "BusI2C.h"
+#include "BusI2C.hpp"
+#include <Arduino.h>
 
 namespace Espfc {
 

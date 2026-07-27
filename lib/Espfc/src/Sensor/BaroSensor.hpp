@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BaseSensor.h"
 #include "Device/BaroDevice.hpp"
 #include "Model.h"
+#include "Sensor/BaseSensor.hpp"
 #include "Utils/Filter.h"
 
 namespace Espfc::Sensor {

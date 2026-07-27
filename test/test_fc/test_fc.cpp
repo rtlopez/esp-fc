@@ -234,22 +234,22 @@ void test_controller_rates()
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_ROLL, 0.0f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.76f, controller.calculateSetpointRate(AXIS_ROLL, 0.25f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, controller.calculateSetpointRate(AXIS_ROLL, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.81f, controller.calculateSetpointRate(AXIS_ROLL, 0.75f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   6.95f, controller.calculateSetpointRate(AXIS_ROLL, 0.85f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, controller.calculateSetpointRate(AXIS_ROLL, 1.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, controller.calculateSetpointRate(AXIS_ROLL, 1.1f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.04f, controller.calculateSetpointRate(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.58f, controller.calculateSetpointRate(AXIS_ROLL, 0.75f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   6.49f, controller.calculateSetpointRate(AXIS_ROLL, 0.85f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.92f, controller.calculateSetpointRate(AXIS_ROLL, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.92f, controller.calculateSetpointRate(AXIS_ROLL, 1.1f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_PITCH,  0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.08f, controller.calculateSetpointRate(AXIS_PITCH, -0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, -13.57f, controller.calculateSetpointRate(AXIS_PITCH, -1.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, controller.calculateSetpointRate(AXIS_PITCH,  0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, controller.calculateSetpointRate(AXIS_PITCH,  1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.04f, controller.calculateSetpointRate(AXIS_PITCH, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -11.92f, controller.calculateSetpointRate(AXIS_PITCH, -1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.04f, controller.calculateSetpointRate(AXIS_PITCH,  0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.92f, controller.calculateSetpointRate(AXIS_PITCH,  1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_YAW, 0.0f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,  -1.48f, controller.calculateSetpointRate(AXIS_YAW, 0.3f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -3.65f, controller.calculateSetpointRate(AXIS_YAW, 0.6f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -8.64f, controller.calculateSetpointRate(AXIS_YAW, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -3.59f, controller.calculateSetpointRate(AXIS_YAW, 0.6f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -8.29f, controller.calculateSetpointRate(AXIS_YAW, 1.0f));
 }
 
 void test_controller_rates_limit()
@@ -283,17 +283,17 @@ void test_controller_rates_limit()
   controller.begin();
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_ROLL, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, controller.calculateSetpointRate(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.03f, controller.calculateSetpointRate(AXIS_ROLL, 0.5f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,   8.73f, controller.calculateSetpointRate(AXIS_ROLL, 1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_PITCH,  0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, controller.calculateSetpointRate(AXIS_PITCH,  0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.08f, controller.calculateSetpointRate(AXIS_PITCH, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.03f, controller.calculateSetpointRate(AXIS_PITCH,  0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.03f, controller.calculateSetpointRate(AXIS_PITCH, -0.5f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,   8.73f, controller.calculateSetpointRate(AXIS_PITCH,  1.0f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,  -8.73f, controller.calculateSetpointRate(AXIS_PITCH, -1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, controller.calculateSetpointRate(AXIS_YAW, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.83f, controller.calculateSetpointRate(AXIS_YAW, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.79f, controller.calculateSetpointRate(AXIS_YAW, 0.5f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,  -6.98f, controller.calculateSetpointRate(AXIS_YAW, 1.0f));
 }
 
@@ -311,18 +311,18 @@ void test_rates_betaflight()
   rates.begin(config);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, rates.getSetpoint(AXIS_ROLL, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, rates.getSetpoint(AXIS_ROLL, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.03f, rates.getSetpoint(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.92f, rates.getSetpoint(AXIS_ROLL, 1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_PITCH,  0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, rates.getSetpoint(AXIS_PITCH,  0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.08f, rates.getSetpoint(AXIS_PITCH, -0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, rates.getSetpoint(AXIS_PITCH,  1.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, -13.57f, rates.getSetpoint(AXIS_PITCH, -1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.03f, rates.getSetpoint(AXIS_PITCH,  0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.03f, rates.getSetpoint(AXIS_PITCH, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.92f, rates.getSetpoint(AXIS_PITCH,  1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -11.92f, rates.getSetpoint(AXIS_PITCH, -1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_YAW, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, rates.getSetpoint(AXIS_YAW, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, rates.getSetpoint(AXIS_YAW, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.03f, rates.getSetpoint(AXIS_YAW, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.92f, rates.getSetpoint(AXIS_YAW, 1.0f));
 }
 
 void test_rates_betaflight_expo()
@@ -339,16 +339,16 @@ void test_rates_betaflight_expo()
   rates.begin(config);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.26f, rates.getSetpoint(AXIS_ROLL, 0.1f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.57f, rates.getSetpoint(AXIS_ROLL, 0.2f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.95f, rates.getSetpoint(AXIS_ROLL, 0.3f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.40f, rates.getSetpoint(AXIS_ROLL, 0.4f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.98f, rates.getSetpoint(AXIS_ROLL, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.73f, rates.getSetpoint(AXIS_ROLL, 0.6f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   3.78f, rates.getSetpoint(AXIS_ROLL, 0.7f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.37f, rates.getSetpoint(AXIS_ROLL, 0.8f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   8.10f, rates.getSetpoint(AXIS_ROLL, 0.9f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.51f, rates.getSetpoint(AXIS_ROLL, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.24f, rates.getSetpoint(AXIS_ROLL, 0.1f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.52f, rates.getSetpoint(AXIS_ROLL, 0.2f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.87f, rates.getSetpoint(AXIS_ROLL, 0.3f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.30f, rates.getSetpoint(AXIS_ROLL, 0.4f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.86f, rates.getSetpoint(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.60f, rates.getSetpoint(AXIS_ROLL, 0.6f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   3.63f, rates.getSetpoint(AXIS_ROLL, 0.7f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.16f, rates.getSetpoint(AXIS_ROLL, 0.8f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   7.64f, rates.getSetpoint(AXIS_ROLL, 0.9f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.90f, rates.getSetpoint(AXIS_ROLL, 1.0f));
 }
 
 void test_rates_raceflight()
@@ -365,16 +365,16 @@ void test_rates_raceflight()
   rates.begin(config);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.59f, rates.getSetpoint(AXIS_ROLL, 0.2f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.46f, rates.getSetpoint(AXIS_ROLL, 0.4f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, rates.getSetpoint(AXIS_ROLL, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.90f, rates.getSetpoint(AXIS_ROLL, 0.6f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.75f, rates.getSetpoint(AXIS_ROLL, 0.8f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, rates.getSetpoint(AXIS_ROLL, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.83f, rates.getSetpoint(AXIS_ROLL, 0.2f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   6.45f, rates.getSetpoint(AXIS_ROLL, 0.4f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   8.55f, rates.getSetpoint(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  10.85f, rates.getSetpoint(AXIS_ROLL, 0.6f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  16.03f, rates.getSetpoint(AXIS_ROLL, 0.8f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  21.83f, rates.getSetpoint(AXIS_ROLL, 1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL,  0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.08f, rates.getSetpoint(AXIS_ROLL, -0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, -13.57f, rates.getSetpoint(AXIS_ROLL, -1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -8.55f, rates.getSetpoint(AXIS_ROLL, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -21.83f, rates.getSetpoint(AXIS_ROLL, -1.0f));
 }
 
 void test_rates_raceflight_expo()
@@ -391,16 +391,16 @@ void test_rates_raceflight_expo()
   rates.begin(config);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.56f, rates.getSetpoint(AXIS_ROLL, 0.2f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.35f, rates.getSetpoint(AXIS_ROLL, 0.4f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.88f, rates.getSetpoint(AXIS_ROLL, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.58f, rates.getSetpoint(AXIS_ROLL, 0.6f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.04f, rates.getSetpoint(AXIS_ROLL, 0.8f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.44f, rates.getSetpoint(AXIS_ROLL, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.29f, rates.getSetpoint(AXIS_ROLL, 0.2f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.36f, rates.getSetpoint(AXIS_ROLL, 0.4f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   7.27f, rates.getSetpoint(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   9.46f, rates.getSetpoint(AXIS_ROLL, 0.6f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  14.87f, rates.getSetpoint(AXIS_ROLL, 0.8f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  21.79f, rates.getSetpoint(AXIS_ROLL, 1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL,  0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -1.88f, rates.getSetpoint(AXIS_ROLL, -0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, -13.44f, rates.getSetpoint(AXIS_ROLL, -1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -7.27f, rates.getSetpoint(AXIS_ROLL, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -21.79f, rates.getSetpoint(AXIS_ROLL, -1.0f));
 
 }
 
@@ -419,15 +419,15 @@ void test_rates_kiss()
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL, 0.0f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.59f, rates.getSetpoint(AXIS_ROLL, 0.2f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.46f, rates.getSetpoint(AXIS_ROLL, 0.4f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.08f, rates.getSetpoint(AXIS_ROLL, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.90f, rates.getSetpoint(AXIS_ROLL, 0.6f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.75f, rates.getSetpoint(AXIS_ROLL, 0.8f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.57f, rates.getSetpoint(AXIS_ROLL, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.43f, rates.getSetpoint(AXIS_ROLL, 0.4f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.04f, rates.getSetpoint(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.81f, rates.getSetpoint(AXIS_ROLL, 0.6f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.43f, rates.getSetpoint(AXIS_ROLL, 0.8f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.92f, rates.getSetpoint(AXIS_ROLL, 1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL,  0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.08f, rates.getSetpoint(AXIS_ROLL, -0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, -13.57f, rates.getSetpoint(AXIS_ROLL, -1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -2.04f, rates.getSetpoint(AXIS_ROLL, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -11.92f, rates.getSetpoint(AXIS_ROLL, -1.0f));
 }
 
 void test_rates_kiss_expo()
@@ -444,16 +444,16 @@ void test_rates_kiss_expo()
   rates.begin(config);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL, 0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.56f, rates.getSetpoint(AXIS_ROLL, 0.2f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.35f, rates.getSetpoint(AXIS_ROLL, 0.4f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.88f, rates.getSetpoint(AXIS_ROLL, 0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.58f, rates.getSetpoint(AXIS_ROLL, 0.6f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   0.47f, rates.getSetpoint(AXIS_ROLL, 0.2f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.20f, rates.getSetpoint(AXIS_ROLL, 0.4f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   1.73f, rates.getSetpoint(AXIS_ROLL, 0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,   2.46f, rates.getSetpoint(AXIS_ROLL, 0.6f));
   TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.04f, rates.getSetpoint(AXIS_ROLL, 0.8f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  13.45f, rates.getSetpoint(AXIS_ROLL, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  11.89f, rates.getSetpoint(AXIS_ROLL, 1.0f));
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f,    0.0f, rates.getSetpoint(AXIS_ROLL,  0.0f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -1.88f, rates.getSetpoint(AXIS_ROLL, -0.5f));
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, -13.45f, rates.getSetpoint(AXIS_ROLL, -1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f,  -1.73f, rates.getSetpoint(AXIS_ROLL, -0.5f));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -11.89f, rates.getSetpoint(AXIS_ROLL, -1.0f));
 }
 
 void test_actuator_arming_gyro_motor_calbration()

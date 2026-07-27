@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 
 // https://gist.github.com/edwintcloud/d547a4f9ccaf7245b06f0e8782acefaa

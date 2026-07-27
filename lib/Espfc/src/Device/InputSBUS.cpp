@@ -6,7 +6,7 @@ namespace Espfc {
 
 namespace Device {
 
-InputSBUS::InputSBUS(): _serial(NULL), _state(SBUS_START), _idx(0), _new_data(false) {}
+InputSBUS::InputSBUS(): _serial(nullptr), _state(SBUS_START), _idx(0), _new_data(false) {}
 
 int InputSBUS::begin(Device::SerialDevice * serial)
 {

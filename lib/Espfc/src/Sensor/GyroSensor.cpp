@@ -1,24 +1,19 @@
 
-#include "GyroSensor.h"
+#include "Sensor/GyroSensor.hpp"
 #include "Utils/FilterHelper.h"
 #include "Utils/Sma.ipp"
 #ifdef ESPFC_DSP
 #include "Utils/FFTAnalyzer.ipp"
 #endif
 
-namespace Espfc::Sensor
-{
+namespace Espfc::Sensor {
 
 static constexpr float ESPFC_FUZZY_ACCEL_ZERO = 0.05f;
 static constexpr float ESPFC_FUZZY_GYRO_ZERO = 0.20f;
 
-GyroSensor::GyroSensor(Model &model) : _dyn_notch_denom(1), _model(model)
-{
-}
+GyroSensor::GyroSensor(Model& model): _dyn_notch_denom(1), _model(model) {}
 
-GyroSensor::~GyroSensor()
-{
-}
+GyroSensor::~GyroSensor() {}
 
 int GyroSensor::begin()
 {
@@ -37,7 +32,8 @@ int GyroSensor::begin()
   _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
   _dyn_notch_sma.begin(_dyn_notch_denom);
   _dyn_notch_count = std::min((size_t)_model.config.gyro.dynamicFilter.count, DYN_NOTCH_COUNT_MAX);
-  _dyn_notch_enabled = _model.isFeatureActive(FEATURE_DYNAMIC_FILTER) && _dyn_notch_count > 0 && _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
+  _dyn_notch_enabled = _model.isFeatureActive(FEATURE_DYNAMIC_FILTER) && _dyn_notch_count > 0 &&
+                       _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
   _dyn_notch_debug = _model.config.debug.mode == DEBUG_FFT_FREQ || _model.config.debug.mode == DEBUG_FFT_TIME;
 
   _rpm_enabled = _model.config.gyro.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;
@@ -60,7 +56,14 @@ int GyroSensor::begin()
 #endif
   }
 
-  _model.logger.info().log(F("GYRO INIT")).log(FPSTR(Device::GyroDevice::getName(_gyro->getType()))).log(_gyro->getAddress()).log(_model.config.gyro.dlpf).log(_gyro->getRate()).log(_model.state.gyro.timer.rate).logln(_model.state.gyro.timer.interval);
+  _model.logger.info()
+      .log(F("GYRO INIT"))
+      .log(FPSTR(Device::GyroDevice::getName(_gyro->getType())))
+      .log(_gyro->getAddress())
+      .log(_model.config.gyro.dlpf)
+      .log(_gyro->getRate())
+      .log(_model.state.gyro.timer.rate)
+      .logln(_model.state.gyro.timer.interval);
 
   return 1;
 }
@@ -184,7 +187,8 @@ void FAST_CODE_ATTR GyroSensor::rpmFilterUpdate()
     for (size_t i = 1; i < AXIS_COUNT_RPY; ++i)
     {
       // copy coefs from roll to pitch and yaw
-      _model.state.gyro.rpmFilter[_rpm_motor_index][n][i].reconfigure(_model.state.gyro.rpmFilter[_rpm_motor_index][n][0]);
+      _model.state.gyro.rpmFilter[_rpm_motor_index][n][i].reconfigure(
+          _model.state.gyro.rpmFilter[_rpm_motor_index][n][0]);
     }
   }
 
@@ -256,7 +260,10 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
         if (_model.config.debug.mode == DEBUG_FFT_FREQ)
         {
           if (update) _model.state.debug[i] = lrintf(freq);
-          if (i == _model.config.debug.axis) _model.state.debug[3] = lrintf(Utils::toDeg(_model.state.gyro.dynNotch[i]));
+          if (i == _model.config.debug.axis)
+          {
+            _model.state.debug[3] = lrintf(Utils::toDeg(_model.state.gyro.dynNotch[i]));
+          }
         }
         if (_dyn_notch_enabled && update)
         {
@@ -266,7 +273,8 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
             {
               size_t x = (p + i) % 3;
               int harmonic = (p / 3) + 1;
-              int16_t f = Utils::clamp((int16_t)lrintf(freq * harmonic), _model.config.gyro.dynamicFilter.min_freq, _model.config.gyro.dynamicFilter.max_freq);
+              int16_t f = Utils::clamp((int16_t)lrintf(freq * harmonic), _model.config.gyro.dynamicFilter.min_freq,
+                                       _model.config.gyro.dynamicFilter.max_freq);
               _model.state.gyro.dynNotchFilter[p][x].reconfigure(f, f, q);
             }
           }
@@ -281,39 +289,38 @@ void FAST_CODE_ATTR GyroSensor::calibrate()
 {
   switch (_model.state.gyro.calibrationState)
   {
-  case CALIBRATION_IDLE:
-    _model.state.gyro.adc -= _model.state.gyro.bias;
-    break;
-  case CALIBRATION_START:
-    //_model.state.gyro.bias = VectorFloat();
-    _model.state.gyro.biasSamples = 2 * _model.state.gyro.calibrationRate;
-    _model.state.gyro.calibrationState = CALIBRATION_UPDATE;
-    break;
-  case CALIBRATION_UPDATE:
-  {
-    auto accel = _model.state.accel.adc.fetch();
-    VectorFloat deltaAccel = accel - _model.state.accel.prev;
-    _model.state.accel.prev = accel;
-    if (deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO && _model.state.gyro.adc.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
-    {
-      _model.state.gyro.bias += (_model.state.gyro.adc - _model.state.gyro.bias) * _model.state.gyro.biasAlpha;
-      _model.state.gyro.biasSamples--;
+    case CALIBRATION_IDLE:
+      _model.state.gyro.adc -= _model.state.gyro.bias;
+      break;
+    case CALIBRATION_START:
+      //_model.state.gyro.bias = VectorFloat();
+      _model.state.gyro.biasSamples = 2 * _model.state.gyro.calibrationRate;
+      _model.state.gyro.calibrationState = CALIBRATION_UPDATE;
+      break;
+    case CALIBRATION_UPDATE: {
+      auto accel = _model.state.accel.adc.fetch();
+      VectorFloat deltaAccel = accel - _model.state.accel.prev;
+      _model.state.accel.prev = accel;
+      if (deltaAccel.getMagnitude() < ESPFC_FUZZY_ACCEL_ZERO &&
+          _model.state.gyro.adc.getMagnitude() < ESPFC_FUZZY_GYRO_ZERO)
+      {
+        _model.state.gyro.bias += (_model.state.gyro.adc - _model.state.gyro.bias) * _model.state.gyro.biasAlpha;
+        _model.state.gyro.biasSamples--;
+      }
+      if (_model.state.gyro.biasSamples <= 0) _model.state.gyro.calibrationState = CALIBRATION_APPLY;
     }
-    if (_model.state.gyro.biasSamples <= 0)
-      _model.state.gyro.calibrationState = CALIBRATION_APPLY;
-  }
-  break;
-  case CALIBRATION_APPLY:
-    _model.state.gyro.calibrationState = CALIBRATION_SAVE;
     break;
-  case CALIBRATION_SAVE:
-    _model.finishCalibration();
-    _model.state.gyro.calibrationState = CALIBRATION_IDLE;
-    break;
-  default:
-    _model.state.gyro.calibrationState = CALIBRATION_IDLE;
-    break;
+    case CALIBRATION_APPLY:
+      _model.state.gyro.calibrationState = CALIBRATION_SAVE;
+      break;
+    case CALIBRATION_SAVE:
+      _model.finishCalibration();
+      _model.state.gyro.calibrationState = CALIBRATION_IDLE;
+      break;
+    default:
+      _model.state.gyro.calibrationState = CALIBRATION_IDLE;
+      break;
   }
 }
 
-}
+} // namespace Espfc::Sensor

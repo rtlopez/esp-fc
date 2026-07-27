@@ -66,7 +66,7 @@ int MagQMC5883L::begin(BusDevice* bus, uint8_t addr)
 int MagQMC5883L::readMag(VectorInt16& v)
 {
   uint8_t buffer[6];
-  _bus->readFast(_addr, QMC5883L_RA_DATAX_L, 6, buffer);
+  if (_bus->readFast(_addr, QMC5883L_RA_DATAX_L, 6, buffer) != 6) return 0;
 
   v.x = (((int16_t)buffer[1]) << 8) | buffer[0];
   v.y = (((int16_t)buffer[3]) << 8) | buffer[2];
@@ -101,10 +101,10 @@ void MagQMC5883L::setMode(uint8_t osr, uint8_t rng, uint8_t odr, uint8_t mode)
 
 bool MagQMC5883L::testConnection()
 {
-  uint8_t buffer[3] = {0, 0, 0};
-  uint8_t len = _bus->read(_addr, QMC5883L_RA_CHIPID, 1, buffer);
+  uint8_t buffer[1] = {};
+  if (_bus->read(_addr, QMC5883L_RA_CHIPID, 1, buffer) != 1) return false;
 
-  return len == 1 && buffer[0] == 0xFF;
+  return buffer[0] == 0xFF;
 }
 
 } // namespace Espfc::Device::Mag
