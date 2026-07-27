@@ -32,6 +32,8 @@ int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config,
   if (!_out) _out = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
   if (!_win) _win = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
 
+  if (!_in || !_out || !_win) std::abort();
+
   int16_t nyquistLimit = rate / 2;
   _rate = rate;
   _freq_min = config.min_freq;

@@ -23,6 +23,11 @@ public:
   FFTAnalyzer();
   ~FFTAnalyzer();
 
+  FFTAnalyzer(const FFTAnalyzer&) = delete;
+  FFTAnalyzer& operator=(const FFTAnalyzer&) = delete;
+  FFTAnalyzer(FFTAnalyzer&&) = delete;
+  FFTAnalyzer& operator=(FFTAnalyzer&&) = delete;
+
   int begin(int16_t rate, const DynamicFilterConfig& config, size_t axis);
   int update(float v);
 
@@ -44,15 +49,6 @@ private:
   size_t _begin;
   size_t _end;
   float _bin_width;
-
-  // fft input
-  //__attribute__((aligned(16))) float _in[SAMPLES];
-
-  // fft output
-  //__attribute__((aligned(16))) float _out[SAMPLES];
-
-  // Window coefficients
-  //__attribute__((aligned(16))) float _win[SAMPLES];
 
   float* _in;
   float* _out;
