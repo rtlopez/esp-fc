@@ -1,6 +1,7 @@
 #include "Connect/Msp.hpp"
 #include "Utils/Crc.hpp"
 #include <algorithm>
+#include <cstdint>
 
 namespace Espfc::Connect {
 
@@ -40,7 +41,7 @@ uint16_t MspMessage::readU16()
 {
   uint16_t ret;
   ret = readU8();
-  ret |= readU8() << 8;
+  ret |= (uint16_t)readU8() << 8;
   return ret;
 }
 
@@ -48,9 +49,9 @@ uint32_t MspMessage::readU32()
 {
   uint32_t ret;
   ret = readU8();
-  ret |= readU8() << 8;
-  ret |= readU8() << 16;
-  ret |= readU8() << 24;
+  ret |= (uint32_t)readU8() << 8;
+  ret |= (uint32_t)readU8() << 16;
+  ret |= (uint32_t)readU8() << 24;
   return ret;
 }
 

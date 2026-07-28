@@ -698,7 +698,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_BLACKBOX_CONFIG:
-      // Don't allow config to be updated while Blackbox is logging
+      // TODO: Don't allow config to be updated while Blackbox is logging
       if (true)
       {
         _model.config.blackbox.dev = m.readU8();

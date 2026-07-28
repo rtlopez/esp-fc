@@ -307,7 +307,7 @@ int32_t Cli::Param::parse(const char * v) const
   {
     for(size_t i = 0; choices[i]; i++)
     {
-      if(strcasecmp_P(v, choices[i]) == 0) return i;
+      if(strcasecmp(v, choices[i]) == 0) return i;
     }
   }
   String tmp = v;
