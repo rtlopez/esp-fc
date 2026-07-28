@@ -3,7 +3,9 @@
 
 namespace Espfc::Connect {
 
-Buzzer::Buzzer(Model& model): _model(model), _status(BUZZER_STATUS_IDLE), _wait(0), _scheme(nullptr), _e(BUZZER_SILENCE) {}
+Buzzer::Buzzer(Model& model): _model(model), _status(BUZZER_STATUS_IDLE), _wait(0), _scheme(nullptr), _e(BUZZER_SILENCE)
+{
+}
 
 int Buzzer::begin()
 {

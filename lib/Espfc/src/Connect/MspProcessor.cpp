@@ -1013,11 +1013,10 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         {
           _model.config.input.superRate[i] = m.readU8();
         }
-        _model.config.controller.tpaScale = Utils::clamp(m.readU8(), (uint8_t)0, (uint8_t)90); // dyn thr pid
-        m.readU8();                                                                            // thrMid8
-        m.readU8();                                                                            // thr expo
-        _model.config.controller.tpaBreakpoint =
-            Utils::clamp(m.readU16(), (uint16_t)1000, (uint16_t)2000); // tpa breakpoint
+        _model.config.controller.tpaScale = std::clamp<uint8_t>(m.readU8(), 0, 90);             // dyn thr pid
+        m.readU8();                                                                             // thrMid8
+        m.readU8();                                                                             // thr expo
+        _model.config.controller.tpaBreakpoint = std::clamp<uint16_t>(m.readU16(), 1000, 2000); // tpa breakpoint
         if (m.remain() >= 1)
         {
           _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo
@@ -1202,7 +1201,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.config.gyro.rpmFilter.minFreq = m.readU8();       // gyro_rpm_notch_min
       }
       // 1.43+
-      if (m.remain() >= 1)
+      if (m.remain() >= 2)
       {
         _model.config.gyro.dynamicFilter.max_freq = m.readU16(); // dyn_notch_max_hz
       }
@@ -1623,9 +1622,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU32(_model.state.gps.location.raw.lat); // lat
       r.writeU32(_model.state.gps.location.raw.lon); // lon
       r.writeU16(std::clamp<int>(_model.state.gps.location.raw.height / 1000, 0,
-                                      std::numeric_limits<uint16_t>::max())); // height [m]
-      r.writeU16(_model.state.gps.velocity.raw.groundSpeed / 10);             // cm/s
-      r.writeU16(_model.state.gps.velocity.raw.heading / 10000);              // deg * 10
+                                 std::numeric_limits<uint16_t>::max())); // height [m]
+      r.writeU16(_model.state.gps.velocity.raw.groundSpeed / 10);        // cm/s
+      r.writeU16(_model.state.gps.velocity.raw.heading / 10000);         // deg * 10
       // Added in API version 1.44
       r.writeU16(_model.state.gps.accuracy.pDop); // pDOP
       break;

@@ -167,7 +167,7 @@ void FAST_CODE_ATTR Mixer::updateMixer(const MixerConfig& mixer, float * outputs
     }
     else
     {
-      thrust = Utils::clamp(thrust, -1.f + range, 1.f - range);
+      thrust = std::clamp(thrust, -1.f + range, 1.f - range);
     }
   }
 
@@ -210,7 +210,7 @@ float FAST_CODE_ATTR Mixer::limitThrust(float thrust, ThrottleLimitType type, in
     case THROTTLE_LIMIT_TYPE_SCALE:
       return (thrust + 1.0f) * limit * 0.01f - 1.0f;
     case THROTTLE_LIMIT_TYPE_CLIP:
-      return Utils::clamp(thrust, -1.f, (limit * 0.02f) - 1.0f);
+      return std::clamp(thrust, -1.f, (limit * 0.02f) - 1.0f);
     default:
       break;
   }
@@ -225,12 +225,12 @@ float FAST_CODE_ATTR Mixer::limitOutput(float output, const OutputChannelConfig&
   if(occ.servo)
   {
     const float factor = limit * 0.01f;
-    return Utils::clamp(output, -factor, factor);
+    return std::clamp(output, -factor, factor);
   }
   else
   {
     const float factor = limit * 0.02f; // *2
-    return Utils::clamp(output + 1.f, 0.f, factor) - 1.0f;
+    return std::clamp(output + 1.f, 0.f, factor) - 1.0f;
   }
 }
 
@@ -251,11 +251,11 @@ void FAST_CODE_ATTR Mixer::writeOutput(const MixerConfig& mixer, float * out)
       if(och.servo)
       {
         const int16_t tmp = lrintf(Utils::map3(out[i], -1.f, 0.f, 1.f, och.reverse ? 2000 : 1000, och.neutral, och.reverse ? 1000 : 2000));
-        _model.state.output.us[i] = Utils::clamp(tmp, och.min, och.max);
+        _model.state.output.us[i] = std::clamp(tmp, och.min, och.max);
       }
       else
       {
-        float v = Utils::clamp(out[i], -1.f, 1.f);
+        float v = std::clamp(out[i], -1.f, 1.f);
         _model.state.output.us[i] = lrintf(Utils::map(v, -1.f, 1.f, _model.state.mixer.minThrottle, _model.state.mixer.maxThrottle));
       }
     }

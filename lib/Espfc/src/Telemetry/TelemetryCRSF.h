@@ -124,8 +124,8 @@ public:
   {
     msg.prepare(Rc::CRSF_FRAMETYPE_BATTERY_SENSOR);
 
-    uint16_t voltage = Utils::clamp(lrintf(_model.state.battery.voltage * 10.0f), 0l, 32000l);
-    uint16_t current = Utils::clamp(lrintf(_model.state.battery.current * 10.0f), 0l, 32000l);
+    uint16_t voltage = std::clamp(lrintf(_model.state.battery.voltage * 10.0f), 0l, 32000l);
+    uint16_t current = std::clamp(lrintf(_model.state.battery.current * 10.0f), 0l, 32000l);
     uint32_t mahDrawn = 0;
     uint8_t remainPerc = lrintf(_model.state.battery.percentage);
 

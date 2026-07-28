@@ -18,7 +18,7 @@ int Input::begin()
   switch(_model.config.input.interpolationMode)
   {
     case INPUT_INTERPOLATION_AUTO:
-      _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+      _model.state.input.interpolationDelta = std::clamp<uint32_t>(_model.state.input.frameDelta, 4000, 40000) * 0.000001f; // estimate real interval
       break;
     case INPUT_INTERPOLATION_MANUAL:
       _model.state.input.interpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
@@ -205,7 +205,7 @@ bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 
   // stage 2 timeout
   _model.state.input.lossTime = micros() - _model.state.input.frameTime;
-  if(_model.state.input.lossTime > Utils::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)2u, (uint32_t)200u) * TENTH_TO_US)
+  if(_model.state.input.lossTime > std::clamp<uint32_t>(_model.config.failsafe.delay, 2u, 200u) * TENTH_TO_US)
   {
     failsafeStage2();
     return true;
@@ -296,7 +296,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
 
   if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO && _model.config.input.filterType == INPUT_INTERPOLATION)
   {
-    _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+    _model.state.input.interpolationDelta = std::clamp<uint32_t>(_model.state.input.frameDelta, 4000, 40000) * 0.000001f; // estimate real interval
     _model.state.input.interpolationStep = _model.state.loopTimer.intervalf / _model.state.input.interpolationDelta;
   }
 
