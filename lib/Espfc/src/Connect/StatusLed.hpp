@@ -1,9 +1,9 @@
 #pragma once
-#include <cstdint>
-#include <cstddef>
 
-namespace Espfc::Connect
-{
+#include <cstddef>
+#include <cstdint>
+
+namespace Espfc::Connect {
 
 enum LedType
 {
@@ -21,7 +21,6 @@ enum LedStatus
 
 class StatusLed
 {
-
 public:
   StatusLed();
   void begin(int8_t pin, uint8_t type, uint8_t invert);
@@ -37,7 +36,7 @@ private:
   uint32_t _next;
   bool _state;
   size_t _step;
-  int * _pattern;
+  int* _pattern;
 };
 
-}
+} // namespace Espfc::Connect

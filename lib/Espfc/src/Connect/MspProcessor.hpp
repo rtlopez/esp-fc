@@ -1,14 +1,12 @@
 #pragma once
 
-#include "Model.h"
 #include "Connect/Msp.hpp"
 #include "Connect/MspParser.hpp"
 #include "Device/SerialDevice.h"
+#include "Model.h"
 #include <functional>
 
-namespace Espfc {
-
-namespace Connect {
+namespace Espfc::Connect {
 
 class MspProcessor
 {
@@ -18,7 +16,8 @@ public:
   void processCommand(MspMessage& m, MspResponse& r, Device::SerialDevice& s);
   void processEsc4way();
   void processRestart();
-  void serializeFlashData(MspResponse& r, uint32_t address, const uint16_t size, bool useLegacyFormat, bool allowCompression);
+  void serializeFlashData(MspResponse& r, uint32_t address, const uint16_t size, bool useLegacyFormat,
+                          bool allowCompression);
 
   void sendResponse(MspResponse& r, Device::SerialDevice& s);
   void postCommand();
@@ -32,6 +31,4 @@ private:
   std::function<void(void)> _postCommand;
 };
 
-}
-
-}
+} // namespace Espfc::Connect

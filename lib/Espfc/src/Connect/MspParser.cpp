@@ -1,40 +1,41 @@
 #include "Connect/MspParser.hpp"
 #include "Utils/Crc.hpp"
 
-namespace Espfc {
-
-namespace Connect {
+namespace Espfc::Connect {
 
 MspParser::MspParser() {}
 
 void MspParser::parse(char c, MspMessage& msg)
 {
-  switch(msg.state)
+  switch (msg.state)
   {
-    case MSP_STATE_IDLE:               // sync char 1 '$'
-      if(c == '$') msg.state = MSP_STATE_HEADER_START;
+    case MSP_STATE_IDLE: // sync char 1 '$'
+      if (c == '$') msg.state = MSP_STATE_HEADER_START;
       break;
 
-    case MSP_STATE_HEADER_START:       // sync char 2 'M'
+    case MSP_STATE_HEADER_START: // sync char 2 'M'
       msg.read = 0;
       msg.received = 0;
       msg.checksum = 0;
       msg.checksum2 = 0;
-      if(c == 'M')
+      if (c == 'M')
       {
         msg.version = MSP_V1;
         msg.state = MSP_STATE_HEADER_M;
       }
-      else if(c == 'X')
+      else if (c == 'X')
       {
         msg.version = MSP_V2;
         msg.state = MSP_STATE_HEADER_X;
       }
-      else msg.state = MSP_STATE_IDLE;
+      else
+      {
+        msg.state = MSP_STATE_IDLE;
+      }
       break;
 
-    case MSP_STATE_HEADER_M:               // type '<','>','!'
-      switch(c)
+    case MSP_STATE_HEADER_M: // type '<','>','!'
+      switch (c)
       {
         case '>':
           msg.dir = MSP_TYPE_REPLY;
@@ -49,8 +50,8 @@ void MspParser::parse(char c, MspMessage& msg)
       }
       break;
 
-    case MSP_STATE_HEADER_X:                // type '<','>','!'
-      switch(c)
+    case MSP_STATE_HEADER_X: // type '<','>','!'
+      switch (c)
       {
         case '>':
           msg.dir = MSP_TYPE_REPLY;
@@ -68,10 +69,13 @@ void MspParser::parse(char c, MspMessage& msg)
     case MSP_STATE_HEADER_V1:
       msg.buffer[msg.received++] = c;
       msg.checksum = Utils::crc8_xor(msg.checksum, c);
-      if(msg.received == sizeof(MspHeaderV1))
+      if (msg.received == sizeof(MspHeaderV1))
       {
-        const MspHeaderV1 * hdr = reinterpret_cast<MspHeaderV1*>(msg.buffer);
-        if(hdr->size > MSP_BUF_SIZE) msg.state = MSP_STATE_IDLE;
+        const MspHeaderV1* hdr = reinterpret_cast<MspHeaderV1*>(msg.buffer);
+        if (hdr->size > MSP_BUF_SIZE)
+        {
+          msg.state = MSP_STATE_IDLE;
+        }
         else
         {
           msg.expected = hdr->size;
@@ -85,7 +89,7 @@ void MspParser::parse(char c, MspMessage& msg)
     case MSP_STATE_PAYLOAD_V1:
       msg.buffer[msg.received++] = c;
       msg.checksum = Utils::crc8_xor(msg.checksum, c);
-      if(msg.received == msg.expected)
+      if (msg.received == msg.expected)
       {
         msg.state = MSP_STATE_CHECKSUM_V1;
       }
@@ -98,10 +102,13 @@ void MspParser::parse(char c, MspMessage& msg)
     case MSP_STATE_HEADER_V2:
       msg.buffer[msg.received++] = c;
       msg.checksum2 = Utils::crc8_dvb_s2(msg.checksum2, c);
-      if(msg.received == sizeof(MspHeaderV2))
+      if (msg.received == sizeof(MspHeaderV2))
       {
-        const MspHeaderV2 * hdr = reinterpret_cast<MspHeaderV2*>(msg.buffer);
-        if(hdr->size > MSP_BUF_SIZE) msg.state = MSP_STATE_IDLE;
+        const MspHeaderV2* hdr = reinterpret_cast<MspHeaderV2*>(msg.buffer);
+        if (hdr->size > MSP_BUF_SIZE)
+        {
+          msg.state = MSP_STATE_IDLE;
+        }
         else
         {
           msg.flags = hdr->flags;
@@ -116,7 +123,7 @@ void MspParser::parse(char c, MspMessage& msg)
     case MSP_STATE_PAYLOAD_V2:
       msg.buffer[msg.received++] = c;
       msg.checksum2 = Utils::crc8_dvb_s2(msg.checksum2, c);
-      if(msg.received == msg.expected)
+      if (msg.received == msg.expected)
       {
         msg.state = MSP_STATE_CHECKSUM_V2;
       }
@@ -127,11 +134,9 @@ void MspParser::parse(char c, MspMessage& msg)
       break;
 
     default:
-      //msg.state = MSP_STATE_IDLE;
+      // msg.state = MSP_STATE_IDLE;
       break;
   }
 }
 
-}
-
-}
+} // namespace Espfc::Connect
