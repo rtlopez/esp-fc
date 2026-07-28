@@ -1,9 +1,10 @@
 #pragma once
 
+#include "Hal/Pgm.h"
 #include <cstddef>
 #include <cstdint>
 
-class __FlashStringHelper;
+
 namespace Espfc::Connect {
 
 constexpr size_t MSP_BUF_SIZE = 192;
