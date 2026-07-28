@@ -120,6 +120,7 @@ float Stats::getCpuTime() const
 
 const char* Stats::getName(StatCounter c) const
 {
+  // clang-format off
   switch (c)
   {
     case COUNTER_GYRO_READ: return "gyro_r";
@@ -152,6 +153,7 @@ const char* Stats::getName(StatCounter c) const
     case COUNTER_CPU_1: return " cpu_1";
     default: return "unknwn";
   }
+  // clang-format on
 }
 
 } // namespace Espfc::Utils

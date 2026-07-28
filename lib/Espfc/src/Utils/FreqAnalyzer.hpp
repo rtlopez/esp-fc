@@ -2,37 +2,33 @@
 
 #include "Utils/Filter.h"
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 class FreqAnalyzer
 {
-  public:
-    FreqAnalyzer();
+public:
+  FreqAnalyzer();
 
-    int begin(int rate, DynamicFilterConfig config);
-    void update(float v);
+  int begin(int rate, DynamicFilterConfig config);
+  void update(float v);
 
-    float freq;
-    float noise;
+  float freq;
+  float noise;
 
-  private:
-    Utils::Filter _bpf;
-    float _rate;
+private:
+  Utils::Filter _bpf;
+  float _rate;
 
-    float _freq_min;
-    float _freq_max;
+  float _freq_min;
+  float _freq_max;
 
-    int _pitch_count_raise;
-    int _pitch_count_fall;
+  int _pitch_count_raise;
+  int _pitch_count_fall;
 
-    float _pitch_freq_raise;
-    float _pitch_freq_fall;
+  float _pitch_freq_raise;
+  float _pitch_freq_fall;
 
-    bool _sign_prev;
+  bool _sign_prev;
 };
 
-}
-
-}
+} // namespace Espfc::Utils
