@@ -644,6 +644,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 
     case MSP_SET_CF_SERIAL_CONFIG: {
       const int packetSize = 1 + 2 + 4;
+      if (m.remain() % packetSize != 0)
+      {
+        r.result = -1;
+        return;
+      }
       while (m.remain() >= packetSize)
       {
         int id = m.readU8();
@@ -667,6 +672,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     case MSP2_COMMON_SET_SERIAL_CONFIG: {
       m.readU8(); // was count - ignore
       const int packetSize = 1 + 4 + 4;
+      if (m.remain() % packetSize != 0)
+      {
+        r.result = -1;
+        return;
+      }
       while (m.remain() >= packetSize)
       {
         int id = m.readU8();
@@ -1657,6 +1667,10 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.reset();
         _model.save();
       }
+      else
+      {
+        r.result = -1; // not allowed when armed
+      }
       break;
 
     case MSP_REBOOT:
@@ -1692,6 +1706,12 @@ void MspProcessor::serializeFlashData(MspResponse& r, uint32_t address, const ui
 
   const uint32_t allowedToRead = r.remain() - 16;
   const uint32_t flashfsSize = flashfsGetSize();
+
+  if (address > flashfsSize)
+  {
+    r.result = -1;
+    return;
+  }
 
   uint16_t readLen = std::min(std::min((uint32_t)size, allowedToRead), flashfsSize - address);
 
