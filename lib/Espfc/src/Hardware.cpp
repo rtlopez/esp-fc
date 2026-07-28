@@ -77,7 +77,7 @@ void Hardware::initBus()
   int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MOSI],
                                _model.config.pin[PIN_SPI_0_MISO]);
   _model.logger.info()
-      .log(F("SPI"))
+      .log("SPI")
       .log(_model.config.pin[PIN_SPI_0_SCK])
       .log(_model.config.pin[PIN_SPI_0_MOSI])
       .log(_model.config.pin[PIN_SPI_0_MISO])
@@ -88,7 +88,7 @@ void Hardware::initBus()
       i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000ul);
   i2cBus.onError = [this]() { onI2CError(); };
   _model.logger.info()
-      .log(F("I2C"))
+      .log("I2C")
       .log(_model.config.pin[PIN_I2C_0_SDA])
       .log(_model.config.pin[PIN_I2C_0_SCL])
       .log(_model.config.i2cSpeed)

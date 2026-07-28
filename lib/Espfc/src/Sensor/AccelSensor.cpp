@@ -30,8 +30,8 @@ int AccelSensor::begin()
   _model.state.accel.calibrationState = CALIBRATION_IDLE;
 
   _model.logger.info()
-      .log(F("ACCEL INIT"))
-      .log(FPSTR(Device::GyroDevice::getName(_gyro->getType())))
+      .log("ACCEL INIT")
+      .log(Device::GyroDevice::getName(_gyro->getType()))
       .log(_gyro->getAddress())
       .log(timer.rate)
       .log(timer.interval)

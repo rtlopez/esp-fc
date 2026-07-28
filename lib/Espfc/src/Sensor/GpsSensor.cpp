@@ -98,7 +98,7 @@ void GpsSensor::onMessage()
   if (_state == DETECT_BAUD)
   {
     _state = GET_VERSION;
-    _model.logger.info().log(F("GPS DET")).logln(_currentBaud);
+    _model.logger.info().log("GPS DET").logln(_currentBaud);
   }
 }
 
@@ -174,7 +174,7 @@ void GpsSensor::handleReceive()
     else if (_ubxMsg.isNak())
     {
       _state = _timeoutState;
-      _model.logger.err().log(F("GPS NAK")).loghex(_ubxMsg.payload[0]).loghex(_ubxMsg.payload[1]).endl();
+      _model.logger.err().log("GPS NAK").loghex(_ubxMsg.payload[0]).loghex(_ubxMsg.payload[1]).endl();
     }
     else if (_ubxMsg.isResponse(Gps::UBX_CFG_VALGET))
     {
@@ -202,7 +202,7 @@ void GpsSensor::handleReceive()
     // timeout
     _state = _timeoutState;
     _model.state.gps.present = false;
-    _model.logger.err().logln(F("GPS TOUT"));
+    _model.logger.err().logln("GPS TOUT");
   }
 }
 
@@ -280,7 +280,7 @@ void GpsSensor::disableNmea()
     {
       _counter = 0;
       send(m, ENABLE_UBX);
-      _model.logger.info().logln(F("GPS NMEA OFF"));
+      _model.logger.info().logln("GPS NMEA OFF");
     }
   }
   else
@@ -294,7 +294,7 @@ void GpsSensor::disableNmea()
     req.write(Gps::UbxCfgValsetItem<Gps::CFG_MSGOUT_NMEA_RMC_UART1, bool>(0));
     req.write(Gps::UbxCfgValsetItem<Gps::CFG_MSGOUT_NMEA_VTG_UART1, bool>(0));
     send(req, ENABLE_UBX);
-    _model.logger.info().logln(F("GPS NMEA* OFF"));
+    _model.logger.info().logln("GPS NMEA* OFF");
   }
 }
 
@@ -316,7 +316,7 @@ void GpsSensor::enableUbx()
       send(m, ENABLE_NAV5);
       _counter = 0;
       _timeout = micros() + 10 * TIMEOUT;
-      _model.logger.info().logln(F("GPS UBX ON"));
+      _model.logger.info().logln("GPS UBX ON");
     }
   }
   else
@@ -326,7 +326,7 @@ void GpsSensor::enableUbx()
     req.write(Gps::UbxCfgValsetItem<Gps::CFG_MSGOUT_UBX_NAV_PVT_UART1, uint8_t>(1));
     req.write(Gps::UbxCfgValsetItem<Gps::CFG_MSGOUT_UBX_NAV_SAT_UART1, uint8_t>(10));
     send(req, ENABLE_NAV5); // if supported we get ACK, then go to get_version, else try legacy disable_nmea commands
-    _model.logger.info().logln(F("GPS UBX* ON"));
+    _model.logger.info().logln("GPS UBX* ON");
   }
 }
 
@@ -357,7 +357,7 @@ void GpsSensor::enableNav5()
             .reserved1 = {0, 0, 0, 0, 0},
         },
         ENABLE_SBAS);
-    _model.logger.info().logln(F("GPS NAV5"));
+    _model.logger.info().logln("GPS NAV5");
   }
   else
   {
@@ -365,7 +365,7 @@ void GpsSensor::enableNav5()
     req.write(Gps::UbxCfgValsetHeader{.version = 0, .layers = 0x01});       // RAM only
     req.write(Gps::UbxCfgValsetItem<Gps::CFG_NAVSPG_DYNMODEL, uint8_t>(8)); // airborne
     send(req, ENABLE_SBAS);
-    _model.logger.info().logln(F("GPS NAVSPG*"));
+    _model.logger.info().logln("GPS NAVSPG*");
   }
 }
 
@@ -384,7 +384,7 @@ void GpsSensor::enableSbas()
               .scanmode1 = 0,
           },
           DETECT_GPS_L5);
-      _model.logger.info().logln(F("GPS SBAS"));
+      _model.logger.info().logln("GPS SBAS");
     }
     else
     {
@@ -392,7 +392,7 @@ void GpsSensor::enableSbas()
       req.write(Gps::UbxCfgValsetHeader{.version = 0, .layers = 0x01});         // RAM only
       req.write(Gps::UbxCfgValsetItem<Gps::CFG_SBAS_PRNSCANMASK, uint64_t>(0)); // all
       send(req, DETECT_GPS_L5);
-      _model.logger.info().logln(F("GPS SBAS*"));
+      _model.logger.info().logln("GPS SBAS*");
     }
   }
   else
@@ -425,7 +425,7 @@ void GpsSensor::configureRate()
         .timeRef = 0, // utc
     };
     send(m, RECEIVE);
-    _model.logger.info().log(F("GPS NAVRATE")).log(mRate).log(nRate).logln(1000 / mRate);
+    _model.logger.info().log("GPS NAVRATE").log(mRate).log(nRate).logln(1000 / mRate);
   }
   else
   {
@@ -435,7 +435,7 @@ void GpsSensor::configureRate()
     req.write(Gps::UbxCfgValsetItem<Gps::CFG_RATE_NAV, uint16_t>(nRate));
     req.write(Gps::UbxCfgValsetItem<Gps::CFG_RATE_TIMEREF, uint8_t>(0)); // utc
     send(req, RECEIVE);
-    _model.logger.info().log(F("GPS NAVRATE*")).log(mRate).log(nRate).logln(1000 / mRate);
+    _model.logger.info().log("GPS NAVRATE*").log(mRate).log(nRate).logln(1000 / mRate);
   }
 }
 
@@ -445,7 +445,7 @@ void GpsSensor::setBaud(int baud)
   {
     _port->updateBaudRate(baud);
     _currentBaud = baud;
-    _model.logger.info().log(F("GPS BAUD")).logln(baud);
+    _model.logger.info().log("GPS BAUD").logln(baud);
   }
 }
 
@@ -466,7 +466,7 @@ void GpsSensor::handleError()
 {
   if (_counter == 0)
   {
-    _model.logger.err().logln(F("GPS ERROR"));
+    _model.logger.err().logln("GPS ERROR");
     _counter++;
   }
   _model.state.gps.present = false;
@@ -635,15 +635,15 @@ void GpsSensor::configureGnss()
     send(req, CONFIGURE_NAV_RATE);
   }
 
-  _model.logger.info().log(F("GPS GNSS"));
-  if (isLegacyProto()) _model.logger.log(F("LEGACY"));
-  if (enableGPS) _model.logger.log(F("GPS"));
-  if (useDualBand) _model.logger.log(F("L1+L5"));
-  if (enableGLO) _model.logger.log(F("GLO"));
-  if (enableGAL) _model.logger.log(F("GAL"));
-  if (enableBDS) _model.logger.log(F("BDS"));
-  if (enableSBAS) _model.logger.log(F("SBAS"));
-  if (enableQZSS) _model.logger.log(F("QZSS"));
+  _model.logger.info().log("GPS GNSS");
+  if (isLegacyProto()) _model.logger.log("LEGACY");
+  if (enableGPS) _model.logger.log("GPS");
+  if (useDualBand) _model.logger.log("L1+L5");
+  if (enableGLO) _model.logger.log("GLO");
+  if (enableGAL) _model.logger.log("GAL");
+  if (enableBDS) _model.logger.log("BDS");
+  if (enableSBAS) _model.logger.log("SBAS");
+  if (enableQZSS) _model.logger.log("QZSS");
   _model.logger.logln(written);
 }
 
@@ -673,7 +673,7 @@ void GpsSensor::handleCfgValGet() const
   if (key == Gps::CFG_SIGNAL_GPS_L5)
   {
     _model.state.gps.support.gpsL5 = true;
-    _model.logger.info().logln(F("GPS DET L5"));
+    _model.logger.info().logln("GPS DET L5");
   }
 }
 
@@ -752,8 +752,8 @@ void GpsSensor::handleVersion() const
 {
   const char* payload = (const char*)_ubxMsg.payload;
 
-  _model.logger.info().log(F("GPS VER")).logln(payload);
-  _model.logger.info().log(F("GPS VER")).logln(payload + 30);
+  _model.logger.info().log("GPS VER").logln(payload);
+  _model.logger.info().log("GPS VER").logln(payload + 30);
 
   if (std::strcmp(payload + 30, "00080000") == 0)
   {
@@ -775,22 +775,22 @@ void GpsSensor::handleVersion() const
   if (_ubxMsg.length >= 70)
   {
     checkSupport(payload + 40);
-    _model.logger.info().log(F("GPS EXT")).logln(payload + 40);
+    _model.logger.info().log("GPS EXT").logln(payload + 40);
   }
   if (_ubxMsg.length >= 100)
   {
     checkSupport(payload + 70);
-    _model.logger.info().log(F("GPS EXT")).logln(payload + 70);
+    _model.logger.info().log("GPS EXT").logln(payload + 70);
   }
   if (_ubxMsg.length >= 130)
   {
     checkSupport(payload + 100);
-    _model.logger.info().log(F("GPS EXT")).logln(payload + 100);
+    _model.logger.info().log("GPS EXT").logln(payload + 100);
   }
   if (_ubxMsg.length >= 160)
   {
     checkSupport(payload + 130);
-    _model.logger.info().log(F("GPS EXT")).logln(payload + 130);
+    _model.logger.info().log("GPS EXT").logln(payload + 130);
   }
 }
 

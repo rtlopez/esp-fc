@@ -47,7 +47,7 @@ static const uint16_t bitpatterns[4] = {0x88, 0x8e, 0xe8, 0xee};
 static void ws2812_init(int8_t pin)
 {
   pin_config.data_out_num = pin;
-  i2s_driver_install(I2S_NUM, &i2s_config, 0, NULL);
+  i2s_driver_install(I2S_NUM, &i2s_config, 0, nullptr);
   i2s_set_pin(I2S_NUM, &pin_config);
   i2s_zero_dma_buffer(I2S_NUM);
   std::fill_n(out_buffer, SIZE_BUFFER, 0);

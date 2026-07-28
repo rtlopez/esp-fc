@@ -346,31 +346,31 @@ Device::InputDevice * Input::getInputDevice()
     {
       case SERIALRX_IBUS:
         _ibus.begin(serial);
-        _model.logger.info().logln(F("RX IBUS"));
+        _model.logger.info().logln("RX IBUS");
         return &_ibus;
 
       case SERIALRX_SBUS:
         _sbus.begin(serial);
-        _model.logger.info().logln(F("RX SBUS"));
+        _model.logger.info().logln("RX SBUS");
         return &_sbus;
 
       case SERIALRX_CRSF:
         _crsf.begin(serial, _model.isFeatureActive(FEATURE_TELEMETRY) ? &_telemetry : nullptr);
-        _model.logger.info().logln(F("RX CRSF"));
+        _model.logger.info().logln("RX CRSF");
         return &_crsf;
     }
   }
   else if(_model.isFeatureActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
   {
     _ppm.begin(_model.config.pin[PIN_INPUT_RX], _model.config.input.ppmMode);
-    _model.logger.info().log(F("RX PPM")).log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
+    _model.logger.info().log("RX PPM").log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
     return &_ppm;
   }
 #if defined(ESPFC_ESPNOW)
   else if(_model.isFeatureActive(FEATURE_RX_SPI))
   {
     int status = _espnow.begin();
-    _model.logger.info().log(F("RX ESPNOW")).logln(status);
+    _model.logger.info().log("RX ESPNOW").logln(status);
     return &_espnow;
   }
 #endif

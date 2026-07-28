@@ -57,8 +57,8 @@ int GyroSensor::begin()
   }
 
   _model.logger.info()
-      .log(F("GYRO INIT"))
-      .log(FPSTR(Device::GyroDevice::getName(_gyro->getType())))
+      .log("GYRO INIT")
+      .log(Device::GyroDevice::getName(_gyro->getType()))
       .log(_gyro->getAddress())
       .log(_model.config.gyro.dlpf)
       .log(_gyro->getRate())

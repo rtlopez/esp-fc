@@ -1,5 +1,4 @@
 #include "Connect/Msp.hpp"
-#include "Hal/Pgm.h"
 #include "Utils/Crc.hpp"
 #include <algorithm>
 
@@ -87,17 +86,6 @@ void MspResponse::writeString(const char* v)
   while (*v)
   {
     writeU8(*v++);
-  }
-}
-
-void MspResponse::writeString(const __FlashStringHelper* ifsh)
-{
-  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-  while (true)
-  {
-    uint8_t c = pgm_read_byte(p++);
-    if (c == 0) break;
-    writeU8(c);
   }
 }
 

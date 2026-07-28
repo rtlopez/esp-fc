@@ -28,8 +28,8 @@ int BaroSensor::begin()
   _varioFilter.begin(FilterConfig(internalFilter, internalCutoff), rate);
 
   _model.logger.info()
-      .log(F("BARO INIT"))
-      .log(FPSTR(Device::BaroDevice::getName(_baro->getType())))
+      .log("BARO INIT")
+      .log(Device::BaroDevice::getName(_baro->getType()))
       .log(rate)
       .logln(internalCutoff);
 

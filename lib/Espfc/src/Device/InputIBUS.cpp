@@ -5,7 +5,7 @@
 namespace Espfc::Device
 {
 
-InputIBUS::InputIBUS() : _serial(NULL), _state(IBUS_LENGTH), _idx(0), _new_data(false) {}
+InputIBUS::InputIBUS() : _serial(nullptr), _state(IBUS_LENGTH), _idx(0), _new_data(false) {}
 
 int InputIBUS::begin(Device::SerialDevice *serial)
 {

@@ -22,7 +22,7 @@ int Blackbox::begin()
 
 #ifdef USE_FLASHFS
   int res = flashfsInit();
-  _model.logger.info().log(F("FLASHFS")).log(res).logln(flashfsGetOffset());
+  _model.logger.info().log("FLASHFS").log(res).logln(flashfsGetOffset());
 #endif
 
   if(!_model.blackboxEnabled()) return 0;

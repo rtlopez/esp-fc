@@ -1,18 +1,16 @@
 #include "Device/MagDevice.hpp"
-#include "Hal/Pgm.h"
 
 namespace Espfc::Device {
 
 const char** MagDevice::getNames()
 {
-  static const char* devChoices[] = {PSTR("AUTO"),   PSTR("NONE"),     PSTR("HMC5883L"), PSTR("AK8975"),
-                                     PSTR("AK8963"), PSTR("QMC5883L"), PSTR("QMC5883P"), NULL};
+  static const char* devChoices[] = {"AUTO", "NONE", "HMC5883L", "AK8975", "AK8963", "QMC5883L", "QMC5883P", nullptr};
   return devChoices;
 }
 
 const char* MagDevice::getName(DeviceType type)
 {
-  if (type >= MAG_MAX) return PSTR("?");
+  if (type >= MAG_MAX) return "?";
   return getNames()[type];
 }
 

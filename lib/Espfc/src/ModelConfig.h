@@ -61,13 +61,13 @@ struct FusionConfig
 
   static const char * getModeName(FusionMode mode)
   {
-    if(mode >= FUSION_MAX) return PSTR("?");
+    if(mode >= FUSION_MAX) return "?";
     return getModeNames()[mode];
   }
 
   static const char ** getModeNames()
   {
-    static const char* modeChoices[] = { PSTR("NONE"), PSTR("MADGWICK"), PSTR("MAHONY"), PSTR("RTQF"), NULL };
+    static const char* modeChoices[] = { "NONE", "MADGWICK", "MAHONY", "RTQF", NULL };
     return modeChoices;
   }
 };

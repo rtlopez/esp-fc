@@ -1,19 +1,18 @@
 #include "Device/GyroDevice.hpp"
-#include "Hal/Pgm.h"
-#include <cstddef>
 
 namespace Espfc::Device {
 
-const char ** GyroDevice::getNames()
+const char** GyroDevice::getNames()
 {
-  static const char* devChoices[] = { PSTR("AUTO"), PSTR("NONE"), PSTR("MPU6000"), PSTR("MPU6050"), PSTR("MPU6500"), PSTR("MPU9250"), PSTR("LSM6DSO"), PSTR("ICM20602"),PSTR("BMI160"), PSTR("ICM42688"), NULL};
+  static const char* devChoices[] = {"AUTO",    "NONE",     "MPU6000", "MPU6050",  "MPU6500", "MPU9250",
+                                     "LSM6DSO", "ICM20602", "BMI160",  "ICM42688", nullptr};
   return devChoices;
 }
 
-const char * GyroDevice::getName(DeviceType type)
+const char* GyroDevice::getName(DeviceType type)
 {
-  if(type >= GYRO_MAX) return PSTR("?");
+  if (type >= GYRO_MAX) return "?";
   return getNames()[type];
 }
 
-}
+} // namespace Espfc::Device
