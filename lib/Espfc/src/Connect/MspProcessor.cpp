@@ -620,14 +620,18 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       for (int i = 0; i < SERIAL_UART_COUNT; i++)
       {
         if (_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL))
+        {
           continue;
+        }
         count++;
       }
       r.writeU8(count);
       for (int i = 0; i < SERIAL_UART_COUNT; i++)
       {
         if (_model.config.serial[i].id >= SERIAL_ID_SOFTSERIAL_1 && !_model.isFeatureActive(FEATURE_SOFTSERIAL))
+        {
           continue;
+        }
         r.writeU8(_model.config.serial[i].id);                        // identifier
         r.writeU32(_model.config.serial[i].functionMask);             // functionMask
         r.writeU8(toBaudIndex(_model.config.serial[i].baud));         // msp_baudrateIndex
@@ -644,6 +648,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       {
         int id = m.readU8();
         int k = _model.getSerialIndex((SerialPortId)id);
+        if (k == -1)
         {
           m.advance(packetSize - 1);
           continue;
@@ -1617,7 +1622,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(_model.state.gps.numSats);           // numSat
       r.writeU32(_model.state.gps.location.raw.lat); // lat
       r.writeU32(_model.state.gps.location.raw.lon); // lon
-      r.writeU16(std::clamp<uint16_t>(_model.state.gps.location.raw.height / 1000, 0,
+      r.writeU16(std::clamp<int>(_model.state.gps.location.raw.height / 1000, 0,
                                       std::numeric_limits<uint16_t>::max())); // height [m]
       r.writeU16(_model.state.gps.velocity.raw.groundSpeed / 10);             // cm/s
       r.writeU16(_model.state.gps.velocity.raw.heading / 10000);              // deg * 10

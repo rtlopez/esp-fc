@@ -1060,21 +1060,24 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       if(!_model.isModeActive(MODE_ARMED)) _model.calibrateMag();
       s.println("OK");
     }
-    else if(strcmp(cmd.args[1], "reset_accel") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
+    else
     {
-      _model.state.accel.bias = VectorFloat();
-      s.println("OK");
-    }
-    else if(strcmp(cmd.args[1], "reset_gyro") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
-    {
-      _model.state.gyro.bias = VectorFloat();
-      s.println("OK");
-    }
-    else if(strcmp(cmd.args[1], "reset_mag") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
-    {
-      _model.state.mag.calibrationOffset = VectorFloat();
-      _model.state.mag.calibrationScale = VectorFloat(1.f, 1.f, 1.f);
-      s.println("OK");
+      if(strcmp(cmd.args[1], "reset_accel") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
+      {
+        _model.state.accel.bias = {};
+        s.println("OK");
+      }
+      if(strcmp(cmd.args[1], "reset_gyro") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
+      {
+        _model.state.gyro.bias = {};
+        s.println("OK");
+      }
+      if(strcmp(cmd.args[1], "reset_mag") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
+      {
+        _model.state.mag.calibrationOffset = {};
+        _model.state.mag.calibrationScale = {1.f, 1.f, 1.f};
+        s.println("OK");
+      }
     }
   }
   else if(strcmp(cmd.args[0], "gps") == 0)
