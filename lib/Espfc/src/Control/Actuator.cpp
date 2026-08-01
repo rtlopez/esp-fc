@@ -28,7 +28,7 @@ int Actuator::begin()
 int Actuator::update()
 {
   uint32_t startTime = micros();
-  Utils::Stats::Measure(_model.state.stats, COUNTER_ACTUATOR);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_ACTUATOR);
   updateArmingDisabled();
   updateModeMask();
   updateArmed();
@@ -239,7 +239,7 @@ void Actuator::updateBuzzer()
 void Actuator::updateDynLpf()
 {
   return; // temporary disable
-  int scale = Utils::clamp((int)_model.state.input.us[AXIS_THRUST], 1000, 2000);
+  int scale = std::clamp((int)_model.state.input.us[AXIS_THRUST], 1000, 2000);
   if(_model.config.gyro.dynLpfFilter.cutoff > 0) {
     int gyroFreq = Utils::map(scale, 1000, 2000, _model.config.gyro.dynLpfFilter.cutoff, _model.config.gyro.dynLpfFilter.freq);
     for(size_t i = 0; i < AXIS_COUNT_RPY; i++) {

@@ -23,8 +23,8 @@ int MagSensor::begin()
   _model.state.mag.calibrationValid = true;
 
   _model.logger.info()
-      .log(F("MAG INIT"))
-      .log(FPSTR(Device::MagDevice::getName(_mag->getType())))
+      .log("MAG INIT")
+      .log(Device::MagDevice::getName(_mag->getType()))
       .log(_mag->getAddress())
       .logln(_model.state.mag.timer.rate);
 

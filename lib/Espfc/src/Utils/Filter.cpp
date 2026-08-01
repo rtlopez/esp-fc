@@ -1,5 +1,6 @@
 #include "Utils/Filter.h"
 #include "Utils/MemoryHelper.h"
+#include <algorithm>
 #include <cmath>
 
 namespace Espfc {
@@ -148,7 +149,7 @@ void FilterStateFirstOrder::reset()
 
 void FilterStateFirstOrder::init(float rate, float freq)
 {
-  freq = Utils::clamp(freq, 0.0f, rate * 0.48f);
+  freq = std::clamp(freq, 0.0f, rate * 0.48f);
 
   const float W = std::tan(Utils::pi() * freq / rate);
 

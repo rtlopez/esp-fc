@@ -4,8 +4,8 @@
 const char * const * EscDriverBase::getProtocolNames()
 {
   static const char * const protocols[] = {
-    PSTR("PWM"), PSTR("ONESHOT125"), PSTR("ONESHOT42"), PSTR("MULTISHOT"), PSTR("BRUSHED"),
-    PSTR("DSHOT150"), PSTR("DSHOT300"), PSTR("DSHOT600"), PSTR("PROSHOT1000"), PSTR("DISABLED"),
+    "PWM", "ONESHOT125", "ONESHOT42", "MULTISHOT", "BRUSHED",
+    "DSHOT150", "DSHOT300", "DSHOT600", "PROSHOT1000", "DISABLED",
     nullptr
   };
   return protocols;
@@ -13,7 +13,7 @@ const char * const * EscDriverBase::getProtocolNames()
 
 const char * const EscDriverBase::getProtocolName(EscProtocol protocol)
 {
-  if(protocol >= ESC_PROTOCOL_COUNT) return PSTR("?");
+  if(protocol >= ESC_PROTOCOL_COUNT) return "?";
   return getProtocolNames()[protocol];
 }
 

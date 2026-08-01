@@ -2,17 +2,13 @@
 
 #include "Connect/Msp.hpp"
 
-namespace Espfc {
-
-namespace Connect {
+namespace Espfc::Connect {
 
 class MspParser
 {
-  public:
-    MspParser();
-    void parse(char c, MspMessage& msg);
+public:
+  MspParser();
+  void parse(char c, MspMessage& msg);
 };
 
-}
-
-}
+} // namespace Espfc::Connect

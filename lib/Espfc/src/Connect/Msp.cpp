@@ -1,7 +1,7 @@
 #include "Connect/Msp.hpp"
-#include "Hal/Pgm.h"
 #include "Utils/Crc.hpp"
 #include <algorithm>
+#include <cstdint>
 
 namespace Espfc::Connect {
 
@@ -41,7 +41,7 @@ uint16_t MspMessage::readU16()
 {
   uint16_t ret;
   ret = readU8();
-  ret |= readU8() << 8;
+  ret |= (uint16_t)readU8() << 8;
   return ret;
 }
 
@@ -49,13 +49,13 @@ uint32_t MspMessage::readU32()
 {
   uint32_t ret;
   ret = readU8();
-  ret |= readU8() <<  8;
-  ret |= readU8() << 16;
-  ret |= readU8() << 24;
+  ret |= (uint32_t)readU8() << 8;
+  ret |= (uint32_t)readU8() << 16;
+  ret |= (uint32_t)readU8() << 24;
   return ret;
 }
 
-uint16_t MspMessage::append(const uint8_t * data, size_t len)
+uint16_t MspMessage::append(const uint8_t* data, size_t len)
 {
   std::copy(data, data + len, buffer + received);
   received += len;
@@ -74,24 +74,19 @@ void MspResponse::advance(size_t size)
   len += size;
 }
 
-void MspResponse::writeData(const char * v, int size)
+void MspResponse::writeData(const char* v, int size)
 {
-  while(size-- > 0) writeU8(*v++);
-}
-
-void MspResponse::writeString(const char * v)
-{
-  while(*v) writeU8(*v++);
-}
-
-void MspResponse::writeString(const __FlashStringHelper *ifsh)
-{
-  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-  while(true)
+  while (size-- > 0)
   {
-    uint8_t c = pgm_read_byte(p++);
-    if (c == 0) break;
-    writeU8(c);
+    writeU8(*v++);
+  }
+}
+
+void MspResponse::writeString(const char* v)
+{
+  while (*v)
+  {
+    writeU8(*v++);
   }
 }
 
@@ -114,9 +109,9 @@ void MspResponse::writeU32(uint32_t v)
   writeU8(v >> 24);
 }
 
-size_t MspResponse::serialize(uint8_t * buff, size_t len_max) const
+size_t MspResponse::serialize(uint8_t* buff, size_t len_max) const
 {
-  switch(version)
+  switch (version)
   {
     case MSP_V1:
       return serializeV1(buff, len_max);
@@ -126,10 +121,10 @@ size_t MspResponse::serialize(uint8_t * buff, size_t len_max) const
   return 0;
 }
 
-size_t MspResponse::serializeV1(uint8_t * buff, size_t len_max) const
+size_t MspResponse::serializeV1(uint8_t* buff, size_t len_max) const
 {
   // not enough space in target buffer
-  if(len + 6ul > len_max) return 0;
+  if (len + 6ul > len_max) return 0;
 
   buff[0] = '$';
   buff[1] = 'M';
@@ -139,7 +134,7 @@ size_t MspResponse::serializeV1(uint8_t * buff, size_t len_max) const
 
   uint8_t checksum = Utils::crc8_xor(0, &buff[3], 2);
   size_t i = 5;
-  for(size_t j = 0; j < len; j++)
+  for (size_t j = 0; j < len; j++)
   {
     checksum = Utils::crc8_xor(checksum, data[j]);
     buff[i++] = data[j];
@@ -149,10 +144,10 @@ size_t MspResponse::serializeV1(uint8_t * buff, size_t len_max) const
   return i + 1;
 }
 
-size_t MspResponse::serializeV2(uint8_t * buff, size_t len_max) const
+size_t MspResponse::serializeV2(uint8_t* buff, size_t len_max) const
 {
   // not enough space in target buffer
-  if(len + 9ul > len_max) return 0;
+  if (len + 9ul > len_max) return 0;
 
   buff[0] = '$';
   buff[1] = 'X';
@@ -165,7 +160,7 @@ size_t MspResponse::serializeV2(uint8_t * buff, size_t len_max) const
 
   uint8_t checksum = Utils::crc8_dvb_s2(0, &buff[3], 5);
   size_t i = 8;
-  for(size_t j = 0; j < len; j++)
+  for (size_t j = 0; j < len; j++)
   {
     checksum = Utils::crc8_dvb_s2(checksum, data[j]);
     buff[i++] = data[j];
@@ -175,4 +170,4 @@ size_t MspResponse::serializeV2(uint8_t * buff, size_t len_max) const
   return i + 1;
 }
 
-}
+} // namespace Espfc::Connect

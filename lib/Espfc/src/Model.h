@@ -141,18 +141,18 @@ class Model
       {
         //save();
         state.buzzer.push(BUZZER_GYRO_CALIBRATED);
-        logger.info().log(F("GYRO BIAS")).log(Utils::toDeg(state.gyro.bias.x)).log(Utils::toDeg(state.gyro.bias.y)).logln(Utils::toDeg(state.gyro.bias.z));
+        logger.info().log("GYRO BIAS").log(Utils::toDeg(state.gyro.bias.x)).log(Utils::toDeg(state.gyro.bias.y)).logln(Utils::toDeg(state.gyro.bias.z));
       }
       if(state.accel.calibrationState == CALIBRATION_SAVE)
       {
         save();
-        logger.info().log(F("ACCEL BIAS")).log(state.accel.bias.x).log(state.accel.bias.y).logln(state.accel.bias.z);
+        logger.info().log("ACCEL BIAS").log(state.accel.bias.x).log(state.accel.bias.y).logln(state.accel.bias.z);
       }
       if(state.mag.calibrationState == CALIBRATION_SAVE)
       {
         save();
-        logger.info().log(F("MAG BIAS")).log(state.mag.calibrationOffset.x).log(state.mag.calibrationOffset.y).logln(state.mag.calibrationOffset.z);
-        logger.info().log(F("MAG SCALE")).log(state.mag.calibrationScale.x).log(state.mag.calibrationScale.y).logln(state.mag.calibrationScale.z);
+        logger.info().log("MAG BIAS").log(state.mag.calibrationOffset.x).log(state.mag.calibrationOffset.y).logln(state.mag.calibrationOffset.z);
+        logger.info().log("MAG SCALE").log(state.mag.calibrationScale.x).log(state.mag.calibrationScale.y).logln(state.mag.calibrationScale.z);
       }
     }
 
@@ -261,7 +261,7 @@ class Model
       size_t channel = config.input.rssiChannel;
       if(channel < 4 || channel > state.input.channelCount) return 0;
       float value = state.input.ch[channel - 1];
-      return Utils::clamp(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
+      return std::clamp<uint16_t>(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0, 1023);
     }
 
     int load()
@@ -269,7 +269,7 @@ class Model
       logger.begin();
       #ifndef UNIT_TEST
       _storage.begin();
-      logger.info().log(F("F_CPU")).logln(F_CPU);
+      logger.info().log("F_CPU").logln(F_CPU);
       _storageResult = _storage.load(config);
       logStorageResult();
       #endif
@@ -563,15 +563,15 @@ class Model
 #ifndef UNIT_TEST
       switch(_storageResult)
       {
-        case STORAGE_LOAD_SUCCESS:    logger.info().logln(F("EEPROM load ok")); break;
-        case STORAGE_SAVE_SUCCESS:    logger.info().logln(F("EEPROM save ok")); break;
-        case STORAGE_SAVE_ERROR:      logger.err().logln(F("EEPROM save failed")); break;
-        case STORAGE_ERR_BAD_MAGIC:   logger.err().logln(F("EEPROM wrong magic")); break;
-        case STORAGE_ERR_BAD_VERSION: logger.err().logln(F("EEPROM wrong version")); break;
-        case STORAGE_ERR_BAD_SIZE:    logger.err().logln(F("EEPROM wrong size")); break;
+        case STORAGE_LOAD_SUCCESS:    logger.info().logln("EEPROM load ok"); break;
+        case STORAGE_SAVE_SUCCESS:    logger.info().logln("EEPROM save ok"); break;
+        case STORAGE_SAVE_ERROR:      logger.err().logln("EEPROM save failed"); break;
+        case STORAGE_ERR_BAD_MAGIC:   logger.err().logln("EEPROM wrong magic"); break;
+        case STORAGE_ERR_BAD_VERSION: logger.err().logln("EEPROM wrong version"); break;
+        case STORAGE_ERR_BAD_SIZE:    logger.err().logln("EEPROM wrong size"); break;
         case STORAGE_NONE:
         default:
-          logger.err().logln(F("EEPROM unknown result")); break;
+          logger.err().logln("EEPROM unknown result"); break;
       }
 #endif
     }

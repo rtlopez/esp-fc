@@ -22,8 +22,8 @@ int Fusion::begin()
   _rtqf.setKp(_model.config.fusion.gain * 0.0002f);
 
   _model.logger.info()
-      .log(F("FUSION"))
-      .log(FPSTR(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode)))
+      .log("FUSION")
+      .log(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))
       .logln(_model.config.fusion.gain);
 
   for (size_t i = 0; i < 4; i++)

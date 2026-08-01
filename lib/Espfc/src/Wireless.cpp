@@ -21,7 +21,7 @@ int Wireless::begin()
 void Wireless::startAp()
 {
   bool status = WiFi.softAP("ESP-FC");
-  _model.logger.info().log(F("WIFI AP START")).logln(status);
+  _model.logger.info().log("WIFI AP START").logln(status);
 }
 
 int Wireless::connect()
@@ -42,7 +42,7 @@ int Wireless::connect()
   if(_model.config.wireless.ssid[0] != 0)
   {
     WiFi.begin(_model.config.wireless.ssid, _model.config.wireless.pass);
-    _model.logger.info().log(F("WIFI STA")).log(_model.config.wireless.ssid).log(_model.config.wireless.pass).log(WiFi.getMode()).logln(WiFi.status());
+    _model.logger.info().log("WIFI STA").log(_model.config.wireless.ssid).log(_model.config.wireless.pass).log(WiFi.getMode()).logln(WiFi.status());
   }
   if(!(WiFi.getMode() & WIFI_AP))
   {
@@ -51,30 +51,30 @@ int Wireless::connect()
   _server.begin(_model.config.wireless.port);
   _server.setNoDelay(true);
   _model.state.serial[SERIAL_SOFT_0].stream = &_adapter;
-  _model.logger.info().log(F("WIFI SERVER PORT")).log(WiFi.status()).logln(_model.config.wireless.port);
+  _model.logger.info().log("WIFI SERVER PORT").log(WiFi.status()).logln(_model.config.wireless.port);
   return 1;
 }
 
 void Wireless::wifiEventConnected(const String& ssid, int channel)
 {
-  _model.logger.info().log(F("WIFI STA CONN")).log(ssid).logln(channel);
+  _model.logger.info().log("WIFI STA CONN").log(ssid).logln(channel);
 }
 
 void Wireless::wifiEventApConnected(const uint8_t* mac)
 {
   char buf[20];
   snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  _model.logger.info().log(F("WIFI AP CONNECT")).logln(buf);
+  _model.logger.info().log("WIFI AP CONNECT").logln(buf);
 }
 
 void Wireless::wifiEventGotIp(const IPAddress& ip)
 {
-  _model.logger.info().log(F("WIFI STA IP")).logln(ip.toString());
+  _model.logger.info().log("WIFI STA IP").logln(ip.toString());
 }
 
 void Wireless::wifiEventDisconnected()
 {
-  _model.logger.info().logln(F("WIFI STA DISCONNECT"));
+  _model.logger.info().logln("WIFI STA DISCONNECT");
 }
 
 int Wireless::update()

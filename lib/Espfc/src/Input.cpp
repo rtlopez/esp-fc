@@ -18,7 +18,7 @@ int Input::begin()
   switch(_model.config.input.interpolationMode)
   {
     case INPUT_INTERPOLATION_AUTO:
-      _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+      _model.state.input.interpolationDelta = std::clamp<uint32_t>(_model.state.input.frameDelta, 4000, 40000) * 0.000001f; // estimate real interval
       break;
     case INPUT_INTERPOLATION_MANUAL:
       _model.state.input.interpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
@@ -98,7 +98,7 @@ int FAST_CODE_ATTR Input::update()
 
 InputStatus FAST_CODE_ATTR Input::readInputs()
 {
-  Utils::Stats::Measure readMeasure(_model.state.stats, COUNTER_INPUT_READ);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_INPUT_READ);
   uint32_t startTime = micros();
 
   InputStatus status = _device->update();
@@ -183,7 +183,7 @@ void FAST_CODE_ATTR Input::processInputs()
 
 bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 {
-  Utils::Stats::Measure readMeasure(_model.state.stats, COUNTER_FAILSAFE);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_FAILSAFE);
 
   if(_model.isSwitchActive(MODE_FAILSAFE))
   {
@@ -205,7 +205,7 @@ bool FAST_CODE_ATTR Input::failsafe(InputStatus status)
 
   // stage 2 timeout
   _model.state.input.lossTime = micros() - _model.state.input.frameTime;
-  if(_model.state.input.lossTime > Utils::clamp((uint32_t)_model.config.failsafe.delay, (uint32_t)2u, (uint32_t)200u) * TENTH_TO_US)
+  if(_model.state.input.lossTime > std::clamp<uint32_t>(_model.config.failsafe.delay, 2u, 200u) * TENTH_TO_US)
   {
     failsafeStage2();
     return true;
@@ -251,7 +251,7 @@ void FAST_CODE_ATTR Input::failsafeStage2()
 
 void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
 {
-  Utils::Stats::Measure filterMeasure(_model.state.stats, COUNTER_INPUT_FILTER);
+  Utils::Stats::Measure measure(_model.state.stats, COUNTER_INPUT_FILTER);
   uint32_t startTime = micros();
 
   const bool newFrame = status != INPUT_IDLE;
@@ -296,7 +296,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
 
   if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO && _model.config.input.filterType == INPUT_INTERPOLATION)
   {
-    _model.state.input.interpolationDelta = Utils::clamp(_model.state.input.frameDelta, (uint32_t)4000, (uint32_t)40000) * 0.000001f; // estimate real interval
+    _model.state.input.interpolationDelta = std::clamp<uint32_t>(_model.state.input.frameDelta, 4000, 40000) * 0.000001f; // estimate real interval
     _model.state.input.interpolationStep = _model.state.loopTimer.intervalf / _model.state.input.interpolationDelta;
   }
 
@@ -346,31 +346,31 @@ Device::InputDevice * Input::getInputDevice()
     {
       case SERIALRX_IBUS:
         _ibus.begin(serial);
-        _model.logger.info().logln(F("RX IBUS"));
+        _model.logger.info().logln("RX IBUS");
         return &_ibus;
 
       case SERIALRX_SBUS:
         _sbus.begin(serial);
-        _model.logger.info().logln(F("RX SBUS"));
+        _model.logger.info().logln("RX SBUS");
         return &_sbus;
 
       case SERIALRX_CRSF:
         _crsf.begin(serial, _model.isFeatureActive(FEATURE_TELEMETRY) ? &_telemetry : nullptr);
-        _model.logger.info().logln(F("RX CRSF"));
+        _model.logger.info().logln("RX CRSF");
         return &_crsf;
     }
   }
   else if(_model.isFeatureActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
   {
     _ppm.begin(_model.config.pin[PIN_INPUT_RX], _model.config.input.ppmMode);
-    _model.logger.info().log(F("RX PPM")).log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
+    _model.logger.info().log("RX PPM").log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
     return &_ppm;
   }
 #if defined(ESPFC_ESPNOW)
   else if(_model.isFeatureActive(FEATURE_RX_SPI))
   {
     int status = _espnow.begin();
-    _model.logger.info().log(F("RX ESPNOW")).logln(status);
+    _model.logger.info().log("RX ESPNOW").logln(status);
     return &_espnow;
   }
 #endif

@@ -6,7 +6,7 @@ namespace Espfc::Device {
 
 using namespace Espfc::Rc;
 
-InputCRSF::InputCRSF(): _serial(NULL), _telemetry(NULL), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
+InputCRSF::InputCRSF(): _serial(nullptr), _telemetry(nullptr), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
 
 int InputCRSF::begin(Device::SerialDevice * serial, TelemetryManager * telemetry)
 {

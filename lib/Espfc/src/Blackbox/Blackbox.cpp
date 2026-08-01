@@ -22,7 +22,7 @@ int Blackbox::begin()
 
 #ifdef USE_FLASHFS
   int res = flashfsInit();
-  _model.logger.info().log(F("FLASHFS")).log(res).logln(flashfsGetOffset());
+  _model.logger.info().log("FLASHFS").log(res).logln(flashfsGetOffset());
 #endif
 
   if(!_model.blackboxEnabled()) return 0;
@@ -262,7 +262,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
   rcCommand[AXIS_THRUST] = _model.state.input.buffer[AXIS_THRUST];
   for(size_t i = 0; i < 4; i++)
   {
-    motor[i] = Utils::clamp(_model.state.output.us[i], (int16_t)1000, (int16_t)2000);
+    motor[i] = std::clamp<int16_t>(_model.state.output.us[i], 1000, 2000);
     if(_model.state.mixer.digitalOutput)
     {
       motor[i] = PWM_TO_DSHOT(motor[i]);

@@ -1,15 +1,15 @@
 #pragma once
 
-#include <cstdint>
 #include <cstddef>
-#include "Hal/Pgm.h"
+#include <cstdint>
 
 namespace Espfc::Connect {
 
 constexpr size_t MSP_BUF_SIZE = 192;
 constexpr size_t MSP_BUF_OUT_SIZE = 240;
 
-enum MspState {
+enum MspState
+{
   MSP_STATE_IDLE,
   MSP_STATE_HEADER_START,
 
@@ -26,25 +26,29 @@ enum MspState {
   MSP_STATE_RECEIVED,
 };
 
-enum MspType {
+enum MspType
+{
   MSP_TYPE_CMD,
   MSP_TYPE_REPLY
 };
 
-enum MspVersion {
+enum MspVersion
+{
   MSP_V1,
   MSP_V2
 };
 
-struct MspHeaderV1 {
-    uint8_t size;
-    uint8_t cmd;
+struct MspHeaderV1
+{
+  uint8_t size;
+  uint8_t cmd;
 } __attribute__((packed));
 
-struct MspHeaderV2 {
-    uint8_t  flags;
-    uint16_t cmd;
-    uint16_t size;
+struct MspHeaderV2
+{
+  uint8_t flags;
+  uint16_t cmd;
+  uint16_t size;
 } __attribute__((packed));
 
 class MspMessage
@@ -59,7 +63,7 @@ public:
   uint8_t readU8();
   uint16_t readU16();
   uint32_t readU32();
-  uint16_t append(const uint8_t * data, size_t len);
+  uint16_t append(const uint8_t* data, size_t len);
 
   MspState state;
   MspType dir;
@@ -82,22 +86,21 @@ public:
 
   MspVersion version;
   uint16_t cmd;
-  int8_t  result;
+  int8_t result;
   uint8_t direction;
   uint16_t len;
   uint8_t data[MSP_BUF_OUT_SIZE];
 
   int remain() const;
   void advance(size_t size);
-  void writeData(const char * v, int size);
-  void writeString(const char * v);
-  void writeString(const __FlashStringHelper *ifsh);
+  void writeData(const char* v, int size);
+  void writeString(const char* v);
   void writeU8(uint8_t v);
   void writeU16(uint16_t v);
   void writeU32(uint32_t v);
-  size_t serialize(uint8_t * buff, size_t len_max) const;
-  size_t serializeV1(uint8_t * buff, size_t len_max) const;
-  size_t serializeV2(uint8_t * buff, size_t len_max) const;
+  size_t serialize(uint8_t* buff, size_t len_max) const;
+  size_t serializeV1(uint8_t* buff, size_t len_max) const;
+  size_t serializeV2(uint8_t* buff, size_t len_max) const;
 };
 
-}
+} // namespace Espfc::Connect

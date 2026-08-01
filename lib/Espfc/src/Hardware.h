@@ -29,7 +29,7 @@ public:
   {
     typename Dev::DeviceType type = dev.getType();
     bool status = dev.begin(&bus, cs);
-    _model.logger.info().log(F("SPI")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
+    _model.logger.info().log("SPI").log(Dev::getName(type)).logln(status ? "Y" : "");
     return status;
   }
 #endif
@@ -40,7 +40,7 @@ public:
   {
     typename Dev::DeviceType type = dev.getType();
     bool status = dev.begin(&bus);
-    _model.logger.info().log(F("I2C")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
+    _model.logger.info().log("I2C").log(Dev::getName(type)).logln(status ? "Y" : "");
     return status;
   }
 #endif
@@ -50,7 +50,7 @@ public:
   {
     typename Dev::DeviceType type = dev.getType();
     bool status = dev.begin(&bus);
-    _model.logger.info().log(F("SLV")).log(FPSTR(Dev::getName(type))).logln(status ? "Y" : "");
+    _model.logger.info().log("SLV").log(Dev::getName(type)).logln(status ? "Y" : "");
     return status;
   }
 

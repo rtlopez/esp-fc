@@ -83,33 +83,33 @@ uint32_t targetFreeHeap()
 /*
 //#include "user_interface.h"
 const rst_info * resetInfo = system_get_rst_info();
-s.print(F("reset reason: "));
+s.print("reset reason: ");
 s.println(resetInfo->reason);
 
-s.print(F("os s.print: "));
+s.print("os s.print: ");
 s.println(system_get_os_print());
 
 //system_print_meminfo();
 
-s.print(F("chip id: 0x"));
+s.print("chip id: 0x");
 s.println(system_get_chip_id(), HEX);
 
-s.print(F("sdk version: "));
+s.print("sdk version: ");
 s.println(system_get_sdk_version());
 
-s.print(F("boot version: "));
+s.print("boot version: ");
 s.println(system_get_boot_version());
 
-s.print(F("userbin addr: 0x"));
+s.print("userbin addr: 0x");
 s.println(system_get_userbin_addr(), HEX);
 
-s.print(F("boot mode: "));
-s.println(system_get_boot_mode() == 0 ? F("SYS_BOOT_ENHANCE_MODE") : F("SYS_BOOT_NORMAL_MODE"));
+s.print("boot mode: ");
+s.println(system_get_boot_mode() == 0 ? "SYS_BOOT_ENHANCE_MODE" : "SYS_BOOT_NORMAL_MODE");
 
-s.print(F("flash size map: "));
+s.print("flash size map: ");
 s.println(system_get_flash_size_map());
 
-s.print(F("time: "));
+s.print("time: ");
 s.println(system_get_time() / 1000000);
 */
 

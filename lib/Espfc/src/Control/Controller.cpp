@@ -31,7 +31,7 @@ int FAST_CODE_ATTR Controller::update()
   }
 
   {
-    Utils::Stats::Measure(_model.state.stats, COUNTER_OUTER_PID);
+    Utils::Stats::Measure measure(_model.state.stats, COUNTER_OUTER_PID);
     resetIterm();
     switch (_model.config.mixer.type)
     {
@@ -42,7 +42,7 @@ int FAST_CODE_ATTR Controller::update()
   }
 
   {
-    Utils::Stats::Measure(_model.state.stats, COUNTER_INNER_PID);
+    Utils::Stats::Measure measure(_model.state.stats, COUNTER_INNER_PID);
     switch (_model.config.mixer.type)
     {
       case FC_MIXER_GIMBAL: innerLoopRobot(); break;
@@ -228,7 +228,7 @@ float Controller::calcualteAltHoldSetpoint() const
 float Controller::getTpaFactor() const
 {
   if (_model.config.controller.tpaScale == 0) return 1.f;
-  float t = Utils::clamp(_model.state.input.us[AXIS_THRUST], (float)_model.config.controller.tpaBreakpoint, 2000.f);
+  float t = std::clamp<float>(_model.state.input.us[AXIS_THRUST], _model.config.controller.tpaBreakpoint, 2000.f);
   return Utils::map(t, (float)_model.config.controller.tpaBreakpoint, 2000.f, 1.f,
                     1.f - ((float)_model.config.controller.tpaScale * 0.01f));
 }
