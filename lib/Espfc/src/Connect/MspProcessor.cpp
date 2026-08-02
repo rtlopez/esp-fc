@@ -185,6 +185,9 @@ constexpr uint8_t MSP_FC_VERSION_MONTH = 6;
 constexpr uint8_t MSP_FC_VERSION_PATCH = 0;
 constexpr char MSP_FC_VERSION_STRING[] = "2026.6.0";
 
+// MCU type id sentinel telling the configurator the name follows as a string
+constexpr uint8_t MCU_TYPE_ID_PROVIDED_BY_NAME = 255;
+
 } // namespace
 
 namespace Espfc::Connect {
@@ -227,6 +230,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writePString(MSP_FC_VERSION_STRING);
       break;
 
+    case MSP2_MCU_INFO:
+      r.writeU8(MCU_TYPE_ID_PROVIDED_BY_NAME);
+      r.writePString(targetName);
+      break;
+
     case MSP_BOARD_INFO:
       r.writeData(boardIdentifier, BOARD_IDENTIFIER_LENGTH);
       r.writeU16(0);                 // No other build targets currently have hardware revision detection.
@@ -238,7 +246,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(0); // manufacturer name
       for (size_t i = 0; i < 32; i++)
         r.writeU8(0); // signature
-      r.writeU8(255); // mcu id: unknown
+      r.writeU8(MCU_TYPE_ID_PROVIDED_BY_NAME); // mcu id
       // 1.42
       r.writeU8(2); // configuration state: configured
       // 1.43
