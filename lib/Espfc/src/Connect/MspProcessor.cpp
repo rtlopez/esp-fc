@@ -326,6 +326,40 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       }
       break;
 
+    case MSP2_GET_TEXT: {
+      const uint8_t textType = m.remain() ? m.readU8() : 0;
+      r.writeU8(textType);
+      switch (textType)
+      {
+        case MSP2TEXT_CRAFT_NAME:
+          r.writePString(_model.config.modelName);
+          break;
+        default:
+          r.writePString(""); // unsupported text types reported as empty
+          break;
+      }
+      break;
+    }
+
+    case MSP2_SET_TEXT: {
+      const uint8_t textType = m.readU8();
+      const uint8_t textLength = m.readU8();
+      if (textType == MSP2TEXT_CRAFT_NAME)
+      {
+        memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
+        for (size_t i = 0; i < textLength; i++)
+        {
+          const uint8_t c = m.readU8();
+          if (i < MODEL_NAME_LEN) _model.config.modelName[i] = c;
+        }
+      }
+      else
+      {
+        m.advance(textLength); // ignore unsupported text types
+      }
+      break;
+    }
+
     case MSP_BOXNAMES:
       r.writeString("ARM;AIRMODE;ANGLE;ALTHOLD;BEEPER;FAILSAFE;BLACKBOX;BLACKBOXERASE;");
       break;
