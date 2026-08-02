@@ -2,6 +2,7 @@
 #include "Utils/Crc.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 
 namespace Espfc::Connect {
 
@@ -88,6 +89,12 @@ void MspResponse::writeString(const char* v)
   {
     writeU8(*v++);
   }
+}
+
+void MspResponse::writePString(const char* v)
+{
+  writeU8(strlen(v));
+  writeString(v);
 }
 
 void MspResponse::writeU8(uint8_t v)

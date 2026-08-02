@@ -95,6 +95,7 @@ public:
   void advance(size_t size);
   void writeData(const char* v, int size);
   void writeString(const char* v);
+  void writePString(const char* v);
   void writeU8(uint8_t v);
   void writeU16(uint16_t v);
   void writeU32(uint32_t v);

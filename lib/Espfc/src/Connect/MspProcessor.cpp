@@ -179,6 +179,12 @@ static uint16_t toIbatCurrent(float current)
 
 constexpr uint8_t MSP_PASSTHROUGH_ESC_4WAY = 0xff;
 
+// FC version reported over MSP, mirrors Betaflight 2026.6 CalVer for configurator compatibility
+constexpr uint8_t MSP_FC_VERSION_YEAR = 2026 - 2000;
+constexpr uint8_t MSP_FC_VERSION_MONTH = 6;
+constexpr uint8_t MSP_FC_VERSION_PATCH = 0;
+constexpr char MSP_FC_VERSION_STRING[] = "2026.6.0";
+
 } // namespace
 
 namespace Espfc::Connect {
@@ -215,9 +221,10 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_FC_VERSION:
-      r.writeU8(FC_VERSION_MAJOR);
-      r.writeU8(FC_VERSION_MINOR);
-      r.writeU8(FC_VERSION_PATCH_LEVEL);
+      r.writeU8(MSP_FC_VERSION_YEAR);
+      r.writeU8(MSP_FC_VERSION_MONTH);
+      r.writeU8(MSP_FC_VERSION_PATCH);
+      r.writePString(MSP_FC_VERSION_STRING);
       break;
 
     case MSP_BOARD_INFO:
