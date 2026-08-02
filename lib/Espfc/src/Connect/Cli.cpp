@@ -1187,33 +1187,17 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.print(" Hz, ");
     s.println(_model.state.input.autoFactor);
 
-    static const char* armingDisableNames[] = {"NO_GYRO",
-                                               "FAILSAFE",
-                                               "RX_FAILSAFE",
-                                               "BAD_RX_RECOVERY",
-                                               "BOXFAILSAFE",
-                                               "RUNAWAY_TAKEOFF",
-                                               "CRASH_DETECTED",
-                                               "THROTTLE",
-                                               "ANGLE",
-                                               "BOOT_GRACE_TIME",
-                                               "NOPREARM",
-                                               "LOAD",
-                                               "CALIBRATING",
-                                               "CLI",
-                                               "CMS_MENU",
-                                               "BST",
-                                               "MSP",
-                                               "PARALYZE",
-                                               "GPS",
-                                               "RESC",
-                                               "RPMFILTER",
-                                               "REBOOT_REQUIRED",
-                                               "DSHOT_BITBANG",
-                                               "ACC_CALIBRATION",
-                                               "MOTOR_PROTOCOL",
-                                               "ARM_SWITCH"};
-    const size_t armingDisableNamesLength = std::size(armingDisableNames);
+    // clang-format off
+    static const char* armingDisableNames[] = {
+      "NO_GYRO", "FAILSAFE", "RX_FAILSAFE", "BAD_RX_RECOVERY", "BOXFAILSAFE", "RUNAWAY_TAKEOFF", "CRASH_DETECTED",
+      "THROTTLE", "ANGLE", "BOOT_GRACE_TIME", "NOPREARM", "LOAD", "CALIBRATING", "CLI", "CMS_MENU", "BST",
+      "MSP", "PARALYZE", "GPS", "RESC", "RPMFILTER", "REBOOT_REQUIRED", "DSHOT_BITBANG", "ACC_CALIBRATION",
+      "MOTOR_PROTOCOL", "CRASHFLIP", "ALTHOLD", "POSHOLD", "AUTOPILOT", "ARM_SWITCH"
+    };
+    // clang-format on
+    constexpr size_t armingDisableNamesLength = std::size(armingDisableNames);
+    static_assert(armingDisableNamesLength == ARMING_DISABLED_FLAGS_COUNT,
+                  "armingDisableNamesLength != ARMING_DISABLED_FLAGS_COUNT");
 
     s.print("   arm flags:");
     for (size_t i = 0; i < armingDisableNamesLength; i++)

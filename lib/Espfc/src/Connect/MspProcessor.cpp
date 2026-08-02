@@ -248,7 +248,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(0); // board name
       r.writeU8(0); // manufacturer name
       for (size_t i = 0; i < 32; i++)
+      {
         r.writeU8(0); // signature
+      }
       r.writeU8(MCU_TYPE_ID_PROVIDED_BY_NAME); // mcu id
       // 1.42
       r.writeU8(2); // configuration state: configured
@@ -275,6 +277,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeData(buildDate, BUILD_DATE_LENGTH);
       r.writeData(buildTime, BUILD_TIME_LENGTH);
       r.writeData(shortGitRevision, GIT_SHORT_REVISION_LENGTH);
+      // 1.46
+      // build info flags - 0 * uint16_t
       break;
 
     case MSP_UID:
@@ -299,8 +303,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         r.writeU8(1); // max profile count
         r.writeU8(0); // current rate profile index
       }
-      else
-      { // MSP_STATUS
+      else // MSP_STATUS
+      {
         // r.writeU16(_model.state.gyro.timer.interval); // gyro cycle time
         r.writeU16(0);
       }
@@ -312,6 +316,15 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(ARMING_DISABLED_FLAGS_COUNT);            // 1 byte, flag count
       r.writeU32(_model.state.mode.armingDisabledFlags); // 4 bytes, flags
       r.writeU8(0);                                      // reboot required
+
+      // 1.46
+      // Write CPU temp
+      r.writeU16(0); // getCoreTemperatureCelsius()
+      r.writeU8(1);
+
+      // 1.48
+      r.writeU8(1);
+      r.writeU8(0);
       break;
 
     case MSP_NAME:
@@ -1753,6 +1766,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(0); // reboot to firmware
       _postCommand = [this]() { processRestart(); };
       break;
+
+    case MSP_SET_RTC:
+      m.readU32(); // secs: ignore
+      m.readU16(); // msecs: ignore
+      break;       // RTC not supported, accept and ignore
 
     default:
       r.result = 0;
