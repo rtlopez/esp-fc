@@ -777,6 +777,16 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU16(lrintf(Utils::toDeg(-_model.state.attitude.euler.z)));       // yaw   [degrees]
       break;
 
+    case MSP_ATTITUDE_QUATERNION: {
+      const float scale = 32767.0f; // int16 unit-quaternion scaling
+      const auto& q = _model.state.attitude.quaternion;
+      r.writeU16((int16_t)lrintf(q.w * scale));
+      r.writeU16((int16_t)lrintf(q.x * scale));
+      r.writeU16((int16_t)lrintf(q.y * scale));
+      r.writeU16((int16_t)lrintf(q.z * scale));
+      break;
+    }
+
     case MSP_ALTITUDE:
       r.writeU32(lrintf(_model.state.altitude.height * 100.f)); // alt [cm]
       r.writeU16(lrintf(_model.state.altitude.vario * 100.f));  // vario [cm/s]
