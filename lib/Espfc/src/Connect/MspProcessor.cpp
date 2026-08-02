@@ -188,6 +188,9 @@ constexpr char MSP_FC_VERSION_STRING[] = "2026.6.0";
 // MCU type id sentinel telling the configurator the name follows as a string
 constexpr uint8_t MCU_TYPE_ID_PROVIDED_BY_NAME = 255;
 
+// Reported for sensor slots the target does not support at all
+constexpr uint8_t SENSOR_NOT_AVAILABLE = 0xff;
+
 } // namespace
 
 namespace Espfc::Connect {
@@ -586,6 +589,20 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.config.baro.dev = m.readU8();  // 2 baro bmp085
       _model.config.mag.dev = m.readU8();   // 3 mag hmc5883l
       _model.reload();
+      break;
+
+    case MSP2_SENSOR_CONFIG_ACTIVE:
+      r.writeU8(_model.gyroActive() ? _model.config.gyro.dev : (uint8_t)GYRO_NONE);   // gyro
+      r.writeU8(_model.accelActive() ? _model.config.accel.dev : (uint8_t)GYRO_NONE); // acc
+      r.writeU8(_model.baroActive() ? _model.config.baro.dev : (uint8_t)BARO_NONE);   // baro
+      r.writeU8(_model.magActive() ? _model.config.mag.dev : (uint8_t)MAG_NONE);      // mag
+      r.writeU8(SENSOR_NOT_AVAILABLE);                                                // rangefinder
+      r.writeU8(SENSOR_NOT_AVAILABLE);                                                // opticalflow
+      break;
+
+    case MSP2_GYRO_SENSOR_ACTIVE:
+      r.writeU8(1);                                                                 // gyro count, single gyro only
+      r.writeU8(_model.gyroActive() ? _model.config.gyro.dev : (uint8_t)GYRO_NONE); // gyro 1
       break;
 
     case MSP_SENSOR_ALIGNMENT:
