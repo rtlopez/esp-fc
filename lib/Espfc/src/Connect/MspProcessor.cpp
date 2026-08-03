@@ -1447,7 +1447,188 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.reload();
       break;
 
+    case MSP_SIMPLIFIED_TUNING: {
+      const SimplifiedTuningConfig& s = _model.config.simplifiedTuning;
+      r.writeU8(s.pidsMode);
+      r.writeU8(s.masterMultiplier);
+      r.writeU8(s.rollPitchRatio);
+      r.writeU8(s.iGain);
+      r.writeU8(s.dGain);
+      r.writeU8(s.piGain);
+      r.writeU8(s.dMaxGain);
+      r.writeU8(s.ffGain);
+      r.writeU8(s.pitchPiGain);
+      r.writeU32(0);
+      r.writeU32(0);
+      r.writeU8(s.dtermFilter);
+      r.writeU8(s.dtermFilterMultiplier);
+      r.writeU16(_model.config.dterm.filter.freq);
+      r.writeU16(_model.config.dterm.filter2.freq);
+      r.writeU16(_model.config.dterm.dynLpfFilter.cutoff);
+      r.writeU16(_model.config.dterm.dynLpfFilter.freq);
+      r.writeU32(0);
+      r.writeU32(0);
+      r.writeU8(s.gyroFilter);
+      r.writeU8(s.gyroFilterMultiplier);
+      r.writeU16(_model.config.gyro.filter.freq);
+      r.writeU16(_model.config.gyro.filter2.freq);
+      r.writeU16(_model.config.gyro.dynLpfFilter.cutoff);
+      r.writeU16(_model.config.gyro.dynLpfFilter.freq);
+      r.writeU32(0);
+      r.writeU32(0);
+      break;
+    }
+
+    case MSP_SET_SIMPLIFIED_TUNING: {
+      SimplifiedTuningConfig& s = _model.config.simplifiedTuning;
+      s.pidsMode = m.readU8();
+      s.masterMultiplier = m.readU8();
+      s.rollPitchRatio = m.readU8();
+      s.iGain = m.readU8();
+      s.dGain = m.readU8();
+      s.piGain = m.readU8();
+      s.dMaxGain = m.readU8();
+      s.ffGain = m.readU8();
+      s.pitchPiGain = m.readU8();
+      m.readU32();
+      m.readU32();
+      s.dtermFilter = m.readU8();
+      s.dtermFilterMultiplier = m.readU8();
+      _model.config.dterm.filter.freq = m.readU16();
+      _model.config.dterm.filter2.freq = m.readU16();
+      _model.config.dterm.dynLpfFilter.cutoff = m.readU16();
+      _model.config.dterm.dynLpfFilter.freq = m.readU16();
+      m.readU32();
+      m.readU32();
+      s.gyroFilter = m.readU8();
+      s.gyroFilterMultiplier = m.readU8();
+      _model.config.gyro.filter.freq = m.readU16();
+      _model.config.gyro.filter2.freq = m.readU16();
+      _model.config.gyro.dynLpfFilter.cutoff = m.readU16();
+      _model.config.gyro.dynLpfFilter.freq = m.readU16();
+      m.readU32();
+      m.readU32();
+      _model.calculateSimplifiedPids(s, _model.config.pid);
+      if (s.dtermFilter)
+      {
+        _model.calculateSimplifiedDtermFilters(
+            s.dtermFilterMultiplier, _model.config.dterm.filter.freq, _model.config.dterm.filter2.freq,
+            _model.config.dterm.dynLpfFilter.cutoff, _model.config.dterm.dynLpfFilter.freq);
+      }
+      if (s.gyroFilter)
+      {
+        _model.calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, _model.config.gyro.filter.freq,
+                                              _model.config.gyro.filter2.freq, _model.config.gyro.dynLpfFilter.cutoff,
+                                              _model.config.gyro.dynLpfFilter.freq);
+      }
+      _model.reload();
+      break;
+    }
+
+    case MSP_CALCULATE_SIMPLIFIED_PID: {
+      SimplifiedTuningConfig s;
+      s.pidsMode = m.readU8();
+      s.masterMultiplier = m.readU8();
+      s.rollPitchRatio = m.readU8();
+      s.iGain = m.readU8();
+      s.dGain = m.readU8();
+      s.piGain = m.readU8();
+      s.dMaxGain = m.readU8();
+      s.ffGain = m.readU8();
+      s.pitchPiGain = m.readU8();
+      m.readU32();
+      m.readU32();
+      PidConfig tmp[3] = {_model.config.pid[FC_PID_ROLL], _model.config.pid[FC_PID_PITCH],
+                          _model.config.pid[FC_PID_YAW]};
+      _model.calculateSimplifiedPids(s, tmp);
+      for (int i = 0; i < 3; i++)
+      {
+        r.writeU8(tmp[i].P);
+        r.writeU8(tmp[i].I);
+        r.writeU8(tmp[i].D);
+        r.writeU8(0); // d_max not supported
+        r.writeU16(tmp[i].F);
+      }
+      break;
+    }
+
+    case MSP_CALCULATE_SIMPLIFIED_GYRO: {
+      uint8_t filter = m.readU8();
+      uint8_t mult = m.readU8();
+      int16_t lpf1 = m.readU16();
+      int16_t lpf2 = m.readU16();
+      int16_t dynMin = m.readU16();
+      int16_t dynMax = m.readU16();
+      m.readU32();
+      m.readU32();
+      if (filter) _model.calculateSimplifiedGyroFilters(mult, lpf1, lpf2, dynMin, dynMax);
+      r.writeU8(filter);
+      r.writeU8(mult);
+      r.writeU16(lpf1);
+      r.writeU16(lpf2);
+      r.writeU16(dynMin);
+      r.writeU16(dynMax);
+      r.writeU32(0);
+      r.writeU32(0);
+      break;
+    }
+
+    case MSP_CALCULATE_SIMPLIFIED_DTERM: {
+      uint8_t filter = m.readU8();
+      uint8_t mult = m.readU8();
+      int16_t lpf1 = m.readU16();
+      int16_t lpf2 = m.readU16();
+      int16_t dynMin = m.readU16();
+      int16_t dynMax = m.readU16();
+      m.readU32();
+      m.readU32();
+      if (filter) _model.calculateSimplifiedDtermFilters(mult, lpf1, lpf2, dynMin, dynMax);
+      r.writeU8(filter);
+      r.writeU8(mult);
+      r.writeU16(lpf1);
+      r.writeU16(lpf2);
+      r.writeU16(dynMin);
+      r.writeU16(dynMax);
+      r.writeU32(0);
+      r.writeU32(0);
+      break;
+    }
+
+    case MSP_VALIDATE_SIMPLIFIED_TUNING: {
+      const SimplifiedTuningConfig& s = _model.config.simplifiedTuning;
+      PidConfig tmp[3] = {_model.config.pid[FC_PID_ROLL], _model.config.pid[FC_PID_PITCH],
+                          _model.config.pid[FC_PID_YAW]};
+      _model.calculateSimplifiedPids(s, tmp);
+      bool pidOk = tmp[0].P == _model.config.pid[FC_PID_ROLL].P && tmp[0].I == _model.config.pid[FC_PID_ROLL].I &&
+                   tmp[0].D == _model.config.pid[FC_PID_ROLL].D && tmp[0].F == _model.config.pid[FC_PID_ROLL].F &&
+                   tmp[1].P == _model.config.pid[FC_PID_PITCH].P && tmp[1].I == _model.config.pid[FC_PID_PITCH].I &&
+                   tmp[1].D == _model.config.pid[FC_PID_PITCH].D && tmp[1].F == _model.config.pid[FC_PID_PITCH].F &&
+                   tmp[2].P == _model.config.pid[FC_PID_YAW].P && tmp[2].I == _model.config.pid[FC_PID_YAW].I &&
+                   tmp[2].D == _model.config.pid[FC_PID_YAW].D && tmp[2].F == _model.config.pid[FC_PID_YAW].F;
+      r.writeU8(pidOk);
+
+      int16_t glpf1 = _model.config.gyro.filter.freq;
+      int16_t glpf2 = _model.config.gyro.filter2.freq;
+      int16_t gmin = _model.config.gyro.dynLpfFilter.cutoff;
+      int16_t gmax = _model.config.gyro.dynLpfFilter.freq;
+      if (s.gyroFilter) _model.calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
+      bool gyroOk = glpf1 == _model.config.gyro.filter.freq && glpf2 == _model.config.gyro.filter2.freq &&
+                    gmin == _model.config.gyro.dynLpfFilter.cutoff && gmax == _model.config.gyro.dynLpfFilter.freq;
+      r.writeU8(gyroOk);
+
+      int16_t dlpf1 = _model.config.dterm.filter.freq;
+      int16_t dlpf2 = _model.config.dterm.filter2.freq;
+      int16_t dmin = _model.config.dterm.dynLpfFilter.cutoff;
+      int16_t dmax = _model.config.dterm.dynLpfFilter.freq;
+      if (s.dtermFilter) _model.calculateSimplifiedDtermFilters(s.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
+      bool dtermOk = dlpf1 == _model.config.dterm.filter.freq && dlpf2 == _model.config.dterm.filter2.freq &&
+                     dmin == _model.config.dterm.dynLpfFilter.cutoff && dmax == _model.config.dterm.dynLpfFilter.freq;
+      r.writeU8(dtermOk);
+      break;
+    }
+
     case MSP_RAW_IMU: {
+
       auto accel = _model.state.accel.adc.fetch();
       for (int i = 0; i < AXIS_COUNT_RPY; i++)
       {

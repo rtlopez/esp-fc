@@ -694,6 +694,42 @@ struct ArmingConfig
   uint8_t smallAngle = 25;
 };
 
+enum SimplifiedTuningMode: uint8_t
+{
+  SIMPLIFIED_TUNING_OFF = 0,
+  SIMPLIFIED_TUNING_RP = FC_PID_PITCH,  // roll + pitch
+  SIMPLIFIED_TUNING_RPY = FC_PID_YAW,   // roll + pitch + yaw
+};
+
+// Betaflight simplified-tuning slider baselines and limits
+static constexpr int SIMPLIFIED_PID_GAIN_MAX = 250;
+static constexpr int SIMPLIFIED_F_GAIN_MAX = 2000;
+static constexpr int SIMPLIFIED_DYN_LPF_MAX_HZ = 1000;
+static constexpr int SIMPLIFIED_LPF_MAX_HZ = 1000;
+static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ = 250;
+static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ = 500;
+static constexpr int SIMPLIFIED_GYRO_LPF2_HZ = 500;
+static constexpr int SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ = 75;
+static constexpr int SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ = 150;
+static constexpr int SIMPLIFIED_DTERM_LPF2_HZ = 150;
+
+struct SimplifiedTuningConfig
+{
+  uint8_t pidsMode = SIMPLIFIED_TUNING_OFF;
+  uint8_t masterMultiplier = 100;
+  uint8_t rollPitchRatio = 100;
+  uint8_t iGain = 100;
+  uint8_t dGain = 100;
+  uint8_t piGain = 100;
+  uint8_t dMaxGain = 0;  // unused, ESP-FC has no D-Max
+  uint8_t ffGain = 100;
+  uint8_t pitchPiGain = 100;
+  uint8_t dtermFilter = 1;
+  uint8_t dtermFilterMultiplier = 100;
+  uint8_t gyroFilter = 1;
+  uint8_t gyroFilterMultiplier = 100;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -734,6 +770,7 @@ class ModelConfig
     ItermConfig iterm;
     AltHoldConfig altHold;
     ControllerConfig controller;
+    SimplifiedTuningConfig simplifiedTuning;
     // hardware
     int8_t pin[PIN_COUNT] = {
 #ifdef ESPFC_INPUT

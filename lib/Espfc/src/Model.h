@@ -291,6 +291,53 @@ class Model
       begin();
     }
 
+    void calculateSimplifiedPids(const SimplifiedTuningConfig& s, PidConfig out[3]) const
+    {
+      // ESP-FC compile-time PID defaults for roll/pitch/yaw (no D-Max on this target)
+      static const PidConfig def[3] = {
+        { 42, 85, 24, 72 },
+        { 46, 90, 26, 76 },
+        { 45, 90,  0, 72 },
+      };
+      if (s.pidsMode == SIMPLIFIED_TUNING_OFF) return;
+      const float master = s.masterMultiplier * 0.01f;
+      const float pi = s.piGain * 0.01f;
+      const float d = s.dGain * 0.01f;
+      const float ff = s.ffGain * 0.01f;
+      const float ig = s.iGain * 0.01f;
+      for (int axis = FC_PID_ROLL; axis <= s.pidsMode; axis++)
+      {
+        const float pitchD = (axis == FC_PID_PITCH) ? s.rollPitchRatio * 0.01f : 1.0f;
+        const float pitchPi = (axis == FC_PID_PITCH) ? s.pitchPiGain * 0.01f : 1.0f;
+        out[axis].P = constrain(lrintf(def[axis].P * master * pi * pitchPi), 0, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].I = constrain(lrintf(def[axis].I * master * pi * ig * pitchPi), 0, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].D = constrain(lrintf(def[axis].D * master * d * pitchD), 0, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].F = constrain(lrintf(def[axis].F * master * pitchPi * ff), 0, SIMPLIFIED_F_GAIN_MAX);
+      }
+    }
+
+    void calculateSimplifiedDtermFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    {
+      if (dynMin)
+      {
+        dynMin = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      }
+      if (lpf1) lpf1 = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = constrain(SIMPLIFIED_DTERM_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+    }
+
+    void calculateSimplifiedGyroFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    {
+      if (dynMin)
+      {
+        dynMin = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      }
+      if (lpf1) lpf1 = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = constrain(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+    }
+
     void reset()
     {
       initialize();
