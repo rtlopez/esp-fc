@@ -1071,14 +1071,14 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       {
         r.writeU8(_model.config.input.superRate[i]);
       }
-      r.writeU8(_model.config.controller.tpaScale);       // dyn thr pid
-      r.writeU8(50);                                      // thrMid8
-      r.writeU8(0);                                       // thr expo
-      r.writeU16(_model.config.controller.tpaBreakpoint); // tpa breakpoint
-      r.writeU8(_model.config.input.expo[AXIS_YAW]);      // yaw expo
-      r.writeU8(_model.config.input.rate[AXIS_YAW]);      // yaw rate
-      r.writeU8(_model.config.input.rate[AXIS_PITCH]);    // pitch rate
-      r.writeU8(_model.config.input.expo[AXIS_PITCH]);    // pitch expo
+      r.writeU8(0);                                    // was tpa scale
+      r.writeU8(50);                                   // thrMid8
+      r.writeU8(0);                                    // thr expo
+      r.writeU16(0);                                   // was tpa breakpoint
+      r.writeU8(_model.config.input.expo[AXIS_YAW]);   // yaw expo
+      r.writeU8(_model.config.input.rate[AXIS_YAW]);   // yaw rate
+      r.writeU8(_model.config.input.rate[AXIS_PITCH]); // pitch rate
+      r.writeU8(_model.config.input.expo[AXIS_PITCH]); // pitch expo
       // 1.41+
       r.writeU8(_model.config.output.throttleLimitType);    // throttle_limit_type (off)
       r.writeU8(_model.config.output.throttleLimitPercent); // throtle_limit_percent (100%)
@@ -1088,7 +1088,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU16(_model.config.input.rateLimit[2]); // rate limit yaw
       // 1.43+
       r.writeU8(_model.config.input.rateType); // rates type
-
+      // 1.47
+      r.writeU8(50); // thrHover8
       break;
 
     case MSP_SET_RC_TUNING:
@@ -1112,10 +1113,10 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         {
           _model.config.input.superRate[i] = m.readU8();
         }
-        _model.config.controller.tpaScale = std::clamp<uint8_t>(m.readU8(), 0, 90);             // dyn thr pid
-        m.readU8();                                                                             // thrMid8
-        m.readU8();                                                                             // thr expo
-        _model.config.controller.tpaBreakpoint = std::clamp<uint16_t>(m.readU16(), 1000, 2000); // tpa breakpoint
+        m.readU8();  // was tpa scale
+        m.readU8();  // thrMid8
+        m.readU8();  // thr expo
+        m.readU16(); // was tpa breakpoint
         if (m.remain() >= 1)
         {
           _model.config.input.expo[AXIS_YAW] = m.readU8(); // yaw expo
@@ -1149,6 +1150,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         if (m.remain() >= 1)
         {
           _model.config.input.rateType = m.readU8();
+        }
+        // 1.47
+        if (m.remain() >= 1)
+        {
+          m.readU8(); // thrHover8 
         }
       }
       else
@@ -1211,9 +1217,13 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.reload();
       break;
 
-      // case MSP_COMPASS_CONFIG:
-      //   r.writeU16(0); // mag_declination * 10
-      //   break;
+    case MSP_COMPASS_CONFIG:
+      r.writeU16(0); // mag_declination * 10
+      break;
+
+    case MSP_SET_COMPASS_CONFIG:
+      m.readU16(); // mag_declination * 10
+      break;
 
     case MSP_FILTER_CONFIG:
       r.writeU8(_model.config.gyro.filter.freq);          // gyro lpf
@@ -1365,11 +1375,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU16(_model.config.pid[FC_PID_YAW].F);   // pid yaw f
       r.writeU8(0);                                  // antigravity mode
       // 1.41+
-      r.writeU8(0); // d min roll
-      r.writeU8(0); // d min pitch
-      r.writeU8(0); // d min yaw
-      r.writeU8(0); // d min gain
-      r.writeU8(0); // d min advance
+      r.writeU8(0); // d max roll
+      r.writeU8(0); // d max pitch
+      r.writeU8(0); // d max yaw
+      r.writeU8(0); // d max gain
+      r.writeU8(0); // d max advance
       r.writeU8(0); // use_integrated_yaw
       r.writeU8(0); // integrated_yaw_relax
       // 1.42+
@@ -1378,6 +1388,17 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(_model.config.output.motorLimit); // motor_output_limit
       r.writeU8(0);                               // auto_profile_cell_count
       r.writeU8(0);                               // idle_min_rpm
+      // 1.44
+      r.writeU8(0);                                       // ff avg
+      r.writeU8(0);                                       // ff smooth
+      r.writeU8(0);                                       // ff boost
+      r.writeU8(0);                                       // ff max rate limit
+      r.writeU8(0);                                       // ff jitter factor
+      r.writeU8(0);                                       // vbat sag compensation
+      r.writeU8(0);                                       // thrust linearization
+      r.writeU8(0);                                       // TODO: tpa mode
+      r.writeU8(_model.config.controller.tpaScale);       // tpa rate
+      r.writeU16(_model.config.controller.tpaBreakpoint); // tpa breakpoint
       break;
 
     case MSP_SET_PID_ADVANCED:
@@ -1424,11 +1445,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       // 1.41+
       if (m.remain() >= 7)
       {
-        m.readU8(); // d min roll
-        m.readU8(); // d min pitch
-        m.readU8(); // d min yaw
-        m.readU8(); // d min gain
-        m.readU8(); // d min advance
+        m.readU8(); // d max roll
+        m.readU8(); // d max pitch
+        m.readU8(); // d max yaw
+        m.readU8(); // d max gain
+        m.readU8(); // d max advance
         m.readU8(); // use_integrated_yaw
         m.readU8(); // integrated_yaw_relax
       }
@@ -1444,11 +1465,34 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         m.readU8();                                   // auto_profile_cell_count
         m.readU8();                                   // idle_min_rpm
       }
+      // 1.44
+      if (m.remain() >= 5)
+      {
+        m.readU8(); // ff avg
+        m.readU8(); // ff smooth
+        m.readU8(); // ff boost
+        m.readU8(); // ff max rate limit
+        m.readU8(); // ff jitter factor
+      }
+      if (m.remain() >= 1)
+      {
+        m.readU8(); // vbat sag compensation
+      }
+      if (m.remain() >= 1)
+      {
+        m.readU8(); // thrust linearization
+      }
+      if (m.remain() >= 4)
+      {
+        m.readU8();                                                                             // TODO: tpa mode
+        _model.config.controller.tpaScale = std::clamp<uint8_t>(m.readU8(), 0, 100);            // tpa rate
+        _model.config.controller.tpaBreakpoint = std::clamp<uint16_t>(m.readU16(), 1000, 2000); // tpa breakpoint
+      }
       _model.reload();
       break;
 
     case MSP_SIMPLIFIED_TUNING: {
-      const SimplifiedTuningConfig& s = _model.config.simplifiedTuning;
+      const auto& s = _model.config.simplifiedTuning;
       r.writeU8(s.pidsMode);
       r.writeU8(s.masterMultiplier);
       r.writeU8(s.rollPitchRatio);
@@ -1480,7 +1524,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     }
 
     case MSP_SET_SIMPLIFIED_TUNING: {
-      SimplifiedTuningConfig& s = _model.config.simplifiedTuning;
+      auto& s = _model.config.simplifiedTuning;
       s.pidsMode = m.readU8();
       s.masterMultiplier = m.readU8();
       s.rollPitchRatio = m.readU8();
