@@ -1154,7 +1154,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         // 1.47
         if (m.remain() >= 1)
         {
-          m.readU8(); // thrHover8 
+          m.readU8(); // thrHover8
         }
       }
       else
@@ -1250,8 +1250,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU16(_model.config.dterm.dynLpfFilter.cutoff); // dyn lpf dterm min
       r.writeU16(_model.config.dterm.dynLpfFilter.freq);   // dyn lpf dterm max
       // gyro analyse
-      r.writeU8(3);                                          // deprecated dyn notch range
-      r.writeU8(_model.config.gyro.dynamicFilter.count);     // dyn_notch_width_percent
+      r.writeU8(0);                                          // deprecated dyn notch range
+      r.writeU8(0);                                          // deprecated dyn_notch_width_percent
       r.writeU16(_model.config.gyro.dynamicFilter.q);        // dyn_notch_q
       r.writeU16(_model.config.gyro.dynamicFilter.min_freq); // dyn_notch_min_hz
       // rpm filter
@@ -1259,6 +1259,16 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(_model.config.gyro.rpmFilter.minFreq);   // gyro_rpm_notch_min
       // 1.43+
       r.writeU16(_model.config.gyro.dynamicFilter.max_freq); // dyn_notch_max_hz
+      // 1.44
+      r.writeU8(0); // dterm lpf1 dyn expo
+      r.writeU8(_model.config.gyro.dynamicFilter.count);
+      // 1.48
+      r.writeU16(_model.config.gyro.rpmFilter.fade); // rpm_notch_fade_range_hz
+      r.writeU16(_model.config.gyro.rpmFilter.q);    // rpm_notch_q
+      for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
+      {
+        r.writeU8(_model.config.gyro.rpmFilter.weights[i]); // rpm_notch_harmonic_freq
+      }
       break;
 
     case MSP_SET_FILTER_CONFIG:
@@ -1313,6 +1323,23 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       if (m.remain() >= 2)
       {
         _model.config.gyro.dynamicFilter.max_freq = m.readU16(); // dyn_notch_max_hz
+      }
+      // 1.44
+      if (m.remain() >= 2)
+      {
+        m.readU8(); // dterm lpf1 dyn expo
+        _model.config.gyro.dynamicFilter.count = m.readU8();
+      }
+      // 1.48
+      if (m.remain() >= 7)
+      {
+        // TODO: validate
+        _model.config.gyro.rpmFilter.fade = m.readU16(); // rpm_notch_fade_range_hz
+        _model.config.gyro.rpmFilter.q = m.readU16();    // rpm_notch_q
+        for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
+        {
+          _model.config.gyro.rpmFilter.weights[i] = m.readU8(); // rpm_notch_harmonic_freq
+        }
       }
       _model.reload();
       break;
