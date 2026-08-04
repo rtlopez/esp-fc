@@ -967,6 +967,15 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(0);                                                                   // usb type
       // 1.42+
       r.writeU8(_model.config.input.filterAutoFactor); // rc_smoothing_auto_factor
+      // 1.44
+      r.writeU8(0); // rc_smoothing
+      // 1.45
+      {
+        uint8_t uid[6] = {};
+        r.writeData((const char*)uid, sizeof(uid)); // elrs uid
+      }
+      // 1.47
+      r.writeU8(0); // elrs modelId
       break;
 
     case MSP_SET_RX_CONFIG:
@@ -1013,7 +1022,21 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       {
         _model.config.input.filterAutoFactor = m.readU8(); // rc_smoothing_auto_factor
       }
-
+      // 1.44
+      if (m.remain() >= 1)
+      {
+        m.readU8(); // rc_smoothing
+      }
+      // 1.45
+      if (m.remain() >= 6)
+      {
+        m.advance(6); // elrs uid
+      }
+      // 1.47
+      if (m.remain() >= 1)
+      {
+        m.readU8(); // elrs modelId
+      }
       _model.reload();
       break;
 
