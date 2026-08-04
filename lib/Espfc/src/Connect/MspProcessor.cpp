@@ -629,12 +629,24 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(_model.config.accel.dev); // 3 acc mpu6050
       r.writeU8(_model.config.baro.dev);  // 2 baro bmp085
       r.writeU8(_model.config.mag.dev);   // 3 mag hmc5883l
+      // 1.46
+      r.writeU8(0); // rangefinder
+      r.writeU8(0); // opticalflow
       break;
 
     case MSP_SET_SENSOR_CONFIG:
       _model.config.accel.dev = m.readU8(); // 3 acc mpu6050
       _model.config.baro.dev = m.readU8();  // 2 baro bmp085
       _model.config.mag.dev = m.readU8();   // 3 mag hmc5883l
+      // 1.46
+      if (m.remain() >= 1)
+      {
+        m.readU8(); // rangefinder
+      }
+      if (m.remain() >= 1)
+      {
+        m.readU8(); // opticalflow
+      }
       _model.reload();
       break;
 
