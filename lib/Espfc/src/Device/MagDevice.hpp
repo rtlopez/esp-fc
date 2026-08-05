@@ -5,7 +5,7 @@
 
 namespace Espfc {
 
-enum MagDeviceType
+enum MagDeviceType: uint8_t
 {
   MAG_DEFAULT = 0,
   MAG_NONE = 1,

@@ -5,7 +5,7 @@
 
 namespace Espfc {
 
-enum BaroDeviceType
+enum BaroDeviceType: uint8_t
 {
   BARO_DEFAULT = 0,
   BARO_NONE = 1,

@@ -191,6 +191,20 @@ constexpr uint8_t MCU_TYPE_ID_PROVIDED_BY_NAME = 255;
 // Reported for sensor slots the target does not support at all
 constexpr uint8_t SENSOR_NOT_AVAILABLE = 0xff;
 
+static uint8_t toAccHw(uint8_t dev)
+{
+  if (dev == 0) return 1;
+  if (dev == 1) return 0;
+  return dev;
+}
+
+static uint8_t fromAccHw(uint8_t dev)
+{
+  if (dev == 0) return 1;
+  if (dev == 1) return 0;
+  return dev;
+}
+
 } // namespace
 
 namespace Espfc::Connect {
@@ -308,20 +322,15 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         // r.writeU16(_model.state.gyro.timer.interval); // gyro cycle time
         r.writeU16(0);
       }
-
       // flight mode flags (above 32 bits)
       r.writeU8(0); // count
-
       // Write arming disable flags
       r.writeU8(ARMING_DISABLED_FLAGS_COUNT);            // 1 byte, flag count
       r.writeU32(_model.state.mode.armingDisabledFlags); // 4 bytes, flags
       r.writeU8(0);                                      // reboot required
-
       // 1.46
-      // Write CPU temp
-      r.writeU16(0); // getCoreTemperatureCelsius()
+      r.writeU16(0); // getCoreTemperatureCelsius() // cpu temperature
       r.writeU8(1);
-
       // 1.48
       r.writeU8(1);
       r.writeU8(0);
@@ -406,7 +415,6 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         r.writeU8(_model.config.conditions[i].logicMode);
         r.writeU8(_model.config.conditions[i].linkId);
       }
-
       break;
 
     case MSP_SET_MODE_RANGE: {
@@ -626,42 +634,45 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SENSOR_CONFIG:
-      r.writeU8(_model.config.accel.dev); // 3 acc mpu6050
-      r.writeU8(_model.config.baro.dev);  // 2 baro bmp085
-      r.writeU8(_model.config.mag.dev);   // 3 mag hmc5883l
+      r.writeU8(toAccHw(_model.config.accel.dev)); // 3 acc mpu6050
+      r.writeU8(_model.config.baro.dev);           // 2 baro bmp085
+      r.writeU8(_model.config.mag.dev);            // 3 mag hmc5883l
       // 1.46
-      r.writeU8(0); // rangefinder
-      r.writeU8(0); // opticalflow
+      r.writeU8(0); // rangefinder 0=none
+      r.writeU8(0); // opticalflow 0=none
       break;
 
     case MSP_SET_SENSOR_CONFIG:
-      _model.config.accel.dev = m.readU8(); // 3 acc mpu6050
-      _model.config.baro.dev = m.readU8();  // 2 baro bmp085
-      _model.config.mag.dev = m.readU8();   // 3 mag hmc5883l
+      _model.config.accel.dev = fromAccHw(m.readU8()); // 3 acc mpu6050
+      _model.config.baro.dev = m.readU8();             // 2 baro bmp085
+      _model.config.mag.dev = m.readU8();              // 3 mag hmc5883l
       // 1.46
       if (m.remain() >= 1)
       {
-        m.readU8(); // rangefinder
+        m.readU8(); // rangefinder skip
       }
       if (m.remain() >= 1)
       {
-        m.readU8(); // opticalflow
+        m.readU8(); // opticalflow skip
       }
       _model.reload();
       break;
 
-    case MSP2_SENSOR_CONFIG_ACTIVE:
-      r.writeU8(_model.gyroActive() ? _model.config.gyro.dev : (uint8_t)GYRO_NONE);   // gyro
-      r.writeU8(_model.accelActive() ? _model.config.accel.dev : (uint8_t)GYRO_NONE); // acc
-      r.writeU8(_model.baroActive() ? _model.config.baro.dev : (uint8_t)BARO_NONE);   // baro
-      r.writeU8(_model.magActive() ? _model.config.mag.dev : (uint8_t)MAG_NONE);      // mag
-      r.writeU8(SENSOR_NOT_AVAILABLE);                                                // rangefinder
-      r.writeU8(SENSOR_NOT_AVAILABLE);                                                // opticalflow
+    case MSP2_SENSOR_CONFIG_ACTIVE: {
+      const auto& state = _model.state;
+      r.writeU8(_model.gyroActive() && state.gyro.dev ? state.gyro.dev->getType() : GYRO_NONE); // gyro
+      r.writeU8(_model.accelActive() && state.gyro.dev ? toAccHw(state.gyro.dev->getType())
+                                                       : toAccHw(GYRO_NONE));                   // acc
+      r.writeU8(_model.baroActive() && state.baro.dev ? state.baro.dev->getType() : BARO_NONE); // baro
+      r.writeU8(_model.magActive() && state.mag.dev ? state.mag.dev->getType() : MAG_NONE);     // mag
+      r.writeU8(SENSOR_NOT_AVAILABLE);                                                          // rangefinder
+      r.writeU8(SENSOR_NOT_AVAILABLE);                                                          // opticalflow
       break;
+    }
 
     case MSP2_GYRO_SENSOR_ACTIVE:
-      r.writeU8(1);                                                                 // gyro count, single gyro only
-      r.writeU8(_model.gyroActive() ? _model.config.gyro.dev : (uint8_t)GYRO_NONE); // gyro 1
+      r.writeU8(1); // gyro count, single gyro only
+      r.writeU8(_model.gyroActive() ? _model.state.gyro.dev->getType() : (uint8_t)GYRO_NONE); // gyro 1
       break;
 
     case MSP_SENSOR_ALIGNMENT:
@@ -671,8 +682,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       // 1.41+
       r.writeU8(_model.state.gyro.present ? 1 : 0); // gyro detection mask GYRO_1_MASK
       r.writeU8(0);                                 // gyro_to_use
-      r.writeU8(_model.config.gyro.align);          // gyro 1
-      r.writeU8(0);                                 // gyro 2
+      r.writeU16(0);                                // mag align roll
+      r.writeU16(0);                                // mag align pitch
+      r.writeU16(0);                                // mag align yaw
       break;
 
     case MSP_SET_SENSOR_ALIGNMENT: {
@@ -680,15 +692,19 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       m.readU8();                           // discard deprecated acc align
       _model.config.mag.align = m.readU8(); // mag align
       // API >= 1.41 - support the gyro_to_use and alignment for gyros 1 & 2
-      if (m.remain() >= 3)
+      if (m.remain() >= 1)
       {
-        m.readU8();             // gyro_to_use
-        gyroAlign = m.readU8(); // gyro 1 align
-        m.readU8();             // gyro 2 align
+        m.readU8(); // gyro enabled bitmask
+      }
+      if (m.remain() >= 6)
+      {
+        m.readU16(); // gyro 1 roll
+        m.readU16(); // gyro 1 pitch
+        m.readU16(); // gyro 1 yaw
       }
       _model.config.gyro.align = gyroAlign;
+      break;
     }
-    break;
 
     case MSP_CF_SERIAL_CONFIG:
       for (int i = 0; i < SERIAL_UART_COUNT; i++)
@@ -896,8 +912,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_MOTOR_CONFIG:
-      r.writeU16(_model.config.output.minThrottle); // minthrottle
-      r.writeU16(_model.config.output.maxThrottle); // maxthrottle
+      r.writeU16(0); // minthrottle
+      r.writeU16(_model.config.output.maxThrottle); // maxthrottle (TODO: deprecate)
       r.writeU16(_model.config.output.minCommand);  // mincommand
       r.writeU8(_model.state.currentMixer.count);   // motor count
       // 1.42+
@@ -907,7 +923,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_MOTOR_CONFIG:
-      _model.config.output.minThrottle = m.readU16(); // minthrottle
+      m.readU16(); // minthrottle (deprecated)
       _model.config.output.maxThrottle = m.readU16(); // maxthrottle
       _model.config.output.minCommand = m.readU16();  // mincommand
       if (m.remain() >= 2)

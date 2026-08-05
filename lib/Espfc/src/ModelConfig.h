@@ -26,11 +26,6 @@ enum GyroDlpf {
   GYRO_DLPF_EX  = 0x07,
 };
 
-enum AccelMode {
-  ACCEL_DELAYED   = 0x00,
-  ACCEL_GYRO      = 0x01,
-};
-
 enum SensorAlign {
   ALIGN_DEFAULT        = 0,
   ALIGN_CW0_DEG        = 1,
