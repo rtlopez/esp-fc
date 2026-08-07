@@ -537,16 +537,15 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 
       Param("output_motor_protocol", &c.output.protocol, protocolChoices), Param("output_motor_async", &c.output.async),
       Param("output_motor_rate", &c.output.rate),
+      Param("output_motor_idle", &c.output.motorIdle),
 #ifdef ESPFC_DSHOT_TELEMETRY
       Param("output_motor_poles", &c.output.motorPoles),
+      Param("output_dshot_telemetry", &c.output.dshotTelemetry),
 #endif
       Param("output_servo_rate", &c.output.servoRate),
 
-      Param("output_min_command", &c.output.minCommand), Param("output_min_throttle", &c.output.minThrottle),
-      Param("output_max_throttle", &c.output.maxThrottle), Param("output_dshot_idle", &c.output.dshotIdle),
-#ifdef ESPFC_DSHOT_TELEMETRY
-      Param("output_dshot_telemetry", &c.output.dshotTelemetry),
-#endif
+      Param("output_min_command", &c.output.minCommand),
+      Param("output_max_throttle", &c.output.maxThrottle),
       Param("output_0", &c.output.channel[0]), Param("output_1", &c.output.channel[1]),
       Param("output_2", &c.output.channel[2]), Param("output_3", &c.output.channel[3]),
 #if ESPFC_OUTPUT_COUNT > 4

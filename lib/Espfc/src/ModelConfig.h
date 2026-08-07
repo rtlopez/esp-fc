@@ -448,9 +448,9 @@ struct OutputConfig
   int16_t servoRate = 0;
 
   int16_t minCommand = 1000;
-  int16_t minThrottle = 1070;
+  int16_t minThrottleUnused = 1070;
   int16_t maxThrottle = 2000;
-  int16_t dshotIdle = 550;
+  int16_t motorIdle = 550;
 
   int8_t throttleLimitType = 0;
   int8_t throttleLimitPercent = 100;

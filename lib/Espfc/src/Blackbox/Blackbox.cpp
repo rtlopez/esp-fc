@@ -138,7 +138,7 @@ int Blackbox::begin()
   motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;
   motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
   motorConfigMutable()->mincommand = _model.config.output.minCommand;
-  motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
+  motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.motorIdle;
   motorConfigMutable()->minthrottle = _model.state.mixer.minThrottle;
   motorConfigMutable()->maxthrottle = _model.state.mixer.maxThrottle;
   motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;

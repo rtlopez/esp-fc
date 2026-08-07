@@ -912,8 +912,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_MOTOR_CONFIG:
-      r.writeU16(0); // minthrottle
-      r.writeU16(_model.config.output.maxThrottle); // maxthrottle (TODO: deprecate)
+      r.writeU16(0); // minthrottle (dropped in 1.46)
+      r.writeU16(_model.config.output.maxThrottle); // maxthrottle
       r.writeU16(_model.config.output.minCommand);  // mincommand
       r.writeU8(_model.state.currentMixer.count);   // motor count
       // 1.42+
@@ -923,7 +923,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_MOTOR_CONFIG:
-      m.readU16(); // minthrottle (deprecated)
+      m.readU16(); // minthrottle (dropped in 1.46)
       _model.config.output.maxThrottle = m.readU16(); // maxthrottle
       _model.config.output.minCommand = m.readU16();  // mincommand
       if (m.remain() >= 2)
@@ -1221,7 +1221,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(_model.config.output.async);
       r.writeU8(_model.config.output.protocol);
       r.writeU16(_model.config.output.rate);
-      r.writeU16(_model.config.output.dshotIdle);
+      r.writeU16(_model.config.output.motorIdle);
       r.writeU8(0);    // 32k gyro
       r.writeU8(0);    // PWM inversion
       r.writeU8(0);    // gyro_to_use: {1:0, 2:1. 2:both}
@@ -1242,7 +1242,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.config.output.rate = m.readU16();
       if (m.remain() >= 2)
       {
-        _model.config.output.dshotIdle = m.readU16(); // dshot idle
+        _model.config.output.motorIdle = m.readU16(); // dshot idle
       }
       if (m.remain())
       {
