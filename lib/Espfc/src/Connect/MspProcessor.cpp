@@ -2058,17 +2058,31 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       {
         _model.reset();
         _model.save();
+        _postCommand = [this]() { processRestart(); };
+        r.writeU8(1); // success
       }
       else
       {
-        r.result = -1; // not allowed when armed
+        r.writeU8(0); // fail
       }
       break;
 
-    case MSP_REBOOT:
-      r.writeU8(0); // reboot to firmware
+    case MSP_REBOOT: {
+      uint8_t rebootType = 0; // reboot to firmware only
+      if (m.remain())
+      {
+        // TODO: reboot to bootloader
+        rebootType = m.readU8();
+        if (rebootType != 0)
+        {
+          r.result = -1; // fail
+          break;
+        }
+      }
+      r.writeU8(rebootType);
       _postCommand = [this]() { processRestart(); };
       break;
+    }
 
     case MSP_SET_RTC:
       m.readU32(); // secs: ignore
