@@ -103,6 +103,7 @@ private:
   const Param* _params;
   bool _ignore;
   bool _active;
+  bool _interactive;
 };
 
 } // namespace Espfc::Connect

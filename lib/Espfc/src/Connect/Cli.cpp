@@ -4,6 +4,7 @@
 #include "Utils/Filter.h"
 #include "msp/msp_protocol.h"
 #include <algorithm>
+#include <cstring>
 #include <iterator>
 #include <platform.h>
 
@@ -314,7 +315,7 @@ int32_t Cli::Param::parse(const char* v) const
   return tmp.toInt();
 }
 
-Cli::Cli(Model& model): _model(model), _ignore(false), _active(false)
+Cli::Cli(Model& model): _model(model), _ignore(false), _active(false), _interactive(false)
 {
   _params = initialize(_model.config);
 }
@@ -673,6 +674,7 @@ bool Cli::process(const char c, CliCmd& cmd, Stream& stream)
   {
     // FIXME: detect disconnection
     _active = true;
+    _interactive = true;
     stream.println();
     stream.println("Entering CLI Mode, type 'exit' to return, or 'help'");
     stream.print("# ");
@@ -682,15 +684,36 @@ bool Cli::process(const char c, CliCmd& cmd, Stream& stream)
     cmd = CliCmd();
     return true;
   }
-  if (_active && c == 4) // CTRL-D
+
+  // non-interactive session enter byte 0x02
+  if (!_active && !_interactive && c == 2)
+  {
+    _active = true;
+    cmd = CliCmd();
+    stream.write(2);
+    return true;
+  }
+  // non-interactive session exit byte 0x03
+  if (_active && !_interactive && c == 3)
+  {
+    _active = false;
+    cmd = CliCmd();
+    stream.write(3);
+    return true;
+  }
+
+  // CTRL-D
+  if (_active && c == 4)
   {
     stream.println();
     stream.println(" #leaving CLI mode, unsaved changes lost");
     _active = false;
+    _interactive = false;
     cmd = CliCmd();
     return true;
   }
 
+  // execute on end line
   bool endl = c == '\n' || c == '\r';
   if (cmd.index && endl)
   {
@@ -700,20 +723,36 @@ bool Cli::process(const char c, CliCmd& cmd, Stream& stream)
     return true;
   }
 
+  // ignore comments
   if (c == '#')
+  {
     _ignore = true;
+  }
   else if (endl)
+  {
     _ignore = false;
+  }
 
   // don't put characters into buffer in specific conditions
-  if (_ignore || endl || cmd.index >= CLI_BUFF_SIZE - 1) return false;
+  if (_ignore || endl || cmd.index >= CLI_BUFF_SIZE - 1)
+  {
+    return false;
+  }
 
   if (c == '\b') // handle backspace
   {
-    cmd.buff[--cmd.index] = '\0';
+    if (cmd.index)
+    {
+      cmd.buff[--cmd.index] = '\0';
+    }
   }
   else
   {
+    if (!_active)
+    {
+      _active = true;
+      _interactive = true;
+    }
     cmd.buff[cmd.index] = c;
     cmd.buff[++cmd.index] = '\0';
   }
@@ -734,14 +773,17 @@ void Cli::parse(CliCmd& cmd)
 
 void Cli::execute(CliCmd& cmd, Stream& s)
 {
-  if (cmd.args[0]) s.print("# ");
-  for (size_t i = 0; i < CLI_ARGS_SIZE; ++i)
+  if (_interactive)
   {
-    if (!cmd.args[i]) break;
-    s.print(cmd.args[i]);
-    s.print(' ');
+    if (cmd.args[0]) s.print("# ");
+    for (size_t i = 0; i < CLI_ARGS_SIZE; ++i)
+    {
+      if (!cmd.args[i]) break;
+      s.print(cmd.args[i]);
+      s.print(' ');
+    }
+    s.println();
   }
-  s.println();
 
   if (!cmd.args[0]) return;
 
@@ -818,6 +860,18 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   }
   else if (strcmp(cmd.args[0], "get") == 0)
   {
+    if (strcmp(cmd.args[1], "mag_calibration") == 0)
+    {
+      // BF specific required by configurator
+      s.print("mag_calibration = ");
+      s.print(lrintf(_model.state.mag.calibrationOffset[0] * 10.f));
+      s.print(",");
+      s.print(lrintf(_model.state.mag.calibrationOffset[1] * 10.f));
+      s.print(",");
+      s.print(lrintf(_model.state.mag.calibrationOffset[2] * 10.f));
+      s.println();
+      return;
+    }
     bool found = false;
     for (size_t i = 0; _params[i].name; ++i)
     {
@@ -868,6 +922,47 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       print(_params[i], s);
     }
     s.println("save");
+  }
+  else if (strcmp(cmd.args[0], "sensor_hardware") == 0)
+  {
+    // BF specific required by configurator
+    s.print("gyro: ");
+    const auto* gyroAccNames = Device::GyroDevice::getNames();
+    for(size_t i = 0; gyroAccNames[i]; ++i)
+    {
+      if (i) s.print(',');
+      s.print(gyroAccNames[i]);
+    }
+    s.println();
+
+    s.print("acc: ");
+    for (size_t i = 0; gyroAccNames[i]; i++)
+    {
+      if (i) s.print(',');
+      s.print(gyroAccNames[i]);
+    }
+    s.println();
+
+    s.print("baro: ");
+    const auto* baroNames = Device::BaroDevice::getNames();
+    for(size_t i = 0; baroNames[i]; ++i)
+    {
+      if (i) s.print(',');
+      s.print(baroNames[i]);
+    }
+    s.println();
+
+    s.print("mag: ");
+    const auto* magNames = Device::MagDevice::getNames();
+    for(size_t i = 0; magNames[i]; ++i)
+    {
+      if (i) s.print(',');
+      s.print(magNames[i]);
+    }
+    s.println();
+
+    s.println("rangefinder: NONE");
+    s.println("opticalflow: NONE");
   }
   else if (strcmp(cmd.args[0], "cal") == 0)
   {
@@ -1264,6 +1359,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   else if (strcmp(cmd.args[0], "reboot") == 0 || strcmp(cmd.args[0], "exit") == 0)
   {
     _active = false;
+    _interactive = false;
     Hardware::restart(_model);
   }
   else if (strcmp(cmd.args[0], "defaults") == 0)
