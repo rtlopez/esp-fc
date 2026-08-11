@@ -679,35 +679,36 @@ bool Cli::process(const char c, CliCmd& cmd, Stream& stream)
     printVersion(stream);
     stream.println();
     _model.setArmingDisabled(ARMING_DISABLED_CLI, true);
-    cmd = CliCmd();
+    cmd = {};
     return true;
   }
 
   // non-interactive session enter byte 0x02
-  if (!_active && !_interactive && c == 2)
+  if (c == 0x02)
   {
     _active = true;
-    cmd = CliCmd();
-    stream.write(2);
+    stream.write(0x02);
+    cmd = {};
     return true;
   }
   // non-interactive session exit byte 0x03
-  if (_active && !_interactive && c == 3)
+  if (c == 0x03)
   {
     _active = false;
-    cmd = CliCmd();
-    stream.write(3);
+    stream.write(0x03);
+    cmd = {};
     return true;
   }
 
   // CTRL-D
-  if (_active && c == 4)
+  if (c == 0x04)
   {
     stream.println();
-    stream.println(" #leaving CLI mode, unsaved changes lost");
+    stream.println("# leaving CLI mode, unsaved changes lost");
     _active = false;
     _interactive = false;
-    cmd = CliCmd();
+    _model.setArmingDisabled(ARMING_DISABLED_CLI, false);
+    cmd = {};
     return true;
   }
 
@@ -717,7 +718,7 @@ bool Cli::process(const char c, CliCmd& cmd, Stream& stream)
   {
     parse(cmd);
     execute(cmd, stream);
-    cmd = CliCmd();
+    cmd = {};
     return true;
   }
 
@@ -760,12 +761,12 @@ bool Cli::process(const char c, CliCmd& cmd, Stream& stream)
 void Cli::parse(CliCmd& cmd)
 {
   const char* DELIM = " \t";
-  char* pch = strtok(cmd.buff, DELIM);
+  char* pch = std::strtok(cmd.buff, DELIM);
   size_t count = 0;
   while (pch)
   {
     cmd.args[count++] = pch;
-    pch = strtok(nullptr, DELIM);
+    pch = std::strtok(nullptr, DELIM);
   }
 }
 
@@ -1474,7 +1475,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
 #endif
   else
   {
-    s.print("unknown command: ");
+    s.print(_interactive ? "unknown command: " : "ERR_CMD_NA: ");
     s.println(cmd.args[0]);
   }
   s.println();

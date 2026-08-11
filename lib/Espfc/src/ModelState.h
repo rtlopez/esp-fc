@@ -24,15 +24,12 @@ constexpr size_t DEBUG_VALUE_COUNT = 8;
 constexpr size_t CLI_BUFF_SIZE = 128;
 constexpr size_t CLI_ARGS_SIZE = 12;
 
-class CliCmd
+struct CliCmd
 {
-  public:
-    CliCmd(): buff{0}, index{0} {
-      std::fill_n(args, CLI_ARGS_SIZE, nullptr);
-    }
-    const char * args[CLI_ARGS_SIZE];
-    char buff[CLI_BUFF_SIZE];
-    size_t index;
+  CliCmd(): args{}, buff{}, index{0} {}
+  const char * args[CLI_ARGS_SIZE];
+  char buff[CLI_BUFF_SIZE];
+  size_t index;
 };
 
 class SerialPortState
