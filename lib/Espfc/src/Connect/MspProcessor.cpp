@@ -19,6 +19,7 @@ int blackboxCalculatePDenom(int rateNum, int rateDenom);
 uint8_t blackboxCalculateSampleRate(uint16_t pRatio);
 uint8_t blackboxGetRateDenom(void);
 uint16_t blackboxGetPRatio(void);
+bool blackboxMayEditConfig(void);
 }
 
 namespace {
@@ -805,18 +806,19 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_BLACKBOX_CONFIG:
-      r.writeU8(1);                              // Blackbox supported
-      r.writeU8(_model.config.blackbox.dev);     // device serial or none
-      r.writeU8(1);                              // blackboxGetRateNum()); // unused
-      r.writeU8(1);                              // blackboxGetRateDenom());
-      r.writeU16(_model.config.blackbox.pDenom); // blackboxGetPRatio()); // p_denom
-      // r.writeU8(_model.config.blackbox.pDenom); // sample_rate
-      // r.writeU32(~_model.config.blackbox.fieldsMask);
+      r.writeU8(1);                                   // Blackbox supported
+      r.writeU8(_model.config.blackbox.dev);          // device serial or none
+      r.writeU8(1);                                   // blackboxGetRateNum()); // unused
+      r.writeU8(blackboxGetRateDenom());              // blackboxGetRateDenom());
+      r.writeU16(blackboxGetPRatio());                // blackboxGetPRatio()); // p_denom
+      r.writeU8(_model.config.blackbox.pDenom);       // sample_rate
+      // 1.45
+      r.writeU32(~_model.config.blackbox.fieldsMask); // fields mask
       break;
 
     case MSP_SET_BLACKBOX_CONFIG:
-      // TODO: Don't allow config to be updated while Blackbox is logging
-      if (true)
+      // Don't allow config to be updated while Blackbox is logging
+      if (blackboxMayEditConfig())
       {
         _model.config.blackbox.dev = m.readU8();
         const int rateNum = m.readU8();   // was rate_num
@@ -824,25 +826,31 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         uint16_t pRatio = 0;
         if (m.remain() >= 2)
         {
-          pRatio = m.readU16(); // p_denom specified, so use it directly
+          // p_denom specified, so use it directly
+          pRatio = m.readU16();
         }
         else
         {
           // p_denom not specified in MSP, so calculate it from old rateNum and rateDenom
-          // pRatio = blackboxCalculatePDenom(rateNum, rateDenom);
-          (void)(rateNum + rateDenom);
+          pRatio = blackboxCalculatePDenom(rateNum, rateDenom);
         }
-        _model.config.blackbox.pDenom = pRatio;
 
-        /*if (m.remain() >= 1) {
-            _model.config.blackbox.pDenom = m.readU8();
-        } else if(pRatio > 0) {
-            _model.config.blackbox.pDenom = blackboxCalculateSampleRate(pRatio);
-            //_model.config.blackbox.pDenom = pRatio;
+        if (m.remain() >= 1)
+        {
+          // sample_rate specified, so use it directly
+          _model.config.blackbox.pDenom = m.readU8();
         }
-        if (m.remain() >= 4) {
+        else
+        {
+          // sample_rate not specified in MSP, so calculate it from old p_ratio
+          _model.config.blackbox.pDenom = blackboxCalculateSampleRate(pRatio);
+        }
+
+        // 1.45
+        if (m.remain() >= 4)
+        {
           _model.config.blackbox.fieldsMask = ~m.readU32();
-        }*/
+        }
       }
       break;
 
@@ -912,7 +920,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_MOTOR_CONFIG:
-      r.writeU16(0); // minthrottle (dropped in 1.46)
+      r.writeU16(0);                                // minthrottle (dropped in 1.46)
       r.writeU16(_model.config.output.maxThrottle); // maxthrottle
       r.writeU16(_model.config.output.minCommand);  // mincommand
       r.writeU8(_model.state.currentMixer.count);   // motor count
@@ -923,7 +931,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_MOTOR_CONFIG:
-      m.readU16(); // minthrottle (dropped in 1.46)
+      m.readU16();                                    // minthrottle (dropped in 1.46)
       _model.config.output.maxThrottle = m.readU16(); // maxthrottle
       _model.config.output.minCommand = m.readU16();  // mincommand
       if (m.remain() >= 2)

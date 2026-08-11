@@ -156,14 +156,17 @@ int Blackbox::begin()
   targetPidLooptime = _model.state.loopTimer.interval;
   activePidLoopDenom = _model.config.loopSync;
 
-  if(_model.config.blackbox.pDenom >= 0 && _model.config.blackbox.pDenom <= 4)
-  {
-    blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
-  }
-  else
-  {
-    blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackbox.pDenom);
-  }
+  blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
+  // blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackbox.pDenom);
+
+  // if(_model.config.blackbox.pDenom >= 0 && _model.config.blackbox.pDenom <= 4)
+  // {
+  //   blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
+  // }
+  // else
+  // {
+  //   blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackbox.pDenom);
+  // }
   blackboxConfigMutable()->device = _model.config.blackbox.dev;
   blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
   blackboxConfigMutable()->mode = _model.config.blackbox.mode;
