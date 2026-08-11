@@ -93,7 +93,9 @@ public:
   void parse(CliCmd& cmd);
   void execute(CliCmd& cmd, Stream& s);
 
+#if !defined(UNIT_TEST)
 private:
+#endif
   void print(const Param& param, Stream& s) const;
   void printGpsStatus(Stream& s, bool full) const;
   void printVersion(Stream& s) const;

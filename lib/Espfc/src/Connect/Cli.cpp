@@ -22,9 +22,7 @@
 #include <freertos/task.h>
 #endif
 
-namespace Espfc {
-
-namespace Connect {
+namespace Espfc::Connect {
 
 void Cli::Param::print(Stream& stream) const
 {
@@ -1689,6 +1687,4 @@ void Cli::printStats(Stream& s) const
   s.println(" Hz");
 }
 
-} // namespace Connect
-
-} // namespace Espfc
+} // namespace Espfc::Connect
