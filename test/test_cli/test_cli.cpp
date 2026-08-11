@@ -1,7 +1,7 @@
-#include <unity.h>
 #include <ArduinoFake.h>
 #include <Connect/Cli.hpp>
 #include <cstring>
+#include <unity.h>
 
 using Cli = Espfc::Connect::Cli;
 using CliCmd = Espfc::CliCmd;
@@ -26,26 +26,32 @@ static void setupPrintMockForStream(Stream& stream)
   // Route Print method calls made on this Stream instance to ArduinoFake(Print).
   getArduinoFakeContext()->Mapping[&stream] = getArduinoFakeContext()->Print();
 
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(const char*)))
-    .AlwaysDo([&stream](const char* s) -> size_t { return appendText(stream, s); });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(char)))
-    .AlwaysDo([&stream](char c) -> size_t { return appendChar(stream, c); });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(int, int)))
-    .AlwaysDo([&stream](int value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
+  When(OverloadedMethod(ArduinoFake(Print), print, size_t(const char*))).AlwaysDo([&stream](const char* s) -> size_t {
+    return appendText(stream, s);
+  });
+  When(OverloadedMethod(ArduinoFake(Print), print, size_t(char))).AlwaysDo([&stream](char c) -> size_t {
+    return appendChar(stream, c);
+  });
+  When(OverloadedMethod(ArduinoFake(Print), print, size_t(int, int))).AlwaysDo([&stream](int value, int) -> size_t {
+    return appendText(stream, std::to_string(value).c_str());
+  });
   When(OverloadedMethod(ArduinoFake(Print), print, size_t(unsigned int, int)))
-    .AlwaysDo([&stream](unsigned int value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(long, int)))
-    .AlwaysDo([&stream](long value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
+      .AlwaysDo(
+          [&stream](unsigned int value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
+  When(OverloadedMethod(ArduinoFake(Print), print, size_t(long, int))).AlwaysDo([&stream](long value, int) -> size_t {
+    return appendText(stream, std::to_string(value).c_str());
+  });
   When(OverloadedMethod(ArduinoFake(Print), print, size_t(unsigned long, int)))
-    .AlwaysDo([&stream](unsigned long value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
+      .AlwaysDo(
+          [&stream](unsigned long value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
 
-  When(OverloadedMethod(ArduinoFake(Print), println, size_t()))
-    .AlwaysDo([&stream]() -> size_t { return appendChar(stream, '\n'); });
-  When(OverloadedMethod(ArduinoFake(Print), println, size_t(const char*)))
-    .AlwaysDo([&stream](const char* s) -> size_t {
-      const size_t n = appendText(stream, s);
-      return n + appendChar(stream, '\n');
-    });
+  When(OverloadedMethod(ArduinoFake(Print), println, size_t())).AlwaysDo([&stream]() -> size_t {
+    return appendChar(stream, '\n');
+  });
+  When(OverloadedMethod(ArduinoFake(Print), println, size_t(const char*))).AlwaysDo([&stream](const char* s) -> size_t {
+    const size_t n = appendText(stream, s);
+    return n + appendChar(stream, '\n');
+  });
 }
 
 class StreamMock : public Stream
@@ -57,7 +63,7 @@ public:
     _buffer += static_cast<char>(c);
     return 1;
   }
-  size_t write(const uint8_t *buffer, size_t size) override
+  size_t write(const uint8_t* buffer, size_t size) override
   {
     _buffer.append(reinterpret_cast<const char*>(buffer), size);
     return size;
@@ -209,6 +215,22 @@ void test_cli_process_comment()
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("unknown command: command"));
 }
 
+void test_cli_overflow()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  for (size_t i = 0; i < sizeof(cmd.buff) + 2; ++i)
+  {
+    cli.process('a', cmd, stream);
+  }
+
+  TEST_ASSERT_EQUAL(sizeof(cmd.buff) - 1, cmd.index);
+  TEST_ASSERT_EQUAL_STRING(std::string(sizeof(cmd.buff) - 1, 'a').c_str(), cmd.buff);
+  TEST_ASSERT_EQUAL(0, cmd.args[cmd.index]);
+}
+
 void test_cli_process_help()
 {
   Model model;
@@ -255,7 +277,39 @@ void test_cli_process_help_non_interactive()
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("reboot"));
 }
 
-void test_cli_get_mag_calibration()
+void test_cli_get_mixer_type()
+{
+  Model model;
+  model.config.mixer.type = 0;
+  Cli cli{model};
+  CliCmd cmd;
+
+  for (char c : std::string("get mixer_type\n"))
+  {
+    cli.process(c, cmd, stream);
+  }
+
+  auto result = stream.str();
+  TEST_ASSERT_NOT_EQUAL(0, result.length());
+  TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("set mixer_type NONE"));
+}
+
+void test_cli_set_mixer_type()
+{
+  Model model;
+  model.config.mixer.type = 0;
+  Cli cli{model};
+  CliCmd cmd;
+
+  for (char c : std::string("set mixer_type QUADX\n"))
+  {
+    cli.process(c, cmd, stream);
+  }
+
+  TEST_ASSERT_EQUAL(Espfc::FC_MIXER_QUADX, model.config.mixer.type);
+}
+
+void test_cli_bf_get_mag_calibration()
 {
   Model model;
   Cli cli{model};
@@ -271,7 +325,7 @@ void test_cli_get_mag_calibration()
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("mag_calibration ="));
 }
 
-void test_cli_sensor_hardware()
+void test_cli_bf_sensor_hardware()
 {
   Model model;
   Cli cli{model};
@@ -298,9 +352,12 @@ int main(int argc, char** argv)
   RUN_TEST(test_cli_enter_leave_non_interactive);
   RUN_TEST(test_cli_configurator_handshake);
   RUN_TEST(test_cli_process_comment);
+  RUN_TEST(test_cli_overflow);
   RUN_TEST(test_cli_process_help);
   RUN_TEST(test_cli_process_help_non_interactive);
-  RUN_TEST(test_cli_get_mag_calibration);
-  RUN_TEST(test_cli_sensor_hardware);
+  RUN_TEST(test_cli_get_mixer_type);
+  RUN_TEST(test_cli_set_mixer_type);
+  RUN_TEST(test_cli_bf_get_mag_calibration);
+  RUN_TEST(test_cli_bf_sensor_hardware);
   return UNITY_END();
 }

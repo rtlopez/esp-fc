@@ -1494,6 +1494,7 @@ static constexpr const char* const qualityNames[] = {"no_signal", "searching",  
                                                      "locked",    "fully_locked", "fully_locked", "fully_locked"};
 static constexpr const char* const usedNames[] = {" No", "Yes"};
 
+#ifndef UNIT_TEST
 static const char* const getGnssName(size_t num)
 {
   constexpr size_t gnssNamesMax = sizeof(gnssNames) / sizeof(gnssNames[0]);
@@ -1514,6 +1515,7 @@ static const char* const getUsedName(size_t num)
   if (num < usedNamesMax) return usedNames[num];
   return "?";
 }
+#endif
 
 void Cli::printGpsStatus(Stream& s, bool full) const
 {
