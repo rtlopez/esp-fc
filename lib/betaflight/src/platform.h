@@ -19,7 +19,6 @@
 
 #if defined(ESP32)
 #define USE_FLASHFS
-#include "esp_partition.h"
 #endif
 
 #if defined(ESP8266)
@@ -109,7 +108,9 @@ static inline uint32_t llog2(uint32_t n) { return 31 - __builtin_clz(n | 1); }
 #define STATIC_UNIT_TESTED
 #endif
 
+#ifndef offsetof
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#endif
 #define UNUSED(v) ((void)v)
 #define ARRAYLEN(x) (sizeof(x) / sizeof((x)[0]))
 #define STATIC_ASSERT(condition, name) \

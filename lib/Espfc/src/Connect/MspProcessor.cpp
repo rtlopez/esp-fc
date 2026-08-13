@@ -806,13 +806,13 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_BLACKBOX_CONFIG:
-      r.writeU8(1);                                   // Blackbox supported
-      r.writeU8(_model.config.blackbox.dev);          // device serial or none
-      r.writeU8(1);                                   // blackboxGetRateNum()); // unused
-      r.writeU8(1);                                   // blackboxGetRateDenom());
-      r.writeU16(0);                                  // blackboxGetPRatio()); // p_denom
+      r.writeU8(1);                          // Blackbox supported
+      r.writeU8(_model.config.blackbox.dev); // device serial or none
+      r.writeU8(1);                          // blackboxGetRateNum()); // unused
+      r.writeU8(1);                          // blackboxGetRateDenom());
+      r.writeU16(0);                         // blackboxGetPRatio()); // p_denom
       // 1.44
-      r.writeU8(_model.config.blackbox.pDenom);       // sample_rate
+      r.writeU8(_model.config.blackbox.pDenom); // sample_rate
       // 1.45
       r.writeU32(~_model.config.blackbox.fieldsMask); // fields mask
       break;

@@ -358,7 +358,6 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   static const char* blackboxDevChoices[] = { "NONE", "FLASH", "SD_CARD", "SERIAL", nullptr };
   static const char* blackboxModeChoices[] = { "NORMAL", "TEST", "ALWAYS", nullptr };
   static const char* ledTypeChoices[] = { "SIMPLE", "STRIP", nullptr };
-  // clang-format on
 
   size_t i = 0;
   static const Param params[] = {
@@ -545,8 +544,10 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 
       Param("output_min_command", &c.output.minCommand),
       Param("output_max_throttle", &c.output.maxThrottle),
-      Param("output_0", &c.output.channel[0]), Param("output_1", &c.output.channel[1]),
-      Param("output_2", &c.output.channel[2]), Param("output_3", &c.output.channel[3]),
+      Param("output_0", &c.output.channel[0]),
+      Param("output_1", &c.output.channel[1]),
+      Param("output_2", &c.output.channel[2]),
+      Param("output_3", &c.output.channel[3]),
 #if ESPFC_OUTPUT_COUNT > 4
       Param("output_4", &c.output.channel[4]),
 #endif
@@ -662,6 +663,8 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 
       Param() // terminate
   };
+  // clang-format on
+
   return params;
 }
 
@@ -927,7 +930,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     // BF specific required by configurator
     s.print("gyro: ");
     const auto* gyroAccNames = Device::GyroDevice::getNames();
-    for(size_t i = 0; gyroAccNames[i]; ++i)
+    for (size_t i = 0; gyroAccNames[i]; ++i)
     {
       if (i) s.print(',');
       s.print(gyroAccNames[i]);
@@ -944,7 +947,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
 
     s.print("baro: ");
     const auto* baroNames = Device::BaroDevice::getNames();
-    for(size_t i = 0; baroNames[i]; ++i)
+    for (size_t i = 0; baroNames[i]; ++i)
     {
       if (i) s.print(',');
       s.print(baroNames[i]);
@@ -953,7 +956,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
 
     s.print("mag: ");
     const auto* magNames = Device::MagDevice::getNames();
-    for(size_t i = 0; magNames[i]; ++i)
+    for (size_t i = 0; magNames[i]; ++i)
     {
       if (i) s.print(',');
       s.print(magNames[i]);
