@@ -55,9 +55,9 @@
 #define PID_PROCESS_DENOM_DEFAULT       1
 
 #define FC_FIRMWARE_NAME            "Betaflight"
-#define FC_VERSION_MAJOR            4  // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR            4  // increment when a minor release is made (small new feature, change etc)
-#define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
+#define FC_VERSION_MAJOR            2026  // increment when a major release is made (big new feature, etc)
+#define FC_VERSION_MINOR            6  // increment when a minor release is made (small new feature, change etc)
+#define FC_VERSION_PATCH_LEVEL      1  // increment when a bug is fixed
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -101,7 +101,7 @@ extern const char * boardIdentifier;
 #define LOG2_32BIT(v) (16*((v)>65535L) + LOG2_16BIT((v)*1L >>16*((v)>65535L)))
 #define LOG2_64BIT(v) (32*((v)/2L>>31 > 0) + LOG2_32BIT((v)*1L >>16*((v)/2L>>31 > 0) >>16*((v)/2L>>31 > 0)))
 #define LOG2(v) LOG2_64BIT(v)
-inline uint32_t llog2(uint32_t n) { return 31 - __builtin_clz(n | 1); }
+static inline uint32_t llog2(uint32_t n) { return 31 - __builtin_clz(n | 1); }
 
 #ifdef UNIT_TEST
 #define STATIC_UNIT_TESTED

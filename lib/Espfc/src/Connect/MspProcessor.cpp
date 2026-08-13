@@ -809,8 +809,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(1);                                   // Blackbox supported
       r.writeU8(_model.config.blackbox.dev);          // device serial or none
       r.writeU8(1);                                   // blackboxGetRateNum()); // unused
-      r.writeU8(blackboxGetRateDenom());              // blackboxGetRateDenom());
-      r.writeU16(blackboxGetPRatio());                // blackboxGetPRatio()); // p_denom
+      r.writeU8(1);                                   // blackboxGetRateDenom());
+      r.writeU16(0);                                  // blackboxGetPRatio()); // p_denom
+      // 1.44
       r.writeU8(_model.config.blackbox.pDenom);       // sample_rate
       // 1.45
       r.writeU32(~_model.config.blackbox.fieldsMask); // fields mask
@@ -835,6 +836,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
           pRatio = blackboxCalculatePDenom(rateNum, rateDenom);
         }
 
+        // 1.44
         if (m.remain() >= 1)
         {
           // sample_rate specified, so use it directly
@@ -957,25 +959,27 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(5);                               // auto_disarm delay
       r.writeU8(0);                               // disarm kill switch
       r.writeU8(_model.config.arming.smallAngle); // small angle
+      r.writeU8(0);                               // gyro_cal_on_first_arm
       break;
 
     case MSP_SET_ARMING_CONFIG:
       m.readU8();                                                           // auto_disarm delay
       m.readU8();                                                           // disarm kill switch
       _model.config.arming.smallAngle = std::min<uint8_t>(180, m.readU8()); // small angle
+      m.readU8();                                                           // gyro_cal_on_first_arm
       break;
 
     case MSP_RC_DEADBAND:
       r.writeU8(_model.config.input.deadband);
       r.writeU8(0);  // yaw deadband
-      r.writeU8(0);  // alt hold deadband
+      r.writeU8(0);  // pos hold deadband
       r.writeU16(0); // deadband 3d throttle
       break;
 
     case MSP_SET_RC_DEADBAND:
       _model.config.input.deadband = m.readU8();
       m.readU8();  // yaw deadband
-      m.readU8();  // alt hod deadband
+      m.readU8();  // pos hod deadband
       m.readU16(); // deadband 3d throttle
       break;
 
