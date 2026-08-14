@@ -15,22 +15,6 @@ int Input::begin()
   _model.state.input.frameRate = 1000000ul / _model.state.input.frameDelta;
   _model.state.input.frameCount = 0;
   _model.state.input.autoFactor = 1.f / (2.f + _model.config.input.filterAutoFactor * 0.1f);
-  switch(_model.config.input.interpolationMode)
-  {
-    case INPUT_INTERPOLATION_AUTO:
-      _model.state.input.interpolationDelta = std::clamp<uint32_t>(_model.state.input.frameDelta, 4000, 40000) * 0.000001f; // estimate real interval
-      break;
-    case INPUT_INTERPOLATION_MANUAL:
-      _model.state.input.interpolationDelta = _model.config.input.interpolationInterval * 0.001f; // manual interval
-      break;
-    case INPUT_INTERPOLATION_DEFAULT:
-    case INPUT_INTERPOLATION_OFF:
-    default:
-      _model.state.input.interpolationDelta = FRAME_TIME_DEFAULT_US * 0.000001f;
-      break;
-  }
-  _model.state.input.interpolationStep = _model.state.loopTimer.intervalf / _model.state.input.interpolationDelta;
-  _step = 0.0f;
   for(size_t c = 0; c < INPUT_CHANNELS; ++c)
   {
     if(_device) _filter[c].begin(FilterConfig(_device->needAverage() ? FILTER_FIR2 : FILTER_NONE, 1), _model.state.loopTimer.rate);
@@ -255,27 +239,10 @@ void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
   uint32_t startTime = micros();
 
   const bool newFrame = status != INPUT_IDLE;
-  const bool interpolation = _model.config.input.interpolationMode != INPUT_INTERPOLATION_OFF && _model.config.input.filterType == INPUT_INTERPOLATION;
-
-  if(interpolation)
-  {
-    if(newFrame)
-    {
-      _step = 0.0f;
-    }
-    if(_step < 1.f)
-    {
-      _step += _model.state.input.interpolationStep;
-    }
-  }
 
   for(size_t c = 0; c < _model.state.input.channelCount; c++)
   {
-    float v = _model.state.input.buffer[c];
-    if(c <= AXIS_THRUST)
-    {
-      v = interpolation ? _interpolate(_model.state.input.bufferPrevious[c], v, _step) : v;
-    }
+    const float v = _model.state.input.buffer[c];
     setInput((Axis)c, v, newFrame);
   }
 
@@ -293,12 +260,6 @@ void FAST_CODE_ATTR Input::updateFrameRate()
   _model.state.input.frameTime = now;
   _model.state.input.frameDelta += (((int)frameDelta - (int)_model.state.input.frameDelta) >> 3); // avg * 0.125
   _model.state.input.frameRate = 1000000ul / _model.state.input.frameDelta;
-
-  if (_model.config.input.interpolationMode == INPUT_INTERPOLATION_AUTO && _model.config.input.filterType == INPUT_INTERPOLATION)
-  {
-    _model.state.input.interpolationDelta = std::clamp<uint32_t>(_model.state.input.frameDelta, 4000, 40000) * 0.000001f; // estimate real interval
-    _model.state.input.interpolationStep = _model.state.loopTimer.intervalf / _model.state.input.interpolationDelta;
-  }
 
   if(_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
   {

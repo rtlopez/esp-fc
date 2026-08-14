@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <EscDriver.h>
-#include "Debug_Espfc.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Utils/Storage.h"
@@ -548,7 +547,7 @@ class Model
 
       for(size_t i = 0; i < 4; i++)
       {
-        if (config.input.filterType == INPUT_FILTER)
+        if (config.input.filterEnable)
         {
           state.input.filter[i].begin(config.input.filter, inputFilterRate);
         }

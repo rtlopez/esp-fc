@@ -347,10 +347,8 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
                                               "HELI120", "HELI90", "VTAIL4", "HEX6H", "PPMSERVO",
                                               "DUALCOPTER", "SINGLECOPTER", "ATAIL4", "CUSTOM", "CUSTOMAIRPLANE",
                                               "CUSTOMTRI", "QUADX1234", nullptr };
-  static const char* interpolChoices[]   = { "NONE", "DEFAULT", "AUTO", "MANUAL", nullptr };
   static const char* inputRateTypeChoices[] = { "BETAFLIGHT", "RACEFLIGHT", "KISS", "ACTUAL", "QUICK", nullptr };
   static const char* throtleLimitTypeChoices[] = { "NONE", "SCALE", "CLIP", nullptr };
-  static const char* inputFilterChoices[] = { "INTERPOLATION", "FILTER", nullptr };
   static const char* inputItermRelaxChoices[] = { "OFF", "RP", "RPY", "RP_INC", "RPY_INC", nullptr };
 
   static const char* voltageSourceChoices[] = { "NONE", "ADC", nullptr };
@@ -439,10 +437,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 
       Param("input_min", &c.input.minRc), Param("input_mid", &c.input.midRc), Param("input_max", &c.input.maxRc),
 
-      Param("input_interpolation", &c.input.interpolationMode, interpolChoices),
-      Param("input_interpolation_interval", &c.input.interpolationInterval),
-
-      Param("input_filter_type", &c.input.filterType, inputFilterChoices),
+      Param("input_filter", &c.input.filterEnable),
       Param("input_lpf_type", &c.input.filter.type, filterTypeChoices), Param("input_lpf_freq", &c.input.filter.freq),
       Param("input_lpf_factor", &c.input.filterAutoFactor),
       Param("input_ff_lpf_type", &c.input.filterDerivative.type, filterTypeChoices),

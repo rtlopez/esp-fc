@@ -450,8 +450,6 @@ set input_deadband 3
 set input_min 885
 set input_mid 1500
 set input_max 2115
-set input_interpolation AUTO
-set input_interpolation_interval 26
 set input_filter_type FILTER
 set input_lpf_type PT3
 set input_lpf_freq 0

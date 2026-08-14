@@ -179,8 +179,6 @@ struct InputState
   uint32_t frameCount;
   uint32_t lossTime;
 
-  float interpolationDelta;
-  float interpolationStep;
   float autoFactor;
   float autoFreq;
 

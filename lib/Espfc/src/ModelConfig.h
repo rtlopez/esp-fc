@@ -206,18 +206,6 @@ enum Feature {
   FEATURE_DYNAMIC_FILTER = 1 << 29,
 };
 
-enum InputInterpolation {
-  INPUT_INTERPOLATION_OFF,
-  INPUT_INTERPOLATION_DEFAULT,
-  INPUT_INTERPOLATION_AUTO,
-  INPUT_INTERPOLATION_MANUAL,
-};
-
-enum InputFilterType : uint8_t {
-  INPUT_INTERPOLATION,
-  INPUT_FILTER,
-};
-
 constexpr size_t MODEL_NAME_LEN  = 16;
 constexpr size_t INPUT_CHANNELS  = AXIS_COUNT;
 constexpr size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
@@ -409,11 +397,11 @@ struct InputConfig
   int16_t midRc = 1500;
   int16_t maxRc = 2115;
 
-  int8_t interpolationMode = INPUT_INTERPOLATION_AUTO;
-  int8_t interpolationInterval = 26;
+  int8_t interpolationModeUnused = 0;
+  int8_t interpolationIntervalUnused = 0;
   int8_t deadband = 3;
 
-  int8_t filterType = INPUT_FILTER;
+  bool filterEnable = true;
   int8_t filterAutoFactor = 50;
   FilterConfig filter{FILTER_PT3, 0};
   FilterConfig filterDerivative{FILTER_PT3, 0};

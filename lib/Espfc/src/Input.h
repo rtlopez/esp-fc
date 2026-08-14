@@ -51,16 +51,10 @@ class Input
     Device::InputDevice * getInputDevice();
 
   private:
-    inline float _interpolate(float left, float right, float step)
-    {
-      return (left * (1.f - step) + right * step);
-    }
-
     Model& _model;
     TelemetryManager& _telemetry;
     Device::InputDevice * _device;
     Utils::Filter _filter[INPUT_CHANNELS];
-    float _step;
     Device::InputPPM _ppm;
     Device::InputIBUS _ibus;
     Device::InputSBUS _sbus;

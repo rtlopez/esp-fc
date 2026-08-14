@@ -1,5 +1,6 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hardware.h"
+#include "ModelConfig.h"
 #include <algorithm>
 #include <limits>
 #include <platform.h>
@@ -255,9 +256,16 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 
     case MSP_BOARD_INFO:
       r.writeData(boardIdentifier, BOARD_IDENTIFIER_LENGTH);
-      r.writeU16(0);                 // No other build targets currently have hardware revision detection.
-      r.writeU8(0);                  // 0 == FC
-      r.writeU8(0);                  // target capabilities
+      r.writeU16(0); // No other build targets currently have hardware revision detection.
+      r.writeU8(0);  // 0 == FC
+      {
+        uint8_t targetCapabilities = 0;
+#if defined(ESPFC_SERIAL_USB)
+        constexpr uint8_t TARGET_HAS_VCP = 0;
+        targetCapabilities |= 1 << TARGET_HAS_VCP;
+#endif
+        r.writeU8(targetCapabilities); // target capabilities
+      }
       r.writeU8(strlen(targetName)); // target name
       r.writeData(targetName, strlen(targetName));
       r.writeU8(0); // board name
@@ -320,21 +328,20 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       }
       else // MSP_STATUS
       {
-        // r.writeU16(_model.state.gyro.timer.interval); // gyro cycle time
-        r.writeU16(0);
+        r.writeU16(0); // unused - gyro cycle time
       }
       // flight mode flags (above 32 bits)
-      r.writeU8(0); // count
+      r.writeU8(0); // count + rest of flags
       // Write arming disable flags
       r.writeU8(ARMING_DISABLED_FLAGS_COUNT);            // 1 byte, flag count
       r.writeU32(_model.state.mode.armingDisabledFlags); // 4 bytes, flags
       r.writeU8(0);                                      // reboot required
       // 1.46
       r.writeU16(0); // getCoreTemperatureCelsius() // cpu temperature
-      r.writeU8(1);
+      r.writeU8(1);  // CONTROL_RATE_PROFILE_COUNT
       // 1.48
-      r.writeU8(1);
-      r.writeU8(0);
+      r.writeU8(1); // BATTERY_PROFILE_COUNT
+      r.writeU8(0); // getCurrentBatteryProfileIndex
       break;
 
     case MSP_NAME:
@@ -984,31 +991,31 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_RX_CONFIG:
-      r.writeU8(_model.config.input.serialRxProvider);      // serialrx_provider
-      r.writeU16(_model.config.input.maxCheck);             // maxcheck
-      r.writeU16(_model.config.input.midRc);                // midrc
-      r.writeU16(_model.config.input.minCheck);             // mincheck
-      r.writeU8(0);                                         // spectrum bind
-      r.writeU16(_model.config.input.minRc);                // min_us
-      r.writeU16(_model.config.input.maxRc);                // max_us
-      r.writeU8(_model.config.input.interpolationMode);     // rc interpolation
-      r.writeU8(_model.config.input.interpolationInterval); // rc interpolation interval
-      r.writeU16(1500);                                     // airmode activate threshold
-      r.writeU8(0);                                         // rx spi prot
-      r.writeU32(0);                                        // rx spi id
-      r.writeU8(0);                                         // rx spi chan count
-      r.writeU8(0);                                         // fpv camera angle
-      r.writeU8(2);                                         // rc iterpolation channels: RPYT
-      r.writeU8(_model.config.input.filterType);            // rc_smoothing_type
-      r.writeU8(_model.config.input.filter.freq);           // rc_smoothing_input_cutoff
-      r.writeU8(_model.config.input.filterDerivative.freq); // rc_smoothing_derivative_cutoff
-      r.writeU8(0); //_model.config.input.filter.type); // rc_smoothing_input_type
+      r.writeU8(_model.config.input.serialRxProvider);                                // serialrx_provider
+      r.writeU16(_model.config.input.maxCheck);                                       // maxcheck
+      r.writeU16(_model.config.input.midRc);                                          // midrc
+      r.writeU16(_model.config.input.minCheck);                                       // mincheck
+      r.writeU8(0);                                                                   // spectrum bind
+      r.writeU16(_model.config.input.minRc);                                          // min_us
+      r.writeU16(_model.config.input.maxRc);                                          // max_us
+      r.writeU8(0);                                                                   // rc interpolation
+      r.writeU8(0);                                                                   // rc interpolation interval
+      r.writeU16(1500);                                                               // airmode activate threshold
+      r.writeU8(0);                                                                   // rx spi prot
+      r.writeU32(0);                                                                  // rx spi id
+      r.writeU8(0);                                                                   // rx spi chan count
+      r.writeU8(0);                                                                   // fpv camera angle
+      r.writeU8(2);                                                                   // rc iterpolation channels: RPYT
+      r.writeU8(0);                                                                   // deprecated: rc_smoothing_type
+      r.writeU8(_model.config.input.filter.freq);                                     // rc_smoothing_input_cutoff
+      r.writeU8(_model.config.input.filterDerivative.freq);                           // rc_smoothing_derivative_cutoff
+      r.writeU8(0);                                                                   // rc_smoothing_input_type
       r.writeU8(fromFilterTypeDerivative(_model.config.input.filterDerivative.type)); // rc_smoothing_derivative_type
       r.writeU8(0);                                                                   // usb type
       // 1.42+
       r.writeU8(_model.config.input.filterAutoFactor); // rc_smoothing_auto_factor
       // 1.44
-      r.writeU8(0); // rc_smoothing
+      r.writeU8(_model.config.input.filterEnable); // rc_smoothing
       // 1.45
       {
         uint8_t uid[6] = {};
@@ -1028,9 +1035,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.config.input.maxRc = m.readU16();           // max_us
       if (m.remain() >= 4)
       {
-        _model.config.input.interpolationMode = m.readU8();     // rc interpolation
-        _model.config.input.interpolationInterval = m.readU8(); // rc interpolation interval
-        m.readU16();                                            // airmode activate threshold
+        m.readU8();  // rc interpolation
+        m.readU8();  // rc interpolation interval
+        m.readU16(); // airmode activate threshold
       }
       if (m.remain() >= 6)
       {
@@ -1046,7 +1053,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       if (m.remain() >= 6)
       {
         m.readU8();                                             // rc iterpolation channels
-        _model.config.input.filterType = m.readU8();            // rc_smoothing_type
+        m.readU8();                                             // deprecated: rc_smoothing_type
         _model.config.input.filter.freq = m.readU8();           // rc_smoothing_input_cutoff
         _model.config.input.filterDerivative.freq = m.readU8(); // rc_smoothing_derivative_cutoff
         //_model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
@@ -1065,7 +1072,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       // 1.44
       if (m.remain() >= 1)
       {
-        m.readU8(); // rc_smoothing
+        _model.config.input.filterEnable = m.readU8(); // rc_smoothing
       }
       // 1.45
       if (m.remain() >= 6)

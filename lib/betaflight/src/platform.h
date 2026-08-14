@@ -961,20 +961,16 @@ int32_t getAmperageLatest(void);
 /* SENSOR END */
 
 /* RX START */
-#define RX_MAPPABLE_CHANNEL_COUNT 8
-
 typedef struct rxConfig_s {
     uint8_t serialrx_provider;              // type of UART-based receiver (0 = spek 10, 1 = spek 11, 2 = sbus). Must be enabled by FEATURE_RX_SERIAL first.
     uint8_t rssi_channel;
-    uint8_t rcInterpolation;
-    uint8_t rcInterpolationChannels;
-    uint8_t rcInterpolationInterval;
-    uint16_t airModeActivateThreshold;      // Throttle setpoint where airmode gets activated
+    uint8_t airModeActivateThreshold;       // Throttle setpoint where airmode gets activated
 } rxConfig_t;
 
 PG_DECLARE(rxConfig_t, rxConfig);
 
 uint16_t getRssi(void);
+/* RX END */
 
 /* FAILSAFE START */
 typedef enum {
@@ -989,13 +985,14 @@ typedef enum {
 failsafePhase_e failsafePhase();
 bool rxIsReceivingSignal(void);
 bool rxAreFlightChannelsValid(void);
+/* FAILSAFE END */
+
 float pidGetPreviousSetpoint(int axis);
 float mixerGetThrottle(void);
 bool isRssiConfigured(void);
 int16_t getMotorOutputLow();
 int16_t getMotorOutputHigh();
 uint16_t getDshotErpm(uint8_t i);
-/* FAILSAFE END */
 
 typedef enum {
     GPS_LATITUDE,

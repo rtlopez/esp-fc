@@ -179,8 +179,6 @@ int Blackbox::begin()
   batteryConfigMutable()->vbatmaxcellvoltage = 420;
   batteryConfigMutable()->vbatmincellvoltage = 340;
 
-  rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
-  rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
   rxConfigMutable()->rssi_channel = _model.config.input.rssiChannel;
   rxConfigMutable()->airModeActivateThreshold = 40;
   rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
