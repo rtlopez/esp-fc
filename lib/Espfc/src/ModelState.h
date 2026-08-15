@@ -181,6 +181,8 @@ struct InputState
 
   float autoFactor;
   float autoFreq;
+  float autoThrottleFactor;
+  float autoThrottleFreq;
 
   int16_t raw[INPUT_CHANNELS];
   int16_t buffer[INPUT_CHANNELS];

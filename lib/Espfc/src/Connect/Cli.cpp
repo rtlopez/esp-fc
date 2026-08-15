@@ -434,12 +434,17 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("input_yaw_expo", &c.input.expo[2]), Param("input_yaw_limit", &c.input.rateLimit[2]),
 
       Param("input_deadband", &c.input.deadband),
+      Param("input_airmode_threshold", &c.input.airModeActivateThreshold),
 
       Param("input_min", &c.input.minRc), Param("input_mid", &c.input.midRc), Param("input_max", &c.input.maxRc),
 
       Param("input_filter", &c.input.filterEnable),
-      Param("input_lpf_type", &c.input.filter.type, filterTypeChoices), Param("input_lpf_freq", &c.input.filter.freq),
+      Param("input_lpf_type", &c.input.filter.type, filterTypeChoices),
+      Param("input_lpf_freq", &c.input.filter.freq),
       Param("input_lpf_factor", &c.input.filterAutoFactor),
+      Param("input_lpf_throttle_type", &c.input.filterThrottle.type, filterTypeChoices),
+      Param("input_lpf_throttle_freq", &c.input.filterThrottle.freq),
+      Param("input_lpf_throttle_factor", &c.input.filterAutoThrottleFactor),
       Param("input_ff_lpf_type", &c.input.filterDerivative.type, filterTypeChoices),
       Param("input_ff_lpf_freq", &c.input.filterDerivative.freq),
 
@@ -1277,6 +1282,10 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.print(_model.state.input.autoFreq);
     s.print(" Hz, ");
     s.println(_model.state.input.autoFactor);
+    s.print(", ");
+    s.print(_model.state.input.autoThrottleFreq);
+    s.print(" Hz, ");
+    s.println(_model.state.input.autoThrottleFactor);
 
     // clang-format off
     static const char* armingDisableNames[] = {

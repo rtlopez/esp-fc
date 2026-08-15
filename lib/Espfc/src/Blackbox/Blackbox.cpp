@@ -180,7 +180,7 @@ int Blackbox::begin()
   batteryConfigMutable()->vbatmincellvoltage = 340;
 
   rxConfigMutable()->rssi_channel = _model.config.input.rssiChannel;
-  rxConfigMutable()->airModeActivateThreshold = 40;
+  rxConfigMutable()->airModeActivateThreshold = _model.config.input.airModeActivateThreshold;
   rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
 
   rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.gyro.rpmFilter.harmonics;

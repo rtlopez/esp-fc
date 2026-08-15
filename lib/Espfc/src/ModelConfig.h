@@ -397,14 +397,15 @@ struct InputConfig
   int16_t midRc = 1500;
   int16_t maxRc = 2115;
 
-  int8_t interpolationModeUnused = 0;
-  int8_t interpolationIntervalUnused = 0;
   int8_t deadband = 3;
+  int8_t airModeActivateThreshold = 40;
 
   bool filterEnable = true;
-  int8_t filterAutoFactor = 50;
-  FilterConfig filter{FILTER_PT3, 0};
-  FilterConfig filterDerivative{FILTER_PT3, 0};
+  int8_t filterAutoFactor = 50;                 // RPY factor
+  int8_t filterAutoThrottleFactor = 50;         // Throttle factor
+  FilterConfig filter{FILTER_PT3, 0};           // autoFactor if freq=0
+  FilterConfig filterThrottle{FILTER_PT3, 0};   // autoFactor if freq=0
+  FilterConfig filterDerivative{FILTER_PT3, 0}; // autoFactor if freq=0
 
   uint8_t expo[3] = { 0, 0, 0 };
   uint8_t rate[3] = { 20, 20, 30 };

@@ -95,36 +95,6 @@ static Espfc::SerialSpeed fromBaudIndex(SerialSpeedIndex index)
   // clang-format on
 }
 
-static uint8_t toFilterTypeDerivative(uint8_t t)
-{
-  switch (t)
-  {
-    case 0:
-      return Espfc::FILTER_NONE;
-    case 1:
-      return Espfc::FILTER_PT3;
-    case 2:
-      return Espfc::FILTER_BIQUAD;
-    default:
-      return Espfc::FILTER_PT3;
-  }
-}
-
-static uint8_t fromFilterTypeDerivative(uint8_t t)
-{
-  switch (t)
-  {
-    case Espfc::FILTER_NONE:
-      return 0;
-    case Espfc::FILTER_PT3:
-      return 1;
-    case Espfc::FILTER_BIQUAD:
-      return 2;
-    default:
-      return 1;
-  }
-}
-
 static uint8_t fromGyroDlpf(uint8_t t)
 {
   switch (t)
@@ -991,27 +961,27 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_RX_CONFIG:
-      r.writeU8(_model.config.input.serialRxProvider);                                // serialrx_provider
-      r.writeU16(_model.config.input.maxCheck);                                       // maxcheck
-      r.writeU16(_model.config.input.midRc);                                          // midrc
-      r.writeU16(_model.config.input.minCheck);                                       // mincheck
-      r.writeU8(0);                                                                   // spectrum bind
-      r.writeU16(_model.config.input.minRc);                                          // min_us
-      r.writeU16(_model.config.input.maxRc);                                          // max_us
-      r.writeU8(0);                                                                   // rc interpolation
-      r.writeU8(0);                                                                   // rc interpolation interval
-      r.writeU16(1500);                                                               // airmode activate threshold
-      r.writeU8(0);                                                                   // rx spi prot
-      r.writeU32(0);                                                                  // rx spi id
-      r.writeU8(0);                                                                   // rx spi chan count
-      r.writeU8(0);                                                                   // fpv camera angle
-      r.writeU8(2);                                                                   // rc iterpolation channels: RPYT
-      r.writeU8(0);                                                                   // deprecated: rc_smoothing_type
-      r.writeU8(_model.config.input.filter.freq);                                     // rc_smoothing_input_cutoff
-      r.writeU8(_model.config.input.filterDerivative.freq);                           // rc_smoothing_derivative_cutoff
-      r.writeU8(0);                                                                   // rc_smoothing_input_type
-      r.writeU8(fromFilterTypeDerivative(_model.config.input.filterDerivative.type)); // rc_smoothing_derivative_type
-      r.writeU8(0);                                                                   // usb type
+      r.writeU8(_model.config.input.serialRxProvider);                      // serialrx_provider
+      r.writeU16(_model.config.input.maxCheck);                             // maxcheck
+      r.writeU16(_model.config.input.midRc);                                // midrc
+      r.writeU16(_model.config.input.minCheck);                             // mincheck
+      r.writeU8(0);                                                         // spectrum bind
+      r.writeU16(_model.config.input.minRc);                                // min_us
+      r.writeU16(_model.config.input.maxRc);                                // max_us
+      r.writeU8(0);                                                         // rc interpolation
+      r.writeU8(0);                                                         // rc interpolation interval
+      r.writeU16(_model.config.input.airModeActivateThreshold * 10 + 1000); // airmode activate threshold
+      r.writeU8(0);                                                         // rx spi prot
+      r.writeU32(0);                                                        // rx spi id
+      r.writeU8(0);                                                         // rx spi chan count
+      r.writeU8(0);                                                         // fpv camera angle
+      r.writeU8(2);                                                         // rc iterpolation channels: RPYT
+      r.writeU8(0);                                                         // deprecated: rc_smoothing_type
+      r.writeU8(_model.config.input.filter.freq);                           // rc_smoothing_setpoint_cutoff
+      r.writeU8(_model.config.input.filterThrottle.freq);                   // rc_smoothing_throtle_cutoff
+      r.writeU8(_model.config.input.filterAutoThrottleFactor);               // rc_smoothing_auto_factor_throttle
+      r.writeU8(0);                                                         // rc_smoothing_derivative_type
+      r.writeU8(0);                                                         // usb type
       // 1.42+
       r.writeU8(_model.config.input.filterAutoFactor); // rc_smoothing_auto_factor
       // 1.44
@@ -1035,9 +1005,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.config.input.maxRc = m.readU16();           // max_us
       if (m.remain() >= 4)
       {
-        m.readU8();  // rc interpolation
-        m.readU8();  // rc interpolation interval
-        m.readU16(); // airmode activate threshold
+        m.readU8();                                                               // rc interpolation
+        m.readU8();                                                               // rc interpolation interval
+        _model.config.input.airModeActivateThreshold = (m.readU16() - 1000) / 10; // airmode activate threshold
       }
       if (m.remain() >= 6)
       {
@@ -1052,13 +1022,12 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       // 1.40+
       if (m.remain() >= 6)
       {
-        m.readU8();                                             // rc iterpolation channels
-        m.readU8();                                             // deprecated: rc_smoothing_type
-        _model.config.input.filter.freq = m.readU8();           // rc_smoothing_input_cutoff
-        _model.config.input.filterDerivative.freq = m.readU8(); // rc_smoothing_derivative_cutoff
-        //_model.config.input.filter.type = m.readU8() == 1 ? FILTER_BIQUAD : FILTER_PT1; // rc_smoothing_input_type
-        m.readU8();
-        _model.config.input.filterDerivative.type = toFilterTypeDerivative(m.readU8()); // rc_smoothing_derivative_type
+        m.readU8();                                               // was rc iterpolation channels
+        m.readU8();                                               // was rc_smoothing_type
+        _model.config.input.filter.freq = m.readU8();             // rc_smoothing_setpoint_cutoff
+        _model.config.input.filterThrottle.freq = m.readU8();     // rc_smoothing_throttle_cutoff
+        _model.config.input.filterAutoThrottleFactor = m.readU8(); // rc_smoothing_auto_factor_throttle
+        m.readU8();                                               // was rc_smoothing_derivative_type
       }
       if (m.remain() >= 1)
       {
@@ -1416,6 +1385,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 
     case MSP_PID_CONTROLLER:
       r.writeU8(1); // betaflight controller id
+      break;
+
+    case MSP_SET_PID_CONTROLLER:
       break;
 
     case MSP_PIDNAMES:

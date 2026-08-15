@@ -1,5 +1,6 @@
 
 #include "Input.h"
+#include "ModelConfig.h"
 #include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
 
@@ -15,6 +16,7 @@ int Input::begin()
   _model.state.input.frameRate = 1000000ul / _model.state.input.frameDelta;
   _model.state.input.frameCount = 0;
   _model.state.input.autoFactor = 1.f / (2.f + _model.config.input.filterAutoFactor * 0.1f);
+  _model.state.input.autoThrottleFactor = 1.f / (2.f + _model.config.input.filterAutoThrottleFactor * 0.1f);
   for(size_t c = 0; c < INPUT_CHANNELS; ++c)
   {
     if(_device) _filter[c].begin(FilterConfig(_device->needAverage() ? FILTER_FIR2 : FILTER_NONE, 1), _model.state.loopTimer.rate);
@@ -269,17 +271,17 @@ void FAST_CODE_ATTR Input::updateFrameRate()
 
   // auto cutoff input freq
   float freq = std::max(_model.state.input.frameRate * _model.state.input.autoFactor, 15.f); // no lower than 15Hz
+  float throttleFreq = std::max(_model.state.input.frameRate * _model.state.input.autoThrottleFactor, 15.f); // no lower than 15Hz
   if(freq > _model.state.input.autoFreq * 1.1f || freq < _model.state.input.autoFreq * 0.9f)
   {
-    _model.state.input.autoFreq += 0.25f * (freq - _model.state.input.autoFreq);
-    if(_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
-    {
-      _model.state.debug[2] = lrintf(freq);
-      _model.state.debug[3] = lrintf(_model.state.input.autoFreq);
-    }
+    _model.state.input.autoFreq += 0.25f * (freq - _model.state.input.autoFreq); // lpf
+    _model.state.input.autoThrottleFreq += 0.25f * (throttleFreq - _model.state.input.autoThrottleFreq); // lpf
+
     FilterConfig conf((FilterType)_model.config.input.filter.type, _model.state.input.autoFreq);
+    FilterConfig confThrottle((FilterType)_model.config.input.filterThrottle.type, _model.state.input.autoThrottleFreq);
     FilterConfig confDerivative((FilterType)_model.config.input.filterDerivative.type, _model.state.input.autoFreq);
-    for(size_t i = 0; i < AXIS_COUNT_RPYT; i++)
+
+    for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
     {
       if(_model.config.input.filter.freq == 0)
       {
@@ -289,6 +291,18 @@ void FAST_CODE_ATTR Input::updateFrameRate()
       {
         _model.state.innerPid[i].ftermFilter.reconfigure(confDerivative, _model.state.loopTimer.rate);
       }
+    }
+
+    if(_model.config.input.filterThrottle.freq == 0)
+    {
+      _model.state.input.filter[AXIS_THRUST].reconfigure(confThrottle, _model.state.loopTimer.rate);
+    }
+
+    if(_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
+    {
+      _model.state.debug[2] = lrintf(freq);
+      _model.state.debug[3] = lrintf(_model.state.input.autoFreq);
+      _model.state.debug[4] = lrintf(_model.state.input.autoThrottleFreq);
     }
   }
 
