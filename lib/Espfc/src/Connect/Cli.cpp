@@ -356,6 +356,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   static const char* blackboxDevChoices[] = { "NONE", "FLASH", "SD_CARD", "SERIAL", nullptr };
   static const char* blackboxModeChoices[] = { "NORMAL", "TEST", "ALWAYS", nullptr };
   static const char* ledTypeChoices[] = { "SIMPLE", "STRIP", nullptr };
+  static const char* simplifiedTunigModeChoices[] = { "OFF", "RP", "RPY", nullptr };
 
   size_t i = 0;
   static const Param params[] = {
@@ -385,6 +386,9 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("gyro_rpm_weight_3", &c.gyro.rpmFilter.weights[2]),
       Param("gyro_rpm_tlm_lpf_freq", &c.gyro.rpmFilter.freqLpf), Param("gyro_offset_x", &c.gyro.bias[0]),
       Param("gyro_offset_y", &c.gyro.bias[1]), Param("gyro_offset_z", &c.gyro.bias[2]),
+
+      Param("gyro_tuning", &c.simplifiedTuning.gyroFilter),
+      Param("gyro_tuning_gain", &c.simplifiedTuning.gyroFilterMultiplier),
 
       Param("accel_bus", &c.accel.bus, busDevChoices), Param("accel_dev", &c.accel.dev, gyroDevChoices),
       Param("accel_lpf_type", &c.accel.filter.type, filterTypeChoices), Param("accel_lpf_freq", &c.accel.filter.freq),
@@ -490,6 +494,16 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 
       Param("pid_sync", &c.loopSync),
 
+      Param("pid_tuning", &c.simplifiedTuning.pidsMode, simplifiedTunigModeChoices),
+      Param("pid_tuning_gain", &c.simplifiedTuning.masterMultiplier),
+      Param("pid_tuning_rp_ratio", &c.simplifiedTuning.rollPitchRatio),
+      Param("pid_tuning_i_gain", &c.simplifiedTuning.iGain),
+      Param("pid_tuning_d_gain", &c.simplifiedTuning.dGain),
+      Param("pid_tuning_pi_gain", &c.simplifiedTuning.piGain),
+      // Param("pid_tuning_d_max_gain", &c.simplifiedTuning.dMaxGain),
+      Param("pid_tuning_ff_gain", &c.simplifiedTuning.ffGain),
+      Param("pid_tuning_pitch_pi_gain", &c.simplifiedTuning.pitchPiGain),
+
       Param("pid_roll_p", &c.pid[FC_PID_ROLL].P), Param("pid_roll_i", &c.pid[FC_PID_ROLL].I),
       Param("pid_roll_d", &c.pid[FC_PID_ROLL].D), Param("pid_roll_f", &c.pid[FC_PID_ROLL].F),
 
@@ -520,6 +534,8 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("pid_dterm_notch_cutoff", &c.dterm.notchFilter.cutoff),
       Param("pid_dterm_dyn_lpf_min", &c.dterm.dynLpfFilter.cutoff),
       Param("pid_dterm_dyn_lpf_max", &c.dterm.dynLpfFilter.freq),
+      Param("pid_dterm_tuning", &c.simplifiedTuning.dtermFilter),
+      Param("pid_dterm_tuning_gain", &c.simplifiedTuning.dtermFilterMultiplier),
 
       Param("pid_dterm_weight", &c.dterm.setpointWeight), Param("pid_iterm_limit", &c.iterm.limit),
       Param("pid_iterm_zero", &c.iterm.lowThrottleZeroIterm),

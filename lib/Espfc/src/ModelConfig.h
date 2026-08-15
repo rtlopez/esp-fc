@@ -699,7 +699,7 @@ static constexpr int SIMPLIFIED_DTERM_LPF2_HZ = 150;
 
 struct SimplifiedTuningConfig
 {
-  uint8_t pidsMode = SIMPLIFIED_TUNING_RPY;
+  int8_t pidsMode = SIMPLIFIED_TUNING_RPY;
   uint8_t masterMultiplier = 100;
   uint8_t rollPitchRatio = 100;
   uint8_t iGain = 100;
