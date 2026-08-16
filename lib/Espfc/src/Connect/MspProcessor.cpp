@@ -1708,34 +1708,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     }
 
     case MSP_VALIDATE_SIMPLIFIED_TUNING: {
-      const SimplifiedTuningConfig& s = _model.config.simplifiedTuning;
-      PidConfig tmp[3] = {_model.config.pid[FC_PID_ROLL], _model.config.pid[FC_PID_PITCH],
-                          _model.config.pid[FC_PID_YAW]};
-      _model.calculateSimplifiedPids(s, tmp);
-      bool pidOk = tmp[0].P == _model.config.pid[FC_PID_ROLL].P && tmp[0].I == _model.config.pid[FC_PID_ROLL].I &&
-                   tmp[0].D == _model.config.pid[FC_PID_ROLL].D && tmp[0].F == _model.config.pid[FC_PID_ROLL].F &&
-                   tmp[1].P == _model.config.pid[FC_PID_PITCH].P && tmp[1].I == _model.config.pid[FC_PID_PITCH].I &&
-                   tmp[1].D == _model.config.pid[FC_PID_PITCH].D && tmp[1].F == _model.config.pid[FC_PID_PITCH].F &&
-                   tmp[2].P == _model.config.pid[FC_PID_YAW].P && tmp[2].I == _model.config.pid[FC_PID_YAW].I &&
-                   tmp[2].D == _model.config.pid[FC_PID_YAW].D && tmp[2].F == _model.config.pid[FC_PID_YAW].F;
+      auto [pidOk, gyroOk, dtermOk] = _model.validateSimplifiedTuning();
       r.writeU8(pidOk);
-
-      int16_t glpf1 = _model.config.gyro.filter.freq;
-      int16_t glpf2 = _model.config.gyro.filter2.freq;
-      int16_t gmin = _model.config.gyro.dynLpfFilter.cutoff;
-      int16_t gmax = _model.config.gyro.dynLpfFilter.freq;
-      if (s.gyroFilter) _model.calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
-      bool gyroOk = glpf1 == _model.config.gyro.filter.freq && glpf2 == _model.config.gyro.filter2.freq &&
-                    gmin == _model.config.gyro.dynLpfFilter.cutoff && gmax == _model.config.gyro.dynLpfFilter.freq;
       r.writeU8(gyroOk);
-
-      int16_t dlpf1 = _model.config.dterm.filter.freq;
-      int16_t dlpf2 = _model.config.dterm.filter2.freq;
-      int16_t dmin = _model.config.dterm.dynLpfFilter.cutoff;
-      int16_t dmax = _model.config.dterm.dynLpfFilter.freq;
-      if (s.dtermFilter) _model.calculateSimplifiedDtermFilters(s.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
-      bool dtermOk = dlpf1 == _model.config.dterm.filter.freq && dlpf2 == _model.config.dterm.filter2.freq &&
-                     dmin == _model.config.dterm.dynLpfFilter.cutoff && dmax == _model.config.dterm.dynLpfFilter.freq;
       r.writeU8(dtermOk);
       break;
     }

@@ -557,12 +557,12 @@ struct GyroConfig
   int8_t dlpf = GYRO_DLPF_256;
   int8_t align = ALIGN_DEFAULT;
   int16_t bias[3] = { 0, 0, 0 };
-  FilterConfig filter{FILTER_PT1, 100};
-  FilterConfig filter2{FILTER_PT1, 213};
+  FilterConfig filter{FILTER_PT1, 150};
+  FilterConfig filter2{FILTER_PT1, 400};
+  FilterConfig dynLpfFilter{FILTER_PT1, 400, 150};
   FilterConfig filter3{FILTER_FO, 150};
   FilterConfig notch1Filter{FILTER_NOTCH, 0, 0};
   FilterConfig notch2Filter{FILTER_NOTCH, 0, 0};
-  FilterConfig dynLpfFilter{FILTER_PT1, 425, 170};
   DynamicFilterConfig dynamicFilter;
   RpmFilterConfig rpmFilter;
 };
@@ -602,10 +602,10 @@ struct YawConfig
 
 struct DtermConfig
 {
-  FilterConfig filter{FILTER_PT1, 128};
-  FilterConfig filter2{FILTER_PT1, 128};
+  FilterConfig filter{FILTER_PT1, 75};
+  FilterConfig filter2{FILTER_PT1, 150};
+  FilterConfig dynLpfFilter{FILTER_PT1, 150, 75};
   FilterConfig notchFilter{FILTER_NOTCH, 0, 0};
-  FilterConfig dynLpfFilter{FILTER_PT1, 145, 60};
   int16_t setpointWeight = 30;
 };
 
@@ -688,11 +688,11 @@ enum SimplifiedTuningMode: uint8_t
 // Betaflight simplified-tuning slider baselines and limits
 static constexpr int SIMPLIFIED_PID_GAIN_MAX = 250;
 static constexpr int SIMPLIFIED_F_GAIN_MAX = 2000;
-static constexpr int SIMPLIFIED_DYN_LPF_MAX_HZ = 1000;
-static constexpr int SIMPLIFIED_LPF_MAX_HZ = 1000;
-static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ = 250;
-static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ = 500;
-static constexpr int SIMPLIFIED_GYRO_LPF2_HZ = 500;
+static constexpr int SIMPLIFIED_DYN_LPF_MAX_HZ = 500;
+static constexpr int SIMPLIFIED_LPF_MAX_HZ = 500;
+static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ = 150;
+static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ = 400;
+static constexpr int SIMPLIFIED_GYRO_LPF2_HZ = 400;
 static constexpr int SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ = 75;
 static constexpr int SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ = 150;
 static constexpr int SIMPLIFIED_DTERM_LPF2_HZ = 150;
@@ -737,9 +737,9 @@ class ModelConfig
 
     // pid controller
     PidConfig pid[FC_PID_ITEM_COUNT] = {
-      [FC_PID_ROLL]  = { .P = 45, .I = 80, .D = 30, .F = 120 },  // ROLL
-      [FC_PID_PITCH] = { .P = 47, .I = 84, .D = 34, .F = 125 },  // PITCH
-      [FC_PID_YAW]   = { .P = 45, .I = 80, .D =  0, .F = 120 },  // YAW
+      [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
+      [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
+      [FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 },  // YAW
       [FC_PID_ALT]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // ALTHOLD POS
       [FC_PID_POS]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_P * 100, POSHOLD_I * 100,
       [FC_PID_POSR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,

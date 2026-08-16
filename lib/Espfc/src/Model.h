@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <tuple>
 #include <EscDriver.h>
 #include "ModelConfig.h"
 #include "ModelState.h"
@@ -335,6 +336,42 @@ class Model
       }
       if (lpf1) lpf1 = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
       if (lpf2) lpf2 = constrain(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+    }
+
+    std::tuple<bool, bool, bool> validateSimplifiedTuning() const
+    {
+      const auto& s = config.simplifiedTuning;
+      
+      const auto& pids = config.pid;
+      PidConfig tmp[3] = {pids[0], pids[1], pids[2]};
+
+      calculateSimplifiedPids(s, tmp);
+      bool pidOk = tmp[0].P == pids[0].P && tmp[0].I == pids[0].I &&
+                   tmp[0].D == pids[0].D && tmp[0].F == pids[0].F &&
+                   tmp[1].P == pids[1].P && tmp[1].I == pids[1].I &&
+                   tmp[1].D == pids[1].D && tmp[1].F == pids[1].F &&
+                   tmp[2].P == pids[2].P && tmp[2].I == pids[2].I &&
+                   tmp[2].D == pids[2].D && tmp[2].F == pids[2].F;
+
+      const auto& gyro = config.gyro;
+      int16_t glpf1 = gyro.filter.freq;
+      int16_t glpf2 = gyro.filter2.freq;
+      int16_t gmin = gyro.dynLpfFilter.cutoff;
+      int16_t gmax = gyro.dynLpfFilter.freq;
+      if (s.gyroFilter) calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
+      bool gyroOk = glpf1 == gyro.filter.freq && glpf2 == gyro.filter2.freq &&
+                    gmin == gyro.dynLpfFilter.cutoff && gmax == gyro.dynLpfFilter.freq;
+
+      const auto& dterm = config.dterm;
+      int16_t dlpf1 = dterm.filter.freq;
+      int16_t dlpf2 = dterm.filter2.freq;
+      int16_t dmin = dterm.dynLpfFilter.cutoff;
+      int16_t dmax = dterm.dynLpfFilter.freq;
+      if (s.dtermFilter) calculateSimplifiedDtermFilters(s.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
+      bool dtermOk = dlpf1 == dterm.filter.freq && dlpf2 == dterm.filter2.freq &&
+                     dmin == dterm.dynLpfFilter.cutoff && dmax == dterm.dynLpfFilter.freq;
+
+      return std::make_tuple(pidOk, gyroOk, dtermOk);
     }
 
     void reset()

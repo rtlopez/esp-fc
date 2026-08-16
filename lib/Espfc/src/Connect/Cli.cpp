@@ -1,6 +1,7 @@
 #include "Connect/Cli.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Hardware.h"
+#include "ModelConfig.h"
 #include "Utils/Filter.h"
 #include "msp/msp_protocol.h"
 #include <algorithm>
@@ -1297,7 +1298,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.print(" Hz, ");
     s.print(_model.state.input.autoFreq);
     s.print(" Hz, ");
-    s.println(_model.state.input.autoFactor);
+    s.print(_model.state.input.autoFactor);
     s.print(", ");
     s.print(_model.state.input.autoThrottleFreq);
     s.print(" Hz, ");
@@ -1415,6 +1416,56 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.print(_model.logger.c_str());
     s.print("usage: ");
     s.println(_model.logger.length());
+  }
+  else if (strcmp(cmd.args[0], "tuning") == 0)
+  {
+    const auto& st = _model.config.simplifiedTuning;
+    const auto& pid = _model.config.pid;
+    PidConfig res[3];
+    _model.calculateSimplifiedPids(st, res);
+    // clang-format off
+    s.print("X: "); s.print(st.pidsMode); s.print(", M: "); s.print(st.masterMultiplier); 
+    s.print(", R/P: "); s.println(st.rollPitchRatio);
+    s.print("PI: "); s.print(st.piGain); s.print(", I: "); s.print(st.iGain);
+    s.print(", D: "); s.print(st.dGain); s.print(", FF: "); s.print(st.ffGain);
+    s.print(", DM: "); s.print(st.dMaxGain); s.print(", PPI: "); s.println(st.pitchPiGain);
+    s.println("X  P  I  D  F");
+    for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+    {
+      s.print(i); s.print(" "); s.print(pid[i].P); s.print(" "); s.print(pid[i].I);
+      s.print(" "); s.print(res[i].D); s.print(" "); s.println(pid[i].F);
+      s.print(' '); s.print(" "); s.print(res[i].P); s.print(" "); s.print(res[i].I);
+      s.print(" "); s.print(res[i].D); s.print(" "); s.println(res[i].F);
+    }
+    auto [pidOk, gyroOk, dtermOk] = _model.validateSimplifiedTuning();
+    s.print("VALID: "); s.println(pidOk ? "OK" : "NOK"); s.println();
+
+    const auto& gyro = _model.config.gyro;
+    int16_t glpf1 = gyro.filter.freq;
+    int16_t glpf2 = gyro.filter2.freq;
+    int16_t gmin = gyro.dynLpfFilter.cutoff;
+    int16_t gmax = gyro.dynLpfFilter.freq;
+    _model.calculateSimplifiedGyroFilters(st.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
+    s.print("Gyro: "); s.print(st.gyroFilter); s.print(", gain: "); s.println(st.gyroFilterMultiplier);
+    s.println("lpf1 lpf2 dmin dmax");
+    s.print(gyro.filter.freq); s.print("  "); s.print(gyro.filter2.freq); s.print("  "); 
+    s.print(gyro.dynLpfFilter.cutoff); s.print("  "); s.println(gyro.dynLpfFilter.freq);
+    s.print(glpf1); s.print("  "); s.print(glpf2); s.print("  "); s.print(gmin); s.print("  "); s.println(gmax);
+    s.print("VALID: "); s.println(gyroOk ? "OK" : "NOK"); s.println();
+
+    const auto& dterm = _model.config.dterm;
+    int16_t dlpf1 = dterm.filter.freq;
+    int16_t dlpf2 = dterm.filter2.freq;
+    int16_t dmin = dterm.dynLpfFilter.cutoff;
+    int16_t dmax = dterm.dynLpfFilter.freq;
+    _model.calculateSimplifiedDtermFilters(st.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
+    s.print("Dterm: "); s.print(st.dtermFilter); s.print(", gain: "); s.println(st.dtermFilterMultiplier);
+    s.println("lpf1 lpf2 dmin dmax");
+    s.print(dterm.filter.freq); s.print("  "); s.print(dterm.filter2.freq); s.print("  ");
+    s.print(dterm.dynLpfFilter.cutoff); s.print("  "); s.println(dterm.dynLpfFilter.freq);
+    s.print(dlpf1); s.print("  "); s.print(dlpf2); s.print("  "); s.print(dmin); s.print("  "); s.println(dmax);
+    s.print("VALID: "); s.println(dtermOk ? "OK" : "NOK");
+    // clang-format on
   }
 #ifdef USE_FLASHFS
   else if (strcmp(cmd.args[0], "flash") == 0)
