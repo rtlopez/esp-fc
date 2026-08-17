@@ -283,9 +283,9 @@ void Cli::Param::write(ActuatorCondition& ac, const char** args) const
 
 void Cli::Param::write(MixerEntry& ac, const char** args) const
 {
-  if (args[2]) ac.src = constrain(String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
-  if (args[3]) ac.dst = constrain(String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
-  if (args[4]) ac.rate = constrain(String(args[4]).toInt(), -1000, 1000);
+  if (args[2]) ac.src = std::clamp<int>(String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
+  if (args[3]) ac.dst = std::clamp<int>(String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
+  if (args[4]) ac.rate = std::clamp<int>(String(args[4]).toInt(), -1000, 1000);
 }
 
 void Cli::Param::write(SerialPortConfig& sc, const char** args) const
@@ -362,86 +362,133 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   size_t i = 0;
   static const Param params[] = {
 
-      Param("feature_gps", &c.featureMask, 7), Param("feature_dyn_notch", &c.featureMask, 29),
-      Param("feature_motor_stop", &c.featureMask, 4), Param("feature_rx_ppm", &c.featureMask, 0),
-      Param("feature_rx_serial", &c.featureMask, 3), Param("feature_rx_spi", &c.featureMask, 25),
-      Param("feature_soft_serial", &c.featureMask, 6), Param("feature_telemetry", &c.featureMask, 10),
+      Param("feature_gps", &c.featureMask, 7),
+      Param("feature_dyn_notch", &c.featureMask, 29),
+      Param("feature_motor_stop", &c.featureMask, 4),
+      Param("feature_rx_ppm", &c.featureMask, 0),
+      Param("feature_rx_serial", &c.featureMask, 3),
+      Param("feature_rx_spi", &c.featureMask, 25),
+      Param("feature_soft_serial", &c.featureMask, 6),
+      Param("feature_telemetry", &c.featureMask, 10),
 
       Param("debug_mode", &c.debug.mode, debugModeChoices), Param("debug_axis", &c.debug.axis),
 
-      Param("gyro_bus", &c.gyro.bus, busDevChoices), Param("gyro_dev", &c.gyro.dev, gyroDevChoices),
-      Param("gyro_dlpf", &c.gyro.dlpf, gyroDlpfChoices), Param("gyro_align", &c.gyro.align, alignChoices),
-      Param("gyro_lpf_type", &c.gyro.filter.type, filterTypeChoices), Param("gyro_lpf_freq", &c.gyro.filter.freq),
-      Param("gyro_lpf2_type", &c.gyro.filter2.type, filterTypeChoices), Param("gyro_lpf2_freq", &c.gyro.filter2.freq),
-      Param("gyro_lpf3_type", &c.gyro.filter3.type, filterTypeChoices), Param("gyro_lpf3_freq", &c.gyro.filter3.freq),
-      Param("gyro_notch1_freq", &c.gyro.notch1Filter.freq), Param("gyro_notch1_cutoff", &c.gyro.notch1Filter.cutoff),
-      Param("gyro_notch2_freq", &c.gyro.notch2Filter.freq), Param("gyro_notch2_cutoff", &c.gyro.notch2Filter.cutoff),
-      Param("gyro_dyn_lpf_min", &c.gyro.dynLpfFilter.cutoff), Param("gyro_dyn_lpf_max", &c.gyro.dynLpfFilter.freq),
-      Param("gyro_dyn_notch_q", &c.gyro.dynamicFilter.q), Param("gyro_dyn_notch_count", &c.gyro.dynamicFilter.count),
+      Param("gyro_bus", &c.gyro.bus, busDevChoices),
+      Param("gyro_dev", &c.gyro.dev, gyroDevChoices),
+      Param("gyro_dlpf", &c.gyro.dlpf, gyroDlpfChoices),
+      Param("gyro_align", &c.gyro.align, alignChoices),
+      Param("gyro_lpf_type", &c.gyro.filter.type, filterTypeChoices),
+      Param("gyro_lpf_freq", &c.gyro.filter.freq),
+      Param("gyro_lpf2_type", &c.gyro.filter2.type, filterTypeChoices),
+      Param("gyro_lpf2_freq", &c.gyro.filter2.freq),
+      Param("gyro_lpf3_type", &c.gyro.filter3.type, filterTypeChoices),
+      Param("gyro_lpf3_freq", &c.gyro.filter3.freq),
+      Param("gyro_notch1_freq", &c.gyro.notch1Filter.freq),
+      Param("gyro_notch1_cutoff", &c.gyro.notch1Filter.cutoff),
+      Param("gyro_notch2_freq", &c.gyro.notch2Filter.freq),
+      Param("gyro_notch2_cutoff", &c.gyro.notch2Filter.cutoff),
+      Param("gyro_dyn_lpf_min", &c.gyro.dynLpfFilter.cutoff),
+      Param("gyro_dyn_lpf_max", &c.gyro.dynLpfFilter.freq),
+      Param("gyro_dyn_notch_q", &c.gyro.dynamicFilter.q),
+      Param("gyro_dyn_notch_count", &c.gyro.dynamicFilter.count),
       Param("gyro_dyn_notch_min", &c.gyro.dynamicFilter.min_freq),
       Param("gyro_dyn_notch_max", &c.gyro.dynamicFilter.max_freq),
-      Param("gyro_rpm_harmonics", &c.gyro.rpmFilter.harmonics), Param("gyro_rpm_q", &c.gyro.rpmFilter.q),
-      Param("gyro_rpm_min_freq", &c.gyro.rpmFilter.minFreq), Param("gyro_rpm_fade", &c.gyro.rpmFilter.fade),
+      Param("gyro_rpm_harmonics", &c.gyro.rpmFilter.harmonics),
+      Param("gyro_rpm_q", &c.gyro.rpmFilter.q),
+      Param("gyro_rpm_min_freq", &c.gyro.rpmFilter.minFreq),
+      Param("gyro_rpm_fade", &c.gyro.rpmFilter.fade),
       Param("gyro_rpm_weight_1", &c.gyro.rpmFilter.weights[0]),
       Param("gyro_rpm_weight_2", &c.gyro.rpmFilter.weights[1]),
       Param("gyro_rpm_weight_3", &c.gyro.rpmFilter.weights[2]),
-      Param("gyro_rpm_tlm_lpf_freq", &c.gyro.rpmFilter.freqLpf), Param("gyro_offset_x", &c.gyro.bias[0]),
-      Param("gyro_offset_y", &c.gyro.bias[1]), Param("gyro_offset_z", &c.gyro.bias[2]),
+      Param("gyro_rpm_tlm_lpf_freq", &c.gyro.rpmFilter.freqLpf),
+      Param("gyro_offset_x", &c.gyro.bias[0]),
+      Param("gyro_offset_y", &c.gyro.bias[1]),
+      Param("gyro_offset_z", &c.gyro.bias[2]),
 
       Param("gyro_tuning", &c.simplifiedTuning.gyroFilter),
       Param("gyro_tuning_gain", &c.simplifiedTuning.gyroFilterMultiplier),
 
-      Param("accel_bus", &c.accel.bus, busDevChoices), Param("accel_dev", &c.accel.dev, gyroDevChoices),
-      Param("accel_lpf_type", &c.accel.filter.type, filterTypeChoices), Param("accel_lpf_freq", &c.accel.filter.freq),
-      Param("accel_offset_x", &c.accel.bias[0]), Param("accel_offset_y", &c.accel.bias[1]),
-      Param("accel_offset_z", &c.accel.bias[2]), Param("accel_trim_roll", &c.accel.trim[1]),
+      Param("accel_bus", &c.accel.bus, busDevChoices),
+      Param("accel_dev", &c.accel.dev, gyroDevChoices),
+      Param("accel_lpf_type", &c.accel.filter.type, filterTypeChoices),
+      Param("accel_lpf_freq", &c.accel.filter.freq),
+      Param("accel_offset_x", &c.accel.bias[0]),
+      Param("accel_offset_y", &c.accel.bias[1]),
+      Param("accel_offset_z", &c.accel.bias[2]),
+      Param("accel_trim_roll", &c.accel.trim[1]),
       Param("accel_trim_pitch", &c.accel.trim[0]),
 
-      Param("mag_bus", &c.mag.bus, busDevChoices), Param("mag_dev", &c.mag.dev, magDevChoices),
-      Param("mag_align", &c.mag.align, alignChoices), Param("mag_filter_type", &c.mag.filter.type, filterTypeChoices),
-      Param("mag_filter_lpf", &c.mag.filter.freq), Param("mag_offset_x", &c.mag.offset[0]),
-      Param("mag_offset_y", &c.mag.offset[1]), Param("mag_offset_z", &c.mag.offset[2]),
-      Param("mag_scale_x", &c.mag.scale[0]), Param("mag_scale_y", &c.mag.scale[1]),
+      Param("mag_bus", &c.mag.bus, busDevChoices),
+      Param("mag_dev", &c.mag.dev, magDevChoices),
+      Param("mag_align", &c.mag.align, alignChoices),
+      Param("mag_filter_type", &c.mag.filter.type, filterTypeChoices),
+      Param("mag_filter_lpf", &c.mag.filter.freq),
+      Param("mag_offset_x", &c.mag.offset[0]),
+      Param("mag_offset_y", &c.mag.offset[1]),
+      Param("mag_offset_z", &c.mag.offset[2]),
+      Param("mag_scale_x", &c.mag.scale[0]),
+      Param("mag_scale_y", &c.mag.scale[1]),
       Param("mag_scale_z", &c.mag.scale[2]),
 
-      Param("baro_bus", &c.baro.bus, busDevChoices), Param("baro_dev", &c.baro.dev, baroDevChoices),
-      Param("baro_lpf_type", &c.baro.filter.type, filterTypeChoices), Param("baro_lpf_freq", &c.baro.filter.freq),
+      Param("baro_bus", &c.baro.bus, busDevChoices),
+      Param("baro_dev", &c.baro.dev, baroDevChoices),
+      Param("baro_lpf_type", &c.baro.filter.type, filterTypeChoices),
+      Param("baro_lpf_freq", &c.baro.filter.freq),
 
-      Param("gps_min_sats", &c.gps.minSats), Param("gps_set_home_once", &c.gps.setHomeOnce),
+      Param("gps_min_sats", &c.gps.minSats),
+      Param("gps_set_home_once", &c.gps.setHomeOnce),
 
-      Param("gps_gnss_mode", &c.gps.gnssMode), Param("gps_enable_dual_band", &c.gps.enableDualBand),
-      Param("gps_enable_gps", &c.gps.enableGPS), Param("gps_enable_glonass", &c.gps.enableGLONASS),
-      Param("gps_enable_galileo", &c.gps.enableGalileo), Param("gps_enable_beidou", &c.gps.enableBeiDou),
-      Param("gps_enable_qzss", &c.gps.enableQZSS), Param("gps_enable_sbas", &c.gps.enableSBAS),
+      Param("gps_gnss_mode", &c.gps.gnssMode),
+      Param("gps_enable_dual_band", &c.gps.enableDualBand),
+      Param("gps_enable_gps", &c.gps.enableGPS),
+      Param("gps_enable_glonass", &c.gps.enableGLONASS),
+      Param("gps_enable_galileo", &c.gps.enableGalileo),
+      Param("gps_enable_beidou", &c.gps.enableBeiDou),
+      Param("gps_enable_qzss", &c.gps.enableQZSS),
+      Param("gps_enable_sbas", &c.gps.enableSBAS),
 
-      Param("board_align_roll", &c.boardAlignment[0]), Param("board_align_pitch", &c.boardAlignment[1]),
+      Param("board_align_roll", &c.boardAlignment[0]),
+      Param("board_align_pitch", &c.boardAlignment[1]),
       Param("board_align_yaw", &c.boardAlignment[2]),
 
-      Param("vbat_source", &c.vbat.source, voltageSourceChoices), Param("vbat_scale", &c.vbat.scale),
-      Param("vbat_mul", &c.vbat.resMult), Param("vbat_div", &c.vbat.resDiv),
+      Param("vbat_source", &c.vbat.source, voltageSourceChoices),
+      Param("vbat_scale", &c.vbat.scale),
+      Param("vbat_mul", &c.vbat.resMult),
+      Param("vbat_div", &c.vbat.resDiv),
       Param("vbat_cell_warn", &c.vbat.cellWarning),
 
-      Param("ibat_source", &c.ibat.source, currentSourceChoices), Param("ibat_scale", &c.ibat.scale),
+      Param("ibat_source", &c.ibat.source, currentSourceChoices),
+      Param("ibat_scale", &c.ibat.scale),
       Param("ibat_offset", &c.ibat.offset),
 
-      Param("fusion_mode", &c.fusion.mode, fusionModeChoices), Param("fusion_gain_p", &c.fusion.gain),
-      Param("fusion_gain_i", &c.fusion.gainI), Param("fusion_use_mag", &c.fusion.useMag),
+      Param("fusion_mode", &c.fusion.mode, fusionModeChoices),
+      Param("fusion_gain_p", &c.fusion.gain),
+      Param("fusion_gain_i", &c.fusion.gainI),
+      Param("fusion_use_mag", &c.fusion.useMag),
 
       Param("input_rate_type", &c.input.rateType, inputRateTypeChoices),
 
-      Param("input_roll_rate", &c.input.rate[0]), Param("input_roll_srate", &c.input.superRate[0]),
-      Param("input_roll_expo", &c.input.expo[0]), Param("input_roll_limit", &c.input.rateLimit[0]),
+      Param("input_roll_rate", &c.input.rate[0]),
+      Param("input_roll_srate", &c.input.superRate[0]),
+      Param("input_roll_expo", &c.input.expo[0]),
+      Param("input_roll_limit", &c.input.rateLimit[0]),
 
-      Param("input_pitch_rate", &c.input.rate[1]), Param("input_pitch_srate", &c.input.superRate[1]),
-      Param("input_pitch_expo", &c.input.expo[1]), Param("input_pitch_limit", &c.input.rateLimit[1]),
+      Param("input_pitch_rate", &c.input.rate[1]),
+      Param("input_pitch_srate", &c.input.superRate[1]),
+      Param("input_pitch_expo", &c.input.expo[1]),
+      Param("input_pitch_limit", &c.input.rateLimit[1]),
 
-      Param("input_yaw_rate", &c.input.rate[2]), Param("input_yaw_srate", &c.input.superRate[2]),
-      Param("input_yaw_expo", &c.input.expo[2]), Param("input_yaw_limit", &c.input.rateLimit[2]),
+      Param("input_yaw_rate", &c.input.rate[2]),
+      Param("input_yaw_srate", &c.input.superRate[2]),
+      Param("input_yaw_expo", &c.input.expo[2]),
+      Param("input_yaw_limit", &c.input.rateLimit[2]),
 
       Param("input_deadband", &c.input.deadband),
       Param("input_airmode_threshold", &c.input.airModeActivateThreshold),
 
-      Param("input_min", &c.input.minRc), Param("input_mid", &c.input.midRc), Param("input_max", &c.input.maxRc),
+      Param("input_min", &c.input.minRc),
+      Param("input_mid", &c.input.midRc),
+      Param("input_max", &c.input.maxRc),
 
       Param("input_filter", &c.input.filterEnable),
       Param("input_lpf_type", &c.input.filter.type, filterTypeChoices),
@@ -455,20 +502,31 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 
       Param("input_rssi_channel", &c.input.rssiChannel),
 
-      Param("input_0", &c.input.channel[0]), Param("input_1", &c.input.channel[1]),
-      Param("input_2", &c.input.channel[2]), Param("input_3", &c.input.channel[3]),
-      Param("input_4", &c.input.channel[4]), Param("input_5", &c.input.channel[5]),
-      Param("input_6", &c.input.channel[6]), Param("input_7", &c.input.channel[7]),
-      Param("input_8", &c.input.channel[8]), Param("input_9", &c.input.channel[9]),
-      Param("input_10", &c.input.channel[10]), Param("input_11", &c.input.channel[11]),
-      Param("input_12", &c.input.channel[12]), Param("input_13", &c.input.channel[13]),
-      Param("input_14", &c.input.channel[14]), Param("input_15", &c.input.channel[15]),
+      Param("input_0", &c.input.channel[0]),
+      Param("input_1", &c.input.channel[1]),
+      Param("input_2", &c.input.channel[2]),
+      Param("input_3", &c.input.channel[3]),
+      Param("input_4", &c.input.channel[4]),
+      Param("input_5", &c.input.channel[5]),
+      Param("input_6", &c.input.channel[6]),
+      Param("input_7", &c.input.channel[7]),
+      Param("input_8", &c.input.channel[8]),
+      Param("input_9", &c.input.channel[9]),
+      Param("input_10", &c.input.channel[10]),
+      Param("input_11", &c.input.channel[11]),
+      Param("input_12", &c.input.channel[12]),
+      Param("input_13", &c.input.channel[13]),
+      Param("input_14", &c.input.channel[14]),
+      Param("input_15", &c.input.channel[15]),
 
-      Param("failsafe_delay", &c.failsafe.delay), Param("failsafe_kill_switch", &c.failsafe.killSwitch),
+      Param("failsafe_delay", &c.failsafe.delay),
+      Param("failsafe_kill_switch", &c.failsafe.killSwitch),
 
       Param("arming_small_angle", &c.arming.smallAngle),
 
-      Param("vtx_power", &c.vtx.power), Param("vtx_channel", &c.vtx.channel), Param("vtx_band", &c.vtx.band),
+      Param("vtx_power", &c.vtx.power),
+      Param("vtx_channel", &c.vtx.channel),
+      Param("vtx_band", &c.vtx.band),
       Param("vtx_low_power_disarm", &c.vtx.lowPowerDisarm),
 
 #ifdef ESPFC_SERIAL_0
@@ -505,52 +563,70 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("pid_tuning_ff_gain", &c.simplifiedTuning.ffGain),
       Param("pid_tuning_pitch_pi_gain", &c.simplifiedTuning.pitchPiGain),
 
-      Param("pid_roll_p", &c.pid[FC_PID_ROLL].P), Param("pid_roll_i", &c.pid[FC_PID_ROLL].I),
-      Param("pid_roll_d", &c.pid[FC_PID_ROLL].D), Param("pid_roll_f", &c.pid[FC_PID_ROLL].F),
+      Param("pid_roll_p", &c.pid[FC_PID_ROLL].P),
+      Param("pid_roll_i", &c.pid[FC_PID_ROLL].I),
+      Param("pid_roll_d", &c.pid[FC_PID_ROLL].D),
+      Param("pid_roll_f", &c.pid[FC_PID_ROLL].F),
 
-      Param("pid_pitch_p", &c.pid[FC_PID_PITCH].P), Param("pid_pitch_i", &c.pid[FC_PID_PITCH].I),
-      Param("pid_pitch_d", &c.pid[FC_PID_PITCH].D), Param("pid_pitch_f", &c.pid[FC_PID_PITCH].F),
+      Param("pid_pitch_p", &c.pid[FC_PID_PITCH].P),
+      Param("pid_pitch_i", &c.pid[FC_PID_PITCH].I),
+      Param("pid_pitch_d", &c.pid[FC_PID_PITCH].D),
+      Param("pid_pitch_f", &c.pid[FC_PID_PITCH].F),
 
-      Param("pid_yaw_p", &c.pid[FC_PID_YAW].P), Param("pid_yaw_i", &c.pid[FC_PID_YAW].I),
-      Param("pid_yaw_d", &c.pid[FC_PID_YAW].D), Param("pid_yaw_f", &c.pid[FC_PID_YAW].F),
+      Param("pid_yaw_p", &c.pid[FC_PID_YAW].P),
+      Param("pid_yaw_i", &c.pid[FC_PID_YAW].I),
+      Param("pid_yaw_d", &c.pid[FC_PID_YAW].D),
+      Param("pid_yaw_f", &c.pid[FC_PID_YAW].F),
 
-      Param("pid_level_p", &c.pid[FC_PID_LEVEL].P), Param("pid_level_i", &c.pid[FC_PID_LEVEL].I),
-      Param("pid_level_d", &c.pid[FC_PID_LEVEL].D), Param("pid_level_f", &c.pid[FC_PID_LEVEL].F),
+      Param("pid_level_p", &c.pid[FC_PID_LEVEL].P),
+      Param("pid_level_i", &c.pid[FC_PID_LEVEL].I),
+      Param("pid_level_d", &c.pid[FC_PID_LEVEL].D),
+      Param("pid_level_f", &c.pid[FC_PID_LEVEL].F),
 
-      Param("pid_level_angle_limit", &c.level.angleLimit), Param("pid_level_rate_limit", &c.level.rateLimit),
+      Param("pid_level_angle_limit", &c.level.angleLimit),
+      Param("pid_level_rate_limit", &c.level.rateLimit),
       Param("pid_level_lpf_type", &c.level.ptermFilter.type, filterTypeChoices),
       Param("pid_level_lpf_freq", &c.level.ptermFilter.freq),
 
-      Param("pid_althold_vel_p", &c.pid[FC_PID_VEL].P), Param("pid_althold_vel_i", &c.pid[FC_PID_VEL].I),
-      Param("pid_althold_vel_d", &c.pid[FC_PID_VEL].D), Param("pid_althold_vel_f", &c.pid[FC_PID_VEL].F),
+      Param("pid_althold_vel_p", &c.pid[FC_PID_VEL].P),
+      Param("pid_althold_vel_i", &c.pid[FC_PID_VEL].I),
+      Param("pid_althold_vel_d", &c.pid[FC_PID_VEL].D),
+      Param("pid_althold_vel_f", &c.pid[FC_PID_VEL].F),
       Param("pid_althold_iterm_center", &c.altHold.itermCenter),
-      Param("pid_althold_iterm_range", &c.altHold.itermRange), Param("pid_althold_baro_tau", &c.altHold.baroTau),
+      Param("pid_althold_iterm_range", &c.altHold.itermRange),
+      Param("pid_althold_baro_tau", &c.altHold.baroTau),
 
-      Param("pid_yaw_lpf_type", &c.yaw.filter.type, filterTypeChoices), Param("pid_yaw_lpf_freq", &c.yaw.filter.freq),
+      Param("pid_yaw_lpf_type", &c.yaw.filter.type, filterTypeChoices),
+      Param("pid_yaw_lpf_freq", &c.yaw.filter.freq),
 
       Param("pid_dterm_lpf_type", &c.dterm.filter.type, filterTypeChoices),
       Param("pid_dterm_lpf_freq", &c.dterm.filter.freq),
       Param("pid_dterm_lpf2_type", &c.dterm.filter2.type, filterTypeChoices),
-      Param("pid_dterm_lpf2_freq", &c.dterm.filter2.freq), Param("pid_dterm_notch_freq", &c.dterm.notchFilter.freq),
+      Param("pid_dterm_lpf2_freq", &c.dterm.filter2.freq),
+      Param("pid_dterm_notch_freq", &c.dterm.notchFilter.freq),
       Param("pid_dterm_notch_cutoff", &c.dterm.notchFilter.cutoff),
       Param("pid_dterm_dyn_lpf_min", &c.dterm.dynLpfFilter.cutoff),
       Param("pid_dterm_dyn_lpf_max", &c.dterm.dynLpfFilter.freq),
       Param("pid_dterm_tuning", &c.simplifiedTuning.dtermFilter),
       Param("pid_dterm_tuning_gain", &c.simplifiedTuning.dtermFilterMultiplier),
 
-      Param("pid_dterm_weight", &c.dterm.setpointWeight), Param("pid_iterm_limit", &c.iterm.limit),
+      Param("pid_dterm_weight", &c.dterm.setpointWeight),
+      Param("pid_iterm_limit", &c.iterm.limit),
       Param("pid_iterm_zero", &c.iterm.lowThrottleZeroIterm),
       Param("pid_iterm_relax", &c.iterm.relax, inputItermRelaxChoices),
-      Param("pid_iterm_relax_cutoff", &c.iterm.relaxCutoff), Param("pid_tpa_scale", &c.controller.tpaScale),
+      Param("pid_iterm_relax_cutoff", &c.iterm.relaxCutoff),
+      Param("pid_tpa_scale", &c.controller.tpaScale),
       Param("pid_tpa_breakpoint", &c.controller.tpaBreakpoint),
 
-      Param("mixer_sync", &c.mixerSync), Param("mixer_type", &c.mixer.type, mixerTypeChoices),
+      Param("mixer_sync", &c.mixerSync),
+      Param("mixer_type", &c.mixer.type, mixerTypeChoices),
       Param("mixer_yaw_reverse", &c.mixer.yawReverse),
       Param("mixer_throttle_limit_type", &c.output.throttleLimitType, throtleLimitTypeChoices),
       Param("mixer_throttle_limit_percent", &c.output.throttleLimitPercent),
       Param("mixer_output_limit", &c.output.motorLimit),
 
-      Param("output_motor_protocol", &c.output.protocol, protocolChoices), Param("output_motor_async", &c.output.async),
+      Param("output_motor_protocol", &c.output.protocol, protocolChoices),
+      Param("output_motor_async", &c.output.async),
       Param("output_motor_rate", &c.output.rate),
       Param("output_motor_idle", &c.output.motorIdle),
 #ifdef ESPFC_DSHOT_TELEMETRY
@@ -580,8 +656,10 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 #ifdef ESPFC_INPUT
       Param("pin_input_rx", &c.pin[PIN_INPUT_RX]),
 #endif
-      Param("pin_output_0", &c.pin[PIN_OUTPUT_0]), Param("pin_output_1", &c.pin[PIN_OUTPUT_1]),
-      Param("pin_output_2", &c.pin[PIN_OUTPUT_2]), Param("pin_output_3", &c.pin[PIN_OUTPUT_3]),
+      Param("pin_output_0", &c.pin[PIN_OUTPUT_0]),
+      Param("pin_output_1", &c.pin[PIN_OUTPUT_1]),
+      Param("pin_output_2", &c.pin[PIN_OUTPUT_2]),
+      Param("pin_output_3", &c.pin[PIN_OUTPUT_3]),
 #if ESPFC_OUTPUT_COUNT > 4
       Param("pin_output_4", &c.pin[PIN_OUTPUT_4]),
 #endif
@@ -594,19 +672,24 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 #if ESPFC_OUTPUT_COUNT > 7
       Param("pin_output_7", &c.pin[PIN_OUTPUT_7]),
 #endif
-      Param("pin_button", &c.pin[PIN_BUTTON]), Param("pin_buzzer", &c.pin[PIN_BUZZER]),
+      Param("pin_button", &c.pin[PIN_BUTTON]),
+      Param("pin_buzzer", &c.pin[PIN_BUZZER]),
       Param("pin_led", &c.pin[PIN_LED_BLINK]),
 #if defined(ESPFC_SERIAL_0) && defined(ESPFC_SERIAL_REMAP_PINS)
-      Param("pin_serial_0_tx", &c.pin[PIN_SERIAL_0_TX]), Param("pin_serial_0_rx", &c.pin[PIN_SERIAL_0_RX]),
+      Param("pin_serial_0_tx", &c.pin[PIN_SERIAL_0_TX]),
+      Param("pin_serial_0_rx", &c.pin[PIN_SERIAL_0_RX]),
 #endif
 #if defined(ESPFC_SERIAL_1) && defined(ESPFC_SERIAL_REMAP_PINS)
-      Param("pin_serial_1_tx", &c.pin[PIN_SERIAL_1_TX]), Param("pin_serial_1_rx", &c.pin[PIN_SERIAL_1_RX]),
+      Param("pin_serial_1_tx", &c.pin[PIN_SERIAL_1_TX]),
+      Param("pin_serial_1_rx", &c.pin[PIN_SERIAL_1_RX]),
 #endif
 #if defined(ESPFC_SERIAL_2) && defined(ESPFC_SERIAL_REMAP_PINS)
-      Param("pin_serial_2_tx", &c.pin[PIN_SERIAL_2_TX]), Param("pin_serial_2_rx", &c.pin[PIN_SERIAL_2_RX]),
+      Param("pin_serial_2_tx", &c.pin[PIN_SERIAL_2_TX]),
+      Param("pin_serial_2_rx", &c.pin[PIN_SERIAL_2_RX]),
 #endif
 #ifdef ESPFC_I2C_0
-      Param("pin_i2c_scl", &c.pin[PIN_I2C_0_SCL]), Param("pin_i2c_sda", &c.pin[PIN_I2C_0_SDA]),
+      Param("pin_i2c_scl", &c.pin[PIN_I2C_0_SCL]),
+      Param("pin_i2c_sda", &c.pin[PIN_I2C_0_SDA]),
 #endif
 #ifdef ESPFC_ADC_0
       Param("pin_input_adc_0", &c.pin[PIN_INPUT_ADC_0]),
@@ -615,11 +698,15 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("pin_input_adc_1", &c.pin[PIN_INPUT_ADC_1]),
 #endif
 #ifdef ESPFC_SPI_0
-      Param("pin_spi_0_sck", &c.pin[PIN_SPI_0_SCK]), Param("pin_spi_0_mosi", &c.pin[PIN_SPI_0_MOSI]),
-      Param("pin_spi_0_miso", &c.pin[PIN_SPI_0_MISO]), Param("pin_spi_cs_0", &c.pin[PIN_SPI_CS0]),
-      Param("pin_spi_cs_1", &c.pin[PIN_SPI_CS1]), Param("pin_spi_cs_2", &c.pin[PIN_SPI_CS2]),
+      Param("pin_spi_0_sck", &c.pin[PIN_SPI_0_SCK]),
+      Param("pin_spi_0_mosi", &c.pin[PIN_SPI_0_MOSI]),
+      Param("pin_spi_0_miso", &c.pin[PIN_SPI_0_MISO]),
+      Param("pin_spi_cs_0", &c.pin[PIN_SPI_CS0]),
+      Param("pin_spi_cs_1", &c.pin[PIN_SPI_CS1]),
+      Param("pin_spi_cs_2", &c.pin[PIN_SPI_CS2]),
 #endif
-      Param("pin_buzzer_invert", &c.buzzer.inverted), Param("pin_led_invert", &c.led.invert),
+      Param("pin_buzzer_invert", &c.buzzer.inverted),
+      Param("pin_led_invert", &c.led.invert),
       Param("pin_led_type", &c.led.type, ledTypeChoices),
 
 #ifdef ESPFC_I2C_0
@@ -631,7 +718,8 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("telemetry_interval", &c.telemetryInterval),
 
       Param("blackbox_dev", &c.blackbox.dev, blackboxDevChoices),
-      Param("blackbox_mode", &c.blackbox.mode, blackboxModeChoices), Param("blackbox_rate", &c.blackbox.pDenom),
+      Param("blackbox_mode", &c.blackbox.mode, blackboxModeChoices),
+      Param("blackbox_rate", &c.blackbox.pDenom),
       Param("blackbox_log_acc", &c.blackbox.fieldsMask, BLACKBOX_FIELD_ACC),
       Param("blackbox_log_alt", &c.blackbox.fieldsMask, BLACKBOX_FIELD_ALTITUDE),
       Param("blackbox_log_bat", &c.blackbox.fieldsMask, BLACKBOX_FIELD_BATTERY),
@@ -655,28 +743,71 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("wifi_tcp_port", &c.wireless.port),
 #endif
 
-      Param("mix_outputs", &c.customMixerCount), Param("mix_0", &c.customMixes[i++]),
-      Param("mix_1", &c.customMixes[i++]), Param("mix_2", &c.customMixes[i++]), Param("mix_3", &c.customMixes[i++]),
-      Param("mix_4", &c.customMixes[i++]), Param("mix_5", &c.customMixes[i++]), Param("mix_6", &c.customMixes[i++]),
-      Param("mix_7", &c.customMixes[i++]), Param("mix_8", &c.customMixes[i++]), Param("mix_9", &c.customMixes[i++]),
-      Param("mix_10", &c.customMixes[i++]), Param("mix_11", &c.customMixes[i++]), Param("mix_12", &c.customMixes[i++]),
-      Param("mix_13", &c.customMixes[i++]), Param("mix_14", &c.customMixes[i++]), Param("mix_15", &c.customMixes[i++]),
-      Param("mix_16", &c.customMixes[i++]), Param("mix_17", &c.customMixes[i++]), Param("mix_18", &c.customMixes[i++]),
-      Param("mix_19", &c.customMixes[i++]), Param("mix_20", &c.customMixes[i++]), Param("mix_21", &c.customMixes[i++]),
-      Param("mix_22", &c.customMixes[i++]), Param("mix_23", &c.customMixes[i++]), Param("mix_24", &c.customMixes[i++]),
-      Param("mix_25", &c.customMixes[i++]), Param("mix_26", &c.customMixes[i++]), Param("mix_27", &c.customMixes[i++]),
-      Param("mix_28", &c.customMixes[i++]), Param("mix_29", &c.customMixes[i++]), Param("mix_30", &c.customMixes[i++]),
-      Param("mix_31", &c.customMixes[i++]), Param("mix_32", &c.customMixes[i++]), Param("mix_33", &c.customMixes[i++]),
-      Param("mix_34", &c.customMixes[i++]), Param("mix_35", &c.customMixes[i++]), Param("mix_36", &c.customMixes[i++]),
-      Param("mix_37", &c.customMixes[i++]), Param("mix_38", &c.customMixes[i++]), Param("mix_39", &c.customMixes[i++]),
-      Param("mix_40", &c.customMixes[i++]), Param("mix_41", &c.customMixes[i++]), Param("mix_42", &c.customMixes[i++]),
-      Param("mix_43", &c.customMixes[i++]), Param("mix_44", &c.customMixes[i++]), Param("mix_45", &c.customMixes[i++]),
-      Param("mix_46", &c.customMixes[i++]), Param("mix_47", &c.customMixes[i++]), Param("mix_48", &c.customMixes[i++]),
-      Param("mix_49", &c.customMixes[i++]), Param("mix_50", &c.customMixes[i++]), Param("mix_51", &c.customMixes[i++]),
-      Param("mix_52", &c.customMixes[i++]), Param("mix_53", &c.customMixes[i++]), Param("mix_54", &c.customMixes[i++]),
-      Param("mix_55", &c.customMixes[i++]), Param("mix_56", &c.customMixes[i++]), Param("mix_57", &c.customMixes[i++]),
-      Param("mix_58", &c.customMixes[i++]), Param("mix_59", &c.customMixes[i++]), Param("mix_60", &c.customMixes[i++]),
-      Param("mix_61", &c.customMixes[i++]), Param("mix_62", &c.customMixes[i++]), Param("mix_63", &c.customMixes[i++]),
+      Param("mix_outputs", &c.customMixerCount),
+      Param("mix_0", &c.customMixes[i++]),
+      Param("mix_1", &c.customMixes[i++]),
+      Param("mix_2", &c.customMixes[i++]),
+      Param("mix_3", &c.customMixes[i++]),
+      Param("mix_4", &c.customMixes[i++]),
+      Param("mix_5", &c.customMixes[i++]),
+      Param("mix_6", &c.customMixes[i++]),
+      Param("mix_7", &c.customMixes[i++]),
+      Param("mix_8", &c.customMixes[i++]),
+      Param("mix_9", &c.customMixes[i++]),
+      Param("mix_10", &c.customMixes[i++]),
+      Param("mix_11", &c.customMixes[i++]),
+      Param("mix_12", &c.customMixes[i++]),
+      Param("mix_13", &c.customMixes[i++]),
+      Param("mix_14", &c.customMixes[i++]),
+      Param("mix_15", &c.customMixes[i++]),
+      Param("mix_16", &c.customMixes[i++]),
+      Param("mix_17", &c.customMixes[i++]),
+      Param("mix_18", &c.customMixes[i++]),
+      Param("mix_19", &c.customMixes[i++]),
+      Param("mix_20", &c.customMixes[i++]),
+      Param("mix_21", &c.customMixes[i++]),
+      Param("mix_22", &c.customMixes[i++]),
+      Param("mix_23", &c.customMixes[i++]),
+      Param("mix_24", &c.customMixes[i++]),
+      Param("mix_25", &c.customMixes[i++]),
+      Param("mix_26", &c.customMixes[i++]),
+      Param("mix_27", &c.customMixes[i++]),
+      Param("mix_28", &c.customMixes[i++]),
+      Param("mix_29", &c.customMixes[i++]),
+      Param("mix_30", &c.customMixes[i++]),
+      Param("mix_31", &c.customMixes[i++]),
+      Param("mix_32", &c.customMixes[i++]),
+      Param("mix_33", &c.customMixes[i++]),
+      Param("mix_34", &c.customMixes[i++]),
+      Param("mix_35", &c.customMixes[i++]),
+      Param("mix_36", &c.customMixes[i++]),
+      Param("mix_37", &c.customMixes[i++]),
+      Param("mix_38", &c.customMixes[i++]),
+      Param("mix_39", &c.customMixes[i++]),
+      Param("mix_40", &c.customMixes[i++]),
+      Param("mix_41", &c.customMixes[i++]),
+      Param("mix_42", &c.customMixes[i++]),
+      Param("mix_43", &c.customMixes[i++]),
+      Param("mix_44", &c.customMixes[i++]),
+      Param("mix_45", &c.customMixes[i++]),
+      Param("mix_46", &c.customMixes[i++]),
+      Param("mix_47", &c.customMixes[i++]),
+      Param("mix_48", &c.customMixes[i++]),
+      Param("mix_49", &c.customMixes[i++]),
+      Param("mix_50", &c.customMixes[i++]),
+      Param("mix_51", &c.customMixes[i++]),
+      Param("mix_52", &c.customMixes[i++]),
+      Param("mix_53", &c.customMixes[i++]),
+      Param("mix_54", &c.customMixes[i++]),
+      Param("mix_55", &c.customMixes[i++]),
+      Param("mix_56", &c.customMixes[i++]),
+      Param("mix_57", &c.customMixes[i++]),
+      Param("mix_58", &c.customMixes[i++]),
+      Param("mix_59", &c.customMixes[i++]),
+      Param("mix_60", &c.customMixes[i++]),
+      Param("mix_61", &c.customMixes[i++]),
+      Param("mix_62", &c.customMixes[i++]),
+      Param("mix_63", &c.customMixes[i++]),
 
       Param() // terminate
   };
@@ -806,7 +937,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
 
   if (!cmd.args[0]) return;
 
-  if (strcmp(cmd.args[0], "help") == 0)
+  if (std::strcmp(cmd.args[0], "help") == 0)
   {
     static const char* const helps[] = {"available commands:", " help", " dump", " get param", " set param value ...",
                                         " cal [gyro]", " defaults", " save", " reboot", " scaler", " mixer", " stats",
@@ -819,13 +950,13 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.println(*ptr);
     }
   }
-  else if (strcmp(cmd.args[0], "version") == 0)
+  else if (std::strcmp(cmd.args[0], "version") == 0)
   {
     printVersion(s);
     s.println();
   }
 #if defined(ESPFC_WIFI) || defined(ESPFC_WIFI_ALT)
-  else if (strcmp(cmd.args[0], "wifi") == 0)
+  else if (std::strcmp(cmd.args[0], "wifi") == 0)
   {
     s.print("ST IP4: tcp://");
     s.print(WiFi.localIP());
@@ -849,7 +980,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   }
 #endif
 #if defined(ESPFC_FREE_RTOS)
-  else if (strcmp(cmd.args[0], "tasks") == 0)
+  else if (std::strcmp(cmd.args[0], "tasks") == 0)
   {
     printVersion(s);
     s.println();
@@ -861,7 +992,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.println();
   }
 #endif
-  else if (strcmp(cmd.args[0], "devinfo") == 0)
+  else if (std::strcmp(cmd.args[0], "devinfo") == 0)
   {
     printVersion(s);
     s.println();
@@ -877,9 +1008,9 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.print(", ");
     s.println(targetFreeHeap());
   }
-  else if (strcmp(cmd.args[0], "get") == 0)
+  else if (std::strcmp(cmd.args[0], "get") == 0)
   {
-    if (strcmp(cmd.args[1], "mag_calibration") == 0)
+    if (std::strcmp(cmd.args[1], "mag_calibration") == 0)
     {
       // BF specific required by configurator
       s.print("mag_calibration = ");
@@ -908,7 +1039,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     }
     s.println();
   }
-  else if (strcmp(cmd.args[0], "set") == 0)
+  else if (std::strcmp(cmd.args[0], "set") == 0)
   {
     if (!cmd.args[1])
     {
@@ -919,7 +1050,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     bool found = false;
     for (size_t i = 0; _params[i].name; ++i)
     {
-      if (strcmp(cmd.args[1], _params[i].name) == 0)
+      if (std::strcmp(cmd.args[1], _params[i].name) == 0)
       {
         _params[i].update(cmd.args);
         print(_params[i], s);
@@ -933,7 +1064,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.println(cmd.args[1]);
     }
   }
-  else if (strcmp(cmd.args[0], "dump") == 0)
+  else if (std::strcmp(cmd.args[0], "dump") == 0)
   {
     s.println("defaults");
     for (size_t i = 0; _params[i].name; ++i)
@@ -942,7 +1073,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     }
     s.println("save");
   }
-  else if (strcmp(cmd.args[0], "sensor_hardware") == 0)
+  else if (std::strcmp(cmd.args[0], "sensor_hardware") == 0)
   {
     // BF specific required by configurator
     s.print("gyro: ");
@@ -983,7 +1114,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.println("rangefinder: NONE");
     s.println("opticalflow: NONE");
   }
-  else if (strcmp(cmd.args[0], "cal") == 0)
+  else if (std::strcmp(cmd.args[0], "cal") == 0)
   {
     if (!cmd.args[1])
     {
@@ -1043,29 +1174,29 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.print(_model.state.mag.calibrationScale[2]);
       s.println("]");
     }
-    else if (strcmp(cmd.args[1], "gyro") == 0)
+    else if (std::strcmp(cmd.args[1], "gyro") == 0)
     {
       if (!_model.isModeActive(MODE_ARMED)) _model.calibrateGyro();
       s.println("OK");
     }
-    else if (strcmp(cmd.args[1], "mag") == 0)
+    else if (std::strcmp(cmd.args[1], "mag") == 0)
     {
       if (!_model.isModeActive(MODE_ARMED)) _model.calibrateMag();
       s.println("OK");
     }
     else
     {
-      if (strcmp(cmd.args[1], "reset_accel") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
+      if (std::strcmp(cmd.args[1], "reset_accel") == 0 || std::strcmp(cmd.args[1], "reset_all") == 0)
       {
         _model.state.accel.bias = {};
         s.println("OK");
       }
-      if (strcmp(cmd.args[1], "reset_gyro") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
+      if (std::strcmp(cmd.args[1], "reset_gyro") == 0 || std::strcmp(cmd.args[1], "reset_all") == 0)
       {
         _model.state.gyro.bias = {};
         s.println("OK");
       }
-      if (strcmp(cmd.args[1], "reset_mag") == 0 || strcmp(cmd.args[1], "reset_all") == 0)
+      if (std::strcmp(cmd.args[1], "reset_mag") == 0 || std::strcmp(cmd.args[1], "reset_all") == 0)
       {
         _model.state.mag.calibrationOffset = {};
         _model.state.mag.calibrationScale = {1.f, 1.f, 1.f};
@@ -1073,14 +1204,14 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       }
     }
   }
-  else if (strcmp(cmd.args[0], "gps") == 0)
+  else if (std::strcmp(cmd.args[0], "gps") == 0)
   {
-    if (cmd.args[1] && strcmp(cmd.args[1], "set_home") == 0)
+    if (cmd.args[1] && std::strcmp(cmd.args[1], "set_home") == 0)
     {
       _model.setGpsHome(true);
       s.println(_model.state.gps.homeSet ? "Home position set" : "No GPS fix");
     }
-    else if (cmd.args[1] && strcmp(cmd.args[1], "clear_home") == 0)
+    else if (cmd.args[1] && std::strcmp(cmd.args[1], "clear_home") == 0)
     {
       _model.state.gps.homeSet = false;
       s.println("Home position cleared");
@@ -1090,13 +1221,13 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       printGpsStatus(s, true);
     }
   }
-  else if (strcmp(cmd.args[0], "preset") == 0)
+  else if (std::strcmp(cmd.args[0], "preset") == 0)
   {
     if (!cmd.args[1])
     {
       s.println("Available presets: scaler, modes, micrus, brobot");
     }
-    else if (strcmp(cmd.args[1], "scaler") == 0)
+    else if (std::strcmp(cmd.args[1], "scaler") == 0)
     {
       _model.config.scaler[0].dimension = (ScalerDimension)(ACT_INNER_P | ACT_AXIS_PITCH | ACT_AXIS_ROLL);
       _model.config.scaler[0].channel = 5;
@@ -1115,7 +1246,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
 
       s.println("OK");
     }
-    else if (strcmp(cmd.args[1], "modes") == 0)
+    else if (std::strcmp(cmd.args[1], "modes") == 0)
     {
       _model.config.conditions[0].id = MODE_ARMED;
       _model.config.conditions[0].ch = AXIS_AUX_1 + 0;
@@ -1134,11 +1265,11 @@ void Cli::execute(CliCmd& cmd, Stream& s)
 
       s.println("OK");
     }
-    else if (strcmp(cmd.args[1], "micrus") == 0)
+    else if (std::strcmp(cmd.args[1], "micrus") == 0)
     {
       s.println("OK");
     }
-    else if (strcmp(cmd.args[1], "brobot") == 0)
+    else if (std::strcmp(cmd.args[1], "brobot") == 0)
     {
       s.println("OK");
     }
@@ -1147,18 +1278,18 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.println("NOT OK");
     }
   }
-  else if (strcmp(cmd.args[0], "load") == 0)
+  else if (std::strcmp(cmd.args[0], "load") == 0)
   {
     _model.load();
     s.println("OK");
   }
-  else if (strcmp(cmd.args[0], "save") == 0)
+  else if (std::strcmp(cmd.args[0], "save") == 0)
   {
     _model.save();
     s.println("# Saved, type reboot to apply changes");
     s.println();
   }
-  else if (strcmp(cmd.args[0], "eeprom") == 0)
+  else if (std::strcmp(cmd.args[0], "eeprom") == 0)
   {
     /*
     int start = 0;
@@ -1184,7 +1315,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.println();
     */
   }
-  else if (strcmp(cmd.args[0], "scaler") == 0)
+  else if (std::strcmp(cmd.args[0], "scaler") == 0)
   {
     for (size_t i = 0; i < SCALER_COUNT; i++)
     {
@@ -1209,7 +1340,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.println(scale);
     }
   }
-  else if (strcmp(cmd.args[0], "mixer") == 0)
+  else if (std::strcmp(cmd.args[0], "mixer") == 0)
   {
     const MixerConfig& mixer = _model.state.currentMixer;
     s.print("set mix_outputs ");
@@ -1225,7 +1356,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       if (mixer.mixes[i].src == MIXER_SOURCE_NULL) break;
     }
   }
-  else if (strcmp(cmd.args[0], "status") == 0)
+  else if (std::strcmp(cmd.args[0], "status") == 0)
   {
     printVersion(s);
     s.println();
@@ -1334,7 +1465,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.print(millis() * 0.001, 1);
     s.println();
   }
-  else if (strcmp(cmd.args[0], "stats") == 0)
+  else if (std::strcmp(cmd.args[0], "stats") == 0)
   {
     printVersion(s);
     s.println();
@@ -1379,17 +1510,17 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     s.print("%");
     s.println();
   }
-  else if (strcmp(cmd.args[0], "reboot") == 0 || strcmp(cmd.args[0], "exit") == 0)
+  else if (std::strcmp(cmd.args[0], "reboot") == 0 || std::strcmp(cmd.args[0], "exit") == 0)
   {
     _active = false;
     _interactive = false;
     Hardware::restart(_model);
   }
-  else if (strcmp(cmd.args[0], "defaults") == 0)
+  else if (std::strcmp(cmd.args[0], "defaults") == 0)
   {
     _model.reset();
   }
-  else if (strcmp(cmd.args[0], "motors") == 0)
+  else if (std::strcmp(cmd.args[0], "motors") == 0)
   {
     s.print("count: ");
     s.println(getMotorCount());
@@ -1411,13 +1542,13 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       }
     }
   }
-  else if (strcmp(cmd.args[0], "logs") == 0)
+  else if (std::strcmp(cmd.args[0], "logs") == 0)
   {
     s.print(_model.logger.c_str());
     s.print("usage: ");
     s.println(_model.logger.length());
   }
-  else if (strcmp(cmd.args[0], "tuning") == 0)
+  else if (std::strcmp(cmd.args[0], "tuning") == 0)
   {
     const auto& st = _model.config.simplifiedTuning;
     const auto& pid = _model.config.pid;
@@ -1468,7 +1599,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     // clang-format on
   }
 #ifdef USE_FLASHFS
-  else if (strcmp(cmd.args[0], "flash") == 0)
+  else if (std::strcmp(cmd.args[0], "flash") == 0)
   {
     if (!cmd.args[1])
     {
@@ -1478,11 +1609,11 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       s.printf(" used: %zu\r\n", used);
       s.printf(" free: %zu\r\n", total - used);
     }
-    else if (strcmp(cmd.args[1], "partitions") == 0)
+    else if (std::strcmp(cmd.args[1], "partitions") == 0)
     {
       Device::FlashDevice::partitions(s);
     }
-    else if (strcmp(cmd.args[1], "journal") == 0)
+    else if (std::strcmp(cmd.args[1], "journal") == 0)
     {
       const FlashfsRuntime* flashfs = flashfsGetRuntime();
       FlashfsJournalItem journal[16];
@@ -1495,12 +1626,12 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       }
       s.printf("current: %u\r\n", flashfs->journalIdx);
     }
-    else if (strcmp(cmd.args[1], "erase") == 0)
+    else if (std::strcmp(cmd.args[1], "erase") == 0)
     {
       flashfsEraseCompletely();
       s.println("OK");
     }
-    else if (strcmp(cmd.args[1], "test") == 0)
+    else if (std::strcmp(cmd.args[1], "test") == 0)
     {
       const char* data = "flashfs-test";
       flashfsWrite((const uint8_t*)data, strlen(data), true);
@@ -1508,7 +1639,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
       flashfsClose();
       s.println("OK");
     }
-    else if (strcmp(cmd.args[1], "print") == 0)
+    else if (std::strcmp(cmd.args[1], "print") == 0)
     {
       size_t addr = 0;
       if (cmd.args[2])
