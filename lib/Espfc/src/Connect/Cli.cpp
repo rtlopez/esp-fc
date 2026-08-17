@@ -1566,7 +1566,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
     for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
     {
       s.print(i); s.print(" "); s.print(pid[i].P); s.print(" "); s.print(pid[i].I);
-      s.print(" "); s.print(res[i].D); s.print(" "); s.println(pid[i].F);
+      s.print(" "); s.print(pid[i].D); s.print(" "); s.println(pid[i].F);
       s.print(' '); s.print(" "); s.print(res[i].P); s.print(" "); s.print(res[i].I);
       s.print(" "); s.print(res[i].D); s.print(" "); s.println(res[i].F);
     }

@@ -295,9 +295,9 @@ class Model
     {
       // ESP-FC compile-time PID defaults for roll/pitch/yaw (no D-Max on this target)
       static const PidConfig def[3] = {
-        { 42, 85, 24, 72 },
-        { 46, 90, 26, 76 },
-        { 45, 90,  0, 72 },
+        { 45, 80, 30, 110 },
+        { 47, 84, 34, 115 },
+        { 45, 80,  0, 110 },
       };
       if (s.pidsMode == SIMPLIFIED_TUNING_OFF) return;
       const float master = s.masterMultiplier * 0.01f;

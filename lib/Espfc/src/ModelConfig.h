@@ -703,10 +703,10 @@ struct SimplifiedTuningConfig
   uint8_t masterMultiplier = 100;
   uint8_t rollPitchRatio = 100;
   uint8_t iGain = 100;
-  uint8_t dGain = 100;
+  uint8_t dGain = 80;
   uint8_t piGain = 100;
   uint8_t dMaxGain = 0;  // unused, ESP-FC has no D-Max
-  uint8_t ffGain = 100;
+  uint8_t ffGain = 80;
   uint8_t pitchPiGain = 100;
   uint8_t dtermFilter = 1;
   uint8_t dtermFilterMultiplier = 100;
@@ -737,9 +737,9 @@ class ModelConfig
 
     // pid controller
     PidConfig pid[FC_PID_ITEM_COUNT] = {
-      [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
-      [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
-      [FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 },  // YAW
+      [FC_PID_ROLL]  = { .P = 45, .I = 80, .D = 24, .F = 88 },  // ROLL
+      [FC_PID_PITCH] = { .P = 47, .I = 84, .D = 27, .F = 92 },  // PITCH
+      [FC_PID_YAW]   = { .P = 45, .I = 80, .D =  0, .F = 88 },  // YAW
       [FC_PID_LEVEL] = { .P = 45, .I =  0, .D =  0, .F =  0 },  // ANGLE/LEVEL
       [FC_PID_MAG]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // MAG
       [FC_PID_ALT]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // ALTHOLD POS
