@@ -979,7 +979,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(0);                                                         // deprecated: rc_smoothing_type
       r.writeU8(_model.config.input.filter.freq);                           // rc_smoothing_setpoint_cutoff
       r.writeU8(_model.config.input.filterThrottle.freq);                   // rc_smoothing_throtle_cutoff
-      r.writeU8(_model.config.input.filterAutoThrottleFactor);               // rc_smoothing_auto_factor_throttle
+      r.writeU8(_model.config.input.filterAutoThrottleFactor);              // rc_smoothing_auto_factor_throttle
       r.writeU8(0);                                                         // rc_smoothing_derivative_type
       r.writeU8(0);                                                         // usb type
       // 1.42+
@@ -1022,12 +1022,12 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       // 1.40+
       if (m.remain() >= 6)
       {
-        m.readU8();                                               // was rc iterpolation channels
-        m.readU8();                                               // was rc_smoothing_type
-        _model.config.input.filter.freq = m.readU8();             // rc_smoothing_setpoint_cutoff
-        _model.config.input.filterThrottle.freq = m.readU8();     // rc_smoothing_throttle_cutoff
+        m.readU8();                                                // was rc iterpolation channels
+        m.readU8();                                                // was rc_smoothing_type
+        _model.config.input.filter.freq = m.readU8();              // rc_smoothing_setpoint_cutoff
+        _model.config.input.filterThrottle.freq = m.readU8();      // rc_smoothing_throttle_cutoff
         _model.config.input.filterAutoThrottleFactor = m.readU8(); // rc_smoothing_auto_factor_throttle
-        m.readU8();                                               // was rc_smoothing_derivative_type
+        m.readU8();                                                // was rc_smoothing_derivative_type
       }
       if (m.remain() >= 1)
       {
@@ -1391,7 +1391,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_PIDNAMES:
-      r.writeString("ROLL;PITCH;YAW;ALT;Pos;PosR;NavR;LEVEL;MAG;VEL;");
+      r.writeString("ROLL;PITCH;YAW;LEVEL;MAG;ALT;VEL;Pos;PosR;NavR;");
       break;
 
     case MSP_PID:
@@ -1413,25 +1413,24 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.reload();
       break;
 
-    case MSP_PID_ADVANCED: /// !!!FINISHED HERE!!!
+    case MSP_PID_ADVANCED:
       r.writeU16(0);
       r.writeU16(0);
-      r.writeU16(0); // was pidProfile.yaw_p_limit
-      r.writeU8(0);  // reserved
-      r.writeU8(0);  // vbatPidCompensation;
-      r.writeU8(0);  // feedForwardTransition;
-      r.writeU8(
-          (uint8_t)std::min(_model.config.dterm.setpointWeight, (int16_t)255)); // was low byte of dtermSetpointWeight
-      r.writeU8(0);                                                             // reserved
-      r.writeU8(0);                                                             // reserved
-      r.writeU8(0);                                                             // reserved
-      r.writeU16(0);                                                            // rateAccelLimit;
-      r.writeU16(0);                                                            // yawRateAccelLimit;
-      r.writeU8(_model.config.level.angleLimit);                                // levelAngleLimit;
-      r.writeU8(0);                                                             // was pidProfile.levelSensitivity
-      r.writeU16(0);                                                            // itermThrottleThreshold;
-      r.writeU16(1000); // itermAcceleratorGain; anti_gravity_gain, 0 in 1.45+
-      r.writeU16(_model.config.dterm.setpointWeight);
+      r.writeU16(0);                             // was pidProfile.yaw_p_limit
+      r.writeU8(0);                              // reserved
+      r.writeU8(0);                              // vbatPidCompensation;
+      r.writeU8(0);                              // feedForwardTransition;
+      r.writeU8(0);                              // was low byte of dtermSetpointWeight
+      r.writeU8(0);                              // reserved
+      r.writeU8(0);                              // reserved
+      r.writeU8(0);                              // reserved
+      r.writeU16(0);                             // rateAccelLimit;
+      r.writeU16(0);                             // yawRateAccelLimit;
+      r.writeU8(_model.config.level.angleLimit); // levelAngleLimit;
+      r.writeU8(0);                              // was pidProfile.levelSensitivity
+      r.writeU16(0);                             // itermThrottleThreshold;
+      r.writeU16(0);                             // itermAcceleratorGain; anti_gravity_gain, 0 in 1.45+
+      r.writeU16(0);
       r.writeU8(0);                                  // iterm rotation
       r.writeU8(0);                                  // smart feed forward
       r.writeU8(_model.config.iterm.relax);          // iterm relax
@@ -1465,7 +1464,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(0);                                       // ff jitter factor
       r.writeU8(0);                                       // vbat sag compensation
       r.writeU8(0);                                       // thrust linearization
-      r.writeU8(0);                                       // TODO: tpa mode
+      r.writeU8(_model.config.controller.tpaMode);        // tpa mode
       r.writeU8(_model.config.controller.tpaScale);       // tpa rate
       r.writeU16(_model.config.controller.tpaBreakpoint); // tpa breakpoint
       break;
@@ -1477,7 +1476,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       m.readU8();  // reserved
       m.readU8();
       m.readU8();
-      _model.config.dterm.setpointWeight = m.readU8();
+      m.readU8();
       m.readU8(); // reserved
       m.readU8(); // reserved
       m.readU8(); // reserved
@@ -1495,7 +1494,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       }
       if (m.remain() >= 2)
       {
-        _model.config.dterm.setpointWeight = m.readU16();
+        m.readU16();
       }
       if (m.remain() >= 14)
       {
@@ -1553,7 +1552,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       }
       if (m.remain() >= 4)
       {
-        m.readU8();                                                                             // TODO: tpa mode
+        _model.config.controller.tpaMode = m.readU8();                                          // tpa mode
         _model.config.controller.tpaScale = std::clamp<uint8_t>(m.readU8(), 0, 100);            // tpa rate
         _model.config.controller.tpaBreakpoint = std::clamp<uint16_t>(m.readU16(), 1000, 2000); // tpa breakpoint
       }

@@ -358,6 +358,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   static const char* blackboxModeChoices[] = { "NORMAL", "TEST", "ALWAYS", nullptr };
   static const char* ledTypeChoices[] = { "SIMPLE", "STRIP", nullptr };
   static const char* simplifiedTunigModeChoices[] = { "OFF", "RP", "RPY", nullptr };
+  static const char* tpaModeChoices[] = { "PD", "D", nullptr };
 
   size_t i = 0;
   static const Param params[] = {
@@ -610,11 +611,12 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("pid_dterm_tuning", &c.simplifiedTuning.dtermFilter),
       Param("pid_dterm_tuning_gain", &c.simplifiedTuning.dtermFilterMultiplier),
 
-      Param("pid_dterm_weight", &c.dterm.setpointWeight),
       Param("pid_iterm_limit", &c.iterm.limit),
       Param("pid_iterm_zero", &c.iterm.lowThrottleZeroIterm),
       Param("pid_iterm_relax", &c.iterm.relax, inputItermRelaxChoices),
       Param("pid_iterm_relax_cutoff", &c.iterm.relaxCutoff),
+
+      Param("pid_tpa_mode", &c.controller.tpaMode, tpaModeChoices),
       Param("pid_tpa_scale", &c.controller.tpaScale),
       Param("pid_tpa_breakpoint", &c.controller.tpaBreakpoint),
 
