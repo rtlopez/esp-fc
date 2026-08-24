@@ -11,6 +11,10 @@ int Controller::begin()
   _rates.begin(_model.config.input);
   _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
 
+  constexpr float FAULT_DECAY_TAU = 2.5f; // seconds, independent of loop rate
+  _faultDecay =
+      1.f - 1.f / (_model.state.loopTimer.rate * FAULT_DECAY_TAU); // ~= exp(-dt / FAULT_DECAY_TAU) for dt << tau
+
   beginInnerLoop(AXIS_ROLL);
   beginInnerLoop(AXIS_PITCH);
   beginInnerLoop(AXIS_YAW);
@@ -35,9 +39,13 @@ int FAST_CODE_ATTR Controller::update()
     resetIterm();
     switch (_model.config.mixer.type)
     {
-      case FC_MIXER_GIMBAL: outerLoopRobot(); break;
+      case FC_MIXER_GIMBAL:
+        outerLoopRobot();
+        break;
 
-      default: outerLoop(); break;
+      default:
+        outerLoop();
+        break;
     }
   }
 
@@ -45,9 +53,13 @@ int FAST_CODE_ATTR Controller::update()
     Utils::Stats::Measure measure(_model.state.stats, COUNTER_INNER_PID);
     switch (_model.config.mixer.type)
     {
-      case FC_MIXER_GIMBAL: innerLoopRobot(); break;
+      case FC_MIXER_GIMBAL:
+        innerLoopRobot();
+        break;
 
-      default: innerLoop(); break;
+      default:
+        innerLoop();
+        break;
     }
   }
 
@@ -179,6 +191,8 @@ void FAST_CODE_ATTR Controller::innerLoop()
     output.ch[i] = innerPid[i].update(setpoint.rate[i], _model.state.gyro.adc[i]) * tpaFactor;
   }
 
+  updateFaultIntegral();
+
   // thrust control
   if (_model.isModeActive(MODE_ALTHOLD))
   {
@@ -211,6 +225,30 @@ void FAST_CODE_ATTR Controller::innerLoop()
     _model.state.debug[1] = lrintf(innerPid[AXIS_ROLL].itermRelaxFactor * 100.0f);
     _model.state.debug[2] = lrintf(Utils::toDeg(innerPid[AXIS_ROLL].iTermError));
     _model.state.debug[3] = lrintf(innerPid[AXIS_ROLL].iTerm * 1000.0f);
+  }
+}
+
+void Controller::updateFaultIntegral()
+{
+  if (_model.state.runaway.status == RunawayProtectionStatus::RUNAWAY_STATUS_MONITORING)
+  {
+    const auto& innerPid = _model.state.innerPid;
+    const auto& threshold = Utils::toRad(80.f); // 80 degrees
+    bool kill = false;
+    for (size_t i = 0; i < AXIS_COUNT_RPY; ++i)
+    {
+      _model.state.runaway.axisFault[i] += innerPid[i].error * innerPid[i].dt;
+      _model.state.runaway.axisFault[i] *= _faultDecay;
+      if (std::fabs(_model.state.runaway.axisFault[i]) > threshold)
+      {
+        kill = true;
+      }
+    }
+    if (kill)
+    {
+      _model.state.runaway.status = RunawayProtectionStatus::RUNAWAY_STATUS_KILL;
+      _model.disarm(DISARM_REASON_RUNAWAY_TAKEOFF);
+    }
   }
 }
 

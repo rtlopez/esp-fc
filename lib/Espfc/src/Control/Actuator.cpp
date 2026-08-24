@@ -293,4 +293,38 @@ void Actuator::updateLed()
   }
 }
 
+void Actuator::updateRunawayProtection()
+{
+  switch (_model.state.runaway.status)
+  {
+    case RunawayProtectionStatus::RUNAWAY_STATUS_IDLE:
+      if (_model.isModeActive(MODE_ARMED) && !_model.isThrottleLow())
+      {
+        std::fill_n(_model.state.runaway.axisFault, AXIS_COUNT_RPY, 0.f);
+        _model.state.runaway.status = RunawayProtectionStatus::RUNAWAY_STATUS_MONITORING;
+        _model.state.runaway.monitoringStartTime = 0;
+      }
+      break;
+    case RunawayProtectionStatus::RUNAWAY_STATUS_MONITORING: {
+      // Note: critical part of checking is executed in Controller at loop speed.
+      const auto now = millis();
+      if (_model.state.runaway.monitoringStartTime == 0 && _model.state.input.us[AXIS_THRUST] > 1500) // throttle above mid, start timer
+      {
+        _model.state.runaway.monitoringStartTime = now;
+      }
+      if (_model.state.runaway.monitoringStartTime && now - _model.state.runaway.monitoringStartTime > 1000) // 1 second in air, we are airborne
+      {
+        _model.state.runaway.status = RunawayProtectionStatus::RUNAWAY_STATUS_AIRBORNE;
+      }
+      break;
+    }
+    case RunawayProtectionStatus::RUNAWAY_STATUS_AIRBORNE:
+      // nothing to do here, we are in the air
+      break;
+    case RunawayProtectionStatus::RUNAWAY_STATUS_KILL:
+      _model.setArmingDisabled(ARMING_DISABLED_RUNAWAY_TAKEOFF, true); // prevent arming until reset
+      break;
+  }
+}
+
 }

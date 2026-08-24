@@ -472,6 +472,20 @@ struct GpsState
   bool isHomeValid() const { return homeSet && fix && fixType >= 2; }
 };
 
+enum class RunawayProtectionStatus {
+  RUNAWAY_STATUS_IDLE,
+  RUNAWAY_STATUS_MONITORING,
+  RUNAWAY_STATUS_AIRBORNE,
+  RUNAWAY_STATUS_KILL,
+};
+
+struct RunawayProtectionState
+{
+  RunawayProtectionStatus status = RunawayProtectionStatus::RUNAWAY_STATUS_IDLE;
+  uint32_t monitoringStartTime = 0;
+  float axisFault[AXIS_COUNT_RPY] = { 0.f };
+};
+
 // runtime data
 struct ModelState
 {
@@ -493,6 +507,8 @@ struct ModelState
   SetpointState setpoint;
   Control::Pid innerPid[AXIS_COUNT_RPYT];
   Control::Pid outerPid[AXIS_COUNT_RPYT];
+
+  RunawayProtectionState runaway;
 
   MixerState mixer;
   OutputState output;

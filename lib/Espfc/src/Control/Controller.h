@@ -17,6 +17,7 @@ public:
   void innerLoopRobot();
   void outerLoop();
   void innerLoop();
+  void updateFaultIntegral();
 
   inline float getTpaFactor() const;
   inline void resetIterm();
@@ -30,6 +31,7 @@ private:
 
   Model& _model;
   Rates _rates;
+  float _faultDecay; // per-sample multiplier derived from FAULT_DECAY_TAU and loop dt
   Utils::Filter _speedFilter;
 };
 
