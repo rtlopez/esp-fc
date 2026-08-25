@@ -1,5 +1,6 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hardware.h"
+#include "Model.h"
 #include "ModelConfig.h"
 #include <algorithm>
 #include <limits>
@@ -305,7 +306,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       // Write arming disable flags
       r.writeU8(ARMING_DISABLED_FLAGS_COUNT);            // 1 byte, flag count
       r.writeU32(_model.state.mode.armingDisabledFlags); // 4 bytes, flags
-      r.writeU8(0);                                      // reboot required
+      r.writeU8(_model.getRebootRequired());             // reboot required
       // 1.46
       r.writeU16(0); // getCoreTemperatureCelsius() // cpu temperature
       r.writeU8(1);  // CONTROL_RATE_PROFILE_COUNT
@@ -638,7 +639,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 
     case MSP2_SENSOR_CONFIG_ACTIVE: {
       const auto& state = _model.state;
-      r.writeU8(_model.gyroActive() && state.gyro.dev ? state.gyro.dev->getType() : GYRO_NONE); // gyro
+      r.writeU8(_model.gyroActive() && state.gyro.dev ? toAccHw(state.gyro.dev->getType())
+                                                      : toAccHw(GYRO_NONE)); // gyro
       r.writeU8(_model.accelActive() && state.gyro.dev ? toAccHw(state.gyro.dev->getType())
                                                        : toAccHw(GYRO_NONE));                   // acc
       r.writeU8(_model.baroActive() && state.baro.dev ? state.baro.dev->getType() : BARO_NONE); // baro
@@ -649,8 +651,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     }
 
     case MSP2_GYRO_SENSOR_ACTIVE:
-      r.writeU8(1); // gyro count, single gyro only
-      r.writeU8(_model.gyroActive() ? _model.state.gyro.dev->getType() : (uint8_t)GYRO_NONE); // gyro 1
+      r.writeU8(1);                                                                  // gyro count, single gyro only
+      r.writeU8(_model.gyroActive() ? _model.state.gyro.dev->getType() : GYRO_NONE); // gyro 1
       break;
 
     case MSP_SENSOR_ALIGNMENT:
@@ -724,8 +726,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         r.writeU8(0);                                                 // telemetry_baudrateIndex
         r.writeU8(toBaudIndex(_model.config.serial[i].blackboxBaud)); // blackbox_baudrateIndex
       }
+      break;
     }
-    break;
 
     case MSP_SET_CF_SERIAL_CONFIG: {
       const int packetSize = 1 + 2 + 4;
@@ -750,9 +752,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         m.readU8();
         _model.config.serial[k].blackboxBaud = fromBaudIndex((SerialSpeedIndex)m.readU8());
       }
-    }
       _model.reload();
       break;
+    }
 
     case MSP2_COMMON_SET_SERIAL_CONFIG: {
       m.readU8(); // was count - ignore
@@ -778,9 +780,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         m.readU8();
         _model.config.serial[k].blackboxBaud = fromBaudIndex((SerialSpeedIndex)m.readU8());
       }
-    }
       _model.reload();
       break;
+    }
 
     case MSP_BLACKBOX_CONFIG:
       r.writeU8(1);                          // Blackbox supported
@@ -874,6 +876,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.config.boardAlignment[0] = m.readU16();
       _model.config.boardAlignment[1] = m.readU16();
       _model.config.boardAlignment[2] = m.readU16();
+      _model.state.boardAlignment.init(VectorFloat(Utils::toRad(_model.config.boardAlignment[0]),
+                                                   Utils::toRad(_model.config.boardAlignment[1]),
+                                                   Utils::toRad(_model.config.boardAlignment[2])));
       break;
 
     case MSP_RX_MAP:
@@ -1054,6 +1059,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         m.readU8(); // elrs modelId
       }
       _model.reload();
+      _model.notifyConfigChange(MODEL_CHANGE_INPUT);
       break;
 
     case MSP_FAILSAFE_CONFIG:
@@ -1195,6 +1201,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         {
           m.readU8(); // thrHover8
         }
+        _model.notifyConfigChange(MODEL_CHANGE_RATES);
       }
       else
       {
@@ -1254,6 +1261,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.config.debug.mode = m.readU8();
       }
       _model.reload();
+      _model.notifyConfigChange(MODEL_CHANGE_FILTER);
       break;
 
     case MSP_COMPASS_CONFIG:
@@ -1380,7 +1388,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
           _model.config.gyro.rpmFilter.weights[i] = m.readU8(); // rpm_notch_harmonic_freq
         }
       }
-      _model.reload();
+      _model.notifyConfigChange(MODEL_CHANGE_FILTER);
       break;
 
     case MSP_PID_CONTROLLER:
@@ -1410,7 +1418,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.config.pid[i].I = m.readU8();
         _model.config.pid[i].D = m.readU8();
       }
-      _model.reload();
+      _model.notifyConfigChange(MODEL_CHANGE_PID);
       break;
 
     case MSP_PID_ADVANCED:
@@ -1556,7 +1564,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.config.controller.tpaScale = std::clamp<uint8_t>(m.readU8(), 0, 100);            // tpa rate
         _model.config.controller.tpaBreakpoint = std::clamp<uint16_t>(m.readU16(), 1000, 2000); // tpa breakpoint
       }
-      _model.reload();
+      _model.notifyConfigChange(MODEL_CHANGE_PID);
       break;
 
     case MSP_SIMPLIFIED_TUNING: {
@@ -1633,7 +1641,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
                                               _model.config.gyro.filter2.freq, _model.config.gyro.dynLpfFilter.cutoff,
                                               _model.config.gyro.dynLpfFilter.freq);
       }
-      _model.reload();
+      _model.notifyConfigChange(MODEL_CHANGE_PID);
+      if (s.gyroFilter || s.dtermFilter)
+      {
+        _model.notifyConfigChange(MODEL_CHANGE_FILTER);
+      }
       break;
     }
 
@@ -1715,7 +1727,6 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     }
 
     case MSP_RAW_IMU: {
-
       auto accel = _model.state.accel.adc.fetch();
       for (int i = 0; i < AXIS_COUNT_RPY; i++)
       {
@@ -2015,7 +2026,14 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_EEPROM_WRITE:
-      _model.save();
+      if (!_model.isModeActive(MODE_ARMED))
+      {
+        _model.save();
+      }
+      else
+      {
+        r.result = -1;
+      }
       break;
 
     case MSP_RESET_CONF:

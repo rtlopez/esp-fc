@@ -17,17 +17,12 @@ int AccelSensor::begin()
     return 0;
   }
 
-  _model.state.accel.scale = 16.f * ACCEL_G / 32768.f;
   const auto& timer = _model.state.accel.timer;
-
-  for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
-  {
-    _filter[i].begin(FilterConfig(FILTER_FIR2, 1), timer.rate);
-    _model.state.accel.filter[i].begin(_model.config.accel.filter, timer.rate);
-  }
-
+  _model.state.accel.scale = 16.f * ACCEL_G / 32768.f;
   _model.state.accel.biasAlpha = 5.0f / timer.rate;
   _model.state.accel.calibrationState = CALIBRATION_IDLE;
+
+  reload(MODEL_CHANGE_FILTER);
 
   _model.logger.info()
       .log("ACCEL INIT")
@@ -37,6 +32,23 @@ int AccelSensor::begin()
       .log(timer.interval)
       .logln(_model.state.accel.present);
 
+  return 1;
+}
+
+int AccelSensor::reload(ModelChangeEvent event)
+{
+  switch (event)
+  {
+    case MODEL_CHANGE_FILTER:
+      for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+      {
+        _filter[i].begin(FilterConfig(FILTER_FIR2, 1), _model.state.accel.timer.rate);
+        _model.state.accel.filter[i].begin(_model.config.accel.filter, _model.state.accel.timer.rate);
+      }
+      break;
+    default:
+      break;
+  }
   return 1;
 }
 

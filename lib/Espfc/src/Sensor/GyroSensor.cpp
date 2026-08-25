@@ -22,39 +22,12 @@ int GyroSensor::begin()
 
   _gyro->setDLPFMode(_model.config.gyro.dlpf);
   _gyro->setRate(_gyro->getRate());
-  _model.state.gyro.scale = Utils::toRad(2000.f) / 32768.f;
+
+  reload(MODEL_CHANGE_FILTER);
 
   _model.state.gyro.calibrationState = CALIBRATION_START; // calibrate gyro on start
   _model.state.gyro.calibrationRate = _model.state.loopTimer.rate;
   _model.state.gyro.biasAlpha = 5.0f / _model.state.gyro.calibrationRate;
-
-  _sma.begin(_model.config.loopSync);
-  _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
-  _dyn_notch_sma.begin(_dyn_notch_denom);
-  _dyn_notch_count = std::min((size_t)_model.config.gyro.dynamicFilter.count, DYN_NOTCH_COUNT_MAX);
-  _dyn_notch_enabled = _model.isFeatureActive(FEATURE_DYNAMIC_FILTER) && _dyn_notch_count > 0 &&
-                       _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
-  _dyn_notch_debug = _model.config.debug.mode == DEBUG_FFT_FREQ || _model.config.debug.mode == DEBUG_FFT_TIME;
-
-  _rpm_enabled = _model.config.gyro.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;
-  _rpm_motor_index = 0;
-  _rpm_fade_inv = 1.0f / _model.config.gyro.rpmFilter.fade;
-  _rpm_min_freq = _model.config.gyro.rpmFilter.minFreq;
-  _rpm_max_freq = 0.48f * _model.state.loopTimer.rate;
-  _rpm_q = _model.config.gyro.rpmFilter.q * 0.01f;
-
-  for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
-  {
-    _rpm_weights[i] = std::clamp(0.01f * _model.config.gyro.rpmFilter.weights[i], 0.0f, 1.0f);
-  }
-  for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
-  {
-#ifdef ESPFC_DSP
-    _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter, i);
-#else
-    _freqAnalyzer[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter);
-#endif
-  }
 
   _model.logger.info()
       .log("GYRO INIT")
@@ -64,6 +37,91 @@ int GyroSensor::begin()
       .log(_gyro->getRate())
       .log(_model.state.gyro.timer.rate)
       .logln(_model.state.gyro.timer.interval);
+
+  return 1;
+}
+
+int GyroSensor::reload(ModelChangeEvent event)
+{
+  const uint32_t gyroFilterRate = _model.state.gyro.timer.rate;
+  const uint32_t loopFilterRate = _model.state.loopTimer.rate;
+  auto& gyroState = _model.state.gyro;
+
+  switch (event)
+  {
+    case MODEL_CHANGE_FILTER:
+      for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+      {
+        // lpf filters
+        if (_model.config.gyro.dynLpfFilter.cutoff > 0)
+        {
+          gyroState.filter[i].begin(
+              {(FilterType)_model.config.gyro.filter.type, _model.config.gyro.dynLpfFilter.cutoff}, loopFilterRate);
+        }
+        else
+        {
+          gyroState.filter[i].begin(_model.config.gyro.filter, loopFilterRate);
+        }
+        gyroState.filter2[i].begin(_model.config.gyro.filter2, loopFilterRate);
+        gyroState.filter3[i].begin(_model.config.gyro.filter3, gyroFilterRate);
+        // rpm filters
+        for (size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
+        {
+          gyroState.rpmFreqFilter[m].begin({FILTER_PT1, _model.config.gyro.rpmFilter.freqLpf}, loopFilterRate);
+          for (size_t n = 0; n < _model.config.gyro.rpmFilter.harmonics; n++)
+          {
+            int center = Utils::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0,
+                                     RPM_FILTER_MOTOR_MAX * _model.config.gyro.rpmFilter.harmonics,
+                                     _model.config.gyro.rpmFilter.minFreq, loopFilterRate / 2);
+            gyroState.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), loopFilterRate);
+          }
+        }
+        // dynamic notch filters
+        if (_model.isFeatureActive(FEATURE_DYNAMIC_FILTER))
+        {
+          for (size_t p = 0; p < (size_t)_model.config.gyro.dynamicFilter.count; p++)
+          {
+            gyroState.dynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
+          }
+        }
+        // static notches
+        gyroState.notch1Filter[i].begin(_model.config.gyro.notch1Filter, gyroFilterRate);
+        gyroState.notch2Filter[i].begin(_model.config.gyro.notch2Filter, gyroFilterRate);
+      }
+
+      _model.state.gyro.scale = Utils::toRad(2000.f) / 32768.f;
+
+      _sma.begin(_model.config.loopSync);
+      _dyn_notch_denom = std::max((uint32_t)1, _model.state.loopTimer.rate / 1000);
+      _dyn_notch_sma.begin(_dyn_notch_denom);
+      _dyn_notch_count = std::min((size_t)_model.config.gyro.dynamicFilter.count, DYN_NOTCH_COUNT_MAX);
+      _dyn_notch_enabled = _model.isFeatureActive(FEATURE_DYNAMIC_FILTER) && _dyn_notch_count > 0 &&
+                           _model.state.loopTimer.rate >= DynamicFilterConfig::MIN_FREQ;
+      _dyn_notch_debug = _model.config.debug.mode == DEBUG_FFT_FREQ || _model.config.debug.mode == DEBUG_FFT_TIME;
+
+      _rpm_enabled = _model.config.gyro.rpmFilter.harmonics > 0 && _model.config.output.dshotTelemetry;
+      _rpm_motor_index = 0;
+      _rpm_fade_inv = 1.0f / _model.config.gyro.rpmFilter.fade;
+      _rpm_min_freq = _model.config.gyro.rpmFilter.minFreq;
+      _rpm_max_freq = 0.48f * _model.state.loopTimer.rate;
+      _rpm_q = _model.config.gyro.rpmFilter.q * 0.01f;
+
+      for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
+      {
+        _rpm_weights[i] = std::clamp(0.01f * _model.config.gyro.rpmFilter.weights[i], 0.0f, 1.0f);
+      }
+      for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+      {
+#ifdef ESPFC_DSP
+        _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter, i);
+#else
+        _freqAnalyzer[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter);
+#endif
+      }
+      break;
+    default:
+      break;
+  }
 
   return 1;
 }
@@ -274,7 +332,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
               size_t x = (p + i) % 3;
               int harmonic = (p / 3) + 1;
               int16_t f = std::clamp((int16_t)lrintf(freq * harmonic), _model.config.gyro.dynamicFilter.min_freq,
-                                       _model.config.gyro.dynamicFilter.max_freq);
+                                     _model.config.gyro.dynamicFilter.max_freq);
               _model.state.gyro.dynNotchFilter[p][x].reconfigure(f, f, q);
             }
           }

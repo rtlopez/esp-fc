@@ -521,6 +521,7 @@ struct ModelState
   Utils::Timer serialTimer;
 
   Target::Queue appQueue;
+  bool rebootRequired = false;
 };
 
 }

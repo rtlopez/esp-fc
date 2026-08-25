@@ -19,7 +19,6 @@
 #elif defined(ESPFC_WIFI)
 #include <WiFi.h>
 #endif
-#include "Debug_Espfc.h"
 
 #ifdef ESP32
 void IRAM_ATTR serialEventRun(void) {}

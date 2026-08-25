@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <tuple>
 #include <EscDriver.h>
 #include "ModelConfig.h"
@@ -12,6 +13,16 @@
 #include "Utils/Math.hpp"
 
 namespace Espfc {
+
+enum ModelChangeEvent
+{
+  MODEL_CHANGE_FILTER,
+  MODEL_CHANGE_PID,
+  MODEL_CHANGE_RATES,
+  MODEL_CHANGE_INPUT,
+  MODEL_CHANGE_OUTPUT,
+  MODEL_CHANGE_SERIAL,
+};
 
 class Model
 {
@@ -291,6 +302,17 @@ class Model
       begin();
     }
 
+    void setRebootRequired()
+    {
+      state.rebootRequired = true;
+      setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, true);
+    }
+
+    bool getRebootRequired() const
+    {
+      return state.rebootRequired;
+    }
+
     void calculateSimplifiedPids(const SimplifiedTuningConfig& s, PidConfig out[3]) const
     {
       // ESP-FC compile-time PID defaults for roll/pitch/yaw (no D-Max on this target)
@@ -539,49 +561,21 @@ class Model
 
       state.boardAlignment.init(VectorFloat(Utils::toRad(config.boardAlignment[0]), Utils::toRad(config.boardAlignment[1]), Utils::toRad(config.boardAlignment[2])));
       onAccChange();
-
-      const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
-      const uint32_t gyroFilterRate = state.loopTimer.rate;
-      const uint32_t inputFilterRate = state.input.timer.rate;
-
-      // configure filters
+      
+      // TODO: move to Fusion.cpp
+      const uint32_t loopFilterRate = state.loopTimer.rate;
       for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
       {
-        if(isFeatureActive(FEATURE_DYNAMIC_FILTER))
-        {
-          for(size_t p = 0; p < (size_t)config.gyro.dynamicFilter.count; p++)
-          {
-            state.gyro.dynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
-          }
-        }
-        state.gyro.notch1Filter[i].begin(config.gyro.notch1Filter, gyroFilterRate);
-        state.gyro.notch2Filter[i].begin(config.gyro.notch2Filter, gyroFilterRate);
-        if(config.gyro.dynLpfFilter.cutoff > 0)
-        {
-          state.gyro.filter[i].begin(FilterConfig((FilterType)config.gyro.filter.type, config.gyro.dynLpfFilter.cutoff), gyroFilterRate);
-        }
-        else
-        {
-          state.gyro.filter[i].begin(config.gyro.filter, gyroFilterRate);
-        }
-        state.gyro.filter2[i].begin(config.gyro.filter2, gyroFilterRate);
-        state.gyro.filter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / GYRO_FUSION_LPF_DIV), gyroFilterRate);
-        for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
-        {
-          state.gyro.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.gyro.rpmFilter.freqLpf), gyroFilterRate);
-          for(size_t n = 0; n < config.gyro.rpmFilter.harmonics; n++)
-          {
-            int center = Utils::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.gyro.rpmFilter.harmonics, config.gyro.rpmFilter.minFreq, gyroFilterRate / 2);
-            state.gyro.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
-          }
-        }
+        state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / GYRO_FUSION_LPF_DIV), loopFilterRate);
+        // TODO: move to SensorMag.cpp
         if(magActive())
         {
           state.mag.filter[i].begin(config.mag.filter, state.mag.timer.rate);
         }
       }
-
+      
+      // TODO: move to Input.cpp
+      const uint32_t inputFilterRate = state.input.timer.rate;
       for(size_t i = 0; i < 4; i++)
       {
         if (config.input.filterEnable)
@@ -610,6 +604,7 @@ class Model
 
     void onAccChange()
     {
+      // TODO: Move to AccelSensor.cpp
       state.trimRotation.init(VectorFloat{Utils::toRad(config.accel.trim[1]) * 0.1f, Utils::toRad(config.accel.trim[0]) * 0.1f, 0.0f});
     }
 
@@ -659,11 +654,23 @@ class Model
 #endif
     }
 
+    void notifyConfigChange(ModelChangeEvent event)
+    {
+      if (_onConfigChange) _onConfigChange(event);
+    }
+
+    void setConfigChangeListener(std::function<void(ModelChangeEvent)> listener)
+    {
+      _onConfigChange = listener;
+    }
+
   private:
     #ifndef UNIT_TEST
     Utils::Storage _storage;
     #endif
     StorageResult _storageResult;
+
+    std::function<void(ModelChangeEvent)> _onConfigChange{};
 };
 
 }

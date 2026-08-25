@@ -1,13 +1,13 @@
 #include "Espfc.h"
-#include "Hal/Gpio.h"
 #include "Debug_Espfc.h"
 
 namespace Espfc {
 
-Espfc::Espfc():
-  _hardware{_model}, _controller{_model}, _telemetry{_model}, _input{_model, _telemetry}, _actuator{_model}, _sensor{_model},
-  _mixer{_model}, _blackbox{_model}, _buzzer{_model}, _serial{_model, _telemetry}
-  {}
+Espfc::Espfc()
+    : _hardware{_model}, _controller{_model}, _telemetry{_model}, _input{_model, _telemetry}, _actuator{_model},
+      _sensor{_model}, _mixer{_model}, _blackbox{_model}, _buzzer{_model}, _serial{_model, _telemetry}
+{
+}
 
 int Espfc::load()
 {
@@ -21,43 +21,48 @@ int Espfc::begin()
 {
   _model.state.led.begin(_model.config.pin[PIN_LED_BLINK], _model.config.led.type, _model.config.led.invert);
 
-  _serial.begin();      // requires _model.load()
+  _serial.begin(); // requires _model.load()
   //_model.logStorageResult();
-  _hardware.begin();    // requires _model.load()
-  _model.begin();       // requires _hardware.begin()
+  _hardware.begin(); // requires _model.load()
+  _model.begin();    // requires _hardware.begin()
   _mixer.begin();
-  _sensor.begin();      // requires _hardware.begin()
-  _input.begin();       // requires _serial.begin()
-  _actuator.begin();    // requires _model.begin()
+  _sensor.begin();   // requires _hardware.begin()
+  _input.begin();    // requires _serial.begin()
+  _actuator.begin(); // requires _model.begin()
   _controller.begin();
-  _blackbox.begin();    // requires _serial.begin(), _actuator.begin()
+  _blackbox.begin(); // requires _serial.begin(), _actuator.begin()
   _buzzer.begin();
 
   _model.state.buzzer.push(BUZZER_SYSTEM_INIT);
+
+  _model.setConfigChangeListener([this](ModelChangeEvent event) {
+    _sensor.reload(event);
+    _controller.reload(event);
+  });
 
   return 1;
 }
 
 int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 {
-  if(externalTrigger)
+  if (externalTrigger)
   {
     _model.state.gyro.timer.update();
   }
   else
   {
-    if(!_model.state.gyro.timer.check()) return 0;
+    if (!_model.state.gyro.timer.check()) return 0;
   }
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
 #if defined(ESPFC_MULTI_CORE)
 
   _sensor.read();
-  if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
+  if (_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
   {
     _input.update();
   }
-  if(_model.state.actuatorTimer.check())
+  if (_model.state.actuatorTimer.check())
   {
     _actuator.update();
   }
@@ -65,19 +70,19 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 #else
 
   _sensor.update();
-  if(_model.state.loopTimer.syncTo(_model.state.gyro.timer))
+  if (_model.state.loopTimer.syncTo(_model.state.gyro.timer))
   {
     _controller.update();
-    if(_model.state.mixer.timer.syncTo(_model.state.loopTimer))
+    if (_model.state.mixer.timer.syncTo(_model.state.loopTimer))
     {
       _mixer.update();
     }
     _blackbox.update();
-    if(_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
+    if (_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
     {
       _input.update();
     }
-    if(_model.state.actuatorTimer.check())
+    if (_model.state.actuatorTimer.check())
     {
       _actuator.update();
     }
@@ -98,7 +103,7 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 int FAST_CODE_ATTR Espfc::updateOther()
 {
 #if defined(ESPFC_MULTI_CORE)
-  if(_model.state.appQueue.isEmpty())
+  if (_model.state.appQueue.isEmpty())
   {
     return 0;
   }
@@ -106,14 +111,14 @@ int FAST_CODE_ATTR Espfc::updateOther()
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
-  switch(e.type)
+  switch (e.type)
   {
     case EVENT_GYRO_READ:
       _sensor.preLoop();
       _controller.update();
-      // skip mixer and bb if earlier than half cycle, possible delay in previous iteration, 
+      // skip mixer and bb if earlier than half cycle, possible delay in previous iteration,
       // to keep space to receive dshot erpm frame, but process rest
-      if(_loop_next < micros())
+      if (_loop_next < micros())
       {
         _loop_next = micros() + _model.state.loopTimer.interval / 2;
         _mixer.update();
@@ -133,5 +138,4 @@ int FAST_CODE_ATTR Espfc::updateOther()
   return 1;
 }
 
-}
-
+} // namespace Espfc

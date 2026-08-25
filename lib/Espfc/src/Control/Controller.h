@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Control/Altitude.hpp"
 #include "Control/Rates.h"
 #include "Model.h"
 
@@ -11,6 +10,7 @@ class Controller
 public:
   Controller(Model& model);
   int begin();
+  int reload(ModelChangeEvent event);
   int update();
 
   void outerLoopRobot();
@@ -24,9 +24,8 @@ public:
   float calcualteAltHoldSetpoint() const;
 
 private:
-  void beginAltHold();
-  void beginInnerLoop(size_t axis);
-  void beginOuterLoop(size_t axis);
+  void reloadFilter();
+  void reloadPid();
 
   Model& _model;
   Rates _rates;
