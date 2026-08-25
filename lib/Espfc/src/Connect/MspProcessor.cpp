@@ -1261,7 +1261,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.config.debug.mode = m.readU8();
       }
       _model.reload();
-      _model.notifyConfigChange(MODEL_CHANGE_FILTER);
+      _model.setRebootRequired();
       break;
 
     case MSP_COMPASS_CONFIG:

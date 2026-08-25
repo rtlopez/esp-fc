@@ -14,7 +14,7 @@ public:
   GpsSensor(Model& model);
 
   int begin(Device::SerialDevice* port, int baud);
-
+  int reload(ModelChangeEvent event);
   int update();
 
 private:

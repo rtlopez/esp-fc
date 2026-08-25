@@ -11,14 +11,26 @@ int VoltageSensor::begin()
   _model.state.battery.timer.setRate(100);
   _model.state.battery.samples = 50;
 
-  _vFilterFast.begin(FilterConfig(FILTER_PT1, 20), _model.state.battery.timer.rate);
-  _vFilter.begin(FilterConfig(FILTER_PT2, 2), _model.state.battery.timer.rate);
-
-  _iFilterFast.begin(FilterConfig(FILTER_PT1, 20), _model.state.battery.timer.rate);
-  _iFilter.begin(FilterConfig(FILTER_PT2, 2), _model.state.battery.timer.rate);
+  reload(MODEL_CHANGE_FILTER);
 
   _state = VBAT;
 
+  return 1;
+}
+
+int VoltageSensor::reload(ModelChangeEvent event)
+{
+  switch (event)
+  {
+    case MODEL_CHANGE_FILTER:
+      _vFilterFast.begin(FilterConfig(FILTER_PT1, 20), _model.state.battery.timer.rate);
+      _vFilter.begin(FilterConfig(FILTER_PT2, 2), _model.state.battery.timer.rate);
+      _iFilterFast.begin(FilterConfig(FILTER_PT1, 20), _model.state.battery.timer.rate);
+      _iFilter.begin(FilterConfig(FILTER_PT2, 2), _model.state.battery.timer.rate);
+      break;
+    default:
+      break;
+  }
   return 1;
 }
 

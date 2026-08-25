@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstdint>
 #include "Utils/Filter.h"
 #include "Utils/Math.hpp"
+#include <cstdint>
 
 namespace Espfc {
 
@@ -12,22 +12,23 @@ constexpr float ITERM_SCALE_BETAFLIGHT = 0.244381f;
 constexpr float DTERM_SCALE_BETAFLIGHT = 0.000529f;
 constexpr float FTERM_SCALE_BETAFLIGHT = 0.00013754f;
 
-constexpr float PTERM_SCALE = PTERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.00183 = 0.032029f * 57.29 / 1000
+constexpr float PTERM_SCALE = PTERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.00183f
 constexpr float ITERM_SCALE = ITERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.014f
 constexpr float DTERM_SCALE = DTERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.0000303f
 constexpr float FTERM_SCALE = FTERM_SCALE_BETAFLIGHT * Utils::toDeg(1.0f) * 0.001f; // ~ 0.00000788f
 
-constexpr float LEVEL_PTERM_SCALE = 0.1f;    // 1/10
-constexpr float LEVEL_ITERM_SCALE = 0.1f;    // 1/10
-constexpr float LEVEL_DTERM_SCALE = 0.001f;  // 1/1000
-constexpr float LEVEL_FTERM_SCALE = 0.001f;  // 1/1000
+constexpr float LEVEL_PTERM_SCALE = 0.1f;   // 1/10
+constexpr float LEVEL_ITERM_SCALE = 0.1f;   // 1/10
+constexpr float LEVEL_DTERM_SCALE = 0.001f; // 1/1000
+constexpr float LEVEL_FTERM_SCALE = 0.001f; // 1/1000
 
 constexpr float VEL_PTERM_SCALE = 0.001f;
 constexpr float VEL_ITERM_SCALE = 0.0025f;
 constexpr float VEL_DTERM_SCALE = 0.00005f;
 constexpr float VEL_FTERM_SCALE = 0.001f;
 
-enum ItermRelaxType {
+enum ItermRelaxType
+{
   ITERM_RELAX_OFF,
   ITERM_RELAX_RP,
   ITERM_RELAX_RPY,
@@ -91,6 +92,6 @@ public:
   float itermRelaxBase;
 };
 
-}
+} // namespace Control
 
-}
+} // namespace Espfc

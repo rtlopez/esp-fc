@@ -26,6 +26,11 @@ int SensorManager::reload(ModelChangeEvent event)
 {
   _gyro.reload(event);
   _accel.reload(event);
+  _fusion.reload(event);
+  _baro.reload(event);
+  _mag.reload(event);
+  _altitude.reload(event);
+  _voltage.reload(event);
   return 1;
 }
 

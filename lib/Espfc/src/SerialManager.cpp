@@ -175,6 +175,12 @@ int SerialManager::begin()
   return 1;
 }
 
+int SerialManager::reload(ModelChangeEvent event)
+{
+  _gps.reload(event);
+  return 1;
+}
+
 int FAST_CODE_ATTR SerialManager::update()
 {
   const SerialPortConfig& sc = _model.config.serial[_current];

@@ -36,6 +36,7 @@ int Espfc::begin()
   _model.state.buzzer.push(BUZZER_SYSTEM_INIT);
 
   _model.setConfigChangeListener([this](ModelChangeEvent event) {
+    _serial.reload(event);
     _sensor.reload(event);
     _controller.reload(event);
   });

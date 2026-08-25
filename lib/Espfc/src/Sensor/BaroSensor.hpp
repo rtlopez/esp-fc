@@ -22,6 +22,7 @@ public:
   int begin();
   int update();
   int read();
+  int reload(ModelChangeEvent event);
 
 private:
   void readTemperature();

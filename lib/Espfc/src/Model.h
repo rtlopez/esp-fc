@@ -561,19 +561,7 @@ class Model
 
       state.boardAlignment.init(VectorFloat(Utils::toRad(config.boardAlignment[0]), Utils::toRad(config.boardAlignment[1]), Utils::toRad(config.boardAlignment[2])));
       onAccChange();
-      
-      // TODO: move to Fusion.cpp
-      const uint32_t loopFilterRate = state.loopTimer.rate;
-      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
-      {
-        state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / GYRO_FUSION_LPF_DIV), loopFilterRate);
-        // TODO: move to SensorMag.cpp
-        if(magActive())
-        {
-          state.mag.filter[i].begin(config.mag.filter, state.mag.timer.rate);
-        }
-      }
-      
+           
       // TODO: move to Input.cpp
       const uint32_t inputFilterRate = state.input.timer.rate;
       for(size_t i = 0; i < 4; i++)
