@@ -19,9 +19,8 @@ enum ModelChangeEvent
   MODEL_CHANGE_FILTER,
   MODEL_CHANGE_PID,
   MODEL_CHANGE_RATES,
+  MODEL_CHANGE_ACCEL,
   MODEL_CHANGE_INPUT,
-  MODEL_CHANGE_OUTPUT,
-  MODEL_CHANGE_SERIAL,
 };
 
 class Model
@@ -558,24 +557,7 @@ class Model
       {
         state.mag.timer.setRate(state.mag.rate);
       }
-
-      state.boardAlignment.init(VectorFloat(Utils::toRad(config.boardAlignment[0]), Utils::toRad(config.boardAlignment[1]), Utils::toRad(config.boardAlignment[2])));
-      onAccChange();
-           
-      // TODO: move to Input.cpp
-      const uint32_t inputFilterRate = state.input.timer.rate;
-      for(size_t i = 0; i < 4; i++)
-      {
-        if (config.input.filterEnable)
-        {
-          state.input.filter[i].begin(config.input.filter, inputFilterRate);
-        }
-        else
-        {
-          state.input.filter[i].begin(FilterConfig(FILTER_PT3, 25), inputFilterRate);
-        }
-      }
-
+          
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -588,12 +570,6 @@ class Model
 
       // override temporary
       //state.telemetryTimer.setRate(100);
-    }
-
-    void onAccChange()
-    {
-      // TODO: Move to AccelSensor.cpp
-      state.trimRotation.init(VectorFloat{Utils::toRad(config.accel.trim[1]) * 0.1f, Utils::toRad(config.accel.trim[0]) * 0.1f, 0.0f});
     }
 
     void postLoad()

@@ -23,6 +23,7 @@ int AccelSensor::begin()
   _model.state.accel.calibrationState = CALIBRATION_IDLE;
 
   reload(MODEL_CHANGE_FILTER);
+  reload(MODEL_CHANGE_ACCEL);
 
   _model.logger.info()
       .log("ACCEL INIT")
@@ -45,6 +46,13 @@ int AccelSensor::reload(ModelChangeEvent event)
         _filter[i].begin(FilterConfig(FILTER_FIR2, 1), _model.state.accel.timer.rate);
         _model.state.accel.filter[i].begin(_model.config.accel.filter, _model.state.accel.timer.rate);
       }
+      break;
+    case MODEL_CHANGE_ACCEL:
+      _model.state.boardAlignment.init(VectorFloat(Utils::toRad(_model.config.boardAlignment[0]),
+                                                   Utils::toRad(_model.config.boardAlignment[1]),
+                                                   Utils::toRad(_model.config.boardAlignment[2])));
+      _model.state.trimRotation.init(VectorFloat{Utils::toRad(_model.config.accel.trim[1]) * 0.1f,
+                                                 Utils::toRad(_model.config.accel.trim[0]) * 0.1f, 0.0f});
       break;
     default:
       break;

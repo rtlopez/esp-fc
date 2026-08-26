@@ -6,7 +6,7 @@
 
 namespace Espfc {
 
-enum GyroDeviceType: uint8_t
+enum GyroDeviceType : uint8_t
 {
   GYRO_NONE = 0,
   GYRO_AUTO = 1,

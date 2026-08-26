@@ -422,6 +422,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("mag_bus", &c.mag.bus, busDevChoices),
       Param("mag_dev", &c.mag.dev, magDevChoices),
       Param("mag_align", &c.mag.align, alignChoices),
+      Param("mag_declination", &c.mag.declination),
       Param("mag_filter_type", &c.mag.filter.type, filterTypeChoices),
       Param("mag_filter_lpf", &c.mag.filter.freq),
       Param("mag_offset_x", &c.mag.offset[0]),

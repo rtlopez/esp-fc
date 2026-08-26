@@ -432,6 +432,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     case MSP_SET_FEATURE_CONFIG:
       _model.config.featureMask = m.readU32();
       _model.reload();
+      _model.setRebootRequired();
       break;
 
     case MSP_BATTERY_CONFIG:
@@ -599,7 +600,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
     case MSP_SET_ACC_TRIM:
       _model.config.accel.trim[0] = std::clamp<int16_t>(m.readU16(), -300, 300); // pitch
       _model.config.accel.trim[1] = std::clamp<int16_t>(m.readU16(), -300, 300); // roll
-      _model.onAccChange();
+      _model.notifyConfigChange(ModelChangeEvent::MODEL_CHANGE_ACCEL);
       break;
 
     case MSP_MIXER_CONFIG:
@@ -635,6 +636,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         m.readU8(); // opticalflow skip
       }
       _model.reload();
+      _model.setRebootRequired();
       break;
 
     case MSP2_SENSOR_CONFIG_ACTIVE: {
@@ -753,6 +755,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.config.serial[k].blackboxBaud = fromBaudIndex((SerialSpeedIndex)m.readU8());
       }
       _model.reload();
+      _model.setRebootRequired();
       break;
     }
 
@@ -781,6 +784,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
         _model.config.serial[k].blackboxBaud = fromBaudIndex((SerialSpeedIndex)m.readU8());
       }
       _model.reload();
+      _model.setRebootRequired();
       break;
     }
 
@@ -876,9 +880,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       _model.config.boardAlignment[0] = m.readU16();
       _model.config.boardAlignment[1] = m.readU16();
       _model.config.boardAlignment[2] = m.readU16();
-      _model.state.boardAlignment.init(VectorFloat(Utils::toRad(_model.config.boardAlignment[0]),
-                                                   Utils::toRad(_model.config.boardAlignment[1]),
-                                                   Utils::toRad(_model.config.boardAlignment[2])));
+      _model.notifyConfigChange(ModelChangeEvent::MODEL_CHANGE_ACCEL);
       break;
 
     case MSP_RX_MAP:
@@ -929,6 +931,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 #endif
       }
       _model.reload();
+      _model.setRebootRequired();
       break;
 
     case MSP_MOTOR_3D_CONFIG:
@@ -1058,7 +1061,6 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       {
         m.readU8(); // elrs modelId
       }
-      _model.reload();
       _model.notifyConfigChange(MODEL_CHANGE_INPUT);
       break;
 
@@ -1265,11 +1267,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_COMPASS_CONFIG:
-      r.writeU16(0); // mag_declination * 10
+      r.writeU16(_model.config.mag.declination); // mag_declination * 10
       break;
 
     case MSP_SET_COMPASS_CONFIG:
-      m.readU16(); // mag_declination * 10
+      _model.config.mag.declination = m.readU16(); // mag_declination * 10
       break;
 
     case MSP_FILTER_CONFIG:

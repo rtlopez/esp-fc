@@ -21,8 +21,7 @@ int Espfc::begin()
 {
   _model.state.led.begin(_model.config.pin[PIN_LED_BLINK], _model.config.led.type, _model.config.led.invert);
 
-  _serial.begin(); // requires _model.load()
-  //_model.logStorageResult();
+  _serial.begin();   // requires _model.load()
   _hardware.begin(); // requires _model.load()
   _model.begin();    // requires _hardware.begin()
   _mixer.begin();
@@ -38,6 +37,7 @@ int Espfc::begin()
   _model.setConfigChangeListener([this](ModelChangeEvent event) {
     _serial.reload(event);
     _sensor.reload(event);
+    _input.reload(event);
     _controller.reload(event);
   });
 
