@@ -229,6 +229,7 @@ bool GyroBMI160::testConnection()
 {
   uint8_t whoami = 0;
   if (_bus->readByte(_addr, BMI160_RA_CHIP_ID, &whoami) != 1) return false;
+  setChipId(whoami);
   return whoami == BMI160_CHIP_ID_DEFAULT_VALUE;
 }
 

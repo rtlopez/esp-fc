@@ -5,24 +5,24 @@
 
 namespace Espfc::Device::Gyro {
 
-class GyroLSM6DSO: public GyroDevice
+class GyroLSM6DSO : public GyroDevice
 {
-  public:
-    int begin(BusDevice * bus) override;
-    int begin(BusDevice * bus, uint8_t addr) override;
+public:
+  int begin(BusDevice* bus) override;
+  int begin(BusDevice* bus, uint8_t addr) override;
 
-    GyroDeviceType getType() const override;
+  GyroDeviceType getType() const override;
 
-    int readGyro(VectorInt16& v) override;
-    int readAccel(VectorInt16& v) override;
+  int readGyro(VectorInt16& v) override;
+  int readAccel(VectorInt16& v) override;
 
-    void setDLPFMode(uint8_t mode) override;
+  void setDLPFMode(uint8_t mode) override;
 
-    int getRate() const override;
+  int getRate() const override;
 
-    void setRate(int rate) override;
+  void setRate(int rate) override;
 
-    bool testConnection() override;
+  bool testConnection() override;
 };
 
 } // namespace Espfc::Device::Gyro

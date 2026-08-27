@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Device/BusDevice.hpp"
+#include <optional>
 
 namespace Espfc::Device {
 
@@ -23,9 +24,20 @@ public:
     return _addr;
   }
 
+  std::optional<uint8_t> getChipId() const
+  {
+    return _chipId;
+  }
+
 protected:
-  BusDevice* _bus;
-  uint8_t _addr;
+  void setChipId(uint8_t chipId)
+  {
+    _chipId = chipId;
+  }
+
+  BusDevice* _bus = nullptr;
+  uint8_t _addr = 0;
+  std::optional<uint8_t> _chipId = {};
 };
 
 } // namespace Espfc::Device

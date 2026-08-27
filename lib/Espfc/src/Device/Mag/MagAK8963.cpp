@@ -92,6 +92,7 @@ MagDeviceType MagAK8963::getType() const
 bool MagAK8963::testConnection()
 {
   if (_bus->read(_addr, AK8963_WHO_AM_I, 1, _buffer) != 1) return false;
+  setChipId(_buffer[0]);
   return _buffer[0] == 0x48;
 }
 

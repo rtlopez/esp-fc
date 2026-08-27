@@ -107,7 +107,8 @@ int BaroBMP085::getDelay(BaroDeviceMode mode) const
 {
   switch (mode)
   {
-    case BARO_MODE_TEMP: return 4550; // temp
+    case BARO_MODE_TEMP:
+      return 4550; // temp
     default:
       // return 4550;  // press_0
       // return 7550;  // press_1
@@ -119,8 +120,10 @@ int BaroBMP085::getDelay(BaroDeviceMode mode) const
 bool BaroBMP085::testConnection()
 {
   uint8_t whoami = 0;
-  _bus->readByte(_addr, BMP085_WHOAMI_REG, &whoami);
-  return whoami == BMP085_WHOAMI_ID;
+  if (_bus->readByte(_addr, BMP085_WHOAMI_REG, &whoami) != 1) return false;
+  setChipId(whoami);
+  if (whoami != BMP085_WHOAMI_ID) return false;
+  return true;
 }
 
 } // namespace Espfc::Device::Baro

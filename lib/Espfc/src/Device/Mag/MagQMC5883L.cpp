@@ -103,7 +103,7 @@ bool MagQMC5883L::testConnection()
 {
   uint8_t buffer[1] = {};
   if (_bus->read(_addr, QMC5883L_RA_CHIPID, 1, buffer) != 1) return false;
-
+  setChipId(buffer[0]);
   return buffer[0] == 0xFF;
 }
 

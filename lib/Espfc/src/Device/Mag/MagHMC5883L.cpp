@@ -158,6 +158,7 @@ bool MagHMC5883L::testConnection()
 {
   uint8_t buffer[3] = {};
   if (_bus->read(_addr, HMC5883L_RA_ID_A, 3, buffer) != 3) return false;
+  setChipId(buffer[0]);
   return buffer[0] == 'H' && buffer[1] == '4' && buffer[2] == '3';
 }
 
