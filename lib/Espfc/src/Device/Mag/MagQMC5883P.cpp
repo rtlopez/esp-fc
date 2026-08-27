@@ -98,10 +98,18 @@ const VectorFloat MagQMC5883P::convert(const VectorInt16& v) const
   float lsbPerGauss = 3750.0f;
   switch (_currentRange)
   {
-    case QMC5883P_RANGE_30G: lsbPerGauss = 1000.0f; break;
-    case QMC5883P_RANGE_12G: lsbPerGauss = 2500.0f; break;
-    case QMC5883P_RANGE_8G: lsbPerGauss = 3750.0f; break;
-    case QMC5883P_RANGE_2G: lsbPerGauss = 15000.0f; break;
+    case QMC5883P_RANGE_30G:
+      lsbPerGauss = 1000.0f;
+      break;
+    case QMC5883P_RANGE_12G:
+      lsbPerGauss = 2500.0f;
+      break;
+    case QMC5883P_RANGE_8G:
+      lsbPerGauss = 3750.0f;
+      break;
+    case QMC5883P_RANGE_2G:
+      lsbPerGauss = 15000.0f;
+      break;
   }
 
   return static_cast<VectorFloat>(v) * (1.0f / lsbPerGauss);
@@ -111,11 +119,15 @@ int MagQMC5883P::getRate() const
 {
   switch (_currentOdr)
   {
-    case QMC5883P_ODR_10HZ: return 10;
-    case QMC5883P_ODR_50HZ: return 50;
-    case QMC5883P_ODR_200HZ: return 200;
+    case QMC5883P_ODR_10HZ:
+      return 10;
+    case QMC5883P_ODR_50HZ:
+      return 50;
+    case QMC5883P_ODR_200HZ:
+      return 200;
     case QMC5883P_ODR_100HZ:
-    default: return 100;
+    default:
+      return 100;
   }
 }
 
@@ -136,11 +148,10 @@ bool MagQMC5883P::testConnection()
   uint8_t chipId = 0;
   for (uint8_t attempt = 0; attempt < 3; attempt++)
   {
-    if (_bus->read(_addr, QMC5883P_REG_CHIPID, 1, &chipId) == 1 && chipId == QMC5883P_CHIP_ID)
-    {
-      return true;
-    }
+    if (_bus->read(_addr, QMC5883P_REG_CHIPID, 1, &chipId) != 1) return false;
+    setChipId(chipId);
     delay(2);
+    return chipId == QMC5883P_CHIP_ID;
   }
 
   return false;

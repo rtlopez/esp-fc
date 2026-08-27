@@ -164,7 +164,8 @@ int BaroSPL06::getDelay(BaroDeviceMode mode) const
 {
   switch (mode)
   {
-    case BARO_MODE_TEMP: return 0;
+    case BARO_MODE_TEMP:
+      return 0;
     default:
       // return 5500; // if sapling X1
       // return 7500; // if sampling X2
@@ -176,7 +177,9 @@ bool BaroSPL06::testConnection()
 {
   uint8_t whoami = 0;
   if (_bus->read(_addr, SPL06_WHOAMI_REG, 1, &whoami) != 1) return false;
-  return whoami == SPL06_WHOAMI_ID;
+  setChipId(whoami);
+  if (whoami != SPL06_WHOAMI_ID) return false;
+  return true;
 }
 
 void BaroSPL06::readMesurment()

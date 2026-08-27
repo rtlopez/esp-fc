@@ -4,14 +4,14 @@
 
 namespace Espfc::Device::Gyro {
 
-class GyroICM20602: public GyroMPU6050
+class GyroICM20602 : public GyroMPU6050
 {
-  public:
-    GyroDeviceType getType() const override;
+public:
+  GyroDeviceType getType() const override;
 
-    void setDLPFMode(uint8_t mode) override;
+  void setDLPFMode(uint8_t mode) override;
 
-    bool testConnection() override;
+  bool testConnection() override;
 };
 
 } // namespace Espfc::Device::Gyro

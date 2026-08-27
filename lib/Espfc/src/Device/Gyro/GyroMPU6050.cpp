@@ -210,7 +210,8 @@ int GyroMPU6050::getRate() const
   switch (_dlpf)
   {
     case GYRO_DLPF_256:
-    case GYRO_DLPF_EX: return 8000;
+    case GYRO_DLPF_EX:
+      return 8000;
   }
   return 1000;
 }
@@ -231,6 +232,7 @@ bool GyroMPU6050::testConnection()
 {
   uint8_t whoami = 0;
   if (_bus->readByte(_addr, MPU6050_RA_WHO_AM_I, &whoami) != 1) return false;
+  setChipId(whoami);
   return whoami == 0x68 || whoami == 0x72;
 }
 

@@ -118,7 +118,8 @@ int BaroBMP280::getDelay(BaroDeviceMode mode) const
 {
   switch (mode)
   {
-    case BARO_MODE_TEMP: return 0;
+    case BARO_MODE_TEMP:
+      return 0;
     default:
       // return 5500; // if sapling X1
       // return 7500; // if sampling X2
@@ -132,7 +133,9 @@ bool BaroBMP280::testConnection()
 {
   uint8_t whoami = 0;
   if (_bus->read(_addr, BMP280_WHOAMI_REG, 1, &whoami) != 1) return false;
-  return whoami == BMP280_WHOAMI_ID;
+  setChipId(whoami);
+  if (whoami != BMP280_WHOAMI_ID) return false;
+  return true;
 }
 
 void BaroBMP280::readMesurment()
