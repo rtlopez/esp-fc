@@ -163,7 +163,6 @@ int FAST_CODE_ATTR GyroSensor::filter()
   for (size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
     _model.setDebug(DEBUG_GYRO_RAW, i, _model.state.gyro.raw[i]);
-    _model.setDebug(DEBUG_GYRO_SCALED, i, lrintf(Utils::toDeg(_model.state.gyro.scaled[i])));
   }
 
   _model.setDebug(DEBUG_GYRO_SAMPLE, 0, lrintf(Utils::toDeg(_model.state.gyro.adc[_model.config.debug.axis])));

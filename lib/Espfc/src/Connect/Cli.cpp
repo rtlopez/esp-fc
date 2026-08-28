@@ -331,15 +331,21 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 
   // clang-format off
   static const char* gyroDlpfChoices[]   = { "256Hz", "188Hz", "98Hz", "42Hz", "20Hz", "10Hz", "5Hz", "EXPERIMENTAL", nullptr };
-  static const char* debugModeChoices[]  = {  "NONE", "CYCLETIME", "BATTERY", "GYRO_FILTERED", "ACCELEROMETER", "PIDLOOP", "GYRO_SCALED", "RC_INTERPOLATION",
+  static const char* debugModeChoices[]  = {  "NONE", "CYCLETIME", "BATTERY", "GYRO_FILTERED", "ACCELEROMETER", "PIDLOOP", "RC_INTERPOLATION",
                                               "ANGLERATE", "ESC_SENSOR", "SCHEDULER", "STACK", "ESC_SENSOR_RPM", "ESC_SENSOR_TMP", "ALTITUDE", "FFT",
-                                              "FFT_TIME", "FFT_FREQ", "RX_FRSKY_SPI", "RX_SFHSS_SPI", "GYRO_RAW", "DUAL_GYRO_RAW", "DUAL_GYRO_DIFF",
-                                              "MAX7456_SIGNAL", "MAX7456_SPICLOCK", "SBUS", "FPORT", "RANGEFINDER", "RANGEFINDER_QUALITY", "LIDAR_TF",
+                                              "FFT_TIME", "FFT_FREQ", "RX_FRSKY_SPI", "RX_SFHSS_SPI", "GYRO_RAW", "MULTI_GYRO_RAW", "MULTI_GYRO_DIFF",
+                                              "MAX7456_SIGNAL", "MAX7456_SPICLOCK", "SBUS", "FPORT", "RANGEFINDER", "RANGEFINDER_QUALITY", "OPTICALFLOW", "LIDAR_TF",
                                               "ADC_INTERNAL", "RUNAWAY_TAKEOFF", "SDIO", "CURRENT_SENSOR", "USB", "SMARTAUDIO", "RTH", "ITERM_RELAX",
                                               "ACRO_TRAINER", "RC_SMOOTHING", "RX_SIGNAL_LOSS", "RC_SMOOTHING_RATE", "ANTI_GRAVITY", "DYN_LPF", "RX_SPEKTRUM_SPI",
-                                              "DSHOT_RPM_TELEMETRY", "RPM_FILTER", "D_MIN", "AC_CORRECTION", "AC_ERROR", "DUAL_GYRO_SCALED", "DSHOT_RPM_ERRORS",
-                                              "CRSF_LINK_STATISTICS_UPLINK", "CRSF_LINK_STATISTICS_PWR", "CRSF_LINK_STATISTICS_DOWN", "BARO", "GPS_RESCUE_THROTTLE_PID",
-                                              "DYN_IDLE", "FF_LIMIT", "FF_INTERPOLATED", "BLACKBOX_OUTPUT", "GYRO_SAMPLE", "RX_TIMING", nullptr };
+                                              "DSHOT_RPM_TELEMETRY", "RPM_FILTER", "D_MAX", "AC_CORRECTION", "AC_ERROR", "MULTI_GYRO_SCALED", "DSHOT_RPM_ERRORS",
+                                              "CRSF_LINK_STATISTICS_UPLINK", "CRSF_LINK_STATISTICS_PWR", "CRSF_LINK_STATISTICS_DOWN", "BARO", "AUTOPILOT_ALTITUDE",
+                                              "DYN_IDLE", "FEEDFORWARD_LIMIT", "FEEDFORWARD", "BLACKBOX_OUTPUT", "GYRO_SAMPLE", "RX_TIMING", "D_LPF",
+                                              "VTX_TRAMP", "GHST", "GHST_MSP", "SCHEDULER_DETERMINISM", "TIMING_ACCURACY", "RX_EXPRESSLRS_SPI",
+                                              "RX_EXPRESSLRS_PHASELOCK", "RX_STATE_TIME", "GPS_RESCUE_VELOCITY", "GPS_RESCUE_HEADING", "GPS_RESCUE_TRACKING",
+                                              "GPS_CONNECTION", "ATTITUDE", "VTX_MSP", "GPS_DOP", "FAILSAFE", "GYRO_CALIBRATION", "ANGLE_MODE", "ANGLE_TARGET",
+                                              "CURRENT_ANGLE", "DSHOT_TELEMETRY_COUNTS", "RPM_LIMIT", "RC_STATS", "MAG_CALIB", "MAG_TASK_RATE", "EZLANDING", "TPA",
+                                              "S_TERM", "SPA", "TASK", "GIMBAL", "WING_SETPOINT", "CHIRP", "FLASH_TEST_PRBS", "MAVLINK_TELEMETRY",
+                                              "AUTOPILOT_PID", "POSITION_NAV", "AUTOPILOT_STOP", "PITOT", nullptr };
   static const char* filterTypeChoices[] = { "PT1", "BIQUAD", "PT2", "PT3", "NOTCH", "NOTCH_DF1", "BPF", "FO", "FIR2", "MEDIAN3", "NONE", nullptr };
   static const char* alignChoices[]      = { "DEFAULT", "CW0", "CW90", "CW180", "CW270", "CW0_FLIP", "CW90_FLIP", "CW180_FLIP", "CW270_FLIP", "CUSTOM", nullptr };
   static const char* mixerTypeChoices[]  = { "NONE", "TRI", "QUADP", "QUADX", "BI",
@@ -372,7 +378,8 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("feature_soft_serial", &c.featureMask, 6),
       Param("feature_telemetry", &c.featureMask, 10),
 
-      Param("debug_mode", &c.debug.mode, debugModeChoices), Param("debug_axis", &c.debug.axis),
+      Param("debug_mode", &c.debug.mode, debugModeChoices),
+      Param("debug_axis", &c.debug.axis),
 
       Param("gyro_bus", &c.gyro.bus, busDevChoices),
       Param("gyro_dev", &c.gyro.dev, gyroDevChoices),
@@ -547,14 +554,20 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("serial_usb", &c.serial[SERIAL_USB]),
 #endif
 
-      Param("scaler_0", &c.scaler[0]), Param("scaler_1", &c.scaler[1]), Param("scaler_2", &c.scaler[2]),
+      Param("scaler_0", &c.scaler[0]),
+      Param("scaler_1", &c.scaler[1]),
+      Param("scaler_2", &c.scaler[2]),
 
-      Param("mode_0", &c.conditions[0]), Param("mode_1", &c.conditions[1]), Param("mode_2", &c.conditions[2]),
-      Param("mode_3", &c.conditions[3]), Param("mode_4", &c.conditions[4]), Param("mode_5", &c.conditions[5]),
-      Param("mode_6", &c.conditions[6]), Param("mode_7", &c.conditions[7]),
+      Param("mode_0", &c.conditions[0]),
+      Param("mode_1", &c.conditions[1]),
+      Param("mode_2", &c.conditions[2]),
+      Param("mode_3", &c.conditions[3]),
+      Param("mode_4", &c.conditions[4]),
+      Param("mode_5", &c.conditions[5]),
+      Param("mode_6", &c.conditions[6]),
+      Param("mode_7", &c.conditions[7]),
 
       Param("pid_sync", &c.loopSync),
-
       Param("pid_tuning", &c.simplifiedTuning.pidsMode, simplifiedTunigModeChoices),
       Param("pid_tuning_gain", &c.simplifiedTuning.masterMultiplier),
       Param("pid_tuning_rp_ratio", &c.simplifiedTuning.rollPitchRatio),

@@ -40,9 +40,9 @@ int Input::reload(ModelChangeEvent event)
       const FilterConfig rxFilter{_device && _device->needAverage() ? FILTER_FIR2 : FILTER_NONE, 1};
       const FilterConfig inputFilter{_model.config.input.filterEnable ? _model.config.input.filter
                                                                       : FilterConfig(FILTER_PT3, 25)};
-      for (size_t i = 0; i < 4; i++)
+      for (size_t i = 0; i < AXIS_COUNT_RPYT; i++)
       {
-        _filter[i].begin(rxFilter, _model.state.loopTimer.rate);
+        _filter[i].begin(rxFilter, 100); // rx filter uses FIR2 on NONE, sample rate doesn't really matter here
         _model.state.input.filter[i].begin(inputFilter, _model.state.input.timer.rate);
       }
       break;

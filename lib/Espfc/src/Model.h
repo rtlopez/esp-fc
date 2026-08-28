@@ -98,7 +98,7 @@ class Model
     bool blackboxEnabled() const
     {
       // serial or flash
-      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH) && config.blackbox.pDenom > 0;
+      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH);
     }
 
     bool gyroActive() const /* IRAM_ATTR */
@@ -620,7 +620,7 @@ class Model
 
     void notifyConfigChange(ModelChangeEvent event)
     {
-      if (_onConfigChange && !isModeActive(MODE_ARMED)) _onConfigChange(event);
+      if (_onConfigChange) _onConfigChange(event);
     }
 
     void setConfigChangeListener(std::function<void(ModelChangeEvent)> listener)
