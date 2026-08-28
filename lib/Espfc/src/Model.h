@@ -326,7 +326,7 @@ class Model
       const float d = s.dGain * 0.01f;
       const float ff = s.ffGain * 0.01f;
       const float ig = s.iGain * 0.01f;
-      for (int axis = FC_PID_ROLL; axis <= s.pidsMode; axis++)
+      for (int axis = FC_PID_ROLL; axis <= std::clamp<int>(s.pidsMode, FC_PID_ROLL, FC_PID_YAW); axis++)
       {
         const float pitchD = (axis == FC_PID_PITCH) ? s.rollPitchRatio * 0.01f : 1.0f;
         const float pitchPi = (axis == FC_PID_PITCH) ? s.pitchPiGain * 0.01f : 1.0f;
@@ -620,7 +620,7 @@ class Model
 
     void notifyConfigChange(ModelChangeEvent event)
     {
-      if (_onConfigChange) _onConfigChange(event);
+      if (_onConfigChange && !isModeActive(MODE_ARMED)) _onConfigChange(event);
     }
 
     void setConfigChangeListener(std::function<void(ModelChangeEvent)> listener)

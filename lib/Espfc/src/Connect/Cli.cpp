@@ -1013,7 +1013,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   }
   else if (std::strcmp(cmd.args[0], "get") == 0)
   {
-    if (std::strcmp(cmd.args[1], "mag_calibration") == 0)
+    if (cmd.args[1] && std::strcmp(cmd.args[1], "mag_calibration") == 0)
     {
       // BF specific required by configurator
       s.print("mag_calibration = ");

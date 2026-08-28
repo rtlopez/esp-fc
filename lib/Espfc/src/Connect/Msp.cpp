@@ -85,16 +85,14 @@ void MspResponse::writeData(const char* v, int size)
 
 void MspResponse::writeString(const char* v)
 {
-  while (*v)
-  {
-    writeU8(*v++);
-  }
+  writeData(v, std::clamp<int>(std::strlen(v), 0, 168));
 }
 
 void MspResponse::writePString(const char* v)
 {
-  writeU8(strlen(v));
-  writeString(v);
+  const auto len = std::clamp<int>(std::strlen(v), 0, 168);
+  writeU8(len);
+  writeData(v, len);
 }
 
 void MspResponse::writeU8(uint8_t v)

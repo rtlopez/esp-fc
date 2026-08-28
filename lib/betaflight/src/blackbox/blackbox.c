@@ -2066,6 +2066,7 @@ uint16_t blackboxGetPRatio(void)
 
 uint8_t blackboxCalculateSampleRate(uint16_t pRatio)
 {
+    pRatio = pRatio ? pRatio : 1;
     return llog2(32000 / (targetPidLooptime * pRatio));
 }
 

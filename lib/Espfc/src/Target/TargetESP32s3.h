@@ -62,11 +62,11 @@
 #define ESPFC_SPI_0_MOSI 11
 #define ESPFC_SPI_0_MISO 13
 
-#define ESPFC_SPI_CS_GYRO 10
+#define ESPFC_SPI_CS_GYRO 8
 #define ESPFC_SPI_CS_BARO 7
 
 #define ESPFC_I2C_0
-#define ESPFC_I2C_0_SCL 8
+#define ESPFC_I2C_0_SCL 10
 #define ESPFC_I2C_0_SDA 9
 #define ESPFC_I2C_0_SOFT
 
