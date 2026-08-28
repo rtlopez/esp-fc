@@ -663,7 +663,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       r.writeU8(_model.config.mag.align);  // mag align
       // 1.41+
       r.writeU8(_model.state.gyro.present ? 1 : 0); // gyro detection mask GYRO_1_MASK
-      r.writeU8(0);                                 // gyro_to_use
+      r.writeU8(_model.state.gyro.present ? 1 : 0); // gyro_enable_mask, was gyro_to_use
       r.writeU16(0);                                // mag align roll
       r.writeU16(0);                                // mag align pitch
       r.writeU16(0);                                // mag align yaw
@@ -676,7 +676,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       // API >= 1.41 - support the gyro_to_use and alignment for gyros 1 & 2
       if (m.remain() >= 1)
       {
-        m.readU8(); // gyro enabled bitmask
+        uint8_t gyroEnableMask = m.readU8(); // gyro_enable_mask
+        _model.config.gyro.dev = gyroEnableMask & 1 ? GYRO_AUTO : GYRO_NONE;
       }
       if (m.remain() >= 6)
       {
@@ -2075,7 +2076,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;       // RTC not supported, accept and ignore
 
     default:
-      r.result = 0;
+      r.result = -1;
       break;
   }
 }
