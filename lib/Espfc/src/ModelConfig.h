@@ -924,7 +924,7 @@ class ModelConfig
     {
 #ifdef ESPFC_DEV_PRESET_BLACKBOX_SERIAL
       blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
-      debug.mode = DEBUG_GYRO_SCALED;
+      debug.mode = DEBUG_GYRO_SAMPLE;
       serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].functionMask |= SERIAL_FUNCTION_BLACKBOX;
       serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].blackboxBaud = SERIAL_SPEED_250000;
       serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].baud = SERIAL_SPEED_250000;
@@ -932,6 +932,7 @@ class ModelConfig
 
 #ifdef ESPFC_DEV_PRESET_BLACKBOX_FLASH
       blackbox.dev = BLACKBOX_DEV_FLASH; // flash
+      debug.mode = DEBUG_GYRO_SAMPLE;
       blackbox.pDenom = 1; // 500Hz
 #endif
 
