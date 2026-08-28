@@ -934,6 +934,7 @@ void Cli::parse(CliCmd& cmd)
   {
     cmd.args[count++] = pch;
     pch = std::strtok(nullptr, DELIM);
+    if (count >= CLI_ARGS_SIZE) break;
   }
 }
 
@@ -1568,7 +1569,7 @@ void Cli::execute(CliCmd& cmd, Stream& s)
   {
     const auto& st = _model.config.simplifiedTuning;
     const auto& pid = _model.config.pid;
-    PidConfig res[3];
+    PidConfig res[3] = {};
     _model.calculateSimplifiedPids(st, res);
     // clang-format off
     s.print("X: "); s.print(st.pidsMode); s.print(", M: "); s.print(st.masterMultiplier); 
