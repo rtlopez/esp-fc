@@ -24,15 +24,12 @@ constexpr size_t DEBUG_VALUE_COUNT = 8;
 constexpr size_t CLI_BUFF_SIZE = 128;
 constexpr size_t CLI_ARGS_SIZE = 12;
 
-class CliCmd
+struct CliCmd
 {
-  public:
-    CliCmd(): buff{0}, index{0} {
-      std::fill_n(args, CLI_ARGS_SIZE, nullptr);
-    }
-    const char * args[CLI_ARGS_SIZE];
-    char buff[CLI_BUFF_SIZE];
-    size_t index;
+  CliCmd(): args{}, buff{}, index{0} {}
+  const char * args[CLI_ARGS_SIZE];
+  char buff[CLI_BUFF_SIZE];
+  size_t index;
 };
 
 class SerialPortState
@@ -182,10 +179,10 @@ struct InputState
   uint32_t frameCount;
   uint32_t lossTime;
 
-  float interpolationDelta;
-  float interpolationStep;
   float autoFactor;
   float autoFreq;
+  float autoThrottleFactor;
+  float autoThrottleFreq;
 
   int16_t raw[INPUT_CHANNELS];
   int16_t buffer[INPUT_CHANNELS];
@@ -524,6 +521,7 @@ struct ModelState
   Utils::Timer serialTimer;
 
   Target::Queue appQueue;
+  bool rebootRequired = false;
 };
 
 }

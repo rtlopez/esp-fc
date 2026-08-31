@@ -22,12 +22,33 @@ int MagSensor::begin()
   _model.state.mag.calibrationState = CALIBRATION_IDLE;
   _model.state.mag.calibrationValid = true;
 
+  reload(MODEL_CHANGE_FILTER);
+
   _model.logger.info()
       .log("MAG INIT")
       .log(Device::MagDevice::getName(_mag->getType()))
       .log(_mag->getAddress())
       .logln(_model.state.mag.timer.rate);
 
+  return 1;
+}
+
+int MagSensor::reload(ModelChangeEvent event)
+{
+  switch (event)
+  {
+    case MODEL_CHANGE_FILTER:
+      if (_model.magActive())
+      {
+        for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+        {
+          _model.state.mag.filter[i].begin(_model.config.mag.filter, _model.state.mag.timer.rate);
+        }
+      }
+      break;
+    default:
+      break;
+  }
   return 1;
 }
 

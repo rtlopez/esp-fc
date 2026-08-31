@@ -36,6 +36,11 @@ int GpsSensor::begin(Device::SerialDevice* port, int baud)
   return 1;
 }
 
+int GpsSensor::reload(ModelChangeEvent event)
+{
+  return 1;
+}
+
 int GpsSensor::update()
 {
   if (!_port) return 0;

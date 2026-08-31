@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Device/SerialDevice.h"
 #include "Device/InputDevice.h"
+#include "Device/SerialDevice.h"
 
-namespace Espfc::Device
-{
+namespace Espfc::Device {
 
 class InputIBUS : public InputDevice
 {
@@ -19,10 +18,10 @@ public:
 
   InputIBUS();
 
-  int begin(Device::SerialDevice *serial);
+  int begin(Device::SerialDevice* serial);
   InputStatus update() override;
   uint16_t get(uint8_t i) const override;
-  void get(uint16_t *data, size_t len) const override;
+  void get(uint16_t* data, size_t len) const override;
   size_t getChannelCount() const override;
   bool needAverage() const override;
 
@@ -44,7 +43,7 @@ private:
   static constexpr uint8_t IBUS_COMMAND = 0x40;
   static constexpr size_t CHANNELS = 14;
 
-  Device::SerialDevice *_serial;
+  Device::SerialDevice* _serial;
   IbusState _state;
   uint8_t _idx = 0;
   bool _new_data;
@@ -53,4 +52,4 @@ private:
   uint16_t _channels[CHANNELS];
 };
 
-}
+} // namespace Espfc::Device

@@ -26,11 +26,6 @@ enum GyroDlpf {
   GYRO_DLPF_EX  = 0x07,
 };
 
-enum AccelMode {
-  ACCEL_DELAYED   = 0x00,
-  ACCEL_GYRO      = 0x01,
-};
-
 enum SensorAlign {
   ALIGN_DEFAULT        = 0,
   ALIGN_CW0_DEG        = 1,
@@ -116,7 +111,6 @@ enum DebugMode {
   DEBUG_GYRO_FILTERED,
   DEBUG_ACCELEROMETER,
   DEBUG_PIDLOOP,
-  DEBUG_GYRO_SCALED,
   DEBUG_RC_INTERPOLATION,
   DEBUG_ANGLERATE,
   DEBUG_ESC_SENSOR,
@@ -131,14 +125,15 @@ enum DebugMode {
   DEBUG_RX_FRSKY_SPI,
   DEBUG_RX_SFHSS_SPI,
   DEBUG_GYRO_RAW,
-  DEBUG_DUAL_GYRO_RAW,
-  DEBUG_DUAL_GYRO_DIFF,
+  DEBUG_MULTI_GYRO_RAW,
+  DEBUG_MULTI_GYRO_DIFF,
   DEBUG_MAX7456_SIGNAL,
   DEBUG_MAX7456_SPICLOCK,
   DEBUG_SBUS,
   DEBUG_FPORT,
   DEBUG_RANGEFINDER,
   DEBUG_RANGEFINDER_QUALITY,
+  DEBUG_OPTICALFLOW,
   DEBUG_LIDAR_TF,
   DEBUG_ADC_INTERNAL,
   DEBUG_RUNAWAY_TAKEOFF,
@@ -157,22 +152,62 @@ enum DebugMode {
   DEBUG_RX_SPEKTRUM_SPI,
   DEBUG_DSHOT_RPM_TELEMETRY,
   DEBUG_RPM_FILTER,
-  DEBUG_D_MIN,
+  DEBUG_D_MAX,
   DEBUG_AC_CORRECTION,
   DEBUG_AC_ERROR,
-  DEBUG_DUAL_GYRO_SCALED,
+  DEBUG_MULTI_GYRO_SCALED,
   DEBUG_DSHOT_RPM_ERRORS,
   DEBUG_CRSF_LINK_STATISTICS_UPLINK,
   DEBUG_CRSF_LINK_STATISTICS_PWR,
   DEBUG_CRSF_LINK_STATISTICS_DOWN,
   DEBUG_BARO,
-  DEBUG_GPS_RESCUE_THROTTLE_PID,
+  DEBUG_AUTOPILOT_ALTITUDE,
   DEBUG_DYN_IDLE,
-  DEBUG_FF_LIMIT,
-  DEBUG_FF_INTERPOLATED,
+  DEBUG_FEEDFORWARD_LIMIT,
+  DEBUG_FEEDFORWARD,
   DEBUG_BLACKBOX_OUTPUT,
   DEBUG_GYRO_SAMPLE,
   DEBUG_RX_TIMING,
+  DEBUG_D_LPF,
+  DEBUG_VTX_TRAMP,
+  DEBUG_GHST,
+  DEBUG_GHST_MSP,
+  DEBUG_SCHEDULER_DETERMINISM,
+  DEBUG_TIMING_ACCURACY,
+  DEBUG_RX_EXPRESSLRS_SPI,
+  DEBUG_RX_EXPRESSLRS_PHASELOCK,
+  DEBUG_RX_STATE_TIME,
+  DEBUG_GPS_RESCUE_VELOCITY,
+  DEBUG_GPS_RESCUE_HEADING,
+  DEBUG_GPS_RESCUE_TRACKING,
+  DEBUG_GPS_CONNECTION,
+  DEBUG_ATTITUDE,
+  DEBUG_VTX_MSP,
+  DEBUG_GPS_DOP,
+  DEBUG_FAILSAFE,
+  DEBUG_GYRO_CALIBRATION,
+  DEBUG_ANGLE_MODE,
+  DEBUG_ANGLE_TARGET,
+  DEBUG_CURRENT_ANGLE,
+  DEBUG_DSHOT_TELEMETRY_COUNTS,
+  DEBUG_RPM_LIMIT,
+  DEBUG_RC_STATS,
+  DEBUG_MAG_CALIB,
+  DEBUG_MAG_TASK_RATE,
+  DEBUG_EZLANDING,
+  DEBUG_TPA,
+  DEBUG_S_TERM,
+  DEBUG_SPA,
+  DEBUG_TASK,
+  DEBUG_GIMBAL,
+  DEBUG_WING_SETPOINT,
+  DEBUG_CHIRP,
+  DEBUG_FLASH_TEST_PRBS,
+  DEBUG_MAVLINK_TELEMETRY,
+  DEBUG_AUTOPILOT_PID,
+  DEBUG_POSITION_NAV,
+  DEBUG_AUTOPILOT_STOP,
+  DEBUG_PITOT,
   DEBUG_COUNT,
 };
 
@@ -209,18 +244,6 @@ enum Feature {
   FEATURE_AIRMODE    = 1 << 22,
   FEATURE_RX_SPI     = 1 << 25,
   FEATURE_DYNAMIC_FILTER = 1 << 29,
-};
-
-enum InputInterpolation {
-  INPUT_INTERPOLATION_OFF,
-  INPUT_INTERPOLATION_DEFAULT,
-  INPUT_INTERPOLATION_AUTO,
-  INPUT_INTERPOLATION_MANUAL,
-};
-
-enum InputFilterType : uint8_t {
-  INPUT_INTERPOLATION,
-  INPUT_FILTER,
 };
 
 constexpr size_t MODEL_NAME_LEN  = 16;
@@ -350,13 +373,13 @@ enum PidIndex {
   FC_PID_ROLL,
   FC_PID_PITCH,
   FC_PID_YAW,
+  FC_PID_LEVEL,
+  FC_PID_MAG,
   FC_PID_ALT,
+  FC_PID_VEL,
   FC_PID_POS,
   FC_PID_POSR,
   FC_PID_NAVR,
-  FC_PID_LEVEL,
-  FC_PID_MAG,
-  FC_PID_VEL,
   FC_PID_ITEM_COUNT,
 };
 
@@ -414,14 +437,15 @@ struct InputConfig
   int16_t midRc = 1500;
   int16_t maxRc = 2115;
 
-  int8_t interpolationMode = INPUT_INTERPOLATION_AUTO;
-  int8_t interpolationInterval = 26;
   int8_t deadband = 3;
+  int8_t airModeActivateThreshold = 40;
 
-  int8_t filterType = INPUT_FILTER;
-  int8_t filterAutoFactor = 50;
-  FilterConfig filter{FILTER_PT3, 0};
-  FilterConfig filterDerivative{FILTER_PT3, 0};
+  bool filterEnable = true;
+  int8_t filterAutoFactor = 50;                 // RPY factor
+  int8_t filterAutoThrottleFactor = 50;         // Throttle factor
+  FilterConfig filter{FILTER_PT3, 0};           // autoFactor if freq=0
+  FilterConfig filterThrottle{FILTER_PT3, 0};   // autoFactor if freq=0
+  FilterConfig filterDerivative{FILTER_PT3, 0}; // autoFactor if freq=0
 
   uint8_t expo[3] = { 0, 0, 0 };
   uint8_t rate[3] = { 20, 20, 30 };
@@ -453,9 +477,8 @@ struct OutputConfig
   int16_t servoRate = 0;
 
   int16_t minCommand = 1000;
-  int16_t minThrottle = 1070;
   int16_t maxThrottle = 2000;
-  int16_t dshotIdle = 550;
+  int16_t motorIdle = 550;
 
   int8_t throttleLimitType = 0;
   int8_t throttleLimitPercent = 100;
@@ -503,10 +526,14 @@ enum ArmingDisabledFlags {
   ARMING_DISABLED_DSHOT_BITBANG   = (1 << 22),
   ARMING_DISABLED_ACC_CALIBRATION = (1 << 23),
   ARMING_DISABLED_MOTOR_PROTOCOL  = (1 << 24),
-  ARMING_DISABLED_ARM_SWITCH      = (1 << 25), // Needs to be the last element, since it's always activated if one of the others is active when arming
+  ARMING_DISABLED_CRASHFLIP       = (1 << 25),
+  ARMING_DISABLED_ALTHOLD         = (1 << 26),
+  ARMING_DISABLED_POSHOLD         = (1 << 27),
+  ARMING_DISABLED_AUTOPILOT       = (1 << 28),
+  ARMING_DISABLED_ARM_SWITCH      = (1 << 29), // Needs to be the last element, since it's always activated if one of the others is active when arming
 };
 
-static constexpr size_t ARMING_DISABLED_FLAGS_COUNT = 25;
+static constexpr size_t ARMING_DISABLED_FLAGS_COUNT = 30;
 
 struct WirelessConfig
 {
@@ -525,7 +552,7 @@ struct FailsafeConfig
 struct BlackboxConfig
 {
   int8_t dev = 0;
-  int16_t pDenom = 32; // 1k
+  int16_t pDenom = 1; // loop / 2
   int32_t fieldsMask = 0xffff;
   int8_t mode = 0;
 };
@@ -569,12 +596,12 @@ struct GyroConfig
   int8_t dlpf = GYRO_DLPF_256;
   int8_t align = ALIGN_DEFAULT;
   int16_t bias[3] = { 0, 0, 0 };
-  FilterConfig filter{FILTER_PT1, 100};
-  FilterConfig filter2{FILTER_PT1, 213};
+  FilterConfig filter{FILTER_PT1, 150};
+  FilterConfig filter2{FILTER_PT1, 400};
+  FilterConfig dynLpfFilter{FILTER_PT1, 400, 150};
   FilterConfig filter3{FILTER_FO, 150};
   FilterConfig notch1Filter{FILTER_NOTCH, 0, 0};
   FilterConfig notch2Filter{FILTER_NOTCH, 0, 0};
-  FilterConfig dynLpfFilter{FILTER_PT1, 425, 170};
   DynamicFilterConfig dynamicFilter;
   RpmFilterConfig rpmFilter;
 };
@@ -605,6 +632,7 @@ struct MagConfig
   int16_t offset[3] = { 0, 0, 0 };
   int16_t scale[3] = { 1000, 1000, 1000 };
   FilterConfig filter{FILTER_BIQUAD, 10};
+  int16_t declination = 0;
 };
 
 struct YawConfig
@@ -614,11 +642,10 @@ struct YawConfig
 
 struct DtermConfig
 {
-  FilterConfig filter{FILTER_PT1, 128};
-  FilterConfig filter2{FILTER_PT1, 128};
+  FilterConfig filter{FILTER_PT1, 75};
+  FilterConfig filter2{FILTER_PT1, 150};
+  FilterConfig dynLpfFilter{FILTER_PT1, 150, 75};
   FilterConfig notchFilter{FILTER_NOTCH, 0, 0};
-  FilterConfig dynLpfFilter{FILTER_PT1, 145, 60};
-  int16_t setpointWeight = 30;
 };
 
 struct ItermConfig
@@ -651,6 +678,7 @@ struct MixerConfiguration
 
 struct ControllerConfig
 {
+  int8_t tpaMode = 0;
   int8_t tpaScale = 10;
   int16_t tpaBreakpoint = 1650;
 };
@@ -690,6 +718,42 @@ struct ArmingConfig
   uint8_t smallAngle = 25;
 };
 
+enum SimplifiedTuningMode: uint8_t
+{
+  SIMPLIFIED_TUNING_OFF = 0,
+  SIMPLIFIED_TUNING_RP = FC_PID_PITCH,  // roll + pitch
+  SIMPLIFIED_TUNING_RPY = FC_PID_YAW,   // roll + pitch + yaw
+};
+
+// Betaflight simplified-tuning slider baselines and limits
+static constexpr int SIMPLIFIED_PID_GAIN_MAX = 250;
+static constexpr int SIMPLIFIED_F_GAIN_MAX = 2000;
+static constexpr int SIMPLIFIED_DYN_LPF_MAX_HZ = 500;
+static constexpr int SIMPLIFIED_LPF_MAX_HZ = 500;
+static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ = 150;
+static constexpr int SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ = 400;
+static constexpr int SIMPLIFIED_GYRO_LPF2_HZ = 400;
+static constexpr int SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ = 75;
+static constexpr int SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ = 150;
+static constexpr int SIMPLIFIED_DTERM_LPF2_HZ = 150;
+
+struct SimplifiedTuningConfig
+{
+  int8_t pidsMode = SIMPLIFIED_TUNING_RPY;
+  uint8_t masterMultiplier = 100;
+  uint8_t rollPitchRatio = 100;
+  uint8_t iGain = 100;
+  uint8_t dGain = 80;
+  uint8_t piGain = 100;
+  uint8_t dMaxGain = 0;  // unused, ESP-FC has no D-Max
+  uint8_t ffGain = 80;
+  uint8_t pitchPiGain = 100;
+  uint8_t dtermFilter = 1;
+  uint8_t dtermFilterMultiplier = 100;
+  uint8_t gyroFilter = 1;
+  uint8_t gyroFilterMultiplier = 100;
+};
+
 // persistent data
 class ModelConfig
 {
@@ -713,16 +777,16 @@ class ModelConfig
 
     // pid controller
     PidConfig pid[FC_PID_ITEM_COUNT] = {
-      [FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 24, .F = 72 },  // ROLL
-      [FC_PID_PITCH] = { .P = 46, .I = 90, .D = 26, .F = 76 },  // PITCH
-      [FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 72 },  // YAW
+      [FC_PID_ROLL]  = { .P = 45, .I = 80, .D = 24, .F = 88 },  // ROLL
+      [FC_PID_PITCH] = { .P = 47, .I = 84, .D = 27, .F = 92 },  // PITCH
+      [FC_PID_YAW]   = { .P = 45, .I = 80, .D =  0, .F = 88 },  // YAW
+      [FC_PID_LEVEL] = { .P = 45, .I =  0, .D =  0, .F =  0 },  // ANGLE/LEVEL
+      [FC_PID_MAG]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // MAG
       [FC_PID_ALT]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // ALTHOLD POS
+      [FC_PID_VEL]   = { .P = 80, .I = 60, .D = 40, .F = 20 },  // ALTHOLD VEL
       [FC_PID_POS]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_P * 100, POSHOLD_I * 100,
       [FC_PID_POSR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
       [FC_PID_NAVR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
-      [FC_PID_LEVEL] = { .P = 45, .I =  0, .D =  0, .F =  0 },  // ANGLE/LEVEL
-      [FC_PID_MAG]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // MAG
-      [FC_PID_VEL]   = { .P = 80, .I = 60, .D = 40, .F = 20 },  // ALTHOLD VEL
     };
     YawConfig yaw;
     LevelConfig level;
@@ -730,6 +794,7 @@ class ModelConfig
     ItermConfig iterm;
     AltHoldConfig altHold;
     ControllerConfig controller;
+    SimplifiedTuningConfig simplifiedTuning;
     // hardware
     int8_t pin[PIN_COUNT] = {
 #ifdef ESPFC_INPUT
@@ -859,7 +924,7 @@ class ModelConfig
     {
 #ifdef ESPFC_DEV_PRESET_BLACKBOX_SERIAL
       blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
-      debug.mode = DEBUG_GYRO_SCALED;
+      debug.mode = DEBUG_GYRO_SAMPLE;
       serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].functionMask |= SERIAL_FUNCTION_BLACKBOX;
       serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].blackboxBaud = SERIAL_SPEED_250000;
       serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].baud = SERIAL_SPEED_250000;
@@ -867,7 +932,8 @@ class ModelConfig
 
 #ifdef ESPFC_DEV_PRESET_BLACKBOX_FLASH
       blackbox.dev = BLACKBOX_DEV_FLASH; // flash
-      blackbox.pDenom = 16; // 500Hz
+      debug.mode = DEBUG_GYRO_SAMPLE;
+      blackbox.pDenom = 1; // 500Hz
 #endif
 
 #ifdef ESPFC_DEV_PRESET_MODES
@@ -935,7 +1001,6 @@ class ModelConfig
 
       iterm.lowThrottleZeroIterm = false; // ROBOT
       iterm.limit = 10; // ROBOT
-      dterm.setpointWeight = 0;      // ROBOT
       level.angleLimit = 10;       // deg // ROBOT
 
       output.protocol = ESC_PROTOCOL_PWM; // ROBOT

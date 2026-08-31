@@ -20,7 +20,7 @@ public:
 
   int update()
   {
-    if(!_timer.check()) return 0;
+    if (!_timer.check()) return 0;
 
     // const uint8_t data[] = {
     //   0x20, 0x40,  // preambule (len, cmd)
@@ -31,13 +31,14 @@ public:
     //   0x83, 0xF3  // checksum
     // };
 
+    // clang-format off
     const uint8_t data[] = {
       0x20, 0x40,
       0xDB, 0x05, 0xDC, 0x05,  0x54, 0x05, 0xDC, 0x05,  0xE8, 0x03, 0xD0, 0x07,  0xD2, 0x05, 0xE8, 0x03,
       0xDC, 0x05, 0xDC, 0x05,  0xDC, 0x05, 0xDC, 0x05,  0xDC, 0x05, 0xDC, 0x05,
       0xDA, 0xF3,
     };
-
+    // clang-format on
     _serial->write(data, sizeof(data));
 
     return 1;
@@ -48,4 +49,4 @@ private:
   Utils::Timer _timer;
 };
 
-}
+} // namespace Espfc::Output

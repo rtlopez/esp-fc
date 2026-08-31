@@ -1,5 +1,4 @@
 #include <unity.h>
-#include <ArduinoFake.h>
 #include <Hal/Gpio.h>
 #include <helper_3dmath.hpp>
 #include <EscDriver.h>
@@ -9,7 +8,6 @@
 #include "msp/msp_protocol.h"
 #include <Gps.hpp>
 
-using namespace fakeit;
 using namespace Espfc;
 using namespace Espfc::Connect;
 

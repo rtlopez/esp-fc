@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Model.h"
-#include "Device/SerialDevice.h"
+#include "Connect/Cli.hpp"
 #include "Connect/MspProcessor.hpp"
 #include "Connect/Vtx.hpp"
-#include "Connect/Cli.hpp"
-#include "TelemetryManager.h"
+#include "Device/SerialDevice.h"
+#include "Model.h"
 #include "Output/OutputIBUS.hpp"
 #include "Sensor/GpsSensor.hpp"
+#include "TelemetryManager.h"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
 #endif
@@ -20,16 +20,17 @@ public:
   SerialManager(Model& model, TelemetryManager& telemetry);
 
   int begin();
+  int reload(ModelChangeEvent event);
   int update();
 
 private:
-  static Device::SerialDevice * getSerialPortById(SerialPort portId);
+  static Device::SerialDevice* getSerialPortById(SerialPort portId);
   void processMsp(SerialPortState& ss);
 
   void next()
   {
     _current++;
-    if(_current >= SERIAL_UART_COUNT) _current = 0;
+    if (_current >= SERIAL_UART_COUNT) _current = 0;
   }
 
   Model& _model;
@@ -46,4 +47,4 @@ private:
 #endif
 };
 
-}
+} // namespace Espfc

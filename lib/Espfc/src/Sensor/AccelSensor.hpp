@@ -12,6 +12,7 @@ public:
   AccelSensor(Model& model);
 
   int begin();
+  int reload(ModelChangeEvent event);
   int update();
   int read();
   int filter();

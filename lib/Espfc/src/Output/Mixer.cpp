@@ -77,12 +77,15 @@ int Mixer::begin()
   }
   motorInitEscDevice(_motor);
 
-  _model.state.mixer.minThrottle = _model.config.output.minThrottle;
+  _model.state.mixer.minThrottle = _model.config.output.minCommand + _model.config.output.motorIdle * 0.1f;
   _model.state.mixer.maxThrottle = _model.config.output.maxThrottle;
   _model.state.mixer.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
   if (_model.state.mixer.digitalOutput)
   {
-    _model.state.mixer.minThrottle = (_model.config.output.dshotIdle * 0.1f) + 1001.f;
+    // pwm to dshot mapping: (pwm - 1000) * 2 + 47
+    // so we want to skip command range
+    // 1000->0(disarmed), 1001->49, 2000->2047
+    _model.state.mixer.minThrottle = (_model.config.output.motorIdle * 0.1f) + 1001.f;
     _model.state.mixer.maxThrottle = 2000.f;
   }
   _model.state.currentMixer = Mixers::getMixer((MixerType)_model.config.mixer.type, _model.state.customMixer);

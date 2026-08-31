@@ -16,6 +16,7 @@ public:
   };
   VoltageSensor(Model& model);
   int begin();
+  int reload(ModelChangeEvent event);
   int update();
   int readVbat();
   int readIbat();

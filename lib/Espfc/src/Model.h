@@ -3,8 +3,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <tuple>
 #include <EscDriver.h>
-#include "Debug_Espfc.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Utils/Storage.h"
@@ -12,6 +13,15 @@
 #include "Utils/Math.hpp"
 
 namespace Espfc {
+
+enum ModelChangeEvent
+{
+  MODEL_CHANGE_FILTER,
+  MODEL_CHANGE_PID,
+  MODEL_CHANGE_RATES,
+  MODEL_CHANGE_ACCEL,
+  MODEL_CHANGE_INPUT,
+};
 
 class Model
 {
@@ -88,7 +98,7 @@ class Model
     bool blackboxEnabled() const
     {
       // serial or flash
-      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH) && config.blackbox.pDenom > 0;
+      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH);
     }
 
     bool gyroActive() const /* IRAM_ATTR */
@@ -291,6 +301,100 @@ class Model
       begin();
     }
 
+    void setRebootRequired()
+    {
+      state.rebootRequired = true;
+      setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, true);
+    }
+
+    bool getRebootRequired() const
+    {
+      return state.rebootRequired;
+    }
+
+    void calculateSimplifiedPids(const SimplifiedTuningConfig& s, PidConfig out[3]) const
+    {
+      // ESP-FC compile-time PID defaults for roll/pitch/yaw (no D-Max on this target)
+      static const PidConfig def[3] = {
+        { 45, 80, 30, 110 },
+        { 47, 84, 34, 115 },
+        { 45, 80,  0, 110 },
+      };
+      if (s.pidsMode == SIMPLIFIED_TUNING_OFF) return;
+      const float master = s.masterMultiplier * 0.01f;
+      const float pi = s.piGain * 0.01f;
+      const float d = s.dGain * 0.01f;
+      const float ff = s.ffGain * 0.01f;
+      const float ig = s.iGain * 0.01f;
+      for (int axis = FC_PID_ROLL; axis <= std::clamp<int>(s.pidsMode, FC_PID_ROLL, FC_PID_YAW); axis++)
+      {
+        const float pitchD = (axis == FC_PID_PITCH) ? s.rollPitchRatio * 0.01f : 1.0f;
+        const float pitchPi = (axis == FC_PID_PITCH) ? s.pitchPiGain * 0.01f : 1.0f;
+        out[axis].P = constrain(lrintf(def[axis].P * master * pi * pitchPi), 0, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].I = constrain(lrintf(def[axis].I * master * pi * ig * pitchPi), 0, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].D = constrain(lrintf(def[axis].D * master * d * pitchD), 0, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].F = constrain(lrintf(def[axis].F * master * pitchPi * ff), 0, SIMPLIFIED_F_GAIN_MAX);
+      }
+    }
+
+    void calculateSimplifiedDtermFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    {
+      if (dynMin)
+      {
+        dynMin = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      }
+      if (lpf1) lpf1 = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = constrain(SIMPLIFIED_DTERM_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+    }
+
+    void calculateSimplifiedGyroFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    {
+      if (dynMin)
+      {
+        dynMin = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      }
+      if (lpf1) lpf1 = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = constrain(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+    }
+
+    std::tuple<bool, bool, bool> validateSimplifiedTuning() const
+    {
+      const auto& s = config.simplifiedTuning;
+      
+      const auto& pids = config.pid;
+      PidConfig tmp[3] = {pids[0], pids[1], pids[2]};
+
+      calculateSimplifiedPids(s, tmp);
+      bool pidOk = tmp[0].P == pids[0].P && tmp[0].I == pids[0].I &&
+                   tmp[0].D == pids[0].D && tmp[0].F == pids[0].F &&
+                   tmp[1].P == pids[1].P && tmp[1].I == pids[1].I &&
+                   tmp[1].D == pids[1].D && tmp[1].F == pids[1].F &&
+                   tmp[2].P == pids[2].P && tmp[2].I == pids[2].I &&
+                   tmp[2].D == pids[2].D && tmp[2].F == pids[2].F;
+
+      const auto& gyro = config.gyro;
+      int16_t glpf1 = gyro.filter.freq;
+      int16_t glpf2 = gyro.filter2.freq;
+      int16_t gmin = gyro.dynLpfFilter.cutoff;
+      int16_t gmax = gyro.dynLpfFilter.freq;
+      if (s.gyroFilter) calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
+      bool gyroOk = glpf1 == gyro.filter.freq && glpf2 == gyro.filter2.freq &&
+                    gmin == gyro.dynLpfFilter.cutoff && gmax == gyro.dynLpfFilter.freq;
+
+      const auto& dterm = config.dterm;
+      int16_t dlpf1 = dterm.filter.freq;
+      int16_t dlpf2 = dterm.filter2.freq;
+      int16_t dmin = dterm.dynLpfFilter.cutoff;
+      int16_t dmax = dterm.dynLpfFilter.freq;
+      if (s.dtermFilter) calculateSimplifiedDtermFilters(s.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
+      bool dtermOk = dlpf1 == dterm.filter.freq && dlpf2 == dterm.filter2.freq &&
+                     dmin == dterm.dynLpfFilter.cutoff && dmax == dterm.dynLpfFilter.freq;
+
+      return std::make_tuple(pidOk, gyroOk, dtermOk);
+    }
+
     void reset()
     {
       initialize();
@@ -453,64 +557,7 @@ class Model
       {
         state.mag.timer.setRate(state.mag.rate);
       }
-
-      state.boardAlignment.init(VectorFloat(Utils::toRad(config.boardAlignment[0]), Utils::toRad(config.boardAlignment[1]), Utils::toRad(config.boardAlignment[2])));
-      onAccChange();
-
-      const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
-      const uint32_t gyroFilterRate = state.loopTimer.rate;
-      const uint32_t inputFilterRate = state.input.timer.rate;
-
-      // configure filters
-      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
-      {
-        if(isFeatureActive(FEATURE_DYNAMIC_FILTER))
-        {
-          for(size_t p = 0; p < (size_t)config.gyro.dynamicFilter.count; p++)
-          {
-            state.gyro.dynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
-          }
-        }
-        state.gyro.notch1Filter[i].begin(config.gyro.notch1Filter, gyroFilterRate);
-        state.gyro.notch2Filter[i].begin(config.gyro.notch2Filter, gyroFilterRate);
-        if(config.gyro.dynLpfFilter.cutoff > 0)
-        {
-          state.gyro.filter[i].begin(FilterConfig((FilterType)config.gyro.filter.type, config.gyro.dynLpfFilter.cutoff), gyroFilterRate);
-        }
-        else
-        {
-          state.gyro.filter[i].begin(config.gyro.filter, gyroFilterRate);
-        }
-        state.gyro.filter2[i].begin(config.gyro.filter2, gyroFilterRate);
-        state.gyro.filter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / GYRO_FUSION_LPF_DIV), gyroFilterRate);
-        for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
-        {
-          state.gyro.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.gyro.rpmFilter.freqLpf), gyroFilterRate);
-          for(size_t n = 0; n < config.gyro.rpmFilter.harmonics; n++)
-          {
-            int center = Utils::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.gyro.rpmFilter.harmonics, config.gyro.rpmFilter.minFreq, gyroFilterRate / 2);
-            state.gyro.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
-          }
-        }
-        if(magActive())
-        {
-          state.mag.filter[i].begin(config.mag.filter, state.mag.timer.rate);
-        }
-      }
-
-      for(size_t i = 0; i < 4; i++)
-      {
-        if (config.input.filterType == INPUT_FILTER)
-        {
-          state.input.filter[i].begin(config.input.filter, inputFilterRate);
-        }
-        else
-        {
-          state.input.filter[i].begin(FilterConfig(FILTER_PT3, 25), inputFilterRate);
-        }
-      }
-
+          
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -523,11 +570,6 @@ class Model
 
       // override temporary
       //state.telemetryTimer.setRate(100);
-    }
-
-    void onAccChange()
-    {
-      state.trimRotation.init(VectorFloat{Utils::toRad(config.accel.trim[1]) * 0.1f, Utils::toRad(config.accel.trim[0]) * 0.1f, 0.0f});
     }
 
     void postLoad()
@@ -576,11 +618,23 @@ class Model
 #endif
     }
 
+    void notifyConfigChange(ModelChangeEvent event)
+    {
+      if (_onConfigChange) _onConfigChange(event);
+    }
+
+    void setConfigChangeListener(std::function<void(ModelChangeEvent)> listener)
+    {
+      _onConfigChange = listener;
+    }
+
   private:
     #ifndef UNIT_TEST
     Utils::Storage _storage;
     #endif
     StorageResult _storageResult;
+
+    std::function<void(ModelChangeEvent)> _onConfigChange{};
 };
 
 }

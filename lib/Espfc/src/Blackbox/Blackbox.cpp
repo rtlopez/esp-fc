@@ -138,7 +138,7 @@ int Blackbox::begin()
   motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;
   motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
   motorConfigMutable()->mincommand = _model.config.output.minCommand;
-  motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
+  motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.motorIdle;
   motorConfigMutable()->minthrottle = _model.state.mixer.minThrottle;
   motorConfigMutable()->maxthrottle = _model.state.mixer.maxThrottle;
   motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;
@@ -156,14 +156,7 @@ int Blackbox::begin()
   targetPidLooptime = _model.state.loopTimer.interval;
   activePidLoopDenom = _model.config.loopSync;
 
-  if(_model.config.blackbox.pDenom >= 0 && _model.config.blackbox.pDenom <= 4)
-  {
-    blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
-  }
-  else
-  {
-    blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackbox.pDenom);
-  }
+  blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
   blackboxConfigMutable()->device = _model.config.blackbox.dev;
   blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
   blackboxConfigMutable()->mode = _model.config.blackbox.mode;
@@ -176,10 +169,8 @@ int Blackbox::begin()
   batteryConfigMutable()->vbatmaxcellvoltage = 420;
   batteryConfigMutable()->vbatmincellvoltage = 340;
 
-  rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
-  rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
   rxConfigMutable()->rssi_channel = _model.config.input.rssiChannel;
-  rxConfigMutable()->airModeActivateThreshold = 40;
+  rxConfigMutable()->airModeActivateThreshold = _model.config.input.airModeActivateThreshold;
   rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
 
   rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.gyro.rpmFilter.harmonics;

@@ -1,9 +1,7 @@
 #include "Control/Fusion.h"
 #include "Utils/MemoryHelper.h"
 
-namespace Espfc {
-
-namespace Control {
+namespace Espfc::Control {
 
 Fusion::Fusion(Model& model): _model(model), _madgwick(), _mahony(), _rtqf(), _useMag(false) {}
 
@@ -21,16 +19,35 @@ int Fusion::begin()
   _rtqf.begin(_model.state.accel.timer.rate);
   _rtqf.setKp(_model.config.fusion.gain * 0.0002f);
 
+  reload(MODEL_CHANGE_FILTER);
+
   _model.logger.info()
       .log("FUSION")
       .log(FusionConfig::getModeName((FusionMode)_model.config.fusion.mode))
       .logln(_model.config.fusion.gain);
 
-  for (size_t i = 0; i < 4; i++)
-  {
-    _qFilter[i].begin(FilterConfig(FILTER_BIQUAD, 20), _model.state.accel.timer.rate);
-  }
+  return 1;
+}
 
+int Fusion::reload(ModelChangeEvent event)
+{
+  switch (event)
+  {
+    case MODEL_CHANGE_FILTER: {
+      const auto cutoff = _model.state.accel.timer.rate / GYRO_FUSION_LPF_DIV;
+      for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+      {
+        _model.state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, cutoff), _model.state.loopTimer.rate);
+      }
+      for (size_t i = 0; i < 4; i++)
+      {
+        _qFilter[i].begin(FilterConfig(FILTER_BIQUAD, 20), _model.state.accel.timer.rate);
+      }
+      break;
+    }
+    default:
+      break;
+  }
   return 1;
 }
 
@@ -55,11 +72,18 @@ int FAST_CODE_ATTR Fusion::update()
 
     switch (_model.config.fusion.mode)
     {
-      case FUSION_MADGWICK: q = madgwickFusion(g, a, m); break;
-      case FUSION_MAHONY: q = mahonyFusion(g, a, m); break;
-      case FUSION_RTQF: q = rtqfFusion(g, a, m); break;
+      case FUSION_MADGWICK:
+        q = madgwickFusion(g, a, m);
+        break;
+      case FUSION_MAHONY:
+        q = mahonyFusion(g, a, m);
+        break;
+      case FUSION_RTQF:
+        q = rtqfFusion(g, a, m);
+        break;
       case FUSION_NONE:
-      default: break;
+      default:
+        break;
     }
 
     _model.state.attitude.quaternion = Quaternion::ensureSign(q, _model.state.attitude.quaternion);
@@ -136,6 +160,4 @@ Quaternion FAST_CODE_ATTR Fusion::rtqfFusion(VectorFloat g, VectorFloat a, Vecto
   return _rtqf.getQuaternion();
 }
 
-} // namespace Control
-
-} // namespace Espfc
+} // namespace Espfc::Control

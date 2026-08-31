@@ -19,7 +19,6 @@
 
 #if defined(ESP32)
 #define USE_FLASHFS
-#include "esp_partition.h"
 #endif
 
 #if defined(ESP8266)
@@ -55,9 +54,9 @@
 #define PID_PROCESS_DENOM_DEFAULT       1
 
 #define FC_FIRMWARE_NAME            "Betaflight"
-#define FC_VERSION_MAJOR            4  // increment when a major release is made (big new feature, etc)
-#define FC_VERSION_MINOR            4  // increment when a minor release is made (small new feature, change etc)
-#define FC_VERSION_PATCH_LEVEL      0  // increment when a bug is fixed
+#define FC_VERSION_MAJOR            2026  // increment when a major release is made (big new feature, etc)
+#define FC_VERSION_MINOR            6  // increment when a minor release is made (small new feature, change etc)
+#define FC_VERSION_PATCH_LEVEL      1  // increment when a bug is fixed
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -101,6 +100,7 @@ extern const char * boardIdentifier;
 #define LOG2_32BIT(v) (16*((v)>65535L) + LOG2_16BIT((v)*1L >>16*((v)>65535L)))
 #define LOG2_64BIT(v) (32*((v)/2L>>31 > 0) + LOG2_32BIT((v)*1L >>16*((v)/2L>>31 > 0) >>16*((v)/2L>>31 > 0)))
 #define LOG2(v) LOG2_64BIT(v)
+static inline uint32_t llog2(uint32_t n) { return 31 - __builtin_clz(n | 1); }
 
 #ifdef UNIT_TEST
 #define STATIC_UNIT_TESTED
@@ -108,7 +108,9 @@ extern const char * boardIdentifier;
 #define STATIC_UNIT_TESTED
 #endif
 
+#ifndef offsetof
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#endif
 #define UNUSED(v) ((void)v)
 #define ARRAYLEN(x) (sizeof(x) / sizeof((x)[0]))
 #define STATIC_ASSERT(condition, name) \
@@ -728,7 +730,6 @@ typedef enum {
     DEBUG_GYRO_FILTERED,
     DEBUG_ACCELEROMETER,
     DEBUG_PIDLOOP,
-    DEBUG_GYRO_SCALED,
     DEBUG_RC_INTERPOLATION,
     DEBUG_ANGLERATE,
     DEBUG_ESC_SENSOR,
@@ -743,14 +744,15 @@ typedef enum {
     DEBUG_RX_FRSKY_SPI,
     DEBUG_RX_SFHSS_SPI,
     DEBUG_GYRO_RAW,
-    DEBUG_DUAL_GYRO_RAW,
-    DEBUG_DUAL_GYRO_DIFF,
+    DEBUG_MULTI_GYRO_RAW,
+    DEBUG_MULTI_GYRO_DIFF,
     DEBUG_MAX7456_SIGNAL,
     DEBUG_MAX7456_SPICLOCK,
     DEBUG_SBUS,
     DEBUG_FPORT,
     DEBUG_RANGEFINDER,
     DEBUG_RANGEFINDER_QUALITY,
+    DEBUG_OPTICALFLOW,
     DEBUG_LIDAR_TF,
     DEBUG_ADC_INTERNAL,
     DEBUG_RUNAWAY_TAKEOFF,
@@ -769,22 +771,62 @@ typedef enum {
     DEBUG_RX_SPEKTRUM_SPI,
     DEBUG_DSHOT_RPM_TELEMETRY,
     DEBUG_RPM_FILTER,
-    DEBUG_D_MIN,
+    DEBUG_D_MAX,
     DEBUG_AC_CORRECTION,
     DEBUG_AC_ERROR,
-    DEBUG_DUAL_GYRO_SCALED,
+    DEBUG_MULTI_GYRO_SCALED,
     DEBUG_DSHOT_RPM_ERRORS,
     DEBUG_CRSF_LINK_STATISTICS_UPLINK,
     DEBUG_CRSF_LINK_STATISTICS_PWR,
     DEBUG_CRSF_LINK_STATISTICS_DOWN,
     DEBUG_BARO,
-    DEBUG_GPS_RESCUE_THROTTLE_PID,
+    DEBUG_AUTOPILOT_ALTITUDE,
     DEBUG_DYN_IDLE,
-    DEBUG_FF_LIMIT,
-    DEBUG_FF_INTERPOLATED,
+    DEBUG_FEEDFORWARD_LIMIT,
+    DEBUG_FEEDFORWARD,
     DEBUG_BLACKBOX_OUTPUT,
     DEBUG_GYRO_SAMPLE,
     DEBUG_RX_TIMING,
+    DEBUG_D_LPF,
+    DEBUG_VTX_TRAMP,
+    DEBUG_GHST,
+    DEBUG_GHST_MSP,
+    DEBUG_SCHEDULER_DETERMINISM,
+    DEBUG_TIMING_ACCURACY,
+    DEBUG_RX_EXPRESSLRS_SPI,
+    DEBUG_RX_EXPRESSLRS_PHASELOCK,
+    DEBUG_RX_STATE_TIME,
+    DEBUG_GPS_RESCUE_VELOCITY,
+    DEBUG_GPS_RESCUE_HEADING,
+    DEBUG_GPS_RESCUE_TRACKING,
+    DEBUG_GPS_CONNECTION,
+    DEBUG_ATTITUDE,
+    DEBUG_VTX_MSP,
+    DEBUG_GPS_DOP,
+    DEBUG_FAILSAFE,
+    DEBUG_GYRO_CALIBRATION,
+    DEBUG_ANGLE_MODE,
+    DEBUG_ANGLE_TARGET,
+    DEBUG_CURRENT_ANGLE,
+    DEBUG_DSHOT_TELEMETRY_COUNTS,
+    DEBUG_RPM_LIMIT,
+    DEBUG_RC_STATS,
+    DEBUG_MAG_CALIB,
+    DEBUG_MAG_TASK_RATE,
+    DEBUG_EZLANDING,
+    DEBUG_TPA,
+    DEBUG_S_TERM,
+    DEBUG_SPA,
+    DEBUG_TASK,
+    DEBUG_GIMBAL,
+    DEBUG_WING_SETPOINT,
+    DEBUG_CHIRP,
+    DEBUG_FLASH_TEST_PRBS,
+    DEBUG_MAVLINK_TELEMETRY,
+    DEBUG_AUTOPILOT_PID,
+    DEBUG_POSITION_NAV,
+    DEBUG_AUTOPILOT_STOP,
+    DEBUG_PITOT,
     DEBUG_COUNT
 } debugType_e;
 
@@ -959,20 +1001,16 @@ int32_t getAmperageLatest(void);
 /* SENSOR END */
 
 /* RX START */
-#define RX_MAPPABLE_CHANNEL_COUNT 8
-
 typedef struct rxConfig_s {
     uint8_t serialrx_provider;              // type of UART-based receiver (0 = spek 10, 1 = spek 11, 2 = sbus). Must be enabled by FEATURE_RX_SERIAL first.
     uint8_t rssi_channel;
-    uint8_t rcInterpolation;
-    uint8_t rcInterpolationChannels;
-    uint8_t rcInterpolationInterval;
-    uint16_t airModeActivateThreshold;      // Throttle setpoint where airmode gets activated
+    uint8_t airModeActivateThreshold;       // Throttle setpoint where airmode gets activated
 } rxConfig_t;
 
 PG_DECLARE(rxConfig_t, rxConfig);
 
 uint16_t getRssi(void);
+/* RX END */
 
 /* FAILSAFE START */
 typedef enum {
@@ -987,13 +1025,14 @@ typedef enum {
 failsafePhase_e failsafePhase();
 bool rxIsReceivingSignal(void);
 bool rxAreFlightChannelsValid(void);
+/* FAILSAFE END */
+
 float pidGetPreviousSetpoint(int axis);
 float mixerGetThrottle(void);
 bool isRssiConfigured(void);
 int16_t getMotorOutputLow();
 int16_t getMotorOutputHigh();
 uint16_t getDshotErpm(uint8_t i);
-/* FAILSAFE END */
 
 typedef enum {
     GPS_LATITUDE,

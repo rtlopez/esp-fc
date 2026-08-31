@@ -21,6 +21,8 @@ public:
   ~GyroSensor();
 
   int begin();
+  int reload(ModelChangeEvent event);
+
   int read();
   int filter();
   void postLoop();

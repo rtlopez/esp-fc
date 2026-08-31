@@ -16,10 +16,23 @@ public:
     _model.state.altitude.height = 0.0f;
     _model.state.altitude.vario = 0.0f;
 
-    _altitudeFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
-    _varioFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
-    _varioFusion.begin(_model.state.accel.timer.rate, _model.config.altHold.baroTau * 0.1f);
+    reload(MODEL_CHANGE_FILTER);
 
+    return 1;
+  }
+
+  int reload(ModelChangeEvent event)
+  {
+    switch (event)
+    {
+      case MODEL_CHANGE_FILTER:
+        _altitudeFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
+        _varioFilter.begin(FilterConfig(FILTER_PT3, 5), _model.state.accel.timer.rate);
+        _varioFusion.begin(_model.state.accel.timer.rate, _model.config.altHold.baroTau * 0.1f);
+        break;
+      default:
+        break;
+    }
     return 1;
   }
 

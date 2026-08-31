@@ -8,16 +8,28 @@ Controller::Controller(Model& model): _model(model), _rates{} {}
 
 int Controller::begin()
 {
-  _rates.begin(_model.config.input);
-  _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
+  reload(MODEL_CHANGE_RATES);
+  reload(MODEL_CHANGE_FILTER);
+  reload(MODEL_CHANGE_PID);
+  return 1;
+}
 
-  beginInnerLoop(AXIS_ROLL);
-  beginInnerLoop(AXIS_PITCH);
-  beginInnerLoop(AXIS_YAW);
-  beginOuterLoop(AXIS_ROLL);
-  beginOuterLoop(AXIS_PITCH);
-  beginAltHold();
-
+int Controller::reload(ModelChangeEvent event)
+{
+  switch (event)
+  {
+    case MODEL_CHANGE_RATES:
+      _rates.begin(_model.config.input);
+      break;
+    case MODEL_CHANGE_FILTER:
+      reloadFilter();
+      break;
+    case MODEL_CHANGE_PID:
+      reloadPid();
+      break;
+    default:
+      break;
+  }
   return 1;
 }
 
@@ -35,9 +47,13 @@ int FAST_CODE_ATTR Controller::update()
     resetIterm();
     switch (_model.config.mixer.type)
     {
-      case FC_MIXER_GIMBAL: outerLoopRobot(); break;
+      case FC_MIXER_GIMBAL:
+        outerLoopRobot();
+        break;
 
-      default: outerLoop(); break;
+      default:
+        outerLoop();
+        break;
     }
   }
 
@@ -45,9 +61,13 @@ int FAST_CODE_ATTR Controller::update()
     Utils::Stats::Measure measure(_model.state.stats, COUNTER_INNER_PID);
     switch (_model.config.mixer.type)
     {
-      case FC_MIXER_GIMBAL: innerLoopRobot(); break;
+      case FC_MIXER_GIMBAL:
+        innerLoopRobot();
+        break;
 
-      default: innerLoop(); break;
+      default:
+        innerLoop();
+        break;
     }
   }
 
@@ -254,13 +274,13 @@ void Controller::resetIterm()
 
 float Controller::calculateSetpointRate(int axis, float input) const
 {
-  if (axis == AXIS_YAW) input *= -1.f;
-  return _rates.getSetpoint(axis, input);
+  return _rates.getSetpoint(axis, axis == AXIS_YAW ? -input : input);
 }
 
-void Controller::beginInnerLoop(size_t axis)
+void Controller::reloadPid()
 {
   const int pidFilterRate = _model.state.loopTimer.rate;
+
   float pidScale[] = {1.f, 1.f, 1.f};
   if (_model.config.mixer.type == FC_MIXER_GIMBAL)
   {
@@ -268,69 +288,55 @@ void Controller::beginInnerLoop(size_t axis)
     pidScale[AXIS_PITCH] = 20.f; // ROBOT
   }
 
-  const auto& pc = _model.config.pid[axis];
-  const auto& dtermConf = _model.config.dterm;
-
-  auto& pid = _model.state.innerPid[axis];
-  pid.Kp = (float)pc.P * PTERM_SCALE * pidScale[axis];
-  pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[axis];
-  pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[axis];
-  pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[axis];
-  pid.iLimitLow = -_model.config.iterm.limit * 0.01f;
-  pid.iLimitHigh = _model.config.iterm.limit * 0.01f;
-  pid.oLimitLow = -0.66f;
-  pid.oLimitHigh = 0.66f;
-  pid.rate = pidFilterRate;
-  pid.dtermNotchFilter.begin(dtermConf.notchFilter, pidFilterRate);
-  if (dtermConf.dynLpfFilter.cutoff > 0)
+  // inner loop
+  for (size_t axis = 0; axis < AXIS_COUNT_RPY; axis++)
   {
-    pid.dtermFilter.begin(FilterConfig((FilterType)dtermConf.filter.type, dtermConf.dynLpfFilter.cutoff),
-                          pidFilterRate);
+    const auto& pc = _model.config.pid[axis];
+    auto& pid = _model.state.innerPid[axis];
+    pid.Kp = (float)pc.P * PTERM_SCALE * pidScale[axis];
+    pid.Ki = (float)pc.I * ITERM_SCALE * pidScale[axis];
+    pid.Kd = (float)pc.D * DTERM_SCALE * pidScale[axis];
+    pid.Kf = (float)pc.F * FTERM_SCALE * pidScale[axis];
+    pid.iLimitLow = -_model.config.iterm.limit * 0.01f;
+    pid.iLimitHigh = _model.config.iterm.limit * 0.01f;
+    pid.oLimitLow = -0.66f;
+    pid.oLimitHigh = 0.66f;
+    pid.rate = pidFilterRate;
+    if (axis == AXIS_YAW)
+    {
+      pid.itermRelax =
+          (_model.config.iterm.relax == ITERM_RELAX_RPY || _model.config.iterm.relax == ITERM_RELAX_RPY_INC)
+              ? _model.config.iterm.relax
+              : ITERM_RELAX_OFF;
+    }
+    else
+    {
+      pid.itermRelax = _model.config.iterm.relax;
+    }
+    pid.begin();
   }
-  else
-  {
-    pid.dtermFilter.begin(dtermConf.filter, pidFilterRate);
-  }
-  pid.dtermFilter2.begin(dtermConf.filter2, pidFilterRate);
-  pid.ftermFilter.begin(_model.config.input.filterDerivative, pidFilterRate);
-  pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, _model.config.iterm.relaxCutoff), pidFilterRate);
-  if (axis == AXIS_YAW)
-  {
-    pid.itermRelax = (_model.config.iterm.relax == ITERM_RELAX_RPY || _model.config.iterm.relax == ITERM_RELAX_RPY_INC)
-                         ? _model.config.iterm.relax
-                         : ITERM_RELAX_OFF;
-    pid.ptermFilter.begin(_model.config.yaw.filter, pidFilterRate);
-  }
-  else
-  {
-    pid.itermRelax = _model.config.iterm.relax;
-  }
-  pid.begin();
-}
 
-void Controller::beginOuterLoop(size_t axis)
-{
-  const int pidFilterRate = _model.state.loopTimer.rate;
-  const auto& pc = _model.config.pid[FC_PID_LEVEL];
+  // outer loop
+  for (size_t axis = 0; axis < AXIS_COUNT_RP; axis++)
+  {
+    const auto& pc = _model.config.pid[FC_PID_LEVEL];
 
-  auto& pid = _model.state.outerPid[axis];
-  pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
-  pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
-  pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
-  pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
-  pid.iLimitHigh = Utils::toRad(_model.config.level.rateLimit * 0.1f);
-  pid.iLimitLow = -pid.iLimitHigh;
-  pid.oLimitHigh = Utils::toRad(_model.config.level.rateLimit);
-  pid.oLimitLow = -pid.oLimitHigh;
-  pid.rate = pidFilterRate;
-  pid.ptermFilter.begin(_model.config.level.ptermFilter, pidFilterRate);
-  // pid.iLimit = 0.3f; // ROBOT
-  // pid.oLimit = 1.f;  // ROBOT
-  pid.begin();
-}
+    auto& pid = _model.state.outerPid[axis];
+    pid.Kp = (float)pc.P * LEVEL_PTERM_SCALE;
+    pid.Ki = (float)pc.I * LEVEL_ITERM_SCALE;
+    pid.Kd = (float)pc.D * LEVEL_DTERM_SCALE;
+    pid.Kf = (float)pc.F * LEVEL_FTERM_SCALE;
+    pid.iLimitHigh = Utils::toRad(_model.config.level.rateLimit * 0.1f);
+    pid.iLimitLow = -pid.iLimitHigh;
+    pid.oLimitHigh = Utils::toRad(_model.config.level.rateLimit);
+    pid.oLimitLow = -pid.oLimitHigh;
+    pid.rate = pidFilterRate;
+    // pid.iLimit = 0.3f; // ROBOT
+    // pid.oLimit = 1.f;  // ROBOT
+    pid.begin();
+  }
 
-void Controller::beginAltHold()
-{
+  // alt hold pid
   float itermCenter = std::clamp((int)_model.config.altHold.itermCenter, 10, 60) * 0.01f;
   float itermRange = itermCenter * std::clamp((int)_model.config.altHold.itermRange, 10, 60) * 0.01f;
   const auto& pc = _model.config.pid[FC_PID_VEL];
@@ -343,6 +349,53 @@ void Controller::beginAltHold()
   pid.iLimitLow = -1.0f + 2.0f * (itermCenter - itermRange);
   pid.iLimitHigh = -1.0f + 2.0f * (itermCenter + itermRange);
   pid.iReset = pid.iLimitLow;
+  pid.rate = _model.state.loopTimer.rate;
+  pid.begin();
+}
+
+void Controller::reloadFilter()
+{
+  _speedFilter.begin(FilterConfig(FILTER_BIQUAD, 10), _model.state.loopTimer.rate);
+
+  const int pidFilterRate = _model.state.loopTimer.rate;
+
+  // inner loop
+  const auto& dtermConf = _model.config.dterm;
+  for (size_t axis = 0; axis < AXIS_COUNT_RPY; axis++)
+  {
+    auto& pid = _model.state.innerPid[axis];
+    pid.rate = pidFilterRate;
+    pid.dtermNotchFilter.begin(dtermConf.notchFilter, pidFilterRate);
+    if (dtermConf.dynLpfFilter.cutoff > 0)
+    {
+      pid.dtermFilter.begin(FilterConfig((FilterType)dtermConf.filter.type, dtermConf.dynLpfFilter.cutoff),
+                            pidFilterRate);
+    }
+    else
+    {
+      pid.dtermFilter.begin(dtermConf.filter, pidFilterRate);
+    }
+    pid.dtermFilter2.begin(dtermConf.filter2, pidFilterRate);
+    pid.ftermFilter.begin(_model.config.input.filterDerivative, pidFilterRate);
+    pid.itermRelaxFilter.begin(FilterConfig(FILTER_PT1, _model.config.iterm.relaxCutoff), pidFilterRate);
+    if (axis == AXIS_YAW)
+    {
+      pid.ptermFilter.begin(_model.config.yaw.filter, pidFilterRate);
+    }
+    pid.begin();
+  }
+
+  // outer loop
+  for (size_t axis = 0; axis < AXIS_COUNT_RP; axis++)
+  {
+    auto& pid = _model.state.outerPid[axis];
+    pid.rate = pidFilterRate;
+    pid.ptermFilter.begin(_model.config.level.ptermFilter, pidFilterRate);
+    pid.begin();
+  }
+
+  // alt hold pid
+  auto& pid = _model.state.innerPid[AXIS_THRUST];
   pid.rate = _model.state.loopTimer.rate;
   pid.dtermFilter.begin(FilterConfig(FILTER_PT1, 10), _model.state.loopTimer.rate);
   pid.ftermDerivative = false;
