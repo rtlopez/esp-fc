@@ -41,7 +41,7 @@ int Input::reload(ModelChangeEvent event)
       const FilterConfig inputFilter{_model.config.input.filterEnable ? _model.config.input.filter
                                                                       : FilterConfig(FILTER_PT3, 25)};
       const FilterConfig throtleFilter{_model.config.input.filterEnable ? _model.config.input.filterThrottle
-                                                                      : FilterConfig(FILTER_PT3, 25)};
+                                                                        : FilterConfig(FILTER_PT3, 25)};
       for (size_t i = 0; i < AXIS_COUNT_RPYT; i++)
       {
         _filter[i].begin(rxFilter, 100); // rx filter uses FIR2 on NONE, sample rate doesn't really matter here
@@ -290,34 +290,33 @@ void FAST_CODE_ATTR Input::filterInputs(InputStatus status)
 
 void FAST_CODE_ATTR Input::updateFrameRate()
 {
+  auto& input = _model.state.input;
   const uint32_t now = micros();
-  const uint32_t frameDelta = now - _model.state.input.frameTime;
+  const uint32_t frameDelta = now - input.frameTime;
 
-  _model.state.input.frameTime = now;
-  _model.state.input.frameDelta += (((int)frameDelta - (int)_model.state.input.frameDelta) >> 3); // avg * 0.125
-  _model.state.input.frameRate = 1000000ul / _model.state.input.frameDelta;
+  input.frameTime = now;
+  input.frameDelta += (((int)frameDelta - (int)input.frameDelta) >> 3); // avg * 0.125
+  input.frameRate = 1000000ul / input.frameDelta;
 
   if (_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
   {
-    _model.state.debug[0] = _model.state.input.frameDelta / 10;
-    _model.state.debug[1] = _model.state.input.frameRate;
+    _model.state.debug[0] = input.frameDelta / 10;
+    _model.state.debug[1] = input.frameRate;
   }
 
   // auto cutoff input freq
-  float freq = std::max(_model.state.input.frameRate * _model.state.input.autoFactor, 15.f); // no lower than 15Hz
-  float throttleFreq =
-      std::max(_model.state.input.frameRate * _model.state.input.autoThrottleFactor, 15.f); // no lower than 15Hz
-  if (freq > _model.state.input.autoFreq * 1.1f || freq < _model.state.input.autoFreq * 0.9f)
+  float freq = std::clamp(input.frameRate * input.autoFactor, 15.f, 500.f);                 // no lower than 15Hz
+  float throttleFreq = std::clamp(input.frameRate * input.autoThrottleFactor, 15.f, 500.f); // no lower than 15Hz
+  if (freq > input.autoFreq * 1.1f || freq < input.autoFreq * 0.9f)
   {
-    _model.state.input.autoFreq += 0.25f * (freq - _model.state.input.autoFreq);                         // lpf
-    _model.state.input.autoThrottleFreq += 0.25f * (throttleFreq - _model.state.input.autoThrottleFreq); // lpf
+    input.autoFreq += 0.25f * (freq - input.autoFreq);                         // lpf
+    input.autoThrottleFreq += 0.25f * (throttleFreq - input.autoThrottleFreq); // lpf
 
-    FilterConfig conf{(FilterType)_model.config.input.filter.type,
-                      std::clamp<int16_t>(_model.state.input.autoFreq, 15, 500)};
+    FilterConfig conf{(FilterType)_model.config.input.filter.type, std::clamp<int16_t>(input.autoFreq, 15, 500)};
     FilterConfig confThrottle{(FilterType)_model.config.input.filterThrottle.type,
-                              std::clamp<int16_t>(_model.state.input.autoThrottleFreq, 15, 500)};
+                              std::clamp<int16_t>(input.autoThrottleFreq, 15, 500)};
     FilterConfig confDerivative{(FilterType)_model.config.input.filterDerivative.type,
-                                std::clamp<int16_t>(_model.state.input.autoFreq, 15, 500)};
+                                std::clamp<int16_t>(input.autoFreq, 15, 500)};
 
     for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
     {
@@ -339,8 +338,8 @@ void FAST_CODE_ATTR Input::updateFrameRate()
     if (_model.config.debug.mode == DEBUG_RC_SMOOTHING_RATE)
     {
       _model.state.debug[2] = lrintf(freq);
-      _model.state.debug[3] = lrintf(_model.state.input.autoFreq);
-      _model.state.debug[4] = lrintf(_model.state.input.autoThrottleFreq);
+      _model.state.debug[3] = lrintf(input.autoFreq);
+      _model.state.debug[4] = lrintf(input.autoThrottleFreq);
     }
   }
 
