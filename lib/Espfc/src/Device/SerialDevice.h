@@ -107,7 +107,7 @@ class SerialDeviceConfig
 
 namespace Device {
 
-class SerialDevice: public Stream
+class SerialDevice: public ::Stream
 {
   public:
     virtual void begin(const SerialDeviceConfig& conf) = 0;

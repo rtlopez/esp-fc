@@ -53,14 +53,14 @@ public:
     Param(const char* n, MixerEntry* a): Param(n, PARAM_MIXER, reinterpret_cast<char*>(a), nullptr) {}
     Param(const char* n, SerialPortConfig* a): Param(n, PARAM_SERIAL, reinterpret_cast<char*>(a), nullptr) {}
 
-    void print(Stream& stream) const;
-    void print(Stream& stream, const OutputChannelConfig& och) const;
-    void print(Stream& stream, const InputChannelConfig& ich) const;
-    void print(Stream& stream, const ScalerConfig& sc) const;
-    void print(Stream& stream, const ActuatorCondition& ac) const;
-    void print(Stream& stream, const MixerEntry& me) const;
-    void print(Stream& stream, const SerialPortConfig& sc) const;
-    void print(Stream& stream, int32_t v) const;
+    void print(::Stream& stream) const;
+    void print(::Stream& stream, const OutputChannelConfig& och) const;
+    void print(::Stream& stream, const InputChannelConfig& ich) const;
+    void print(::Stream& stream, const ScalerConfig& sc) const;
+    void print(::Stream& stream, const ActuatorCondition& ac) const;
+    void print(::Stream& stream, const MixerEntry& me) const;
+    void print(::Stream& stream, const SerialPortConfig& sc) const;
+    void print(::Stream& stream, int32_t v) const;
 
     void update(const char** args) const;
 
@@ -89,17 +89,17 @@ public:
 
   Cli(Model& model);
   static const Param* initialize(ModelConfig& c);
-  bool process(const char c, CliCmd& cmd, Stream& stream);
+  bool process(const char c, CliCmd& cmd, ::Stream& stream);
   void parse(CliCmd& cmd);
-  void execute(CliCmd& cmd, Stream& s);
+  void execute(CliCmd& cmd, ::Stream& s);
 
 #if !defined(UNIT_TEST)
 private:
 #endif
-  void print(const Param& param, Stream& s) const;
-  void printGpsStatus(Stream& s, bool full) const;
-  void printVersion(Stream& s) const;
-  void printStats(Stream& s) const;
+  void print(const Param& param, ::Stream& s) const;
+  void printGpsStatus(::Stream& s, bool full) const;
+  void printVersion(::Stream& s) const;
+  void printStats(::Stream& s) const;
 
   Model& _model;
   const Param* _params;

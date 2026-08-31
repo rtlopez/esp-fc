@@ -36,7 +36,7 @@ private:
 class FlashDevice
 { 
 public:
-  static void partitions(Stream& s)
+  static void partitions(::Stream& s)
   {
     s.printf("ESP32 Partition table:\r\n");
     s.printf("| Type | Sub |  Offset  |   Size   |       Label      |\r\n");
@@ -57,7 +57,7 @@ public:
     return esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, nullptr);
   }
 
-  static void journal(Stream& s)
+  static void journal(::Stream& s)
   {
     FlashfsJournalItem journal[8];
     flashfsJournalLoad(journal, 0, 8);

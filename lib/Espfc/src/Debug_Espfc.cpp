@@ -3,7 +3,7 @@
 namespace Espfc {
 
 #ifdef ESPFC_DEBUG_SERIAL
-Stream* _debugStream = nullptr;
+::Stream* _debugStream = nullptr;
 #endif
 
 } // namespace Espfc
