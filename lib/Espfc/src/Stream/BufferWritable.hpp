@@ -9,8 +9,20 @@ namespace Espfc::Stream {
 class BufferWritable : public Writable
 {
 public:
+  BufferWritable(): BufferWritable(nullptr, 0) {}
+
   BufferWritable(char* buff, size_t size): _buff(buff), _size(size), _len(0), _overflow(false)
   {
+    if (_size) _buff[0] = '\0';
+  }
+
+  // rebinds the sink to another buffer, the previous one is not touched
+  void reset(char* buff, size_t size)
+  {
+    _buff = buff;
+    _size = size;
+    _len = 0;
+    _overflow = false;
     if (_size) _buff[0] = '\0';
   }
 

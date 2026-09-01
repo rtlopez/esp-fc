@@ -57,7 +57,7 @@ int Wireless::connect()
 
 void Wireless::wifiEventConnected(const String& ssid, int channel)
 {
-  _model.logger.info().log("WIFI STA CONN").log(ssid).logln(channel);
+  _model.logger.info().log("WIFI STA CONN").log(ssid.c_str()).logln(channel);
 }
 
 void Wireless::wifiEventApConnected(const uint8_t* mac)
@@ -69,7 +69,7 @@ void Wireless::wifiEventApConnected(const uint8_t* mac)
 
 void Wireless::wifiEventGotIp(const IPAddress& ip)
 {
-  _model.logger.info().log("WIFI STA IP").logln(ip.toString());
+  _model.logger.info().log("WIFI STA IP").logln(ip.toString().c_str());
 }
 
 void Wireless::wifiEventDisconnected()

@@ -9,7 +9,7 @@
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Utils/Storage.h"
-#include "Utils/Logger.h"
+#include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"
 
 namespace Espfc {
