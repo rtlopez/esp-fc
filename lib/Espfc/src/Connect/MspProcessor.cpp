@@ -2,6 +2,7 @@
 #include "Hardware.h"
 #include "Model.h"
 #include "ModelConfig.h"
+#include "Stream/Printer.hpp"
 #include <algorithm>
 #include <limits>
 #include <platform.h>
@@ -196,7 +197,7 @@ bool MspProcessor::parse(char c, MspMessage& msg)
   return !msg.isIdle();
 }
 
-void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
+void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWritable& s)
 {
   r.cmd = m.cmd;
   r.version = m.version;
@@ -2138,7 +2139,7 @@ void MspProcessor::serializeFlashData(MspResponse& r, uint32_t address, const ui
 #endif
 }
 
-void MspProcessor::sendResponse(MspResponse& r, Device::SerialDevice& s)
+void MspProcessor::sendResponse(MspResponse& r, Stream::ReadWritable& s)
 {
   debugResponse(r);
   uint8_t buff[256];
@@ -2177,39 +2178,43 @@ bool MspProcessor::debugSkip(uint8_t cmd)
 void MspProcessor::debugMessage(const MspMessage& m)
 {
   if (debugSkip(m.cmd)) return;
-  Device::SerialDevice* s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
-  if (!s) return;
+  auto* dev = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
+  if (!dev) return;
 
-  s->print(m.dir == MSP_TYPE_REPLY ? '>' : '<');
-  s->print(m.cmd);
-  s->print('.');
-  s->print(m.expected);
-  s->print(' ');
+  Stream::Printer s{*dev};
+
+  s.print(m.dir == MSP_TYPE_REPLY ? '>' : '<');
+  s.print(m.cmd);
+  s.print('.');
+  s.print(m.expected);
+  s.print(' ');
   for (size_t i = 0; i < m.expected; i++)
   {
-    s->print(m.buffer[i], HEX);
-    s->print(' ');
+    s.print(m.buffer[i], HEX);
+    s.print(' ');
   }
-  s->println();
+  s.println();
 }
 
 void MspProcessor::debugResponse(const MspResponse& r)
 {
   if (debugSkip(r.cmd)) return;
-  Device::SerialDevice* s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
-  if (!s) return;
+  auto* dev = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
+  if (!dev) return;
 
-  s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@'));
-  s->print(r.cmd);
-  s->print('.');
-  s->print(r.len);
-  s->print(' ');
+  Stream::Printer s{*dev};
+
+  s.print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@'));
+  s.print(r.cmd);
+  s.print('.');
+  s.print(r.len);
+  s.print(' ');
   for (size_t i = 0; i < r.len; i++)
   {
-    s->print(r.data[i], HEX);
-    s->print(' ');
+    s.print(r.data[i], HEX);
+    s.print(' ');
   }
-  s->println();
+  s.println();
 }
 
 } // namespace Espfc::Connect

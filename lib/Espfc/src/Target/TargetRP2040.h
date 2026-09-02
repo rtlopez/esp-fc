@@ -77,41 +77,13 @@
 #define ESPFC_MULTI_CORE
 #define ESPFC_MULTI_CORE_RP2040
 
-#include "Device/SerialDevice.h"
-
+#include <cstddef>
+#include <cstdint>
 namespace Espfc {
 
 constexpr size_t targetSerialTxBufferSize()
 {
   return 256u;
-}
-
-uint16_t targetSerialConfigFlags(const SerialDeviceConfig& conf);
-
-template<typename T>
-inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
-{
-  uint16_t sc = targetSerialConfigFlags(conf);
-  dev.setFIFOSize(targetSerialTxBufferSize());
-  dev.setPinout(conf.tx_pin, conf.rx_pin);
-  if (conf.inverted)
-  {
-    // gpio_set_inover(conf.rx_pin, GPIO_OVERRIDE_INVERT);
-    // gpio_set_outover(conf.tx_pin, GPIO_OVERRIDE_INVERT);
-    dev.setInvertRX();
-    dev.setInvertTX();
-  }
-  dev.begin(conf.baud, sc);
-
-  return 1;
-}
-
-template<>
-inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
-{
-  dev.begin(conf.baud);
-  // while(!dev) delay(10);
-  return 1;
 }
 
 template<typename T>

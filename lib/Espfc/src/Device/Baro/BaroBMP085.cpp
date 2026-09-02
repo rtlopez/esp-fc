@@ -1,4 +1,6 @@
 #include "BaroBMP085.hpp"
+#include "Hal/Time.hpp"
+#include <cmath>
 
 #define BMP085_DEFAULT_ADDRESS 0x77
 #define BMP085_WHOAMI_ID 0x55

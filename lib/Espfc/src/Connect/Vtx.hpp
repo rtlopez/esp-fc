@@ -31,14 +31,14 @@ class Vtx
 public:
   Vtx(Model& model): _serial(nullptr), _model(model) {}
 
-  int begin(Device::SerialDevice* serial);
+  int begin(Stream::ReadWritable* serial);
   int update();
   int setChannel();
   int setPower();
   Connect::VtxDeviceType type;
 
 private:
-  Device::SerialDevice* _serial;
+  Stream::ReadWritable* _serial;
   Model& _model;
   State _state = State::INACTIVE;
   bool _armed = false;

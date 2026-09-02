@@ -55,27 +55,28 @@
 #define ESPFC_WIFI_ALT
 #define ESPFC_ESPNOW
 
-#include "Device/SerialDevice.h"
 #include <uart.h>
+#include <cstddef>
+#include <cstdint>
 
 namespace Espfc {
 
-uint32_t targetSerialConfigFlags(const SerialDeviceConfig& conf);
+// uint32_t targetSerialConfigFlags(const Hal::SerialDeviceConfig& conf);
 
 constexpr size_t targetSerialTxBufferSize()
 {
-  return UART_TX_FIFO_SIZE;
+  return 0x80; // UART_TX_FIFO_SIZE;
 }
 
-template<typename T>
-inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
-{
-  uint32_t sc = targetSerialConfigFlags(conf);
-  const bool isUart0 = &dev == &Serial;
-  dev.begin(conf.baud, (SerialConfig)sc, isUart0 ? SERIAL_FULL : SERIAL_TX_ONLY, isUart0 ? 1 : 2, conf.inverted);
+// template<typename T>
+// inline int targetSerialInit(T& dev, const Hal::SerialDeviceConfig& conf)
+// {
+//   uint32_t sc = targetSerialConfigFlags(conf);
+//   const bool isUart0 = &dev == &Serial;
+//   dev.begin(conf.baud, (SerialConfig)sc, isUart0 ? SERIAL_FULL : SERIAL_TX_ONLY, isUart0 ? 1 : 2, conf.inverted);
 
-  return 1;
-}
+//   return 1;
+// }
 
 template<typename T>
 inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)

@@ -56,6 +56,8 @@ public:
 
   void flush() override {}
 
+  bool isTxFifoEmpty() override { return _size == 0; }
+
   void clear()
   {
     _len = 0;

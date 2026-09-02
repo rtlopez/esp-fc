@@ -1,5 +1,5 @@
 #include "Buzzer.hpp"
-#include "Hal/Gpio.h"
+#include "Hal/Gpio.hpp"
 
 namespace Espfc::Connect {
 

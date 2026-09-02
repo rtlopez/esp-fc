@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Device/InputDevice.h"
-#include "Device/SerialDevice.h"
+#include "Stream/ReadWritable.hpp"
 
 namespace Espfc::Device {
 
@@ -18,7 +18,7 @@ public:
 
   InputIBUS();
 
-  int begin(Device::SerialDevice* serial);
+  int begin(Stream::ReadWritable* serial);
   InputStatus update() override;
   uint16_t get(uint8_t i) const override;
   void get(uint16_t* data, size_t len) const override;
@@ -43,7 +43,7 @@ private:
   static constexpr uint8_t IBUS_COMMAND = 0x40;
   static constexpr size_t CHANNELS = 14;
 
-  Device::SerialDevice* _serial;
+  Stream::ReadWritable* _serial;
   IbusState _state;
   uint8_t _idx = 0;
   bool _new_data;

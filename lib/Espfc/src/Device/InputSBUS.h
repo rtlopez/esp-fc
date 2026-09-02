@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Device/SerialDevice.h"
 #include "Device/InputDevice.h"
+#include "Stream/ReadWritable.hpp"
 #include <cstdint>
 #include <cstddef>
 
@@ -52,7 +52,7 @@ class InputSBUS: public InputDevice
 
     InputSBUS();
 
-    int begin(Device::SerialDevice * serial);
+    int begin(Stream::ReadWritable* serial);
     InputStatus update() override;
     uint16_t get(uint8_t i) const override;
     void get(uint16_t * data, size_t len) const override;
@@ -67,7 +67,7 @@ class InputSBUS: public InputDevice
     static constexpr size_t SBUS_FRAME_SIZE = sizeof(SbusData);
     static constexpr size_t CHANNELS = 16;
 
-    Device::SerialDevice * _serial;
+    Stream::ReadWritable* _serial;
     SbusState _state;
     uint8_t _idx = 0;
     bool _new_data;

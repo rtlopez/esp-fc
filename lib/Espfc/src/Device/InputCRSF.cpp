@@ -8,7 +8,7 @@ using namespace Espfc::Rc;
 
 InputCRSF::InputCRSF(): _serial(nullptr), _telemetry(nullptr), _state(CRSF_ADDR), _idx(0), _new_data(false) {}
 
-int InputCRSF::begin(Device::SerialDevice * serial, TelemetryManager * telemetry)
+int InputCRSF::begin(Stream::ReadWritable* serial, TelemetryManager* telemetry)
 {
   _serial = serial;
   _telemetry = telemetry;

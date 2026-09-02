@@ -13,7 +13,7 @@ class GpsSensor
 public:
   GpsSensor(Model& model);
 
-  int begin(Device::SerialDevice* port, int baud);
+  int begin(Stream::ReadWritable* port, int baud);
   int reload(ModelChangeEvent event);
   int update();
 
@@ -111,7 +111,7 @@ private:
   Gps::NmeaParser _nmeaParser;
   Gps::NmeaMessage _nmeaMsg;
 
-  Device::SerialDevice* _port;
+  Stream::ReadWritable* _port;
   Utils::Timer _timer;
 };
 

@@ -75,18 +75,16 @@
 
 #define ESPFC_DSP
 
-#include "Device/SerialDevice.h"
-
 #include "Target/TargetEsp32Common.h"
 
 namespace Espfc {
 
-template<>
-inline int targetSerialInit(USBCDC& dev, const SerialDeviceConfig& conf)
-{
-  dev.begin(conf.baud);
-  // while(!dev) delay(10);
-  return 1;
-}
+// template<>
+// inline int targetSerialInit(USBCDC& dev, const Hal::SerialDeviceConfig& conf)
+// {
+//   dev.begin(conf.baud);
+//   // while(!dev) delay(10);
+//   return 1;
+// }
 
 } // namespace Espfc

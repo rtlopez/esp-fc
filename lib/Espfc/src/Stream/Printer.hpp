@@ -26,6 +26,11 @@ class Printer
 {
 public:
   explicit Printer(Writable& out): _out(out) {}
+  Printer& operator=(Printer&& other) noexcept
+  {
+    _out = other._out;
+    return *this;
+  }
 
   size_t write(uint8_t c)
   {

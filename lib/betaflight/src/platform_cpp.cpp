@@ -1,7 +1,7 @@
 #include "platform.h"
-#include "Device/SerialDevice.h"
 #include "EscDriver.h"
-#include "Hal/Gpio.h"
+#include "Hal/Gpio.hpp"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/MemoryHelper.h"
 
 int IORead(IO_t pin)
@@ -98,34 +98,34 @@ void serialEndWrite(serialPort_t * instance)
 
 void FAST_CODE_ATTR serialWrite(serialPort_t * instance, uint8_t ch)
 {
-  Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
+  auto* dev = static_cast<Espfc::Stream::ReadWritable*>(instance->espfcDevice);
   if(dev) dev->write(ch);
 }
 
 uint32_t FAST_CODE_ATTR serialRxBytesWaiting(serialPort_t * instance)
 {
-  Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
+  auto* dev = static_cast<Espfc::Stream::ReadWritable*>(instance->espfcDevice);
   if(!dev) return 0;
   return dev->available();
 }
 
 int FAST_CODE_ATTR serialRead(serialPort_t * instance)
 {
-  Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
+  auto* dev = static_cast<Espfc::Stream::ReadWritable*>(instance->espfcDevice);
   if(dev) return dev->read();
   return -1;
 }
 
 uint32_t FAST_CODE_ATTR serialTxBytesFree(const serialPort_t * instance)
 {
-  Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
+  auto* dev = static_cast<Espfc::Stream::ReadWritable*>(instance->espfcDevice);
   if(!dev) return 0;
   return dev->availableForWrite();
 }
 
 bool FAST_CODE_ATTR isSerialTransmitBufferEmpty(const serialPort_t * instance)
 {
-  Espfc::Device::SerialDevice * dev = (Espfc::Device::SerialDevice *)instance->espfcDevice;
+  auto* dev = static_cast<Espfc::Stream::ReadWritable*>(instance->espfcDevice);
   if(!dev) return 0;
   return dev->isTxFifoEmpty();
 }

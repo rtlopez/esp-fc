@@ -8,35 +8,6 @@
 
 namespace Espfc {
 
-uint32_t targetSerialConfigFlags(const SerialDeviceConfig& conf)
-{
-  uint32_t sc = 0;
-  // clang-format off
-  switch(conf.data_bits)
-  {
-    case 8: sc |= UART_NB_BIT_8; break;
-    case 7: sc |= UART_NB_BIT_7; break;
-    case 6: sc |= UART_NB_BIT_6; break;
-    case 5: sc |= UART_NB_BIT_5; break;
-    default: sc |= UART_NB_BIT_8; break;
-  }
-  switch(conf.parity)
-  {
-    case SDC_SERIAL_PARITY_EVEN: sc |= UART_PARITY_EVEN; break;
-    case SDC_SERIAL_PARITY_ODD:  sc |= UART_PARITY_ODD;  break;
-    default: sc |= UART_PARITY_NONE;  break;
-  }
-  switch(conf.stop_bits)
-  {
-    case SDC_SERIAL_STOP_BITS_2:  sc |= UART_NB_STOP_BIT_2;  break;
-    case SDC_SERIAL_STOP_BITS_15: sc |= UART_NB_STOP_BIT_15; break;
-    case SDC_SERIAL_STOP_BITS_1:  sc |= UART_NB_STOP_BIT_1;  break;
-    default: break;
-  }
-  // clang-format on
-  return sc;
-}
-
 uint32_t getBoardId0()
 {
   return ESP.getChipId();

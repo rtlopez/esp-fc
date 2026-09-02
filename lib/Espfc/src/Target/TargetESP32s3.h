@@ -105,13 +105,13 @@
 
 namespace Espfc {
 
-template<>
-inline int targetSerialInit(HWCDC& dev, const SerialDeviceConfig& conf)
-{
-  dev.begin(conf.baud);
-  // dev.setTxTimeoutMs(10);
-  // while(!dev) delay(10);
-  return 1;
-}
+// template<>
+// inline int targetSerialInit(HWCDC& dev, const Hal::SerialDeviceConfig& conf)
+// {
+//   dev.begin(conf.baud);
+//   // dev.setTxTimeoutMs(10);
+//   // while(!dev) delay(10);
+//   return 1;
+// }
 
 } // namespace Espfc

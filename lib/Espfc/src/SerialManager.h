@@ -3,10 +3,10 @@
 #include "Connect/Cli.hpp"
 #include "Connect/MspProcessor.hpp"
 #include "Connect/Vtx.hpp"
-#include "Device/SerialDevice.h"
 #include "Model.h"
 #include "Output/OutputIBUS.hpp"
 #include "Sensor/GpsSensor.hpp"
+#include "Stream/ReadWritable.hpp"
 #include "TelemetryManager.h"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
@@ -24,7 +24,7 @@ public:
   int update();
 
 private:
-  static Device::SerialDevice* getSerialPortById(SerialPort portId);
+  static Stream::ReadWritable* getSerialPortById(SerialPort portId);
   void processMsp(SerialPortState& ss);
 
   void next()

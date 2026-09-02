@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Device/SerialDevice.h"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/Timer.h"
 
 namespace Espfc::Output {
@@ -10,7 +10,7 @@ class OutputIBUS
 public:
   OutputIBUS() {}
 
-  int begin(Device::SerialDevice* serial)
+  int begin(Stream::ReadWritable* serial)
   {
     _serial = serial;
     _timer.setInterval(7000); // 7ms
@@ -45,7 +45,7 @@ public:
   }
 
 private:
-  Device::SerialDevice* _serial;
+  Stream::ReadWritable* _serial;
   Utils::Timer _timer;
 };
 

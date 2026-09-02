@@ -14,8 +14,9 @@ public:
   virtual size_t write(const uint8_t* data, size_t len) = 0;
   virtual int availableForWrite() = 0;
   virtual void flush() = 0;
+  virtual bool isTxFifoEmpty() = 0;
 
-protected:
+// protected:
   // Non virtual and protected on purpose: no vtable slot, no delete through base pointer.
   ~Writable() = default;
 };

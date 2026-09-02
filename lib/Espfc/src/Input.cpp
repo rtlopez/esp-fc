@@ -351,7 +351,7 @@ void FAST_CODE_ATTR Input::updateFrameRate()
 
 Device::InputDevice* Input::getInputDevice()
 {
-  Device::SerialDevice* serial = _model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
+  auto* serial = _model.getSerialStream(SERIAL_FUNCTION_RX_SERIAL);
   if (serial && _model.isFeatureActive(FEATURE_RX_SERIAL))
   {
     switch (_model.config.input.serialRxProvider)

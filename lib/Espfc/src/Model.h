@@ -8,6 +8,7 @@
 #include <EscDriver.h>
 #include "ModelConfig.h"
 #include "ModelState.h"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/Storage.h"
 #include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"
@@ -228,12 +229,12 @@ class Model
       }
     }
 
-    Device::SerialDevice * getSerialStream(SerialPort i)
+    Stream::ReadWritable * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
     }
 
-    Device::SerialDevice * getSerialStream(SerialFunction sf)
+    Stream::ReadWritable * getSerialStream(SerialFunction sf)
     {
       for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
       {

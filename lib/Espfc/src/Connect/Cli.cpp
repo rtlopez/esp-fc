@@ -25,7 +25,7 @@
 
 namespace Espfc::Connect {
 
-void Cli::Param::print(::Stream& stream) const
+void Cli::Param::print(Stream::Printer& stream) const
 {
   if (!addr)
   {
@@ -82,7 +82,7 @@ void Cli::Param::print(::Stream& stream) const
   }
 }
 
-void Cli::Param::print(::Stream& stream, const OutputChannelConfig& och) const
+void Cli::Param::print(Stream::Printer& stream, const OutputChannelConfig& och) const
 {
   stream.print(och.servo ? 'S' : 'M');
   stream.print(' ');
@@ -95,7 +95,7 @@ void Cli::Param::print(::Stream& stream, const OutputChannelConfig& och) const
   stream.print(och.max);
 }
 
-void Cli::Param::print(::Stream& stream, const InputChannelConfig& ich) const
+void Cli::Param::print(Stream::Printer& stream, const InputChannelConfig& ich) const
 {
   stream.print(ich.map);
   stream.print(' ');
@@ -110,7 +110,7 @@ void Cli::Param::print(::Stream& stream, const InputChannelConfig& ich) const
   stream.print(ich.fsValue);
 }
 
-void Cli::Param::print(::Stream& stream, const ScalerConfig& sc) const
+void Cli::Param::print(Stream::Printer& stream, const ScalerConfig& sc) const
 {
   stream.print(sc.dimension);
   stream.print(' ');
@@ -121,7 +121,7 @@ void Cli::Param::print(::Stream& stream, const ScalerConfig& sc) const
   stream.print(sc.maxScale);
 }
 
-void Cli::Param::print(::Stream& stream, const ActuatorCondition& ac) const
+void Cli::Param::print(Stream::Printer& stream, const ActuatorCondition& ac) const
 {
   stream.print(ac.id);
   stream.print(' ');
@@ -136,7 +136,7 @@ void Cli::Param::print(::Stream& stream, const ActuatorCondition& ac) const
   stream.print(ac.linkId);
 }
 
-void Cli::Param::print(::Stream& stream, const MixerEntry& me) const
+void Cli::Param::print(Stream::Printer& stream, const MixerEntry& me) const
 {
   stream.print(me.src);
   stream.print(' ');
@@ -145,7 +145,7 @@ void Cli::Param::print(::Stream& stream, const MixerEntry& me) const
   stream.print(me.rate);
 }
 
-void Cli::Param::print(::Stream& stream, const SerialPortConfig& sc) const
+void Cli::Param::print(Stream::Printer& stream, const SerialPortConfig& sc) const
 {
   stream.print(sc.functionMask);
   stream.print(' ');
@@ -154,7 +154,7 @@ void Cli::Param::print(::Stream& stream, const SerialPortConfig& sc) const
   stream.print(sc.blackboxBaud);
 }
 
-void Cli::Param::print(::Stream& stream, int32_t v) const
+void Cli::Param::print(Stream::Printer& stream, int32_t v) const
 {
   if (choices)
   {
@@ -832,7 +832,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   return params;
 }
 
-bool Cli::process(const char c, CliCmd& cmd, ::Stream& stream)
+bool Cli::process(const char c, CliCmd& cmd, Stream::Printer& stream)
 {
   // configurator handshake
   if (!_active && c == '#')
@@ -938,7 +938,7 @@ void Cli::parse(CliCmd& cmd)
   }
 }
 
-void Cli::execute(CliCmd& cmd, ::Stream& s)
+void Cli::execute(CliCmd& cmd, Stream::Printer& s)
 {
   if (_interactive)
   {
@@ -976,17 +976,17 @@ void Cli::execute(CliCmd& cmd, ::Stream& s)
   else if (std::strcmp(cmd.args[0], "wifi") == 0)
   {
     s.print("ST IP4: tcp://");
-    s.print(WiFi.localIP());
+    s.print(WiFi.localIP().toString().c_str());
     s.print(":");
     s.println(_model.config.wireless.port);
     s.print("ST MAC: ");
-    s.println(WiFi.macAddress());
+    s.println(WiFi.macAddress().c_str());
     s.print("AP IP4: tcp://");
-    s.print(WiFi.softAPIP());
+    s.print(WiFi.softAPIP().toString().c_str());
     s.print(":");
     s.println(_model.config.wireless.port);
     s.print("AP MAC: ");
-    s.println(WiFi.softAPmacAddress());
+    s.println(WiFi.softAPmacAddress().c_str());
     s.print("STATUS: ");
     s.println(WiFi.status());
     s.print("  MODE: ");
@@ -1703,7 +1703,7 @@ void Cli::execute(CliCmd& cmd, ::Stream& s)
   s.println();
 }
 
-void Cli::print(const Param& param, ::Stream& s) const
+void Cli::print(const Param& param, Stream::Printer& s) const
 {
   s.print("set ");
   s.print(param.name);
@@ -1740,7 +1740,7 @@ static const char* const getUsedName(size_t num)
 }
 #endif
 
-void Cli::printGpsStatus(::Stream& s, bool full) const
+void Cli::printGpsStatus(Stream::Printer& s, bool full) const
 {
 #ifndef UNIT_TEST
   s.println("GPS STATUS:");
@@ -1854,7 +1854,7 @@ void Cli::printGpsStatus(::Stream& s, bool full) const
 #endif
 }
 
-void Cli::printVersion(::Stream& s) const
+void Cli::printVersion(Stream::Printer& s) const
 {
   s.print(boardIdentifier);
   s.print(' ');
@@ -1877,7 +1877,7 @@ void Cli::printVersion(::Stream& s) const
   s.print(__cplusplus);
 }
 
-void Cli::printStats(::Stream& s) const
+void Cli::printStats(Stream::Printer& s) const
 {
   s.print("    cpu freq: ");
   s.print(targetCpuFreq());

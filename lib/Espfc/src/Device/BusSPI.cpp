@@ -2,7 +2,7 @@
 
 #if defined(ESPFC_SPI_0)
 
-#include "Hal/Gpio.h"
+#include "Hal/Gpio.hpp"
 #include <Arduino.h>
 
 namespace Espfc::Device {

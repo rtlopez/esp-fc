@@ -2,16 +2,14 @@
 
 #include "Model.h"
 
-namespace Espfc {
-
-namespace Telemetry {
+namespace Espfc::Telemetry {
 
 class TelemetryText
 {
 public:
   TelemetryText(Model& model): _model(model) {}
 
-  int process(::Stream& s) const
+  int process(Stream::Printer& s) const
   {
     // print(s, _model.state.gyro.adc.x, 3);
     // println(s);
@@ -21,39 +19,39 @@ public:
 
 private:
   template<typename T>
-  void print(::Stream& s, const T& v) const
+  void print(Stream::Printer& s, const T& v) const
   {
     s.print(v);
     s.print(' ');
   }
 
-  void print(::Stream& s, const long& v) const
+  void print(Stream::Printer& s, const long& v) const
   {
     s.print(v);
     s.print(' ');
   }
 
-  void print(::Stream& s, float& v, int len) const
+  void print(Stream::Printer& s, float& v, int len) const
   {
     s.print(v, len);
     s.print(' ');
   }
 
-  void print(::Stream& s, const VectorFloat& v) const
+  void print(Stream::Printer& s, const VectorFloat& v) const
   {
     print(s, v.x);
     print(s, v.y);
     print(s, v.z);
   }
 
-  void print(::Stream& s, const VectorInt16& v) const
+  void print(Stream::Printer& s, const VectorInt16& v) const
   {
     print(s, v.x);
     print(s, v.y);
     print(s, v.z);
   }
 
-  void print(::Stream& s, const Quaternion& v) const
+  void print(Stream::Printer& s, const Quaternion& v) const
   {
     print(s, v.w);
     print(s, v.x);
@@ -61,7 +59,7 @@ private:
     print(s, v.z);
   }
 
-  void println(::Stream& s) const
+  void println(Stream::Printer& s) const
   {
     s.println();
   }
@@ -69,6 +67,4 @@ private:
   Model& _model;
 };
 
-} // namespace Telemetry
-
-} // namespace Espfc
+} // namespace Espfc::Telemetry
