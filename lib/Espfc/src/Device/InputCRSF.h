@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Device/SerialDevice.h"
 #include "Device/InputDevice.h"
 #include "Rc/Crsf.h"
 #include "TelemetryManager.h"

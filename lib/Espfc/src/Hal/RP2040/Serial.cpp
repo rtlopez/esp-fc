@@ -70,10 +70,13 @@ static constexpr size_t targetSerialTxBufferSize()
   return 256u;
 }
 
+static SerialDeviceConfig _configs[NUM_UARTS];
+
 void SerialUart::begin(const SerialDeviceConfig& conf)
 {
-  uint16_t sc = targetSerialConfigFlags(conf);
+  _configs[_index] = conf;
   auto& p = getPort(_index);
+  uint16_t sc = targetSerialConfigFlags(conf);
   p.setFIFOSize(targetSerialTxBufferSize());
   p.setPinout(conf.tx_pin, conf.rx_pin);
   if (conf.inverted)
@@ -88,7 +91,11 @@ void SerialUart::begin(const SerialDeviceConfig& conf)
 
 void SerialUart::updateBaudRate(int baud)
 {
-  // getPort(_index).updateBaudRate(baud);
+  auto& p = getPort(_index);
+  p.end();
+  auto cfg = _configs[_index];
+  cfg.baud = baud;
+  begin(cfg);
 }
 
 int SerialUart::available()
@@ -136,7 +143,9 @@ int SerialUart::availableForWrite()
 
 bool SerialUart::isTxFifoEmpty()
 {
-  return getPort(_index).availableForWrite() >= 0xff;
+  // SerialUART::availableForWrite() returns only 0 or 1, and setFIFOSize(256u) does not change that value
+  // assume writable == empty
+  return getPort(_index).availableForWrite() == 1;
 }
 
 SerialUsb* getSerialUsb()

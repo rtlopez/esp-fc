@@ -107,7 +107,7 @@ int SerialUart::read()
 
 size_t SerialUart::readMany(uint8_t* c, size_t l)
 {
-  return getPort(_index).readBytes((char*)c, l);
+  return getPort(_index).read((char*)c, l);
 }
 
 int SerialUart::peek()

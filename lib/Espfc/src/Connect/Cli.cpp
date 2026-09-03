@@ -5,8 +5,11 @@
 #include "Utils/Filter.h"
 #include "msp/msp_protocol.h"
 #include <algorithm>
+#include <charconv>
 #include <cstring>
 #include <iterator>
+#include <memory>
+#include <optional>
 #include <platform.h>
 
 #ifdef USE_FLASHFS
@@ -23,7 +26,37 @@
 #include <freertos/task.h>
 #endif
 
-#include <Arduino.h>
+namespace {
+
+static std::optional<int> toNumber(const char* str)
+{
+  if (!str) return std::nullopt;
+
+  int value = 0;
+  auto [ptr, ec] = std::from_chars(str, str + std::strlen(str), value);
+
+  if (ec == std::errc{} && *ptr == '\0')
+  {
+    return value;
+  }
+
+  return std::nullopt;
+}
+
+static std::optional<float> toFloat(const char* str)
+{
+  if (!str || *str == '\0') return std::nullopt;
+ 
+  char* end = nullptr;
+  errno = 0;
+  const float value = std::strtof(str, &end);
+ 
+  if (end == str || *end != '\0' || errno == ERANGE) return std::nullopt;
+ 
+  return value;
+}
+
+} // namespace
 
 namespace Espfc::Connect {
 
@@ -201,7 +234,7 @@ void Cli::Param::update(const char** args) const
       break;
     case PARAM_FLOAT:
       if (!v) return;
-      write(String(v).toFloat());
+      write(toFloat(v).value_or(0.0f));
       break;
     case PARAM_STRING:
       write(v ? v : "");
@@ -250,51 +283,51 @@ void Cli::Param::write(OutputChannelConfig& och, const char** args) const
 {
   if (args[2]) och.servo = *args[2] == 'S';
   if (args[3]) och.reverse = *args[3] == 'R';
-  if (args[4]) och.min = String(args[4]).toInt();
-  if (args[5]) och.neutral = String(args[5]).toInt();
-  if (args[6]) och.max = String(args[6]).toInt();
+  if (args[4]) och.min = toNumber(args[4]).value_or(och.min);
+  if (args[5]) och.neutral = toNumber(args[5]).value_or(och.neutral);
+  if (args[6]) och.max = toNumber(args[6]).value_or(och.max);
 }
 
 void Cli::Param::write(InputChannelConfig& ich, const char** args) const
 {
-  if (args[2]) ich.map = String(args[2]).toInt();
-  if (args[3]) ich.min = String(args[3]).toInt();
-  if (args[4]) ich.neutral = String(args[4]).toInt();
-  if (args[5]) ich.max = String(args[5]).toInt();
+  if (args[2]) ich.map = toNumber(args[2]).value_or(ich.map);
+  if (args[3]) ich.min = toNumber(args[3]).value_or(ich.min);
+  if (args[4]) ich.neutral = toNumber(args[4]).value_or(ich.neutral);
+  if (args[5]) ich.max = toNumber(args[5]).value_or(ich.max);
   if (args[6]) ich.fsMode = *args[6] == 'A' ? 0 : (*args[6] == 'H' ? 1 : (*args[6] == 'S' ? 2 : 0));
-  if (args[7]) ich.fsValue = String(args[7]).toInt();
+  if (args[7]) ich.fsValue = toNumber(args[7]).value_or(ich.fsValue);
 }
 
 void Cli::Param::write(ScalerConfig& sc, const char** args) const
 {
-  if (args[2]) sc.dimension = (ScalerDimension)String(args[2]).toInt();
-  if (args[3]) sc.channel = String(args[3]).toInt();
-  if (args[4]) sc.minScale = String(args[4]).toInt();
-  if (args[5]) sc.maxScale = String(args[5]).toInt();
+  if (args[2]) sc.dimension = (ScalerDimension)toNumber(args[2]).value_or(sc.dimension);
+  if (args[3]) sc.channel = toNumber(args[3]).value_or(sc.channel);
+  if (args[4]) sc.minScale = toNumber(args[4]).value_or(sc.minScale);
+  if (args[5]) sc.maxScale = toNumber(args[5]).value_or(sc.maxScale);
 }
 
 void Cli::Param::write(ActuatorCondition& ac, const char** args) const
 {
-  if (args[2]) ac.id = String(args[2]).toInt();
-  if (args[3]) ac.ch = String(args[3]).toInt();
-  if (args[4]) ac.min = String(args[4]).toInt();
-  if (args[5]) ac.max = String(args[5]).toInt();
-  if (args[6]) ac.logicMode = String(args[6]).toInt();
-  if (args[7]) ac.linkId = String(args[7]).toInt();
+  if (args[2]) ac.id = toNumber(args[2]).value_or(ac.id);
+  if (args[3]) ac.ch = toNumber(args[3]).value_or(ac.ch);
+  if (args[4]) ac.min = toNumber(args[4]).value_or(ac.min);
+  if (args[5]) ac.max = toNumber(args[5]).value_or(ac.max);
+  if (args[6]) ac.logicMode = toNumber(args[6]).value_or(ac.logicMode);
+  if (args[7]) ac.linkId = toNumber(args[7]).value_or(ac.linkId);
 }
 
 void Cli::Param::write(MixerEntry& ac, const char** args) const
 {
-  if (args[2]) ac.src = std::clamp<int>(String(args[2]).toInt(), 0, MIXER_SOURCE_MAX - 1);
-  if (args[3]) ac.dst = std::clamp<int>(String(args[3]).toInt(), 0, (int)(OUTPUT_CHANNELS - 1));
-  if (args[4]) ac.rate = std::clamp<int>(String(args[4]).toInt(), -1000, 1000);
+  if (args[2]) ac.src = std::clamp<int>(toNumber(args[2]).value_or(ac.src), 0, MIXER_SOURCE_MAX - 1);
+  if (args[3]) ac.dst = std::clamp<int>(toNumber(args[3]).value_or(ac.dst), 0, (int)(OUTPUT_CHANNELS - 1));
+  if (args[4]) ac.rate = std::clamp<int>(toNumber(args[4]).value_or(ac.rate), -1000, 1000);
 }
 
 void Cli::Param::write(SerialPortConfig& sc, const char** args) const
 {
-  if (args[2]) sc.functionMask = String(args[2]).toInt();
-  if (args[3]) sc.baud = String(args[3]).toInt();
-  if (args[4]) sc.blackboxBaud = String(args[4]).toInt();
+  if (args[2]) sc.functionMask = toNumber(args[2]).value_or(sc.functionMask);
+  if (args[3]) sc.baud = toNumber(args[3]).value_or(sc.baud);
+  if (args[4]) sc.blackboxBaud = toNumber(args[4]).value_or(sc.blackboxBaud);
 }
 
 void Cli::Param::write(const char* v) const
@@ -312,8 +345,7 @@ int32_t Cli::Param::parse(const char* v) const
       if (strcasecmp(v, choices[i]) == 0) return i;
     }
   }
-  String tmp = v;
-  return tmp.toInt();
+  return toNumber(v).value_or(0);
 }
 
 Cli::Cli(Model& model): _model(model), _ignore(false), _active(false), _interactive(false)
@@ -1044,8 +1076,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     bool found = false;
     for (size_t i = 0; _params[i].name; ++i)
     {
-      String ts = _params[i].name;
-      if (!cmd.args[1] || ts.indexOf(cmd.args[1]) >= 0)
+      if (!cmd.args[1] || std::strstr(_params[i].name, cmd.args[1]) != nullptr)
       {
         print(_params[i], s);
         found = true;
@@ -1663,22 +1694,22 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
       size_t addr = 0;
       if (cmd.args[2])
       {
-        addr = String(cmd.args[2]).toInt();
+        addr = toNumber(cmd.args[2]).value_or(0);
       }
       size_t size = 0;
       if (cmd.args[3])
       {
-        size = String(cmd.args[3]).toInt();
+        size = toNumber(cmd.args[3]).value_or(0);
       }
       size = std::clamp<size_t>(size, 8u, 128 * 1024u);
       size_t chunk_size = 256;
 
-      uint8_t* data = new uint8_t[chunk_size];
+      auto data = std::make_unique<uint8_t[]>(chunk_size);
       while (size)
       {
         size_t len = std::min(size, chunk_size);
-        flashfsReadAbs(addr, data, len);
-        s.write(data, len);
+        flashfsReadAbs(addr, data.get(), len);
+        s.write(data.get(), len);
 
         if (size > chunk_size)
         {
@@ -1689,7 +1720,6 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
           break;
       }
       s.println();
-      delete[] data;
     }
     else
     {

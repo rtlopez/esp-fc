@@ -56,7 +56,7 @@ public:
 
   void flush() override {}
 
-  bool isTxFifoEmpty() override { return _size == 0; }
+  bool isTxFifoEmpty() override { return _len == 0; }
 
   void clear()
   {

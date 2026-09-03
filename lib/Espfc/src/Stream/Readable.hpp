@@ -14,7 +14,7 @@ public:
   virtual size_t readMany(uint8_t* data, size_t len) = 0;
   virtual int peek() = 0;
 
-// protected:
+protected:
   // Non virtual and protected on purpose: no vtable slot, no delete through base pointer.
   ~Readable() = default;
 };

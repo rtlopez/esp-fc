@@ -14,6 +14,7 @@ Logger::~Logger()
 
 int Logger::begin(size_t size)
 {
+  if (size == 0) return 0;
   _sink.reset(nullptr, 0);
   delete[] _buff;
   _buff = new char[size];

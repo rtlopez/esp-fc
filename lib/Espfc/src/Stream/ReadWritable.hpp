@@ -13,7 +13,7 @@ public:
   virtual void begin(const Hal::SerialDeviceConfig& config) = 0;
   virtual void updateBaudRate(int baud) = 0;
 
-// protected:
+protected:
   ~ReadWritable() = default;
 };
 

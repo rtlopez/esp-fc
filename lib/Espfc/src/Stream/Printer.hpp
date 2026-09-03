@@ -25,20 +25,15 @@ namespace Espfc::Stream {
 class Printer
 {
 public:
-  explicit Printer(Writable& out): _out(out) {}
-  Printer& operator=(Printer&& other) noexcept
-  {
-    _out = other._out;
-    return *this;
-  }
+  explicit Printer(Writable& out): _out(&out) {}
 
   size_t write(uint8_t c)
   {
-    return _out.write(c);
+    return _out->write(c);
   }
   size_t write(const uint8_t* data, size_t len)
   {
-    return _out.write(data, len);
+    return _out->write(data, len);
   }
   size_t write(const char* s);
 
@@ -129,7 +124,7 @@ public:
 
   Writable& out() const
   {
-    return _out;
+    return *_out;
   }
 
   static constexpr size_t PRINTF_BUFF_SIZE = 128;
@@ -141,7 +136,7 @@ private:
   size_t printSigned(long long v, int base, size_t bytes);
   size_t printFloat(double v, int digits);
 
-  Writable& _out;
+  Writable* _out;
 };
 
 } // namespace Espfc::Stream

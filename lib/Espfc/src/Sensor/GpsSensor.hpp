@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Device/SerialDevice.h"
 #include "Model.h"
 #include "Utils/Timer.h"
 #include <GpsParser.hpp>
