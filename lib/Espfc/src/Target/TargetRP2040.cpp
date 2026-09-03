@@ -1,6 +1,7 @@
 #ifdef ARCH_RP2040
 
 #include "TargetRP2040.h"
+#include <Arduino.h>
 #include <RP2040Support.h>
 
 namespace Espfc {

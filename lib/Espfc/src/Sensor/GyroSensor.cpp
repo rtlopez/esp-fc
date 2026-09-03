@@ -1,5 +1,6 @@
 
 #include "Sensor/GyroSensor.hpp"
+#include <Hal/Time.hpp>
 #include "Utils/FilterHelper.h"
 #include "Utils/Sma.ipp"
 #ifdef ESPFC_DSP

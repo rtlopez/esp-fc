@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "InputCRSF.h"
+#include "Hal/Time.hpp"
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc::Device {

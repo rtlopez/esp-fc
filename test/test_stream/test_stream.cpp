@@ -4,6 +4,7 @@
 // the Espfc include path, same reason as in test_msp
 #include <platform.h>
 
+#include <Hal/Serial.hpp>
 #include <Stream/BufferWritable.hpp>
 #include <Stream/Printer.hpp>
 #include <Stream/ReadWritable.hpp>
@@ -290,6 +291,12 @@ public:
   {
     return _last;
   }
+  bool isTxFifoEmpty() override
+  {
+    return true;
+  }
+  void begin(const Espfc::Hal::SerialDeviceConfig& config) override {}
+  void updateBaudRate(int baud) override {}
 
   uint8_t _last = 0;
 };

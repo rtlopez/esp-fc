@@ -1,5 +1,7 @@
 #include "BlackboxBridge.h"
 
+#include <algorithm>
+
 static Espfc::Model * _model_ptr = nullptr;
 
 void initBlackboxModel(Espfc::Model * m)
@@ -11,14 +13,14 @@ uint16_t getBatteryVoltageLatest(void)
 {
   if(!_model_ptr) return 0;
   float v = (*_model_ptr).state.battery.voltageUnfiltered;
-  return constrain(lrintf(v * 100.0f), 0, 32000);
+  return std::clamp<long>(lrintf(v * 100.0f), 0L, 32000L);
 }
 
 int32_t getAmperageLatest(void)
 {
   if(!_model_ptr) return 0;
   float v = (*_model_ptr).state.battery.currentUnfiltered;
-  return constrain(lrintf(v * 100.0f), 0, 32000);
+  return std::clamp<long>(lrintf(v * 100.0f), 0L, 32000L);
 }
 
 bool rxIsReceivingSignal(void)

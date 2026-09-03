@@ -1,5 +1,6 @@
 
 #include "Input.h"
+#include "Hal/Time.hpp"
 #include "ModelConfig.h"
 #include "Utils/Filter.h"
 #include "Utils/Math.hpp"

@@ -77,7 +77,7 @@ public:
       *reinterpret_cast<T*>(addr) = v;
     }
 
-    void write(const String& v) const;
+    void write(const char* v) const;
     int32_t parse(const char* v) const;
 
     const char* name;

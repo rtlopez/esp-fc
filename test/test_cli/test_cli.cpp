@@ -1,60 +1,14 @@
-#include <ArduinoFake.h>
 #include <Connect/Cli.hpp>
+#include <Stream/Printer.hpp>
 #include <cstring>
+#include <string>
 #include <unity.h>
 
 using Cli = Espfc::Connect::Cli;
 using CliCmd = Espfc::CliCmd;
 using Model = Espfc::Model;
-using namespace fakeit;
 
-static size_t appendText(Stream& stream, const char* text)
-{
-  if (!text) return 0;
-  const size_t len = std::strlen(text);
-  stream.write(reinterpret_cast<const uint8_t*>(text), len);
-  return len;
-}
-
-static size_t appendChar(Stream& stream, char c)
-{
-  return stream.write(static_cast<uint8_t>(c));
-}
-
-static void setupPrintMockForStream(Stream& stream)
-{
-  // Route Print method calls made on this Stream instance to ArduinoFake(Print).
-  getArduinoFakeContext()->Mapping[&stream] = getArduinoFakeContext()->Print();
-
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(const char*))).AlwaysDo([&stream](const char* s) -> size_t {
-    return appendText(stream, s);
-  });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(char))).AlwaysDo([&stream](char c) -> size_t {
-    return appendChar(stream, c);
-  });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(int, int))).AlwaysDo([&stream](int value, int) -> size_t {
-    return appendText(stream, std::to_string(value).c_str());
-  });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(unsigned int, int)))
-      .AlwaysDo(
-          [&stream](unsigned int value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(long, int))).AlwaysDo([&stream](long value, int) -> size_t {
-    return appendText(stream, std::to_string(value).c_str());
-  });
-  When(OverloadedMethod(ArduinoFake(Print), print, size_t(unsigned long, int)))
-      .AlwaysDo(
-          [&stream](unsigned long value, int) -> size_t { return appendText(stream, std::to_string(value).c_str()); });
-
-  When(OverloadedMethod(ArduinoFake(Print), println, size_t())).AlwaysDo([&stream]() -> size_t {
-    return appendChar(stream, '\n');
-  });
-  When(OverloadedMethod(ArduinoFake(Print), println, size_t(const char*))).AlwaysDo([&stream](const char* s) -> size_t {
-    const size_t n = appendText(stream, s);
-    return n + appendChar(stream, '\n');
-  });
-}
-
-class StreamMock : public Stream
+class StreamMock : public Espfc::Stream::Writable
 {
 public:
   StreamMock(): _buffer("") {}
@@ -68,25 +22,17 @@ public:
     _buffer.append(reinterpret_cast<const char*>(buffer), size);
     return size;
   }
-  int available() override
+  int availableForWrite() override
   {
-    return _buffer.length();
-  }
-  int read() override
-  {
-    if (_buffer.empty()) return -1;
-    char c = _buffer[0];
-    _buffer.erase(0, 1);
-    return static_cast<int>(c);
-  }
-  int peek() override
-  {
-    if (_buffer.empty()) return -1;
-    return static_cast<int>(_buffer[0]);
+    return 0;
   }
   void flush() override
   {
     _buffer.clear();
+  }
+  bool isTxFifoEmpty() override
+  {
+    return true;
   }
   const char* c_str() const
   {
@@ -102,12 +48,11 @@ private:
 };
 
 static StreamMock stream;
+static Espfc::Stream::Printer printer{stream};
 
 void setUp(void)
 {
-  ArduinoFakeReset();
   stream.flush();
-  setupPrintMockForStream(stream);
 }
 
 void tearDown(void)
@@ -131,7 +76,7 @@ void test_cli_enter_interactive()
   Cli cli{model};
   CliCmd cmd;
 
-  cli.process('h', cmd, stream);
+  cli.process('h', cmd, printer);
   TEST_ASSERT_TRUE(cli._active);
   TEST_ASSERT_TRUE(cli._interactive);
   TEST_ASSERT_FALSE(cli._ignore);
@@ -143,12 +88,12 @@ void test_cli_enter_leave_non_interactive()
   Cli cli{model};
   CliCmd cmd;
 
-  cli.process(0x02, cmd, stream);
+  cli.process(0x02, cmd, printer);
   TEST_ASSERT_TRUE(cli._active);
   TEST_ASSERT_FALSE(cli._interactive);
   TEST_ASSERT_FALSE(cli._ignore);
 
-  cli.process(0x03, cmd, stream);
+  cli.process(0x03, cmd, printer);
   TEST_ASSERT_FALSE(cli._active);
   TEST_ASSERT_FALSE(cli._interactive);
   TEST_ASSERT_FALSE(cli._ignore);
@@ -165,7 +110,7 @@ void test_cli_configurator_handshake()
   Cli cli{model};
   CliCmd cmd;
 
-  cli.process('#', cmd, stream);
+  cli.process('#', cmd, printer);
   TEST_ASSERT_TRUE(cli._active);
   TEST_ASSERT_TRUE(cli._interactive);
   TEST_ASSERT_FALSE(cli._ignore);
@@ -177,7 +122,7 @@ void test_cli_configurator_handshake()
   stream.flush();
 
   // CTRL-D (0x04) is used to exit CLI mode
-  cli.process(0x04, cmd, stream);
+  cli.process(0x04, cmd, printer);
   TEST_ASSERT_FALSE(cli._active);
   TEST_ASSERT_FALSE(cli._interactive);
   TEST_ASSERT_FALSE(cli._ignore);
@@ -195,7 +140,7 @@ void test_cli_process_comment()
 
   for (char c : std::string("command # comment"))
   {
-    cli.process(c, cmd, stream);
+    cli.process(c, cmd, printer);
   }
 
   TEST_ASSERT_EQUAL(8, cmd.index);
@@ -207,7 +152,7 @@ void test_cli_process_comment()
   TEST_ASSERT_TRUE(cli._interactive);
   TEST_ASSERT_TRUE(cli._ignore);
 
-  cli.process('\n', cmd, stream);
+  cli.process('\n', cmd, printer);
 
   auto result = stream.str();
   TEST_ASSERT_NOT_EQUAL(0, result.length());
@@ -223,7 +168,7 @@ void test_cli_overflow()
 
   for (size_t i = 0; i < sizeof(cmd.buff) + 2; ++i)
   {
-    cli.process('a', cmd, stream);
+    cli.process('a', cmd, printer);
   }
 
   TEST_ASSERT_EQUAL(sizeof(cmd.buff) - 1, cmd.index);
@@ -239,14 +184,14 @@ void test_cli_process_help()
 
   for (char c : std::string("help"))
   {
-    cli.process(c, cmd, stream);
+    cli.process(c, cmd, printer);
   }
 
   TEST_ASSERT_EQUAL(4, cmd.index);
   TEST_ASSERT_EQUAL_STRING("help", cmd.buff);
   TEST_ASSERT_EQUAL(0, cmd.args[cmd.index]);
 
-  cli.process('\n', cmd, stream);
+  cli.process('\n', cmd, printer);
 
   auto result = stream.str();
   TEST_ASSERT_NOT_EQUAL(0, result.length());
@@ -264,7 +209,7 @@ void test_cli_process_help_non_interactive()
 
   for (char c : std::string("\02help\n\03"))
   {
-    cli.process(c, cmd, stream);
+    cli.process(c, cmd, printer);
   }
 
   auto result = stream.str();
@@ -286,7 +231,7 @@ void test_cli_get_mixer_type()
 
   for (char c : std::string("get mixer_type\n"))
   {
-    cli.process(c, cmd, stream);
+    cli.process(c, cmd, printer);
   }
 
   auto result = stream.str();
@@ -303,7 +248,7 @@ void test_cli_set_mixer_type()
 
   for (char c : std::string("set mixer_type QUADX\n"))
   {
-    cli.process(c, cmd, stream);
+    cli.process(c, cmd, printer);
   }
 
   TEST_ASSERT_EQUAL(Espfc::FC_MIXER_QUADX, model.config.mixer.type);
@@ -317,7 +262,7 @@ void test_cli_bf_get_mag_calibration()
 
   for (char c : std::string("get mag_calibration\n"))
   {
-    cli.process(c, cmd, stream);
+    cli.process(c, cmd, printer);
   }
 
   auto result = stream.str();
@@ -333,7 +278,7 @@ void test_cli_bf_sensor_hardware()
 
   for (char c : std::string("sensor_hardware\n"))
   {
-    cli.process(c, cmd, stream);
+    cli.process(c, cmd, printer);
   }
 
   auto result = stream.str();

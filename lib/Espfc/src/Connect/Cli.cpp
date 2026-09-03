@@ -23,6 +23,8 @@
 #include <freertos/task.h>
 #endif
 
+#include <Arduino.h>
+
 namespace Espfc::Connect {
 
 void Cli::Param::print(Stream::Printer& stream) const
@@ -202,7 +204,7 @@ void Cli::Param::update(const char** args) const
       write(String(v).toFloat());
       break;
     case PARAM_STRING:
-      write(String(v ? v : ""));
+      write(v ? v : "");
       break;
     case PARAM_BITMASK:
       if (!v) return;
@@ -295,10 +297,10 @@ void Cli::Param::write(SerialPortConfig& sc, const char** args) const
   if (args[4]) sc.blackboxBaud = String(args[4]).toInt();
 }
 
-void Cli::Param::write(const String& v) const
+void Cli::Param::write(const char* v) const
 {
   *addr = 0;
-  strncat(addr, v.c_str(), maxLen);
+  std::strncat(addr, v, maxLen);
 }
 
 int32_t Cli::Param::parse(const char* v) const
