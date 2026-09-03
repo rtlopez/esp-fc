@@ -39,15 +39,15 @@ static void reenumerateUsb()
 
     // Disconnect pull-up and pull D+ line to ground
     CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
-    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, OUTPUT);
-    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, LOW);
+    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, Hal::Gpio::Output);
+    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, Hal::Gpio::Low);
 
     // Sufficient delay for USB host controller
     delay(200);
 
     // Restore USB state
-    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, HIGH);
-    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, INPUT);
+    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, Hal::Gpio::High);
+    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, Hal::Gpio::Input);
     SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
   }
 #endif

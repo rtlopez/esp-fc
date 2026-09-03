@@ -1,5 +1,6 @@
 #include "Buzzer.hpp"
 #include "Hal/Gpio.hpp"
+#include "Hal/Time.hpp"
 
 namespace Espfc::Connect {
 
@@ -10,8 +11,8 @@ Buzzer::Buzzer(Model& model): _model(model), _status(BUZZER_STATUS_IDLE), _wait(
 int Buzzer::begin()
 {
   if (_model.config.pin[PIN_BUZZER] == -1) return 0;
-  Hal::Gpio::pinMode(_model.config.pin[PIN_BUZZER], OUTPUT);
-  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)_model.config.buzzer.inverted);
+  Hal::Gpio::pinMode(_model.config.pin[PIN_BUZZER], Hal::Gpio::Output);
+  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted ? Hal::Gpio::High : Hal::Gpio::Low);
   _model.state.buzzer.timer.setRate(100);
 
   return 1;
@@ -70,7 +71,8 @@ void Buzzer::_play(bool v, int time, BuzzerPlayStatus s)
 
 void Buzzer::_write(bool v)
 {
-  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], (pin_status_t)(_model.config.buzzer.inverted ? !v : v));
+  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER],
+                          (_model.config.buzzer.inverted ? !v : v) ? Hal::Gpio::High : Hal::Gpio::Low);
 }
 
 void Buzzer::_delay(int time)

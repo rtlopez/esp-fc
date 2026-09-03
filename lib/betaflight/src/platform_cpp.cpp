@@ -3,6 +3,7 @@
 #include "Hal/Gpio.hpp"
 #include "Stream/ReadWritable.hpp"
 #include "Utils/MemoryHelper.h"
+#include <cstring>
 
 int IORead(IO_t pin)
 {
@@ -13,23 +14,23 @@ void IOConfigGPIO(IO_t pin, uint8_t mode)
 {
     switch(mode) {
         case IOCFG_IPU:
-            Espfc::Hal::Gpio::pinMode(pin, INPUT_PULLUP);
+            Espfc::Hal::Gpio::pinMode(pin, Espfc::Hal::Gpio::InputPullup);
             break;
         case IOCFG_OUT_PP:
         case IOCFG_AF_PP:
-            Espfc::Hal::Gpio::pinMode(pin, OUTPUT);
+            Espfc::Hal::Gpio::pinMode(pin, Espfc::Hal::Gpio::Output);
             break;
     }
 }
 
 void IOHi(IO_t pin)
 {
-    Espfc::Hal::Gpio::digitalWrite(pin, HIGH);
+    Espfc::Hal::Gpio::digitalWrite(pin, Espfc::Hal::Gpio::High);
 }
 
 void IOLo(IO_t pin)
 {
-    Espfc::Hal::Gpio::digitalWrite(pin, LOW);
+    Espfc::Hal::Gpio::digitalWrite(pin, Espfc::Hal::Gpio::Low);
 }
 
 static serialPort_t _sp[2] = {{

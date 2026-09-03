@@ -6,7 +6,7 @@
 
 namespace Espfc::Hal {
 
-void FAST_CODE_ATTR Gpio::digitalWrite(uint8_t pin, pin_status_t val)
+void FAST_CODE_ATTR Gpio::digitalWrite(uint8_t pin, Gpio::PinStatus val)
 {
   if (pin < 16)
   {
@@ -32,22 +32,33 @@ void FAST_CODE_ATTR Gpio::digitalWrite(uint8_t pin, pin_status_t val)
   }
 }
 
-pin_status_t FAST_CODE_ATTR Gpio::digitalRead(uint8_t pin)
+Gpio::PinStatus FAST_CODE_ATTR Gpio::digitalRead(uint8_t pin)
 {
   if (pin < 16)
   {
-    return GPIP(pin);
+    return GPIP(pin) ? Gpio::High : Gpio::Low;
   }
   else if (pin == 16)
   {
-    return GP16I & 0x01;
+    return (GP16I & 0x01) ? Gpio::High : Gpio::Low;
   }
-  return 0;
+  return Gpio::Low;
 }
 
-void FAST_CODE_ATTR Gpio::pinMode(uint8_t pin, pin_mode_t mode)
+void FAST_CODE_ATTR Gpio::pinMode(uint8_t pin, Gpio::PinMode mode)
 {
-  ::pinMode(pin, mode);
+  switch (mode)
+  {
+    case Gpio::Input:
+      ::pinMode(pin, INPUT);
+      break;
+    case Gpio::InputPullup:
+      ::pinMode(pin, INPUT_PULLUP);
+      break;
+    case Gpio::Output:
+      ::pinMode(pin, OUTPUT);
+      break;
+  }
 }
 
 } // namespace Espfc::Hal

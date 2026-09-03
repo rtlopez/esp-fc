@@ -4,18 +4,18 @@
 
 namespace Espfc::Hal {
 
-void Gpio::digitalWrite(uint8_t pin, pin_status_t val)
+void Gpio::digitalWrite(uint8_t pin, Gpio::PinStatus val)
 {
   // do nothing
 }
 
-pin_status_t Gpio::digitalRead(uint8_t pin)
+Gpio::PinStatus Gpio::digitalRead(uint8_t pin)
 {
   // do nothing
-  return 0;
+  return Gpio::Low;
 }
 
-void Gpio::pinMode(uint8_t pin, pin_mode_t mode)
+void Gpio::pinMode(uint8_t pin, Gpio::PinMode mode)
 {
   // do nothing
   return;
