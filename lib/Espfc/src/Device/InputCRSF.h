@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Device/SerialDevice.h"
 #include "Device/InputDevice.h"
 #include "Rc/Crsf.h"
 #include "TelemetryManager.h"
@@ -24,7 +23,7 @@ class InputCRSF: public InputDevice
 
     InputCRSF();
 
-    int begin(Device::SerialDevice * serial, TelemetryManager * telemetry);
+    int begin(Stream::ReadWritable* serial, TelemetryManager* telemetry);
     virtual InputStatus update() override;
     virtual uint16_t get(uint8_t i) const override;
     virtual void get(uint16_t * data, size_t len) const override;
@@ -44,8 +43,8 @@ class InputCRSF: public InputDevice
     static constexpr size_t CHANNELS = 16;
     static constexpr size_t TELEMETRY_INTERVAL = 20000;
 
-    Device::SerialDevice * _serial;
-    TelemetryManager * _telemetry;
+    Stream::ReadWritable* _serial;
+    TelemetryManager* _telemetry;
     CrsfState _state;
     uint8_t _idx;
     bool _new_data;

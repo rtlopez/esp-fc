@@ -7,7 +7,7 @@ namespace Espfc::Device
 
 InputIBUS::InputIBUS() : _serial(nullptr), _state(IBUS_LENGTH), _idx(0), _new_data(false) {}
 
-int InputIBUS::begin(Device::SerialDevice *serial)
+int InputIBUS::begin(Stream::ReadWritable* serial)
 {
   _serial = serial;
 

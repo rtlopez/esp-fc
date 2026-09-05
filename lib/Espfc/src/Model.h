@@ -8,8 +8,9 @@
 #include <EscDriver.h>
 #include "ModelConfig.h"
 #include "ModelState.h"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/Storage.h"
-#include "Utils/Logger.h"
+#include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"
 
 namespace Espfc {
@@ -228,12 +229,12 @@ class Model
       }
     }
 
-    Device::SerialDevice * getSerialStream(SerialPort i)
+    Stream::ReadWritable * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
     }
 
-    Device::SerialDevice * getSerialStream(SerialFunction sf)
+    Stream::ReadWritable * getSerialStream(SerialFunction sf)
     {
       for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
       {
@@ -330,10 +331,10 @@ class Model
       {
         const float pitchD = (axis == FC_PID_PITCH) ? s.rollPitchRatio * 0.01f : 1.0f;
         const float pitchPi = (axis == FC_PID_PITCH) ? s.pitchPiGain * 0.01f : 1.0f;
-        out[axis].P = constrain(lrintf(def[axis].P * master * pi * pitchPi), 0, SIMPLIFIED_PID_GAIN_MAX);
-        out[axis].I = constrain(lrintf(def[axis].I * master * pi * ig * pitchPi), 0, SIMPLIFIED_PID_GAIN_MAX);
-        out[axis].D = constrain(lrintf(def[axis].D * master * d * pitchD), 0, SIMPLIFIED_PID_GAIN_MAX);
-        out[axis].F = constrain(lrintf(def[axis].F * master * pitchPi * ff), 0, SIMPLIFIED_F_GAIN_MAX);
+        out[axis].P = std::clamp<long>(lrintf(def[axis].P * master * pi * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].I = std::clamp<long>(lrintf(def[axis].I * master * pi * ig * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].D = std::clamp<long>(lrintf(def[axis].D * master * d * pitchD), 0L, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].F = std::clamp<long>(lrintf(def[axis].F * master * pitchPi * ff), 0L, SIMPLIFIED_F_GAIN_MAX);
       }
     }
 
@@ -341,22 +342,22 @@ class Model
     {
       if (dynMin)
       {
-        dynMin = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-        dynMax = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMin = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
       }
-      if (lpf1) lpf1 = constrain(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-      if (lpf2) lpf2 = constrain(SIMPLIFIED_DTERM_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+      if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_DTERM_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
     }
 
     void calculateSimplifiedGyroFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
     {
       if (dynMin)
       {
-        dynMin = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-        dynMax = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMin = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
       }
-      if (lpf1) lpf1 = constrain(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-      if (lpf2) lpf2 = constrain(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+      if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
     }
 
     std::tuple<bool, bool, bool> validateSimplifiedTuning() const
@@ -446,20 +447,20 @@ class Model
         switch(config.output.protocol)
         {
           case ESC_PROTOCOL_PWM:
-            config.output.rate = constrain(config.output.rate, 50, 480);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 480);
             break;
           case ESC_PROTOCOL_ONESHOT125:
-            config.output.rate = constrain(config.output.rate, 50, 2000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
             break;
           case ESC_PROTOCOL_ONESHOT42:
-            config.output.rate = constrain(config.output.rate, 50, 4000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 4000);
             break;
           case ESC_PROTOCOL_BRUSHED:
           case ESC_PROTOCOL_MULTISHOT:
-            config.output.rate = constrain(config.output.rate, 50, 8000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 8000);
             break;
           default:
-            config.output.rate = constrain(config.output.rate, 50, 2000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
             break;
         }
       }
@@ -501,12 +502,6 @@ class Model
         SERIAL_FUNCTION_GPS | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT | SERIAL_FUNCTION_TELEMETRY_IBUS | SERIAL_FUNCTION_VTX_SMARTAUDIO;
       uint32_t featureAllowMask =  FEATURE_RX_PPM | FEATURE_RX_SERIAL | FEATURE_MOTOR_STOP | FEATURE_SOFTSERIAL | FEATURE_GPS |
         FEATURE_TELEMETRY | FEATURE_RX_SPI;// | FEATURE_AIRMODE;
-
-      // allow dynamic filter only above 1k sampling rate
-      if(state.loopRate >= DynamicFilterConfig::MIN_FREQ)
-      {
-        featureAllowMask |= FEATURE_DYNAMIC_FILTER;
-      }
 
       config.featureMask &= featureAllowMask;
 

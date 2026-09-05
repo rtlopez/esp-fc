@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Device/SerialDevice.h"
+#include <cstddef>
+#include <cstdint>
 
 #define ESPFC_WIFI
 #define ESPFC_ESPNOW
@@ -8,21 +9,9 @@
 
 namespace Espfc {
 
-uint32_t targetSerialConfigFlags(const SerialDeviceConfig& conf);
-
 constexpr size_t targetSerialTxBufferSize()
 {
   return 0xFF;
-}
-
-template<typename T>
-inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
-{
-  uint32_t sc = targetSerialConfigFlags(conf);
-  if (dev) dev.end();
-  dev.setTxBufferSize(targetSerialTxBufferSize());
-  dev.begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
-  return 1;
 }
 
 template<typename T>

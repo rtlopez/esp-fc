@@ -2,8 +2,10 @@
 #include "Hardware.h"
 #include "Model.h"
 #include "ModelConfig.h"
+#include "Stream/Printer.hpp"
 #include <algorithm>
 #include <limits>
+#include <cstring>
 #include <platform.h>
 #if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
 #include <driver/timer.h>
@@ -137,17 +139,17 @@ static int8_t toIbatSource(uint8_t t)
 
 static uint8_t toVbatVoltageLegacy(float voltage)
 {
-  return constrain(lrintf(voltage * 10.0f), 0, 255);
+  return std::clamp<long>(lrintf(voltage * 10.0f), 0L, 255L);
 }
 
 static uint16_t toVbatVoltage(float voltage)
 {
-  return constrain(lrintf(voltage * 100.0f), 0, 32000);
+  return std::clamp<long>(lrintf(voltage * 100.0f), 0L, 32000L);
 }
 
 static uint16_t toIbatCurrent(float current)
 {
-  return constrain(lrintf(current * 100.0f), -32000, 32000);
+  return std::clamp<long>(lrintf(current * 100.0f), -32000L, 32000L);
 }
 
 constexpr uint8_t MSP_PASSTHROUGH_ESC_4WAY = 0xff;
@@ -196,7 +198,7 @@ bool MspProcessor::parse(char c, MspMessage& msg)
   return !msg.isIdle();
 }
 
-void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialDevice& s)
+void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWritable& s)
 {
   r.cmd = m.cmd;
   r.version = m.version;
@@ -237,8 +239,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
 #endif
         r.writeU8(targetCapabilities); // target capabilities
       }
-      r.writeU8(strlen(targetName)); // target name
-      r.writeData(targetName, strlen(targetName));
+      r.writeU8(std::strlen(targetName)); // target name
+      r.writeData(targetName, std::strlen(targetName));
       r.writeU8(0); // board name
       r.writeU8(0); // manufacturer name
       for (size_t i = 0; i < 32; i++)
@@ -320,7 +322,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       break;
 
     case MSP_SET_NAME:
-      memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
+      std::fill_n(&_model.config.modelName[0], MODEL_NAME_LEN + 1, 0);
       for (size_t i = 0; i < std::min((size_t)m.received, MODEL_NAME_LEN); i++)
       {
         _model.config.modelName[i] = m.readU8();
@@ -347,7 +349,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       const uint8_t textLength = m.readU8();
       if (textType == MSP2TEXT_CRAFT_NAME)
       {
-        memset(&_model.config.modelName, 0, MODEL_NAME_LEN + 1);
+        std::fill_n(&_model.config.modelName[0], MODEL_NAME_LEN + 1, 0);
         for (size_t i = 0; i < textLength; i++)
         {
           const uint8_t c = m.readU8();
@@ -490,7 +492,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Device::SerialD
       {
         r.writeU8(i + 10);                                                                  // meter id (10-19 ibat adc)
         r.writeU16(0);                                                                      // mah drawn
-        r.writeU16(constrain(toIbatCurrent(_model.state.battery.current) * 10, 0, 0xffff)); // meter value
+        r.writeU16(std::clamp<int>(toIbatCurrent(_model.state.battery.current) * 10, 0, 0xffff)); // meter value
       }
       break;
 
@@ -2138,7 +2140,7 @@ void MspProcessor::serializeFlashData(MspResponse& r, uint32_t address, const ui
 #endif
 }
 
-void MspProcessor::sendResponse(MspResponse& r, Device::SerialDevice& s)
+void MspProcessor::sendResponse(MspResponse& r, Stream::ReadWritable& s)
 {
   debugResponse(r);
   uint8_t buff[256];
@@ -2177,39 +2179,43 @@ bool MspProcessor::debugSkip(uint8_t cmd)
 void MspProcessor::debugMessage(const MspMessage& m)
 {
   if (debugSkip(m.cmd)) return;
-  Device::SerialDevice* s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
-  if (!s) return;
+  auto* dev = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
+  if (!dev) return;
 
-  s->print(m.dir == MSP_TYPE_REPLY ? '>' : '<');
-  s->print(m.cmd);
-  s->print('.');
-  s->print(m.expected);
-  s->print(' ');
+  Stream::Printer s{*dev};
+
+  s.print(m.dir == MSP_TYPE_REPLY ? '>' : '<');
+  s.print(m.cmd);
+  s.print('.');
+  s.print(m.expected);
+  s.print(' ');
   for (size_t i = 0; i < m.expected; i++)
   {
-    s->print(m.buffer[i], HEX);
-    s->print(' ');
+    s.print(m.buffer[i], HEX);
+    s.print(' ');
   }
-  s->println();
+  s.println();
 }
 
 void MspProcessor::debugResponse(const MspResponse& r)
 {
   if (debugSkip(r.cmd)) return;
-  Device::SerialDevice* s = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
-  if (!s) return;
+  auto* dev = _model.getSerialStream(SERIAL_FUNCTION_TELEMETRY_HOTT);
+  if (!dev) return;
 
-  s->print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@'));
-  s->print(r.cmd);
-  s->print('.');
-  s->print(r.len);
-  s->print(' ');
+  Stream::Printer s{*dev};
+
+  s.print(r.result == 1 ? '>' : (r.result == -1 ? '!' : '@'));
+  s.print(r.cmd);
+  s.print('.');
+  s.print(r.len);
+  s.print(' ');
   for (size_t i = 0; i < r.len; i++)
   {
-    s->print(r.data[i], HEX);
-    s->print(' ');
+    s.print(r.data[i], HEX);
+    s.print(' ');
   }
-  s->println();
+  s.println();
 }
 
 } // namespace Espfc::Connect

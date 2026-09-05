@@ -1,4 +1,5 @@
 #include "Sensor/BaroSensor.hpp"
+#include "Hal/Time.hpp"
 
 namespace Espfc::Sensor {
 

@@ -10,8 +10,6 @@
 #define ESPFC_OUTPUT_3 15    // D8
 
 #define ESPFC_SERIAL_0
-#define ESPFC_SERIAL_0_DEV Serial
-#define ESPFC_SERIAL_0_DEV_T HardwareSerial
 #define ESPFC_SERIAL_0_TX 1
 #define ESPFC_SERIAL_0_RX 3
 #define ESPFC_SERIAL_0_FN (SERIAL_FUNCTION_MSP)
@@ -19,8 +17,6 @@
 #define ESPFC_SERIAL_0_BBAUD (SERIAL_SPEED_NONE)
 
 #define ESPFC_SERIAL_1
-#define ESPFC_SERIAL_1_DEV Serial1
-#define ESPFC_SERIAL_1_DEV_T HardwareSerial
 #define ESPFC_SERIAL_1_TX 2 // D4
 #define ESPFC_SERIAL_1_RX -1
 #define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_NONE)
@@ -47,7 +43,7 @@
 
 #define ESPFC_ADC_SCALE (1.0f / 1024)
 
-#define ESPFC_FEATURE_MASK (FEATURE_RX_PPM | FEATURE_DYNAMIC_FILTER)
+#define ESPFC_FEATURE_MASK (FEATURE_RX_PPM)
 
 #define ESPFC_GYRO_I2C_RATE_MAX 1000
 #define ESPFC_GYRO_SPI_RATE_MAX 1000
@@ -55,26 +51,15 @@
 #define ESPFC_WIFI_ALT
 #define ESPFC_ESPNOW
 
-#include "Device/SerialDevice.h"
 #include <uart.h>
+#include <cstddef>
+#include <cstdint>
 
 namespace Espfc {
-
-uint32_t targetSerialConfigFlags(const SerialDeviceConfig& conf);
 
 constexpr size_t targetSerialTxBufferSize()
 {
   return UART_TX_FIFO_SIZE;
-}
-
-template<typename T>
-inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
-{
-  uint32_t sc = targetSerialConfigFlags(conf);
-  const bool isUart0 = &dev == &Serial;
-  dev.begin(conf.baud, (SerialConfig)sc, isUart0 ? SERIAL_FULL : SERIAL_TX_ONLY, isUart0 ? 1 : 2, conf.inverted);
-
-  return 1;
 }
 
 template<typename T>

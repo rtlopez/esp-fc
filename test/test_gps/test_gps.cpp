@@ -1,12 +1,15 @@
 // test/test_gps/test_gps.cpp
 // Tests for GPS distance and bearing math used in GpsSensor::calculateHomeVector()
 
-#include <unity.h>
+#include <Gps.hpp>
 #include <cmath>
 #include <cstdint>
-#include <Gps.hpp>
+#include <unity.h>
 
-static constexpr float toRad(float deg) { return deg * (float)M_PI / 180.0f; }
+static constexpr float toRad(float deg)
+{
+  return deg * (float)M_PI / 180.0f;
+}
 
 // ---------------------------------------------------------------------------
 
@@ -66,10 +69,10 @@ void test_date_line_crossing_east_to_west()
   // Home at 179° East, current at -179° (179° West)
   // Actual shortest distance: ~2° (2° * 111300m/deg ≈ 222600m)
   // Without date line handling, would calculate 358° (40067000m) - WRONG!
-  const int32_t homeLon = 1790000000;   // 179° * 1e7
-  const int32_t curLon = -1790000000;   // -179° * 1e7
+  const int32_t homeLon = 1790000000; // 179° * 1e7
+  const int32_t curLon = -1790000000; // -179° * 1e7
   const auto [distance, bearing] = Gps::calculateDistanceAndBearing(0, homeLon, 0, curLon);
-  
+
   // Distance should be ~2° (222600m) not 358° (40000000m+)
   TEST_ASSERT_FLOAT_WITHIN(100.0f, 222600.0f, distance);
 }
@@ -78,10 +81,10 @@ void test_date_line_crossing_west_to_east()
 {
   // Home at -179° (179° West), current at 179° East
   // Actual shortest distance: ~2°
-  const int32_t homeLon = -1790000000;  // -179° * 1e7
-  const int32_t curLon = 1790000000;    // 179° * 1e7
+  const int32_t homeLon = -1790000000; // -179° * 1e7
+  const int32_t curLon = 1790000000;   // 179° * 1e7
   const auto [distance, bearing] = Gps::calculateDistanceAndBearing(0, homeLon, 0, curLon);
-  
+
   TEST_ASSERT_FLOAT_WITHIN(100.0f, 222600.0f, distance);
 }
 
@@ -93,7 +96,7 @@ void test_date_line_crossing_bearing()
   const int32_t homeLon = -1790000000;
   const int32_t curLon = 1790000000;
   const auto [distance, bearing] = Gps::calculateDistanceAndBearing(0, homeLon, 0, curLon);
-  
+
   TEST_ASSERT_FLOAT_WITHIN(0.01f, toRad(270.0f), bearing);
 }
 

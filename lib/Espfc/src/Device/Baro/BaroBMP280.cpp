@@ -1,4 +1,5 @@
 #include "BaroBMP280.hpp"
+#include "Hal/Time.hpp"
 
 #define BMP280_ADDRESS_FIRST 0x76
 #define BMP280_ADDRESS_SECOND 0x77

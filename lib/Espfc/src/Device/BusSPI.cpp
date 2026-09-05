@@ -2,7 +2,7 @@
 
 #if defined(ESPFC_SPI_0)
 
-#include "Hal/Gpio.h"
+#include "Hal/Gpio.hpp"
 #include <Arduino.h>
 
 namespace Espfc::Device {
@@ -45,7 +45,7 @@ void FAST_CODE_ATTR BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t l
                                      uint32_t speed)
 {
   _dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));
-  Hal::Gpio::digitalWrite(devAddr, LOW);
+  Hal::Gpio::digitalWrite(devAddr, Hal::Gpio::Low);
 #if defined(ARCH_RP2040)
   _dev.transfer(regAddr);
   _dev.transfer(in, out, length);
@@ -53,7 +53,7 @@ void FAST_CODE_ATTR BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t l
   _dev.transfer(regAddr);
   _dev.transferBytes(in, out, length);
 #endif
-  Hal::Gpio::digitalWrite(devAddr, HIGH);
+  Hal::Gpio::digitalWrite(devAddr, Hal::Gpio::High);
   _dev.endTransaction();
 }
 

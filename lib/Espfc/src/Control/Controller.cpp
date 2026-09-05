@@ -1,4 +1,5 @@
 #include "Control/Controller.h"
+#include "Hal/Time.hpp"
 #include "Utils/Math.hpp"
 #include <algorithm>
 

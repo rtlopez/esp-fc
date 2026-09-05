@@ -8,7 +8,7 @@ namespace Device {
 
 InputSBUS::InputSBUS(): _serial(nullptr), _state(SBUS_START), _idx(0), _new_data(false) {}
 
-int InputSBUS::begin(Device::SerialDevice * serial)
+int InputSBUS::begin(Stream::ReadWritable* serial)
 {
   _serial = serial;
   for(size_t i = 0; i < SBUS_FRAME_SIZE; i++)

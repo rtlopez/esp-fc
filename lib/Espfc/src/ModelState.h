@@ -13,9 +13,9 @@
 #include "Utils/Filter.h"
 #include "Utils/Timer.h"
 #include "Utils/Stats.h"
-#include "Device/SerialDevice.h"
 #include "Connect/Msp.hpp"
 #include "Connect/StatusLed.hpp"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/SeqLockWrapper.hpp"
 
 namespace Espfc {
@@ -38,7 +38,7 @@ class SerialPortState
     Connect::MspMessage mspRequest;
     Connect::MspResponse mspResponse;
     CliCmd cliCmd;
-    Device::SerialDevice * stream;
+    Stream::ReadWritable * stream;
 };
 
 class BuzzerState

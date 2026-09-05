@@ -13,4 +13,7 @@ void delay(uint32_t ms);
 void delayMicroseconds(uint32_t us);
 #endif
 
+unsigned long micros();
+unsigned long millis();
+
 } // extern "C"

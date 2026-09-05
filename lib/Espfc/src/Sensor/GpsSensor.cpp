@@ -22,7 +22,7 @@ static constexpr std::array<std::tuple<uint16_t, uint8_t>, 2> UBX_MSG_ON{{
 
 GpsSensor::GpsSensor(Model& model): _model(model) {}
 
-int GpsSensor::begin(Device::SerialDevice* port, int baud)
+int GpsSensor::begin(Stream::ReadWritable* port, int baud)
 {
   _port = port;
   _targetBaud = _currentBaud = baud;

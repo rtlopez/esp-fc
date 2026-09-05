@@ -243,7 +243,7 @@ enum Feature {
   FEATURE_TELEMETRY  = 1 << 10,
   FEATURE_AIRMODE    = 1 << 22,
   FEATURE_RX_SPI     = 1 << 25,
-  FEATURE_DYNAMIC_FILTER = 1 << 29,
+  // FEATURE_DYNAMIC_FILTER = 1 << 29, (removed)
 };
 
 constexpr size_t MODEL_NAME_LEN  = 16;
@@ -398,6 +398,8 @@ enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
   BLACKBOX_FIELD_GPS,
   BLACKBOX_FIELD_RPM,
   BLACKBOX_FIELD_GYROUNFILT,
+  BLACKBOX_FIELD_SERVO,
+  BLACKBOX_FIELD_PITOT,
   BLACKBOX_FIELD_COUNT,
 };
 

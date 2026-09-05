@@ -78,14 +78,14 @@ int VoltageSensor::readVbat()
     _model.state.battery.samples--;
   }
 
-  _model.state.battery.cellVoltage = _model.state.battery.voltage / constrain(_model.state.battery.cells, 1, 6);
+  _model.state.battery.cellVoltage = _model.state.battery.voltage / std::clamp<int>(_model.state.battery.cells, 1, 6);
   _model.state.battery.percentage =
       std::clamp(Utils::map(_model.state.battery.cellVoltage, 3.4f, 4.2f, 0.0f, 100.0f), 0.0f, 100.0f);
 
   if (_model.config.debug.mode == DEBUG_BATTERY)
   {
-    _model.state.debug[0] = constrain(lrintf(_model.state.battery.voltageUnfiltered * 100.0f), 0, 32000);
-    _model.state.debug[1] = constrain(lrintf(_model.state.battery.voltage * 100.0f), 0, 32000);
+    _model.state.debug[0] = std::clamp<long>(lrintf(_model.state.battery.voltageUnfiltered * 100.0f), 0L, 32000L);
+    _model.state.debug[1] = std::clamp<long>(lrintf(_model.state.battery.voltage * 100.0f), 0L, 32000L);
   }
   return 1;
 #else
@@ -111,7 +111,7 @@ int VoltageSensor::readIbat()
   if (_model.config.debug.mode == DEBUG_CURRENT_SENSOR)
   {
     _model.state.debug[0] = lrintf(milivolts);
-    _model.state.debug[1] = constrain(lrintf(_model.state.battery.currentUnfiltered * 100.0f), 0, 32000);
+    _model.state.debug[1] = std::clamp<long>(lrintf(_model.state.battery.currentUnfiltered * 100.0f), 0L, 32000L);
     _model.state.debug[2] = _model.state.battery.rawCurrent;
   }
 

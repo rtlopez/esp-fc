@@ -5,7 +5,7 @@ static const uint8_t dummyByte[] = {0x00};
 
 namespace Espfc::Connect {
 
-int Vtx::begin(Device::SerialDevice* serial)
+int Vtx::begin(Stream::ReadWritable* serial)
 {
   _serial = serial;
   _timer.setRate(300000);
