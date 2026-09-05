@@ -503,12 +503,6 @@ class Model
       uint32_t featureAllowMask =  FEATURE_RX_PPM | FEATURE_RX_SERIAL | FEATURE_MOTOR_STOP | FEATURE_SOFTSERIAL | FEATURE_GPS |
         FEATURE_TELEMETRY | FEATURE_RX_SPI;// | FEATURE_AIRMODE;
 
-      // allow dynamic filter only above 1k sampling rate
-      if(state.loopRate >= DynamicFilterConfig::MIN_FREQ)
-      {
-        featureAllowMask |= FEATURE_DYNAMIC_FILTER;
-      }
-
       config.featureMask &= featureAllowMask;
 
       for(int i = 0; i < SERIAL_UART_COUNT; i++)

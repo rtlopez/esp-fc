@@ -3,22 +3,14 @@
 
 namespace Espfc::Utils {
 
-Logger::Logger(): _buff(nullptr), _printer(_sink) {}
-
-Logger::~Logger()
-{
-  _sink.reset(nullptr, 0);
-  delete[] _buff;
-  _buff = nullptr;
-}
+Logger::Logger(): _printer(_sink) {}
 
 int Logger::begin(size_t size)
 {
   if (size == 0) return 0;
   _sink.reset(nullptr, 0);
-  delete[] _buff;
-  _buff = new char[size];
-  _sink.reset(_buff, size);
+  _buff.reset(new char[size]);
+  _sink.reset(_buff.get(), size);
   return 1;
 }
 

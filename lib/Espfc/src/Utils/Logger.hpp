@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include "Debug_Espfc.h"
 #include "Stream/BufferWritable.hpp"
@@ -12,7 +13,6 @@ class Logger
 {
 public:
   Logger();
-  ~Logger();
 
   int begin(size_t size = 2048);
 
@@ -55,7 +55,7 @@ public:
   size_t length() const;
 
 private:
-  char* _buff;
+  std::unique_ptr<char[]> _buff;
   Stream::BufferWritable _sink;
   Stream::Printer _printer;
 };

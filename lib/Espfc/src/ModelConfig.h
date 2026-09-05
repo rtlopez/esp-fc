@@ -243,7 +243,7 @@ enum Feature {
   FEATURE_TELEMETRY  = 1 << 10,
   FEATURE_AIRMODE    = 1 << 22,
   FEATURE_RX_SPI     = 1 << 25,
-  FEATURE_DYNAMIC_FILTER = 1 << 29,
+  // FEATURE_DYNAMIC_FILTER = 1 << 29, (removed)
 };
 
 constexpr size_t MODEL_NAME_LEN  = 16;
