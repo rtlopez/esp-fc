@@ -404,7 +404,6 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   static const Param params[] = {
 
       Param("feature_gps", &c.featureMask, 7),
-      Param("feature_dyn_notch", &c.featureMask, 29),
       Param("feature_motor_stop", &c.featureMask, 4),
       Param("feature_rx_ppm", &c.featureMask, 0),
       Param("feature_rx_serial", &c.featureMask, 3),
@@ -431,8 +430,8 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("gyro_notch2_cutoff", &c.gyro.notch2Filter.cutoff),
       Param("gyro_dyn_lpf_min", &c.gyro.dynLpfFilter.cutoff),
       Param("gyro_dyn_lpf_max", &c.gyro.dynLpfFilter.freq),
-      Param("gyro_dyn_notch_q", &c.gyro.dynamicFilter.q),
       Param("gyro_dyn_notch_count", &c.gyro.dynamicFilter.count),
+      Param("gyro_dyn_notch_q", &c.gyro.dynamicFilter.q),
       Param("gyro_dyn_notch_min", &c.gyro.dynamicFilter.min_freq),
       Param("gyro_dyn_notch_max", &c.gyro.dynamicFilter.max_freq),
       Param("gyro_rpm_harmonics", &c.gyro.rpmFilter.harmonics),
