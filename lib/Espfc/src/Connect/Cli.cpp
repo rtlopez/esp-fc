@@ -779,9 +779,11 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("blackbox_log_mag", &c.blackbox.fieldsMask, BLACKBOX_FIELD_MAG),
       Param("blackbox_log_motor", &c.blackbox.fieldsMask, BLACKBOX_FIELD_MOTOR),
       Param("blackbox_log_pid", &c.blackbox.fieldsMask, BLACKBOX_FIELD_PID),
+      Param("blackbox_log_pitot", &c.blackbox.fieldsMask, BLACKBOX_FIELD_PITOT),
       Param("blackbox_log_rc", &c.blackbox.fieldsMask, BLACKBOX_FIELD_RC_COMMANDS),
       Param("blackbox_log_rpm", &c.blackbox.fieldsMask, BLACKBOX_FIELD_RPM),
       Param("blackbox_log_rssi", &c.blackbox.fieldsMask, BLACKBOX_FIELD_RSSI),
+      Param("blackbox_log_servo", &c.blackbox.fieldsMask, BLACKBOX_FIELD_SERVO),
       Param("blackbox_log_sp", &c.blackbox.fieldsMask, BLACKBOX_FIELD_SETPOINT),
 
       Param("model_name", PARAM_STRING, &c.modelName[0], nullptr, MODEL_NAME_LEN),

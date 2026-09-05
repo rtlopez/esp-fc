@@ -398,6 +398,8 @@ enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
   BLACKBOX_FIELD_GPS,
   BLACKBOX_FIELD_RPM,
   BLACKBOX_FIELD_GYROUNFILT,
+  BLACKBOX_FIELD_SERVO,
+  BLACKBOX_FIELD_PITOT,
   BLACKBOX_FIELD_COUNT,
 };
 
