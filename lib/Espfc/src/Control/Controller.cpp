@@ -150,8 +150,6 @@ void FAST_CODE_ATTR Controller::outerLoop()
     {
       const float angleSetpoint = Utils::toRad(_model.config.level.angleLimit) * _model.state.input.ch[i];
       _model.state.setpoint.rate[i] = _model.state.outerPid[i].update(angleSetpoint, _model.state.attitude.euler[i]);
-      // disable fterm in angle mode
-      _model.state.innerPid[i].fScale = 0.f;
     }
   }
   else
@@ -197,7 +195,14 @@ void FAST_CODE_ATTR Controller::innerLoop()
 
   for (size_t i = 0; i < AXIS_COUNT_RPY; ++i)
   {
-    output.ch[i] = innerPid[i].update(setpoint.rate[i], _model.state.gyro.adc[i]) * tpaFactor;
+    auto& pid = innerPid[i];
+    const float fScale = pid.fScale; // disable f-term in angle mode
+    if (_model.isModeActive(MODE_ANGLE) && i < AXIS_COUNT_RP)
+    {
+      pid.fScale = 0.f;
+    }
+    output.ch[i] = pid.update(setpoint.rate[i], _model.state.gyro.adc[i]) * tpaFactor;
+    pid.fScale = fScale;
   }
 
   // thrust control
