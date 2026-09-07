@@ -297,6 +297,38 @@ void test_controller_rates_limit()
   TEST_ASSERT_FLOAT_WITHIN(0.01f, -6.98f, controller.calculateSetpointRate(AXIS_YAW, 1.0f));
 }
 
+void test_controller_angle_mode_does_not_latch_fterm_scale()
+{
+  When(Method(ArduinoFake(), micros)).AlwaysReturn(0);
+
+  Model model;
+  model.state.gyro.clock = 1000;
+  model.config.gyro.dlpf = GYRO_DLPF_256;
+  model.config.loopSync = 1;
+  model.config.mixerSync = 1;
+  model.config.mixer.type = FC_MIXER_QUADX;
+  model.config.pid[FC_PID_ROLL] = {.P = 0u, .I = 0u, .D = 0u, .F = 100};
+  model.config.input.filterDerivative = {FILTER_NONE, 0};
+  model.begin();
+
+  Controller controller(model);
+  controller.begin();
+
+  model.state.input.ch[AXIS_ROLL] = 1.f;
+  model.updateModes(1 << MODE_ANGLE);
+  controller.update();
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, model.state.innerPid[AXIS_ROLL].fScale);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, model.state.innerPid[AXIS_ROLL].fTerm);
+
+  model.clearMode(MODE_ANGLE);
+  model.state.input.ch[AXIS_ROLL] = 0.f;
+  controller.update();
+
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, model.state.innerPid[AXIS_ROLL].fScale);
+  TEST_ASSERT_TRUE(model.state.innerPid[AXIS_ROLL].fTerm < -0.001f || model.state.innerPid[AXIS_ROLL].fTerm > 0.001f);
+}
+
 void test_rates_betaflight()
 {
   InputConfig config;
@@ -645,6 +677,7 @@ int main(int argc, char** argv)
   RUN_TEST(test_model_outer_pid_init);
   RUN_TEST(test_controller_rates);
   RUN_TEST(test_controller_rates_limit);
+  RUN_TEST(test_controller_angle_mode_does_not_latch_fterm_scale);
   RUN_TEST(test_rates_betaflight);
   RUN_TEST(test_rates_betaflight_expo);
   RUN_TEST(test_rates_raceflight);
