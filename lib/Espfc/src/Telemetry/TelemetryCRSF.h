@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Model.h"
-#include "Device/SerialDevice.h"
+#include "Stream/ReadWritable.hpp"
 #include "Rc/Crsf.h"
 #include "Utils/Math.hpp"
 #include <algorithm>
@@ -33,7 +33,7 @@ public:
     return 1;
   }
 
-  int process(Device::SerialDevice& s) const
+  int process(Stream::ReadWritable& s) const
   {
     Rc::CrsfMessage f;
     switch(_current)
@@ -75,7 +75,7 @@ public:
     return 1;
   }
 
-  int sendMsp(Device::SerialDevice& s, Connect::MspResponse resp, uint8_t origin)
+  int sendMsp(Stream::ReadWritable& s, Connect::MspResponse resp, uint8_t origin)
   {
     size_t size = resp.serialize(_buff, sizeof(_buff));
     const uint8_t* beg = _buff + 3;        // skip msp header
@@ -93,7 +93,7 @@ public:
     return iter;
   }
 
-  void send(const Rc::CrsfMessage& msg, Device::SerialDevice& s) const
+  void send(const Rc::CrsfMessage& msg, Stream::ReadWritable& s) const
   {
     s.write((uint8_t*)&msg, msg.size + 2);
   }
@@ -124,8 +124,8 @@ public:
   {
     msg.prepare(Rc::CRSF_FRAMETYPE_BATTERY_SENSOR);
 
-    uint16_t voltage = Utils::clamp(lrintf(_model.state.battery.voltage * 10.0f), 0l, 32000l);
-    uint16_t current = Utils::clamp(lrintf(_model.state.battery.current * 10.0f), 0l, 32000l);
+    uint16_t voltage = std::clamp(lrintf(_model.state.battery.voltage * 10.0f), 0l, 32000l);
+    uint16_t current = std::clamp(lrintf(_model.state.battery.current * 10.0f), 0l, 32000l);
     uint32_t mahDrawn = 0;
     uint8_t remainPerc = lrintf(_model.state.battery.percentage);
 

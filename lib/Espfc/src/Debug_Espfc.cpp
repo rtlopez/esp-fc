@@ -1,9 +1,15 @@
 #include "Debug_Espfc.h"
+#include "Stream/NullWritable.hpp"
+#include <utility>
 
 namespace Espfc {
 
-#ifdef ESPFC_DEBUG_SERIAL
-Stream* _debugStream = nullptr;
-#endif
+static Stream::NullWritable _nullWriter;
+Stream::Printer _debugStream{_nullWriter};
+
+void initDebugStream(Stream::Printer p)
+{
+  _debugStream = std::move(p);
+}
 
 } // namespace Espfc

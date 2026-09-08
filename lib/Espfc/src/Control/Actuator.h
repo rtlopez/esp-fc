@@ -6,28 +6,28 @@ namespace Espfc::Control {
 
 class Actuator
 {
-  public:
-    Actuator(Model& model);
+public:
+  Actuator(Model& model);
 
-    int begin();
-    int update();
+  int begin();
+  int update();
 
-  #ifndef UNIT_TEST
-  private:
-  #endif
+#ifndef UNIT_TEST
+private:
+#endif
 
-    void updateScaler();
-    void updateArmingDisabled();
-    void updateModeMask();
-    bool canActivateMode(FlightMode mode);
-    void updateArmed();
-    void updateAirMode();
-    void updateBuzzer();
-    void updateDynLpf();
-    void updateRescueConfig();
-    void updateLed();
+  void updateScaler();
+  void updateArmingDisabled();
+  void updateModeMask();
+  bool canActivateMode(FlightMode mode);
+  void updateArmed();
+  void updateAirMode();
+  void updateBuzzer();
+  void updateDynLpf();
+  void updateRescueConfig();
+  void updateLed();
 
-    Model& _model;
+  Model& _model;
 };
 
-}
+} // namespace Espfc::Control

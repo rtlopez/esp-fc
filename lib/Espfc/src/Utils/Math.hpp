@@ -47,15 +47,6 @@ T deadband(const T value, const T band)
   return 0;
 }
 
-// std::clamp() is available since c++17
-template<typename T>
-T clamp(const T value, const T min, const T max)
-{
-  if (value > max) return max;
-  if (value < min) return min;
-  return value;
-}
-
 inline int alignToClock(uint32_t clock, uint32_t maxFreq)
 {
   uint32_t result = clock;

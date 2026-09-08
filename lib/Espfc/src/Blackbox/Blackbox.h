@@ -1,34 +1,30 @@
 #pragma once
 
-#include "Model.h"
-#include "Device/SerialDevice.h"
 #include "BlackboxSerialBuffer.h"
+#include "Model.h"
+#include "Stream/ReadWritable.hpp"
 extern "C" {
 #include <platform.h>
 }
 
-namespace Espfc {
-
-namespace Blackbox {
+namespace Espfc::Blackbox {
 
 class Blackbox
 {
-  public:
-    Blackbox(Model& model);
-    int begin();
-    int update();
+public:
+  Blackbox(Model& model);
+  int begin();
+  int update();
 
-  private:
-    void updateData();
-    void updateArmed();
-    void updateMode();
+private:
+  void updateData();
+  void updateArmed();
+  void updateMode();
 
-    Model& _model;
-    pidProfile_s _pidProfile;
-    Device::SerialDevice * _serial;
-    BlackboxSerialBuffer _buffer;
+  Model& _model;
+  pidProfile_s _pidProfile;
+  Stream::ReadWritable* _serial;
+  BlackboxSerialBuffer _buffer;
 };
 
-}
-
-}
+} // namespace Espfc::Blackbox

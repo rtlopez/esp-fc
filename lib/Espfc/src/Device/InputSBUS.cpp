@@ -1,14 +1,14 @@
 #include "InputSBUS.h"
-#include "Utils/Math.hpp"
+#include <algorithm>
 #include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
 namespace Device {
 
-InputSBUS::InputSBUS(): _serial(NULL), _state(SBUS_START), _idx(0), _new_data(false) {}
+InputSBUS::InputSBUS(): _serial(nullptr), _state(SBUS_START), _idx(0), _new_data(false) {}
 
-int InputSBUS::begin(Device::SerialDevice * serial)
+int InputSBUS::begin(Stream::ReadWritable* serial)
 {
   _serial = serial;
   for(size_t i = 0; i < SBUS_FRAME_SIZE; i++)
@@ -140,7 +140,7 @@ void FAST_CODE_ATTR InputSBUS::apply()
 
 uint16_t FAST_CODE_ATTR InputSBUS::convert(int v)
 {
-  return Utils::clamp(((v * 5) / 8) + 880, 800, 2200);
+  return std::clamp(((v * 5) / 8) + 880, 800, 2200);
 }
 
 }

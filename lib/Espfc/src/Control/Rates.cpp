@@ -20,18 +20,28 @@ void Rates::begin(const InputConfig& config)
 
 float FAST_CODE_ATTR Rates::getSetpoint(const int axis, float input) const
 {
-  input = Utils::clamp(input, -0.995f, 0.995f); // limit input
+  input = std::clamp(input, -0.995f, 0.995f); // limit input
   const float inputAbs = fabsf(input);
   float result = 0;
   switch (rateType)
   {
-    case RATES_TYPE_BETAFLIGHT: result = betaflight(axis, input, inputAbs);
-    case RATES_TYPE_RACEFLIGHT: result = raceflight(axis, input, inputAbs);
-    case RATES_TYPE_KISS: result = kiss(axis, input, inputAbs);
-    case RATES_TYPE_ACTUAL: result = actual(axis, input, inputAbs);
-    case RATES_TYPE_QUICK: result = quick(axis, input, inputAbs);
+    case RATES_TYPE_BETAFLIGHT:
+      result = betaflight(axis, input, inputAbs);
+      break;
+    case RATES_TYPE_RACEFLIGHT:
+      result = raceflight(axis, input, inputAbs);
+      break;
+    case RATES_TYPE_KISS:
+      result = kiss(axis, input, inputAbs);
+      break;
+    case RATES_TYPE_ACTUAL:
+      result = actual(axis, input, inputAbs);
+      break;
+    case RATES_TYPE_QUICK:
+      result = quick(axis, input, inputAbs);
+      break;
   }
-  return Utils::toRad(Utils::clamp(result, -(float)rateLimit[axis], (float)rateLimit[axis]));
+  return Utils::toRad(std::clamp<float>(result, -rateLimit[axis], rateLimit[axis]));
 }
 
 float FAST_CODE_ATTR Rates::betaflight(const int axis, float rcCommandf, const float rcCommandfAbs) const

@@ -3,15 +3,26 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <tuple>
 #include <EscDriver.h>
-#include "Debug_Espfc.h"
 #include "ModelConfig.h"
 #include "ModelState.h"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/Storage.h"
-#include "Utils/Logger.h"
+#include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"
 
 namespace Espfc {
+
+enum ModelChangeEvent
+{
+  MODEL_CHANGE_FILTER,
+  MODEL_CHANGE_PID,
+  MODEL_CHANGE_RATES,
+  MODEL_CHANGE_ACCEL,
+  MODEL_CHANGE_INPUT,
+};
 
 class Model
 {
@@ -88,7 +99,7 @@ class Model
     bool blackboxEnabled() const
     {
       // serial or flash
-      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH) && config.blackbox.pDenom > 0;
+      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH);
     }
 
     bool gyroActive() const /* IRAM_ATTR */
@@ -141,18 +152,18 @@ class Model
       {
         //save();
         state.buzzer.push(BUZZER_GYRO_CALIBRATED);
-        logger.info().log(F("GYRO BIAS")).log(Utils::toDeg(state.gyro.bias.x)).log(Utils::toDeg(state.gyro.bias.y)).logln(Utils::toDeg(state.gyro.bias.z));
+        logger.info().log("GYRO BIAS").log(Utils::toDeg(state.gyro.bias.x)).log(Utils::toDeg(state.gyro.bias.y)).logln(Utils::toDeg(state.gyro.bias.z));
       }
       if(state.accel.calibrationState == CALIBRATION_SAVE)
       {
         save();
-        logger.info().log(F("ACCEL BIAS")).log(state.accel.bias.x).log(state.accel.bias.y).logln(state.accel.bias.z);
+        logger.info().log("ACCEL BIAS").log(state.accel.bias.x).log(state.accel.bias.y).logln(state.accel.bias.z);
       }
       if(state.mag.calibrationState == CALIBRATION_SAVE)
       {
         save();
-        logger.info().log(F("MAG BIAS")).log(state.mag.calibrationOffset.x).log(state.mag.calibrationOffset.y).logln(state.mag.calibrationOffset.z);
-        logger.info().log(F("MAG SCALE")).log(state.mag.calibrationScale.x).log(state.mag.calibrationScale.y).logln(state.mag.calibrationScale.z);
+        logger.info().log("MAG BIAS").log(state.mag.calibrationOffset.x).log(state.mag.calibrationOffset.y).logln(state.mag.calibrationOffset.z);
+        logger.info().log("MAG SCALE").log(state.mag.calibrationScale.x).log(state.mag.calibrationScale.y).logln(state.mag.calibrationScale.z);
       }
     }
 
@@ -225,12 +236,12 @@ class Model
       }
     }
 
-    Device::SerialDevice * getSerialStream(SerialPort i)
+    Stream::ReadWritable * getSerialStream(SerialPort i)
     {
       return state.serial[i].stream;
     }
 
-    Device::SerialDevice * getSerialStream(SerialFunction sf)
+    Stream::ReadWritable * getSerialStream(SerialFunction sf)
     {
       for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
       {
@@ -268,7 +279,7 @@ class Model
       size_t channel = config.input.rssiChannel;
       if(channel < 4 || channel > state.input.channelCount) return 0;
       float value = state.input.ch[channel - 1];
-      return Utils::clamp(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0l, 1023l);
+      return std::clamp<uint16_t>(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0, 1023);
     }
 
     int load()
@@ -276,7 +287,7 @@ class Model
       logger.begin();
       #ifndef UNIT_TEST
       _storage.begin();
-      logger.info().log(F("F_CPU")).logln(F_CPU);
+      logger.info().log("F_CPU").logln(F_CPU);
       _storageResult = _storage.load(config);
       logStorageResult();
       #endif
@@ -296,6 +307,100 @@ class Model
     void reload()
     {
       begin();
+    }
+
+    void setRebootRequired()
+    {
+      state.rebootRequired = true;
+      setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, true);
+    }
+
+    bool getRebootRequired() const
+    {
+      return state.rebootRequired;
+    }
+
+    void calculateSimplifiedPids(const SimplifiedTuningConfig& s, PidConfig out[3]) const
+    {
+      // ESP-FC compile-time PID defaults for roll/pitch/yaw (no D-Max on this target)
+      static const PidConfig def[3] = {
+        { 45, 80, 30, 110 },
+        { 47, 84, 34, 115 },
+        { 45, 80,  0, 110 },
+      };
+      if (s.pidsMode == SIMPLIFIED_TUNING_OFF) return;
+      const float master = s.masterMultiplier * 0.01f;
+      const float pi = s.piGain * 0.01f;
+      const float d = s.dGain * 0.01f;
+      const float ff = s.ffGain * 0.01f;
+      const float ig = s.iGain * 0.01f;
+      for (int axis = FC_PID_ROLL; axis <= std::clamp<int>(s.pidsMode, FC_PID_ROLL, FC_PID_YAW); axis++)
+      {
+        const float pitchD = (axis == FC_PID_PITCH) ? s.rollPitchRatio * 0.01f : 1.0f;
+        const float pitchPi = (axis == FC_PID_PITCH) ? s.pitchPiGain * 0.01f : 1.0f;
+        out[axis].P = std::clamp<long>(lrintf(def[axis].P * master * pi * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].I = std::clamp<long>(lrintf(def[axis].I * master * pi * ig * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].D = std::clamp<long>(lrintf(def[axis].D * master * d * pitchD), 0L, SIMPLIFIED_PID_GAIN_MAX);
+        out[axis].F = std::clamp<long>(lrintf(def[axis].F * master * pitchPi * ff), 0L, SIMPLIFIED_F_GAIN_MAX);
+      }
+    }
+
+    void calculateSimplifiedDtermFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    {
+      if (dynMin)
+      {
+        dynMin = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      }
+      if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_DTERM_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+    }
+
+    void calculateSimplifiedGyroFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    {
+      if (dynMin)
+      {
+        dynMin = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+        dynMax = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      }
+      if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+    }
+
+    std::tuple<bool, bool, bool> validateSimplifiedTuning() const
+    {
+      const auto& s = config.simplifiedTuning;
+      
+      const auto& pids = config.pid;
+      PidConfig tmp[3] = {pids[0], pids[1], pids[2]};
+
+      calculateSimplifiedPids(s, tmp);
+      bool pidOk = tmp[0].P == pids[0].P && tmp[0].I == pids[0].I &&
+                   tmp[0].D == pids[0].D && tmp[0].F == pids[0].F &&
+                   tmp[1].P == pids[1].P && tmp[1].I == pids[1].I &&
+                   tmp[1].D == pids[1].D && tmp[1].F == pids[1].F &&
+                   tmp[2].P == pids[2].P && tmp[2].I == pids[2].I &&
+                   tmp[2].D == pids[2].D && tmp[2].F == pids[2].F;
+
+      const auto& gyro = config.gyro;
+      int16_t glpf1 = gyro.filter.freq;
+      int16_t glpf2 = gyro.filter2.freq;
+      int16_t gmin = gyro.dynLpfFilter.cutoff;
+      int16_t gmax = gyro.dynLpfFilter.freq;
+      if (s.gyroFilter) calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
+      bool gyroOk = glpf1 == gyro.filter.freq && glpf2 == gyro.filter2.freq &&
+                    gmin == gyro.dynLpfFilter.cutoff && gmax == gyro.dynLpfFilter.freq;
+
+      const auto& dterm = config.dterm;
+      int16_t dlpf1 = dterm.filter.freq;
+      int16_t dlpf2 = dterm.filter2.freq;
+      int16_t dmin = dterm.dynLpfFilter.cutoff;
+      int16_t dmax = dterm.dynLpfFilter.freq;
+      if (s.dtermFilter) calculateSimplifiedDtermFilters(s.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
+      bool dtermOk = dlpf1 == dterm.filter.freq && dlpf2 == dterm.filter2.freq &&
+                     dmin == dterm.dynLpfFilter.cutoff && dmax == dterm.dynLpfFilter.freq;
+
+      return std::make_tuple(pidOk, gyroOk, dtermOk);
     }
 
     void reset()
@@ -349,20 +454,20 @@ class Model
         switch(config.output.protocol)
         {
           case ESC_PROTOCOL_PWM:
-            config.output.rate = constrain(config.output.rate, 50, 480);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 480);
             break;
           case ESC_PROTOCOL_ONESHOT125:
-            config.output.rate = constrain(config.output.rate, 50, 2000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
             break;
           case ESC_PROTOCOL_ONESHOT42:
-            config.output.rate = constrain(config.output.rate, 50, 4000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 4000);
             break;
           case ESC_PROTOCOL_BRUSHED:
           case ESC_PROTOCOL_MULTISHOT:
-            config.output.rate = constrain(config.output.rate, 50, 8000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 8000);
             break;
           default:
-            config.output.rate = constrain(config.output.rate, 50, 2000);
+            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
             break;
         }
       }
@@ -404,12 +509,6 @@ class Model
         SERIAL_FUNCTION_GPS | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT | SERIAL_FUNCTION_TELEMETRY_IBUS | SERIAL_FUNCTION_VTX_SMARTAUDIO;
       uint32_t featureAllowMask =  FEATURE_RX_PPM | FEATURE_RX_SERIAL | FEATURE_MOTOR_STOP | FEATURE_SOFTSERIAL | FEATURE_GPS |
         FEATURE_TELEMETRY | FEATURE_RX_SPI;// | FEATURE_AIRMODE;
-
-      // allow dynamic filter only above 1k sampling rate
-      if(state.loopRate >= DynamicFilterConfig::MIN_FREQ)
-      {
-        featureAllowMask |= FEATURE_DYNAMIC_FILTER;
-      }
 
       config.featureMask &= featureAllowMask;
 
@@ -460,64 +559,7 @@ class Model
       {
         state.mag.timer.setRate(state.mag.rate);
       }
-
-      state.boardAlignment.init(VectorFloat(Utils::toRad(config.boardAlignment[0]), Utils::toRad(config.boardAlignment[1]), Utils::toRad(config.boardAlignment[2])));
-      onAccChange();
-
-      const uint32_t gyroPreFilterRate = state.gyro.timer.rate;
-      const uint32_t gyroFilterRate = state.loopTimer.rate;
-      const uint32_t inputFilterRate = state.input.timer.rate;
-
-      // configure filters
-      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
-      {
-        if(isFeatureActive(FEATURE_DYNAMIC_FILTER))
-        {
-          for(size_t p = 0; p < (size_t)config.gyro.dynamicFilter.count; p++)
-          {
-            state.gyro.dynNotchFilter[p][i].begin(FilterConfig(FILTER_NOTCH_DF1, 400, 380), gyroFilterRate);
-          }
-        }
-        state.gyro.notch1Filter[i].begin(config.gyro.notch1Filter, gyroFilterRate);
-        state.gyro.notch2Filter[i].begin(config.gyro.notch2Filter, gyroFilterRate);
-        if(config.gyro.dynLpfFilter.cutoff > 0)
-        {
-          state.gyro.filter[i].begin(FilterConfig((FilterType)config.gyro.filter.type, config.gyro.dynLpfFilter.cutoff), gyroFilterRate);
-        }
-        else
-        {
-          state.gyro.filter[i].begin(config.gyro.filter, gyroFilterRate);
-        }
-        state.gyro.filter2[i].begin(config.gyro.filter2, gyroFilterRate);
-        state.gyro.filter3[i].begin(config.gyro.filter3, gyroPreFilterRate);
-        state.attitude.filter[i].begin(FilterConfig(FILTER_PT1, state.accel.timer.rate / GYRO_FUSION_LPF_DIV), gyroFilterRate);
-        for(size_t m = 0; m < RPM_FILTER_MOTOR_MAX; m++)
-        {
-          state.gyro.rpmFreqFilter[m].begin(FilterConfig(FILTER_PT1, config.gyro.rpmFilter.freqLpf), gyroFilterRate);
-          for(size_t n = 0; n < config.gyro.rpmFilter.harmonics; n++)
-          {
-            int center = Utils::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0, RPM_FILTER_MOTOR_MAX * config.gyro.rpmFilter.harmonics, config.gyro.rpmFilter.minFreq, gyroFilterRate / 2);
-            state.gyro.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), gyroFilterRate);
-          }
-        }
-        if(magActive())
-        {
-          state.mag.filter[i].begin(config.mag.filter, state.mag.timer.rate);
-        }
-      }
-
-      for(size_t i = 0; i < 4; i++)
-      {
-        if (config.input.filterType == INPUT_FILTER)
-        {
-          state.input.filter[i].begin(config.input.filter, inputFilterRate);
-        }
-        else
-        {
-          state.input.filter[i].begin(FilterConfig(FILTER_PT3, 25), inputFilterRate);
-        }
-      }
-
+          
       // ensure disarmed pulses
       for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
       {
@@ -530,11 +572,6 @@ class Model
 
       // override temporary
       //state.telemetryTimer.setRate(100);
-    }
-
-    void onAccChange()
-    {
-      state.trimRotation.init(VectorFloat{Utils::toRad(config.accel.trim[1]) * 0.1f, Utils::toRad(config.accel.trim[0]) * 0.1f, 0.0f});
     }
 
     void postLoad()
@@ -570,17 +607,27 @@ class Model
 #ifndef UNIT_TEST
       switch(_storageResult)
       {
-        case STORAGE_LOAD_SUCCESS:    logger.info().logln(F("EEPROM load ok")); break;
-        case STORAGE_SAVE_SUCCESS:    logger.info().logln(F("EEPROM save ok")); break;
-        case STORAGE_SAVE_ERROR:      logger.err().logln(F("EEPROM save failed")); break;
-        case STORAGE_ERR_BAD_MAGIC:   logger.err().logln(F("EEPROM wrong magic")); break;
-        case STORAGE_ERR_BAD_VERSION: logger.err().logln(F("EEPROM wrong version")); break;
-        case STORAGE_ERR_BAD_SIZE:    logger.err().logln(F("EEPROM wrong size")); break;
+        case STORAGE_LOAD_SUCCESS:    logger.info().logln("EEPROM load ok"); break;
+        case STORAGE_SAVE_SUCCESS:    logger.info().logln("EEPROM save ok"); break;
+        case STORAGE_SAVE_ERROR:      logger.err().logln("EEPROM save failed"); break;
+        case STORAGE_ERR_BAD_MAGIC:   logger.err().logln("EEPROM wrong magic"); break;
+        case STORAGE_ERR_BAD_VERSION: logger.err().logln("EEPROM wrong version"); break;
+        case STORAGE_ERR_BAD_SIZE:    logger.err().logln("EEPROM wrong size"); break;
         case STORAGE_NONE:
         default:
-          logger.err().logln(F("EEPROM unknown result")); break;
+          logger.err().logln("EEPROM unknown result"); break;
       }
 #endif
+    }
+
+    void notifyConfigChange(ModelChangeEvent event)
+    {
+      if (_onConfigChange) _onConfigChange(event);
+    }
+
+    void setConfigChangeListener(std::function<void(ModelChangeEvent)> listener)
+    {
+      _onConfigChange = listener;
     }
 
   private:
@@ -588,6 +635,8 @@ class Model
     Utils::Storage _storage;
     #endif
     StorageResult _storageResult;
+
+    std::function<void(ModelChangeEvent)> _onConfigChange{};
 };
 
 }

@@ -1,6 +1,7 @@
 #if defined(ESP32) && !defined(ESP32C3)
 
 #include <Arduino.h>
+#include <algorithm>
 #include "EscDriverEsp32.h"
 //#include "Debug_Espfc.h"
 #include "soc/rmt_periph.h"
@@ -92,7 +93,7 @@ int EscDriverEsp32::begin(const EscConfig& conf)
 {
   _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
-  _rate = constrain(conf.rate, 50, 8000);
+  _rate = std::clamp(conf.rate, 50, 8000);
   _interval = TO_INTERVAL_US(_rate);
   _digital = isDigital(_protocol);
   _dshot_tlm = conf.dshotTelemetry && (_protocol == ESC_PROTOCOL_DSHOT300 || _protocol == ESC_PROTOCOL_DSHOT600);
@@ -360,7 +361,7 @@ void IRAM_ATTR EscDriverEsp32::writeAnalogCommand(uint32_t channel, int32_t puls
     minPulse = 1000;
     maxPulse = 2000;
   }
-  pulse = constrain(pulse, minPulse, maxPulse);
+  pulse = std::clamp(pulse, minPulse, maxPulse);
   int duration = _map(pulse, 1000, 2000, slot.pulse_min, slot.pulse_max);
 
   int count = 2;
@@ -388,7 +389,7 @@ void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse
     modeTx((rmt_channel_t)channel);
   }
 
-  pulse = constrain(pulse, 0, 2000);
+  pulse = std::clamp(pulse, 0, 2000);
   // scale to dshot commands (0 or 48-2047)
   int value = dshotConvert(pulse);
   uint16_t frame = dshotEncode(value, _dshot_tlm);

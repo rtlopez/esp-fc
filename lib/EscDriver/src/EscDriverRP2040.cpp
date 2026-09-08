@@ -2,6 +2,7 @@
 
 #include "EscDriverRP2040.h"
 #include <Arduino.h>
+#include <algorithm>
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
 #include <hardware/dma.h>
@@ -133,15 +134,15 @@ uint32_t IRAM_ATTR EscDriverRP2040::usToTicks(uint32_t us)
       ticks = map(us, 1000, 2000, usToTicksReal(5), usToTicksReal(25));
       break;
     case ESC_PROTOCOL_BRUSHED:
-      ticks = map(constrain(us, 1000, 2000), 1000, 2000, 0, _interval);
+      ticks = map(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval);
       break;
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:
     case ESC_PROTOCOL_DSHOT600:
-      ticks = constrain(us, 1000, 2000);
+      ticks = std::clamp<uint32_t>(us, 1000, 2000);
       break;
     default:
-      ticks = usToTicksReal(constrain(us, 800, 2200)); // PWM
+      ticks = usToTicksReal(std::clamp<uint32_t>(us, 800, 2200)); // PWM
       break;
   }
   return ticks;
@@ -171,7 +172,7 @@ int EscDriverRP2040::begin(const EscConfig& conf)
   _timer = (EscDriverTimer)conf.timer;
   _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
-  _rate = constrain(conf.rate, 50, 8000);
+  _rate = std::clamp(conf.rate, 50, 8000);
   _interval = usToTicksReal(1000000ul / _rate);
 
   _dl = nsToDshotTicks(DSHOT150_T0H);
@@ -232,7 +233,7 @@ void EscDriverRP2040::dshotWriteDMA()
   {
     if(!_slots[i].active()) continue;
 
-    uint16_t pulse = constrain(_slots[i].pulse, 0, 2000);
+    uint16_t pulse = std::clamp<int>(_slots[i].pulse, 0, 2000);
     uint16_t value = dshotConvert(pulse);
     uint16_t frame = dshotEncode(value);
 

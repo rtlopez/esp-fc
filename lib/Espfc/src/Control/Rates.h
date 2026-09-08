@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ModelConfig.h"
-#include "Utils/Math.hpp"
+#include <algorithm>
 
 namespace Espfc {
 
@@ -41,7 +41,7 @@ private:
 
   inline float constrainf(float x, float l, float h) const
   {
-    return Utils::clamp(x, l, h);
+    return std::clamp(x, l, h);
   }
 
 private:

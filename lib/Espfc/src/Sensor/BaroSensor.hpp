@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BaseSensor.h"
 #include "Device/BaroDevice.hpp"
 #include "Model.h"
+#include "Sensor/BaseSensor.hpp"
 #include "Utils/Filter.h"
 
 namespace Espfc::Sensor {
@@ -22,6 +22,7 @@ public:
   int begin();
   int update();
   int read();
+  int reload(ModelChangeEvent event);
 
 private:
   void readTemperature();

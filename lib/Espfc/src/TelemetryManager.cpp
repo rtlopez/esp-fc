@@ -1,18 +1,21 @@
 #include "TelemetryManager.h"
+#include "Stream/Printer.hpp"
 
 namespace Espfc {
 
 TelemetryManager::TelemetryManager(Model& model): _model(model), _msp(model), _text(model), _crsf(model) {}
 
-int TelemetryManager::process(Device::SerialDevice& s, TelemetryProtocol protocol) const
+int TelemetryManager::process(Stream::ReadWritable& s, TelemetryProtocol protocol) const
 {
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_TELEMETRY);
 
-  switch(protocol)
+  switch (protocol)
   {
-    case TELEMETRY_PROTOCOL_TEXT:
-      _text.process(s);
+    case TELEMETRY_PROTOCOL_TEXT: {
+      Stream::Printer printer(s);
+      _text.process(printer);
       break;
+    }
     case TELEMETRY_PROTOCOL_CRSF:
       _crsf.process(s);
       break;
@@ -21,16 +24,17 @@ int TelemetryManager::process(Device::SerialDevice& s, TelemetryProtocol protoco
   return 1;
 }
 
-int TelemetryManager::processMsp(Device::SerialDevice& s, TelemetryProtocol protocol, Connect::MspMessage m, uint8_t origin)
+int TelemetryManager::processMsp(Stream::ReadWritable& s, TelemetryProtocol protocol, Connect::MspMessage m,
+                                 uint8_t origin)
 {
   Connect::MspResponse r;
 
   // not valid msp message, stop processing
-  if(!m.isReady() || !m.isCmd()) return 0;
+  if (!m.isReady() || !m.isCmd()) return 0;
 
   _msp.processCommand(m, r, s);
 
-  switch(protocol)
+  switch (protocol)
   {
     case TELEMETRY_PROTOCOL_CRSF:
       _crsf.sendMsp(s, r, origin);
@@ -44,4 +48,4 @@ int TelemetryManager::processMsp(Device::SerialDevice& s, TelemetryProtocol prot
   return 1;
 }
 
-}
+} // namespace Espfc

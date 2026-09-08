@@ -234,7 +234,7 @@ uint32_t IRAM_ATTR EscDriverEsp32c3::usToTicks(uint32_t us)
       ticks = map(us, 1000, 2000, usToTicksReal(_timer, 5), usToTicksReal(_timer, 25));
       break;
     case ESC_PROTOCOL_BRUSHED:
-      ticks = map(constrain(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
+      ticks = map(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
       break;
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:
@@ -258,7 +258,7 @@ int EscDriverEsp32c3::begin(const EscConfig& conf)
 {
   _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
-  _rate = constrain(conf.rate, 50, 8000);
+  _rate = std::clamp(conf.rate, 50, 8000);
   _timer = (EscDriverTimer)conf.timer;
   _interval = usToTicksReal(_timer, 1000000L / _rate)/* - 400*/; // small compensation to keep frequency
   _intervalMin = _interval / 500; // do not generate brushed pulses if duty < ~0.2%  (1002)
@@ -330,7 +330,7 @@ void IRAM_ATTR EscDriverEsp32c3::dshotWrite()
   {
     if(_slots[c].pin > 16 || _slots[c].pin < 0) continue;
     mask_t mask = (1U << _slots[c].pin);
-    int pulse = constrain(_slots[c].pulse, 0, 2000);
+    int pulse = std::clamp(_slots[c].pulse, 0, 2000);
     // scale to dshot commands (0 or 48-2047)
     int value = dshotConvert(pulse);
     uint16_t frame = dshotEncode(value);

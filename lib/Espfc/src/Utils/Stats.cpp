@@ -120,38 +120,40 @@ float Stats::getCpuTime() const
 
 const char* Stats::getName(StatCounter c) const
 {
+  // clang-format off
   switch (c)
   {
-    case COUNTER_GYRO_READ: return PSTR("gyro_r");
-    case COUNTER_GYRO_FILTER: return PSTR("gyro_f");
-    case COUNTER_GYRO_FFT: return PSTR("gyro_a");
-    case COUNTER_RPM_UPDATE: return PSTR(" rpm_u");
-    case COUNTER_ACCEL_READ: return PSTR(" acc_r");
-    case COUNTER_ACCEL_FILTER: return PSTR(" acc_f");
-    case COUNTER_MAG_READ: return PSTR(" mag_r");
-    case COUNTER_MAG_FILTER: return PSTR(" mag_f");
-    case COUNTER_BARO: return PSTR("baro_p");
-    case COUNTER_GPS_READ: return PSTR(" gps_r");
-    case COUNTER_IMU_FUSION: return PSTR(" imu_p");
-    case COUNTER_IMU_FUSION2: return PSTR(" imu_c");
-    case COUNTER_OUTER_PID: return PSTR(" pid_o");
-    case COUNTER_INNER_PID: return PSTR(" pid_i");
-    case COUNTER_MIXER: return PSTR(" mix_p");
-    case COUNTER_MIXER_WRITE: return PSTR(" mix_w");
-    case COUNTER_MIXER_READ: return PSTR(" mix_r");
-    case COUNTER_BLACKBOX: return PSTR(" bblog");
-    case COUNTER_INPUT_READ: return PSTR("  rx_r");
-    case COUNTER_INPUT_FILTER: return PSTR("  rx_f");
-    case COUNTER_FAILSAFE: return PSTR("  rx_s");
-    case COUNTER_ACTUATOR: return PSTR("  rx_a");
-    case COUNTER_SERIAL: return PSTR("serial");
-    case COUNTER_WIFI: return PSTR("  wifi");
-    case COUNTER_BATTERY: return PSTR("   bat");
-    case COUNTER_TELEMETRY: return PSTR("   tlm");
-    case COUNTER_CPU_0: return PSTR(" cpu_0");
-    case COUNTER_CPU_1: return PSTR(" cpu_1");
-    default: return PSTR("unknwn");
+    case COUNTER_GYRO_READ: return "gyro_r";
+    case COUNTER_GYRO_FILTER: return "gyro_f";
+    case COUNTER_GYRO_FFT: return "gyro_a";
+    case COUNTER_RPM_UPDATE: return " rpm_u";
+    case COUNTER_ACCEL_READ: return " acc_r";
+    case COUNTER_ACCEL_FILTER: return " acc_f";
+    case COUNTER_MAG_READ: return " mag_r";
+    case COUNTER_MAG_FILTER: return " mag_f";
+    case COUNTER_BARO: return "baro_p";
+    case COUNTER_GPS_READ: return " gps_r";
+    case COUNTER_IMU_FUSION: return " imu_p";
+    case COUNTER_IMU_FUSION2: return " imu_c";
+    case COUNTER_OUTER_PID: return " pid_o";
+    case COUNTER_INNER_PID: return " pid_i";
+    case COUNTER_MIXER: return " mix_p";
+    case COUNTER_MIXER_WRITE: return " mix_w";
+    case COUNTER_MIXER_READ: return " mix_r";
+    case COUNTER_BLACKBOX: return " bblog";
+    case COUNTER_INPUT_READ: return "  rx_r";
+    case COUNTER_INPUT_FILTER: return "  rx_f";
+    case COUNTER_FAILSAFE: return "  rx_s";
+    case COUNTER_ACTUATOR: return "  rx_a";
+    case COUNTER_SERIAL: return "serial";
+    case COUNTER_WIFI: return "  wifi";
+    case COUNTER_BATTERY: return "   bat";
+    case COUNTER_TELEMETRY: return "   tlm";
+    case COUNTER_CPU_0: return " cpu_0";
+    case COUNTER_CPU_1: return " cpu_1";
+    default: return "unknwn";
   }
+  // clang-format on
 }
 
 } // namespace Espfc::Utils

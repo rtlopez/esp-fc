@@ -9,9 +9,7 @@
 static EEPROMClass EEPROM;
 #endif
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 int Storage::begin()
 {
@@ -22,17 +20,17 @@ int Storage::begin()
 
 StorageResult Storage::load(ModelConfig& config) const
 {
-  //return STORAGE_ERR_BAD_MAGIC;
+  // return STORAGE_ERR_BAD_MAGIC;
 
   int addr = 0;
   uint8_t magic = EEPROM.read(addr++);
-  if(EEPROM_MAGIC != magic)
+  if (EEPROM_MAGIC != magic)
   {
     return STORAGE_ERR_BAD_MAGIC;
   }
 
   uint8_t version = EEPROM.read(addr++);
-  if(EEPROM_VERSION != version)
+  if (EEPROM_VERSION != version)
   {
     return STORAGE_ERR_BAD_VERSION;
   }
@@ -40,7 +38,7 @@ StorageResult Storage::load(ModelConfig& config) const
   uint16_t size = 0;
   size = EEPROM.read(addr++);
   size |= EEPROM.read(addr++) << 8;
-  if(size != sizeof(ModelConfig))
+  if (size != sizeof(ModelConfig))
   {
     return STORAGE_ERR_BAD_SIZE;
   }
@@ -59,12 +57,10 @@ StorageResult Storage::save(const ModelConfig& config)
   EEPROM.write(addr++, (size >> 8) & 0xFF);
   EEPROM.put(addr, config);
   bool ok = EEPROM.commit();
-  if(!ok) return STORAGE_SAVE_ERROR;
+  if (!ok) return STORAGE_SAVE_ERROR;
   return STORAGE_SAVE_SUCCESS;
 }
 
-}
-
-}
+} // namespace Espfc::Utils
 
 #endif

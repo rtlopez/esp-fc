@@ -1,5 +1,6 @@
 
 CompileFlags:
+  CompilationDatabase: .
   # clang do not understand this flags
   Remove:
     - -mlongcalls

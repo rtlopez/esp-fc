@@ -1,14 +1,14 @@
-#include <unity.h>
-#include <EscDriver.h>
-#include <helper_3dmath.hpp>
-#include <platform.h>
-#include "Utils/Math.hpp"
-#include "Utils/Bits.hpp"
-#include "Utils/Filter.h"
 #include "Control/Pid.h"
 #include "Target/QueueAtomic.h"
+#include "Utils/Bits.hpp"
+#include "Utils/Filter.h"
+#include "Utils/Math.hpp"
 #include "Utils/RingBuf.h"
+#include <EscDriver.h>
 #include <Gps.hpp>
+#include <helper_3dmath.hpp>
+#include <platform.h>
+#include <unity.h>
 
 // void setUp(void) {
 // // set stuff up here
@@ -24,38 +24,38 @@ using namespace Espfc::Utils;
 
 void test_math_map()
 {
-  TEST_ASSERT_FLOAT_WITHIN(1.f,     0.f, Utils::map(   0.0f, -100.0f, 100.0f, -1000.0f, 1000.0f));
-  TEST_ASSERT_FLOAT_WITHIN(1.f,  1000.f, Utils::map( 100.0f, -100.0f, 100.0f, -1000.0f, 1000.0f));
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 0.f, Utils::map(0.0f, -100.0f, 100.0f, -1000.0f, 1000.0f));
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 1000.f, Utils::map(100.0f, -100.0f, 100.0f, -1000.0f, 1000.0f));
   TEST_ASSERT_FLOAT_WITHIN(1.f, -1000.f, Utils::map(-100.0f, -100.0f, 100.0f, -1000.0f, 1000.0f));
-  TEST_ASSERT_FLOAT_WITHIN(1.f,   200.f, Utils::map(  20.0f, -100.0f, 100.0f, -1000.0f, 1000.0f));
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 200.f, Utils::map(20.0f, -100.0f, 100.0f, -1000.0f, 1000.0f));
 
-  TEST_ASSERT_FLOAT_WITHIN(.001f,  0.f, Utils::map(   0.0f, -100.0f, 100.0f, -1.0f, 1.0f));
-  TEST_ASSERT_FLOAT_WITHIN(.001f,  1.f, Utils::map( 100.0f, -100.0f, 100.0f, -1.0f, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(.001f, 0.f, Utils::map(0.0f, -100.0f, 100.0f, -1.0f, 1.0f));
+  TEST_ASSERT_FLOAT_WITHIN(.001f, 1.f, Utils::map(100.0f, -100.0f, 100.0f, -1.0f, 1.0f));
   TEST_ASSERT_FLOAT_WITHIN(.001f, -1.f, Utils::map(-100.0f, -100.0f, 100.0f, -1.0f, 1.0f));
 }
 
 void test_math_map3()
 {
-  TEST_ASSERT_FLOAT_WITHIN(1.f,    0.f, Utils::map3(  0.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
-  TEST_ASSERT_FLOAT_WITHIN(1.f,  500.f, Utils::map3( 50.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 0.f, Utils::map3(0.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
+  TEST_ASSERT_FLOAT_WITHIN(1.f, 500.f, Utils::map3(50.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
   TEST_ASSERT_FLOAT_WITHIN(1.f, -500.f, Utils::map3(-50.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
 }
 
 void test_math_baro_altitude()
 {
-  TEST_ASSERT_FLOAT_WITHIN(0.1f,   0.0f, Utils::toAltitude(101325.f)); // sea level
-  TEST_ASSERT_FLOAT_WITHIN(0.1f,  27.0f, Utils::toAltitude(101000.f));
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, Utils::toAltitude(101325.f)); // sea level
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 27.0f, Utils::toAltitude(101000.f));
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 110.9f, Utils::toAltitude(100000.f));
 }
 
 void test_math_deadband()
 {
-  TEST_ASSERT_EQUAL_INT32( 0, Utils::deadband(  0, 10));
-  TEST_ASSERT_EQUAL_INT32( 0, Utils::deadband( 10, 10));
-  TEST_ASSERT_EQUAL_INT32( 1, Utils::deadband( 11, 10));
+  TEST_ASSERT_EQUAL_INT32(0, Utils::deadband(0, 10));
+  TEST_ASSERT_EQUAL_INT32(0, Utils::deadband(10, 10));
+  TEST_ASSERT_EQUAL_INT32(1, Utils::deadband(11, 10));
   TEST_ASSERT_EQUAL_INT32(-1, Utils::deadband(-11, 10));
-  TEST_ASSERT_EQUAL_INT32( 0, Utils::deadband( -5, 10));
-  TEST_ASSERT_EQUAL_INT32(10, Utils::deadband( 20, 10));
+  TEST_ASSERT_EQUAL_INT32(0, Utils::deadband(-5, 10));
+  TEST_ASSERT_EQUAL_INT32(10, Utils::deadband(20, 10));
 }
 
 void test_math_bit()
@@ -73,27 +73,27 @@ void test_math_bit()
 
 void test_math_bitmask()
 {
-  TEST_ASSERT_EQUAL_UINT8(   0, Utils::setMasked(0, 1, 0));
-  TEST_ASSERT_EQUAL_UINT8(   1, Utils::setMasked(0, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8(0, Utils::setMasked(0, 1, 0));
+  TEST_ASSERT_EQUAL_UINT8(1, Utils::setMasked(0, 1, 1));
   TEST_ASSERT_EQUAL_UINT8(0x38, Utils::setMasked(0x00, 0x38, 0xff));
   TEST_ASSERT_EQUAL_UINT8(0xc7, Utils::setMasked(0xff, 0x38, 0x00));
 }
 
 void test_math_bitmask_lsb()
 {
-  TEST_ASSERT_EQUAL_UINT8( 1, Utils::getMaskLsb(0, 1));
-  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getMaskLsb(1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 4, Utils::getMaskLsb(2, 1));
+  TEST_ASSERT_EQUAL_UINT8(1, Utils::getMaskLsb(0, 1));
+  TEST_ASSERT_EQUAL_UINT8(2, Utils::getMaskLsb(1, 1));
+  TEST_ASSERT_EQUAL_UINT8(4, Utils::getMaskLsb(2, 1));
   TEST_ASSERT_EQUAL_UINT8(12, Utils::getMaskLsb(2, 2));
   TEST_ASSERT_EQUAL_UINT8(56, Utils::getMaskLsb(3, 3));
 }
 
 void test_math_bitmask_msb()
 {
-  TEST_ASSERT_EQUAL_UINT8( 1, Utils::getMaskMsb(0, 1));
-  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getMaskMsb(1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 4, Utils::getMaskMsb(2, 1));
-  TEST_ASSERT_EQUAL_UINT8( 6, Utils::getMaskMsb(2, 2));
+  TEST_ASSERT_EQUAL_UINT8(1, Utils::getMaskMsb(0, 1));
+  TEST_ASSERT_EQUAL_UINT8(2, Utils::getMaskMsb(1, 1));
+  TEST_ASSERT_EQUAL_UINT8(4, Utils::getMaskMsb(2, 1));
+  TEST_ASSERT_EQUAL_UINT8(6, Utils::getMaskMsb(2, 2));
   TEST_ASSERT_EQUAL_UINT8(14, Utils::getMaskMsb(3, 3));
   TEST_ASSERT_EQUAL_UINT8(30, Utils::getMaskMsb(4, 4));
 }
@@ -106,92 +106,92 @@ void test_math_bits_lsb()
   TEST_ASSERT_EQUAL_UINT8(1, Utils::getBitsLsb(0x55, 4, 2));
   TEST_ASSERT_EQUAL_UINT8(5, Utils::getBitsLsb(0x55, 2, 4));
 
-  TEST_ASSERT_EQUAL_UINT8(  8, Utils::setBitsLsb(0x00, 3, 4, 1));
-  TEST_ASSERT_EQUAL_UINT8( 80, Utils::setBitsLsb(0x00, 3, 4, 10));
-  TEST_ASSERT_EQUAL_UINT8( 16, Utils::setBitsLsb(0x00, 4, 2, 1));
+  TEST_ASSERT_EQUAL_UINT8(8, Utils::setBitsLsb(0x00, 3, 4, 1));
+  TEST_ASSERT_EQUAL_UINT8(80, Utils::setBitsLsb(0x00, 3, 4, 10));
+  TEST_ASSERT_EQUAL_UINT8(16, Utils::setBitsLsb(0x00, 4, 2, 1));
   TEST_ASSERT_EQUAL_UINT8(160, Utils::setBitsLsb(0x00, 4, 4, 10));
 }
 
 void test_math_bits_msb()
 {
-  TEST_ASSERT_EQUAL_UINT8( 0, Utils::getBitsMsb(0x00, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 0, Utils::getBitsMsb(0x55, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getBitsMsb(0x55, 2, 2));
-  TEST_ASSERT_EQUAL_UINT8( 2, Utils::getBitsMsb(0x55, 4, 2));
+  TEST_ASSERT_EQUAL_UINT8(0, Utils::getBitsMsb(0x00, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8(0, Utils::getBitsMsb(0x55, 1, 1));
+  TEST_ASSERT_EQUAL_UINT8(2, Utils::getBitsMsb(0x55, 2, 2));
+  TEST_ASSERT_EQUAL_UINT8(2, Utils::getBitsMsb(0x55, 4, 2));
   TEST_ASSERT_EQUAL_UINT8(10, Utils::getBitsMsb(0x55, 4, 4));
 
-  TEST_ASSERT_EQUAL_UINT8( 1, Utils::setBitsMsb(0x00, 3, 4, 1));
+  TEST_ASSERT_EQUAL_UINT8(1, Utils::setBitsMsb(0x00, 3, 4, 1));
   TEST_ASSERT_EQUAL_UINT8(10, Utils::setBitsMsb(0x00, 3, 4, 10));
-  TEST_ASSERT_EQUAL_UINT8( 8, Utils::setBitsMsb(0x00, 6, 4, 1));
+  TEST_ASSERT_EQUAL_UINT8(8, Utils::setBitsMsb(0x00, 6, 4, 1));
   TEST_ASSERT_EQUAL_UINT8(80, Utils::setBitsMsb(0x00, 6, 4, 10));
 }
 
 void test_math_clock_align()
 {
-  TEST_ASSERT_EQUAL_INT( 250, Utils::alignToClock(1000,  332));
-  TEST_ASSERT_EQUAL_INT( 333, Utils::alignToClock(1000,  333));
-  TEST_ASSERT_EQUAL_INT( 333, Utils::alignToClock(1000,  334));
-  TEST_ASSERT_EQUAL_INT( 333, Utils::alignToClock(1000,  400));
-  TEST_ASSERT_EQUAL_INT( 500, Utils::alignToClock(1000,  500));
-  TEST_ASSERT_EQUAL_INT( 500, Utils::alignToClock(1000,  800));
+  TEST_ASSERT_EQUAL_INT(250, Utils::alignToClock(1000, 332));
+  TEST_ASSERT_EQUAL_INT(333, Utils::alignToClock(1000, 333));
+  TEST_ASSERT_EQUAL_INT(333, Utils::alignToClock(1000, 334));
+  TEST_ASSERT_EQUAL_INT(333, Utils::alignToClock(1000, 400));
+  TEST_ASSERT_EQUAL_INT(500, Utils::alignToClock(1000, 500));
+  TEST_ASSERT_EQUAL_INT(500, Utils::alignToClock(1000, 800));
   TEST_ASSERT_EQUAL_INT(1000, Utils::alignToClock(1000, 2000));
-  TEST_ASSERT_EQUAL_INT( 500, Utils::alignToClock(8000,  500));
-  TEST_ASSERT_EQUAL_INT( 476, Utils::alignToClock(6667,  500));
+  TEST_ASSERT_EQUAL_INT(500, Utils::alignToClock(8000, 500));
+  TEST_ASSERT_EQUAL_INT(476, Utils::alignToClock(6667, 500));
 }
 
 void test_math_peak_detect_full()
 {
   using Utils::Peak;
 
-  float samples[32] = { 0, 20, 0, 0,  4, 0, 2, 4,  5, 3, 1, 4,  0, 6, 0, 0 };
-  Peak peaks[8] = { Peak(), Peak(), Peak(), Peak() };
+  float samples[32] = {0, 20, 0, 0, 4, 0, 2, 4, 5, 3, 1, 4, 0, 6, 0, 0};
+  Peak peaks[8] = {Peak(), Peak(), Peak(), Peak()};
 
   Utils::peakDetect(samples, 1, 14, 1, peaks, 4);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  1.f, peaks[0].freq);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 1.f, peaks[0].freq);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 20.f, peaks[0].value);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 13.f, peaks[1].freq);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  6.f, peaks[1].value);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 6.f, peaks[1].value);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 7.92f, peaks[2].freq);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.f, peaks[2].value);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5.f, peaks[2].value);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  4.f, peaks[3].freq);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  4.f, peaks[3].value);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.f, peaks[3].freq);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.f, peaks[3].value);
 }
 
 void test_math_peak_detect_partial()
 {
   using Utils::Peak;
 
-  float samples[32] = { 0, 20, 0, 0,  4, 0, 2, 4,  5, 3, 1, 4,  0, 6, 0, 0 };
-  Peak peaks[8] = { Peak(), Peak(), Peak(), Peak() };
+  float samples[32] = {0, 20, 0, 0, 4, 0, 2, 4, 5, 3, 1, 4, 0, 6, 0, 0};
+  Peak peaks[8] = {Peak(), Peak(), Peak(), Peak()};
 
   Utils::peakDetect(samples, 3, 12, 1, peaks, 3);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 7.92f, peaks[0].freq);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   5.f, peaks[0].value);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5.f, peaks[0].value);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.f, peaks[1].freq);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.f, peaks[1].value);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.f, peaks[1].freq);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.f, peaks[1].value);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 10.8f, peaks[2].freq);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,   4.f, peaks[2].value);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 4.f, peaks[2].value);
 }
 
 void test_math_peak_sort()
 {
   using Utils::Peak;
 
-  Peak peaks[8] = { Peak(20, 10), Peak(10, 10), Peak(0, 10), Peak(5, 5) };
+  Peak peaks[8] = {Peak(20, 10), Peak(10, 10), Peak(0, 10), Peak(5, 5)};
 
   Utils::peakSort(peaks, 4);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  5.f, peaks[0].freq);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5.f, peaks[0].freq);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 10.f, peaks[1].freq);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 20.f, peaks[2].freq);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, peaks[3].freq);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.f, peaks[3].freq);
 }
 
 void test_vector_int16_access()
@@ -280,17 +280,17 @@ void test_vector_float_math3d()
   const VectorFloat v3(2.0f, 2.0f, 0.0f);
   const VectorFloat r3 = v0.cross(v3);
   float d3 = v0.dot(v3);
-  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, r3.x);
-  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, r3.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, r3.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, r3.y);
   TEST_ASSERT_FLOAT_WITHIN(0.001f, -2.0f, r3.z);
-  TEST_ASSERT_FLOAT_WITHIN(0.001f,  2.0f, d3);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 2.0f, d3);
 
   TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, v0.getMagnitude());
   TEST_ASSERT_FLOAT_WITHIN(0.001f, 2.0f, r3.getMagnitude());
 
   const VectorFloat n = r3.getNormalized();
-  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, n.x);
-  TEST_ASSERT_FLOAT_WITHIN(0.001f,  0.0f, n.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, n.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, n.y);
   TEST_ASSERT_FLOAT_WITHIN(0.001f, -1.0f, n.z);
 }
 
@@ -721,9 +721,9 @@ void test_pid_init()
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.Kd);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, pid.Kf);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,  0.3f, pid.iLimitHigh);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.3f, pid.iLimitHigh);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, -0.3f, pid.iLimitLow);
-  TEST_ASSERT_FLOAT_WITHIN(0.0001f,  1.0f, pid.oLimitHigh);
+  TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.oLimitHigh);
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, -1.0f, pid.oLimitLow);
 
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.0f, pid.pScale);
@@ -996,7 +996,7 @@ void test_pid_update_sum_limit()
 void test_queue_atomic()
 {
   QueueAtomic<int, 3> q;
-  int e1 =  1, e2 =  2, e3 =  3, e4 =  4;
+  int e1 = 1, e2 = 2, e3 = 3, e4 = 4;
   int r1 = 91, r2 = 92, r3 = 93, r4 = 94;
 
   // empty
@@ -1058,7 +1058,7 @@ void test_queue_atomic()
 void test_ring_buf()
 {
   Utils::RingBuf<uint8_t, 3> q;
-  uint8_t e1 =  1, e2 =  2, e3 =  3, e4 =  4;
+  uint8_t e1 = 1, e2 = 2, e3 = 3, e4 = 4;
   uint8_t r1 = 91, r2 = 92, r3 = 93, r4 = 94;
 
   // empty
@@ -1171,12 +1171,10 @@ void test_ring_buf2()
 {
   Utils::RingBuf<int, 8> q;
   int x[] = {
-      100, 101, 102, 103, 104, 105, 106, 107,
-      108, 109, 110, 111, 112, 113, 114, 115,
+      100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
   };
   int y[] = {
-      99, 99, 99, 99, 99, 99, 99, 99,
-      99, 99, 99, 99, 99, 99, 99, 99,
+      99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
   };
 
   TEST_ASSERT_TRUE(q.isEmpty());
@@ -1229,11 +1227,11 @@ void test_ring_buf2()
 
 void test_align_addr_to_write()
 {
-  TEST_ASSERT_EQUAL_UINT32(  0, Utils::alignAddressToWrite(  0,  8, 16));
-  TEST_ASSERT_EQUAL_UINT32( 16, Utils::alignAddressToWrite(  0, 16, 16));
-  TEST_ASSERT_EQUAL_UINT32( 16, Utils::alignAddressToWrite(  0, 24, 16));
+  TEST_ASSERT_EQUAL_UINT32(0, Utils::alignAddressToWrite(0, 8, 16));
+  TEST_ASSERT_EQUAL_UINT32(16, Utils::alignAddressToWrite(0, 16, 16));
+  TEST_ASSERT_EQUAL_UINT32(16, Utils::alignAddressToWrite(0, 24, 16));
   TEST_ASSERT_EQUAL_UINT32(144, Utils::alignAddressToWrite(128, 16, 16));
-  TEST_ASSERT_EQUAL_UINT32( 32, Utils::alignAddressToWrite(  0, 32, 16));
+  TEST_ASSERT_EQUAL_UINT32(32, Utils::alignAddressToWrite(0, 32, 16));
   TEST_ASSERT_EQUAL_UINT32(128, Utils::alignAddressToWrite(100, 32, 16));
 }
 
@@ -1254,16 +1252,16 @@ void test_rotation_matrix_90_roll()
   VectorFloat v{0.f, 0.f, 1.f};
   RotationMatrixFloat rm;
   rm.init(VectorFloat{
-    Utils::toRad(90),
-    Utils::toRad(0),
-    Utils::toRad(0),
+      Utils::toRad(90),
+      Utils::toRad(0),
+      Utils::toRad(0),
   });
 
   VectorFloat r = rm.apply(v);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.x);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  1.f, r.y);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.z);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.f, r.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 1.f, r.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.f, r.z);
 }
 
 void test_rotation_matrix_90_pitch()
@@ -1271,16 +1269,16 @@ void test_rotation_matrix_90_pitch()
   VectorFloat v{0.f, 0.f, 1.f};
   RotationMatrixFloat rm;
   rm.init(VectorFloat{
-    Utils::toRad(0),
-    Utils::toRad(90),
-    Utils::toRad(0),
+      Utils::toRad(0),
+      Utils::toRad(90),
+      Utils::toRad(0),
   });
 
   VectorFloat r = rm.apply(v);
 
   TEST_ASSERT_FLOAT_WITHIN(0.01f, -1.f, r.x);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.y);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  0.f, r.z);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.f, r.y);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.f, r.z);
 }
 
 void test_rotation_matrix_90_yaw()
@@ -1288,19 +1286,19 @@ void test_rotation_matrix_90_yaw()
   VectorFloat v{1.f, 2.f, 3.f};
   RotationMatrixFloat rm;
   rm.init(VectorFloat{
-    Utils::toRad(0),
-    Utils::toRad(0),
-    Utils::toRad(90),
+      Utils::toRad(0),
+      Utils::toRad(0),
+      Utils::toRad(90),
   });
 
   VectorFloat r = rm.apply(v);
 
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  2.f, r.x);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 2.f, r.x);
   TEST_ASSERT_FLOAT_WITHIN(0.01f, -1.f, r.y);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f,  3.f, r.z);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 3.f, r.z);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   UNITY_BEGIN();
 

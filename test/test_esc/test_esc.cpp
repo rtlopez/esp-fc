@@ -1,13 +1,13 @@
-#include <unity.h>
 #include <ArduinoFake.h>
 #include <EscDriver.h>
+#include <unity.h>
 
 void test_esc_dshot_encode()
 {
-  TEST_ASSERT_EQUAL_UINT16(    0, EscDriver::dshotEncode(   0, false));
-  TEST_ASSERT_EQUAL_UINT16(   34, EscDriver::dshotEncode(   1, false));
-  TEST_ASSERT_EQUAL_UINT16(   68, EscDriver::dshotEncode(   2, false));
-  TEST_ASSERT_EQUAL_UINT16( 1515, EscDriver::dshotEncode(  47, false));
+  TEST_ASSERT_EQUAL_UINT16(0, EscDriver::dshotEncode(0, false));
+  TEST_ASSERT_EQUAL_UINT16(34, EscDriver::dshotEncode(1, false));
+  TEST_ASSERT_EQUAL_UINT16(68, EscDriver::dshotEncode(2, false));
+  TEST_ASSERT_EQUAL_UINT16(1515, EscDriver::dshotEncode(47, false));
   TEST_ASSERT_EQUAL_UINT16(32010, EscDriver::dshotEncode(1000, false));
   TEST_ASSERT_EQUAL_UINT16(32040, EscDriver::dshotEncode(1001, false));
   TEST_ASSERT_EQUAL_UINT16(32742, EscDriver::dshotEncode(1023, false));
@@ -17,10 +17,10 @@ void test_esc_dshot_encode()
 
 void test_esc_dshot_encode_inverted()
 {
-  TEST_ASSERT_EQUAL_UINT16(   15, EscDriver::dshotEncode(0,    true));
-  TEST_ASSERT_EQUAL_UINT16(   45, EscDriver::dshotEncode(1,    true));
-  TEST_ASSERT_EQUAL_UINT16(   75, EscDriver::dshotEncode(2,    true));
-  TEST_ASSERT_EQUAL_UINT16( 1508, EscDriver::dshotEncode(47,   true));
+  TEST_ASSERT_EQUAL_UINT16(15, EscDriver::dshotEncode(0, true));
+  TEST_ASSERT_EQUAL_UINT16(45, EscDriver::dshotEncode(1, true));
+  TEST_ASSERT_EQUAL_UINT16(75, EscDriver::dshotEncode(2, true));
+  TEST_ASSERT_EQUAL_UINT16(1508, EscDriver::dshotEncode(47, true));
   TEST_ASSERT_EQUAL_UINT16(32005, EscDriver::dshotEncode(1000, true));
   TEST_ASSERT_EQUAL_UINT16(32039, EscDriver::dshotEncode(1001, true));
   TEST_ASSERT_EQUAL_UINT16(32745, EscDriver::dshotEncode(1023, true));
@@ -30,11 +30,11 @@ void test_esc_dshot_encode_inverted()
 
 void test_esc_dshot_convert()
 {
-  TEST_ASSERT_EQUAL_UINT16(   0, EscDriver::dshotConvert(   0));
-  TEST_ASSERT_EQUAL_UINT16(   0, EscDriver::dshotConvert(   1));
-  TEST_ASSERT_EQUAL_UINT16(   0, EscDriver::dshotConvert( 999));
-  TEST_ASSERT_EQUAL_UINT16(   0, EscDriver::dshotConvert(1000));
-  TEST_ASSERT_EQUAL_UINT16(  49, EscDriver::dshotConvert(1001));
+  TEST_ASSERT_EQUAL_UINT16(0, EscDriver::dshotConvert(0));
+  TEST_ASSERT_EQUAL_UINT16(0, EscDriver::dshotConvert(1));
+  TEST_ASSERT_EQUAL_UINT16(0, EscDriver::dshotConvert(999));
+  TEST_ASSERT_EQUAL_UINT16(0, EscDriver::dshotConvert(1000));
+  TEST_ASSERT_EQUAL_UINT16(49, EscDriver::dshotConvert(1001));
   TEST_ASSERT_EQUAL_UINT16(1047, EscDriver::dshotConvert(1500));
   TEST_ASSERT_EQUAL_UINT16(2047, EscDriver::dshotConvert(2000));
 }
@@ -61,19 +61,19 @@ void test_esc_gcr_convert_to_value()
 
 void test_esc_gcr_convert_to_erpm()
 {
-  TEST_ASSERT_EQUAL_UINT32(  60, EscDriver::convertToErpm(10000));
-  TEST_ASSERT_EQUAL_UINT32( 120, EscDriver::convertToErpm( 5000));
-  TEST_ASSERT_EQUAL_UINT32( 300, EscDriver::convertToErpm( 2000));
-  TEST_ASSERT_EQUAL_UINT32( 600, EscDriver::convertToErpm( 1000));
-  TEST_ASSERT_EQUAL_UINT32(1200, EscDriver::convertToErpm(  500));
-  TEST_ASSERT_EQUAL_UINT32(3000, EscDriver::convertToErpm(  200));
-  TEST_ASSERT_EQUAL_UINT32(6000, EscDriver::convertToErpm(  100));
+  TEST_ASSERT_EQUAL_UINT32(60, EscDriver::convertToErpm(10000));
+  TEST_ASSERT_EQUAL_UINT32(120, EscDriver::convertToErpm(5000));
+  TEST_ASSERT_EQUAL_UINT32(300, EscDriver::convertToErpm(2000));
+  TEST_ASSERT_EQUAL_UINT32(600, EscDriver::convertToErpm(1000));
+  TEST_ASSERT_EQUAL_UINT32(1200, EscDriver::convertToErpm(500));
+  TEST_ASSERT_EQUAL_UINT32(3000, EscDriver::convertToErpm(200));
+  TEST_ASSERT_EQUAL_UINT32(6000, EscDriver::convertToErpm(100));
 }
 
 void test_esc_duration_to_bitlen()
 {
   uint32_t bit_len = 213; // dshot300: 2.666us/12.5, dshot600: 1.333us/12.5
-  TEST_ASSERT_EQUAL_UINT32(0, EscDriver::durationToBitLen( 80, bit_len));
+  TEST_ASSERT_EQUAL_UINT32(0, EscDriver::durationToBitLen(80, bit_len));
 
   TEST_ASSERT_EQUAL_UINT32(1, EscDriver::durationToBitLen(150, bit_len));
   TEST_ASSERT_EQUAL_UINT32(1, EscDriver::durationToBitLen(160, bit_len));
@@ -100,9 +100,8 @@ void test_esc_extract_telemetry_gcr_synth()
   // 0b     0    11     0     1    00   111     0    11     0    11    00     1     0   1
   // 24 0:100 1:200 0:100 1:100 0:200 1:300 0:100 1:200 0:100 1:200 0:200 1:100 0:100
   uint32_t data[] = {
-    make_item(100, 0, 200, 1), make_item(100, 0, 100, 1), make_item(200, 0, 300, 1),
-    make_item(100, 0, 200, 1), make_item(100, 0, 200, 1), make_item(200, 0, 100, 1),
-    make_item(100, 0,   0, 0),
+      make_item(100, 0, 200, 1), make_item(100, 0, 100, 1), make_item(200, 0, 300, 1), make_item(100, 0, 200, 1),
+      make_item(100, 0, 200, 1), make_item(200, 0, 100, 1), make_item(100, 0, 0, 0),
   };
   uint32_t bit_len = 100;
   uint32_t data_len = sizeof(data);
@@ -118,9 +117,8 @@ void test_esc_extract_telemetry_gcr_synth_idle()
   // 0b    00     1     0     1    00     1     0     1    00     1     0     1     0     1   000  1
   // 32 0:200 1:100 0:100 1:100 0:200 1:100 0:100 1:100 0:200 1:100 0:100 1:100 0:100 1:100 0:300
   uint32_t data[] = {
-    make_item(200, 0, 100, 1), make_item(100, 0, 100, 1), make_item(200, 0, 100, 1),
-    make_item(100, 0, 100, 1), make_item(200, 0, 100, 1), make_item(100, 0, 100, 1),
-    make_item(100, 0, 100, 1), make_item(300, 0,   0, 1),
+      make_item(200, 0, 100, 1), make_item(100, 0, 100, 1), make_item(200, 0, 100, 1), make_item(100, 0, 100, 1),
+      make_item(200, 0, 100, 1), make_item(100, 0, 100, 1), make_item(100, 0, 100, 1), make_item(300, 0, 0, 1),
   };
   uint32_t bit_len = 100;
   uint32_t data_len = sizeof(data);
@@ -151,8 +149,8 @@ void test_esc_extract_telemetry_dshot300_sample()
   // 24 0:373 1:605 0:163 1:605 0:174 1:376 0:379 1:599 0:177 1:163 0:173 1EF67A 1EF67A?
   //       00   111     0   111     0    11    00   111     0     1     0
   uint32_t data[] = {
-    make_item(373, 0, 605, 1), make_item(163, 0, 605, 1), make_item(174, 0, 376, 1),
-    make_item(379, 0, 599, 1), make_item(177, 0, 163, 1), make_item(173, 0,   0, 1),
+      make_item(373, 0, 605, 1), make_item(163, 0, 605, 1), make_item(174, 0, 376, 1),
+      make_item(379, 0, 599, 1), make_item(177, 0, 163, 1), make_item(173, 0, 0, 1),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
   uint32_t data_len = sizeof(data);
@@ -183,9 +181,8 @@ void test_esc_extract_telemetry_dshot300_running()
   // 28 0:177 1:379 0:177 1:167 0:173 1:164 0:379 1:177 0:373 1:379 0:380 1:608 0:164 D499E D499E?
   //        0    11     0     1     0     1    00     1    00    11    00   111     0
   uint32_t data[] = {
-    make_item(177, 0, 379, 1), make_item(177, 0, 167, 1), make_item(173, 0, 164, 1),
-    make_item(379, 0, 177, 1), make_item(373, 0, 379, 1), make_item(380, 0, 608, 1),
-    make_item(164, 0, 0, 0),
+      make_item(177, 0, 379, 1), make_item(177, 0, 167, 1), make_item(173, 0, 164, 1), make_item(379, 0, 177, 1),
+      make_item(373, 0, 379, 1), make_item(380, 0, 608, 1), make_item(164, 0, 0, 0),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
   uint32_t data_len = sizeof(data);
@@ -216,9 +213,8 @@ void test_esc_extract_telemetry_dshot300_idle()
   // 32 0:380 1:172 0:175 1:172 0:371 1:172 0:175 1:172 0:371 1:172 0:174 1:162 0:172 1:172 0:606 52950 52950
   //       00     1     0     1    00     1     0     1    00     1     0     1     0     1   000  1
   uint32_t data[] = {
-    make_item(380, 0, 172, 1), make_item(175, 0, 172, 1), make_item(371, 0, 172, 1), 
-    make_item(175, 0, 172, 1), make_item(371, 0, 172, 1), make_item(174, 0, 162, 1),
-    make_item(172, 0, 172, 1), make_item(606, 0, 0, 1),
+      make_item(380, 0, 172, 1), make_item(175, 0, 172, 1), make_item(371, 0, 172, 1), make_item(175, 0, 172, 1),
+      make_item(371, 0, 172, 1), make_item(174, 0, 162, 1), make_item(172, 0, 172, 1), make_item(606, 0, 0, 1),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
   uint32_t data_len = sizeof(data);
@@ -244,7 +240,7 @@ void test_esc_extract_telemetry_dshot300_idle()
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, rpm);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   UNITY_BEGIN();
   RUN_TEST(test_esc_dshot_encode);

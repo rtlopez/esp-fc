@@ -1,21 +1,22 @@
+#include "Hardware.h"
 #include "Device/Baro/BaroBMP085.hpp"
 #include "Device/Baro/BaroBMP280.hpp"
 #include "Device/Baro/BaroSPL06.hpp"
 #include "Device/BaroDevice.hpp"
-#include "Device/GyroBMI160.h"
-#include "Device/GyroDevice.h"
-#include "Device/GyroICM20602.h"
-#include "Device/GyroICM42688.h"
-#include "Device/GyroLSM6DSO.h"
-#include "Device/GyroMPU6050.h"
-#include "Device/GyroMPU6500.h"
-#include "Device/GyroMPU9250.h"
+#include "Device/Gyro/GyroBMI160.hpp"
+#include "Device/Gyro/GyroICM20602.hpp"
+#include "Device/Gyro/GyroICM42688.hpp"
+#include "Device/Gyro/GyroLSM6DSO.hpp"
+#include "Device/Gyro/GyroMPU6050.hpp"
+#include "Device/Gyro/GyroMPU6500.hpp"
+#include "Device/Gyro/GyroMPU9250.hpp"
+#include "Device/GyroDevice.hpp"
 #include "Device/Mag/MagAK8963.hpp"
 #include "Device/Mag/MagHMC5883L.hpp"
 #include "Device/Mag/MagQMC5883L.hpp"
 #include "Device/Mag/MagQMC5883P.hpp"
-#include "Hal/Gpio.h"
-#include "Hardware.h"
+#include "Hal/Gpio.hpp"
+#include "Hal/Time.hpp"
 #if defined(ESPFC_WIFI_ALT)
 #include <ESP8266WiFi.h>
 #elif defined(ESPFC_WIFI)
@@ -35,13 +36,13 @@ static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
 static Espfc::Device::BusI2C i2cBus(WireInstance);
 #endif
 static Espfc::Device::BusSlave gyroSlaveBus;
-static Espfc::Device::GyroMPU6050 mpu6050;
-static Espfc::Device::GyroMPU6500 mpu6500;
-static Espfc::Device::GyroMPU9250 mpu9250;
-static Espfc::Device::GyroLSM6DSO lsm6dso;
-static Espfc::Device::GyroICM20602 icm20602;
-static Espfc::Device::GyroICM42688 icm42688;
-static Espfc::Device::GyroBMI160 bmi160;
+static Espfc::Device::Gyro::GyroMPU6050 mpu6050;
+static Espfc::Device::Gyro::GyroMPU6500 mpu6500;
+static Espfc::Device::Gyro::GyroMPU9250 mpu9250;
+static Espfc::Device::Gyro::GyroLSM6DSO lsm6dso;
+static Espfc::Device::Gyro::GyroICM20602 icm20602;
+static Espfc::Device::Gyro::GyroICM42688 icm42688;
+static Espfc::Device::Gyro::GyroBMI160 bmi160;
 static Espfc::Device::Mag::MagHMC5883L hmc5883l;
 static Espfc::Device::Mag::MagQMC5883L qmc5883l;
 static Espfc::Device::Mag::MagQMC5883P qmc5883p;
@@ -76,7 +77,7 @@ void Hardware::initBus()
   int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MOSI],
                                _model.config.pin[PIN_SPI_0_MISO]);
   _model.logger.info()
-      .log(F("SPI"))
+      .log("SPI")
       .log(_model.config.pin[PIN_SPI_0_SCK])
       .log(_model.config.pin[PIN_SPI_0_MOSI])
       .log(_model.config.pin[PIN_SPI_0_MISO])
@@ -85,9 +86,9 @@ void Hardware::initBus()
 #if defined(ESPFC_I2C_0)
   int i2cResult =
       i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000ul);
-  i2cBus.onError = std::bind(&Hardware::onI2CError, this);
+  i2cBus.onError = [this]() { onI2CError(); };
   _model.logger.info()
-      .log(F("I2C"))
+      .log("I2C")
       .log(_model.config.pin[PIN_I2C_0_SDA])
       .log(_model.config.pin[PIN_I2C_0_SCL])
       .log(_model.config.i2cSpeed)
@@ -103,8 +104,8 @@ void Hardware::detectGyro()
 #if defined(ESPFC_SPI_0)
   if (_model.config.pin[PIN_SPI_CS0] != -1)
   {
-    Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS0], HIGH);
-    Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS0], OUTPUT);
+    Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS0], Hal::Gpio::High);
+    Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS0], Hal::Gpio::Output);
     if (!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
     if (!detectedGyro && detectDevice(mpu6500, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu6500;
     if (!detectedGyro && detectDevice(icm20602, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
@@ -169,8 +170,8 @@ void Hardware::detectBaro()
 #if defined(ESPFC_SPI_0)
   if (_model.config.pin[PIN_SPI_CS1] != -1)
   {
-    Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS1], HIGH);
-    Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS1], OUTPUT);
+    Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS1], Hal::Gpio::High);
+    Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS1], Hal::Gpio::Output);
     if (!detectedBaro && detectDevice(bmp280, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp280;
     if (!detectedBaro && detectDevice(bmp085, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
     if (!detectedBaro && detectDevice(spl06, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &spl06;

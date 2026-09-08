@@ -1,13 +1,14 @@
 #pragma once
 
+#include "Hal/Serial.hpp"
 #include "Target/Target.h"
-#include "Device/SerialDevice.h"
+#include "Stream/ReadWritable.hpp"
 
 namespace Espfc {
 
 namespace Blackbox {
 
-class BlackboxSerialBuffer: public Device::SerialDevice
+class BlackboxSerialBuffer: public Stream::ReadWritable
 {
   public:
     static constexpr size_t SIZE = targetSerialTxBufferSize(); // 128;
@@ -22,17 +23,20 @@ class BlackboxSerialBuffer: public Device::SerialDevice
       _data = nullptr;
     }
 
-    void updateBaudRate(int baud) override { };
-
-    void wrap(Espfc::Device::SerialDevice * s)
+    void wrap(Stream::ReadWritable * s)
     {
       _dev = s;
       _data = new uint8_t[SIZE];
     }
 
-    void begin(const Espfc::SerialDeviceConfig& conf) override
+    void begin(const Hal::SerialDeviceConfig& conf) override
     {
       //_dev->begin(conf);
+    }
+
+    void updateBaudRate(int baud) override
+    {
+      //_dev->updateBaudRate(baud);
     }
 
     size_t write(uint8_t c) override
@@ -62,17 +66,9 @@ class BlackboxSerialBuffer: public Device::SerialDevice
 
     int available() override { return _dev->available(); }
     int read() override { return _dev->read(); }
-    size_t readMany(uint8_t * c, size_t l) override {
-#if defined(ARCH_RP2040)
-      size_t count = std::min(l, (size_t)available());
-      for(size_t i = 0; i < count; i++)
-      {
-        c[i] = read();
-      }
-      return count;
-#else
+    size_t readMany(uint8_t * c, size_t l) override
+    {
       return _dev->readMany(c, l);
-#endif
     }
     int peek() override { return _dev->peek(); }
 
@@ -84,10 +80,8 @@ class BlackboxSerialBuffer: public Device::SerialDevice
       }
       return l;
     }
-    bool isSoft() const override { return false; };
-    operator bool() const override { return (bool)(*_dev); }
 
-    Device::SerialDevice * _dev;
+    Stream::ReadWritable * _dev;
     size_t _idx;
     uint8_t* _data;
 };

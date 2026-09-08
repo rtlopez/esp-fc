@@ -22,7 +22,7 @@ int Blackbox::begin()
 
 #ifdef USE_FLASHFS
   int res = flashfsInit();
-  _model.logger.info().log(F("FLASHFS")).log(res).logln(flashfsGetOffset());
+  _model.logger.info().log("FLASHFS").log(res).logln(flashfsGetOffset());
 #endif
 
   if(!_model.blackboxEnabled()) return 0;
@@ -138,7 +138,7 @@ int Blackbox::begin()
   motorConfigMutable()->dev.motorPwmProtocol = _model.config.output.protocol;
   motorConfigMutable()->dev.motorPwmRate = _model.config.output.rate;
   motorConfigMutable()->mincommand = _model.config.output.minCommand;
-  motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.dshotIdle;
+  motorConfigMutable()->digitalIdleOffsetValue = _model.config.output.motorIdle;
   motorConfigMutable()->minthrottle = _model.state.mixer.minThrottle;
   motorConfigMutable()->maxthrottle = _model.state.mixer.maxThrottle;
   motorConfigMutable()->dev.useDshotTelemetry = _model.config.output.dshotTelemetry;
@@ -156,14 +156,7 @@ int Blackbox::begin()
   targetPidLooptime = _model.state.loopTimer.interval;
   activePidLoopDenom = _model.config.loopSync;
 
-  if(_model.config.blackbox.pDenom >= 0 && _model.config.blackbox.pDenom <= 4)
-  {
-    blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
-  }
-  else
-  {
-    blackboxConfigMutable()->sample_rate = blackboxCalculateSampleRate(_model.config.blackbox.pDenom);
-  }
+  blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
   blackboxConfigMutable()->device = _model.config.blackbox.dev;
   blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
   blackboxConfigMutable()->mode = _model.config.blackbox.mode;
@@ -176,10 +169,8 @@ int Blackbox::begin()
   batteryConfigMutable()->vbatmaxcellvoltage = 420;
   batteryConfigMutable()->vbatmincellvoltage = 340;
 
-  rxConfigMutable()->rcInterpolation = _model.config.input.interpolationMode;
-  rxConfigMutable()->rcInterpolationInterval = _model.config.input.interpolationInterval;
   rxConfigMutable()->rssi_channel = _model.config.input.rssiChannel;
-  rxConfigMutable()->airModeActivateThreshold = 40;
+  rxConfigMutable()->airModeActivateThreshold = _model.config.input.airModeActivateThreshold;
   rxConfigMutable()->serialrx_provider = _model.config.input.serialRxProvider;
 
   rpmFilterConfigMutable()->rpm_filter_harmonics = _model.config.gyro.rpmFilter.harmonics;
@@ -262,7 +253,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
   rcCommand[AXIS_THRUST] = _model.state.input.buffer[AXIS_THRUST];
   for(size_t i = 0; i < 4; i++)
   {
-    motor[i] = Utils::clamp(_model.state.output.us[i], (int16_t)1000, (int16_t)2000);
+    motor[i] = std::clamp<int16_t>(_model.state.output.us[i], 1000, 2000);
     if(_model.state.mixer.digitalOutput)
     {
       motor[i] = PWM_TO_DSHOT(motor[i]);

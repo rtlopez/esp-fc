@@ -19,25 +19,21 @@ enum StorageResult
 
 #include "ModelConfig.h"
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 class Storage
 {
-  public:
-    int begin();
-    StorageResult load(ModelConfig& config) const;
-    StorageResult save(const ModelConfig& config);
+public:
+  int begin();
+  StorageResult load(ModelConfig& config) const;
+  StorageResult save(const ModelConfig& config);
 
-  private:
-    static constexpr uint8_t EEPROM_MAGIC   = 0xA5;
-    static constexpr uint8_t EEPROM_VERSION = 0x01;
-    static constexpr size_t  EEPROM_SIZE    = 2048;
+private:
+  static constexpr uint8_t EEPROM_MAGIC = 0xA5;
+  static constexpr uint8_t EEPROM_VERSION = 0x01;
+  static constexpr size_t EEPROM_SIZE = 2048;
 };
 
-}
-
-}
+} // namespace Espfc::Utils
 
 #endif

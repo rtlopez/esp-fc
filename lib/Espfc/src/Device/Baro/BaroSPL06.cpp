@@ -164,7 +164,8 @@ int BaroSPL06::getDelay(BaroDeviceMode mode) const
 {
   switch (mode)
   {
-    case BARO_MODE_TEMP: return 0;
+    case BARO_MODE_TEMP:
+      return 0;
     default:
       // return 5500; // if sapling X1
       // return 7500; // if sampling X2
@@ -175,14 +176,16 @@ int BaroSPL06::getDelay(BaroDeviceMode mode) const
 bool BaroSPL06::testConnection()
 {
   uint8_t whoami = 0;
-  _bus->read(_addr, SPL06_WHOAMI_REG, 1, &whoami);
-  return whoami == SPL06_WHOAMI_ID;
+  if (_bus->read(_addr, SPL06_WHOAMI_REG, 1, &whoami) != 1) return false;
+  setChipId(whoami);
+  if (whoami != SPL06_WHOAMI_ID) return false;
+  return true;
 }
 
 void BaroSPL06::readMesurment()
 {
-  uint8_t buffer[6] = {0, 0, 0, 0, 0, 0};
-  _bus->readFast(_addr, SPL06_PRESSURE_REG, 6, buffer);
+  uint8_t buffer[6] = {};
+  if (_bus->readFast(_addr, SPL06_PRESSURE_REG, 6, buffer) != 6) return;
 
   _raw_pressure = buffer[2] | (buffer[1] << 8) | (buffer[0] << 16);
   _raw_pressure = (_raw_pressure & 0x800000) ? (0xFF000000 | _raw_pressure) : _raw_pressure;

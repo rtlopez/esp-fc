@@ -14,8 +14,6 @@
 #define ESPFC_OUTPUT_7 -1
 
 #define ESPFC_SERIAL_0
-#define ESPFC_SERIAL_0_DEV Serial1
-#define ESPFC_SERIAL_0_DEV_T SerialUART
 #define ESPFC_SERIAL_0_TX 0
 #define ESPFC_SERIAL_0_RX 1
 #define ESPFC_SERIAL_0_FN (SERIAL_FUNCTION_MSP)
@@ -23,8 +21,6 @@
 #define ESPFC_SERIAL_0_BBAUD (SERIAL_SPEED_NONE)
 
 #define ESPFC_SERIAL_1
-#define ESPFC_SERIAL_1_DEV Serial2
-#define ESPFC_SERIAL_1_DEV_T SerialUART
 #define ESPFC_SERIAL_1_TX 8
 #define ESPFC_SERIAL_1_RX 9
 #define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_RX_SERIAL)
@@ -32,8 +28,6 @@
 #define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_NONE)
 
 #define ESPFC_SERIAL_USB
-#define ESPFC_SERIAL_USB_DEV Serial
-#define ESPFC_SERIAL_USB_DEV_T SerialUSB
 #define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
 
 #define ESPFC_SERIAL_REMAP_PINS
@@ -66,7 +60,7 @@
 
 #define ESPFC_ADC_SCALE (3.3f / 4096)
 
-#define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL | FEATURE_DYNAMIC_FILTER)
+#define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL)
 
 #if defined(ARCH_RP2350)
 #define ESPFC_GYRO_SPI_RATE_MAX 4000
@@ -77,41 +71,13 @@
 #define ESPFC_MULTI_CORE
 #define ESPFC_MULTI_CORE_RP2040
 
-#include "Device/SerialDevice.h"
-
+#include <cstddef>
+#include <cstdint>
 namespace Espfc {
 
 constexpr size_t targetSerialTxBufferSize()
 {
   return 256u;
-}
-
-uint16_t targetSerialConfigFlags(const SerialDeviceConfig& conf);
-
-template<typename T>
-inline int targetSerialInit(T& dev, const SerialDeviceConfig& conf)
-{
-  uint16_t sc = targetSerialConfigFlags(conf);
-  dev.setFIFOSize(targetSerialTxBufferSize());
-  dev.setPinout(conf.tx_pin, conf.rx_pin);
-  if (conf.inverted)
-  {
-    // gpio_set_inover(conf.rx_pin, GPIO_OVERRIDE_INVERT);
-    // gpio_set_outover(conf.tx_pin, GPIO_OVERRIDE_INVERT);
-    dev.setInvertRX();
-    dev.setInvertTX();
-  }
-  dev.begin(conf.baud, sc);
-
-  return 1;
-}
-
-template<>
-inline int targetSerialInit(SerialUSB& dev, const SerialDeviceConfig& conf)
-{
-  dev.begin(conf.baud);
-  // while(!dev) delay(10);
-  return 1;
 }
 
 template<typename T>

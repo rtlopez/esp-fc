@@ -1,25 +1,57 @@
 #include "SerialManager.h"
-#include "Device/SerialDeviceAdapter.h"
 #include "Debug_Espfc.h"
+#include "Device/SerialDeviceAdapter.h"
+#include "Stream/Printer.hpp"
+#if defined(ESPFC_SERIAL_USB_REENUMERATE)
+#include "Hal/Gpio.hpp"
+#include <esp_system.h>
+#include <soc/usb_serial_jtag_reg.h>
+#endif
 
-// TODO: move to target
 #ifdef ESPFC_SERIAL_0
-  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_0_DEV_T> _uart0(ESPFC_SERIAL_0_DEV);
+static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUart> _uart0(*Espfc::Hal::getSerialUart(0));
 #endif
 
 #ifdef ESPFC_SERIAL_1
-  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_1_DEV_T> _uart1(ESPFC_SERIAL_1_DEV);
+static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUart> _uart1(*Espfc::Hal::getSerialUart(1));
 #endif
 
 #ifdef ESPFC_SERIAL_2
-  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_2_DEV_T> _uart2(ESPFC_SERIAL_2_DEV);
+static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUart> _uart2(*Espfc::Hal::getSerialUart(2));
 #endif
 
 #ifdef ESPFC_SERIAL_USB
-  static Espfc::Device::SerialDeviceAdapter<ESPFC_SERIAL_USB_DEV_T> _usb(ESPFC_SERIAL_USB_DEV);
+static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUsb> _usb(*Espfc::Hal::getSerialUsb());
 #endif
 
 namespace Espfc {
+
+static void reenumerateUsb()
+{
+#if defined(ESPFC_SERIAL_USB_REENUMERATE)
+  
+  esp_reset_reason_t reason = esp_reset_reason();
+
+  // Reenumerate USB only after crash / WDT / soft reset
+  if (reason == ESP_RST_WDT || reason == ESP_RST_INT_WDT || reason == ESP_RST_PANIC || reason == ESP_RST_TASK_WDT ||
+      reason == ESP_RST_SW)
+  {
+
+    // Disconnect pull-up and pull D+ line to ground
+    CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
+    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, Hal::Gpio::Output);
+    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, Hal::Gpio::Low);
+
+    // Sufficient delay for USB host controller
+    delay(200);
+
+    // Restore USB state
+    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, Hal::Gpio::High);
+    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, Hal::Gpio::Input);
+    SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
+  }
+#endif
+}
 
 SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(model), _current(0), _msp(model), _cli(model), _vtx(model),
   _telemetry(telemetry), _gps(model)
@@ -30,17 +62,19 @@ SerialManager::SerialManager(Model& model, TelemetryManager& telemetry): _model(
 
 int SerialManager::begin()
 {
+  reenumerateUsb();
+
   for(int i = 0; i < SERIAL_UART_COUNT; i++)
   {
-    Device::SerialDevice * port = getSerialPortById((SerialPort)i);
-    const SerialPortConfig& spc = _model.config.serial[i];
+    auto * port = getSerialPortById((SerialPort)i);
+    const auto& spc = _model.config.serial[i];
 
     if(!port || !spc.functionMask)
     {
       continue;
     }
 
-    SerialDeviceConfig sdc;
+    Hal::SerialDeviceConfig sdc;
     sdc.baud = spc.baud;
 
 #ifdef ESPFC_SERIAL_USB
@@ -72,8 +106,8 @@ int SerialManager::begin()
       {
         case SERIALRX_SBUS:
           sdc.baud = 100000ul;
-          sdc.parity = SDC_SERIAL_PARITY_EVEN;
-          sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+          sdc.parity = Hal::SDC_SERIAL_PARITY_EVEN;
+          sdc.stop_bits = Hal::SDC_SERIAL_STOP_BITS_2;
           sdc.inverted = true;
           break;
         case SERIALRX_IBUS:
@@ -91,7 +125,7 @@ int SerialManager::begin()
       //sdc.baud = spc.blackboxBaud;
       if(sdc.baud == 230400 || sdc.baud == 460800)
       {
-        sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+        sdc.stop_bits = Hal::SDC_SERIAL_STOP_BITS_2;
       }
     }
     else if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
@@ -101,8 +135,8 @@ int SerialManager::begin()
     else if(spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
     {
       sdc.baud = 4800;
-      sdc.parity = SDC_SERIAL_PARITY_NONE;
-      sdc.stop_bits = SDC_SERIAL_STOP_BITS_2;
+      sdc.parity = Hal::SDC_SERIAL_PARITY_NONE;
+      sdc.stop_bits = Hal::SDC_SERIAL_STOP_BITS_2;
       sdc.data_bits = 8;
     }
 
@@ -116,7 +150,7 @@ int SerialManager::begin()
 
     if(i == ESPFC_SERIAL_DEBUG_PORT)
     {
-      initDebugStream(port);
+      initDebugStream(Stream::Printer{*port});
     }
     if(spc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
     {
@@ -131,13 +165,19 @@ int SerialManager::begin()
       _gps.begin(port, sdc.baud);
     }
 
-    _model.logger.info().log(F("UART")).log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(i == ESPFC_SERIAL_DEBUG_PORT).log(sdc.tx_pin).logln(sdc.rx_pin);
+    _model.logger.info().log("UART").log(i).log(spc.id).log(spc.functionMask).log(sdc.baud).log(i == ESPFC_SERIAL_DEBUG_PORT).log(sdc.tx_pin).logln(sdc.rx_pin);
   }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
   _wireless.begin();
 #endif
 
+  return 1;
+}
+
+int SerialManager::reload(ModelChangeEvent event)
+{
+  _gps.reload(event);
   return 1;
 }
 
@@ -202,19 +242,20 @@ void SerialManager::processMsp(SerialPortState& ss)
         _msp.processCommand(ss.mspRequest, ss.mspResponse, *ss.stream);
         _msp.sendResponse(ss.mspResponse, *ss.stream);
         _msp.postCommand();
-        ss.mspRequest = Connect::MspMessage();
-        ss.mspResponse = Connect::MspResponse();
+        ss.mspRequest = {};
+        ss.mspResponse = {};
       }
     }
     else
     {
-      _cli.process(*c, ss.cliCmd, *ss.stream);
+      Stream::Printer printer(*ss.stream);
+      _cli.process(*c, ss.cliCmd, printer);
     }
     c++;
   }
 }
 
-Device::SerialDevice * SerialManager::getSerialPortById(SerialPort portId)
+Stream::ReadWritable* SerialManager::getSerialPortById(SerialPort portId)
 {
   switch(portId)
   {

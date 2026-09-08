@@ -1,10 +1,9 @@
-#ifndef _ESPFC_DEBUG_H_
-#define _ESPFC_DEBUG_H_
+#pragma once
 
-#include <Arduino.h>
+#include "Stream/Printer.hpp"
 
 #ifdef ESPFC_DEBUG_PIN
-#include "Hal/Gpio.h"
+#include "Hal/Gpio.hpp"
 #define PIN_DEBUG(v) ::Espfc::Hal::Gpio::digitalWrite(ESPFC_DEBUG_PIN, v)
 #define PIN_DEBUG_INIT() ::Espfc::Hal::Gpio::pinMode(ESPFC_DEBUG_PIN, OUTPUT)
 #else
@@ -14,47 +13,31 @@
 
 namespace Espfc {
 
+void initDebugStream(Stream::Printer p);
+extern Stream::Printer _debugStream;
+
 #ifdef ESPFC_DEBUG_SERIAL
-extern Stream* _debugStream;
 
-static inline void initDebugStream(Stream* p)
-{
-  _debugStream = p;
-}
-
-#define LOG_SERIAL_INIT(p) _debugStream = p;
-#define LOG_SERIAL_DEBUG(v)                                                                                            \
-  if (_debugStream)                                                                                                    \
-  {                                                                                                                    \
-    _debugStream->print(v);                                                                                            \
-  }
-#define LOG_SERIAL_DEBUG_HEX(v)                                                                                        \
-  if (_debugStream)                                                                                                    \
-  {                                                                                                                    \
-    _debugStream->print(v, HEX);                                                                                       \
-  }
+#define LOG_SERIAL_DEBUG(v) _debugStream.print(v);
+#define LOG_SERIAL_DEBUG_HEX(v) _debugStream.print(v, HEX);
 
 template<typename T>
 void D(T t)
 {
-  if (!_debugStream) return;
-  _debugStream->println(t);
+  _debugStream.println(t);
 }
 
+// recursive variadic function
 template<typename T, typename... Args>
-void D(T t, Args... args) // recursive variadic function
+void D(T t, Args... args)
 {
-  if (!_debugStream) return;
-  _debugStream->print(t);
-  _debugStream->print(' ');
+  _debugStream.print(t);
+  _debugStream.print(' ');
   D(args...);
 }
 
 #else
 
-static inline void initDebugStream(Stream* p) {}
-
-#define LOG_SERIAL_INIT(p)
 #define LOG_SERIAL_DEBUG(v)
 #define LOG_SERIAL_DEBUG_HEX(v)
 #define D(...)
@@ -62,5 +45,3 @@ static inline void initDebugStream(Stream* p) {}
 #endif
 
 } // namespace Espfc
-
-#endif

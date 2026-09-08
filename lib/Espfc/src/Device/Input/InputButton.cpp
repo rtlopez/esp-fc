@@ -1,5 +1,5 @@
 #include "Device/Input/InputButton.hpp"
-#include "Hal/Gpio.h"
+#include "Hal/Gpio.hpp"
 #include <Arduino.h>
 #include <MultiButton.h>
 
@@ -20,7 +20,7 @@ int InputButton::begin(int pin, bool triggerLow)
 
   if(_pin == -1) return 0;
 
-  Hal::Gpio::pinMode(_pin, INPUT_PULLUP);
+  Hal::Gpio::pinMode(_pin, Hal::Gpio::InputPullup);
 
   return 1;
 }

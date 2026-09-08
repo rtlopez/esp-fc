@@ -2,16 +2,15 @@
 
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 
-#include <cstdint>
-#include <cstddef>
 #include "Utils/Filter.h"
 #include "Utils/Math.hpp"
+#include <cstddef>
+#include <cstdint>
 
-namespace Espfc {
+namespace Espfc::Utils {
 
-namespace Utils {
-
-enum FFTPhase {
+enum FFTPhase
+{
   PHASE_COLLECT,
   PHASE_FFT,
   PHASE_PEAKS
@@ -23,6 +22,11 @@ class FFTAnalyzer
 public:
   FFTAnalyzer();
   ~FFTAnalyzer();
+
+  FFTAnalyzer(const FFTAnalyzer&) = delete;
+  FFTAnalyzer& operator=(const FFTAnalyzer&) = delete;
+  FFTAnalyzer(FFTAnalyzer&&) = delete;
+  FFTAnalyzer& operator=(FFTAnalyzer&&) = delete;
 
   int begin(int16_t rate, const DynamicFilterConfig& config, size_t axis);
   int update(float v);
@@ -46,20 +50,9 @@ private:
   size_t _end;
   float _bin_width;
 
-  // fft input
-  //__attribute__((aligned(16))) float _in[SAMPLES];
-
-  // fft output
-  //__attribute__((aligned(16))) float _out[SAMPLES];
-
-  // Window coefficients
-  //__attribute__((aligned(16))) float _win[SAMPLES];
-
   float* _in;
   float* _out;
   float* _win;
 };
 
-}
-
-}
+} // namespace Espfc::Utils

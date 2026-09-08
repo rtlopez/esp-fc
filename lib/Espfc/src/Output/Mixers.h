@@ -137,19 +137,25 @@ public:
 
     switch (mixer)
     {
-      case FC_MIXER_QUADX: return MixerConfig(4, mixesQuadX);
+      case FC_MIXER_QUADX:
+        return MixerConfig(4, mixesQuadX);
 
-      case FC_MIXER_QUADX_1234: return MixerConfig(4, mixesQuadX1234);
+      case FC_MIXER_QUADX_1234:
+        return MixerConfig(4, mixesQuadX1234);
 
-      case FC_MIXER_TRI: return MixerConfig(4, mixesTricopter);
+      case FC_MIXER_TRI:
+        return MixerConfig(4, mixesTricopter);
 
-      case FC_MIXER_GIMBAL: return MixerConfig(2, mixesGimbal);
+      case FC_MIXER_GIMBAL:
+        return MixerConfig(2, mixesGimbal);
 
       case FC_MIXER_CUSTOM:
       case FC_MIXER_CUSTOM_TRI:
-      case FC_MIXER_CUSTOM_AIRPLANE: return custom;
+      case FC_MIXER_CUSTOM_AIRPLANE:
+        return custom;
 
-      default: return MixerConfig(0, mixesEmpty);
+      default:
+        return MixerConfig(0, mixesEmpty);
     }
     return MixerConfig(0, mixesEmpty);
   }

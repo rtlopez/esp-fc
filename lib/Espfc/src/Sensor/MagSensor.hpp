@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseSensor.h"
+#include "BaseSensor.hpp"
 #include "Device/MagDevice.hpp"
 #include "Model.h"
 
@@ -12,6 +12,7 @@ public:
   MagSensor(Model& model);
 
   int begin();
+  int reload(ModelChangeEvent event);
   int update();
   int read();
   int filter();

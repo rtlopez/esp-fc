@@ -1,17 +1,16 @@
 #include "Device/BusDevice.hpp"
-#include "Hal/Pgm.h"
 
 namespace Espfc::Device {
 
 const char** BusDevice::getNames()
 {
-  static const char* busDevChoices[] = {PSTR("NONE"), PSTR("AUTO"), PSTR("I2C"), PSTR("SPI"), PSTR("SLV"), NULL};
+  static const char* busDevChoices[] = {"NONE", "AUTO", "I2C", "SPI", "SLV", nullptr};
   return busDevChoices;
 }
 
 const char* BusDevice::getName(BusType type)
 {
-  if (type >= BUS_MAX) return PSTR("?");
+  if (type >= BUS_MAX) return "?";
   return getNames()[type];
 }
 

@@ -10,8 +10,6 @@
 #define ESPFC_OUTPUT_3 42
 
 #define ESPFC_SERIAL_0
-#define ESPFC_SERIAL_0_DEV Serial0
-#define ESPFC_SERIAL_0_DEV_T HardwareSerial
 #define ESPFC_SERIAL_0_TX 43
 #define ESPFC_SERIAL_0_RX 44
 #define ESPFC_SERIAL_0_FN (SERIAL_FUNCTION_MSP)
@@ -19,8 +17,6 @@
 #define ESPFC_SERIAL_0_BBAUD (SERIAL_SPEED_NONE)
 
 #define ESPFC_SERIAL_1
-#define ESPFC_SERIAL_1_DEV Serial1
-#define ESPFC_SERIAL_1_DEV_T HardwareSerial
 #define ESPFC_SERIAL_1_TX 17
 #define ESPFC_SERIAL_1_RX 16
 #define ESPFC_SERIAL_1_FN (SERIAL_FUNCTION_RX_SERIAL)
@@ -28,8 +24,6 @@
 #define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_NONE)
 
 #define ESPFC_SERIAL_USB
-#define ESPFC_SERIAL_USB_DEV Serial
-#define ESPFC_SERIAL_USB_DEV_T USBCDC
 #define ESPFC_SERIAL_USB_FN (SERIAL_FUNCTION_MSP)
 
 #define ESPFC_SERIAL_SOFT_0
@@ -64,7 +58,7 @@
 
 #define ESPFC_ADC_SCALE (3.3f / 4096)
 
-#define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL | FEATURE_DYNAMIC_FILTER)
+#define ESPFC_FEATURE_MASK (FEATURE_RX_SERIAL)
 
 #define ESPFC_GYRO_I2C_RATE_MAX 2000
 #define ESPFC_GYRO_SPI_RATE_MAX 2000
@@ -75,18 +69,4 @@
 
 #define ESPFC_DSP
 
-#include "Device/SerialDevice.h"
-
 #include "Target/TargetEsp32Common.h"
-
-namespace Espfc {
-
-template<>
-inline int targetSerialInit(USBCDC& dev, const SerialDeviceConfig& conf)
-{
-  dev.begin(conf.baud);
-  // while(!dev) delay(10);
-  return 1;
-}
-
-} // namespace Espfc

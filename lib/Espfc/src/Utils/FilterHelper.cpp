@@ -1,9 +1,7 @@
 #include "FilterHelper.h"
 #include "MemoryHelper.h"
 
-namespace Espfc {
-
-namespace Utils {
+namespace Espfc::Utils {
 
 float FAST_CODE_ATTR applyFilter(Filter& filter, float sample)
 {
@@ -19,6 +17,4 @@ VectorFloat FAST_CODE_ATTR applyFilter(Filter filters[3], const VectorFloat& sam
   return result;
 }
 
-}
-
-}
+} // namespace Espfc::Utils
