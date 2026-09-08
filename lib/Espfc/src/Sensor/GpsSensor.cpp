@@ -15,9 +15,11 @@ static constexpr std::array<uint16_t, 6> NMEA_MSG_OFF{
     Gps::NMEA_MSG_GGA, Gps::NMEA_MSG_GLL, Gps::NMEA_MSG_GSA, Gps::NMEA_MSG_GSV, Gps::NMEA_MSG_RMC, Gps::NMEA_MSG_VTG,
 };
 
-static constexpr std::array<std::tuple<uint16_t, uint8_t>, 2> UBX_MSG_ON{
-  std::make_tuple(Gps::UBX_NAV_PVT,  1u),
-  std::make_tuple(Gps::UBX_NAV_SAT, 10u),
+static constexpr std::array<std::tuple<uint16_t, uint8_t>, 4> LEGACY_UBX_MSG_ON{
+  std::make_tuple(Gps::UBX_NAV_POSLLH, 1u),
+  std::make_tuple(Gps::UBX_NAV_SOL, 1u),
+  std::make_tuple(Gps::UBX_NAV_VELNED, 1u),
+  std::make_tuple(Gps::UBX_NAV_SVINFO, 1u),
 };
 
 GpsSensor::GpsSensor(Model& model): _model(model) {}

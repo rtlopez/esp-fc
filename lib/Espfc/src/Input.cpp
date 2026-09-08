@@ -132,35 +132,6 @@ if (millis() - lastTelemetry >= 50)  // Send every 50ms instead of 100ms
 }
 #endif
 
-  #if defined(ESPFC_ESPNOW)
-static uint32_t lastTelemetry = 0;
-
-if (millis() - lastTelemetry >= 50)  // Send every 50ms instead of 100ms
-{
-    lastTelemetry = millis();
-
-    _espnow.setSensor(
-        0,
-        (int)(_model.state.battery.voltage * 100.0f)
-    );
-
-    _espnow.setSensor(
-        1,
-        (int)(_model.state.battery.current * 100.0f)
-    );
-
-    _espnow.setSensor(
-        2,
-        (int)_model.state.battery.percentage
-    );
-
-    _espnow.setArmingFlags(
-        _model.state.mode.armingDisabledFlags
-    );
-
-}
-#endif
-
   if (!failsafe(status))
   {
     filterInputs(status);
