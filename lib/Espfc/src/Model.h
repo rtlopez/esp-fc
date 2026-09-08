@@ -165,6 +165,13 @@ class Model
       return state.mode.armingDisabledFlags != 0;
 #endif
     }
+    
+    // <-- Add it here
+    uint32_t getArmingDisabledFlags() const
+    {
+        return state.mode.armingDisabledFlags;
+    }
+
 
     void setArmingDisabled(ArmingDisabledFlags flag, bool value)
     {

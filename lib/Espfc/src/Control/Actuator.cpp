@@ -114,7 +114,7 @@ void Actuator::updateArmingDisabled()
   }
   if(_model.isFeatureActive(FEATURE_GPS))
   {
-    _model.setArmingDisabled(ARMING_DISABLED_GPS, !_model.state.gps.present || _model.state.gps.numSats < _model.config.gps.minSats);
+    _model.setArmingDisabled(ARMING_DISABLED_GPS, !_model.state.gps.fix || _model.state.gps.numSats < _model.config.gps.minSats);
   }
 }
 

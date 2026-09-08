@@ -569,6 +569,89 @@ public:
 } __attribute__((packed));
 
 /**
+ * Legacy position solution used by u-blox 6 receivers.
+ */
+class UbxNavPosllh
+{
+public:
+  static constexpr MsgId ID = UBX_NAV_POSLLH;
+  uint32_t iTow;
+  int32_t lon;
+  int32_t lat;
+  int32_t height;
+  int32_t hMSL;
+  uint32_t hAcc;
+  uint32_t vAcc;
+} __attribute__((packed));
+
+/**
+ * Legacy navigation solution used by u-blox 6 receivers.
+ */
+class UbxNavSol
+{
+public:
+  static constexpr MsgId ID = UBX_NAV_SOL;
+  uint32_t iTow;
+  int32_t fTow;
+  int16_t week;
+  uint8_t gpsFix;
+  uint8_t flags;
+  int32_t ecefX;
+  int32_t ecefY;
+  int32_t ecefZ;
+  uint32_t pAcc;
+  int32_t ecefVX;
+  int32_t ecefVY;
+  int32_t ecefVZ;
+  uint32_t sAcc;
+  uint16_t pDOP;
+  uint8_t reserved1[2];
+  uint8_t numSV;
+  uint8_t reserved2[3];
+} __attribute__((packed));
+
+/**
+ * Legacy velocity solution used by u-blox 6 receivers.
+ */
+class UbxNavVelned
+{
+public:
+  static constexpr MsgId ID = UBX_NAV_VELNED;
+  uint32_t iTow;
+  int32_t velN;
+  int32_t velE;
+  int32_t velD;
+  uint32_t speed3d;
+  uint32_t gSpeed;
+  int32_t heading;
+  uint32_t sAcc;
+  uint32_t cAcc;
+} __attribute__((packed));
+
+/**
+ * Legacy satellite information used by u-blox 6 receivers.
+ */
+class UbxNavSvinfo
+{
+public:
+  static constexpr MsgId ID = UBX_NAV_SVINFO;
+  uint32_t iTow;
+  uint8_t numCh;
+  uint8_t globalFlags;
+  uint16_t reserved;
+  struct Channel {
+    uint8_t ch;
+    uint8_t svid;
+    uint8_t flags; // bit 0: satellite is used in navigation solution
+    uint8_t quality;
+    uint8_t cno;
+    int8_t elev;
+    int16_t azim;
+    int32_t prRes;
+  } channels[12];
+} __attribute__((packed));
+
+/**
  * Used to receive satellite information
  */
 class UbxNavSat

@@ -75,6 +75,10 @@ private:
 
   void handleError();
   void handleNavPvt() const;
+  void handleNavPosllh() const;
+  void handleNavSol() const;
+  void handleNavVelned() const;
+  void handleNavSvinfo() const;
   void handleNavSat() const;
   void handleVersion() const;
   void handleReceive();

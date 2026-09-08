@@ -1,5 +1,7 @@
 #pragma once
 
+#include <HardwareSerial.h>
+
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 35 // ppm
 
@@ -32,7 +34,8 @@
 #define ESPFC_SERIAL_1_BBAUD (SERIAL_SPEED_NONE)
 
 #define ESPFC_SERIAL_2
-#define ESPFC_SERIAL_2_DEV Serial2
+extern HardwareSerial EspfcGpsSerial;
+#define ESPFC_SERIAL_2_DEV EspfcGpsSerial
 #define ESPFC_SERIAL_2_DEV_T HardwareSerial
 #define ESPFC_SERIAL_2_TX 17
 #define ESPFC_SERIAL_2_RX 16

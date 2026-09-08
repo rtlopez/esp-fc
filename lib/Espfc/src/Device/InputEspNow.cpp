@@ -48,8 +48,26 @@ size_t InputEspNow::getChannelCount() const { return CHANNELS; }
 
 bool InputEspNow::needAverage() const { return false; }
 
+void InputEspNow::setSensor(uint8_t id, int value)
+{
+    _rx.setSensor(id, value);
+}
+
+void InputEspNow::setArmingFlags(uint32_t flags)
+{
+    static uint32_t lastDebug = 0;
+    if (millis() - lastDebug >= 500) {
+        lastDebug = millis();
+        //Serial.print("FC->TX Flags = 0x");
+        //Serial.println(flags, HEX);
+    }
+
+    _rx.setArmingDisableFlags(flags);
 }
 
 }
+
+}
+
 
 #endif

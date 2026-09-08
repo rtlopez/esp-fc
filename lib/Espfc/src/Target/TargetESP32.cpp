@@ -3,6 +3,8 @@
 #include "Device/SerialDevice.h"
 #include <Esp.h>
 
+HardwareSerial EspfcGpsSerial(1);
+
 namespace {
 
 static constexpr uint32_t SERIAL_UART_PARITY_NONE = 0B00000000;

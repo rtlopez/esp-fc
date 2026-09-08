@@ -14,7 +14,10 @@ public:
     {
       case UBX_STATE_READY:
       case UBX_STATE_IDLE:
-        if (c == UBX_SYNC0) m.status = UBX_STATE_SYNC;
+        if (c == UBX_SYNC0) {
+          m.written = 0;
+          m.status = UBX_STATE_SYNC;
+        }
         else m.status = UBX_STATE_IDLE;
         break;
 

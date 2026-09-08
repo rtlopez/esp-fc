@@ -18,9 +18,11 @@ static constexpr std::array<uint16_t, 6> NMEA_MSG_OFF{
   Gps::NMEA_MSG_GSV, Gps::NMEA_MSG_RMC, Gps::NMEA_MSG_VTG,
 };
 
-static constexpr std::array<std::tuple<uint16_t, uint8_t>, 2> UBX_MSG_ON{
-  std::make_tuple(Gps::UBX_NAV_PVT,  1u),
-  std::make_tuple(Gps::UBX_NAV_SAT, 10u),
+static constexpr std::array<std::tuple<uint16_t, uint8_t>, 4> LEGACY_UBX_MSG_ON{
+  std::make_tuple(Gps::UBX_NAV_POSLLH, 1u),
+  std::make_tuple(Gps::UBX_NAV_SOL, 1u),
+  std::make_tuple(Gps::UBX_NAV_VELNED, 1u),
+  std::make_tuple(Gps::UBX_NAV_SVINFO, 1u),
 };
 
 GpsSensor::GpsSensor(Model& model): _model(model) {}
@@ -195,6 +197,22 @@ void GpsSensor::handleReceive()
     {
       handleNavPvt();
     }
+    else if (_ubxMsg.isResponse(Gps::UbxNavPosllh::ID))
+    {
+      handleNavPosllh();
+    }
+    else if (_ubxMsg.isResponse(Gps::UbxNavSol::ID))
+    {
+      handleNavSol();
+    }
+    else if (_ubxMsg.isResponse(Gps::UbxNavVelned::ID))
+    {
+      handleNavVelned();
+    }
+    else if (_ubxMsg.isResponse(Gps::UbxNavSvinfo::ID))
+    {
+      handleNavSvinfo();
+    }
     else if (_ubxMsg.isResponse(Gps::UbxNavSat::ID))
     {
       handleNavSat();
@@ -304,11 +322,11 @@ void GpsSensor::enableUbx()
   if (isLegacyProto())
   {
     const Gps::UbxCfgMsg3 m{
-      .msgId = std::get<0>(UBX_MSG_ON[_counter]),
-      .rate = std::get<1>(UBX_MSG_ON[_counter]),
+      .msgId = std::get<0>(LEGACY_UBX_MSG_ON[_counter]),
+      .rate = std::get<1>(LEGACY_UBX_MSG_ON[_counter]),
     };
     _counter++;
-    if (_counter < UBX_MSG_ON.size())
+    if (_counter < LEGACY_UBX_MSG_ON.size())
     {
       send(m, _state);
     }
@@ -660,6 +678,7 @@ void GpsSensor::handleNavPvt() const
 {
   const auto &m = *_ubxMsg.getAs<Gps::UbxNavPvt92>();
 
+  _model.state.gps.present = true;
   _model.state.gps.fix = m.fixType == 3 && m.flags.gnssFixOk;
   _model.state.gps.fixType = m.fixType;
   _model.state.gps.numSats = m.numSV;
@@ -705,6 +724,74 @@ void GpsSensor::handleNavPvt() const
   _model.state.gps.lastMsgTs = now;
 
   calculateHomeVector();
+}
+
+void GpsSensor::handleNavPosllh() const
+{
+  const auto &m = *_ubxMsg.getAs<Gps::UbxNavPosllh>();
+
+  _model.state.gps.location.raw.lat = m.lat;
+  _model.state.gps.location.raw.lon = m.lon;
+  _model.state.gps.location.raw.height = m.hMSL;
+  _model.state.gps.accuracy.horizontal = m.hAcc;
+  _model.state.gps.accuracy.vertical = m.vAcc;
+
+  const uint32_t now = micros();
+  _model.state.gps.interval = now - _model.state.gps.lastMsgTs;
+  _model.state.gps.lastMsgTs = now;
+
+  calculateHomeVector();
+}
+
+void GpsSensor::handleNavSol() const
+{
+  const auto &m = *_ubxMsg.getAs<Gps::UbxNavSol>();
+
+  _model.state.gps.present = true;
+  _model.state.gps.fix = m.gpsFix == 3 && (m.flags & 0x01);
+  _model.state.gps.fixType = m.gpsFix;
+  _model.state.gps.numSats = m.numSV;
+  _model.state.gps.accuracy.pDop = m.pDOP;
+}
+
+void GpsSensor::handleNavVelned() const
+{
+  const auto &m = *_ubxMsg.getAs<Gps::UbxNavVelned>();
+
+  _model.state.gps.velocity.raw.north = m.velN;
+  _model.state.gps.velocity.raw.east = m.velE;
+  _model.state.gps.velocity.raw.down = m.velD;
+  _model.state.gps.velocity.raw.speed3d = m.speed3d;
+  _model.state.gps.velocity.raw.groundSpeed = m.gSpeed;
+  _model.state.gps.velocity.raw.heading = m.heading;
+  _model.state.gps.accuracy.speed = m.sAcc;
+  _model.state.gps.accuracy.heading = m.cAcc;
+}
+
+void GpsSensor::handleNavSvinfo() const
+{
+  const auto &m = *_ubxMsg.getAs<Gps::UbxNavSvinfo>();
+  const uint8_t channelCount = std::min<uint8_t>(m.numCh, 12);
+  uint8_t usedCount = 0;
+
+  _model.state.gps.numCh = channelCount;
+  for (uint8_t i = 0; i < SAT_MAX; i++)
+  {
+    if (i < channelCount)
+    {
+      const auto &channel = m.channels[i];
+      _model.state.gps.svinfo[i].id = channel.svid;
+      _model.state.gps.svinfo[i].gnssId = 0;
+      _model.state.gps.svinfo[i].cno = channel.cno;
+      _model.state.gps.svinfo[i].quality.value = channel.flags & 0x01;
+      usedCount += (channel.flags & 0x01) != 0;
+    }
+    else
+    {
+      _model.state.gps.svinfo[i] = GpsSatelite{};
+    }
+  }
+  _model.state.gps.numSats = usedCount;
 }
 
 void GpsSensor::handleNavSat() const

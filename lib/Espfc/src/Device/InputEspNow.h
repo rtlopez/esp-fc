@@ -16,10 +16,13 @@ class InputEspNow: public InputDevice
 public:
   int begin(void);
   InputStatus update() override;
+  void setSensor(uint8_t id, int value);
+  void setArmingFlags(uint32_t flags);
   uint16_t get(uint8_t i) const override;
   void get(uint16_t * data, size_t len) const override;
   size_t getChannelCount() const override;
   bool needAverage() const override;
+
 
 private:
   EspNowRcLink::Receiver _rx;

@@ -204,8 +204,8 @@ ESP-FC supports u-blox M8, M9, F9, and M10 GPS modules via UART. M10 modules pro
 
 ### Hardware Connection
 
-1. Connect GPS TX to ESP32 RX pin (e.g., UART2 RX)
-2. Connect GPS RX to ESP32 TX pin (e.g., UART2 TX)
+1. Connect GPS TX to ESP32 RX pin (UART3 RX, GPIO16 on the ESP32 target)
+2. Connect GPS RX to ESP32 TX pin (UART3 TX, GPIO17 on the ESP32 target)
 3. Connect VCC (3.3V or 5V depending on module) and GND
 
 ### Enable GPS Feature
@@ -224,8 +224,8 @@ In the `Ports` tab, Disable MSP function and enable GPS on the UART connected to
 Alternatively, via CLI:
 
 ```
-# For UART2 (common GPS port)
-set serial_1 2 115200 115200
+# For GPIO16/GPIO17 (UART3, `serial_2` in the CLI)
+set serial_2 2 115200 115200
 save
 ```
 
