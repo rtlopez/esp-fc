@@ -23,10 +23,16 @@ int32_t getAmperageLatest(void)
   return std::clamp<long>(lrintf(v * 100.0f), 0L, 32000L);
 }
 
-bool rxIsReceivingSignal(void)
+bool isRxReceivingSignal(void)
 {
   if(!_model_ptr) return false;
   return !((*_model_ptr).state.input.rxLoss || (*_model_ptr).state.input.rxFailSafe);
+}
+
+bool rxAreFlightChannelsValid(void)
+{
+  if(!_model_ptr) return false;
+  return (*_model_ptr).state.input.channelsValid;
 }
 
 bool isRssiConfigured(void)

@@ -3,9 +3,6 @@
 #include "BlackboxSerialBuffer.h"
 #include "Model.h"
 #include "Stream/ReadWritable.hpp"
-extern "C" {
-#include <platform.h>
-}
 
 namespace Espfc::Blackbox {
 
@@ -22,9 +19,9 @@ private:
   void updateMode();
 
   Model& _model;
-  pidProfile_s _pidProfile;
   Stream::ReadWritable* _serial;
   BlackboxSerialBuffer _buffer;
+  uint32_t _lastGpsTs = 0;
 };
 
 } // namespace Espfc::Blackbox

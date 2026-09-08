@@ -158,7 +158,7 @@ void FAST_CODE_ATTR Input::processInputs()
   uint16_t channels[INPUT_CHANNELS];
   _device->get(channels, _model.state.input.channelCount);
 
-  _model.state.input.channelsValid = true;
+  bool channelsValid = true;
   for (size_t c = 0; c < _model.state.input.channelCount; c++)
   {
     const InputChannelConfig& ich = _model.config.input.channel[c];
@@ -188,13 +188,14 @@ void FAST_CODE_ATTR Input::processInputs()
     if (v < _model.config.input.minRc || v > _model.config.input.maxRc)
     {
       v = getFailsafeValue(c);
-      if (c <= AXIS_THRUST) _model.state.input.channelsValid = false;
+      if (c <= AXIS_THRUST) channelsValid = false;
     }
 
     // update input buffer
     _model.state.input.bufferPrevious[c] = _model.state.input.buffer[c];
     _model.state.input.buffer[c] = v;
   }
+  _model.state.input.channelsValid = channelsValid;
 
   if (_model.config.debug.mode == DEBUG_RX_TIMING)
   {
