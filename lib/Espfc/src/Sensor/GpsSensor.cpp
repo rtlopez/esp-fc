@@ -1,9 +1,10 @@
 #include "Sensor/GpsSensor.hpp"
-#include <Arduino.h>
 #include <Gps.hpp>
+#include <Arduino.h>
 #include <cmath>
 #include <cstdlib>
 #include <tuple>
+#include "GpsSensor.hpp"
 
 namespace Espfc::Sensor {
 
@@ -326,8 +327,8 @@ void GpsSensor::enableUbx()
   if (isLegacyProto())
   {
     const Gps::UbxCfgMsg3 m{
-      .msgId = std::get<0>(UBX_MSG_ON[_counter]),
-      .rate = std::get<1>(UBX_MSG_ON[_counter]),
+      .msgId = std::get<0>(LEGACY_UBX_MSG_ON[_counter]),
+      .rate = std::get<1>(LEGACY_UBX_MSG_ON[_counter]),
     };
     _counter++;
     if (_counter < LEGACY_UBX_MSG_ON.size())
