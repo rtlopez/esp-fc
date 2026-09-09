@@ -46,13 +46,13 @@ static std::optional<int> toNumber(const char* str)
 static std::optional<float> toFloat(const char* str)
 {
   if (!str || *str == '\0') return std::nullopt;
- 
+
   char* end = nullptr;
   errno = 0;
-  const float value = std::strtof(str, &end);
- 
+  float value = std::strtof(str, &end);
+
   if (end == str || *end != '\0' || errno == ERANGE) return std::nullopt;
- 
+
   return value;
 }
 

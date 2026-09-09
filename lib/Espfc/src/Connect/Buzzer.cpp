@@ -12,7 +12,8 @@ int Buzzer::begin()
 {
   if (_model.config.pin[PIN_BUZZER] == -1) return 0;
   Hal::Gpio::pinMode(_model.config.pin[PIN_BUZZER], Hal::Gpio::Output);
-  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER], _model.config.buzzer.inverted ? Hal::Gpio::High : Hal::Gpio::Low);
+  Hal::Gpio::digitalWrite(_model.config.pin[PIN_BUZZER],
+                          _model.config.buzzer.inverted ? Hal::Gpio::High : Hal::Gpio::Low);
   _model.state.buzzer.timer.setRate(100);
 
   return 1;

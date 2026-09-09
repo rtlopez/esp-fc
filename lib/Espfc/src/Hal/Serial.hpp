@@ -34,7 +34,7 @@ struct SerialDeviceConfig
 class SerialUart
 {
 public:
-  SerialUart(int index) : _index(index) {}
+  SerialUart(int index): _index(index) {}
   void begin(const SerialDeviceConfig& conf);
   void updateBaudRate(int baud);
   int available();
@@ -46,6 +46,7 @@ public:
   size_t write(const uint8_t* c, size_t l);
   int availableForWrite();
   bool isTxFifoEmpty();
+
 private:
   int _index;
 };

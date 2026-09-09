@@ -1,57 +1,61 @@
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
-#include "Utils/Crc.hpp"
 #include "Connect/Msp.hpp"
+#include "Utils/Crc.hpp"
+#include <cstddef>
+#include <cstdint>
 
 namespace Espfc::Rc {
 
+// clang-format off
 enum { CRSF_SYNC_BYTE = 0xC8 };
 enum { CRSF_FRAME_SIZE_MAX = 64 }; // 62 bytes frame plus 2 bytes frame header(<length><type>)
 enum { CRSF_PAYLOAD_SIZE_MAX = CRSF_FRAME_SIZE_MAX - 6 };
+// clang-format on
 
-enum {
-    CRSF_ADDRESS_BROADCAST = 0x00,
-    CRSF_ADDRESS_USB = 0x10,
-    CRSF_ADDRESS_TBS_CORE_PNP_PRO = 0x80,
-    CRSF_ADDRESS_RESERVED1 = 0x8A,
-    CRSF_ADDRESS_CURRENT_SENSOR = 0xC0,
-    CRSF_ADDRESS_GPS = 0xC2,
-    CRSF_ADDRESS_TBS_BLACKBOX = 0xC4,
-    CRSF_ADDRESS_FLIGHT_CONTROLLER = 0xC8,
-    CRSF_ADDRESS_RESERVED2 = 0xCA,
-    CRSF_ADDRESS_RACE_TAG = 0xCC,
-    CRSF_ADDRESS_RADIO_TRANSMITTER = 0xEA,
-    CRSF_ADDRESS_CRSF_RECEIVER = 0xEC,
-    CRSF_ADDRESS_CRSF_TRANSMITTER = 0xEE
+enum
+{
+  CRSF_ADDRESS_BROADCAST = 0x00,
+  CRSF_ADDRESS_USB = 0x10,
+  CRSF_ADDRESS_TBS_CORE_PNP_PRO = 0x80,
+  CRSF_ADDRESS_RESERVED1 = 0x8A,
+  CRSF_ADDRESS_CURRENT_SENSOR = 0xC0,
+  CRSF_ADDRESS_GPS = 0xC2,
+  CRSF_ADDRESS_TBS_BLACKBOX = 0xC4,
+  CRSF_ADDRESS_FLIGHT_CONTROLLER = 0xC8,
+  CRSF_ADDRESS_RESERVED2 = 0xCA,
+  CRSF_ADDRESS_RACE_TAG = 0xCC,
+  CRSF_ADDRESS_RADIO_TRANSMITTER = 0xEA,
+  CRSF_ADDRESS_CRSF_RECEIVER = 0xEC,
+  CRSF_ADDRESS_CRSF_TRANSMITTER = 0xEE
 };
 
-enum {
-    CRSF_FRAMETYPE_GPS = 0x02,
-    CRSF_FRAMETYPE_VARIO_SENSOR = 0x07,
-    CRSF_FRAMETYPE_BATTERY_SENSOR = 0x08,
-    CRSF_FRAMETYPE_BARO_ALTITUDE = 0x09,
-    CRSF_FRAMETYPE_HEARTBEAT = 0x0B,
-    CRSF_FRAMETYPE_LINK_STATISTICS = 0x14,
-    CRSF_FRAMETYPE_RC_CHANNELS_PACKED = 0x16,
-    CRSF_FRAMETYPE_SUBSET_RC_CHANNELS_PACKED = 0x17,
-    CRSF_FRAMETYPE_LINK_STATISTICS_RX = 0x1C,
-    CRSF_FRAMETYPE_LINK_STATISTICS_TX = 0x1D,
-    CRSF_FRAMETYPE_ATTITUDE = 0x1E,
-    CRSF_FRAMETYPE_FLIGHT_MODE = 0x21,
-    // Extended Header Frames, range: 0x28 to 0x96
-    CRSF_FRAMETYPE_DEVICE_PING = 0x28,
-    CRSF_FRAMETYPE_DEVICE_INFO = 0x29,
-    CRSF_FRAMETYPE_PARAMETER_SETTINGS_ENTRY = 0x2B,
-    CRSF_FRAMETYPE_PARAMETER_READ = 0x2C,
-    CRSF_FRAMETYPE_PARAMETER_WRITE = 0x2D,
-    CRSF_FRAMETYPE_COMMAND = 0x32,
-    // MSP commands
-    CRSF_FRAMETYPE_MSP_REQ = 0x7A,   // response request using msp sequence as command
-    CRSF_FRAMETYPE_MSP_RESP = 0x7B,  // reply with 58 byte chunked binary
-    CRSF_FRAMETYPE_MSP_WRITE = 0x7C,  // write with 8 byte chunked binary (OpenTX outbound telemetry buffer limit)
-    CRSF_FRAMETYPE_DISPLAYPORT_CMD = 0x7D, // displayport control command
+enum
+{
+  CRSF_FRAMETYPE_GPS = 0x02,
+  CRSF_FRAMETYPE_VARIO_SENSOR = 0x07,
+  CRSF_FRAMETYPE_BATTERY_SENSOR = 0x08,
+  CRSF_FRAMETYPE_BARO_ALTITUDE = 0x09,
+  CRSF_FRAMETYPE_HEARTBEAT = 0x0B,
+  CRSF_FRAMETYPE_LINK_STATISTICS = 0x14,
+  CRSF_FRAMETYPE_RC_CHANNELS_PACKED = 0x16,
+  CRSF_FRAMETYPE_SUBSET_RC_CHANNELS_PACKED = 0x17,
+  CRSF_FRAMETYPE_LINK_STATISTICS_RX = 0x1C,
+  CRSF_FRAMETYPE_LINK_STATISTICS_TX = 0x1D,
+  CRSF_FRAMETYPE_ATTITUDE = 0x1E,
+  CRSF_FRAMETYPE_FLIGHT_MODE = 0x21,
+  // Extended Header Frames, range: 0x28 to 0x96
+  CRSF_FRAMETYPE_DEVICE_PING = 0x28,
+  CRSF_FRAMETYPE_DEVICE_INFO = 0x29,
+  CRSF_FRAMETYPE_PARAMETER_SETTINGS_ENTRY = 0x2B,
+  CRSF_FRAMETYPE_PARAMETER_READ = 0x2C,
+  CRSF_FRAMETYPE_PARAMETER_WRITE = 0x2D,
+  CRSF_FRAMETYPE_COMMAND = 0x32,
+  // MSP commands
+  CRSF_FRAMETYPE_MSP_REQ = 0x7A,         // response request using msp sequence as command
+  CRSF_FRAMETYPE_MSP_RESP = 0x7B,        // reply with 58 byte chunked binary
+  CRSF_FRAMETYPE_MSP_WRITE = 0x7C,       // write with 8 byte chunked binary (OpenTX outbound telemetry buffer limit)
+  CRSF_FRAMETYPE_DISPLAYPORT_CMD = 0x7D, // displayport control command
 };
 
 /*
@@ -70,18 +74,19 @@ enum {
  * int8_t Downlink SNR ( db )
  * Uplink is the connection from the ground to the UAV and downlink the opposite direction.
  */
-struct CrsfLinkStats {
-    uint8_t uplink_RSSI_1;
-    uint8_t uplink_RSSI_2;
-    uint8_t uplink_Link_quality;
-    int8_t uplink_SNR;
-    uint8_t active_antenna;
-    uint8_t rf_Mode;
-    uint8_t uplink_TX_Power;
-    uint8_t downlink_RSSI;
-    uint8_t downlink_Link_quality;
-    int8_t downlink_SNR;
-} __attribute__ ((__packed__));
+struct CrsfLinkStats
+{
+  uint8_t uplink_RSSI_1;
+  uint8_t uplink_RSSI_2;
+  uint8_t uplink_Link_quality;
+  int8_t uplink_SNR;
+  uint8_t active_antenna;
+  uint8_t rf_Mode;
+  uint8_t uplink_TX_Power;
+  uint8_t downlink_RSSI;
+  uint8_t downlink_Link_quality;
+  int8_t downlink_SNR;
+} __attribute__((__packed__));
 
 struct CrsfData
 {
@@ -101,7 +106,7 @@ struct CrsfData
   unsigned int chan13 : 11;
   unsigned int chan14 : 11;
   unsigned int chan15 : 11;
-} __attribute__ ((__packed__));
+} __attribute__((__packed__));
 
 /*
  * Every frame has the structure:
@@ -150,15 +155,17 @@ struct CrsfMessage
     writeU8(v >> 24);
   }
 
-  void write(const uint8_t * v, size_t len)
+  void write(const uint8_t* v, size_t len)
   {
-    while(len--) writeU8(*v++);
+    while (len--)
+      writeU8(*v++);
   }
 
-  void writeString(const char * v, bool terminate = false)
+  void writeString(const char* v, bool terminate = false)
   {
-    while(*v) writeU8(*v++);
-    if(terminate) writeU8(0);
+    while (*v)
+      writeU8(*v++);
+    if (terminate) writeU8(0);
   }
 
   void writeCRC(uint8_t v)
@@ -171,16 +178,17 @@ struct CrsfMessage
     uint8_t crc = Utils::crc8_dvb_s2(0, type);
     return Utils::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
   }
-} __attribute__ ((__packed__));
+} __attribute__((__packed__));
 
 class Crsf
 {
 public:
   static void decodeRcData(uint16_t* channels, const CrsfData* frame);
   static void decodeRcDataShift8(uint16_t* channels, const CrsfData* frame);
-  //static void decodeRcDataShift32(uint16_t* channels, const CrsfData* frame);
+  // static void decodeRcDataShift32(uint16_t* channels, const CrsfData* frame);
   static void encodeRcData(CrsfMessage& frame, const CrsfData& data);
-  static const uint8_t* encodeMspData(CrsfMessage& msg, uint8_t origin, uint8_t version, uint8_t seq, bool start, const uint8_t* begin, const uint8_t* end);
+  static const uint8_t* encodeMspData(CrsfMessage& msg, uint8_t origin, uint8_t version, uint8_t seq, bool start,
+                                      const uint8_t* begin, const uint8_t* end);
   static int decodeMsp(const CrsfMessage& frame, Connect::MspMessage& m, uint8_t& origin);
   static uint16_t convert(int v);
   static uint8_t crc(const CrsfMessage& frame);
@@ -191,4 +199,4 @@ public:
   static constexpr uint8_t CRSF_MSP_STATUS_ERROR_MASK = 0x80;
 };
 
-}
+} // namespace Espfc::Rc

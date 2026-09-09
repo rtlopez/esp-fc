@@ -7,11 +7,13 @@ namespace Espfc::Hal {
 class Gpio
 {
 public:
-  enum PinStatus {
+  enum PinStatus
+  {
     Low = 0,
     High = 1
   };
-  enum PinMode {
+  enum PinMode
+  {
     Input = 0,
     InputPullup = 1,
     Output = 10,

@@ -4,8 +4,8 @@
 #include "ModelConfig.h"
 #include "Stream/Printer.hpp"
 #include <algorithm>
-#include <limits>
 #include <cstring>
+#include <limits>
 #include <platform.h>
 #if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
 #include <driver/timer.h>
@@ -490,8 +490,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
     case MSP_CURRENT_METERS:
       for (int i = 0; i < 1; i++)
       {
-        r.writeU8(i + 10);                                                                  // meter id (10-19 ibat adc)
-        r.writeU16(0);                                                                      // mah drawn
+        r.writeU8(i + 10); // meter id (10-19 ibat adc)
+        r.writeU16(0);     // mah drawn
         r.writeU16(std::clamp<int>(toIbatCurrent(_model.state.battery.current) * 10, 0, 0xffff)); // meter value
       }
       break;
