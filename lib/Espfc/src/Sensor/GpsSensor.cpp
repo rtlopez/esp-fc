@@ -690,6 +690,7 @@ void GpsSensor::handleNavPvt() const
   _model.state.gps.fixType = m.fixType;
   _model.state.gps.numSats = m.numSV;
 
+  _model.state.gps.time = m.iTow;
   _model.state.gps.accuracy.pDop = m.pDOP;
   _model.state.gps.accuracy.horizontal = m.hAcc; // mm
   _model.state.gps.accuracy.vertical = m.vAcc;   // mm

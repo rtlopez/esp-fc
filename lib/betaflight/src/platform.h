@@ -5,7 +5,7 @@
 #define USE_MAG
 #define USE_BARO
 #define USE_DYN_LPF
-#define USE_D_MIN
+#define USE_D_MAX
 #define USE_DYN_NOTCH_FILTER
 #define USE_ITERM_RELAX
 #define USE_DSHOT_TELEMETRY
@@ -81,6 +81,12 @@ extern const char * pidnames;
 extern const char * const targetVersion;
 extern const char * flightControllerIdentifier;
 extern const char * boardIdentifier;
+
+extern uint32_t systemUniqueId[3];
+
+#define U_ID_0 (systemUniqueId[0])
+#define U_ID_1 (systemUniqueId[1])
+#define U_ID_2 (systemUniqueId[2])
 
 /* UTILS START */
 #ifndef MIN
@@ -229,8 +235,8 @@ typedef enum {
     BF_SERIAL_BIDIR         = 1 << 3,
 
     /*
-     * Note on SERIAL_BIDIR_PP
-     * With SERIAL_BIDIR_PP, the very first start bit of back-to-back bytes
+     * Note on BF_SERIAL_BIDIR_PP
+     * With BF_SERIAL_BIDIR_PP, the very first start bit of back-to-back bytes
      * is lost and the first data byte will be lost by a framing error.
      * To ensure the first start bit to be sent, prepend a zero byte (0x00)
      * to actual data bytes.
@@ -351,7 +357,7 @@ void closeSerialPort(serialPort_t *serialPort);
 uint32_t serialRxBytesWaiting(serialPort_t * instance);
 uint32_t serialTxBytesFree(const serialPort_t *instance);
 bool isSerialTransmitBufferEmpty(const serialPort_t *instance);
-portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function);
+portSharing_e determinePortSharing(serialPortIdentifier_e identifier, serialPortFunction_e function);
 
 void serialDeviceInit(void * serial, size_t index);
 
@@ -404,23 +410,25 @@ PG_DECLARE(mixerConfig_t, mixerConfig);
 
 typedef struct motorDevConfig_s {
     uint16_t motorPwmRate;                  // The update rate of motor outputs (50-498Hz)
-    uint8_t  motorPwmProtocol;              // Pwm Protocol
-    uint8_t  motorPwmInversion;             // Active-High vs Active-Low. Useful for brushed FCs converted for brushless operation
-    uint8_t  useUnsyncedPwm;
-    uint8_t  useDshotTelemetry;
+    uint8_t  motorProtocol;                 // Pwm Protocol
+    uint8_t  motorInversion;                // Active-High vs Active-Low. Useful for brushed FCs converted for brushless operation
+    uint8_t  useContinuousUpdate;
+//    uint8_t  useDshotTelemetry;
 //    ioTag_t  ioTags[MAX_SUPPORTED_MOTORS];
 } motorDevConfig_t;
 
 typedef struct motorConfig_s {
     motorDevConfig_t dev;
-    uint16_t digitalIdleOffsetValue;        // Idle value for DShot protocol, full motor output = 10000
-    uint16_t minthrottle;                   // Set the minimum throttle command sent to the ESC (Electronic Speed Controller). This is the minimum value that allow motors to run at a idle speed.
+    uint16_t motorIdle;                     // Idle value for DShot protocol, full motor output = 10000
     uint16_t maxthrottle;                   // This is the maximum value for the ESCs at full power this value can be increased up to 2000
     uint16_t mincommand;                    // This is the value for the ESCs when they are not armed. In some cases, this value must be lowered down to 900 for some specific ESCs
+    uint16_t kv;                            // Motor velocity constant (Kv) to estimate RPM under no load (unloadedRpm = Kv * batteryVoltage)
     uint8_t motorPoleCount;
 } motorConfig_t;
 
 PG_DECLARE(motorConfig_t, motorConfig);
+
+extern bool useDshotTelemetry;
 
 #define RPM_FILTER_HARMONICS_MAX 3
 
@@ -450,11 +458,15 @@ typedef enum {
     BOXANGLE,
     BOXHORIZON,
     BOXMAG,
+    BOXALTHOLD,
     BOXHEADFREE,
+    BOXCHIRP,
     BOXPASSTHRU,
     BOXFAILSAFE,
+    BOXPOSHOLD,
     BOXGPSRESCUE,
-    BOXID_FLIGHTMODE_LAST = BOXGPSRESCUE,
+    BOXAUTOPILOT,  // GPS waypoint following
+    BOXID_FLIGHTMODE_LAST = BOXAUTOPILOT,
     // RCMODE flags
     BOXANTIGRAVITY,
     BOXHEADADJ,
@@ -475,7 +487,7 @@ typedef enum {
     BOXCAMERA1,
     BOXCAMERA2,
     BOXCAMERA3,
-    BOXFLIPOVERAFTERCRASH,
+    BOXCRASHFLIP,
     BOXPREARM,
     BOXBEEPGPSCOUNT,
     BOXVTXPITMODE,
@@ -488,6 +500,12 @@ typedef enum {
     BOXACROTRAINER,
     BOXVTXCONTROLDISABLE,
     BOXLAUNCHCONTROL,
+    BOXMSPOVERRIDE,
+    BOXSTICKCOMMANDDISABLE,
+    BOXBEEPERMUTE,
+    BOXREADY,
+    BOXLAPTIMERRESET,
+    BOXWPCAPTURE,
     CHECKBOX_ITEM_COUNT
 } boxId_e;
 
@@ -598,6 +616,7 @@ PG_DECLARE(pilotConfig_t, pilotConfig);
 typedef struct systemConfig_s {
     uint8_t pidProfileIndex;
     uint8_t activeRateProfile;
+    uint8_t activeBatteryProfile;
     uint8_t debug_mode;
 } systemConfig_t;
 
@@ -615,6 +634,7 @@ typedef struct controlRateConfig_s {
     uint16_t tpa_breakpoint;                // Breakpoint where TPA is activated
     uint8_t throttle_limit_type;            // Sets the throttle limiting type - off, scale or clip
     uint8_t throttle_limit_percent;         // Sets the maximum pilot commanded throttle limit
+    uint8_t thrHover8;
 } controlRateConfig_t;
 
 #define CONTROL_RATE_PROFILE_COUNT  1
@@ -629,13 +649,13 @@ typedef enum {
     PID_ROLL,
     PID_PITCH,
     PID_YAW,
-    PID_ALT,
-    PID_POS,
-    PID_POSR,
-    PID_NAVR,
     PID_LEVEL,
     PID_MAG,
-    PID_VEL,
+    // PID_ALT,
+    // PID_VEL,
+    // PID_POS,
+    // PID_POSR,
+    // PID_NAVR,
     PID_ITEM_COUNT
 } pidIndex_e;
 
@@ -656,7 +676,7 @@ typedef struct pidProfile_s {
     uint16_t dterm_lpf1_dyn_min_hz;         // Dterm lowpass filter 1 min hz when in dynamic mode
     uint16_t dterm_lpf1_dyn_max_hz;         // Dterm lowpass filter 1 max hz when in dynamic mode
     uint8_t dterm_lpf1_dyn_expo;            // set the curve for dynamic dterm lowpass filter
-    uint8_t itermWindupPointPercent;        // Experimental ITerm windup threshold, percent motor saturation
+    uint8_t itermWindup;                    // iterm windup threshold, percentage of pidSumLimit within which to limit iTerm
     uint16_t pidSumLimit;
     uint16_t pidSumLimitYaw;
     uint8_t vbatPidCompensation;            // Scale PIDsum to battery voltage
@@ -682,9 +702,9 @@ typedef struct pidProfile_s {
     uint8_t anti_gravity_gain;              // AntiGravity Gain (was itermAcceleratorGain)
     uint8_t anti_gravity_cutoff_hz;
     uint8_t anti_gravity_p_gain;
-    uint8_t d_min[XYZ_AXIS_COUNT];          // Minimum D value on each axis
-    uint8_t d_min_gain;                     // Gain factor for amount of gyro / setpoint activity required to boost D
-    uint8_t d_min_advance;                  // Percentage multiplier for setpoint input to boost algorithm
+    uint8_t d_max[XYZ_AXIS_COUNT];          // Minimum D value on each axis
+    uint8_t d_max_gain;                     // Gain factor for amount of gyro / setpoint activity required to boost D
+    uint8_t d_max_advance;                  // Percentage multiplier for setpoint input to boost algorithm
     uint8_t angle_limit;                    // Max angle in degrees in Angle mode
     uint8_t angle_earth_ref;                // Control amount of "co-ordination" from yaw into roll while pitched forward in angle mode
     uint8_t horizon_limit_degrees;          // in Horizon mode, zero levelling when the quad's attitude exceeds this angle
@@ -698,6 +718,8 @@ typedef struct pidProfile_s {
     uint8_t tpa_low_always;                 // off, on - if OFF then low TPA is only active until tpa_low_breakpoint is reached the first time
     uint8_t ez_landing_threshold;           // Threshold stick position below which motor output is limited
     uint8_t ez_landing_limit;               // Maximum motor output when all sticks centred and throttle zero
+    uint8_t ez_landing_speed;               // Speed below which motor output is limited
+    uint8_t landing_disarm_threshold;       // Accelerometer vector delta (jerk) threshold with disarms if exceeded
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, MAX_PROFILE_COUNT, pidProfiles);
@@ -850,6 +872,19 @@ typedef enum {
     SENSOR_GPSMAG = 1 << 6
 } sensors_e;
 
+typedef union vector3_u {
+    struct {
+        float x, y, z;
+    };
+    float v[3];
+} vector3_t;
+
+typedef union {
+    struct {
+        float w, x, y, z;
+    };
+    float v[4];
+} quaternion_t;
 
 typedef struct gyro_s {
     //uint32_t targetLooptime;
@@ -865,12 +900,12 @@ typedef struct accDev_s {
 
 typedef struct acc_s {
     accDev_t dev;
-    int32_t accADC[XYZ_AXIS_COUNT];
+    vector3_t accADC;
 } acc_t;
 extern acc_t acc;
 
 typedef struct mag_s {
-    float magADC[XYZ_AXIS_COUNT];
+    vector3_t magADC;
 } mag_t;
 extern mag_t mag;
 
@@ -907,10 +942,6 @@ typedef enum {
 
 typedef struct batteryConfig_s {
     // voltage
-    uint16_t vbatmaxcellvoltage;             // maximum voltage per cell, used for auto-detecting battery voltage in 0.1V units, default is 43 (4.3V)
-    uint16_t vbatmincellvoltage;             // minimum voltage per cell, this triggers battery critical alarm, in 0.1V units, default is 33 (3.3V)
-    uint16_t vbatwarningcellvoltage;         // warning voltage per cell, this triggers battery warning alarm, in 0.1V units, default is 35 (3.5V)
-    uint8_t vbatnotpresentcellvoltage;      // Between vbatmaxcellvoltage and 2*this is considered to be USB powered. Below this it is notpresent
     voltageMeterSource_e voltageMeterSource; // source of battery voltage meter used, either ADC or ESC
     currentMeterSource_e currentMeterSource; // source of battery current meter used, either ADC, Virtual or ESC
 } batteryConfig_t;
@@ -928,6 +959,18 @@ typedef struct voltageSensorADCConfig_s {
 
 PG_DECLARE_ARRAY(voltageSensorADCConfig_t, MAX_VOLTAGE_SENSOR_ADC, voltageSensorADCConfig);
 
+#define BATTERY_PROFILE_COUNT 1
+
+typedef struct batteryProfile_s {
+    uint16_t vbatmaxcellvoltage;            // maximum voltage per cell, used for auto-detecting battery voltage in 0.01V units, default is 430 (4.30V)
+    uint16_t vbatmincellvoltage;            // minimum voltage per cell, this triggers battery critical alarm, in 0.01V units, default is 330 (3.30V)
+    uint16_t vbatwarningcellvoltage;        // warning voltage per cell, this triggers battery warning alarm, in 0.01V units, default is 350 (3.50V)
+} batteryProfile_t;
+
+PG_DECLARE_ARRAY(batteryProfile_t, BATTERY_PROFILE_COUNT, batteryProfiles);
+
+extern batteryProfile_t *currentBatteryProfile;
+
 typedef struct compassConfig_s {
     int16_t mag_declination;                // Get your magnetic decliniation from here : http://magnetic-declination.com/
     uint8_t mag_hardware;                   // Which mag hardware to use on boards with more than one device
@@ -944,6 +987,7 @@ PG_DECLARE(accelerometerConfig_t, accelerometerConfig);
 
 typedef struct barometerConfig_s {
     uint8_t baro_hardware;                  // Barometer hardware to use
+    int16_t baroTempDriftCmPer10C;          // cm per 10°C, signed
 } barometerConfig_t;
 
 PG_DECLARE(barometerConfig_t, barometerConfig);
@@ -974,6 +1018,8 @@ typedef struct gyroConfig_s {
     uint8_t gyro_lpf1_dyn_expo; // set the curve for dynamic gyro lowpass filter
     uint8_t gyro_lpf2_type;
     uint16_t gyro_lpf2_static_hz;
+    uint8_t gyro_filter_debug_axis;
+    uint8_t gyro_enabled_bitmask;
 } gyroConfig_t;
 
 PG_DECLARE(gyroConfig_t, gyroConfig);
@@ -1023,7 +1069,7 @@ typedef enum {
 } failsafePhase_e;
 
 failsafePhase_e failsafePhase();
-bool rxIsReceivingSignal(void);
+bool isRxReceivingSignal(void);
 bool rxAreFlightChannelsValid(void);
 /* FAILSAFE END */
 
@@ -1040,19 +1086,44 @@ typedef enum {
 } gpsCoordinateType_e;
 
 /* LLH Location in NEU axis system */
-typedef struct gpsLocation_s {
-    int32_t lat;                    // latitude * 1e+7
-    int32_t lon;                    // longitude * 1e+7
-    int32_t altCm;                  // altitude in 0.01m
+typedef union gpsLocation_u {
+    struct {
+        int32_t lat;                // latitude * 1e+7
+        int32_t lon;                // longitude * 1e+7
+        int32_t altCm;              // altitude in 0.01m
+    };
+    int32_t coords[3];              // added to provide direct access within loops
 } gpsLocation_t;
+
+/* Only available on U-blox protocol */
+typedef struct gpsVelned_s {
+    int16_t velN; // north velocity, cm/s
+    int16_t velE; // east velocity, cm/s
+    int16_t velD; // down velocity, cm/s
+} gpsVelned_t;
+
+/* GPS date/time from NAV-PVT message */
+typedef struct gpsDateTime_s {
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+    uint8_t hour;
+    uint8_t min;
+    uint8_t sec;
+    uint16_t millis;
+    bool valid;                     // true when date/time are valid from GPS
+} gpsDateTime_t;
 
 typedef struct gpsSolutionData_s {
     gpsLocation_t llh;
+    gpsVelned_t velned;
     uint16_t speed3d;              // speed in 0.1m/s
     uint16_t groundSpeed;           // speed in 0.1m/s
     uint16_t groundCourse;          // degrees * 10
     uint16_t hdop;                  // generic HDOP value (*100)
     uint8_t numSat;
+    uint32_t time;                  // GPS msToW
+    gpsDateTime_t dateTime;         // GPS date/time from NAV-PVT
 } gpsSolutionData_t;
 
 typedef struct gpsConfig_s {
@@ -1063,15 +1134,41 @@ typedef struct gpsConfig_s {
 
 PG_DECLARE(gpsConfig_t, gpsConfig);
 
-extern int32_t GPS_home[2];
+// extern int32_t GPS_home[2];
+extern gpsLocation_t GPS_home_llh;
 extern gpsSolutionData_t gpsSol;
+extern quaternion_t imuAttitudeQuaternion; //attitude quaternion to use in blackbox
+
+uint32_t gpsDateTimeToEpoch(const gpsDateTime_t *dt);
+
+typedef struct autopilotConfig_s {
+    uint8_t landingAltitudeM;   // altitude below which landing behaviours can change, metres
+    uint16_t hoverThrottle;      // value used at the start of a rescue or position hold
+    uint16_t throttleMin;
+    uint16_t throttleMax;
+    uint8_t altitudeP;
+    uint8_t altitudeI;
+    uint8_t altitudeD;
+    uint8_t altitudeA;
+    uint8_t altitudeF;
+    uint8_t positionP;
+    uint8_t positionI;
+    uint8_t positionD;
+    uint8_t positionA;
+    uint8_t positionF;
+    uint8_t positionCutoff;
+    uint8_t stopThreshold;       // percent of the speed carried into braking, floored at 1 cm/s: braking captures the position hold target once the speed falls below it
+    uint8_t maxAngle;
+} autopilotConfig_t;
+
+PG_DECLARE(autopilotConfig_t, autopilotConfig);
 
 #define PARAM_NAME_GYRO_HARDWARE_LPF "gyro_hardware_lpf"
 #define PARAM_NAME_GYRO_LPF1_TYPE "gyro_lpf1_type"
 #define PARAM_NAME_GYRO_LPF1_STATIC_HZ "gyro_lpf1_static_hz"
 #define PARAM_NAME_GYRO_LPF2_TYPE "gyro_lpf2_type"
 #define PARAM_NAME_GYRO_LPF2_STATIC_HZ "gyro_lpf2_static_hz"
-#define PARAM_NAME_GYRO_TO_USE "gyro_to_use"
+#define PARAM_NAME_GYRO_ENABLE_MASK "gyro_enabled_bitmask"
 #define PARAM_NAME_DYN_NOTCH_MAX_HZ "dyn_notch_max_hz"
 #define PARAM_NAME_DYN_NOTCH_COUNT "dyn_notch_count"
 #define PARAM_NAME_DYN_NOTCH_Q "dyn_notch_q"
@@ -1080,6 +1177,7 @@ extern gpsSolutionData_t gpsSol;
 #define PARAM_NAME_ACC_LPF_HZ "acc_lpf_hz"
 #define PARAM_NAME_MAG_HARDWARE "mag_hardware"
 #define PARAM_NAME_BARO_HARDWARE "baro_hardware"
+#define PARAM_NAME_BARO_DRIFT "baro_drift"
 #define PARAM_NAME_RC_SMOOTHING "rc_smoothing"
 #define PARAM_NAME_RC_SMOOTHING_AUTO_FACTOR "rc_smoothing_auto_factor"
 #define PARAM_NAME_RC_SMOOTHING_AUTO_FACTOR_THROTTLE "rc_smoothing_auto_factor_throttle"
@@ -1089,7 +1187,7 @@ extern gpsSolutionData_t gpsSol;
 #define PARAM_NAME_RC_SMOOTHING_DEBUG_AXIS "rc_smoothing_debug_axis"
 #define PARAM_NAME_RC_SMOOTHING_ACTIVE_CUTOFFS "rc_smoothing_active_cutoffs_ff_sp_thr"
 #define PARAM_NAME_SERIAL_RX_PROVIDER "serialrx_provider"
-#define PARAM_NAME_DSHOT_IDLE_VALUE "dshot_idle_value"
+#define PARAM_NAME_MOTOR_IDLE "motor_idle"
 #define PARAM_NAME_DSHOT_BIDIR "dshot_bidir"
 #define PARAM_NAME_USE_UNSYNCED_PWM "use_unsynced_pwm"
 #define PARAM_NAME_MOTOR_PWM_PROTOCOL "motor_pwm_protocol"
@@ -1097,6 +1195,7 @@ extern gpsSolutionData_t gpsSol;
 #define PARAM_NAME_MOTOR_POLES "motor_poles"
 #define PARAM_NAME_THR_MID "thr_mid"
 #define PARAM_NAME_THR_EXPO "thr_expo"
+#define PARAM_NAME_THR_HOVER "thr_hover"
 #define PARAM_NAME_RATES_TYPE "rates_type"
 #define PARAM_NAME_TPA_RATE "tpa_rate"
 #define PARAM_NAME_TPA_BREAKPOINT "tpa_breakpoint"
@@ -1107,6 +1206,8 @@ extern gpsSolutionData_t gpsSol;
 #define PARAM_NAME_MIXER_TYPE "mixer_type"
 #define PARAM_NAME_EZ_LANDING_THRESHOLD "ez_landing_threshold"
 #define PARAM_NAME_EZ_LANDING_LIMIT "ez_landing_limit"
+#define PARAM_NAME_EZ_LANDING_SPEED "ez_landing_speed"
+#define PARAM_NAME_LANDING_DISARM_THRESHOLD "landing_disarm_threshold"
 #define PARAM_NAME_THROTTLE_LIMIT_TYPE "throttle_limit_type"
 #define PARAM_NAME_THROTTLE_LIMIT_PERCENT "throttle_limit_percent"
 #define PARAM_NAME_GYRO_CAL_ON_FIRST_ARM "gyro_cal_on_first_arm"
@@ -1249,6 +1350,30 @@ extern gpsSolutionData_t gpsSol;
 #define PARAM_NAME_GPS_LAP_TIMER_GATE_TOLERANCE "gps_lap_timer_gate_tolerance_m"
 #endif // USE_GPS_LAP_TIMER
 #endif
+
+#define PARAM_NAME_ALTITUDE_SOURCE "altitude_source"
+#define PARAM_NAME_ALTITUDE_PREFER_BARO "altitude_prefer_baro"
+#define PARAM_NAME_ALTITUDE_LPF "altitude_lpf"
+#define PARAM_NAME_ALTITUDE_D_LPF "altitude_d_lpf"
+
+#define PARAM_NAME_AP_LANDING_ALTITUDE_M "ap_landing_altitude_m"
+#define PARAM_NAME_AP_HOVER_THROTTLE "ap_hover_throttle"
+#define PARAM_NAME_AP_THROTTLE_MIN "ap_throttle_min"
+#define PARAM_NAME_AP_THROTTLE_MAX "ap_throttle_max"
+#define PARAM_NAME_AP_ALTITUDE_P "ap_altitude_p"
+#define PARAM_NAME_AP_ALTITUDE_I "ap_altitude_i"
+#define PARAM_NAME_AP_ALTITUDE_D "ap_altitude_d"
+#define PARAM_NAME_AP_ALTITUDE_A "ap_altitude_a"
+#define PARAM_NAME_AP_ALTITUDE_F "ap_altitude_f"
+#define PARAM_NAME_AP_POSITION_P "ap_position_p"
+#define PARAM_NAME_AP_POSITION_I "ap_position_i"
+#define PARAM_NAME_AP_POSITION_D "ap_position_d"
+#define PARAM_NAME_AP_POSITION_A "ap_position_a"
+#define PARAM_NAME_AP_POSITION_F "ap_position_f"
+#define PARAM_NAME_AP_POSITION_CUTOFF "ap_position_cutoff"
+#define PARAM_NAME_AP_STOP_THRESHOLD "ap_stop_threshold"
+#define PARAM_NAME_AP_MAX_ANGLE "ap_max_angle"
+
 
 // ESC 4-Way IF
 

@@ -383,7 +383,7 @@ enum PidIndex {
   FC_PID_ITEM_COUNT,
 };
 
-enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
+enum BlacboxLogField { // no more than 32, sync with flightLogFieldSelect_e
   BLACKBOX_FIELD_PID = 0,
   BLACKBOX_FIELD_RC_COMMANDS,
   BLACKBOX_FIELD_SETPOINT,
@@ -392,6 +392,7 @@ enum BlacboxLogField { // no more than 32, sync with FlightLogFieldSelect_e
   BLACKBOX_FIELD_ALTITUDE,
   BLACKBOX_FIELD_RSSI,
   BLACKBOX_FIELD_GYRO,
+  BLACKBOX_FIELD_ATTITUDE,
   BLACKBOX_FIELD_ACC,
   BLACKBOX_FIELD_DEBUG_LOG,
   BLACKBOX_FIELD_MOTOR,

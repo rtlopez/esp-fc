@@ -84,7 +84,7 @@ void mspSerialAllocatePorts(void)
 {
 }
 
-portSharing_e determinePortSharing(const serialPortConfig_t *portConfig, serialPortFunction_e function)
+portSharing_e determinePortSharing(serialPortIdentifier_e identifier, serialPortFunction_e function)
 {
     return PORTSHARING_UNUSED;
 }

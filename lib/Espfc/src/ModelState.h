@@ -463,6 +463,7 @@ struct GpsState
   GpsVelocity velocity;
   GpsAccuracy accuracy;
   GpsDateTime dateTime;
+  uint32_t time;
   GpsSatelite svinfo[SAT_MAX];
   float distanceToHome = 0;
   float directionToHome = 0;

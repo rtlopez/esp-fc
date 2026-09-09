@@ -59,6 +59,8 @@
 #include "drivers/sdcard.h"
 #endif
 
+#include "blackbox_virtual.h"
+
 #define BLACKBOX_SERIAL_PORT_MODE MODE_TX
 
 // How many bytes can we transmit per loop iteration when writing headers?
@@ -125,6 +127,11 @@ void blackboxWrite(uint8_t value)
         afatfs_fputc(blackboxSDCard.logFile, value);
         break;
 #endif
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        blackboxVirtualPutChar(value);
+        break;
+#endif
     case BLACKBOX_DEVICE_SERIAL:
     default:
         {
@@ -132,13 +139,13 @@ void blackboxWrite(uint8_t value)
 
 #ifdef DEBUG_BB_OUTPUT
             bbBits += 2;
-            DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 3, txBytesFree);
+            DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 3, txBytesFree);  //!< Serial TX Bytes Free [unit:bytes]
 #endif
 
             if (txBytesFree == 0) {
 #ifdef DEBUG_BB_OUTPUT
                 ++bbDrops;
-                DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 2, bbDrops);
+                DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 2, bbDrops);  //!< Dropped Bytes
 #endif
                 return;
             }
@@ -152,10 +159,10 @@ void blackboxWrite(uint8_t value)
 
     if (now > bbLastclearMs + 100) {  // Debug log every 100[msec]
         uint16_t bbRate = ((bbBits * 10 + 5) / (now - bbLastclearMs)) / 10; // In unit of [Kbps]
-        DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 0, bbRate);
+        DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 0, bbRate);  //!< Output Rate [unit:kbit/s]
         if (bbRate > bbRateMax) {
             bbRateMax = bbRate;
-            DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 1, bbRateMax);
+            DEBUG_SET(DEBUG_BLACKBOX_OUTPUT, 1, bbRateMax);  //!< Peak Output Rate [unit:kbit/s]
         }
         bbLastclearMs = now;
         bbBits = 0;
@@ -184,6 +191,13 @@ int blackboxWriteString(const char *s)
         afatfs_fwrite(blackboxSDCard.logFile, (const uint8_t*) s, length); // Ignore failures due to buffers filling up
         break;
 #endif // USE_SDCARD
+
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        length = strlen(s);
+        blackboxVirtualWrite((const uint8_t*) s, length);
+        break;
+#endif
 
     case BLACKBOX_DEVICE_SERIAL:
     default:
@@ -217,6 +231,11 @@ void blackboxDeviceFlush(void)
         flashfsFlushAsync(false);
         break;
 #endif // USE_FLASHFS
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        blackboxVirtualFlush();
+        break;
+#endif
 
     default:
         ;
@@ -249,6 +268,10 @@ bool blackboxDeviceFlushForce(void)
         // been physically written to the SD card yet.
         return afatfs_flush();
 #endif // USE_SDCARD
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        return blackboxVirtualFlush();
+#endif
 
     default:
         return false;
@@ -269,6 +292,11 @@ bool blackboxDeviceFlushForceComplete(void)
             return false;
         }
 #endif // USE_SDCARD
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        blackboxVirtualFlush();
+        return true;
+#endif
 
     default:
         return blackboxDeviceFlushForce();
@@ -283,16 +311,16 @@ bool blackboxDeviceOpen(void)
     switch (blackboxConfig()->device) {
     case BLACKBOX_DEVICE_SERIAL:
         {
-            const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_BLACKBOX);
+            const serialPortIdentifier_e port = blackboxConfig()->blackbox_uart;
             baudRate_e baudRateIndex;
             portOptions_e portOptions = BF_SERIAL_PARITY_NO | BF_SERIAL_NOT_INVERTED;
 
-            if (!portConfig) {
+            if (port == SERIAL_PORT_NONE) {
                 return false;
             }
 
-            blackboxPortSharing = determinePortSharing(portConfig, FUNCTION_BLACKBOX);
-            baudRateIndex = portConfig->blackbox_baudrateIndex;
+            blackboxPortSharing = determinePortSharing(port, FUNCTION_BLACKBOX);
+            baudRateIndex = blackboxConfig()->blackbox_baud;
 
             if (baudRates[baudRateIndex] == 230400) {
                 /*
@@ -304,7 +332,7 @@ bool blackboxDeviceOpen(void)
                 portOptions |= BF_SERIAL_STOPBITS_1;
             }
 
-            blackboxPort = openSerialPort(portConfig->identifier, FUNCTION_BLACKBOX, NULL, NULL, baudRates[baudRateIndex],
+            blackboxPort = openSerialPort(port, FUNCTION_BLACKBOX, NULL, NULL, baudRates[baudRateIndex],
                 BLACKBOX_SERIAL_PORT_MODE, portOptions);
 
             /*
@@ -321,7 +349,6 @@ bool blackboxDeviceOpen(void)
              *                              = floor((looptime_ns * 3) / 500.0)
              *                              = (looptime_ns * 3) / 500
              */
-
 
             switch (baudRateIndex) {
             case BAUD_1000000:
@@ -361,6 +388,11 @@ bool blackboxDeviceOpen(void)
         return true;
         break;
 #endif // USE_SDCARD
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        return blackboxVirtualOpen();
+
+#endif
     default:
         return false;
     }
@@ -428,6 +460,11 @@ void blackboxDeviceClose(void)
     case BLACKBOX_DEVICE_FLASH:
         // Some flash device, e.g., NAND devices, require explicit close to flush internally buffered data.
         flashfsClose();
+        break;
+#endif
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        blackboxVirtualClose();
         break;
 #endif
     default:
@@ -565,6 +602,10 @@ bool blackboxDeviceBeginLog(void)
     case BLACKBOX_DEVICE_SDCARD:
         return blackboxSDCardBeginLog();
 #endif // USE_SDCARD
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        return blackboxVirtualBeginLog();
+#endif
     default:
         return true;
     }
@@ -599,6 +640,13 @@ bool blackboxDeviceEndLog(bool retainLog)
         }
         return false;
 #endif // USE_SDCARD
+
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        blackboxVirtualEndLog();
+        return true;
+#endif
+
     default:
         return true;
     }
@@ -641,6 +689,11 @@ bool isBlackboxDeviceWorking(void)
         return flashfsIsReady();
 #endif
 
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        return true;
+#endif
+
     default:
         return false;
     }
@@ -652,6 +705,12 @@ int32_t blackboxGetLogNumber(void)
 #ifdef USE_SDCARD
     case BLACKBOX_DEVICE_SDCARD:
         return blackboxSDCard.largestLogFileNumber;
+#endif
+
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        return blackboxVirtualLogFileNumber();
+        break;
 #endif
 
     default:
@@ -680,6 +739,11 @@ void blackboxReplenishHeaderBudget(void)
     case BLACKBOX_DEVICE_SDCARD:
         freeSpace = afatfs_getFreeBufferSpace();
         break;
+#endif
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        blackboxHeaderBudget = 1024*8;
+        return;
 #endif
     default:
         freeSpace = 0;
@@ -746,16 +810,21 @@ blackboxBufferReserveStatus_e blackboxDeviceReserveBufferSpace(int32_t bytes)
         return BLACKBOX_RESERVE_TEMPORARY_FAILURE;
 #endif // USE_SDCARD
 
+#ifdef USE_BLACKBOX_VIRTUAL
+    case BLACKBOX_DEVICE_VIRTUAL:
+        return BLACKBOX_RESERVE_TEMPORARY_FAILURE;
+#endif
+
+
     default:
         return BLACKBOX_RESERVE_PERMANENT_FAILURE;
     }
 }
 
 int8_t blackboxGetLogFileNo(void)
-{   
-#ifdef USE_BLACKBOX
+{
 #ifdef USE_SDCARD
-    // return current file number or -1 
+    // return current file number or -1
     if (blackboxSDCard.state == BLACKBOX_SDCARD_READY_TO_LOG) {
         return blackboxSDCard.largestLogFileNumber;
     } else {
@@ -765,6 +834,5 @@ int8_t blackboxGetLogFileNo(void)
     // will be implemented later for flash based storage
     return -1;
 #endif
-#endif    
 }
 #endif // BLACKBOX

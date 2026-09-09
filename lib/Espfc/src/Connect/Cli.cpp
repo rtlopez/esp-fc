@@ -771,6 +771,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("blackbox_rate", &c.blackbox.pDenom),
       Param("blackbox_log_acc", &c.blackbox.fieldsMask, BLACKBOX_FIELD_ACC),
       Param("blackbox_log_alt", &c.blackbox.fieldsMask, BLACKBOX_FIELD_ALTITUDE),
+      Param("blackbox_log_atti", &c.blackbox.fieldsMask, BLACKBOX_FIELD_ATTITUDE),
       Param("blackbox_log_bat", &c.blackbox.fieldsMask, BLACKBOX_FIELD_BATTERY),
       Param("blackbox_log_debug", &c.blackbox.fieldsMask, BLACKBOX_FIELD_DEBUG_LOG),
       Param("blackbox_log_gps", &c.blackbox.fieldsMask, BLACKBOX_FIELD_GPS),
