@@ -94,12 +94,12 @@
 
 namespace Espfc::Device::Gyro {
 
-int GyroMPU6050::begin(BusDevice* bus)
+int GyroMPU6050::begin(Hal::BusDevice* bus)
 {
   return begin(bus, MPU6050_ADDRESS_FIRST) ? 1 : begin(bus, MPU6050_ADDRESS_SECOND);
 }
 
-int GyroMPU6050::begin(BusDevice* bus, uint8_t addr)
+int GyroMPU6050::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

@@ -1,6 +1,6 @@
-#include "Device/BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 
-namespace Espfc::Device {
+namespace Espfc::Hal {
 
 const char** BusDevice::getNames()
 {
@@ -14,4 +14,4 @@ const char* BusDevice::getName(BusType type)
   return getNames()[type];
 }
 
-} // namespace Espfc::Device
+} // namespace Espfc::Hal

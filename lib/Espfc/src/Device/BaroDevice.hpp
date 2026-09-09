@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BusAwareDevice.hpp"
-#include "BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 
 namespace Espfc {
 
@@ -29,8 +29,8 @@ class BaroDevice : public BusAwareDevice
 public:
   typedef BaroDeviceType DeviceType;
 
-  virtual int begin(BusDevice* bus) = 0;
-  virtual int begin(BusDevice* bus, uint8_t addr) = 0;
+  virtual int begin(Hal::BusDevice* bus) = 0;
+  virtual int begin(Hal::BusDevice* bus, uint8_t addr) = 0;
 
   virtual DeviceType getType() const = 0;
 

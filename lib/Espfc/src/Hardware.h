@@ -2,10 +2,10 @@
 
 #include "Model.h"
 #if defined(ESPFC_I2C_0)
-#include "Device/BusI2C.hpp"
+#include "Hal/BusI2C.hpp"
 #endif
 #if defined(ESPFC_SPI_0)
-#include "Device/BusSPI.hpp"
+#include "Hal/BusSPI.hpp"
 #endif
 #include "Device/BusSlave.hpp"
 
@@ -25,7 +25,7 @@ public:
 
 #if defined(ESPFC_SPI_0)
   template<typename Dev>
-  bool detectDevice(Dev& dev, Device::BusSPI& bus, int cs)
+  bool detectDevice(Dev& dev, Hal::BusSPI& bus, int cs)
   {
     typename Dev::DeviceType type = dev.getType();
     bool status = dev.begin(&bus, cs);
@@ -37,7 +37,7 @@ public:
 
 #if defined(ESPFC_I2C_0)
   template<typename Dev>
-  bool detectDevice(Dev& dev, Device::BusI2C& bus)
+  bool detectDevice(Dev& dev, Hal::BusI2C& bus)
   {
     typename Dev::DeviceType type = dev.getType();
     bool status = dev.begin(&bus);

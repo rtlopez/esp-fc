@@ -1,19 +1,19 @@
 #pragma once
 
 #include "BusAwareDevice.hpp"
-#include "BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 #include <cstdint>
 
 namespace Espfc::Device {
 
-class BusSlave : public BusDevice, public BusAwareDevice
+class BusSlave : public Hal::BusDevice, public BusAwareDevice
 {
 public:
   BusSlave();
 
-  int begin(BusDevice* dev, uint8_t addr);
+  int begin(Hal::BusDevice* dev, uint8_t addr);
 
-  BusType getType() const override;
+  Hal::BusType getType() const override;
 
   int8_t read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) override;
 

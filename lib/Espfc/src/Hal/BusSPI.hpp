@@ -1,11 +1,11 @@
 #pragma once
 
-#include "BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 #include "Target/Target.h"
 
 #if defined(ESPFC_SPI_0)
 
-namespace Espfc::Device {
+namespace Espfc::Hal {
 
 class BusSPI : public BusDevice
 {
@@ -34,6 +34,6 @@ private:
   ESPFC_SPI_0_DEV_T& _dev;
 };
 
-} // namespace Espfc::Device
+} // namespace Espfc::Hal
 
 #endif

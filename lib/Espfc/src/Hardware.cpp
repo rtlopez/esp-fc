@@ -30,10 +30,10 @@ static SPIClass SPI1(HSPI);
 #elif defined(ESP32)
 static SPIClass SPI1(VSPI);
 #endif
-static Espfc::Device::BusSPI spiBus(ESPFC_SPI_0_DEV);
+static Espfc::Hal::BusSPI spiBus(ESPFC_SPI_0_DEV);
 #endif
 #if defined(ESPFC_I2C_0)
-static Espfc::Device::BusI2C i2cBus(WireInstance);
+static Espfc::Hal::BusI2C i2cBus(WireInstance);
 #endif
 static Espfc::Device::BusSlave gyroSlaveBus;
 static Espfc::Device::Gyro::GyroMPU6050 mpu6050;

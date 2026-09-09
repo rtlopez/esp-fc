@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BusAwareDevice.hpp"
-#include "BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 #include <helper_3dmath.hpp>
 
 namespace Espfc {
@@ -28,8 +28,8 @@ class GyroDevice : public BusAwareDevice
 public:
   typedef GyroDeviceType DeviceType;
 
-  virtual int begin(BusDevice* bus) = 0;
-  virtual int begin(BusDevice* bus, uint8_t addr) = 0;
+  virtual int begin(Hal::BusDevice* bus) = 0;
+  virtual int begin(Hal::BusDevice* bus, uint8_t addr) = 0;
 
   virtual DeviceType getType() const = 0;
 

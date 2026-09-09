@@ -2,10 +2,10 @@
 
 #if defined(ESPFC_I2C_0)
 
-#include "BusI2C.hpp"
+#include "Hal/BusI2C.hpp"
 #include <Arduino.h>
 
-namespace Espfc::Device {
+namespace Espfc::Hal {
 
 BusI2C::BusI2C(WireClass& i2c): _dev(i2c) {}
 
@@ -73,6 +73,6 @@ bool BusI2C::write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8
   return status == 0;
 }
 
-} // namespace Espfc::Device
+} // namespace Espfc::Hal
 
 #endif

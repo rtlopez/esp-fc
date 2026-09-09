@@ -19,12 +19,12 @@
 
 namespace Espfc::Device::Baro {
 
-int BaroBMP085::begin(BusDevice* bus)
+int BaroBMP085::begin(Hal::BusDevice* bus)
 {
   return begin(bus, BMP085_DEFAULT_ADDRESS);
 }
 
-int BaroBMP085::begin(BusDevice* bus, uint8_t addr)
+int BaroBMP085::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

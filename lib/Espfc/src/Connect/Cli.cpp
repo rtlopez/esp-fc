@@ -355,7 +355,7 @@ Cli::Cli(Model& model): _model(model), _ignore(false), _active(false), _interact
 
 const Cli::Param* Cli::initialize(ModelConfig& c)
 {
-  const char** busDevChoices = Device::BusDevice::getNames();
+  const char** busDevChoices = Hal::BusDevice::getNames();
   const char** gyroDevChoices = Device::GyroDevice::getNames();
   const char** baroDevChoices = Device::BaroDevice::getNames();
   const char** magDevChoices = Device::MagDevice::getNames();
@@ -1424,7 +1424,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     {
       s.print(Device::GyroDevice::getName(gyro->getType()));
       s.print('/');
-      s.print(Device::BusDevice::getName(gyro->getBus()->getType()));
+      s.print(Hal::BusDevice::getName(gyro->getBus()->getType()));
     }
     else
     {
@@ -1436,7 +1436,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
       s.print(", ");
       s.print(Device::BaroDevice::getName(baro->getType()));
       s.print('/');
-      s.print(Device::BusDevice::getName(baro->getBus()->getType()));
+      s.print(Hal::BusDevice::getName(baro->getBus()->getType()));
     }
 
     if (mag)
@@ -1444,7 +1444,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
       s.print(", ");
       s.print(Device::MagDevice::getName(mag->getType()));
       s.print('/');
-      s.print(Device::BusDevice::getName(mag->getBus()->getType()));
+      s.print(Hal::BusDevice::getName(mag->getBus()->getType()));
     }
 
     if (_model.state.gps.present)

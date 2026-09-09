@@ -1,11 +1,11 @@
-#include "BusSPI.hpp"
+#include "Hal/BusSPI.hpp"
 
 #if defined(ESPFC_SPI_0)
 
 #include "Hal/Gpio.hpp"
 #include <Arduino.h>
 
-namespace Espfc::Device {
+namespace Espfc::Hal {
 
 BusSPI::BusSPI(ESPFC_SPI_0_DEV_T& spi): _dev(spi) {}
 
@@ -57,6 +57,6 @@ void FAST_CODE_ATTR BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t l
   _dev.endTransaction();
 }
 
-} // namespace Espfc::Device
+} // namespace Espfc::Hal
 
 #endif

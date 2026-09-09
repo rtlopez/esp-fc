@@ -1,11 +1,11 @@
 #pragma once
 
-#include "BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 #include "Target/Target.h"
 
 #if defined(ESPFC_I2C_0)
 
-namespace Espfc::Device {
+namespace Espfc::Hal {
 
 class BusI2C : public BusDevice
 {
@@ -22,6 +22,6 @@ private:
   WireClass& _dev;
 };
 
-} // namespace Espfc::Device
+} // namespace Espfc::Hal
 
 #endif

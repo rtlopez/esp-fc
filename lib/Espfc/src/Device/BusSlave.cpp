@@ -13,16 +13,16 @@ namespace Espfc::Device {
 
 BusSlave::BusSlave() {}
 
-int BusSlave::begin(BusDevice* dev, uint8_t addr)
+int BusSlave::begin(Hal::BusDevice* dev, uint8_t addr)
 {
   setBus(dev, addr);
 
   return 1;
 }
 
-BusType BusSlave::getType() const
+Hal::BusType BusSlave::getType() const
 {
-  return BUS_SLV;
+  return Hal::BUS_SLV;
 }
 
 int8_t BusSlave::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)

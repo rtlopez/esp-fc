@@ -4,7 +4,7 @@
 #include "Target/Target.h"
 #include "EscDriver.h"
 #include "Utils/Filter.h"
-#include "Device/BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Device/MagDevice.hpp"
 #include "Device/BaroDevice.hpp"
@@ -594,7 +594,7 @@ struct IBatConfig
 
 struct GyroConfig
 {
-  int8_t bus = BUS_AUTO;
+  int8_t bus = Hal::BUS_AUTO;
   int8_t dev = GYRO_AUTO;
   int8_t dlpf = GYRO_DLPF_256;
   int8_t align = ALIGN_DEFAULT;
@@ -613,7 +613,7 @@ static constexpr size_t GYRO_FUSION_LPF_DIV = 3;
 
 struct AccelConfig
 {
-  int8_t bus = BUS_AUTO;
+  int8_t bus = Hal::BUS_AUTO;
   int8_t dev = GYRO_AUTO;
   int16_t bias[3] = { 0, 0, 0 };
   int16_t trim[2] = { 0, 0 };
@@ -622,14 +622,14 @@ struct AccelConfig
 
 struct BaroConfig
 {
-  int8_t bus = BUS_AUTO;
+  int8_t bus = Hal::BUS_AUTO;
   int8_t dev = BARO_NONE;
   FilterConfig filter{FILTER_BIQUAD, 3};
 };
 
 struct MagConfig
 {
-  int8_t bus = BUS_AUTO;
+  int8_t bus = Hal::BUS_AUTO;
   int8_t dev = MAG_NONE;
   int8_t align = ALIGN_DEFAULT;
   int16_t offset[3] = { 0, 0, 0 };

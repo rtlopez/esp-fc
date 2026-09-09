@@ -7,6 +7,7 @@
 #include <unity.h>
 
 using namespace Espfc;
+using namespace Espfc::Hal;
 using namespace Espfc::Device;
 using namespace Espfc::Device::Gyro;
 using namespace Espfc::Device::Mag;
