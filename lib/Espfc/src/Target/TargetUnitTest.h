@@ -18,6 +18,18 @@
 #define ESPFC_GYRO_I2C_RATE_MAX 2000
 #define ESPFC_GYRO_SPI_RATE_MAX 8000
 
+#define ESPFC_SPI_0
+#define ESPFC_SPI_0_SCK -1
+#define ESPFC_SPI_0_MOSI -1
+#define ESPFC_SPI_0_MISO -1
+
+#define ESPFC_SPI_CS_GYRO -1
+#define ESPFC_SPI_CS_BARO -1
+
+#define ESPFC_I2C_0
+#define ESPFC_I2C_0_SDA -1
+#define ESPFC_I2C_0_SCL -1
+
 #define ESPFC_SERIAL_DEBUG_PORT 0
 #define ESPFC_BUZZER_PIN -1
 #define ESPFC_BUTTON_PIN -1

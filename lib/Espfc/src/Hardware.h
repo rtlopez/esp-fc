@@ -61,6 +61,12 @@ public:
 
 private:
   Model& _model;
+#if defined(ESPFC_SPI_0)
+  Hal::BusSPI* _spiBus;
+#endif
+#if defined(ESPFC_I2C_0)
+  Hal::BusI2C* _i2cBus;
+#endif
 };
 
 } // namespace Espfc

@@ -24,17 +24,6 @@
 #endif
 
 namespace {
-#if defined(ESPFC_SPI_0)
-#if defined(ESP32C3) || defined(ESP32S3) || defined(ESP32S2)
-static SPIClass SPI1(HSPI);
-#elif defined(ESP32)
-static SPIClass SPI1(VSPI);
-#endif
-static Espfc::Hal::BusSPI spiBus(ESPFC_SPI_0_DEV);
-#endif
-#if defined(ESPFC_I2C_0)
-static Espfc::Hal::BusI2C i2cBus(WireInstance);
-#endif
 static Espfc::Device::BusSlave gyroSlaveBus;
 static Espfc::Device::Gyro::GyroMPU6050 mpu6050;
 static Espfc::Device::Gyro::GyroMPU6500 mpu6500;
@@ -74,8 +63,10 @@ void Hardware::onI2CError()
 void Hardware::initBus()
 {
 #if defined(ESPFC_SPI_0)
-  int spiResult = spiBus.begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MOSI],
-                               _model.config.pin[PIN_SPI_0_MISO]);
+  _spiBus = Hal::getBusSPI(0);
+
+  int spiResult = _spiBus->begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MOSI],
+                                 _model.config.pin[PIN_SPI_0_MISO]);
   _model.logger.info()
       .log("SPI")
       .log(_model.config.pin[PIN_SPI_0_SCK])
@@ -83,10 +74,12 @@ void Hardware::initBus()
       .log(_model.config.pin[PIN_SPI_0_MISO])
       .logln(spiResult);
 #endif
+
 #if defined(ESPFC_I2C_0)
-  int i2cResult =
-      i2cBus.begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL], _model.config.i2cSpeed * 1000ul);
-  i2cBus.onError = [this]() { onI2CError(); };
+  _i2cBus = Hal::getBusI2C(0);
+  int i2cResult = _i2cBus->begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL],
+                                 _model.config.i2cSpeed * 1000ul);
+  _i2cBus->onError = [this]() { onI2CError(); };
   _model.logger.info()
       .log("I2C")
       .log(_model.config.pin[PIN_I2C_0_SDA])
@@ -106,25 +99,25 @@ void Hardware::detectGyro()
   {
     Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS0], Hal::Gpio::High);
     Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS0], Hal::Gpio::Output);
-    if (!detectedGyro && detectDevice(mpu9250, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
-    if (!detectedGyro && detectDevice(mpu6500, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu6500;
-    if (!detectedGyro && detectDevice(icm20602, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
-    if (!detectedGyro && detectDevice(icm42688, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm42688;
-    if (!detectedGyro && detectDevice(bmi160, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
-    if (!detectedGyro && detectDevice(lsm6dso, spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
-    if (detectedGyro) gyroSlaveBus.begin(&spiBus, detectedGyro->getAddress());
+    if (!detectedGyro && detectDevice(mpu9250, *_spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
+    if (!detectedGyro && detectDevice(mpu6500, *_spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu6500;
+    if (!detectedGyro && detectDevice(icm20602, *_spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
+    if (!detectedGyro && detectDevice(icm42688, *_spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm42688;
+    if (!detectedGyro && detectDevice(bmi160, *_spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
+    if (!detectedGyro && detectDevice(lsm6dso, *_spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
+    if (detectedGyro) gyroSlaveBus.begin(_spiBus, detectedGyro->getAddress());
   }
 #endif
 #if defined(ESPFC_I2C_0)
   if (!detectedGyro && _model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
   {
-    if (!detectedGyro && detectDevice(mpu9250, i2cBus)) detectedGyro = &mpu9250;
-    if (!detectedGyro && detectDevice(mpu6500, i2cBus)) detectedGyro = &mpu6500;
-    if (!detectedGyro && detectDevice(icm20602, i2cBus)) detectedGyro = &icm20602;
-    if (!detectedGyro && detectDevice(bmi160, i2cBus)) detectedGyro = &bmi160;
-    if (!detectedGyro && detectDevice(mpu6050, i2cBus)) detectedGyro = &mpu6050;
-    if (!detectedGyro && detectDevice(lsm6dso, i2cBus)) detectedGyro = &lsm6dso;
-    if (detectedGyro) gyroSlaveBus.begin(&i2cBus, detectedGyro->getAddress());
+    if (!detectedGyro && detectDevice(mpu9250, *_i2cBus)) detectedGyro = &mpu9250;
+    if (!detectedGyro && detectDevice(mpu6500, *_i2cBus)) detectedGyro = &mpu6500;
+    if (!detectedGyro && detectDevice(icm20602, *_i2cBus)) detectedGyro = &icm20602;
+    if (!detectedGyro && detectDevice(bmi160, *_i2cBus)) detectedGyro = &bmi160;
+    if (!detectedGyro && detectDevice(mpu6050, *_i2cBus)) detectedGyro = &mpu6050;
+    if (!detectedGyro && detectDevice(lsm6dso, *_i2cBus)) detectedGyro = &lsm6dso;
+    if (detectedGyro) gyroSlaveBus.begin(_i2cBus, detectedGyro->getAddress());
   }
 #endif
   if (!detectedGyro) return;
@@ -144,10 +137,10 @@ void Hardware::detectMag()
 #if defined(ESPFC_I2C_0)
   if (_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
   {
-    if (!detectedMag && detectDevice(ak8963, i2cBus)) detectedMag = &ak8963;
-    if (!detectedMag && detectDevice(hmc5883l, i2cBus)) detectedMag = &hmc5883l;
-    if (!detectedMag && detectDevice(qmc5883l, i2cBus)) detectedMag = &qmc5883l;
-    if (!detectedMag && detectDevice(qmc5883p, i2cBus)) detectedMag = &qmc5883p;
+    if (!detectedMag && detectDevice(ak8963, *_i2cBus)) detectedMag = &ak8963;
+    if (!detectedMag && detectDevice(hmc5883l, *_i2cBus)) detectedMag = &hmc5883l;
+    if (!detectedMag && detectDevice(qmc5883l, *_i2cBus)) detectedMag = &qmc5883l;
+    if (!detectedMag && detectDevice(qmc5883p, *_i2cBus)) detectedMag = &qmc5883p;
   }
 #endif
   if (gyroSlaveBus.getBus())
@@ -172,17 +165,17 @@ void Hardware::detectBaro()
   {
     Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS1], Hal::Gpio::High);
     Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS1], Hal::Gpio::Output);
-    if (!detectedBaro && detectDevice(bmp280, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp280;
-    if (!detectedBaro && detectDevice(bmp085, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
-    if (!detectedBaro && detectDevice(spl06, spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &spl06;
+    if (!detectedBaro && detectDevice(bmp280, *_spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp280;
+    if (!detectedBaro && detectDevice(bmp085, *_spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
+    if (!detectedBaro && detectDevice(spl06, *_spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &spl06;
   }
 #endif
 #if defined(ESPFC_I2C_0)
   if (_model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
   {
-    if (!detectedBaro && detectDevice(bmp280, i2cBus)) detectedBaro = &bmp280;
-    if (!detectedBaro && detectDevice(bmp085, i2cBus)) detectedBaro = &bmp085;
-    if (!detectedBaro && detectDevice(spl06, i2cBus)) detectedBaro = &spl06;
+    if (!detectedBaro && detectDevice(bmp280, *_i2cBus)) detectedBaro = &bmp280;
+    if (!detectedBaro && detectDevice(bmp085, *_i2cBus)) detectedBaro = &bmp085;
+    if (!detectedBaro && detectDevice(spl06, *_i2cBus)) detectedBaro = &spl06;
   }
 #endif
   if (gyroSlaveBus.getBus())

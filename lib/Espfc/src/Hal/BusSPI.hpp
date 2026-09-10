@@ -1,16 +1,13 @@
 #pragma once
 
 #include "Hal/BusDevice.hpp"
-#include "Target/Target.h"
-
-#if defined(ESPFC_SPI_0)
 
 namespace Espfc::Hal {
 
 class BusSPI : public BusDevice
 {
 public:
-  BusSPI(ESPFC_SPI_0_DEV_T& spi);
+  BusSPI(size_t index);
 
   static constexpr uint8_t SPI_READ = 0x80;
   static constexpr uint8_t SPI_WRITE = 0x7f;
@@ -31,9 +28,9 @@ public:
 private:
   void transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* in, uint8_t* out, uint32_t speed);
 
-  ESPFC_SPI_0_DEV_T& _dev;
+  size_t _index;
 };
 
-} // namespace Espfc::Hal
+BusSPI* getBusSPI(size_t index);
 
-#endif
+} // namespace Espfc::Hal
