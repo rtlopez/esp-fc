@@ -24,8 +24,8 @@ class MagDevice : public BusAwareDevice
 public:
   using DeviceType = MagDeviceType;
 
-  virtual int begin(BusDevice* bus) = 0;
-  virtual int begin(BusDevice* bus, uint8_t addr) = 0;
+  virtual int begin(Hal::BusDevice* bus) = 0;
+  virtual int begin(Hal::BusDevice* bus, uint8_t addr) = 0;
 
   virtual DeviceType getType() const = 0;
 

@@ -2,10 +2,10 @@
 
 #include "Model.h"
 #if defined(ESPFC_I2C_0)
-#include "Device/BusI2C.hpp"
+#include "Hal/BusI2C.hpp"
 #endif
 #if defined(ESPFC_SPI_0)
-#include "Device/BusSPI.hpp"
+#include "Hal/BusSPI.hpp"
 #endif
 #include "Device/BusSlave.hpp"
 
@@ -25,10 +25,10 @@ public:
 
 #if defined(ESPFC_SPI_0)
   template<typename Dev>
-  bool detectDevice(Dev& dev, Device::BusSPI& bus, int cs)
+  bool detectDevice(Dev& dev, Hal::BusSPI* bus, int cs)
   {
     typename Dev::DeviceType type = dev.getType();
-    bool status = dev.begin(&bus, cs);
+    bool status = dev.begin(bus, cs);
     auto& logger = _model.logger.info();
     logger.log("SPI").log(Dev::getName(type)).loghex(dev.getChipId().value_or(0xff)).logln(status ? "Y" : "");
     return status;
@@ -37,10 +37,10 @@ public:
 
 #if defined(ESPFC_I2C_0)
   template<typename Dev>
-  bool detectDevice(Dev& dev, Device::BusI2C& bus)
+  bool detectDevice(Dev& dev, Hal::BusI2C* bus)
   {
     typename Dev::DeviceType type = dev.getType();
-    bool status = dev.begin(&bus);
+    bool status = dev.begin(bus);
     auto& logger = _model.logger.info();
     logger.log("I2C").log(Dev::getName(type)).loghex(dev.getChipId().value_or(0xff)).logln(status ? "Y" : "");
     return status;
@@ -48,10 +48,10 @@ public:
 #endif
 
   template<typename Dev>
-  bool detectDevice(Dev& dev, Device::BusSlave& bus)
+  bool detectDevice(Dev& dev, Device::BusSlave* bus)
   {
     typename Dev::DeviceType type = dev.getType();
-    bool status = dev.begin(&bus);
+    bool status = dev.begin(bus);
     auto& logger = _model.logger.info();
     logger.log("SLV").log(Dev::getName(type)).loghex(dev.getChipId().value_or(0xff)).logln(status ? "Y" : "");
     return status;
@@ -61,6 +61,12 @@ public:
 
 private:
   Model& _model;
+#if defined(ESPFC_SPI_0)
+  Hal::BusSPI* _spiBus = nullptr;
+#endif
+#if defined(ESPFC_I2C_0)
+  Hal::BusI2C* _i2cBus = nullptr;
+#endif
 };
 
 } // namespace Espfc

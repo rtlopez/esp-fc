@@ -34,12 +34,12 @@
 
 namespace Espfc::Device::Baro {
 
-int BaroBMP280::begin(BusDevice* bus)
+int BaroBMP280::begin(Hal::BusDevice* bus)
 {
   return begin(bus, BMP280_ADDRESS_FIRST) ? 1 : begin(bus, BMP280_ADDRESS_SECOND) ? 1 : 0;
 }
 
-int BaroBMP280::begin(BusDevice* bus, uint8_t addr)
+int BaroBMP280::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

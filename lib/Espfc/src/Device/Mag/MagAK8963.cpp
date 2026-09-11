@@ -17,12 +17,12 @@
 
 namespace Espfc::Device::Mag {
 
-int MagAK8963::begin(BusDevice* bus)
+int MagAK8963::begin(Hal::BusDevice* bus)
 {
   return begin(bus, AK8963_ADDRESS_FIRST) ? 1 : begin(bus, AK8963_ADDRESS_SECOND);
 }
 
-int MagAK8963::begin(BusDevice* bus, uint8_t addr)
+int MagAK8963::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

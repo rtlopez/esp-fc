@@ -65,12 +65,12 @@ namespace Espfc::Device::Baro {
 
 static const uint32_t scaleFactor[8] = {524288, 1572864, 3670016, 7864320, 253952, 516096, 1040384, 2088960};
 
-int BaroSPL06::begin(BusDevice* bus)
+int BaroSPL06::begin(Hal::BusDevice* bus)
 {
   return begin(bus, SPL06_ADDRESS_FIRST) ? 1 : begin(bus, SPL06_ADDRESS_SECOND) ? 1 : 0;
 }
 
-int BaroSPL06::begin(BusDevice* bus, uint8_t addr)
+int BaroSPL06::begin(Hal::BusDevice* bus, uint8_t addr)
 {
 
   uint8_t buffer[SPL06_CALIB_REG_COEF_LEN] = {0};

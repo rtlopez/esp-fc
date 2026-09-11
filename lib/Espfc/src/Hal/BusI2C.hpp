@@ -1,16 +1,14 @@
 #pragma once
 
-#include "BusDevice.hpp"
-#include "Target/Target.h"
+#include "Hal/BusDevice.hpp"
+#include <cstddef>
 
-#if defined(ESPFC_I2C_0)
-
-namespace Espfc::Device {
+namespace Espfc::Hal {
 
 class BusI2C : public BusDevice
 {
 public:
-  BusI2C(WireClass& i2c);
+  BusI2C(size_t index);
   BusType getType() const override;
 
   int begin(int sda, int scl, uint32_t speed);
@@ -19,9 +17,9 @@ public:
   bool write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* data) override;
 
 private:
-  WireClass& _dev;
+  size_t _index;
 };
 
-} // namespace Espfc::Device
+BusI2C* getBusI2C(size_t index);
 
-#endif
+} // namespace Espfc::Hal

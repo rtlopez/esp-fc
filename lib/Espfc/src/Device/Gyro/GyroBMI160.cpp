@@ -112,12 +112,12 @@ enum
 
 } // namespace
 
-int GyroBMI160::begin(BusDevice* bus)
+int GyroBMI160::begin(Hal::BusDevice* bus)
 {
   return begin(bus, BMI160_ADDRESS_FIRST) ? 1 : begin(bus, BMI160_ADDRESS_SECOND) ? 1 : 0;
 }
 
-int GyroBMI160::begin(BusDevice* bus, uint8_t addr)
+int GyroBMI160::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

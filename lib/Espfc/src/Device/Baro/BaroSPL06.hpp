@@ -21,8 +21,8 @@ public:
     int16_t c30;
   } __attribute__((__packed__));
 
-  int begin(BusDevice* bus) final;
-  int begin(BusDevice* bus, uint8_t addr) final;
+  int begin(Hal::BusDevice* bus) final;
+  int begin(Hal::BusDevice* bus, uint8_t addr) final;
 
   BaroDeviceType getType() const final;
 

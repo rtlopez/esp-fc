@@ -62,12 +62,12 @@
 
 namespace Espfc::Device::Gyro {
 
-int GyroLSM6DSO::begin(BusDevice* bus)
+int GyroLSM6DSO::begin(Hal::BusDevice* bus)
 {
   return begin(bus, LSM6DSOX_ADDRESS_FIRST) ? 1 : begin(bus, LSM6DSOX_ADDRESS_SECOND) ? 1 : 0;
 }
 
-int GyroLSM6DSO::begin(BusDevice* bus, uint8_t addr)
+int GyroLSM6DSO::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

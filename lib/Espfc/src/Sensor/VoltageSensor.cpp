@@ -1,5 +1,6 @@
 #include "VoltageSensor.hpp"
 
+#include <Arduino.h>
 #include <algorithm>
 
 namespace Espfc::Sensor {

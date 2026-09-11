@@ -19,12 +19,12 @@
 
 namespace Espfc::Device::Gyro {
 
-int GyroICM42688::begin(BusDevice* bus)
+int GyroICM42688::begin(Hal::BusDevice* bus)
 {
   return begin(bus, 0);
 }
 
-int GyroICM42688::begin(BusDevice* bus, uint8_t addr)
+int GyroICM42688::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

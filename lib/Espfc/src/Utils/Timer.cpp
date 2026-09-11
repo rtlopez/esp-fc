@@ -1,7 +1,6 @@
-#include <Arduino.h>
-
-#include "Utils/MemoryHelper.h"
 #include "Utils/Timer.h"
+#include "Hal/Time.hpp"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc::Utils {
 

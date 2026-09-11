@@ -3,7 +3,7 @@
 // https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.cpp#L1501
 // https://github.com/guywithaview/Arduino-Test/blob/master/GY87/GY87.ino
 
-#include "Device/BusDevice.hpp"
+#include "Hal/BusDevice.hpp"
 #include "Device/GyroDevice.hpp"
 #include "helper_3dmath.hpp"
 
@@ -12,8 +12,8 @@ namespace Espfc::Device::Gyro {
 class GyroMPU6050 : public GyroDevice
 {
 public:
-  int begin(BusDevice* bus) override;
-  int begin(BusDevice* bus, uint8_t addr) override;
+  int begin(Hal::BusDevice* bus) override;
+  int begin(Hal::BusDevice* bus, uint8_t addr) override;
 
   GyroDeviceType getType() const override;
 

@@ -65,12 +65,12 @@
 
 namespace Espfc::Device::Mag {
 
-int MagHMC5883L::begin(BusDevice* bus)
+int MagHMC5883L::begin(Hal::BusDevice* bus)
 {
   return begin(bus, HMC5883L_DEFAULT_ADDRESS);
 }
 
-int MagHMC5883L::begin(BusDevice* bus, uint8_t addr)
+int MagHMC5883L::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

@@ -52,12 +52,12 @@ namespace Espfc::Device::Mag {
 
 MagQMC5883P::MagQMC5883P(): _currentRange{QMC5883P_RANGE_8G}, _currentOdr{QMC5883P_ODR_100HZ} {}
 
-int MagQMC5883P::begin(BusDevice* bus)
+int MagQMC5883P::begin(Hal::BusDevice* bus)
 {
   return begin(bus, QMC5883P_DEFAULT_ADDRESS);
 }
 
-int MagQMC5883P::begin(BusDevice* bus, uint8_t addr)
+int MagQMC5883P::begin(Hal::BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 

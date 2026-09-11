@@ -8,8 +8,8 @@ namespace Espfc::Device::Gyro {
 class GyroLSM6DSO : public GyroDevice
 {
 public:
-  int begin(BusDevice* bus) override;
-  int begin(BusDevice* bus, uint8_t addr) override;
+  int begin(Hal::BusDevice* bus) override;
+  int begin(Hal::BusDevice* bus, uint8_t addr) override;
 
   GyroDeviceType getType() const override;
 

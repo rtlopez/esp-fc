@@ -6,7 +6,7 @@
 
 constexpr uint32_t ESPFC_BUS_TIMEOUT = 100u;
 
-namespace Espfc {
+namespace Espfc::Hal {
 
 enum BusType
 {
@@ -17,8 +17,6 @@ enum BusType
   BUS_SLV,
   BUS_MAX
 };
-
-namespace Device {
 
 class BusDevice
 {
@@ -140,6 +138,4 @@ protected:
   uint32_t _timeout;
 };
 
-} // namespace Device
-
-} // namespace Espfc
+} // namespace Espfc::Hal

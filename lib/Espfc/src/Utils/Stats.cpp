@@ -1,9 +1,10 @@
-#include <Arduino.h>
-
-#include <cstddef>
-
-#include "Utils/MemoryHelper.h"
 #include "Utils/Stats.h"
+
+#include "Hal/Time.hpp"
+#include "Utils/MemoryHelper.h"
+
+#include <algorithm>
+#include <cstddef>
 
 namespace Espfc::Utils {
 

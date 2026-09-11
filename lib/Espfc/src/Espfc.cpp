@@ -1,5 +1,6 @@
 #include "Espfc.h"
 #include "Debug_Espfc.h"
+#include "Hal/Time.hpp"
 
 namespace Espfc {
 
