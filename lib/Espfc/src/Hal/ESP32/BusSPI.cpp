@@ -23,8 +23,10 @@ static SPIClass SPI1(VSPI);
 #endif
 #endif
 
-SPIClass& getSPI(size_t index) {
-  switch (index) {
+SPIClass& getSPI(size_t index)
+{
+  switch (index)
+  {
     case 0:
       return SPI0;
 #if NUM_SPI_PORTS >= 2
@@ -41,13 +43,14 @@ Espfc::Hal::BusSPI _spi0(0);
 Espfc::Hal::BusSPI _spi1(1);
 #endif
 
-}
+} // namespace
 
 namespace Espfc::Hal {
 
 BusSPI* getBusSPI(size_t index)
 {
-  switch (index) {
+  switch (index)
+  {
     case 0:
       return &_spi0;
 #if NUM_SPI_PORTS >= 2
@@ -94,7 +97,7 @@ bool BusSPI::write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8
 }
 
 void IRAM_ATTR BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* in, uint8_t* out,
-                                     uint32_t speed)
+                                uint32_t speed)
 {
   auto& dev = getSPI(_index);
   dev.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0));

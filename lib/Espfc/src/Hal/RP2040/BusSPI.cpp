@@ -9,8 +9,10 @@
 namespace {
 
 // index 0 uses SPI1, because default target pins (sck 14, mosi 15, miso 12) belong to the spi1 peripheral
-SPIClassRP2040& getSPI(size_t index) {
-  switch (index) {
+SPIClassRP2040& getSPI(size_t index)
+{
+  switch (index)
+  {
     case 0:
       return SPI1;
     case 1:
@@ -23,13 +25,14 @@ SPIClassRP2040& getSPI(size_t index) {
 Espfc::Hal::BusSPI _spi0(0);
 Espfc::Hal::BusSPI _spi1(1);
 
-}
+} // namespace
 
 namespace Espfc::Hal {
 
 BusSPI* getBusSPI(size_t index)
 {
-  switch (index) {
+  switch (index)
+  {
     case 0:
       return &_spi0;
     case 1:
@@ -53,9 +56,9 @@ int BusSPI::begin(int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
   if (sck == -1 || miso == -1 || mosi == -1) return 0;
 
   auto& dev = getSPI(_index);
-  dev.setSCK(sck);
-  dev.setRX(miso);
-  dev.setTX(mosi);
+  if (!dev.setSCK(sck)) return 0;
+  if (!dev.setRX(miso)) return 0;
+  if (!dev.setTX(mosi)) return 0;
   dev.begin();
 
   return 1;
@@ -79,8 +82,7 @@ bool BusSPI::write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8
   return true;
 }
 
-void BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* in, uint8_t* out,
-                                     uint32_t speed)
+void BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* in, uint8_t* out, uint32_t speed)
 {
   auto& dev = getSPI(_index);
 

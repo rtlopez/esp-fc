@@ -22,13 +22,14 @@ TwoWire& getI2C(size_t index)
 Espfc::Hal::BusI2C busI2C0(0);
 Espfc::Hal::BusI2C busI2C1(1);
 
-}
+} // namespace
 
 namespace Espfc::Hal {
 
 BusI2C* getBusI2C(size_t index)
 {
-  switch (index) {
+  switch (index)
+  {
     case 0:
       return &busI2C0;
     case 1:

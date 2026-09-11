@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hal/BusDevice.hpp"
+#include <cstddef>
 
 namespace Espfc::Hal {
 

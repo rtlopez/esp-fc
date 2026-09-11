@@ -7,13 +7,14 @@ namespace {
 Espfc::Hal::BusSPI _spi0(0);
 Espfc::Hal::BusSPI _spi1(1);
 
-}
+} // namespace
 
 namespace Espfc::Hal {
 
 BusSPI* getBusSPI(size_t index)
 {
-  switch (index) {
+  switch (index)
+  {
     case 0:
       return &_spi0;
     case 1:
@@ -33,7 +34,7 @@ BusType BusSPI::getType() const
 int BusSPI::begin(int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
 {
   // do nothing
-  return 0;
+  return 1;
 }
 
 int8_t BusSPI::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)

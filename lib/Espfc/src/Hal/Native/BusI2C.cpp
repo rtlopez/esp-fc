@@ -7,13 +7,14 @@ namespace {
 Espfc::Hal::BusI2C busI2C0(0);
 Espfc::Hal::BusI2C busI2C1(1);
 
-}
+} // namespace
 
 namespace Espfc::Hal {
 
 BusI2C* getBusI2C(size_t index)
 {
-  switch (index) {
+  switch (index)
+  {
     case 0:
       return &busI2C0;
     case 1:
@@ -33,7 +34,7 @@ BusType BusI2C::getType() const
 int BusI2C::begin(int sda, int scl, uint32_t speed)
 {
   // do nothing
-  return 0;
+  return 1;
 }
 
 int8_t BusI2C::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
