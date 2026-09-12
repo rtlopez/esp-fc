@@ -8,6 +8,7 @@
 #include "Device/BusSPI.hpp"
 #endif
 #include "Device/BusSlave.hpp"
+#include "Device/Wireless/WirelessDevice.hpp"
 
 namespace Espfc {
 
@@ -22,6 +23,7 @@ public:
   void detectGyro();
   void detectMag();
   void detectBaro();
+  void detectWireless();
 
 #if defined(ESPFC_SPI_0)
   template<typename Dev>

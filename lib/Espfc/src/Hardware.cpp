@@ -15,6 +15,7 @@
 #include "Device/Mag/MagHMC5883L.hpp"
 #include "Device/Mag/MagQMC5883L.hpp"
 #include "Device/Mag/MagQMC5883P.hpp"
+#include "Device/Wireless/NRF24L01.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
 #if defined(ESPFC_WIFI_ALT)
@@ -50,6 +51,7 @@ static Espfc::Device::Mag::MagAK8963 ak8963;
 static Espfc::Device::Baro::BaroBMP085 bmp085;
 static Espfc::Device::Baro::BaroBMP280 bmp280;
 static Espfc::Device::Baro::BaroSPL06 spl06;
+static Espfc::Device::Wireless::NRF24L01 nrf24l01;
 } // namespace
 
 namespace Espfc {
@@ -62,6 +64,7 @@ int Hardware::begin()
   detectGyro();
   detectMag();
   detectBaro();
+  detectWireless();
   return 1;
 }
 
@@ -196,6 +199,37 @@ void Hardware::detectBaro()
 
   _model.state.baro.dev = detectedBaro;
   _model.state.baro.present = (bool)detectedBaro;
+}
+
+void Hardware::detectWireless()
+{
+  if (_model.config.wireless_transceiver.dev == WIRELESS_NONE) return;
+
+  Device::WirelessDevice* detectedWireless = nullptr;
+#if defined(ESPFC_SPI_0)
+  if (_model.config.pin[PIN_SPI_CS2] != -1)
+  {
+    Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS2], Hal::Gpio::High);
+    Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS2], Hal::Gpio::Output);
+    if (!detectedWireless && detectDevice(nrf24l01, spiBus, _model.config.pin[PIN_SPI_CS2])) detectedWireless = &nrf24l01;
+  }
+#endif
+  
+  if (!detectedWireless) return;
+
+  // Configure wireless device
+  if (_model.config.wireless_transceiver.channel <= 125)
+  {
+    detectedWireless->setChannel(_model.config.wireless_transceiver.channel);
+  }
+  if (_model.config.wireless_transceiver.power <= 3)
+  {
+    detectedWireless->setPower(_model.config.wireless_transceiver.power);
+  }
+  detectedWireless->setAddress(_model.config.wireless_transceiver.address, 5);
+
+  _model.state.wireless.dev = detectedWireless;
+  _model.state.wireless.present = (bool)detectedWireless;
 }
 
 void Hardware::restart(const Model& model)

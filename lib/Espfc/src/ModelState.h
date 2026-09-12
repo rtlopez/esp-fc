@@ -9,6 +9,10 @@
 #include <Kalman.hpp>
 
 #include "ModelConfig.h"
+#include "Device/GyroDevice.hpp"
+#include "Device/MagDevice.hpp"
+#include "Device/BaroDevice.hpp"
+#include "Device/Wireless/WirelessDevice.hpp"
 #include "Control/Pid.h"
 #include "Utils/Filter.h"
 #include "Utils/Timer.h"
@@ -298,6 +302,19 @@ struct AccelState
   int calibrationState;
 };
 
+struct WirelessState
+{
+  Device::WirelessDevice* dev;
+  bool present;
+  uint8_t channel;
+  uint8_t power;
+  uint32_t packetsRx;
+  uint32_t packetsTx;
+  uint32_t packetErrors;
+  int32_t lastRssi;
+  Utils::Timer timer;
+};
+
 struct AttitudeState
 {
   VectorFloat rate;
@@ -477,6 +494,7 @@ struct ModelState
   MagState mag;
   BaroState baro;
   GpsState gps;
+  WirelessState wireless;
 
   InputState input;
   FailsafeState failsafe;

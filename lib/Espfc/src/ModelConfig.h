@@ -8,6 +8,7 @@
 #include "Device/GyroDevice.hpp"
 #include "Device/MagDevice.hpp"
 #include "Device/BaroDevice.hpp"
+#include "Device/Wireless/WirelessDevice.hpp"
 #include "Device/SerialDevice.h"
 #include "Device/InputPPM.h"
 #include "Output/Mixers.h"
@@ -637,6 +638,17 @@ struct MagConfig
   int16_t declination = 0;
 };
 
+struct WirelessTransceiverConfig
+{
+  int8_t bus = BUS_AUTO;
+  int8_t dev = WIRELESS_NONE;
+  uint8_t channel = 76;      // 2.4GHz: 76 = 2.476 GHz
+  uint8_t power = 3;         // 0 = -18dBm, 1 = -12dBm, 2 = -6dBm, 3 = 0dBm
+  uint8_t address[5] = {0xC2, 0xC2, 0xC2, 0xC2, 0xC2};
+  uint8_t payload = 32;      // 1-32 bytes
+  bool enabled = false;
+};
+
 struct YawConfig
 {
   FilterConfig filter{FILTER_PT1, 90};
@@ -765,6 +777,7 @@ class ModelConfig
     AccelConfig accel;
     BaroConfig baro;
     MagConfig mag;
+    WirelessTransceiverConfig wireless_transceiver;
     InputConfig input;
     FailsafeConfig failsafe;
     FusionConfig fusion;
