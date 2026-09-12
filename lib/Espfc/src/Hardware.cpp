@@ -93,6 +93,8 @@ void Hardware::initBus()
       .log(_model.config.pin[PIN_I2C_0_SCL])
       .log(_model.config.i2cSpeed)
       .logln(i2cResult);
+  // Allow I2C bus and sensors to stabilize before device detection
+  delay(50);
 #endif
 }
 

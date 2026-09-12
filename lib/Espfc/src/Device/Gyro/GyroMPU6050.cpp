@@ -103,6 +103,13 @@ int GyroMPU6050::begin(BusDevice* bus, uint8_t addr)
 {
   setBus(bus, addr);
 
+  // Retry connection test a few times to handle I2C bus startup issues
+  for (int retry = 0; retry < 3; retry++)
+  {
+    if (testConnection()) break;
+    if (retry < 2) delay(5);
+  }
+
   if (!testConnection()) return 0;
 
   uint8_t res = 0;
