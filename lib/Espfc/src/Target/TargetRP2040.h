@@ -51,7 +51,6 @@
 #define ESPFC_BUTTON_PIN -1
 #define ESPFC_LED_PIN -1
 
-
 #define ESPFC_ADC_0
 #define ESPFC_ADC_0_PIN 26
 
@@ -72,41 +71,11 @@
 #define ESPFC_MULTI_CORE_RP2040
 
 #include <cstddef>
-#include <cstdint>
 namespace Espfc {
 
 constexpr size_t targetSerialTxBufferSize()
 {
   return 256u;
 }
-
-template<typename T>
-inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
-{
-  dev.setSCK(sck);
-  dev.setRX(miso);
-  dev.setTX(mosi);
-  dev.begin();
-  return 1;
-}
-
-template<typename T>
-inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, uint32_t speed)
-{
-  if (!dev.setSCL(scl)) return -1;
-  if (!dev.setSDA(sda)) return -2;
-  dev.setClock(speed);
-  dev.begin();
-  return 1;
-}
-
-void targetReset();
-
-uint32_t getBoardId0();
-uint32_t getBoardId1();
-uint32_t getBoardId2();
-
-uint32_t targetCpuFreq();
-uint32_t targetFreeHeap();
 
 } // namespace Espfc

@@ -1,29 +1,27 @@
 #if defined(ESP8266)
 
+#include "Hal/Board.hpp"
 #include <Arduino.h>
 #include <Esp.h>
-#include <cstdint>
 
-#include "Target/TargetESP8266.h"
+namespace Espfc::Hal {
 
-namespace Espfc {
-
-uint32_t getBoardId0()
+uint32_t Board::getId0()
 {
   return ESP.getChipId();
 }
 
-uint32_t getBoardId1()
+uint32_t Board::getId1()
 {
   return ESP.getFlashChipId();
 }
 
-uint32_t getBoardId2()
+uint32_t Board::getId2()
 {
   return ESP.getFlashChipSize();
 }
 
-void targetReset()
+void Board::reset()
 {
   // pin setup to ensure boot from flash
   pinMode(0, OUTPUT);
@@ -41,12 +39,12 @@ void targetReset()
   }
 }
 
-uint32_t targetCpuFreq()
+uint32_t Board::getCpuFreq()
 {
   return ESP.getCpuFreqMHz();
 }
 
-uint32_t targetFreeHeap()
+uint32_t Board::getFreeHeap()
 {
   return ESP.getFreeHeap();
 }
@@ -84,6 +82,6 @@ s.print("time: ");
 s.println(system_get_time() / 1000000);
 */
 
-} // namespace Espfc
+} // namespace Espfc::Hal
 
 #endif

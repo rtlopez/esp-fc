@@ -1,5 +1,6 @@
 #include "Connect/Cli.hpp"
 #include "Device/GyroDevice.hpp"
+#include "Hal/Board.hpp"
 #include "Hardware.h"
 #include "ModelConfig.h"
 #include "Utils/Filter.h"
@@ -1051,7 +1052,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     s.println();
 
     s.print("cpu freq: ");
-    s.print(targetCpuFreq());
+    s.print(Hal::Board::getCpuFreq());
     s.println(" MHz");
 
     s.print("  memory: ");
@@ -1059,7 +1060,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     s.print(", ");
     s.print(sizeof(ModelState));
     s.print(", ");
-    s.println(targetFreeHeap());
+    s.println(Hal::Board::getFreeHeap());
   }
   else if (std::strcmp(cmd.args[0], "get") == 0)
   {
@@ -1914,7 +1915,7 @@ void Cli::printVersion(Stream::Printer& s) const
 void Cli::printStats(Stream::Printer& s) const
 {
   s.print("    cpu freq: ");
-  s.print(targetCpuFreq());
+  s.print(Hal::Board::getCpuFreq());
   s.println(" MHz");
 
   s.print("  gyro clock: ");

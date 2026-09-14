@@ -51,9 +51,8 @@
 #define ESPFC_WIFI_ALT
 #define ESPFC_ESPNOW
 
-#include <uart.h>
 #include <cstddef>
-#include <cstdint>
+#include <uart.h>
 
 namespace Espfc {
 
@@ -61,29 +60,5 @@ constexpr size_t targetSerialTxBufferSize()
 {
   return UART_TX_FIFO_SIZE;
 }
-
-template<typename T>
-inline int targetSPIInit(T& dev, int8_t sck, int8_t mosi, int8_t miso, int8_t ss)
-{
-  dev.pins(sck, miso, mosi, ss);
-  dev.begin();
-  return 1;
-}
-
-template<typename T>
-inline int targetI2CInit(T& dev, int8_t sda, int8_t scl, uint32_t speed)
-{
-  dev.begin(sda, scl, speed);
-  return 1;
-}
-
-uint32_t getBoardId0();
-uint32_t getBoardId1();
-uint32_t getBoardId2();
-
-void targetReset();
-
-uint32_t targetCpuFreq();
-uint32_t targetFreeHeap();
 
 } // namespace Espfc

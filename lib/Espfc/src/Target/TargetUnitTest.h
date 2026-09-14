@@ -39,30 +39,3 @@ constexpr size_t targetSerialTxBufferSize()
 {
   return 0xff;
 }
-
-inline void targetReset() {}
-
-inline uint32_t getBoardId0()
-{
-  return 0;
-}
-
-inline uint32_t getBoardId1()
-{
-  return 0;
-}
-
-inline uint32_t getBoardId2()
-{
-  return 0;
-}
-
-inline uint32_t targetCpuFreq()
-{
-  return 1;
-}
-
-inline uint32_t targetFreeHeap()
-{
-  return 1;
-}
