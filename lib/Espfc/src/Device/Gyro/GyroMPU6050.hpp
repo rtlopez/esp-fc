@@ -3,8 +3,8 @@
 // https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050.cpp#L1501
 // https://github.com/guywithaview/Arduino-Test/blob/master/GY87/GY87.ino
 
-#include "Hal/BusDevice.hpp"
 #include "Device/GyroDevice.hpp"
+#include "Hal/BusDevice.hpp"
 #include "helper_3dmath.hpp"
 
 namespace Espfc::Device::Gyro {
