@@ -1,4 +1,5 @@
 #include "Connect/MspProcessor.hpp"
+#include "Hal/Board.hpp"
 #include "Hardware.h"
 #include "Model.h"
 #include "ModelConfig.h"
@@ -278,9 +279,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       break;
 
     case MSP_UID:
-      r.writeU32(getBoardId0());
-      r.writeU32(getBoardId1());
-      r.writeU32(getBoardId2());
+      r.writeU32(Hal::Board::getId0());
+      r.writeU32(Hal::Board::getId1());
+      r.writeU32(Hal::Board::getId2());
       break;
 
     case MSP_STATUS_EX:

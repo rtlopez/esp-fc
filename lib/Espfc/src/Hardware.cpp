@@ -15,6 +15,7 @@
 #include "Device/Mag/MagHMC5883L.hpp"
 #include "Device/Mag/MagQMC5883L.hpp"
 #include "Device/Mag/MagQMC5883P.hpp"
+#include "Hal/Board.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
 #if defined(ESPFC_WIFI_ALT)
@@ -211,7 +212,7 @@ void Hardware::restart(const Model& model)
   WiFi.softAPdisconnect();
 #endif
   delay(100);
-  targetReset();
+  Hal::Board::reset();
 }
 
 } // namespace Espfc
