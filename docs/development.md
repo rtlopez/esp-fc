@@ -87,6 +87,7 @@ Go to your fork on GitHub and click Compare & pull request. Add a clear title an
 
 1. Provide clear change description with reasoning what type of problem you are trying to resolve
 2. Provide evidence that feature you deliver works as expected and do not breaks any existing functionality
-3. Ensure that unittests are passing and static alanysis tools do not report any errors
-4. Avoid commiting unnecesary changes
-5. Untested changes will not be accepted
+3. In PR address only one problem or feature
+4. Ensure that unittests are passing and static alanysis tools do not report any errors
+5. Avoid commiting unnecesary changes
+6. Untested changes will not be accepted
