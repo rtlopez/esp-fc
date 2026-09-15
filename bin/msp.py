@@ -2,9 +2,9 @@
 # Requires pyserial: install with `python3 -m pip install pyserial`
 # On Ubuntu you can also install it with `sudo apt install python3-serial`
 import argparse
-from dataclasses import dataclass
 import sys
 import time
+from dataclasses import dataclass
 
 import serial
 
@@ -32,6 +32,7 @@ MSP_TYPE_REPLY = 1
 
 MSP_V1 = 0
 MSP_V2 = 1
+
 
 @dataclass
 class ParsedFrame:
@@ -75,7 +76,7 @@ class MspParser:
         c = byte & 0xFF
 
         if self.state == MSP_STATE_IDLE:
-            if c == ord('$'):
+            if c == ord("$"):
                 self.raw = bytearray((c,))
                 self.state = MSP_STATE_HEADER_START
             return None
@@ -86,10 +87,10 @@ class MspParser:
             self.checksum2 = 0
             self.buffer = bytearray()
             self.raw.append(c)
-            if c == ord('M'):
+            if c == ord("M"):
                 self.version = MSP_V1
                 self.state = MSP_STATE_HEADER_M
-            elif c == ord('X'):
+            elif c == ord("X"):
                 self.version = MSP_V2
                 self.state = MSP_STATE_HEADER_X
             else:
@@ -98,15 +99,15 @@ class MspParser:
 
         if self.state == MSP_STATE_HEADER_M:
             self.raw.append(c)
-            if c == ord('>'):
+            if c == ord(">"):
                 self.direction = MSP_TYPE_REPLY
                 self.frame_type = c
                 self.state = MSP_STATE_HEADER_V1
-            elif c == ord('<'):
+            elif c == ord("<"):
                 self.direction = MSP_TYPE_CMD
                 self.frame_type = c
                 self.state = MSP_STATE_HEADER_V1
-            elif c == ord('!'):
+            elif c == ord("!"):
                 self.direction = MSP_TYPE_REPLY
                 self.frame_type = c
                 self.state = MSP_STATE_HEADER_V1
@@ -116,15 +117,15 @@ class MspParser:
 
         if self.state == MSP_STATE_HEADER_X:
             self.raw.append(c)
-            if c == ord('>'):
+            if c == ord(">"):
                 self.direction = MSP_TYPE_REPLY
                 self.frame_type = c
                 self.state = MSP_STATE_HEADER_V2
-            elif c == ord('<'):
+            elif c == ord("<"):
                 self.direction = MSP_TYPE_CMD
                 self.frame_type = c
                 self.state = MSP_STATE_HEADER_V2
-            elif c == ord('!'):
+            elif c == ord("!"):
                 self.direction = MSP_TYPE_REPLY
                 self.frame_type = c
                 self.state = MSP_STATE_HEADER_V2
@@ -146,7 +147,11 @@ class MspParser:
                     self.cmd = self.buffer[1]
                     self.received = 0
                     self.buffer = bytearray()
-                    self.state = MSP_STATE_PAYLOAD_V1 if self.expected > 0 else MSP_STATE_CHECKSUM_V1
+                    self.state = (
+                        MSP_STATE_PAYLOAD_V1
+                        if self.expected > 0
+                        else MSP_STATE_CHECKSUM_V1
+                    )
             return None
 
         if self.state == MSP_STATE_PAYLOAD_V1:
@@ -194,7 +199,11 @@ class MspParser:
                     self.expected = size
                     self.received = 0
                     self.buffer = bytearray()
-                    self.state = MSP_STATE_PAYLOAD_V2 if self.expected > 0 else MSP_STATE_CHECKSUM_V2
+                    self.state = (
+                        MSP_STATE_PAYLOAD_V2
+                        if self.expected > 0
+                        else MSP_STATE_CHECKSUM_V2
+                    )
             return None
 
         if self.state == MSP_STATE_PAYLOAD_V2:
@@ -271,11 +280,13 @@ class RequestFrame:
 
 def build_request(cmd: int) -> RequestFrame:
     if cmd <= 0xFF:
-        header = bytes((ord('$'), ord('M'), ord('<'), 0, cmd))
+        header = bytes((ord("$"), ord("M"), ord("<"), 0, cmd))
         checksum = 0 ^ header[3] ^ header[4]
         return RequestFrame(MSP_V1, header, b"", checksum)
 
-    header = bytes((ord('$'), ord('X'), ord('<'), 0, cmd & 0xFF, (cmd >> 8) & 0xFF, 0, 0))
+    header = bytes(
+        (ord("$"), ord("X"), ord("<"), 0, cmd & 0xFF, (cmd >> 8) & 0xFF, 0, 0)
+    )
     checksum = 0
     for value in header[3:8]:
         checksum = crc8_dvb_s2(checksum, value)
@@ -288,14 +299,20 @@ def read_response(ser: serial.Serial, expected_cmd: int, timeout: float) -> Pars
     while True:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise TimeoutError(f"timeout waiting for response to message {expected_cmd}")
+            raise TimeoutError(
+                f"timeout waiting for response to message {expected_cmd}"
+            )
         ser.timeout = max(0.0, min(remaining, 0.2))
         chunk = ser.read(256)
         if not chunk:
             continue
         for byte in chunk:
             frame = parser.feed(byte)
-            if frame and frame.direction == MSP_TYPE_REPLY and frame.cmd == expected_cmd:
+            if (
+                frame
+                and frame.direction == MSP_TYPE_REPLY
+                and frame.cmd == expected_cmd
+            ):
                 return frame
 
 
@@ -330,9 +347,19 @@ def format_header(header: bytes) -> str:
 
 def print_frame_parts(request: RequestFrame, response: ParsedFrame) -> None:
     marker = response_marker(response)
-    print("<", format_header(request.header), "..", format_bytes(bytes((request.checksum,))))
+    print(
+        "<",
+        format_header(request.header),
+        "..",
+        format_bytes(bytes((request.checksum,))),
+    )
     print("<", format_bytes(request.payload))
-    print(marker, format_header(response.header), "..", format_bytes(bytes((response.checksum,))))
+    print(
+        marker,
+        format_header(response.header),
+        "..",
+        format_bytes(bytes((response.checksum,))),
+    )
     print(marker, format_bytes(response.payload))
 
 

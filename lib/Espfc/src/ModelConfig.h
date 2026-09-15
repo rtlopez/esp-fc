@@ -1012,10 +1012,8 @@ class ModelConfig
       wireless.pass[0] = 0;
       modelName[0] = 0;
 
-// only local development settings
-#if !defined(ESPFC_REVISION)
+      // only local development settings
       devPreset();
-#endif
     }
 
     void devPreset()

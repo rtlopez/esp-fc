@@ -46,7 +46,7 @@
 #endif
 
 #ifndef ESPFC_VERSION
-#define ESPFC_VERSION v0.0.0
+#define ESPFC_VERSION v0.3.0-dev
 #endif
 
 #define MAX_SUPPORTED_MOTORS 8
@@ -77,7 +77,6 @@ extern const char * const buildDate;  // "MMM DD YYYY" MMM = Jan/Feb/...
 #define BUILD_TIME_LENGTH 8
 extern const char * const buildTime;  // "HH:MM:SS"
 
-extern const char * pidnames;
 extern const char * const targetVersion;
 extern const char * flightControllerIdentifier;
 extern const char * boardIdentifier;
