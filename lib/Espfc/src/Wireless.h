@@ -1,47 +1,41 @@
 #pragma once
 
-#include "Model.h"
 #include "Device/SerialDeviceAdapter.h"
+#include "Hal/Wifi.hpp"
+#include "Model.h"
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
-#if defined(ESPFC_WIFI_ALT)
-#include <ESP8266WiFi.h>
-#elif defined(ESPFC_WIFI)
-#include <WiFi.h>
-#endif
 
 namespace Espfc {
 
-class Wireless
+class Wireless : public Hal::WifiListener
 {
-  enum Status {
+  enum Status
+  {
     STOPPED,
     STARTED,
   };
-  public:
-    Wireless(Model& model);
 
-    int begin();
-    int update();
+public:
+  Wireless(Model& model);
 
-    void startAp();
-    int connect();
-    void wifiEventConnected(const String& ssid, int channel);
-    void wifiEventApConnected(const uint8_t* mac);
-    void wifiEventGotIp(const IPAddress& ip);
-    void wifiEventDisconnected();
+  int begin();
+  int update();
 
-  private:
-    Model& _model;
-    Status _status;
-    WiFiServer _server;
-    WiFiClient _client;
-    Device::SerialDeviceAdapter<WiFiClient> _adapter;
-#ifdef ESPFC_WIFI_ALT
-    WiFiEventHandler _events[4];
-#endif
+  void startAp();
+  int connect();
+
+  void onStaConnected(const char* ssid, int channel) override;
+  void onStaGotIp(const char* ip) override;
+  void onStaDisconnected() override;
+  void onApStaConnected(const uint8_t* mac) override;
+
+private:
+  Model& _model;
+  Status _status;
+  Device::SerialDeviceAdapter<Hal::WifiClient> _adapter;
 };
 
-}
+} // namespace Espfc
 
 #endif

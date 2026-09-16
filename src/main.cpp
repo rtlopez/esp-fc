@@ -14,12 +14,6 @@
 #if defined(ESPFC_ESPNOW)
 #include <EspNowRcLink/Receiver.h>
 #endif
-#ifdef ESPFC_WIFI_ALT
-#include <ESP8266WiFi.h>
-#elif defined(ESPFC_WIFI)
-#include <WiFi.h>
-#endif
-
 #ifdef ESP32
 void IRAM_ATTR serialEventRun(void) {}
 #endif

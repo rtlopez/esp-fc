@@ -48,7 +48,6 @@
 #define ESPFC_GYRO_I2C_RATE_MAX 1000
 #define ESPFC_GYRO_SPI_RATE_MAX 1000
 
-#define ESPFC_WIFI_ALT
 #define ESPFC_ESPNOW
 
 #include <cstddef>

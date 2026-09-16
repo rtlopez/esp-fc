@@ -1,6 +1,7 @@
 #include "Connect/Cli.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Hal/Board.hpp"
+#include "Hal/Wifi.hpp"
 #include "Hardware.h"
 #include "ModelConfig.h"
 #include "Utils/Filter.h"
@@ -15,12 +16,6 @@
 
 #ifdef USE_FLASHFS
 #include "Device/FlashDevice.h"
-#endif
-
-#if defined(ESPFC_WIFI_ALT)
-#include <ESP8266WiFi.h>
-#elif defined(ESPFC_WIFI)
-#include <WiFi.h>
 #endif
 
 #ifdef ESPFC_FREE_RTOS
@@ -1009,28 +1004,29 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     printVersion(s);
     s.println();
   }
-#if defined(ESPFC_WIFI) || defined(ESPFC_WIFI_ALT)
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
   else if (std::strcmp(cmd.args[0], "wifi") == 0)
   {
+    Hal::WifiStatus status;
+    Hal::Wifi::getStatus(status);
     s.print("ST IP4: tcp://");
-    s.print(WiFi.localIP().toString().c_str());
+    s.print(status.staIp);
     s.print(":");
     s.println(_model.config.wireless.port);
     s.print("ST MAC: ");
-    s.println(WiFi.macAddress().c_str());
+    s.println(status.staMac);
     s.print("AP IP4: tcp://");
-    s.print(WiFi.softAPIP().toString().c_str());
+    s.print(status.apIp);
     s.print(":");
     s.println(_model.config.wireless.port);
     s.print("AP MAC: ");
-    s.println(WiFi.softAPmacAddress().c_str());
+    s.println(status.apMac);
     s.print("STATUS: ");
-    s.println(WiFi.status());
+    s.println(status.state);
     s.print("  MODE: ");
-    s.println(WiFi.getMode());
+    s.println((int)status.mode);
     s.print("CHANNEL: ");
-    s.println(WiFi.channel());
-    // WiFi.printDiag(s);
+    s.println(status.channel);
   }
 #endif
 #if defined(ESPFC_FREE_RTOS)
