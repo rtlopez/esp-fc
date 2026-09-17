@@ -3,6 +3,7 @@
 #include "Hal/Board.hpp"
 #include <Arduino.h>
 #include <Esp.h>
+#include <user_interface.h>
 
 namespace Espfc::Hal {
 
@@ -36,6 +37,34 @@ void Board::reset()
   ESP.reset();
   while (1)
   {
+  }
+}
+
+ResetReason Board::getResetReason()
+{
+  const rst_info* resetInfo = system_get_rst_info();
+  if (!resetInfo)
+  {
+    return ResetReason::UNKNOWN;
+  }
+
+  switch (resetInfo->reason)
+  {
+    case REASON_DEFAULT_RST:
+      return ResetReason::POWER_ON;
+    case REASON_EXT_SYS_RST:
+      return ResetReason::EXTERNAL_RESET;
+    case REASON_SOFT_RESTART:
+      return ResetReason::SOFTWARE;
+    case REASON_WDT_RST:
+    case REASON_SOFT_WDT_RST:
+      return ResetReason::WATCHDOG;
+    case REASON_EXCEPTION_RST:
+      return ResetReason::PANIC;
+    case REASON_DEEP_SLEEP_AWAKE:
+      return ResetReason::DEEP_SLEEP;
+    default:
+      return ResetReason::OTHER;
   }
 }
 

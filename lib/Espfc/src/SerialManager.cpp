@@ -3,9 +3,9 @@
 #include "Device/SerialDeviceAdapter.h"
 #include "Stream/Printer.hpp"
 #if defined(ESPFC_SERIAL_USB_REENUMERATE)
+#include "Hal/Board.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
-#include <esp_system.h>
 #include <soc/usb_serial_jtag_reg.h>
 #endif
 
@@ -31,11 +31,8 @@ static void reenumerateUsb()
 {
 #if defined(ESPFC_SERIAL_USB_REENUMERATE)
 
-  esp_reset_reason_t reason = esp_reset_reason();
-
   // Reenumerate USB only after crash / WDT / soft reset
-  if (reason == ESP_RST_WDT || reason == ESP_RST_INT_WDT || reason == ESP_RST_PANIC || reason == ESP_RST_TASK_WDT ||
-      reason == ESP_RST_SW)
+  if (Hal::isUnexpectedReset(Hal::Board::getResetReason()))
   {
 
     // Disconnect pull-up and pull D+ line to ground

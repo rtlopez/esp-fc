@@ -21,6 +21,11 @@ uint32_t Board::getId2()
 
 void Board::reset() {}
 
+ResetReason Board::getResetReason()
+{
+  return ResetReason::UNKNOWN;
+}
+
 uint32_t Board::getCpuFreq()
 {
   return 1;

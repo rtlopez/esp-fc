@@ -31,6 +31,11 @@ void Board::reset()
   }
 }
 
+ResetReason Board::getResetReason()
+{
+  return ResetReason::UNKNOWN;
+}
+
 uint32_t Board::getCpuFreq()
 {
   return rp2040.f_cpu() / 1000000u;
