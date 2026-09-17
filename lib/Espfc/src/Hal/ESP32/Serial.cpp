@@ -2,6 +2,12 @@
 
 #include "Hal/Serial.hpp"
 #include <Arduino.h>
+#include <soc/soc_caps.h>
+#if defined(SOC_USB_SERIAL_JTAG_SUPPORTED) && SOC_USB_SERIAL_JTAG_SUPPORTED
+#include "Hal/Gpio.hpp"
+#include <soc/io_mux_reg.h>
+#include <soc/usb_serial_jtag_reg.h>
+#endif
 
 namespace {
 
@@ -174,6 +180,21 @@ SerialUsb* getSerialUsb()
 void SerialUsb::begin(const SerialDeviceConfig& conf)
 {
   Serial.begin(conf.baud);
+}
+
+void SerialUsb::reenumerate()
+{
+#if defined(SOC_USB_SERIAL_JTAG_SUPPORTED) && SOC_USB_SERIAL_JTAG_SUPPORTED
+  CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
+  Gpio::pinMode(USB_DP_GPIO_NUM, Gpio::Output);
+  Gpio::digitalWrite(USB_DP_GPIO_NUM, Gpio::Low);
+
+  delay(200);
+
+  Gpio::digitalWrite(USB_DP_GPIO_NUM, Gpio::High);
+  Gpio::pinMode(USB_DP_GPIO_NUM, Gpio::Input);
+  SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
+#endif
 }
 
 void SerialUsb::updateBaudRate(int baud)

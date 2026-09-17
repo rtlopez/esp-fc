@@ -158,6 +158,8 @@ void SerialUsb::begin(const SerialDeviceConfig& conf)
   Serial.begin(conf.baud);
 }
 
+void SerialUsb::reenumerate() {}
+
 void SerialUsb::updateBaudRate(int baud)
 {
   // noop

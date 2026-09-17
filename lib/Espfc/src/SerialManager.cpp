@@ -2,11 +2,8 @@
 #include "Debug_Espfc.h"
 #include "Device/SerialDeviceAdapter.h"
 #include "Stream/Printer.hpp"
-#if defined(ESPFC_SERIAL_USB_REENUMERATE)
+#if defined(ESPFC_SERIAL_USB_REENUMERATE) && defined(ESPFC_SERIAL_USB)
 #include "Hal/Board.hpp"
-#include "Hal/Gpio.hpp"
-#include "Hal/Time.hpp"
-#include <soc/usb_serial_jtag_reg.h>
 #endif
 
 #ifdef ESPFC_SERIAL_0
@@ -27,30 +24,6 @@ static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUsb> _usb(*Espfc::Ha
 
 namespace Espfc {
 
-static void reenumerateUsb()
-{
-#if defined(ESPFC_SERIAL_USB_REENUMERATE)
-
-  // Reenumerate USB only after crash / WDT / soft reset
-  if (Hal::isUnexpectedReset(Hal::Board::getResetReason()))
-  {
-
-    // Disconnect pull-up and pull D+ line to ground
-    CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
-    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, Hal::Gpio::Output);
-    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, Hal::Gpio::Low);
-
-    // Sufficient delay for USB host controller
-    delay(200);
-
-    // Restore USB state
-    Hal::Gpio::digitalWrite(ESPFC_SERIAL_USB_DP, Hal::Gpio::High);
-    Hal::Gpio::pinMode(ESPFC_SERIAL_USB_DP, Hal::Gpio::Input);
-    SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_DP_PULLUP);
-  }
-#endif
-}
-
 SerialManager::SerialManager(Model& model, TelemetryManager& telemetry)
     : _model(model), _current(0), _msp(model), _cli(model), _vtx(model), _telemetry(telemetry), _gps(model)
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
@@ -62,7 +35,12 @@ SerialManager::SerialManager(Model& model, TelemetryManager& telemetry)
 
 int SerialManager::begin()
 {
-  reenumerateUsb();
+#if defined(ESPFC_SERIAL_USB_REENUMERATE) && defined(ESPFC_SERIAL_USB)
+  if (Hal::isUnexpectedReset(Hal::Board::getResetReason()))
+  {
+    Hal::getSerialUsb()->reenumerate();
+  }
+#endif
 
   for (int i = 0; i < SERIAL_UART_COUNT; i++)
   {

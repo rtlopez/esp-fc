@@ -59,6 +59,7 @@ class SerialUsb
 {
 public:
   void begin(const SerialDeviceConfig& conf);
+  void reenumerate();
   void updateBaudRate(int baud);
   int available();
   int read();
