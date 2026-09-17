@@ -2,7 +2,7 @@
 
 #if defined(ARCH_RP2040)
 
-#include "Queue.h"
+#include "Queue.hpp"
 
 namespace Espfc {
 

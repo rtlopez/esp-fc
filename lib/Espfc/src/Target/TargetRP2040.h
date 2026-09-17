@@ -69,13 +69,3 @@
 #define ESPFC_GYRO_I2C_RATE_MAX 1000
 #define ESPFC_MULTI_CORE
 #define ESPFC_MULTI_CORE_RP2040
-
-#include <cstddef>
-namespace Espfc {
-
-constexpr size_t targetSerialTxBufferSize()
-{
-  return 256u;
-}
-
-} // namespace Espfc

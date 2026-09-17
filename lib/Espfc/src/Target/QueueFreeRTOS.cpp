@@ -1,8 +1,8 @@
 #include "Target.h"
 
-#ifdef ESPFC_FREE_RTOS_QUEUE
+#if defined(ESPFC_FREE_RTOS_QUEUE)
 
-#include "Queue.h"
+#include "Queue.hpp"
 
 namespace Espfc {
 

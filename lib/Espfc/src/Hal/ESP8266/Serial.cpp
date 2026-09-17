@@ -77,11 +77,6 @@ static inline uint32_t targetSerialConfigFlags(const SerialDeviceConfig& conf)
   return sc;
 }
 
-static constexpr size_t targetSerialTxBufferSize()
-{
-  return 0xFF;
-}
-
 void SerialUart::begin(const SerialDeviceConfig& conf)
 {
   uint32_t sc = targetSerialConfigFlags(conf);
@@ -148,6 +143,8 @@ void SerialUsb::begin(const SerialDeviceConfig& conf)
 {
   Serial.begin(conf.baud);
 }
+
+void SerialUsb::reenumerate() {}
 
 void SerialUsb::updateBaudRate(int baud)
 {

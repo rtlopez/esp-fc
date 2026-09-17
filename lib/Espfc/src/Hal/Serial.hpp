@@ -5,6 +5,18 @@
 
 namespace Espfc::Hal {
 
+#if defined(ESP32)
+static constexpr size_t SERIAL_TX_BUFFER_SIZE = 0xff;
+#elif defined(ESP8266)
+static constexpr size_t SERIAL_TX_BUFFER_SIZE = 0x80;
+#elif defined(ARCH_RP2040)
+static constexpr size_t SERIAL_TX_BUFFER_SIZE = 256;
+#elif defined(UNIT_TEST)
+static constexpr size_t SERIAL_TX_BUFFER_SIZE = 0xff;
+#else
+#error "Unsupported platform!"
+#endif
+
 enum SerialDeviceConfigParity : uint8_t
 {
   SDC_SERIAL_PARITY_NONE,
@@ -59,6 +71,7 @@ class SerialUsb
 {
 public:
   void begin(const SerialDeviceConfig& conf);
+  void reenumerate();
   void updateBaudRate(int baud);
   int available();
   int read();

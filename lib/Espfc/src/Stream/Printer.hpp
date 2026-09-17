@@ -127,7 +127,7 @@ public:
     return *_out;
   }
 
-  static constexpr size_t PRINTF_BUFF_SIZE = 128;
+  static constexpr size_t PRINTF_BUFF_SIZE = 256;
 
 private:
   // bytes is the width of the original argument, negative values are printed as two's complement of

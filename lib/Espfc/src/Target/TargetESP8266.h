@@ -49,15 +49,3 @@
 #define ESPFC_GYRO_SPI_RATE_MAX 1000
 
 #define ESPFC_ESPNOW
-
-#include <cstddef>
-#include <uart.h>
-
-namespace Espfc {
-
-constexpr size_t targetSerialTxBufferSize()
-{
-  return UART_TX_FIFO_SIZE;
-}
-
-} // namespace Espfc

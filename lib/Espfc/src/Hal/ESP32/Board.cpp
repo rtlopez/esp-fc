@@ -2,6 +2,7 @@
 
 #include "Hal/Board.hpp"
 #include <Esp.h>
+#include <esp_system.h>
 
 namespace Espfc::Hal {
 
@@ -27,6 +28,33 @@ void Board::reset()
   ESP.restart();
   while (1)
   {
+  }
+}
+
+ResetReason Board::getResetReason()
+{
+  switch (esp_reset_reason())
+  {
+    case ESP_RST_POWERON:
+      return ResetReason::POWER_ON;
+    case ESP_RST_EXT:
+      return ResetReason::EXTERNAL_RESET;
+    case ESP_RST_SW:
+      return ResetReason::SOFTWARE;
+    case ESP_RST_PANIC:
+      return ResetReason::PANIC;
+    case ESP_RST_INT_WDT:
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_WDT:
+      return ResetReason::WATCHDOG;
+    case ESP_RST_DEEPSLEEP:
+      return ResetReason::DEEP_SLEEP;
+    case ESP_RST_BROWNOUT:
+      return ResetReason::BROWNOUT;
+    case ESP_RST_UNKNOWN:
+      return ResetReason::UNKNOWN;
+    default:
+      return ResetReason::OTHER;
   }
 }
 

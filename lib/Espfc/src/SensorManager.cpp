@@ -1,4 +1,5 @@
 #include "SensorManager.h"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-
 #define ESPFC_INPUT
 #define ESPFC_INPUT_PIN 0
 
@@ -34,8 +31,3 @@
 #define ESPFC_BUZZER_PIN -1
 #define ESPFC_BUTTON_PIN -1
 #define ESPFC_LED_PIN -1
-
-constexpr size_t targetSerialTxBufferSize()
-{
-  return 0xff;
-}

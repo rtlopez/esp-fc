@@ -2,7 +2,8 @@
 
 #if defined(UNIT_TEST) || !defined(ESPFC_MULTI_CORE)
 
-#include "Queue.h"
+#include "Queue.hpp"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 
