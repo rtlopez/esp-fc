@@ -110,16 +110,11 @@ static inline uint32_t targetSerialConfigFlags(const Hal::SerialDeviceConfig& co
   return sc;
 }
 
-static constexpr size_t targetSerialTxBufferSize()
-{
-  return 0xFF;
-}
-
 void SerialUart::begin(const SerialDeviceConfig& conf)
 {
   uint32_t sc = targetSerialConfigFlags(conf);
   getPort(_index).end();
-  getPort(_index).setTxBufferSize(targetSerialTxBufferSize());
+  getPort(_index).setTxBufferSize(SERIAL_TX_BUFFER_SIZE);
   getPort(_index).begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
 }
 

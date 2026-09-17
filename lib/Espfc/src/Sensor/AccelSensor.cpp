@@ -1,4 +1,5 @@
 #include "Sensor/AccelSensor.hpp"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc::Sensor {
 

@@ -1,7 +1,7 @@
 #if defined(ESP32)
 
 #include "Hal/Wifi.hpp"
-#include "Target/Target.h"
+#include "Hal/Serial.hpp"
 #include <WiFi.h>
 #include <algorithm>
 #include <cstring>
@@ -181,7 +181,7 @@ size_t WifiClient::write(const uint8_t* c, size_t l)
 
 int WifiClient::availableForWrite()
 {
-  return static_cast<int>(targetSerialTxBufferSize());
+  return SERIAL_TX_BUFFER_SIZE;
 }
 
 bool WifiClient::isTxFifoEmpty()

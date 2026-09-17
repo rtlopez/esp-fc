@@ -2,6 +2,7 @@
 #include "Debug_Espfc.h"
 #include "Device/SerialDeviceAdapter.h"
 #include "Stream/Printer.hpp"
+#include "Utils/MemoryHelper.h"
 #if defined(ESPFC_SERIAL_USB_REENUMERATE) && defined(ESPFC_SERIAL_USB)
 #include "Hal/Board.hpp"
 #endif

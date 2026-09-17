@@ -1,4 +1,5 @@
 #include "Wireless.h"
+#include <cstdio>
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 

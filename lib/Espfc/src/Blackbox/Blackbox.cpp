@@ -1,6 +1,7 @@
 #include "Blackbox.h"
 #include "BlackboxBridge.h"
 #include "Utils/Math.hpp"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc::Blackbox {
 

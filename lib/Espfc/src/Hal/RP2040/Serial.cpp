@@ -65,11 +65,6 @@ static inline uint16_t targetSerialConfigFlags(const Hal::SerialDeviceConfig& co
   return flags;
 }
 
-static constexpr size_t targetSerialTxBufferSize()
-{
-  return 256u;
-}
-
 static SerialDeviceConfig _configs[NUM_UARTS];
 
 void SerialUart::begin(const SerialDeviceConfig& conf)
@@ -77,7 +72,7 @@ void SerialUart::begin(const SerialDeviceConfig& conf)
   _configs[_index] = conf;
   auto& p = getPort(_index);
   uint16_t sc = targetSerialConfigFlags(conf);
-  p.setFIFOSize(targetSerialTxBufferSize());
+  p.setFIFOSize(SERIAL_TX_BUFFER_SIZE);
   p.setPinout(conf.tx_pin, conf.rx_pin);
   if (conf.inverted)
   {

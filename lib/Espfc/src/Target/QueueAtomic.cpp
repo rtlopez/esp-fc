@@ -2,7 +2,8 @@
 
 #if defined(ESPFC_ATOMIC_QUEUE)
 
-#include "Queue.h"
+#include "Queue.hpp"
+#include "Utils/MemoryHelper.h"
 
 namespace Espfc {
 

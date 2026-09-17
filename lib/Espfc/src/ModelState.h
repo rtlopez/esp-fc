@@ -1,10 +1,6 @@
 #ifndef _ESPFC_MODEL_STATE_H_
 #define _ESPFC_MODEL_STATE_H_
 
-#ifndef UNIT_TEST
-#include <IPAddress.h>
-#endif
-
 #include <helper_3dmath.hpp>
 #include <Kalman.hpp>
 
@@ -16,6 +12,7 @@
 #include "Connect/Msp.hpp"
 #include "Connect/StatusLed.hpp"
 #include "Stream/ReadWritable.hpp"
+#include "Target/Queue.hpp"
 #include "Utils/SeqLockWrapper.hpp"
 
 namespace Espfc {
