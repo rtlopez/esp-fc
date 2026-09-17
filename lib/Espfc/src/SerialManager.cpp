@@ -4,6 +4,7 @@
 #include "Stream/Printer.hpp"
 #if defined(ESPFC_SERIAL_USB_REENUMERATE)
 #include "Hal/Gpio.hpp"
+#include "Hal/Time.hpp"
 #include <esp_system.h>
 #include <soc/usb_serial_jtag_reg.h>
 #endif

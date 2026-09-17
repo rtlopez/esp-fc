@@ -18,11 +18,7 @@
 #include "Hal/Board.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
-#if defined(ESPFC_WIFI_ALT)
-#include <ESP8266WiFi.h>
-#elif defined(ESPFC_WIFI)
-#include <WiFi.h>
-#endif
+#include "Hal/Wifi.hpp"
 
 namespace {
 static Espfc::Device::BusSlave gyroSlaveBus;
@@ -208,8 +204,7 @@ void Hardware::restart(const Model& model)
   if (model.state.mixer.escMotor) model.state.mixer.escMotor->end();
   if (model.state.mixer.escServo) model.state.mixer.escServo->end();
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
-  WiFi.disconnect();
-  WiFi.softAPdisconnect();
+  Hal::Wifi::stop();
 #endif
   delay(100);
   Hal::Board::reset();
