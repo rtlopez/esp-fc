@@ -15,7 +15,7 @@
 #include <platform.h>
 
 #ifdef USE_FLASHFS
-#include "Device/FlashDevice.h"
+#include "Hal/Flash.hpp"
 #endif
 
 #ifdef ESPFC_FREE_RTOS
@@ -1660,7 +1660,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     }
     else if (std::strcmp(cmd.args[1], "partitions") == 0)
     {
-      Device::FlashDevice::partitions(s);
+      Hal::Flash::printPartitions(s);
     }
     else if (std::strcmp(cmd.args[1], "journal") == 0)
     {
