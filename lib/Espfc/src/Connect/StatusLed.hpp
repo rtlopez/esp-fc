@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Hal/RgbLed.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -37,6 +38,7 @@ private:
   bool _state;
   size_t _step;
   int* _pattern;
+  Hal::RgbLed _rgb;
 };
 
 } // namespace Espfc::Connect
