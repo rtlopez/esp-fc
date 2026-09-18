@@ -1,7 +1,7 @@
 #include "Utils/Stats.h"
 
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
 
 #include <algorithm>
 #include <cstddef>

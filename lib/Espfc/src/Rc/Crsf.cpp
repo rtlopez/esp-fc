@@ -1,7 +1,7 @@
 #include "Crsf.h"
+#include "Hal/FastCode.hpp"
 #include "Utils/Crc.hpp"
-#include "Utils/Math.hpp"
-#include "Utils/MemoryHelper.h"
+#include <algorithm>
 #include <cstring>
 
 namespace Espfc::Rc {

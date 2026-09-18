@@ -1,7 +1,7 @@
 #if defined(ESP8266)
 
 #include "Hal/Gpio.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 #include <Arduino.h>
 
 namespace Espfc::Hal {

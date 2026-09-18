@@ -1,6 +1,6 @@
 #include "Pid.h"
+#include "Hal/FastCode.hpp"
 #include "Utils/Math.hpp"
-#include "Utils/MemoryHelper.h"
 #include <algorithm>
 
 namespace Espfc::Control {

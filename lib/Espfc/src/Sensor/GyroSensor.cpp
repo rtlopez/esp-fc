@@ -1,8 +1,8 @@
 
 #include "Sensor/GyroSensor.hpp"
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
 #include "Utils/FilterHelper.h"
-#include "Utils/MemoryHelper.h"
 #include "Utils/Sma.ipp"
 #ifdef ESPFC_DSP
 #include "Utils/FFTAnalyzer.ipp"

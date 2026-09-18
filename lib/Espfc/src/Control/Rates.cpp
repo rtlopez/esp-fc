@@ -1,5 +1,5 @@
 #include "Rates.h"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc::Control {
 

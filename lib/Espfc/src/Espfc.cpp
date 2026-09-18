@@ -1,7 +1,7 @@
 #include "Espfc.h"
 #include "Debug_Espfc.h"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc {
 

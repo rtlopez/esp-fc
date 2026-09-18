@@ -1,7 +1,7 @@
 #if defined(ESP8266)
 
 #include "Hal/BusI2C.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 #include <Arduino.h>
 #include <EspWire.h>
 

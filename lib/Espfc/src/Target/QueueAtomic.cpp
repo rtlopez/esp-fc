@@ -2,20 +2,16 @@
 
 #if defined(ESPFC_ATOMIC_QUEUE)
 
+#include "Hal/FastCode.hpp"
 #include "Queue.hpp"
-#include "Utils/MemoryHelper.h"
 
-namespace Espfc {
+namespace Espfc::Target {
 
-namespace Target {
-
-void Queue::begin()
-{
-}
+void Queue::begin() {}
 
 void FAST_CODE_ATTR Queue::send(const Event& e)
 {
-  if(isFull()) return;
+  if (isFull()) return;
   _q.push(e);
 }
 
@@ -36,8 +32,6 @@ bool FAST_CODE_ATTR Queue::isFull() const
   return _q.isFull();
 }
 
-}
-
-}
+} // namespace Espfc::Target
 
 #endif

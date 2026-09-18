@@ -1,7 +1,7 @@
 #include "Control/Controller.h"
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
 #include "Utils/Math.hpp"
-#include "Utils/MemoryHelper.h"
 #include <algorithm>
 
 namespace Espfc::Control {

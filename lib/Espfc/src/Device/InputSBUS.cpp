@@ -1,6 +1,6 @@
 #include "InputSBUS.h"
 #include <algorithm>
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc {
 

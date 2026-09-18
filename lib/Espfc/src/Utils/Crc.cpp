@@ -1,5 +1,5 @@
 #include "Utils/Crc.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc::Utils {
 

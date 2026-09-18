@@ -1,7 +1,7 @@
 #include "GyroBMI160.hpp"
 
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
 
 #define BMI160_ADDRESS_FIRST 0x69
 #define BMI160_ADDRESS_SECOND 0x68

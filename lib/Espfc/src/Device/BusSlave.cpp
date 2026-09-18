@@ -1,6 +1,6 @@
 #include "BusSlave.hpp"
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
 
 #define MPU6050_I2C_SLV0_ADDR 0x25
 #define MPU6050_I2C_SLV0_REG 0x26

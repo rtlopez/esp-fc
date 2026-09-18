@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Model.h"
-#include "Stream/ReadWritable.hpp"
 #include "Rc/Crsf.h"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/Math.hpp"
 #include <algorithm>
 
@@ -14,7 +14,8 @@ namespace Espfc {
 
 namespace Telemetry {
 
-enum TelemetryState {
+enum TelemetryState
+{
   CRSF_TELEMETRY_STATE_ATTI,
   CRSF_TELEMETRY_STATE_BAT,
   CRSF_TELEMETRY_STATE_FM,
@@ -36,7 +37,7 @@ public:
   int process(Stream::ReadWritable& s) const
   {
     Rc::CrsfMessage f;
-    switch(_current)
+    switch (_current)
     {
       case CRSF_TELEMETRY_STATE_ATTI:
         attitude(f);
@@ -52,7 +53,8 @@ public:
         flightMode(f);
         send(f, s);
         // If no GPS don't waste time sending empty messages
-        _current = _model.gpsActive() ? CRSF_TELEMETRY_STATE_GPS : (_model.baroActive() ? CRSF_TELEMETRY_STATE_BARO : CRSF_TELEMETRY_STATE_HB);
+        _current = _model.gpsActive() ? CRSF_TELEMETRY_STATE_GPS
+                                      : (_model.baroActive() ? CRSF_TELEMETRY_STATE_BARO : CRSF_TELEMETRY_STATE_HB);
         break;
       case CRSF_TELEMETRY_STATE_GPS:
         gps(f);
@@ -65,7 +67,7 @@ public:
         send(f, s);
         _current = CRSF_TELEMETRY_STATE_HB;
         break;
-      default:    // In case of an invalid state, send heartbeat and continue loop
+      default: // In case of an invalid state, send heartbeat and continue loop
         heartbeat(f);
         send(f, s);
         _current = CRSF_TELEMETRY_STATE_ATTI;
@@ -88,7 +90,7 @@ public:
       beg = Rc::Crsf::encodeMspData(frame, origin, version, _seq++, !iter, beg, end);
       send(frame, s);
       iter++;
-    } while(beg != end && iter < 4);
+    } while (beg != end && iter < 4);
 
     return iter;
   }
@@ -100,8 +102,8 @@ public:
 
   int16_t toAngle(float angle) const
   {
-    if(angle < -Utils::pi()) angle += Utils::twoPi();
-    if(angle >  Utils::pi()) angle -= Utils::twoPi();
+    if (angle < -Utils::pi()) angle += Utils::twoPi();
+    if (angle > Utils::pi()) angle -= Utils::twoPi();
     return lrintf(angle * 10000);
   }
 
@@ -143,11 +145,11 @@ public:
   {
     msg.prepare(Rc::CRSF_FRAMETYPE_FLIGHT_MODE);
 
-    if(_model.armingDisabled()) msg.writeString("!DIS");
-    if(_model.isModeActive(MODE_FAILSAFE)) msg.writeString("!FS,");
-    if(_model.isModeActive(MODE_ARMED)) msg.writeString("ARM,");
-    if(_model.isModeActive(MODE_AIRMODE)) msg.writeString("AIR,");
-    if(_model.isModeActive(MODE_ANGLE)) msg.writeString("STAB,");
+    if (_model.armingDisabled()) msg.writeString("!DIS");
+    if (_model.isModeActive(MODE_FAILSAFE)) msg.writeString("!FS,");
+    if (_model.isModeActive(MODE_ARMED)) msg.writeString("ARM,");
+    if (_model.isModeActive(MODE_AIRMODE)) msg.writeString("AIR,");
+    if (_model.isModeActive(MODE_ANGLE)) msg.writeString("STAB,");
     msg.writeU8(0);
 
     msg.finalize();
@@ -157,11 +159,12 @@ public:
   {
     msg.prepare(Rc::CRSF_FRAMETYPE_GPS);
 
-    msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lat)); // deg * 1e7
-    msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lon)); // deg * 1e7
+    msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lat));                             // deg * 1e7
+    msg.writeU32(Utils::toBigEndian32(_model.state.gps.location.raw.lon));                             // deg * 1e7
     msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.groundSpeed * 36 + 500) / 1000)); // in km/h * 10
-    msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.heading + 500) / 1000)); // deg * 10
-    uint16_t altitude = std::clamp((_model.state.gps.location.raw.height + 500) / 1000, (int32_t)-900, (int32_t)5000) + 1000; // m
+    msg.writeU16(Utils::toBigEndian16((_model.state.gps.velocity.raw.heading + 500) / 1000));          // deg * 10
+    uint16_t altitude =
+        std::clamp((_model.state.gps.location.raw.height + 500) / 1000, (int32_t)-900, (int32_t)5000) + 1000; // m
     msg.writeU16(Utils::toBigEndian16(altitude));
     msg.writeU8(_model.state.gps.numSats);
 
@@ -174,8 +177,9 @@ public:
     msg.prepare(Rc::CRSF_FRAMETYPE_BARO_ALTITUDE);
 
     // Send barometer data
-    msg.writeU16(Utils::toBigEndian16((_model.state.baro.altitude * 10.0f) + 10000 )); // (dm + 10000) or (m + 0 | 0x8000)
-    msg.writeU16(Utils::toBigEndian16(_model.state.baro.vario * 100.0f)); // cm
+    msg.writeU16(
+        Utils::toBigEndian16((_model.state.baro.altitude * 10.0f) + 10000)); // (dm + 10000) or (m + 0 | 0x8000)
+    msg.writeU16(Utils::toBigEndian16(_model.state.baro.vario * 100.0f));    // cm
 
     msg.finalize();
   }
@@ -196,6 +200,6 @@ private:
   uint8_t _seq = 0;
 };
 
-}
+} // namespace Telemetry
 
-}
+} // namespace Espfc

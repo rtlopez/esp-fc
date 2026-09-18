@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Espfc::Device::Input {
 
 class InputButton
@@ -16,4 +14,4 @@ private:
   bool _triggerLow = true;
 };
 
-}
+} // namespace Espfc::Device::Input

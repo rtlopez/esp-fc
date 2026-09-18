@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "InputCRSF.h"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc::Device {
 

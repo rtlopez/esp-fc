@@ -1,7 +1,7 @@
 #include "GyroLSM6DSO.hpp"
 
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
 
 // https://github.com/arduino-libraries/Arduino_LSM6DSOX/blob/master/src/LSM6DSOX.cpp
 #define LSM6DSOX_ADDRESS_FIRST 0x6A

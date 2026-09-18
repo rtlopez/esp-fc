@@ -1,5 +1,5 @@
 #include "InputIBUS.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 #include <algorithm>
 
 namespace Espfc::Device

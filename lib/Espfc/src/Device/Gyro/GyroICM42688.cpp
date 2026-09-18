@@ -1,7 +1,7 @@
 #include "GyroICM42688.hpp"
 
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
 
 #define ICM42688_REG_WHO_AM_I 0x75
 #define ICM42688_REG_DEVICE_CONFIG 0x11
