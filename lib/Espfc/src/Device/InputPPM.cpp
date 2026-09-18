@@ -1,6 +1,6 @@
 #include "Device/InputPPM.h"
 #include <Arduino.h>
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc {
 

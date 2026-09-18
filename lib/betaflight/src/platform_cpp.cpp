@@ -2,7 +2,7 @@
 #include "EscDriver.h"
 #include "Hal/Gpio.hpp"
 #include "Stream/ReadWritable.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 #include <cstring>
 
 int IORead(IO_t pin)

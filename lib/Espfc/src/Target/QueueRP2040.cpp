@@ -15,8 +15,8 @@ void Queue::begin()
 
 void Queue::send(const Event& e)
 {
-  if(isFull()) return;
-  //Serial1.write((uint8_t)e.type);
+  if (isFull()) return;
+  // Serial1.write((uint8_t)e.type);
   queue_add_blocking(&_q, &e);
 }
 
@@ -37,8 +37,8 @@ bool Queue::isFull() const
   return queue_is_full(const_cast<TargetQueueHandle*>(&_q));
 }
 
-}
+} // namespace Target
 
-}
+} // namespace Espfc
 
 #endif

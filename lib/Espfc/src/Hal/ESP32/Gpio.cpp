@@ -1,7 +1,7 @@
 #if defined(ESP32)
 
 #include "Hal/Gpio.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 #include "hal/gpio_ll.h"
 #include <Arduino.h>
 

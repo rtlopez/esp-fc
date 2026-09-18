@@ -1,5 +1,5 @@
 #include "MagQMC5883P.hpp"
-#include <Arduino.h>
+#include "Hal/Time.hpp"
 
 #define QMC5883P_ADDRESS 0x2C
 #define QMC5883P_DEFAULT_ADDRESS 0x2C

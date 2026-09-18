@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Hal/BusDevice.hpp"
 #include "Device/MagDevice.hpp"
+#include "Hal/BusDevice.hpp"
 
 namespace Espfc::Device::Mag {
 

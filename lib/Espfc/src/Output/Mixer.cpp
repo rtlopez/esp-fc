@@ -1,7 +1,7 @@
 
 #include "Mixer.h"
+#include "Hal/FastCode.hpp"
 #include "Output/Mixers.h"
-#include "Utils/MemoryHelper.h"
 #include <algorithm>
 #include <platform.h>
 

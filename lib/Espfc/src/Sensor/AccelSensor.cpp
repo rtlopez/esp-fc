@@ -1,5 +1,5 @@
 #include "Sensor/AccelSensor.hpp"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc::Sensor {
 

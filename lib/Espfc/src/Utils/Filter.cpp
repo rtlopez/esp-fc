@@ -1,5 +1,5 @@
 #include "Utils/Filter.h"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 #include <algorithm>
 #include <cmath>
 

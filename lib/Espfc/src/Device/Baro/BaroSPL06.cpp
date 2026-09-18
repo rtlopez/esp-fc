@@ -1,5 +1,5 @@
 #include "BaroSPL06.hpp"
-#include <Arduino.h>
+#include "Hal/Time.hpp"
 
 namespace Espfc::Device::Baro {
 

@@ -1,5 +1,5 @@
 #include "FilterHelper.h"
-#include "MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc::Utils {
 

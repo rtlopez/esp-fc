@@ -1,7 +1,7 @@
 #if defined(ESP32) || defined(ESP8266)
 
 #include "InputEspNow.h"
-#include "Utils/MemoryHelper.h"
+#include "Hal/FastCode.hpp"
 
 namespace Espfc {
 

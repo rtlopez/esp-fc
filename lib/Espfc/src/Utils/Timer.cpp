@@ -1,6 +1,6 @@
 #include "Utils/Timer.h"
+#include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/MemoryHelper.h"
 
 namespace Espfc::Utils {
 

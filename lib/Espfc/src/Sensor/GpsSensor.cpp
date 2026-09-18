@@ -1,5 +1,5 @@
 #include "Sensor/GpsSensor.hpp"
-#include <Arduino.h>
+#include "Hal/Time.hpp"
 #include <Gps.hpp>
 #include <cmath>
 #include <cstdlib>
