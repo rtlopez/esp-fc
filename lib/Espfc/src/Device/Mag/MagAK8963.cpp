@@ -1,5 +1,5 @@
 #include "MagAK8963.hpp"
-#include <Arduino.h>
+#include "Hal/Time.hpp"
 
 #define AK8963_ADDRESS_FIRST 0x0C  // this device only has one address
 #define AK8963_ADDRESS_SECOND 0x0D // 0x0E and 0x0F also possible

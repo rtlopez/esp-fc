@@ -2,7 +2,6 @@
 #include "Utils/Crc.hpp"
 #include "Utils/Math.hpp"
 #include "Utils/MemoryHelper.h"
-#include <Arduino.h>
 #include <cstring>
 
 namespace Espfc::Rc {

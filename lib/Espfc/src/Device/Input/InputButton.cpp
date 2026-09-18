@@ -1,6 +1,5 @@
 #include "Device/Input/InputButton.hpp"
 #include "Hal/Gpio.hpp"
-#include <Arduino.h>
 #include <MultiButton.h>
 
 // https://github.com/poelstra/arduino-multi-button
