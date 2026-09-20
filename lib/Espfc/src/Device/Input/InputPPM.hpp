@@ -27,16 +27,15 @@ public:
 
 private:
   static constexpr size_t CHANNELS = 16;
-  static constexpr uint32_t BROKEN_LINK_US = 100000UL; // 100ms
 
   void handle();
   static void handle_isr(void* args);
 
-  volatile uint16_t _channels[CHANNELS];
-  volatile uint32_t _last_tick;
-  volatile uint8_t _channel;
-  volatile bool _new_data;
-  int8_t _pin;
+  volatile uint16_t _channels[CHANNELS] = {0};
+  volatile uint32_t _last_tick = 0;
+  volatile uint8_t _channel = 0;
+  volatile bool _new_data = false;
+  int8_t _pin = -1;
 };
 
 } // namespace Device::Input
