@@ -1,12 +1,12 @@
-#ifndef _ESPFC_DEVICE_INPUT_DEVICE_H_
-#define _ESPFC_DEVICE_INPUT_DEVICE_H_
+#pragma once
 
 #include <cstddef>
 #include <cstdint>
 
 namespace Espfc {
 
-enum InputStatus {
+enum InputStatus
+{
   INPUT_IDLE,
   INPUT_RECEIVED,
   INPUT_LOST,
@@ -17,16 +17,14 @@ namespace Device {
 
 class InputDevice
 {
-  public:
-    virtual InputStatus update() = 0;
-    virtual uint16_t get(uint8_t channel) const = 0;
-    virtual void get(uint16_t * data, size_t len) const = 0;
-    virtual size_t getChannelCount() const = 0;
-    virtual bool needAverage() const = 0;
+public:
+  virtual InputStatus update() = 0;
+  virtual uint16_t get(uint8_t channel) const = 0;
+  virtual void get(uint16_t* data, size_t len) const = 0;
+  virtual size_t getChannelCount() const = 0;
+  virtual bool needAverage() const = 0;
 };
 
-}
+} // namespace Device
 
-}
-
-#endif
+} // namespace Espfc

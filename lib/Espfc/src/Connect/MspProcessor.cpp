@@ -276,9 +276,9 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       r.writeData(shortGitRevision, GIT_SHORT_REVISION_LENGTH);
       // 1.46
       // build info flags
-      r.writeU16(4097);  // USE_SERIALRX_CRSF
-      r.writeU16(4102);  // USE_PPM
-      r.writeU16(4103);  // USE_SERIALRX_SBUS
+      r.writeU16(4097); // USE_SERIALRX_CRSF
+      r.writeU16(4102); // USE_PPM
+      r.writeU16(4103); // USE_SERIALRX_SBUS
 
       r.writeU16(16412); // USE_GPS
       r.writeU16(16415); // USE_MAG
