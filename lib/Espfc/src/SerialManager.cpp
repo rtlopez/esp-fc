@@ -176,25 +176,31 @@ int FAST_CODE_ATTR SerialManager::update()
   if (ss.stream && !(sc.functionMask & SERIAL_FUNCTION_RX_SERIAL))
   {
     Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
-    if (sc.functionMask & SERIAL_FUNCTION_MSP)
-    {
-      processMsp(ss);
-    }
+    
+    bool processed = false;
     if (sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
     {
       _telemetry.process(*ss.stream, TELEMETRY_PROTOCOL_TEXT);
+      processed = true;
     }
     if (sc.functionMask & SERIAL_FUNCTION_TELEMETRY_IBUS)
     {
       _ibus.update();
+      processed = true;
     }
     if (sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
     {
       _vtx.update();
+      processed = true;
     }
     if (sc.functionMask & SERIAL_FUNCTION_GPS)
     {
       _gps.update();
+      processed = true;
+    }
+    if (!processed && sc.functionMask & SERIAL_FUNCTION_MSP)
+    {
+      processMsp(ss);
     }
   }
 

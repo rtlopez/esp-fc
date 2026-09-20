@@ -43,6 +43,8 @@ int GpsSensor::reload(ModelChangeEvent event)
 
 int GpsSensor::update()
 {
+  if (!_model.isFeatureActive(FEATURE_GPS)) return 0;
+
   if (!_port) return 0;
 
   if (!_timer.check()) return 0;

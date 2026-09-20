@@ -275,7 +275,20 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       r.writeData(buildTime, BUILD_TIME_LENGTH);
       r.writeData(shortGitRevision, GIT_SHORT_REVISION_LENGTH);
       // 1.46
-      // build info flags - 0 * uint16_t
+      // build info flags
+      r.writeU16(4097);  // USE_SERIALRX_CRSF
+      r.writeU16(4102);  // USE_PPM
+      r.writeU16(4103);  // USE_SERIALRX_SBUS
+
+      r.writeU16(16412); // USE_GPS
+      r.writeU16(16415); // USE_MAG
+      r.writeU16(16422); // USE_ALTHOLD
+
+      r.writeU16(8230); // USE_BRUSHED
+      r.writeU16(8231); // USE_DSHOT
+      r.writeU16(8232); // USE_MULTISHOT
+      r.writeU16(8233); // USE_ONESHOT
+      r.writeU16(8235); // USE_PWM_OUTPUT
       break;
 
     case MSP_UID:
