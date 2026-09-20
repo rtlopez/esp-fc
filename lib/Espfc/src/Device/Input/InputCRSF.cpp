@@ -1,9 +1,9 @@
-#include <algorithm>
-#include "InputCRSF.h"
-#include "Hal/Time.hpp"
+#include "Device/Input/InputCRSF.hpp"
 #include "Hal/FastCode.hpp"
+#include "Hal/Time.hpp"
+#include <algorithm>
 
-namespace Espfc::Device {
+namespace Espfc::Device::Input {
 
 using namespace Espfc::Rc;
 
@@ -21,28 +21,28 @@ int InputCRSF::begin(Stream::ReadWritable* serial, TelemetryManager* telemetry)
 
 InputStatus FAST_CODE_ATTR InputCRSF::update()
 {
-  if(!_serial) return INPUT_IDLE;
+  if (!_serial) return INPUT_IDLE;
 
   size_t len = _serial->available();
-  if(len)
+  if (len)
   {
     uint8_t buff[64] = {0};
     len = std::min(len, sizeof(buff));
     _serial->readMany(buff, len);
     size_t i = 0;
-    while(i < len)
+    while (i < len)
     {
       parse(_frame, buff[i++]);
     }
   }
 
-  if(_telemetry && micros() > _telemetry_next)
+  if (_telemetry && micros() > _telemetry_next)
   {
     _telemetry_next = micros() + TELEMETRY_INTERVAL;
     _telemetry->process(*_serial, TELEMETRY_PROTOCOL_CRSF);
   }
 
-  if(_new_data)
+  if (_new_data)
   {
     _new_data = false;
     return INPUT_RECEIVED;
@@ -56,57 +56,71 @@ uint16_t FAST_CODE_ATTR InputCRSF::get(uint8_t i) const
   return _channels[i];
 }
 
-void FAST_CODE_ATTR InputCRSF::get(uint16_t * data, size_t len) const
+void FAST_CODE_ATTR InputCRSF::get(uint16_t* data, size_t len) const
 {
-  const uint16_t * src = _channels;
-  while(len--)
+  const uint16_t* src = _channels;
+  while (len--)
   {
     *data++ = *src++;
   }
 }
 
-size_t InputCRSF::getChannelCount() const { return CHANNELS; }
+size_t InputCRSF::getChannelCount() const
+{
+  return CHANNELS;
+}
 
-bool InputCRSF::needAverage() const { return false; }
+bool InputCRSF::needAverage() const
+{
+  return false;
+}
 
 void FAST_CODE_ATTR InputCRSF::parse(CrsfMessage& msg, int d)
 {
-  uint8_t *data = reinterpret_cast<uint8_t*>(&msg);
+  uint8_t* data = reinterpret_cast<uint8_t*>(&msg);
   uint8_t c = (uint8_t)(d & 0xff);
-  switch(_state)
+  switch (_state)
   {
     case CRSF_ADDR:
-      if(c == CRSF_SYNC_BYTE)
+      if (c == CRSF_SYNC_BYTE)
       {
         data[_idx++] = c;
         _state = CRSF_SIZE;
       }
       break;
     case CRSF_SIZE:
-      if(c >= 2 && c <= CRSF_FRAME_SIZE_MAX - 2) // allowed size is in range 2-62
+      if (c >= 2 && c <= CRSF_FRAME_SIZE_MAX - 2) // allowed size is in range 2-62
       {
         data[_idx++] = c;
         _state = CRSF_TYPE;
-      } else {
+      }
+      else
+      {
         reset();
       }
       break;
     case CRSF_TYPE:
-      if(c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED || c == CRSF_FRAMETYPE_LINK_STATISTICS || c == CRSF_FRAMETYPE_MSP_REQ || c == CRSF_FRAMETYPE_MSP_WRITE)
+      if (c == CRSF_FRAMETYPE_RC_CHANNELS_PACKED || c == CRSF_FRAMETYPE_LINK_STATISTICS ||
+          c == CRSF_FRAMETYPE_MSP_REQ || c == CRSF_FRAMETYPE_MSP_WRITE)
       {
         data[_idx++] = c;
-        if (msg.size > 2) {
+        if (msg.size > 2)
+        {
           _state = CRSF_DATA;
-        } else {
+        }
+        else
+        {
           _state = CRSF_CRC; // no payload, next byte is crc
         }
-      } else {
+      }
+      else
+      {
         reset();
       }
       break;
     case CRSF_DATA:
       data[_idx++] = c;
-      if(_idx > msg.size) // _idx is incremented here and operator > accounts as size - 2
+      if (_idx > msg.size) // _idx is incremented here and operator > accounts as size - 2
       {
         _state = CRSF_CRC;
       }
@@ -115,11 +129,12 @@ void FAST_CODE_ATTR InputCRSF::parse(CrsfMessage& msg, int d)
       data[_idx++] = c;
       reset();
       uint8_t crc = msg.crc();
-      if(c == crc) {
+      if (c == crc)
+      {
         apply(msg);
       }
       break;
-    }
+  }
 }
 
 void FAST_CODE_ATTR InputCRSF::reset()
@@ -152,28 +167,28 @@ void FAST_CODE_ATTR InputCRSF::apply(const CrsfMessage& msg)
 
 void FAST_CODE_ATTR InputCRSF::applyLinkStats(const CrsfMessage& msg)
 {
-  const auto * stats = reinterpret_cast<const CrsfLinkStats*>(msg.payload);
+  const auto* stats = reinterpret_cast<const CrsfLinkStats*>(msg.payload);
   (void)stats;
   // TODO:
 }
 
 void FAST_CODE_ATTR InputCRSF::applyChannels(const CrsfMessage& msg)
 {
-  const auto * data = reinterpret_cast<const CrsfData*>(msg.payload);
+  const auto* data = reinterpret_cast<const CrsfData*>(msg.payload);
   Crsf::decodeRcDataShift8(_channels, data);
-  //Crsf::decodeRcData(_channels, frame);
+  // Crsf::decodeRcData(_channels, frame);
   _new_data = true;
 }
 
 void FAST_CODE_ATTR InputCRSF::applyMspReq(const CrsfMessage& frame)
 {
-  if(!_telemetry) return;
+  if (!_telemetry) return;
 
   uint8_t origin = 0;
 
   Crsf::decodeMsp(frame, _msg, origin);
 
-  if(_msg.isCmd() && _msg.isReady())
+  if (_msg.isCmd() && _msg.isReady())
   {
     _telemetry->processMsp(*_serial, TELEMETRY_PROTOCOL_CRSF, _msg, origin);
   }
@@ -181,5 +196,4 @@ void FAST_CODE_ATTR InputCRSF::applyMspReq(const CrsfMessage& frame)
   _telemetry_next = micros() + TELEMETRY_INTERVAL;
 }
 
-}
-
+} // namespace Espfc::Device::Input

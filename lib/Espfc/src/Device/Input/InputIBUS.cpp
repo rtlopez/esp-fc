@@ -1,11 +1,10 @@
-#include "InputIBUS.hpp"
+#include "Device/Input/InputIBUS.hpp"
 #include "Hal/FastCode.hpp"
 #include <algorithm>
 
-namespace Espfc::Device
-{
+namespace Espfc::Device::Input {
 
-InputIBUS::InputIBUS() : _serial(nullptr), _state(IBUS_LENGTH), _idx(0), _new_data(false) {}
+InputIBUS::InputIBUS(): _serial(nullptr), _state(IBUS_LENGTH), _idx(0), _new_data(false) {}
 
 int InputIBUS::begin(Stream::ReadWritable* serial)
 {
@@ -28,7 +27,7 @@ InputStatus FAST_CODE_ATTR InputIBUS::update()
   {
     _serial->readMany(buff, len);
     uint8_t* ptr = buff;
-    while(len--)
+    while (len--)
     {
       parse(_data, *ptr++);
     }
@@ -46,17 +45,17 @@ void FAST_CODE_ATTR InputIBUS::parse(IBusData& frameData, int d)
 {
   uint8_t* data = reinterpret_cast<uint8_t*>(&frameData);
   uint8_t c = d & 0xff;
-  switch(_state)
+  switch (_state)
   {
     case IBUS_LENGTH:
-      if(c == IBUS_FRAME_SIZE)
+      if (c == IBUS_FRAME_SIZE)
       {
         data[_idx++] = c;
         _state = IBUS_CMD;
       }
       break;
     case IBUS_CMD:
-      if(c == IBUS_COMMAND)
+      if (c == IBUS_COMMAND)
       {
         data[_idx++] = c;
         _state = IBUS_DATA;
@@ -68,7 +67,7 @@ void FAST_CODE_ATTR InputIBUS::parse(IBusData& frameData, int d)
       break;
     case IBUS_DATA:
       data[_idx] = c;
-      if(++_idx >= IBUS_FRAME_SIZE - 2)
+      if (++_idx >= IBUS_FRAME_SIZE - 2)
       {
         _state = IBUS_CRC_LO;
       }
@@ -80,20 +79,20 @@ void FAST_CODE_ATTR InputIBUS::parse(IBusData& frameData, int d)
     case IBUS_CRC_HI:
       data[_idx++] = c;
       uint16_t csum = 0xffff;
-      for(size_t i = 0; i < IBUS_FRAME_SIZE - 2; i++)
+      for (size_t i = 0; i < IBUS_FRAME_SIZE - 2; i++)
       {
         csum -= data[i];
       }
-      if(frameData.checksum == csum) apply(frameData);
+      if (frameData.checksum == csum) apply(frameData);
       _state = IBUS_LENGTH;
       _idx = 0;
       break;
-    }
+  }
 }
 
 void FAST_CODE_ATTR InputIBUS::apply(IBusData& data)
 {
-  for(size_t i = 0; i < CHANNELS; i++)
+  for (size_t i = 0; i < CHANNELS; i++)
   {
     _channels[i] = data.ch[i];
   }
@@ -105,17 +104,23 @@ uint16_t FAST_CODE_ATTR InputIBUS::get(uint8_t i) const
   return _channels[i];
 }
 
-void FAST_CODE_ATTR InputIBUS::get(uint16_t *data, size_t len) const
+void FAST_CODE_ATTR InputIBUS::get(uint16_t* data, size_t len) const
 {
-  const uint16_t *src = _channels;
+  const uint16_t* src = _channels;
   while (len--)
   {
     *data++ = *src++;
   }
 }
 
-size_t InputIBUS::getChannelCount() const { return CHANNELS; }
-
-bool InputIBUS::needAverage() const { return false; }
-
+size_t InputIBUS::getChannelCount() const
+{
+  return CHANNELS;
 }
+
+bool InputIBUS::needAverage() const
+{
+  return false;
+}
+
+} // namespace Espfc::Device::Input

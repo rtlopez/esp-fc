@@ -2,22 +2,20 @@
 
 #if defined(ESP32) || defined(ESP8266)
 
-#include "Device/InputDevice.h"
+#include "Device/InputDevice.hpp"
 #include <EspNowRcLink/Receiver.h>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
-namespace Espfc {
+namespace Espfc::Device::Input {
 
-namespace Device {
-
-class InputEspNow: public InputDevice
+class InputEspNow : public InputDevice
 {
 public:
   int begin(void);
   InputStatus update() override;
   uint16_t get(uint8_t i) const override;
-  void get(uint16_t * data, size_t len) const override;
+  void get(uint16_t* data, size_t len) const override;
   size_t getChannelCount() const override;
   bool needAverage() const override;
 
@@ -27,8 +25,6 @@ private:
   uint16_t _channels[CHANNELS];
 };
 
-}
-
-}
+} // namespace Espfc::Device::Input
 
 #endif

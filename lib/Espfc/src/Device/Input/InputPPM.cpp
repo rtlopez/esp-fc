@@ -1,9 +1,9 @@
-#include "Device/InputPPM.h"
+#include "Device/Input/InputPPM.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
 
-namespace Espfc::Device {
+namespace Espfc::Device::Input {
 
 void InputPPM::begin(int8_t pin, int mode)
 {
@@ -89,4 +89,4 @@ void ISR_CODE_ATTR InputPPM::handle_isr(void* args)
   if (args) reinterpret_cast<InputPPM*>(args)->handle();
 }
 
-} // namespace Espfc::Device
+} // namespace Espfc::Device::Input

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Device/InputDevice.hpp"
 #include "Hal/Gpio.hpp"
-#include "InputDevice.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -13,7 +13,7 @@ enum PPMMode
   PPM_MODE_INVERTED = Hal::Gpio::Falling // FALLING edge
 };
 
-namespace Device {
+namespace Device::Input {
 
 class InputPPM : public InputDevice
 {
@@ -39,6 +39,6 @@ private:
   int8_t _pin;
 };
 
-} // namespace Device
+} // namespace Device::Input
 
 } // namespace Espfc

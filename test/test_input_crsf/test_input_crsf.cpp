@@ -1,5 +1,5 @@
-#include "Device/InputCRSF.h"
-#include "Device/InputIBUS.hpp"
+#include "Device/Input/InputCRSF.hpp"
+#include "Device/Input/InputIBUS.hpp"
 #include "msp/msp_protocol.h"
 #include <ArduinoFake.h>
 #include <Gps.hpp>
@@ -7,7 +7,7 @@
 #include <unity.h>
 
 using namespace Espfc;
-using namespace Espfc::Device;
+using namespace Espfc::Device::Input;
 using namespace Espfc::Rc;
 using namespace fakeit;
 
