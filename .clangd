@@ -6,6 +6,9 @@ CompileFlags:
     - -mlongcalls
     - -fstrict-volatile-bitfields
     - -fno-tree-switch-conversion
+    - -mtext-section-literals
+    - -free
+    - -fipa-pta
 
   # help clangd resolve includes for files not present in compile_commands.json
   # (e.g. newly added unit tests under test/)

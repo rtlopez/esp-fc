@@ -176,7 +176,7 @@ int FAST_CODE_ATTR SerialManager::update()
   if (ss.stream && !(sc.functionMask & SERIAL_FUNCTION_RX_SERIAL))
   {
     Utils::Stats::Measure measure(_model.state.stats, COUNTER_SERIAL);
-    
+
     bool processed = false;
     if (sc.functionMask & SERIAL_FUNCTION_TELEMETRY_FRSKY && _model.state.telemetryTimer.check())
     {

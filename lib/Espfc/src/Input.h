@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Device/InputCRSF.h"
-#include "Device/InputDevice.h"
-#include "Device/InputIBUS.hpp"
-#include "Device/InputPPM.h"
-#include "Device/InputSBUS.h"
+#include "Device/Input/InputCRSF.hpp"
+#include "Device/Input/InputIBUS.hpp"
+#include "Device/Input/InputPPM.hpp"
+#include "Device/Input/InputSBUS.hpp"
+#include "Device/InputDevice.hpp"
 #include "Model.h"
 #include "TelemetryManager.h"
 #if defined(ESPFC_ESPNOW)
-#include "Device/InputEspNow.h"
+#include "Device/Input/InputEspNow.hpp"
 #endif
 
 namespace Espfc {
@@ -57,12 +57,12 @@ private:
   TelemetryManager& _telemetry;
   Device::InputDevice* _device;
   Utils::Filter _filter[INPUT_CHANNELS];
-  Device::InputPPM _ppm;
-  Device::InputIBUS _ibus;
-  Device::InputSBUS _sbus;
-  Device::InputCRSF _crsf;
+  Device::Input::InputPPM _ppm;
+  Device::Input::InputIBUS _ibus;
+  Device::Input::InputSBUS _sbus;
+  Device::Input::InputCRSF _crsf;
 #if defined(ESPFC_ESPNOW)
-  Device::InputEspNow _espnow;
+  Device::Input::InputEspNow _espnow;
 #endif
 
   static constexpr uint32_t TENTH_TO_US = 100000UL;        // 1_000_000 / 10;

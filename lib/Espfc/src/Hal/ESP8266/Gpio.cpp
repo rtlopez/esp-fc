@@ -61,6 +61,20 @@ void FAST_CODE_ATTR Gpio::pinMode(uint8_t pin, Gpio::PinMode mode)
   }
 }
 
+static_assert(Gpio::InterruptMode::Rising == RISING);
+static_assert(Gpio::InterruptMode::Falling == FALLING);
+static_assert(Gpio::InterruptMode::Change == CHANGE);
+
+void Gpio::attachInterrupt(uint8_t pin, InterruptHandler handler, void* arg, InterruptMode mode)
+{
+  ::attachInterruptArg(pin, handler, arg, mode);
+}
+
+void Gpio::detachInterrupt(uint8_t pin)
+{
+  ::detachInterrupt(pin);
+}
+
 } // namespace Espfc::Hal
 
 #endif

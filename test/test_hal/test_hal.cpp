@@ -5,6 +5,7 @@
 #include <platform.h>
 
 #include <Hal/Board.hpp>
+#include <Hal/Gpio.hpp>
 
 using namespace Espfc;
 
@@ -46,6 +47,14 @@ void test_hal_unexpected_reset()
   TEST_ASSERT_FALSE(Hal::isUnexpectedReset(Hal::ResetReason::OTHER));
 }
 
+void test_hal_gpio_interrupt()
+{
+  int context = 0;
+  Hal::Gpio::attachInterrupt(1, [](void* arg) { *static_cast<int*>(arg) = 1; }, &context, Hal::Gpio::Rising);
+  Hal::Gpio::detachInterrupt(1);
+  TEST_ASSERT_EQUAL_INT(0, context);
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
@@ -54,6 +63,7 @@ int main(int argc, char** argv)
   RUN_TEST(test_hal_board_reset);
   RUN_TEST(test_hal_board_reset_reason);
   RUN_TEST(test_hal_unexpected_reset);
+  RUN_TEST(test_hal_gpio_interrupt);
 
   return UNITY_END();
 }

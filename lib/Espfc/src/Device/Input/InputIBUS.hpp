@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Device/InputDevice.h"
+#include "Device/InputDevice.hpp"
 #include "Stream/ReadWritable.hpp"
 
-namespace Espfc::Device {
+namespace Espfc::Device::Input {
 
 class InputIBUS : public InputDevice
 {
@@ -52,4 +52,4 @@ private:
   uint16_t _channels[CHANNELS];
 };
 
-} // namespace Espfc::Device
+} // namespace Espfc::Device::Input

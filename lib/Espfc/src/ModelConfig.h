@@ -8,7 +8,7 @@
 #include "Device/GyroDevice.hpp"
 #include "Device/MagDevice.hpp"
 #include "Device/BaroDevice.hpp"
-#include "Device/InputPPM.h"
+#include "Device/Input/InputPPM.hpp"
 #include "Output/Mixers.h"
 #include "Control/Pid.h"
 

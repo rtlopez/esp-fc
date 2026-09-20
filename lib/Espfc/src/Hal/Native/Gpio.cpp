@@ -21,6 +21,10 @@ void Gpio::pinMode(uint8_t pin, Gpio::PinMode mode)
   return;
 }
 
+void Gpio::attachInterrupt(uint8_t pin, InterruptHandler handler, void* arg, InterruptMode mode) {}
+
+void Gpio::detachInterrupt(uint8_t pin) {}
+
 } // namespace Espfc::Hal
 
 #endif
