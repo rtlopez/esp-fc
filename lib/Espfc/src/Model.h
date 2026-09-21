@@ -278,12 +278,10 @@ class Model
     int load()
     {
       logger.begin();
-      #ifndef UNIT_TEST
       _storage.begin();
       logger.info().log("F_CPU").logln(F_CPU);
       _storageResult = _storage.load(config);
       logStorageResult();
-      #endif
       postLoad();
       return 1;
     }
@@ -291,10 +289,8 @@ class Model
     void save()
     {
       preSave();
-      #ifndef UNIT_TEST
       _storageResult = _storage.save(config);
       logStorageResult();
-      #endif
     }
 
     void reload()
@@ -597,7 +593,6 @@ class Model
 
     void logStorageResult()
     {
-#ifndef UNIT_TEST
       switch(_storageResult)
       {
         case STORAGE_LOAD_SUCCESS:    logger.info().logln("EEPROM load ok"); break;
@@ -610,7 +605,6 @@ class Model
         default:
           logger.err().logln("EEPROM uninitialized"); break;
       }
-#endif
     }
 
     void notifyConfigChange(ModelChangeEvent event)
