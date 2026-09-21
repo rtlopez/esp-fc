@@ -1,11 +1,11 @@
 // not used directly, but required so that the library dependency finder resolves include paths
 // for lib/betaflight, same reason as in test_msp
-#include <platform.h>
 #include <EscDriver.h>
 #include <Gps.hpp>
+#include <platform.h>
 
 #include "Hal/ConfigStorage.hpp"
-#include "Utils/Storage.h"
+#include "Utils/Storage.hpp"
 #include <unity.h>
 
 using namespace Espfc;

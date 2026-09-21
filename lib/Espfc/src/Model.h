@@ -9,7 +9,7 @@
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Stream/ReadWritable.hpp"
-#include "Utils/Storage.h"
+#include "Utils/Storage.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"
 
@@ -608,7 +608,7 @@ class Model
         case STORAGE_ERR_BAD_SIZE:    logger.err().logln("EEPROM wrong size"); break;
         case STORAGE_NONE:
         default:
-          logger.err().logln("EEPROM unknown result"); break;
+          logger.err().logln("EEPROM uninitialized"); break;
       }
 #endif
     }
@@ -624,9 +624,7 @@ class Model
     }
 
   private:
-    #ifndef UNIT_TEST
     Utils::Storage _storage;
-    #endif
     StorageResult _storageResult;
 
     std::function<void(ModelChangeEvent)> _onConfigChange{};

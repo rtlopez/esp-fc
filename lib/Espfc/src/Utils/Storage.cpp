@@ -1,18 +1,17 @@
-#include "Utils/Storage.h"
-#include "ModelConfig.h"
+#include "Utils/Storage.hpp"
 
 namespace Espfc::Utils {
 
 int Storage::begin()
 {
   static_assert(sizeof(ModelConfig) <= EEPROM_SIZE, "ModelConfig Size too big");
-  _storage.begin(EEPROM_SIZE);
-  return 1;
+  _initialized = _storage.begin(EEPROM_SIZE);
+  return _initialized;
 }
 
 StorageResult Storage::load(ModelConfig& config) const
 {
-  // return STORAGE_ERR_BAD_MAGIC;
+  if (!_initialized) return STORAGE_NONE;
 
   size_t addr = 0;
   uint8_t magic = _storage.readByte(addr++);
@@ -41,6 +40,8 @@ StorageResult Storage::load(ModelConfig& config) const
 
 StorageResult Storage::save(const ModelConfig& config)
 {
+  if (!_initialized) return STORAGE_SAVE_ERROR;
+
   size_t addr = 0;
   uint16_t size = sizeof(ModelConfig);
   _storage.writeByte(addr++, EEPROM_MAGIC);
