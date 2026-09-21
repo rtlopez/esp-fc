@@ -1331,7 +1331,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       // 1.48
       r.writeU16(_model.config.gyro.rpmFilter.fade); // rpm_notch_fade_range_hz
       r.writeU16(_model.config.gyro.rpmFilter.q);    // rpm_notch_q
-      for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
+      for (size_t i = 0; i < RPM_FILTER_HARMONICS_COUNT; i++)
       {
         r.writeU8(_model.config.gyro.rpmFilter.weights[i]); // rpm_notch_harmonic_freq
       }
@@ -1402,7 +1402,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
         // TODO: validate
         _model.config.gyro.rpmFilter.fade = m.readU16(); // rpm_notch_fade_range_hz
         _model.config.gyro.rpmFilter.q = m.readU16();    // rpm_notch_q
-        for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
+        for (size_t i = 0; i < RPM_FILTER_HARMONICS_COUNT; i++)
         {
           _model.config.gyro.rpmFilter.weights[i] = m.readU8(); // rpm_notch_harmonic_freq
         }

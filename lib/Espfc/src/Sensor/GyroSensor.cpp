@@ -68,7 +68,7 @@ int GyroSensor::reload(ModelChangeEvent event)
       _rpm_max_freq = 0.48f * _model.state.loopTimer.rate;
       _rpm_q = _model.config.gyro.rpmFilter.q * 0.01f;
 
-      for (size_t i = 0; i < RPM_FILTER_HARMONICS_MAX; i++)
+      for (size_t i = 0; i < RPM_FILTER_HARMONICS_COUNT; i++)
       {
         _rpm_weights[i] = std::clamp(0.01f * _model.config.gyro.rpmFilter.weights[i], 0.0f, 1.0f);
       }
@@ -93,7 +93,7 @@ int GyroSensor::reload(ModelChangeEvent event)
           gyroState.rpmFreqFilter[m].begin({FILTER_PT1, _model.config.gyro.rpmFilter.freqLpf}, loopFilterRate);
           for (size_t n = 0; n < _model.config.gyro.rpmFilter.harmonics; n++)
           {
-            int center = Utils::mapi(m * RPM_FILTER_HARMONICS_MAX + n, 0,
+            int center = Utils::mapi(m * RPM_FILTER_HARMONICS_COUNT + n, 0,
                                      RPM_FILTER_MOTOR_MAX * _model.config.gyro.rpmFilter.harmonics,
                                      _model.config.gyro.rpmFilter.minFreq, loopFilterRate / 2);
             gyroState.rpmFilter[m][n][i].begin(FilterConfig(FILTER_NOTCH_DF1, center, center * 0.98f), loopFilterRate);

@@ -15,8 +15,7 @@ enum StorageResult
 
 }
 
-#ifndef UNIT_TEST
-
+#include "Hal/ConfigStorage.hpp"
 #include "ModelConfig.h"
 
 namespace Espfc::Utils {
@@ -32,8 +31,8 @@ private:
   static constexpr uint8_t EEPROM_MAGIC = 0xA5;
   static constexpr uint8_t EEPROM_VERSION = 0x01;
   static constexpr size_t EEPROM_SIZE = 2048;
+
+  Hal::ConfigStorage _storage;
 };
 
 } // namespace Espfc::Utils
-
-#endif
