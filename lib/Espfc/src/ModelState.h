@@ -270,7 +270,7 @@ struct GyroState
   Utils::Filter notch1Filter[AXIS_COUNT_RPY];
   Utils::Filter notch2Filter[AXIS_COUNT_RPY];
   Utils::Filter dynNotchFilter[DYN_NOTCH_COUNT_MAX][AXIS_COUNT_RPY];
-  Utils::Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_MAX][AXIS_COUNT_RPY];
+  Utils::Filter rpmFilter[RPM_FILTER_MOTOR_MAX][RPM_FILTER_HARMONICS_COUNT][AXIS_COUNT_RPY];
   Utils::Filter rpmFreqFilter[RPM_FILTER_MOTOR_MAX];
 
   Utils::Timer timer;

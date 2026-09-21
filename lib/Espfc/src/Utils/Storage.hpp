@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Hal/ConfigStorage.hpp"
+#include "ModelConfig.h"
+
 namespace Espfc {
 
 enum StorageResult
@@ -13,13 +16,7 @@ enum StorageResult
   STORAGE_ERR_BAD_SIZE,
 };
 
-}
-
-#ifndef UNIT_TEST
-
-#include "ModelConfig.h"
-
-namespace Espfc::Utils {
+namespace Utils {
 
 class Storage
 {
@@ -32,8 +29,11 @@ private:
   static constexpr uint8_t EEPROM_MAGIC = 0xA5;
   static constexpr uint8_t EEPROM_VERSION = 0x01;
   static constexpr size_t EEPROM_SIZE = 2048;
+
+  Hal::ConfigStorage _storage;
+  bool _initialized = false;
 };
 
-} // namespace Espfc::Utils
+} // namespace Utils
 
-#endif
+} // namespace Espfc

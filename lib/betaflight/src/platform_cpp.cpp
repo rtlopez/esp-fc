@@ -1,8 +1,8 @@
 #include "platform.h"
-#include "EscDriver.h"
-#include "Hal/Gpio.hpp"
-#include "Stream/ReadWritable.hpp"
-#include "Hal/FastCode.hpp"
+#include <EscDriver.h>
+#include <Hal/Gpio.hpp>
+#include <Stream/ReadWritable.hpp>
+#include <Hal/FastCode.hpp>
 #include <cstring>
 
 int IORead(IO_t pin)

@@ -2,7 +2,7 @@
 #define _ESPFC_MODEL_CONFIG_H_
 
 #include "Target/Target.h"
-#include "EscDriver.h"
+#include <EscDriver.h>
 #include "Utils/Filter.h"
 #include "Hal/BusDevice.hpp"
 #include "Device/GyroDevice.hpp"
@@ -251,7 +251,7 @@ constexpr size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
 
 constexpr size_t RPM_FILTER_MOTOR_MAX = 4;
-constexpr size_t RPM_FILTER_HARMONICS_MAX = 3;
+constexpr size_t RPM_FILTER_HARMONICS_COUNT = 3;
 
 enum SerialSpeed
 {
@@ -667,7 +667,7 @@ struct RpmFilterConfig
   uint8_t minFreq = 100;
   int16_t q = 500;
   uint8_t freqLpf = 150;
-  uint8_t weights[RPM_FILTER_HARMONICS_MAX] = {100, 100, 100};
+  uint8_t weights[RPM_FILTER_HARMONICS_COUNT] = {100, 100, 100};
   uint8_t fade = 30;
 };
 

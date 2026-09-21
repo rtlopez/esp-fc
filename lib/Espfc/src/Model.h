@@ -9,7 +9,7 @@
 #include "ModelConfig.h"
 #include "ModelState.h"
 #include "Stream/ReadWritable.hpp"
-#include "Utils/Storage.h"
+#include "Utils/Storage.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"
 
@@ -278,12 +278,10 @@ class Model
     int load()
     {
       logger.begin();
-      #ifndef UNIT_TEST
       _storage.begin();
       logger.info().log("F_CPU").logln(F_CPU);
       _storageResult = _storage.load(config);
       logStorageResult();
-      #endif
       postLoad();
       return 1;
     }
@@ -291,10 +289,8 @@ class Model
     void save()
     {
       preSave();
-      #ifndef UNIT_TEST
       _storageResult = _storage.save(config);
       logStorageResult();
-      #endif
     }
 
     void reload()
@@ -597,7 +593,6 @@ class Model
 
     void logStorageResult()
     {
-#ifndef UNIT_TEST
       switch(_storageResult)
       {
         case STORAGE_LOAD_SUCCESS:    logger.info().logln("EEPROM load ok"); break;
@@ -608,9 +603,8 @@ class Model
         case STORAGE_ERR_BAD_SIZE:    logger.err().logln("EEPROM wrong size"); break;
         case STORAGE_NONE:
         default:
-          logger.err().logln("EEPROM unknown result"); break;
+          logger.err().logln("EEPROM uninitialized"); break;
       }
-#endif
     }
 
     void notifyConfigChange(ModelChangeEvent event)
@@ -624,9 +618,7 @@ class Model
     }
 
   private:
-    #ifndef UNIT_TEST
     Utils::Storage _storage;
-    #endif
     StorageResult _storageResult;
 
     std::function<void(ModelChangeEvent)> _onConfigChange{};
