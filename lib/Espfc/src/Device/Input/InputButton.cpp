@@ -5,7 +5,7 @@
 // https://github.com/poelstra/arduino-multi-button
 namespace {
 
-const static MultiButtonConfig conf = {20, 250, 300};
+static const MultiButtonConfig conf = {20, 250, 300};
 static MultiButton btn(&conf);
 
 } // namespace

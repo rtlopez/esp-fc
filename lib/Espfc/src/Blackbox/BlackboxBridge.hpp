@@ -9,4 +9,4 @@ bool blackboxShouldLogPFrame(void);
 bool blackboxShouldLogIFrame(void);
 }
 
-void initBlackboxModel(Espfc::Model * m);
+void initBlackboxModel(Espfc::Model* m);

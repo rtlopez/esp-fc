@@ -38,7 +38,7 @@
 #elif defined(UNIT_TEST)
 #define ESPFC_TARGET "UNIT"
 #else
-  #error "Unsupported platform"
+#error "Unsupported platform"
 #endif
 
 #ifndef ESPFC_REVISION
@@ -1505,5 +1505,5 @@ uint32_t flashfsGetWriteBufferSize(void);
 #endif
 
 #ifdef __cplusplus
-}
+} // extern "C"
 #endif

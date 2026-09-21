@@ -1,5 +1,5 @@
 #include "Blackbox.h"
-#include "BlackboxBridge.h"
+#include "BlackboxBridge.hpp"
 #include "Hal/FastCode.hpp"
 #include "Utils/Math.hpp"
 
@@ -265,13 +265,13 @@ int FAST_CODE_ATTR Blackbox::update()
   {
     updateData();
   }
-  // PIN_DEBUG(HIGH);
+  // PIN_DEBUG(1);
   blackboxUpdate(_model.state.loopTimer.last);
   if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
     _buffer.flush();
   }
-  // PIN_DEBUG(LOW);
+  // PIN_DEBUG(0);
 
   if (_model.config.debug.mode == DEBUG_PIDLOOP)
   {
