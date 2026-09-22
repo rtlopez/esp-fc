@@ -117,11 +117,11 @@ static int8_t toVbatSource(uint8_t t)
   switch (t)
   {
     case 0:
-      return 0; // none
+      return Espfc::VBAT_SOURCE_NONE;
     case 1:
-      return 1; // internal adc
+      return Espfc::VBAT_SOURCE_ADC;
     default:
-      return 0;
+      return Espfc::VBAT_SOURCE_NONE;
   }
 }
 
@@ -130,11 +130,11 @@ static int8_t toIbatSource(uint8_t t)
   switch (t)
   {
     case 0:
-      return 0; // none
+      return Espfc::IBAT_SOURCE_NONE;
     case 1:
-      return 1; // internal adc
+      return Espfc::IBAT_SOURCE_ADC;
     default:
-      return 0;
+      return Espfc::IBAT_SOURCE_NONE;
   }
 }
 
@@ -476,6 +476,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
         m.readU16(); // vbatmaxcellvoltage
         _model.config.vbat.cellWarning = m.readU16();
       }
+      _model.notifyConfigChange(MODEL_CHANGE_ADC);
       break;
 
     case MSP_BATTERY_STATE:

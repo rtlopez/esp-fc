@@ -388,11 +388,11 @@ enum PinFunction {
   PIN_I2C_0_SCL,
   PIN_I2C_0_SDA,
 #endif
-#ifdef ESPFC_ADC_0
-  PIN_INPUT_ADC_0,
+#ifdef ESPFC_ADC_VBAT
+  PIN_INPUT_ADC_VBAT,
 #endif
-#ifdef ESPFC_ADC_1
-  PIN_INPUT_ADC_1,
+#ifdef ESPFC_ADC_IBAT
+  PIN_INPUT_ADC_IBAT,
 #endif
 #ifdef ESPFC_SPI_0
   PIN_SPI_0_SCK,
@@ -671,18 +671,30 @@ struct RpmFilterConfig
   uint8_t fade = 30;
 };
 
+enum VBatSource : int8_t
+{
+  VBAT_SOURCE_NONE = 0,
+  VBAT_SOURCE_ADC = 1
+};
+
 struct VBatConfig
 {
   int16_t cellWarning = 350;
   uint8_t scale = 100;
   uint8_t resDiv = 10;
   uint8_t resMult = 1;
-  int8_t source = 0;
+  int8_t source = VBAT_SOURCE_NONE;
+};
+
+enum IBatSource : int8_t
+{
+  IBAT_SOURCE_NONE = 0,
+  IBAT_SOURCE_ADC = 1
 };
 
 struct IBatConfig
 {
-  int8_t source = 0;
+  int8_t source = IBAT_SOURCE_NONE;
   int16_t scale = 100;
   int16_t offset = 0;
 };
@@ -933,11 +945,11 @@ class ModelConfig
       [PIN_I2C_0_SCL] = ESPFC_I2C_0_SCL,
       [PIN_I2C_0_SDA] = ESPFC_I2C_0_SDA,
 #endif
-#ifdef ESPFC_ADC_0
-      [PIN_INPUT_ADC_0] = ESPFC_ADC_0_PIN,
+#ifdef ESPFC_ADC_VBAT
+      [PIN_INPUT_ADC_VBAT] = ESPFC_ADC_VBAT_PIN,
 #endif
-#ifdef ESPFC_ADC_1
-      [PIN_INPUT_ADC_1] = ESPFC_ADC_1_PIN,
+#ifdef ESPFC_ADC_IBAT
+      [PIN_INPUT_ADC_IBAT] = ESPFC_ADC_IBAT_PIN,
 #endif
 #ifdef ESPFC_SPI_0
       [PIN_SPI_0_SCK] = ESPFC_SPI_0_SCK,

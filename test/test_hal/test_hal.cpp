@@ -4,6 +4,7 @@
 // the Espfc include path, same reason as in test_msp
 #include <platform.h>
 
+#include <Hal/Adc.hpp>
 #include <Hal/Board.hpp>
 #include <Hal/Gpio.hpp>
 
@@ -55,6 +56,12 @@ void test_hal_gpio_interrupt()
   TEST_ASSERT_EQUAL_INT(0, context);
 }
 
+void test_hal_adc_read()
+{
+  Hal::Adc::begin(1);
+  TEST_ASSERT_EQUAL_UINT16(0, Hal::Adc::read(1));
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
@@ -64,6 +71,7 @@ int main(int argc, char** argv)
   RUN_TEST(test_hal_board_reset_reason);
   RUN_TEST(test_hal_unexpected_reset);
   RUN_TEST(test_hal_gpio_interrupt);
+  RUN_TEST(test_hal_adc_read);
 
   return UNITY_END();
 }

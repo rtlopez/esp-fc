@@ -60,8 +60,8 @@ Tu unmap pin function use -1 as pin number
 
 | Uart    | CLI name          | ESP32 | ESP32-S3 |
 |--------:|-------------------|------:|---------:|
-| Voltage | `pin_input_adc_0` |  36   | 1        |
-| Current | `pin_input_adc_1` |  39   | 4        |
+| Voltage | `pin_input_adc_vbat` |  36   | 1        |
+| Current | `pin_input_adc_ibat` |  39   | 4        |
 
 > [!NOTE]
 > On ESP32 choose only pins assigned to ADC1 channels
