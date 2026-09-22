@@ -22,6 +22,7 @@ enum ModelChangeEvent
   MODEL_CHANGE_RATES,
   MODEL_CHANGE_ACCEL,
   MODEL_CHANGE_INPUT,
+  MODEL_CHANGE_ADC,
 };
 
 class Model

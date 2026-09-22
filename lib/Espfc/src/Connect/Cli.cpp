@@ -736,11 +736,11 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("pin_i2c_scl", &c.pin[PIN_I2C_0_SCL]),
       Param("pin_i2c_sda", &c.pin[PIN_I2C_0_SDA]),
 #endif
-#ifdef ESPFC_ADC_0
-      Param("pin_input_adc_0", &c.pin[PIN_INPUT_ADC_0]),
+#ifdef ESPFC_ADC_VBAT
+      Param("pin_input_adc_vbat", &c.pin[PIN_INPUT_ADC_VBAT]),
 #endif
-#ifdef ESPFC_ADC_1
-      Param("pin_input_adc_1", &c.pin[PIN_INPUT_ADC_1]),
+#ifdef ESPFC_ADC_IBAT
+      Param("pin_input_adc_ibat", &c.pin[PIN_INPUT_ADC_IBAT]),
 #endif
 #ifdef ESPFC_SPI_0
       Param("pin_spi_0_sck", &c.pin[PIN_SPI_0_SCK]),

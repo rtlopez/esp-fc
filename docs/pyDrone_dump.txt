@@ -192,8 +192,8 @@ set pin_serial_2_tx -1
 set pin_serial_2_rx -1
 set pin_i2c_scl 15
 set pin_i2c_sda 16
-set pin_input_adc_0 2
-set pin_input_adc_1 -1
+set pin_input_adc_vbat 2
+set pin_input_adc_ibat -1
 set pin_spi_0_sck -1
 set pin_spi_0_mosi -1
 set pin_spi_0_miso -1
