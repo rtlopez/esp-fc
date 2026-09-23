@@ -84,9 +84,6 @@
 #define ESPFC_MULTI_CORE
 #endif
 
-// #define ESPFC_FREE_RTOS_QUEUE
-#define ESPFC_ATOMIC_QUEUE
-
 #define ESPFC_DSP
 
 #include "Target/TargetEsp32Common.h"

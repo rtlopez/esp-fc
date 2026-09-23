@@ -12,7 +12,7 @@
 #include "Connect/Msp.hpp"
 #include "Connect/StatusLed.hpp"
 #include "Stream/ReadWritable.hpp"
-#include "Target/Queue.hpp"
+#include "Event.hpp"
 #include "Utils/SeqLockWrapper.hpp"
 
 namespace Espfc {
@@ -518,7 +518,7 @@ struct ModelState
   SerialPortState serial[SERIAL_UART_COUNT];
   Utils::Timer serialTimer;
 
-  Target::Queue appQueue;
+  EventQueue appQueue;
   bool rebootRequired = false;
 };
 

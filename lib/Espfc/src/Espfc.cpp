@@ -2,8 +2,13 @@
 #include "Debug_Espfc.h"
 #include "Hal/Time.hpp"
 #include "Hal/FastCode.hpp"
+#include "Hal/Platform.hpp"
 
 namespace Espfc {
+
+#if defined(ESPFC_MULTI_CORE)
+static_assert(Hal::MULTI_CORE, "target claims multi core, but Hal reports a single core platform");
+#endif
 
 Espfc::Espfc()
     : _hardware{_model}, _controller{_model}, _telemetry{_model}, _input{_model, _telemetry}, _actuator{_model},
@@ -106,11 +111,11 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 int FAST_CODE_ATTR Espfc::updateOther()
 {
 #if defined(ESPFC_MULTI_CORE)
-  if (_model.state.appQueue.isEmpty())
+  Event e;
+  if (!_model.state.appQueue.pop(e))
   {
     return 0;
   }
-  Event e = _model.state.appQueue.receive();
 
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
