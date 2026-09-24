@@ -1053,11 +1053,11 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     s.print(Hal::Board::getCpuFreq());
     s.println(" MHz");
 
-    s.print("  memory: ");
+    s.print("  memory: cfg=");
     s.print(sizeof(ModelConfig));
-    s.print(", ");
+    s.print(", state=");
     s.print(sizeof(ModelState));
-    s.print(", ");
+    s.print(", free=");
     s.println(Hal::Board::getFreeHeap());
   }
   else if (std::strcmp(cmd.args[0], "get") == 0)

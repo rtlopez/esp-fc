@@ -26,9 +26,15 @@
 namespace Espfc::Hal {
 
 #if defined(ESPFC_HAL_QUEUE_FREERTOS)
+#if !defined(ESP32)
+#error "ESPFC_HAL_QUEUE_FREERTOS is supported on ESP32 targets only"
+#endif
 template<typename T, size_t Capacity>
 using Queue = Detail::QueueFreeRTOS<T, Capacity>;
 #elif defined(ESPFC_HAL_QUEUE_PICOSDK)
+#if !defined(ARCH_RP2040)
+#error "ESPFC_HAL_QUEUE_PICOSDK is supported on RP2040/RP2350 targets only"
+#endif
 template<typename T, size_t Capacity>
 using Queue = Detail::QueuePicoSdk<T, Capacity>;
 #elif defined(ESPFC_HAL_QUEUE_ATOMIC)
