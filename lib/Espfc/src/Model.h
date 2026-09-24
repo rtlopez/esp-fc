@@ -79,7 +79,7 @@ class Model
       state.mode.disarmReason = r;
       clearMode(MODE_ARMED);
       clearMode(MODE_AIRMODE);
-      state.appQueue.send(Event(EVENT_DISARM));
+      state.appQueue.push(Event(EVENT_DISARM));
     }
 
     bool isFeatureActive(Feature feature) const

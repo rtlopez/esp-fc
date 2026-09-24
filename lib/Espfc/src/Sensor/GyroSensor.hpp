@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Device/GyroDevice.hpp"
+#include "Hal/Platform.hpp"
 #include "Model.h"
 #include "Sensor/BaseSensor.hpp"
 #include "Utils/Sma.hpp"
-#ifdef ESPFC_DSP
+#ifdef ESPFC_HAL_DSP
 #include "Utils/FFTAnalyzer.hpp"
 #else
 #include "Utils/FreqAnalyzer.hpp"
@@ -49,7 +50,7 @@ private:
   Model& _model;
   Device::GyroDevice* _gyro;
 
-#ifdef ESPFC_DSP
+#ifdef ESPFC_HAL_DSP
   Utils::FFTAnalyzer<128> _fft[3];
 #else
   Utils::FreqAnalyzer _freqAnalyzer[3];

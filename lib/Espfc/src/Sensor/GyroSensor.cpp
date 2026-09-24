@@ -1,10 +1,11 @@
 
 #include "Sensor/GyroSensor.hpp"
 #include "Hal/FastCode.hpp"
+#include "Hal/Platform.hpp"
 #include "Hal/Time.hpp"
 #include "Utils/FilterHelper.h"
 #include "Utils/Sma.ipp"
-#ifdef ESPFC_DSP
+#ifdef ESPFC_HAL_DSP
 #include "Utils/FFTAnalyzer.ipp"
 #endif
 
@@ -111,7 +112,7 @@ int GyroSensor::reload(ModelChangeEvent event)
         gyroState.notch1Filter[i].begin(_model.config.gyro.notch1Filter, gyroFilterRate);
         gyroState.notch2Filter[i].begin(_model.config.gyro.notch2Filter, gyroFilterRate);
 
-#ifdef ESPFC_DSP
+#ifdef ESPFC_HAL_DSP
         _fft[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter, i);
 #else
         _freqAnalyzer[i].begin(_model.state.loopTimer.rate / _dyn_notch_denom, _model.config.gyro.dynamicFilter);
@@ -272,7 +273,7 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
 
     for (size_t i = 0; i < AXIS_COUNT_RPY; ++i)
     {
-#ifdef ESPFC_DSP
+#ifdef ESPFC_HAL_DSP
       (void)update;
       if (feed)
       {

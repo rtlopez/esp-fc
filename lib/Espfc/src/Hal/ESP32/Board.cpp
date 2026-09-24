@@ -1,8 +1,17 @@
 #if defined(ESP32)
 
 #include "Hal/Board.hpp"
+#include "Hal/Platform.hpp"
 #include <Esp.h>
 #include <esp_system.h>
+#include <sdkconfig.h>
+#include <soc/soc_caps.h>
+
+#if defined(CONFIG_FREERTOS_UNICORE) || defined(ESPFC_SINGLE_CORE)
+static_assert(!Espfc::Hal::MULTI_CORE, "sdkconfig is unicore, build with -DESPFC_SINGLE_CORE");
+#else
+static_assert(Espfc::Hal::CORE_COUNT == SOC_CPU_CORES_NUM, "Hal::CORE_COUNT does not match SoC core count");
+#endif
 
 namespace Espfc::Hal {
 

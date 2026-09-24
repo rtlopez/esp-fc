@@ -1,6 +1,7 @@
 #include "Connect/Cli.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Hal/Board.hpp"
+#include "Hal/Platform.hpp"
 #include "Hal/Wifi.hpp"
 #include "Hardware.h"
 #include "ModelConfig.h"
@@ -18,7 +19,8 @@
 #include "Hal/Flash.hpp"
 #endif
 
-#ifdef ESPFC_FREE_RTOS
+#ifdef ESPFC_HAL_FREE_RTOS
+#include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #endif
 
@@ -1029,7 +1031,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     s.println(status.channel);
   }
 #endif
-#if defined(ESPFC_FREE_RTOS)
+#if defined(ESPFC_HAL_FREE_RTOS)
   else if (std::strcmp(cmd.args[0], "tasks") == 0)
   {
     printVersion(s);
@@ -1051,11 +1053,11 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     s.print(Hal::Board::getCpuFreq());
     s.println(" MHz");
 
-    s.print("  memory: ");
+    s.print("  memory: cfg=");
     s.print(sizeof(ModelConfig));
-    s.print(", ");
+    s.print(", state=");
     s.print(sizeof(ModelState));
-    s.print(", ");
+    s.print(", free=");
     s.println(Hal::Board::getFreeHeap());
   }
   else if (std::strcmp(cmd.args[0], "get") == 0)

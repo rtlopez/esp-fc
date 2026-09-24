@@ -1,6 +1,8 @@
 #pragma once
 
-#ifdef ESPFC_DSP
+#include "Hal/Platform.hpp"
+
+#ifdef ESPFC_HAL_DSP
 
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 #include "Utils/FFTAnalyzer.hpp"

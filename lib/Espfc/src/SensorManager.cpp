@@ -41,13 +41,13 @@ int FAST_CODE_ATTR SensorManager::read()
 
   if (_model.state.loopTimer.syncTo(_model.state.gyro.timer))
   {
-    _model.state.appQueue.send(Event(EVENT_GYRO_READ));
+    _model.state.appQueue.push(Event(EVENT_GYRO_READ));
   }
 
   if (_model.state.accel.timer.syncTo(_model.state.gyro.timer))
   {
     _accel.update();
-    _model.state.appQueue.send(Event(EVENT_ACCEL_READ));
+    _model.state.appQueue.push(Event(EVENT_ACCEL_READ));
     _model.state.mode.button = _button.update();
     return 1;
   }

@@ -1,4 +1,5 @@
 #include "Wireless.h"
+#include "Hal/Platform.hpp"
 #include <cstdio>
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
@@ -10,7 +11,7 @@ Wireless::Wireless(Model& model): _model(model), _status(STOPPED), _adapter(*Hal
 int Wireless::begin()
 {
   Hal::Wifi::begin();
-#ifdef ESPFC_ESPNOW
+#ifdef ESPFC_HAL_ESPNOW
   if (_model.isFeatureActive(FEATURE_RX_SPI))
   {
     startAp();

@@ -1,5 +1,4 @@
 #include "Control/Pid.h"
-#include "Target/QueueAtomic.h"
 #include "Utils/Bits.hpp"
 #include "Utils/Filter.h"
 #include "Utils/Math.hpp"
@@ -993,68 +992,6 @@ void test_pid_update_sum_limit()
   TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, result);
 }
 
-void test_queue_atomic()
-{
-  QueueAtomic<int, 3> q;
-  int e1 = 1, e2 = 2, e3 = 3, e4 = 4;
-  int r1 = 91, r2 = 92, r3 = 93, r4 = 94;
-
-  // empty
-  TEST_ASSERT_TRUE(q.isEmpty());
-  TEST_ASSERT_FALSE(q.isFull());
-
-  TEST_ASSERT_FALSE(q.pop(r1));
-  TEST_ASSERT_EQUAL(91, r1);
-
-  TEST_ASSERT_TRUE(q.isEmpty());
-  TEST_ASSERT_FALSE(q.isFull());
-
-  // push first element
-  TEST_ASSERT_TRUE(q.push(e1));
-
-  TEST_ASSERT_FALSE(q.isEmpty());
-  TEST_ASSERT_FALSE(q.isFull());
-
-  // pop last element
-  TEST_ASSERT_TRUE(q.pop(r1));
-  TEST_ASSERT_EQUAL(1, r1);
-
-  TEST_ASSERT_TRUE(q.isEmpty());
-  TEST_ASSERT_FALSE(q.isFull());
-
-  // pop element again
-  TEST_ASSERT_FALSE(q.pop(r1));
-  TEST_ASSERT_EQUAL(1, r1);
-
-  TEST_ASSERT_TRUE(q.isEmpty());
-  TEST_ASSERT_FALSE(q.isFull());
-
-  // make full
-  TEST_ASSERT_TRUE(q.push(e1));
-  TEST_ASSERT_TRUE(q.push(e2));
-  TEST_ASSERT_TRUE(q.push(e3));
-  TEST_ASSERT_FALSE(q.push(e4));
-
-  TEST_ASSERT_FALSE(q.isEmpty());
-  TEST_ASSERT_TRUE(q.isFull());
-
-  // make empty
-  TEST_ASSERT_TRUE(q.pop(r1));
-  TEST_ASSERT_EQUAL(1, r1);
-
-  TEST_ASSERT_TRUE(q.pop(r2));
-  TEST_ASSERT_EQUAL(2, r2);
-
-  TEST_ASSERT_TRUE(q.pop(r3));
-  TEST_ASSERT_EQUAL(3, r3);
-
-  TEST_ASSERT_FALSE(q.pop(r4));
-  TEST_ASSERT_EQUAL(94, r4);
-
-  TEST_ASSERT_TRUE(q.isEmpty());
-  TEST_ASSERT_FALSE(q.isFull());
-}
-
 void test_ring_buf()
 {
   Utils::RingBuf<uint8_t, 3> q;
@@ -1365,7 +1302,6 @@ int main(int argc, char** argv)
   RUN_TEST(test_pid_update_sum);
   RUN_TEST(test_pid_update_sum_limit);
 
-  RUN_TEST(test_queue_atomic);
   RUN_TEST(test_ring_buf);
   RUN_TEST(test_ring_buf2);
   RUN_TEST(test_align_addr_to_write);
