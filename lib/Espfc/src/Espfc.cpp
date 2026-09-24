@@ -1,8 +1,8 @@
 #include "Espfc.h"
 #include "Debug_Espfc.h"
-#include "Hal/Time.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Platform.hpp"
+#include "Hal/Time.hpp"
 
 namespace Espfc {
 

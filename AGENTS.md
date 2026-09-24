@@ -64,11 +64,11 @@ Guidelines for AI agents working on **Esp-FC**. Keep changes small, tested and p
 
 ```
 pio test -e native            # unit tests (must pass)
-pio run -e esp32              # build affected target(s)
+pio run -e esp32s3            # build specific target
 pio run                       # build all targets
-pio check                     # static analysis (cppcheck)
-pio run -t check_format       # code style check
-pio run -e native -t format   # apply formatting
+pio run -t check_format       # code style check - only when asked
+pio run -e native -t format   # apply formatting - only when asked
+pio check                     # static analysis (cppcheck) - only when asked
 ```
 
 Without a local PlatformIO install, prefix with `docker compose run --rm espfc`.

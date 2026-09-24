@@ -8,7 +8,7 @@ namespace Espfc::Hal::Detail {
 static_assert(sizeof(queue_t) <= QueuePicoSdkBase::STORAGE_SIZE, "opaque storage too small");
 static_assert(alignof(queue_t) <= QueuePicoSdkBase::STORAGE_ALIGN, "opaque storage misaligned");
 
-static queue_t* handle(uint8_t* storage)
+static inline queue_t* handle(uint8_t* storage)
 {
   return reinterpret_cast<queue_t*>(storage);
 }

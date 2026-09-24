@@ -7,7 +7,7 @@
 #include <sdkconfig.h>
 #include <soc/soc_caps.h>
 
-#if defined(CONFIG_FREERTOS_UNICORE)
+#if defined(CONFIG_FREERTOS_UNICORE) || defined(ESPFC_SINGLE_CORE)
 static_assert(!Espfc::Hal::MULTI_CORE, "sdkconfig is unicore, build with -DESPFC_SINGLE_CORE");
 #else
 static_assert(Espfc::Hal::CORE_COUNT == SOC_CPU_CORES_NUM, "Hal::CORE_COUNT does not match SoC core count");

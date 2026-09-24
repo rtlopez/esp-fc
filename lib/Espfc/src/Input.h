@@ -5,9 +5,10 @@
 #include "Device/Input/InputPPM.hpp"
 #include "Device/Input/InputSBUS.hpp"
 #include "Device/InputDevice.hpp"
+#include "Hal/Platform.hpp"
 #include "Model.h"
 #include "TelemetryManager.h"
-#if defined(ESPFC_ESPNOW)
+#if defined(ESPFC_HAL_ESPNOW)
 #include "Device/Input/InputEspNow.hpp"
 #endif
 
@@ -61,7 +62,7 @@ private:
   Device::Input::InputIBUS _ibus;
   Device::Input::InputSBUS _sbus;
   Device::Input::InputCRSF _crsf;
-#if defined(ESPFC_ESPNOW)
+#if defined(ESPFC_HAL_ESPNOW)
   Device::Input::InputEspNow _espnow;
 #endif
 

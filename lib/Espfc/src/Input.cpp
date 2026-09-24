@@ -1,6 +1,7 @@
 
 #include "Input.h"
 #include "Hal/FastCode.hpp"
+#include "Hal/Platform.hpp"
 #include "Hal/Time.hpp"
 #include "ModelConfig.h"
 #include "Utils/Filter.h"
@@ -380,7 +381,7 @@ Device::InputDevice* Input::getInputDevice()
     _model.logger.info().log("RX PPM").log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
     return &_ppm;
   }
-#if defined(ESPFC_ESPNOW)
+#if defined(ESPFC_HAL_ESPNOW)
   else if (_model.isFeatureActive(FEATURE_RX_SPI))
   {
     int status = _espnow.begin();

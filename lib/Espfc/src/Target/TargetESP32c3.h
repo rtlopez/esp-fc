@@ -66,7 +66,3 @@
 
 #define ESPFC_GYRO_I2C_RATE_MAX 1000
 #define ESPFC_GYRO_SPI_RATE_MAX 2000
-
-#define ESPFC_DSP
-
-#include "Target/TargetEsp32Common.h"

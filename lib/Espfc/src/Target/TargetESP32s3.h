@@ -78,9 +78,3 @@
 #define ESPFC_GYRO_SPI_RATE_MAX 4000
 
 #define ESPFC_DSHOT_TELEMETRY
-
-#define ESPFC_FREE_RTOS
-
-#define ESPFC_DSP
-
-#include "Target/TargetEsp32Common.h"
