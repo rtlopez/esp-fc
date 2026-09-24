@@ -1,5 +1,6 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hal/Board.hpp"
+#include "Hal/Platform.hpp"
 #include "Hardware.h"
 #include "Model.h"
 #include "ModelConfig.h"
@@ -8,7 +9,7 @@
 #include <cstring>
 #include <limits>
 #include <platform.h>
-#if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
+#if ESPFC_HAL_CORE_COUNT > 1 && defined(ESPFC_FREE_RTOS)
 #include <driver/timer.h>
 #endif
 
@@ -2100,7 +2101,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
 
 void MspProcessor::processEsc4way()
 {
-#if defined(ESPFC_MULTI_CORE) && defined(ESPFC_FREE_RTOS)
+#if ESPFC_HAL_CORE_COUNT > 1 && defined(ESPFC_FREE_RTOS)
   timer_pause(TIMER_GROUP_0, TIMER_0);
 #endif
   esc4wayProcess(getSerialPort());

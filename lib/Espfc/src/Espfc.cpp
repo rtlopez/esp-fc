@@ -6,10 +6,6 @@
 
 namespace Espfc {
 
-#if defined(ESPFC_MULTI_CORE)
-static_assert(Hal::MULTI_CORE, "target claims multi core, but Hal reports a single core platform");
-#endif
-
 Espfc::Espfc()
     : _hardware{_model}, _controller{_model}, _telemetry{_model}, _input{_model, _telemetry}, _actuator{_model},
       _sensor{_model}, _mixer{_model}, _blackbox{_model}, _buzzer{_model}, _serial{_model, _telemetry}
@@ -63,29 +59,9 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
   }
   Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_0);
 
-#if defined(ESPFC_MULTI_CORE)
-
-  _sensor.read();
-  if (_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
+  if constexpr (Hal::MULTI_CORE)
   {
-    _input.update();
-  }
-  if (_model.state.actuatorTimer.check())
-  {
-    _actuator.update();
-  }
-
-#else
-
-  _sensor.update();
-  if (_model.state.loopTimer.syncTo(_model.state.gyro.timer))
-  {
-    _controller.update();
-    if (_model.state.mixer.timer.syncTo(_model.state.loopTimer))
-    {
-      _mixer.update();
-    }
-    _blackbox.update();
+    _sensor.read();
     if (_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
     {
       _input.update();
@@ -95,9 +71,28 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
       _actuator.update();
     }
   }
-  _sensor.updateDelayed();
-
-#endif
+  else
+  {
+    _sensor.update();
+    if (_model.state.loopTimer.syncTo(_model.state.gyro.timer))
+    {
+      _controller.update();
+      if (_model.state.mixer.timer.syncTo(_model.state.loopTimer))
+      {
+        _mixer.update();
+      }
+      _blackbox.update();
+      if (_model.state.input.timer.syncTo(_model.state.gyro.timer, 1u))
+      {
+        _input.update();
+      }
+      if (_model.state.actuatorTimer.check())
+      {
+        _actuator.update();
+      }
+    }
+    _sensor.updateDelayed();
+  }
 
   _serial.update();
   _buzzer.update();
@@ -110,38 +105,39 @@ int FAST_CODE_ATTR Espfc::update(bool externalTrigger)
 // other task
 int FAST_CODE_ATTR Espfc::updateOther()
 {
-#if defined(ESPFC_MULTI_CORE)
-  Event e;
-  if (!_model.state.appQueue.pop(e))
+  if constexpr (Hal::MULTI_CORE)
   {
-    return 0;
-  }
+    Event e;
+    if (!_model.state.appQueue.pop(e))
+    {
+      return 0;
+    }
 
-  Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
+    Utils::Stats::Measure measure(_model.state.stats, COUNTER_CPU_1);
 
-  switch (e.type)
-  {
-    case EVENT_GYRO_READ:
-      _sensor.preLoop();
-      _controller.update();
-      // skip mixer and bb if earlier than half cycle, possible delay in previous iteration,
-      // to keep space to receive dshot erpm frame, but process rest
-      if (_loop_next < micros())
-      {
-        _loop_next = micros() + _model.state.loopTimer.interval / 2;
-        _mixer.update();
-        _blackbox.update();
-      }
-      _sensor.postLoop();
-      break;
-    case EVENT_ACCEL_READ:
-      _sensor.fusion();
-      break;
-    default:
-      break;
-      // nothing
+    switch (e.type)
+    {
+      case EVENT_GYRO_READ:
+        _sensor.preLoop();
+        _controller.update();
+        // skip mixer and bb if earlier than half cycle, possible delay in previous iteration,
+        // to keep space to receive dshot erpm frame, but process rest
+        if (_loop_next < micros())
+        {
+          _loop_next = micros() + _model.state.loopTimer.interval / 2;
+          _mixer.update();
+          _blackbox.update();
+        }
+        _sensor.postLoop();
+        break;
+      case EVENT_ACCEL_READ:
+        _sensor.fusion();
+        break;
+      default:
+        break;
+        // nothing
+    }
   }
-#endif
 
   return 1;
 }

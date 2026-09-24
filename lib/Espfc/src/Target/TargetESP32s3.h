@@ -80,9 +80,6 @@
 #define ESPFC_DSHOT_TELEMETRY
 
 #define ESPFC_FREE_RTOS
-#ifndef CONFIG_FREERTOS_UNICORE
-#define ESPFC_MULTI_CORE
-#endif
 
 #define ESPFC_DSP
 

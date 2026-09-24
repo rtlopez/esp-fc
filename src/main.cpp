@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <EEPROM.h>
 #include <Espfc.h>
+#include <Hal/Platform.hpp>
 #include <Kalman.hpp>
 #include <Madgwick.hpp>
 #include <Mahony.hpp>
@@ -20,7 +21,7 @@ void IRAM_ATTR serialEventRun(void) {}
 
 Espfc::Espfc espfc;
 
-#if defined(ESPFC_MULTI_CORE)
+#if ESPFC_HAL_CORE_COUNT > 1
   #if defined(ESPFC_FREE_RTOS)
 
     // ESP32 multicore
