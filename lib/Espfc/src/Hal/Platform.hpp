@@ -16,6 +16,9 @@
 #endif
 
 #if defined(ARCH_RP2040)
+#if defined(__FREERTOS)
+#define ESPFC_HAL_FREE_RTOS
+#endif
 #define ESPFC_HAL_MULTI_CORE_RP2040
 #endif
 

@@ -5,7 +5,9 @@
 #include <EspWire.h>
 #include <Espfc.h>
 #include <Gps.hpp>
+#include <Hal/FastCode.hpp>
 #include <Hal/Platform.hpp>
+#include <Hal/Task.hpp>
 #include <Kalman.hpp>
 #include <Madgwick.hpp>
 #include <Mahony.hpp>
@@ -25,27 +27,24 @@ Espfc::Espfc espfc;
 #if ESPFC_HAL_CORE_COUNT > 1
 #if defined(ESPFC_HAL_FREE_RTOS)
 
-// ESP32 multicore
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
+// RTOS multicore, gyro loop is triggered by the hardware timer interrupt
+using Espfc::Hal::Task;
 
-TaskHandle_t gyroTaskHandle = NULL;
-TaskHandle_t pidTaskHandle = NULL;
+Task::Handle gyroTaskHandle = nullptr;
 
-bool IRAM_ATTR gyroTimerIsr(void* args)
+bool ISR_CODE_ATTR gyroTimerIsr(void* args)
 {
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  vTaskNotifyGiveFromISR(gyroTaskHandle, &xHigherPriorityTaskWoken);
-  return xHigherPriorityTaskWoken == pdTRUE;
+  return Task::notifyFromIsr(gyroTaskHandle);
 }
 
 void gyroTask(void* pvParameters)
 {
+  gyroTaskHandle = Task::currentHandle();
   espfc.begin();
   espfc.beginGyroTimer(gyroTimerIsr);
   while (true)
   {
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for timer isr notification
+    Task::waitNotify(); // wait for timer isr notification
     espfc.update(true);
   }
 }
@@ -60,14 +59,11 @@ void pidTask(void* pvParameters)
 
 void setup()
 {
-  disableCore0WDT();
-  // internal task priorities
-  // PRO(0): hi-res timer(22), timer(1), event-loop(20), lwip(18/any), wifi(23), wpa(2/any), BT/vhci(23), NimBle(21),
-  // BT/other(19,20,22), Eth(15), Mqtt(5/any) APP(1): free
+  Task::disableIdleWatchdog();
   espfc.load();
-  xTaskCreateUniversal(gyroTask, "gyroTask", 8192, NULL, 24, &gyroTaskHandle, 1);
-  xTaskCreateUniversal(pidTask, "pidTask", 8192, NULL, 1, &pidTaskHandle, 0);
-  vTaskDelete(NULL); // delete arduino loop task
+  Task::create(gyroTask, "gyroTask", 8192, nullptr, Task::Priority::High, 1);
+  Task::create(pidTask, "pidTask", 8192, nullptr, Task::Priority::Low, 0);
+  Task::exitCurrent(); // delete arduino loop task
 }
 
 void loop() {}

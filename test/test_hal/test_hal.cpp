@@ -9,6 +9,7 @@
 #include <Hal/Gpio.hpp>
 #include <Hal/HwTimer.hpp>
 #include <Hal/Queue.hpp>
+#include <Hal/Task.hpp>
 #include <type_traits>
 
 using namespace Espfc;
@@ -75,6 +76,23 @@ void test_hal_hw_timer()
   timer.end();
   TEST_ASSERT_FALSE(timer.isRunning());
   TEST_ASSERT_EQUAL_INT(0, context);
+}
+
+void test_hal_task()
+{
+  int context = 0;
+  TEST_ASSERT_FALSE(
+      Hal::Task::create([](void* arg) { *static_cast<int*>(arg) = 1; }, "task", 1024, &context,
+                        Hal::Task::Priority::High, 0));
+  TEST_ASSERT_EQUAL_INT(0, context);
+
+  TEST_ASSERT_NULL(Hal::Task::currentHandle());
+  TEST_ASSERT_FALSE(Hal::Task::notifyFromIsr(nullptr));
+
+  Hal::Task::waitNotify();
+  Hal::Task::exitCurrent();
+  Hal::Task::disableIdleWatchdog();
+  TEST_PASS();
 }
 
 void test_hal_adc_read()
@@ -239,6 +257,7 @@ int main(int argc, char** argv)
   RUN_TEST(test_hal_unexpected_reset);
   RUN_TEST(test_hal_gpio_interrupt);
   RUN_TEST(test_hal_hw_timer);
+  RUN_TEST(test_hal_task);
   RUN_TEST(test_hal_adc_read);
   RUN_TEST(test_hal_queue_atomic_plain_index);
   RUN_TEST(test_hal_queue_atomic_plain_index_wrap);
