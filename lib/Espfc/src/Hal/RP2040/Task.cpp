@@ -38,7 +38,7 @@ bool __not_in_flash_func(Task::notifyFromIsr)(Handle handle)
   return false;
 }
 
-void Task::waitNotify()
+void __not_in_flash_func(Task::waitNotify)()
 {
   ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 }

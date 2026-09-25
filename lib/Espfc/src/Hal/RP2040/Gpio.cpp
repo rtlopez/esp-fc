@@ -3,7 +3,7 @@
 #include "Hal/Gpio.hpp"
 #include "Hal/FastCode.hpp"
 #include <Arduino.h>
-#include <gpio.h>
+#include <hardware/gpio.h>
 
 namespace Espfc::Hal {
 

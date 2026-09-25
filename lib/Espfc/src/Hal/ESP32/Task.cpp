@@ -35,7 +35,7 @@ bool ISR_CODE_ATTR Task::notifyFromIsr(Handle handle)
   return woken == pdTRUE;
 }
 
-void Task::waitNotify()
+void FAST_CODE_ATTR Task::waitNotify()
 {
   ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 }
