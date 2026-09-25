@@ -7,6 +7,7 @@
 #include <Hal/Adc.hpp>
 #include <Hal/Board.hpp>
 #include <Hal/Gpio.hpp>
+#include <Hal/HwTimer.hpp>
 #include <Hal/Queue.hpp>
 #include <type_traits>
 
@@ -55,6 +56,24 @@ void test_hal_gpio_interrupt()
   int context = 0;
   Hal::Gpio::attachInterrupt(1, [](void* arg) { *static_cast<int*>(arg) = 1; }, &context, Hal::Gpio::Rising);
   Hal::Gpio::detachInterrupt(1);
+  TEST_ASSERT_EQUAL_INT(0, context);
+}
+
+void test_hal_hw_timer()
+{
+  int context = 0;
+  Hal::HwTimer timer(0);
+  TEST_ASSERT_FALSE(timer.isRunning());
+  TEST_ASSERT_FALSE(timer.begin(
+      1000,
+      [](void* arg) {
+        *static_cast<int*>(arg) = 1;
+        return false;
+      },
+      &context));
+  TEST_ASSERT_FALSE(timer.isRunning());
+  timer.end();
+  TEST_ASSERT_FALSE(timer.isRunning());
   TEST_ASSERT_EQUAL_INT(0, context);
 }
 
@@ -219,6 +238,7 @@ int main(int argc, char** argv)
   RUN_TEST(test_hal_board_reset_reason);
   RUN_TEST(test_hal_unexpected_reset);
   RUN_TEST(test_hal_gpio_interrupt);
+  RUN_TEST(test_hal_hw_timer);
   RUN_TEST(test_hal_adc_read);
   RUN_TEST(test_hal_queue_atomic_plain_index);
   RUN_TEST(test_hal_queue_atomic_plain_index_wrap);

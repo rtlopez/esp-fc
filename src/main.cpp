@@ -26,44 +26,23 @@ Espfc::Espfc espfc;
 #if defined(ESPFC_HAL_FREE_RTOS)
 
 // ESP32 multicore
-#include <driver/timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 TaskHandle_t gyroTaskHandle = NULL;
 TaskHandle_t pidTaskHandle = NULL;
-static const timer_group_t TIMER_GROUP = TIMER_GROUP_0;
-static const timer_idx_t TIMER_IDX = TIMER_0;
 
 bool IRAM_ATTR gyroTimerIsr(void* args)
 {
-  BaseType_t xHigherPriorityTaskWoken;
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   vTaskNotifyGiveFromISR(gyroTaskHandle, &xHigherPriorityTaskWoken);
   return xHigherPriorityTaskWoken == pdTRUE;
-}
-
-void gyroTimerInit(bool (*isrCb)(void* args), int interval)
-{
-  timer_config_t config = {
-      .alarm_en = TIMER_ALARM_EN,
-      .counter_en = TIMER_PAUSE,
-      .intr_type = TIMER_INTR_LEVEL,
-      .counter_dir = TIMER_COUNT_UP,
-      .auto_reload = TIMER_AUTORELOAD_EN,
-      .divider = 80,
-  };
-  timer_init(TIMER_GROUP, TIMER_IDX, &config);
-  timer_set_counter_value(TIMER_GROUP, TIMER_IDX, 0);
-  timer_set_alarm_value(TIMER_GROUP, TIMER_IDX, interval);
-  timer_isr_callback_add(TIMER_GROUP, TIMER_IDX, isrCb, nullptr, ESP_INTR_FLAG_IRAM);
-  timer_enable_intr(TIMER_GROUP, TIMER_IDX);
-  timer_start(TIMER_GROUP, TIMER_IDX);
 }
 
 void gyroTask(void* pvParameters)
 {
   espfc.begin();
-  gyroTimerInit(gyroTimerIsr, espfc.getGyroInterval());
+  espfc.beginGyroTimer(gyroTimerIsr);
   while (true)
   {
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY); // wait for timer isr notification
