@@ -12,7 +12,7 @@ static inline QueueHandle_t handle(void* h)
   return static_cast<QueueHandle_t>(h);
 }
 
-void FAST_CODE_ATTR QueueFreeRtosBase::beginImpl()
+void QueueFreeRtosBase::beginImpl()
 {
   _handle = xQueueCreate(_count, _elemSize);
 }

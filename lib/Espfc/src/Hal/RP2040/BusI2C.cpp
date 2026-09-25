@@ -1,6 +1,7 @@
 #if defined(ARCH_RP2040)
 
 #include "Hal/BusI2C.hpp"
+#include "Hal/FastCode.hpp"
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -60,12 +61,12 @@ int BusI2C::begin(int sda, int scl, uint32_t speed)
   return 1;
 }
 
-int8_t BusI2C::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
+int8_t FAST_CODE_ATTR BusI2C::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
 {
   return read(devAddr, regAddr, length, data);
 }
 
-int8_t BusI2C::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
+int8_t FAST_CODE_ATTR BusI2C::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
 {
   int8_t count = 0;
   uint32_t t1 = millis();

@@ -29,6 +29,11 @@ public:
     return _model.state.gyro.timer.interval;
   }
 
+  bool beginGyroTimer(Hal::HwTimer::Callback callback)
+  {
+    return _model.state.gyro.hwTimer.begin(getGyroInterval(), callback);
+  }
+
 private:
   Model _model;
   Hardware _hardware;
