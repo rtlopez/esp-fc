@@ -31,6 +31,7 @@ private:
   void handle();
   static void handle_isr(void* args);
 
+  // TODO: migrate to std::atomic<int>
   volatile uint16_t _channels[CHANNELS] = {0};
   volatile uint32_t _last_tick = 0;
   volatile uint8_t _channel = 0;

@@ -18,10 +18,7 @@ bool Task::create(Function function, const char* name, size_t stackSize, void* a
   TaskHandle_t task = nullptr;
   // FreeRTOS takes the stack depth in words
   const configSTACK_DEPTH_TYPE depth = stackSize / sizeof(StackType_t);
-  if (xTaskCreate(function, name, depth, arg, taskPriority(priority), &task) != pdPASS) return false;
-
-  vTaskCoreAffinitySet(task, 1u << core);
-  return true;
+  return xTaskCreateAffinitySet(function, name, depth, arg, taskPriority(priority), 1u << core, &task) == pdPASS;
 }
 
 Task::Handle Task::currentHandle()
