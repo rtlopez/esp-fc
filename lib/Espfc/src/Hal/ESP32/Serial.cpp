@@ -1,6 +1,7 @@
 #if defined(ESP32)
 
 #include "Hal/Serial.hpp"
+#include "Hal/FastCode.hpp"
 #include <Arduino.h>
 #include <soc/soc_caps.h>
 #if defined(SOC_USB_SERIAL_JTAG_SUPPORTED) && SOC_USB_SERIAL_JTAG_SUPPORTED
@@ -123,44 +124,44 @@ void SerialUart::updateBaudRate(int baud)
   getPort(_index).updateBaudRate(baud);
 }
 
-int SerialUart::available()
+int FAST_CODE_ATTR SerialUart::available()
 {
   return getPort(_index).available();
 }
 
-int SerialUart::read()
+int FAST_CODE_ATTR SerialUart::read()
 {
   return getPort(_index).read();
 }
 
-size_t SerialUart::readMany(uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUart::readMany(uint8_t* c, size_t l)
 {
   return getPort(_index).read((char*)c, l);
 }
 
-int SerialUart::peek()
+int FAST_CODE_ATTR SerialUart::peek()
 {
   return getPort(_index).peek();
 }
 
 void SerialUart::flush() {}
 
-size_t SerialUart::write(uint8_t c)
+size_t FAST_CODE_ATTR SerialUart::write(uint8_t c)
 {
   return getPort(_index).write(c);
 }
 
-size_t SerialUart::write(const uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUart::write(const uint8_t* c, size_t l)
 {
   return getPort(_index).write(c, l);
 }
 
-int SerialUart::availableForWrite()
+int FAST_CODE_ATTR SerialUart::availableForWrite()
 {
   return getPort(_index).availableForWrite();
 }
 
-bool SerialUart::isTxFifoEmpty()
+bool FAST_CODE_ATTR SerialUart::isTxFifoEmpty()
 {
   return getPort(_index).availableForWrite() >= 0xff;
 }
@@ -197,44 +198,44 @@ void SerialUsb::updateBaudRate(int baud)
   // noop
 }
 
-int SerialUsb::available()
+int FAST_CODE_ATTR SerialUsb::available()
 {
   return Serial.available();
 }
 
-int SerialUsb::read()
+int FAST_CODE_ATTR SerialUsb::read()
 {
   return Serial.read();
 }
 
-size_t SerialUsb::readMany(uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUsb::readMany(uint8_t* c, size_t l)
 {
   return Serial.read((char*)c, l);
 }
 
-int SerialUsb::peek()
+int FAST_CODE_ATTR SerialUsb::peek()
 {
   return Serial.peek();
 }
 
 void SerialUsb::flush() {}
 
-size_t SerialUsb::write(uint8_t c)
+size_t FAST_CODE_ATTR SerialUsb::write(uint8_t c)
 {
   return Serial.write(c);
 }
 
-size_t SerialUsb::write(const uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUsb::write(const uint8_t* c, size_t l)
 {
   return Serial.write(c, l);
 }
 
-int SerialUsb::availableForWrite()
+int FAST_CODE_ATTR SerialUsb::availableForWrite()
 {
   return Serial.availableForWrite();
 }
 
-bool SerialUsb::isTxFifoEmpty()
+bool FAST_CODE_ATTR SerialUsb::isTxFifoEmpty()
 {
   return true;
 }

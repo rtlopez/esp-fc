@@ -13,6 +13,7 @@
 #include "Connect/StatusLed.hpp"
 #include "Stream/ReadWritable.hpp"
 #include "Event.hpp"
+#include "Hal/HwTimer.hpp"
 #include "Utils/SeqLockWrapper.hpp"
 
 namespace Espfc {
@@ -275,6 +276,7 @@ struct GyroState
 
   Utils::Timer timer;
   Utils::Timer dynamicFilterTimer;
+  Hal::HwTimer hwTimer;
 };
 
 struct AccelState

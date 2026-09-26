@@ -1,6 +1,7 @@
 #if defined(ARCH_RP2040)
 
 #include "Hal/Serial.hpp"
+#include "Hal/FastCode.hpp"
 #include <Arduino.h>
 #include <algorithm>
 
@@ -93,17 +94,17 @@ void SerialUart::updateBaudRate(int baud)
   begin(cfg);
 }
 
-int SerialUart::available()
+int FAST_CODE_ATTR SerialUart::available()
 {
   return getPort(_index).available();
 }
 
-int SerialUart::read()
+int FAST_CODE_ATTR SerialUart::read()
 {
   return getPort(_index).read();
 }
 
-size_t SerialUart::readMany(uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUart::readMany(uint8_t* c, size_t l)
 {
   auto& p = getPort(_index);
   auto len = std::min<size_t>(l, p.available());
@@ -114,29 +115,29 @@ size_t SerialUart::readMany(uint8_t* c, size_t l)
   return len;
 }
 
-int SerialUart::peek()
+int FAST_CODE_ATTR SerialUart::peek()
 {
   return getPort(_index).peek();
 }
 
-void SerialUart::flush() {}
+void FAST_CODE_ATTR SerialUart::flush() {}
 
-size_t SerialUart::write(uint8_t c)
+size_t FAST_CODE_ATTR SerialUart::write(uint8_t c)
 {
   return getPort(_index).write(c);
 }
 
-size_t SerialUart::write(const uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUart::write(const uint8_t* c, size_t l)
 {
   return getPort(_index).write(c, l);
 }
 
-int SerialUart::availableForWrite()
+int FAST_CODE_ATTR SerialUart::availableForWrite()
 {
   return getPort(_index).availableForWrite();
 }
 
-bool SerialUart::isTxFifoEmpty()
+bool FAST_CODE_ATTR SerialUart::isTxFifoEmpty()
 {
   // SerialUART::availableForWrite() returns only 0 or 1, and setFIFOSize(256u) does not change that value
   // assume writable == empty
@@ -160,17 +161,17 @@ void SerialUsb::updateBaudRate(int baud)
   // noop
 }
 
-int SerialUsb::available()
+int FAST_CODE_ATTR SerialUsb::available()
 {
   return Serial.available();
 }
 
-int SerialUsb::read()
+int FAST_CODE_ATTR SerialUsb::read()
 {
   return Serial.read();
 }
 
-size_t SerialUsb::readMany(uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUsb::readMany(uint8_t* c, size_t l)
 {
   auto& p = Serial;
   auto len = std::min<size_t>(l, p.available());
@@ -181,29 +182,29 @@ size_t SerialUsb::readMany(uint8_t* c, size_t l)
   return len;
 }
 
-int SerialUsb::peek()
+int FAST_CODE_ATTR SerialUsb::peek()
 {
   return Serial.peek();
 }
 
-void SerialUsb::flush() {}
+void FAST_CODE_ATTR SerialUsb::flush() {}
 
-size_t SerialUsb::write(uint8_t c)
+size_t FAST_CODE_ATTR SerialUsb::write(uint8_t c)
 {
   return Serial.write(c);
 }
 
-size_t SerialUsb::write(const uint8_t* c, size_t l)
+size_t FAST_CODE_ATTR SerialUsb::write(const uint8_t* c, size_t l)
 {
   return Serial.write(c, l);
 }
 
-int SerialUsb::availableForWrite()
+int FAST_CODE_ATTR SerialUsb::availableForWrite()
 {
   return Serial.availableForWrite();
 }
 
-bool SerialUsb::isTxFifoEmpty()
+bool FAST_CODE_ATTR SerialUsb::isTxFifoEmpty()
 {
   return true;
 }

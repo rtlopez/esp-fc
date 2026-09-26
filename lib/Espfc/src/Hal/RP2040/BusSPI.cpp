@@ -2,6 +2,7 @@
 
 #include "Hal/BusSPI.hpp"
 
+#include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
 #include <Arduino.h>
 #include <SPI.h>
@@ -70,7 +71,7 @@ int8_t BusSPI::read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* d
   return length;
 }
 
-int8_t BusSPI::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
+int8_t FAST_CODE_ATTR BusSPI::readFast(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data)
 {
   transfer(devAddr, regAddr | SPI_READ, length, nullptr, data, SPI_SPEED_FAST);
   return length;
@@ -82,7 +83,8 @@ bool BusSPI::write(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8
   return true;
 }
 
-void BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* in, uint8_t* out, uint32_t speed)
+void FAST_CODE_ATTR BusSPI::transfer(uint8_t devAddr, uint8_t regAddr, uint8_t length, const uint8_t* in, uint8_t* out,
+                                     uint32_t speed)
 {
   auto& dev = getSPI(_index);
 
