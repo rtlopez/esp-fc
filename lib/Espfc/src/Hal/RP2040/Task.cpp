@@ -32,7 +32,7 @@ bool __not_in_flash_func(Task::notifyFromIsr)(Handle handle)
   vTaskNotifyGiveFromISR(static_cast<TaskHandle_t>(handle), &woken);
   // the hardware alarm handler ignores the result, request the context switch here
   portYIELD_FROM_ISR(woken);
-  return false;
+  return woken == pdTRUE;
 }
 
 void __not_in_flash_func(Task::waitNotify)()
