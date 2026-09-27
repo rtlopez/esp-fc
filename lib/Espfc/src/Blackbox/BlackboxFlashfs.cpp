@@ -178,7 +178,7 @@ void FAST_CODE_ATTR flashfsWriteAbs(uint32_t address, const uint8_t* data, unsig
   Espfc::Hal::Flash::write(flashfs.partition, address, data, len);
 }
 
-int FAST_CODE_ATTR flashfsReadAbs(uint32_t address, uint8_t* data, unsigned int len)
+int flashfsReadAbs(uint32_t address, uint8_t* data, unsigned int len)
 {
   return Espfc::Hal::Flash::read(flashfs.partition, address, data, len);
 }

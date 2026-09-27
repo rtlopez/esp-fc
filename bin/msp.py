@@ -12,8 +12,12 @@ import serial
 MSP debug script
 """
 
-MSP_BUF_SIZE = 192
 TIMEOUT_SECONDS = 3.0
+DATAFLASH_TIMEOUT_SECONDS = 0.5
+DATAFLASH_RETRIES = 0
+MSP_DATAFLASH_SUMMARY = 70
+MSP_DATAFLASH_READ = 71
+DATAFLASH_READ_SIZE = 256
 
 MSP_STATE_IDLE = 0
 MSP_STATE_HEADER_START = 1
@@ -139,19 +143,15 @@ class MspParser:
             self.received += 1
             self.checksum ^= c
             if self.received == 2:
-                size = self.buffer[0]
-                if size > MSP_BUF_SIZE:
-                    self.reset()
-                else:
-                    self.expected = size
-                    self.cmd = self.buffer[1]
-                    self.received = 0
-                    self.buffer = bytearray()
-                    self.state = (
-                        MSP_STATE_PAYLOAD_V1
-                        if self.expected > 0
-                        else MSP_STATE_CHECKSUM_V1
-                    )
+                self.expected = self.buffer[0]
+                self.cmd = self.buffer[1]
+                self.received = 0
+                self.buffer = bytearray()
+                self.state = (
+                    MSP_STATE_PAYLOAD_V1
+                    if self.expected > 0
+                    else MSP_STATE_CHECKSUM_V1
+                )
             return None
 
         if self.state == MSP_STATE_PAYLOAD_V1:
@@ -188,22 +188,16 @@ class MspParser:
             self.received += 1
             self.checksum2 = crc8_dvb_s2(self.checksum2, c)
             if self.received == 5:
-                flags = self.buffer[0]
-                cmd = self.buffer[1] | (self.buffer[2] << 8)
-                size = self.buffer[3] | (self.buffer[4] << 8)
-                if size > MSP_BUF_SIZE:
-                    self.reset()
-                else:
-                    self.flags = flags
-                    self.cmd = cmd
-                    self.expected = size
-                    self.received = 0
-                    self.buffer = bytearray()
-                    self.state = (
-                        MSP_STATE_PAYLOAD_V2
-                        if self.expected > 0
-                        else MSP_STATE_CHECKSUM_V2
-                    )
+                self.flags = self.buffer[0]
+                self.cmd = self.buffer[1] | (self.buffer[2] << 8)
+                self.expected = self.buffer[3] | (self.buffer[4] << 8)
+                self.received = 0
+                self.buffer = bytearray()
+                self.state = (
+                    MSP_STATE_PAYLOAD_V2
+                    if self.expected > 0
+                    else MSP_STATE_CHECKSUM_V2
+                )
             return None
 
         if self.state == MSP_STATE_PAYLOAD_V2:
@@ -260,9 +254,15 @@ def parse_message_id(value: str) -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("port")
-    parser.add_argument("message_id", type=parse_message_id)
+    parser.add_argument("--port", default="/dev/ttyACM0")
     parser.add_argument("--baud", type=int, default=115200)
+    commands = parser.add_subparsers(dest="action", required=True)
+
+    send_parser = commands.add_parser("send")
+    send_parser.add_argument("message_id", type=parse_message_id, help="Message ID to read")
+
+    get_log_parser = commands.add_parser("get_log")
+    get_log_parser.add_argument("--logfile", required=True, help="Output Blackbox log file")
     return parser.parse_args()
 
 
@@ -278,19 +278,30 @@ class RequestFrame:
         return self.header + self.payload + bytes((self.checksum,))
 
 
-def build_request(cmd: int) -> RequestFrame:
-    if cmd <= 0xFF:
-        header = bytes((ord("$"), ord("M"), ord("<"), 0, cmd))
-        checksum = 0 ^ header[3] ^ header[4]
-        return RequestFrame(MSP_V1, header, b"", checksum)
+def build_request(cmd: int, payload: bytes = b"") -> RequestFrame:
+    if cmd <= 0xFF and len(payload) <= 0xFF:
+        header = bytes((ord("$"), ord("M"), ord("<"), len(payload), cmd))
+        checksum = 0
+        for value in header[3:] + payload:
+            checksum ^= value
+        return RequestFrame(MSP_V1, header, payload, checksum)
 
     header = bytes(
-        (ord("$"), ord("X"), ord("<"), 0, cmd & 0xFF, (cmd >> 8) & 0xFF, 0, 0)
+        (
+            ord("$"),
+            ord("X"),
+            ord("<"),
+            0,
+            cmd & 0xFF,
+            (cmd >> 8) & 0xFF,
+            len(payload) & 0xFF,
+            (len(payload) >> 8) & 0xFF,
+        )
     )
     checksum = 0
-    for value in header[3:8]:
+    for value in header[3:] + payload:
         checksum = crc8_dvb_s2(checksum, value)
-    return RequestFrame(MSP_V2, header, b"", checksum)
+    return RequestFrame(MSP_V2, header, payload, checksum)
 
 
 def read_response(ser: serial.Serial, expected_cmd: int, timeout: float) -> ParsedFrame:
@@ -303,7 +314,7 @@ def read_response(ser: serial.Serial, expected_cmd: int, timeout: float) -> Pars
                 f"timeout waiting for response to message {expected_cmd}"
             )
         ser.timeout = max(0.0, min(remaining, 0.2))
-        chunk = ser.read(256)
+        chunk = ser.read(max(1, ser.in_waiting))
         if not chunk:
             continue
         for byte in chunk:
@@ -363,14 +374,102 @@ def print_frame_parts(request: RequestFrame, response: ParsedFrame) -> None:
     print(marker, format_bytes(response.payload))
 
 
-def main() -> int:
-    args = parse_args()
-    request = build_request(args.message_id)
-    ser = open_serial(args.port, args.baud)
-    try:
+def send_request(
+    ser: serial.Serial,
+    cmd: int,
+    payload: bytes = b"",
+    timeout: float = TIMEOUT_SECONDS,
+    retries: int = 0,
+) -> tuple[RequestFrame, ParsedFrame]:
+    request = build_request(cmd, payload)
+    for attempt in range(retries + 1):
         ser.write(request.raw)
         ser.flush()
-        response = read_response(ser, args.message_id, TIMEOUT_SECONDS)
+        try:
+            response = read_response(ser, cmd, timeout)
+            break
+        except TimeoutError:
+            if attempt == retries:
+                raise
+            ser.reset_input_buffer()
+    if response.frame_type == ord("!"):
+        raise ValueError(f"MSP command {cmd} failed")
+    return request, response
+
+
+def read_u16(data: bytes, offset: int) -> int:
+    return int.from_bytes(data[offset : offset + 2], "little")
+
+
+def read_u32(data: bytes, offset: int) -> int:
+    return int.from_bytes(data[offset : offset + 4], "little")
+
+
+def get_log(ser: serial.Serial, logfile: str) -> int:
+    _, summary = send_request(ser, MSP_DATAFLASH_SUMMARY)
+    if len(summary.payload) < 13:
+        raise ValueError("invalid MSP_DATAFLASH_SUMMARY response")
+
+    flags = summary.payload[0]
+    flash_size = read_u32(summary.payload, 5)
+    log_size = read_u32(summary.payload, 9)
+    print(f"Flags: {flags:02X}, Flash size: {flash_size}, Log size: {log_size}")
+    if flags & 2 == 0:
+        raise ValueError("dataflash is not supported")
+    if flags & 1 == 0:
+        raise ValueError("dataflash is not ready")
+    if log_size > flash_size:
+        raise ValueError("invalid dataflash size in summary")
+
+    address = 0
+    with open(logfile, "wb") as output:
+        while address < log_size:
+            requested = min(DATAFLASH_READ_SIZE, log_size - address)
+            payload = (
+                address.to_bytes(4, "little")
+                + requested.to_bytes(2, "little")
+                + b"\x00"
+            )
+            _, response = send_request(
+                ser,
+                MSP_DATAFLASH_READ,
+                payload,
+                DATAFLASH_TIMEOUT_SECONDS,
+                DATAFLASH_RETRIES,
+            )
+            if len(response.payload) < 7:
+                raise ValueError("invalid MSP_DATAFLASH_READ response")
+
+            response_address = read_u32(response.payload, 0)
+            read_length = read_u16(response.payload, 4)
+            compression = response.payload[6]
+            data = response.payload[7:]
+            print(f"addr: {response_address:08X}/{log_size:08X}, length: {read_length}")
+            if response_address != address:
+                raise ValueError(
+                    f"unexpected dataflash address {response_address:08X}, expected {address:08X}"
+                )
+            if compression != 0:
+                raise ValueError(f"unsupported dataflash compression method {compression}")
+            if read_length != len(data) or read_length > requested:
+                raise ValueError("invalid data length in MSP_DATAFLASH_READ response")
+            if read_length == 0:
+                raise ValueError(f"dataflash read stopped at address {address}")
+
+            output.write(data)
+            address += read_length
+
+    print(f"Saved {address} bytes to {logfile}")
+    return 0
+
+
+def main() -> int:
+    args = parse_args()
+    ser = open_serial(args.port, args.baud)
+    try:
+        if args.action == "get_log":
+            return get_log(ser, args.logfile)
+        request, response = send_request(ser, args.message_id)
     finally:
         ser.close()
     print_frame_parts(request, response)

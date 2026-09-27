@@ -202,6 +202,12 @@ int FAST_CODE_ATTR SerialManager::update()
     {
       processMsp(ss);
     }
+#ifdef ESPFC_SERIAL_USB
+    if (_current == SERIAL_USB)
+    {
+      Hal::getSerialUsb()->completeTx();
+    }
+#endif
   }
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI

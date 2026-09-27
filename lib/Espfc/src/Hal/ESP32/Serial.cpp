@@ -6,8 +6,13 @@
 #include <soc/soc_caps.h>
 #if defined(SOC_USB_SERIAL_JTAG_SUPPORTED) && SOC_USB_SERIAL_JTAG_SUPPORTED
 #include "Hal/Gpio.hpp"
+#include <hal/usb_serial_jtag_ll.h>
 #include <soc/io_mux_reg.h>
 #include <soc/usb_serial_jtag_reg.h>
+#endif
+
+#if ARDUINO_USB_MODE && defined(SOC_USB_SERIAL_JTAG_SUPPORTED) && SOC_USB_SERIAL_JTAG_SUPPORTED
+#define ESPFC_SERIAL_HWCDC
 #endif
 
 namespace {
@@ -28,6 +33,11 @@ static constexpr uint32_t SERIAL_UART_NB_STOP_BIT_2 = 0B00110000;
 
 #if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
 static Espfc::Hal::SerialUsb usb;
+#endif
+
+#ifdef ESPFC_SERIAL_HWCDC
+static constexpr int HWCDC_TX_BUFFER_SIZE = 256;
+static bool usbTxPending = false;
 #endif
 
 static Espfc::Hal::SerialUart uart0(0);
@@ -222,11 +232,14 @@ void SerialUsb::flush() {}
 
 size_t FAST_CODE_ATTR SerialUsb::write(uint8_t c)
 {
-  return Serial.write(c);
+  return write(&c, 1);
 }
 
 size_t FAST_CODE_ATTR SerialUsb::write(const uint8_t* c, size_t l)
 {
+#ifdef ESPFC_SERIAL_HWCDC
+  usbTxPending = true;
+#endif
   return Serial.write(c, l);
 }
 
@@ -238,6 +251,25 @@ int FAST_CODE_ATTR SerialUsb::availableForWrite()
 bool FAST_CODE_ATTR SerialUsb::isTxFifoEmpty()
 {
   return true;
+}
+
+// Workarounds for HWCDC TX stalls, both released only by the next write:
+// - queued data left in the ring buffer with IN_EMPTY interrupt disabled,
+// - transfer ending with a full 64-byte packet kept by the host until a zero-length packet.
+void FAST_CODE_ATTR SerialUsb::completeTx()
+{
+#ifdef ESPFC_SERIAL_HWCDC
+  if (!usbTxPending || !Serial.isPlugged()) return;
+  if (Serial.availableForWrite() < HWCDC_TX_BUFFER_SIZE)
+  {
+    usb_serial_jtag_ll_txfifo_flush();
+    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    return;
+  }
+  if (!usb_serial_jtag_ll_txfifo_writable()) return;
+  usb_serial_jtag_ll_txfifo_flush();
+  usbTxPending = false;
+#endif
 }
 
 #endif

@@ -209,6 +209,8 @@ bool FAST_CODE_ATTR SerialUsb::isTxFifoEmpty()
   return true;
 }
 
+void SerialUsb::completeTx() {}
+
 } // namespace Espfc::Hal
 
 #endif

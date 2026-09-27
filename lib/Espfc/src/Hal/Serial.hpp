@@ -82,6 +82,7 @@ public:
   size_t write(const uint8_t* c, size_t l);
   int availableForWrite();
   bool isTxFifoEmpty();
+  void completeTx();
 };
 
 SerialUsb* getSerialUsb();
