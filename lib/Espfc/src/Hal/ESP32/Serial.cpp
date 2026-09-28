@@ -125,7 +125,7 @@ void SerialUart::begin(const SerialDeviceConfig& conf)
 {
   uint32_t sc = targetSerialConfigFlags(conf);
   getPort(_index).end();
-  getPort(_index).setTxBufferSize(SERIAL_TX_BUFFER_SIZE);
+  getPort(_index).setTxBufferSize(SERIAL_TX_BUF_LEN);
   getPort(_index).begin(conf.baud, sc, conf.rx_pin, conf.tx_pin, conf.inverted);
 }
 
