@@ -1453,8 +1453,6 @@ void beeper(int mode);
 // FLASHFS START
 #ifdef USE_FLASHFS
 
-#define FLASHFS_WRITE_BUFFER_SIZE 128u
-#define FLASHFS_FLUSH_BUFFER_SIZE 64u
 #define FLASHFS_JOURNAL_ITEMS 32u
 
 typedef struct

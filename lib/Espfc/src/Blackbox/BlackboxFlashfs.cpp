@@ -8,6 +8,9 @@
 
 static constexpr uint32_t FLASHFS_ERASED_VAL = 0xffffffff;
 
+static constexpr size_t FLASHFS_WRITE_BUFFER_SIZE = 256;
+static constexpr size_t FLASHFS_FLUSH_BUFFER_SIZE = 128;
+
 using BufferType = Espfc::Utils::RingBuf<uint8_t, FLASHFS_WRITE_BUFFER_SIZE>;
 
 static BufferType buff;

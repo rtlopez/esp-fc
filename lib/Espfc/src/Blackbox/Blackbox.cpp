@@ -30,9 +30,14 @@ int Blackbox::begin()
 
   if (!_model.blackboxEnabled()) return 0;
 
+  int serialIdx = -1;
+
   if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
-    _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+    serialIdx = _model.getSerialIndex(SERIAL_FUNCTION_BLACKBOX);
+    if (serialIdx < 0) return 0;
+
+    _serial = _model.state.serial[serialIdx].stream;
     if (!_serial) return 0;
 
     _buffer.wrap(_serial);
@@ -183,8 +188,11 @@ int Blackbox::begin()
   if (_model.magActive()) sensorsSet(SENSOR_MAG);
   if (_model.baroActive()) sensorsSet(SENSOR_BARO);
 
+  const auto& sc = _model.config.serial[serialIdx];
   blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
   blackboxConfigMutable()->device = _model.config.blackbox.dev;
+  blackboxConfigMutable()->blackbox_uart = SERIAL_PORT_USART1;
+  blackboxConfigMutable()->blackbox_baud = toBaudIndex(sc.baud);
   blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
   blackboxConfigMutable()->mode = _model.config.blackbox.mode;
   blackboxConfigMutable()->high_resolution = 0;
@@ -261,12 +269,14 @@ int FAST_CODE_ATTR Blackbox::update()
   uint32_t startTime = micros();
   updateArmed();
   updateMode();
+  // PIN_DEBUG(1);
   if (blackboxShouldLogIFrame() || blackboxShouldLogPFrame())
   {
     updateData();
   }
-  // PIN_DEBUG(1);
+  // PIN_DEBUG(0);
   blackboxUpdate(_model.state.loopTimer.last);
+  // PIN_DEBUG(1);
   if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
     _buffer.flush();

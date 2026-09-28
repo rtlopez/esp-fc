@@ -244,6 +244,15 @@ class Model
       return nullptr;
     }
 
+    int getSerialIndex(SerialFunction sf)
+    {
+      for (size_t i = 0; i < SERIAL_UART_COUNT; i++)
+      {
+        if(config.serial[i].functionMask & sf) return i;
+      }
+      return -1;
+    }
+
     int getSerialIndex(SerialPortId id)
     {
       switch(id)
