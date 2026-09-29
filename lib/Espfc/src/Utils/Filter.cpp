@@ -33,7 +33,7 @@ void FAST_CODE_ATTR FilterStatePt1::reconfigure(const FilterStatePt1& from)
   k = from.k;
 }
 
-void FilterStatePt1::init(float rate, float freq)
+void FAST_CODE_ATTR FilterStatePt1::init(float rate, float freq)
 {
   k = pt1Gain(rate, freq);
 }
@@ -49,7 +49,7 @@ void FilterStateFir2::reset()
   v[0] = v[1] = 0.0f;
 }
 
-void FilterStateFir2::init() {}
+void FAST_CODE_ATTR FilterStateFir2::init() {}
 
 void FAST_CODE_ATTR FilterStateFir2::reconfigure(const FilterStateFir2& from) {}
 
@@ -65,7 +65,7 @@ void FilterStateBiquad::reset()
   x1 = x2 = y1 = y2 = 0;
 }
 
-void FilterStateBiquad::init(BiquadFilterType filterType, float rate, float freq, float q)
+void FAST_CODE_ATTR FilterStateBiquad::init(BiquadFilterType filterType, float rate, float freq, float q)
 {
   const float omega = (2.0f * Utils::pi() * freq) / rate;
   const float sn = sinf(omega);
@@ -147,7 +147,7 @@ void FilterStateFirstOrder::reset()
   x1 = y1 = 0;
 }
 
-void FilterStateFirstOrder::init(float rate, float freq)
+void FAST_CODE_ATTR FilterStateFirstOrder::init(float rate, float freq)
 {
   freq = std::clamp(freq, 0.0f, rate * 0.48f);
 
@@ -191,7 +191,7 @@ void FilterStateMedian::reset()
   v[0] = v[1] = v[2] = 0.f;
 }
 
-void FilterStateMedian::init() {}
+void FAST_CODE_ATTR FilterStateMedian::init() {}
 
 void FAST_CODE_ATTR FilterStateMedian::reconfigure(const FilterStateMedian& from) {}
 
@@ -242,7 +242,7 @@ void FilterStatePt2::reset()
   v[0] = v[1] = 0.f;
 }
 
-void FilterStatePt2::init(float rate, float freq)
+void FAST_CODE_ATTR FilterStatePt2::init(float rate, float freq)
 {
   constexpr float correction = 1.553773974f; // 1 / sqrt(2^(1/n) - 1)
   k = pt1Gain(rate, freq * correction);
@@ -265,7 +265,7 @@ void FilterStatePt3::reset()
   v[0] = v[1] = v[2] = 0.f;
 }
 
-void FilterStatePt3::init(float rate, float freq)
+void FAST_CODE_ATTR FilterStatePt3::init(float rate, float freq)
 {
   constexpr float correction = 1.961459177f; // 1 / sqrt(2^(1/n) - 1)
   k = pt1Gain(rate, freq * correction);
@@ -345,11 +345,14 @@ void Filter::reset()
       _state.median.reset();
       break;
     case FILTER_PT2:
-      return _state.pt2.reset();
+      _state.pt2.reset();
+      break;
     case FILTER_PT3:
-      return _state.pt3.reset();
+      _state.pt3.reset();
+      break;
     case FILTER_FO:
-      return _state.fo.reset();
+      _state.fo.reset();
+      break;
     case FILTER_NONE:
     default:
       break;

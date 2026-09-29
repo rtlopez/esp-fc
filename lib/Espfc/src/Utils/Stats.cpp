@@ -32,7 +32,7 @@ void FAST_CODE_ATTR Stats::end(StatCounter c)
   _count[c]++;
 }
 
-void Stats::loopTick()
+void FAST_CODE_ATTR Stats::loopTick()
 {
   uint32_t now = micros();
   uint32_t diff = now - _loop_last;
@@ -46,7 +46,7 @@ uint32_t Stats::loopTime() const
   return _loop_time;
 }
 
-void Stats::update()
+void FAST_CODE_ATTR Stats::update()
 {
   if (!timer.check()) return;
   for (size_t i = 0; i < COUNTER_COUNT; i++)
