@@ -12,7 +12,7 @@ namespace Espfc::Blackbox {
 class BlackboxSerialBuffer : public Stream::ReadWritable
 {
 public:
-  static constexpr size_t SIZE = Hal::SERIAL_TX_BUFFER_SIZE;
+  static constexpr size_t SIZE = Hal::SERIAL_TX_BUF_LEN;
 
   BlackboxSerialBuffer(): _dev(nullptr), _idx(0) {}
 

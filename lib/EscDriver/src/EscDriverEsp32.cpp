@@ -167,6 +167,10 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(i);
   bool splitted = i != rx_ch; // rx and tx are separated
 
+  _channel[i].iomux_reg = GPIO_PIN_MUX_REG[pin];
+  _channel[i].tx_sig = rmt_periph_signals.groups[0].channels[i].tx_sig;
+  _channel[i].rx_sig = rmt_periph_signals.groups[0].channels[rx_ch].rx_sig;
+
   if(_digital && _dshot_tlm)
   {
     // setup RX
@@ -233,12 +237,13 @@ void IRAM_ATTR EscDriverEsp32::modeRx(rmt_channel_t channel)
 
 void IRAM_ATTR EscDriverEsp32::enableTx(rmt_channel_t channel)
 {
-  gpio_num_t gpio_num = (gpio_num_t)_channel[(size_t)channel].pin;
+  const Slot& slot = _channel[(size_t)channel];
+  gpio_num_t gpio_num = (gpio_num_t)slot.pin;
 
   //gpio_set_direction(gpio_num, GPIO_MODE_OUTPUT);
-  gpio_ll_input_disable(&GPIO, gpio_num);
+  PIN_INPUT_DISABLE(slot.iomux_reg);
   gpio_ll_output_enable(&GPIO, gpio_num);
-  esp_rom_gpio_connect_out_signal(gpio_num, rmt_periph_signals.groups[0].channels[channel].tx_sig, false, false);
+  esp_rom_gpio_connect_out_signal(gpio_num, slot.tx_sig, false, false);
   rmt_ll_enable_tx_end_interrupt(&RMT, channel, true);
 }
 
@@ -250,13 +255,13 @@ void IRAM_ATTR EscDriverEsp32::disableTx(rmt_channel_t channel)
 void IRAM_ATTR EscDriverEsp32::enableRx(rmt_channel_t channel)
 {
   // NOTE: time critical function, execution must not exceed 5-6us
-  rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(channel);
-  gpio_num_t gpio_num = (gpio_num_t)_channel[(size_t)channel].pin;
+  const Slot& slot = _channel[(size_t)channel];
+  gpio_num_t gpio_num = (gpio_num_t)slot.pin;
 
   //gpio_set_direction(gpio_num, GPIO_MODE_INPUT);
-  gpio_ll_input_enable(&GPIO, gpio_num);
+  PIN_INPUT_ENABLE(slot.iomux_reg);
   gpio_ll_output_disable(&GPIO, gpio_num);
-  esp_rom_gpio_connect_in_signal(gpio_num, rmt_periph_signals.groups[0].channels[rx_ch].rx_sig, false);
+  esp_rom_gpio_connect_in_signal(gpio_num, slot.rx_sig, false);
 
   //rmt_rx_start((rmt_channel_t)i, true);
   rmt_ll_rx_set_mem_owner(&RMT, channel, RMT_MEM_OWNER_RX);

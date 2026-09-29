@@ -230,21 +230,23 @@ class Model
       }
     }
 
-    Stream::ReadWritable * getSerialStream(SerialPort i)
-    {
-      return state.serial[i].stream;
-    }
-
     Stream::ReadWritable * getSerialStream(SerialFunction sf)
     {
-      for(size_t i = 0; i < SERIAL_UART_COUNT; i++)
-      {
-        if(config.serial[i].functionMask & sf) return state.serial[i].stream;
-      }
+      auto serialIdx = getSerialIndex(sf);
+      if(serialIdx >= 0 && serialIdx < SERIAL_UART_COUNT) return state.serial[serialIdx].stream;
       return nullptr;
     }
 
-    int getSerialIndex(SerialPortId id)
+    int getSerialIndex(SerialFunction sf)
+    {
+      for (size_t i = 0; i < SERIAL_UART_COUNT; i++)
+      {
+        if(config.serial[i].functionMask & sf) return i;
+      }
+      return -1;
+    }
+
+    int getSerialIndexById(SerialPortId id)
     {
       switch(id)
       {

@@ -75,6 +75,10 @@ class EscDriverEsp32: public EscDriverBase
         uint16_t dshot_t1l;
         uint16_t dshot_tlm_bit_len;
         uint32_t telemetryValue;
+        // cached in RAM, flash tables are not accessible from isr during flash operations
+        uint32_t iomux_reg;
+        uint16_t tx_sig;
+        uint16_t rx_sig;
     };
 
     EscDriverEsp32();

@@ -32,7 +32,7 @@ uint32_t FAST_CODE_ATTR Flash::getSectorSize()
   return SPI_FLASH_SEC_SIZE;
 }
 
-size_t FAST_CODE_ATTR Flash::read(FlashPartition partition, uint32_t address, uint8_t* data, size_t len)
+size_t Flash::read(FlashPartition partition, uint32_t address, uint8_t* data, size_t len)
 {
   const auto p = toPartition(partition);
   if (!p) return 0;

@@ -25,14 +25,16 @@ int Blackbox::begin()
 
 #ifdef USE_FLASHFS
   int res = flashfsInit();
-  _model.logger.info().log("FLASHFS").log(res).logln(flashfsGetOffset());
+  _model.logger.info().log("FLASHFS").log(res).log(flashfsGetOffset()).logln(flashfsGetSize());
 #endif
 
   if (!_model.blackboxEnabled()) return 0;
 
-  if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
+  int serialIdx = _model.getSerialIndex(SERIAL_FUNCTION_BLACKBOX);
+
+  if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL && serialIdx >= 0 && serialIdx < SERIAL_UART_COUNT)
   {
-    _serial = _model.getSerialStream(SERIAL_FUNCTION_BLACKBOX);
+    _serial = _model.state.serial[serialIdx].stream;
     if (!_serial) return 0;
 
     _buffer.wrap(_serial);
@@ -188,6 +190,12 @@ int Blackbox::begin()
   blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
   blackboxConfigMutable()->mode = _model.config.blackbox.mode;
   blackboxConfigMutable()->high_resolution = 0;
+  blackboxConfigMutable()->blackbox_uart = SERIAL_PORT_USART1;
+  blackboxConfigMutable()->blackbox_baud = SERIAL_SPEED_INDEX_115200;
+  if (serialIdx >= 0 && serialIdx < SERIAL_UART_COUNT)
+  {
+    blackboxConfigMutable()->blackbox_baud = toBaudIndex(_model.config.serial[serialIdx].baud);
+  }
 
   featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 
@@ -261,12 +269,14 @@ int FAST_CODE_ATTR Blackbox::update()
   uint32_t startTime = micros();
   updateArmed();
   updateMode();
+  // PIN_DEBUG(1);
   if (blackboxShouldLogIFrame() || blackboxShouldLogPFrame())
   {
     updateData();
   }
-  // PIN_DEBUG(1);
+  // PIN_DEBUG(0);
   blackboxUpdate(_model.state.loopTimer.last);
+  // PIN_DEBUG(1);
   if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
   {
     _buffer.flush();

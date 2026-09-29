@@ -73,7 +73,7 @@ void SerialUart::begin(const SerialDeviceConfig& conf)
   _configs[_index] = conf;
   auto& p = getPort(_index);
   uint16_t sc = targetSerialConfigFlags(conf);
-  p.setFIFOSize(SERIAL_TX_BUFFER_SIZE);
+  p.setFIFOSize(SERIAL_TX_BUF_LEN);
   p.setPinout(conf.tx_pin, conf.rx_pin);
   if (conf.inverted)
   {
@@ -208,6 +208,8 @@ bool FAST_CODE_ATTR SerialUsb::isTxFifoEmpty()
 {
   return true;
 }
+
+void SerialUsb::completeTx() {}
 
 } // namespace Espfc::Hal
 

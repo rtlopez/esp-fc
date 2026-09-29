@@ -162,7 +162,7 @@ size_t WifiClient::write(const uint8_t* c, size_t l)
 
 int WifiClient::availableForWrite()
 {
-  return SERIAL_TX_BUFFER_SIZE;
+  return SERIAL_TX_BUF_LEN;
 }
 
 bool WifiClient::isTxFifoEmpty()

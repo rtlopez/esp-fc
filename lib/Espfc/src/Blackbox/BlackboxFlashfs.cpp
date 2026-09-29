@@ -8,6 +8,9 @@
 
 static constexpr uint32_t FLASHFS_ERASED_VAL = 0xffffffff;
 
+static constexpr size_t FLASHFS_WRITE_BUFFER_SIZE = 256;
+static constexpr size_t FLASHFS_FLUSH_BUFFER_SIZE = 128;
+
 using BufferType = Espfc::Utils::RingBuf<uint8_t, FLASHFS_WRITE_BUFFER_SIZE>;
 
 static BufferType buff;
@@ -178,7 +181,7 @@ void FAST_CODE_ATTR flashfsWriteAbs(uint32_t address, const uint8_t* data, unsig
   Espfc::Hal::Flash::write(flashfs.partition, address, data, len);
 }
 
-int FAST_CODE_ATTR flashfsReadAbs(uint32_t address, uint8_t* data, unsigned int len)
+int flashfsReadAbs(uint32_t address, uint8_t* data, unsigned int len)
 {
   return Espfc::Hal::Flash::read(flashfs.partition, address, data, len);
 }
