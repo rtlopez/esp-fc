@@ -25,18 +25,15 @@ int Blackbox::begin()
 
 #ifdef USE_FLASHFS
   int res = flashfsInit();
-  _model.logger.info().log("FLASHFS").log(res).logln(flashfsGetOffset());
+  _model.logger.info().log("FLASHFS").log(res).log(flashfsGetOffset()).logln(flashfsGetSize());
 #endif
 
   if (!_model.blackboxEnabled()) return 0;
 
-  int serialIdx = -1;
+  int serialIdx = _model.getSerialIndex(SERIAL_FUNCTION_BLACKBOX);
 
-  if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL)
+  if (_model.config.blackbox.dev == BLACKBOX_DEV_SERIAL && serialIdx >= 0 && serialIdx < SERIAL_UART_COUNT)
   {
-    serialIdx = _model.getSerialIndex(SERIAL_FUNCTION_BLACKBOX);
-    if (serialIdx < 0) return 0;
-
     _serial = _model.state.serial[serialIdx].stream;
     if (!_serial) return 0;
 
@@ -188,14 +185,17 @@ int Blackbox::begin()
   if (_model.magActive()) sensorsSet(SENSOR_MAG);
   if (_model.baroActive()) sensorsSet(SENSOR_BARO);
 
-  const auto& sc = _model.config.serial[serialIdx];
   blackboxConfigMutable()->sample_rate = _model.config.blackbox.pDenom;
   blackboxConfigMutable()->device = _model.config.blackbox.dev;
-  blackboxConfigMutable()->blackbox_uart = SERIAL_PORT_USART1;
-  blackboxConfigMutable()->blackbox_baud = toBaudIndex(sc.baud);
   blackboxConfigMutable()->fields_disabled_mask = ~_model.config.blackbox.fieldsMask;
   blackboxConfigMutable()->mode = _model.config.blackbox.mode;
   blackboxConfigMutable()->high_resolution = 0;
+  blackboxConfigMutable()->blackbox_uart = SERIAL_PORT_USART1;
+  blackboxConfigMutable()->blackbox_baud = SERIAL_SPEED_INDEX_115200;
+  if (serialIdx >= 0 && serialIdx < SERIAL_UART_COUNT)
+  {
+    blackboxConfigMutable()->blackbox_baud = toBaudIndex(_model.config.serial[serialIdx].baud);
+  }
 
   featureConfigMutable()->enabledFeatures = _model.config.featureMask;
 

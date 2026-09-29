@@ -687,7 +687,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       while (m.remain() >= packetSize)
       {
         int id = m.readU8();
-        int k = _model.getSerialIndex((SerialPortId)id);
+        int k = _model.getSerialIndexById((SerialPortId)id);
         if (k == -1)
         {
           m.advance(packetSize - 1);
@@ -716,7 +716,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       while (m.remain() >= packetSize)
       {
         int id = m.readU8();
-        int k = _model.getSerialIndex((SerialPortId)id);
+        int k = _model.getSerialIndexById((SerialPortId)id);
         if (k == -1)
         {
           m.advance(packetSize - 1);
