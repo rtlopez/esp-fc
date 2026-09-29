@@ -66,20 +66,21 @@ void test_cli_init()
   Cli cli{model};
   TEST_ASSERT_FALSE(cli._active);
   TEST_ASSERT_FALSE(cli._interactive);
-  TEST_ASSERT_FALSE(cli._ignore);
   TEST_ASSERT_NOT_NULL(cli._params);
 }
 
-void test_cli_enter_interactive()
+void test_cli_not_enter_interactive()
 {
   Model model;
   Cli cli{model};
   CliCmd cmd;
 
   cli.process('h', cmd, printer);
-  TEST_ASSERT_TRUE(cli._active);
-  TEST_ASSERT_TRUE(cli._interactive);
-  TEST_ASSERT_FALSE(cli._ignore);
+  TEST_ASSERT_FALSE(cli._active);
+  TEST_ASSERT_FALSE(cli._interactive);
+
+  TEST_ASSERT_EQUAL(0, cmd.index);
+  TEST_ASSERT_EQUAL(0, cmd.buff[cmd.index]);
 }
 
 void test_cli_enter_leave_non_interactive()
@@ -91,12 +92,10 @@ void test_cli_enter_leave_non_interactive()
   cli.process(0x02, cmd, printer);
   TEST_ASSERT_TRUE(cli._active);
   TEST_ASSERT_FALSE(cli._interactive);
-  TEST_ASSERT_FALSE(cli._ignore);
 
   cli.process(0x03, cmd, printer);
   TEST_ASSERT_FALSE(cli._active);
   TEST_ASSERT_FALSE(cli._interactive);
-  TEST_ASSERT_FALSE(cli._ignore);
 
   auto result = stream.str();
   TEST_ASSERT_EQUAL(2, result.length());
@@ -113,7 +112,9 @@ void test_cli_configurator_handshake()
   cli.process('#', cmd, printer);
   TEST_ASSERT_TRUE(cli._active);
   TEST_ASSERT_TRUE(cli._interactive);
-  TEST_ASSERT_FALSE(cli._ignore);
+
+  TEST_ASSERT_EQUAL(0, cmd.index);
+  TEST_ASSERT_EQUAL(0, cmd.buff[cmd.index]);
 
   auto result = stream.str();
   TEST_ASSERT_NOT_EQUAL(0, result.length());
@@ -125,7 +126,6 @@ void test_cli_configurator_handshake()
   cli.process(0x04, cmd, printer);
   TEST_ASSERT_FALSE(cli._active);
   TEST_ASSERT_FALSE(cli._interactive);
-  TEST_ASSERT_FALSE(cli._ignore);
 
   result = stream.str();
   TEST_ASSERT_NOT_EQUAL(0, result.length());
@@ -138,25 +138,26 @@ void test_cli_process_comment()
   Cli cli{model};
   CliCmd cmd;
 
+  cli.process('#', cmd, printer);
+
   for (char c : std::string("command # comment"))
   {
     cli.process(c, cmd, printer);
   }
 
-  TEST_ASSERT_EQUAL(8, cmd.index);
-  TEST_ASSERT_EQUAL_STRING("command ", cmd.buff);
-  TEST_ASSERT_EQUAL(0, cmd.args[cmd.index]);
-  TEST_ASSERT_EQUAL(std::string::npos, std::string{cmd.buff}.find("# comment"));
+  TEST_ASSERT_EQUAL(17, cmd.index);
+  TEST_ASSERT_EQUAL(0, cmd.buff[cmd.index]);
+  TEST_ASSERT_EQUAL_STRING("command # comment", cmd.buff);
+  TEST_ASSERT_EQUAL(8, std::string{cmd.buff}.find("# comment"));
 
   TEST_ASSERT_TRUE(cli._active);
   TEST_ASSERT_TRUE(cli._interactive);
-  TEST_ASSERT_TRUE(cli._ignore);
 
   cli.process('\n', cmd, printer);
 
   auto result = stream.str();
   TEST_ASSERT_NOT_EQUAL(0, result.length());
-  TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("# command"));
+  TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("# command # comment"));
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("unknown command: command"));
 }
 
@@ -166,6 +167,8 @@ void test_cli_overflow()
   Cli cli{model};
   CliCmd cmd;
 
+  cli.process('#', cmd, printer);
+
   for (size_t i = 0; i < sizeof(cmd.buff) + 2; ++i)
   {
     cli.process('a', cmd, printer);
@@ -173,7 +176,7 @@ void test_cli_overflow()
 
   TEST_ASSERT_EQUAL(sizeof(cmd.buff) - 1, cmd.index);
   TEST_ASSERT_EQUAL_STRING(std::string(sizeof(cmd.buff) - 1, 'a').c_str(), cmd.buff);
-  TEST_ASSERT_EQUAL(0, cmd.args[cmd.index]);
+  TEST_ASSERT_EQUAL(0, cmd.buff[cmd.index]);
 }
 
 void test_cli_process_help()
@@ -182,6 +185,8 @@ void test_cli_process_help()
   Cli cli{model};
   CliCmd cmd;
 
+  cli.process('#', cmd, printer);
+
   for (char c : std::string("help"))
   {
     cli.process(c, cmd, printer);
@@ -189,7 +194,7 @@ void test_cli_process_help()
 
   TEST_ASSERT_EQUAL(4, cmd.index);
   TEST_ASSERT_EQUAL_STRING("help", cmd.buff);
-  TEST_ASSERT_EQUAL(0, cmd.args[cmd.index]);
+  TEST_ASSERT_EQUAL(0, cmd.buff[cmd.index]);
 
   cli.process('\n', cmd, printer);
 
@@ -216,7 +221,7 @@ void test_cli_process_help_non_interactive()
   TEST_ASSERT_NOT_EQUAL(0, result.length());
   TEST_ASSERT_EQUAL(0x02, result[0]);
   TEST_ASSERT_EQUAL(0x03, result[result.length() - 1]);
-  TEST_ASSERT_EQUAL(std::string::npos, result.find("# help"));
+  TEST_ASSERT_EQUAL(1, result.find("# help"));
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("available commands"));
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("defaults"));
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("reboot"));
@@ -228,6 +233,8 @@ void test_cli_get_mixer_type()
   model.config.mixer.type = 0;
   Cli cli{model};
   CliCmd cmd;
+
+  cli.process('#', cmd, printer);
 
   for (char c : std::string("get mixer_type\n"))
   {
@@ -246,6 +253,8 @@ void test_cli_set_mixer_type()
   Cli cli{model};
   CliCmd cmd;
 
+  cli.process('#', cmd, printer);
+
   for (char c : std::string("set mixer_type QUADX\n"))
   {
     cli.process(c, cmd, printer);
@@ -259,6 +268,8 @@ void test_cli_bf_get_mag_calibration()
   Model model;
   Cli cli{model};
   CliCmd cmd;
+
+  cli.process('#', cmd, printer);
 
   for (char c : std::string("get mag_calibration\n"))
   {
@@ -275,6 +286,8 @@ void test_cli_bf_sensor_hardware()
   Model model;
   Cli cli{model};
   CliCmd cmd;
+
+  cli.process('#', cmd, printer);
 
   for (char c : std::string("sensor_hardware\n"))
   {
@@ -293,7 +306,7 @@ int main(int argc, char** argv)
 {
   UNITY_BEGIN();
   RUN_TEST(test_cli_init);
-  RUN_TEST(test_cli_enter_interactive);
+  RUN_TEST(test_cli_not_enter_interactive);
   RUN_TEST(test_cli_enter_leave_non_interactive);
   RUN_TEST(test_cli_configurator_handshake);
   RUN_TEST(test_cli_process_comment);

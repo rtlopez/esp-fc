@@ -74,6 +74,8 @@ static inline HardwareSerial& getPort(int index)
 
 namespace Espfc::Hal {
 
+static_assert(SERIAL_TX_BUF_LEN == SOC_UART_FIFO_LEN * 4);
+
 SerialUart* getSerialUart(int index)
 {
   switch (index)
@@ -185,6 +187,7 @@ SerialUsb* getSerialUsb()
 
 void SerialUsb::begin(const SerialDeviceConfig& conf)
 {
+  Serial.setTxBufferSize(SERIAL_TX_BUF_LEN);
   Serial.begin(conf.baud);
 }
 

@@ -346,7 +346,7 @@ int32_t Cli::Param::parse(const char* v) const
   return toNumber(v).value_or(0);
 }
 
-Cli::Cli(Model& model): _model(model), _ignore(false), _active(false), _interactive(false)
+Cli::Cli(Model& model): _model(model), _active(false), _interactive(false)
 {
   _params = initialize(_model.config);
 }
@@ -876,8 +876,6 @@ bool Cli::process(const char c, CliCmd& cmd, Stream::Printer& stream)
     _interactive = true;
     stream.println();
     stream.println("Entering CLI Mode, type 'exit' to return, or 'help'");
-    stream.print("# ");
-    printVersion(stream);
     stream.println();
     _model.setArmingDisabled(ARMING_DISABLED_CLI, true);
     cmd = {};
@@ -913,55 +911,44 @@ bool Cli::process(const char c, CliCmd& cmd, Stream::Printer& stream)
     return true;
   }
 
+  // handle backspace
+  if (c == '\b' && cmd.index)
+  {
+    cmd.buff[--cmd.index] = '\0';
+    return false;
+  }
+
   // execute on end line
   bool endl = c == '\n' || c == '\r';
   if (cmd.index && endl)
   {
+    stream.print("# ");
+    stream.println(cmd.buff);
     parse(cmd);
     execute(cmd, stream);
     cmd = {};
     return true;
   }
 
-  // ignore comments
-  if (c == '#')
+  // put characters into buffer in specific conditions only
+  if (_active && !endl && cmd.index < CLI_BUFF_SIZE - 1)
   {
-    _ignore = true;
-  }
-  else if (endl)
-  {
-    _ignore = false;
+    cmd.buff[cmd.index++] = c;
+    cmd.buff[cmd.index] = '\0';
   }
 
-  // don't put characters into buffer in specific conditions
-  if (_ignore || endl || cmd.index >= CLI_BUFF_SIZE - 1)
-  {
-    return false;
-  }
-
-  if (c == '\b') // handle backspace
-  {
-    if (cmd.index)
-    {
-      cmd.buff[--cmd.index] = '\0';
-    }
-  }
-  else
-  {
-    if (!_active)
-    {
-      _active = true;
-      _interactive = true;
-    }
-    cmd.buff[cmd.index] = c;
-    cmd.buff[++cmd.index] = '\0';
-  }
   return false;
 }
 
 void Cli::parse(CliCmd& cmd)
 {
   const char* DELIM = " \t";
+  // ignore comments
+  char* pos = std::strchr(cmd.buff, '#');
+  if (pos)
+  {
+    *pos = '\0';
+  }
   char* pch = std::strtok(cmd.buff, DELIM);
   size_t count = 0;
   while (pch)
@@ -976,14 +963,10 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
 {
   if (_interactive)
   {
-    if (cmd.args[0]) s.print("# ");
     for (size_t i = 0; i < CLI_ARGS_SIZE; ++i)
     {
       if (!cmd.args[i]) break;
-      s.print(cmd.args[i]);
-      s.print(' ');
     }
-    s.println();
   }
 
   if (!cmd.args[0]) return;
