@@ -302,6 +302,186 @@ void test_cli_bf_sensor_hardware()
   TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("mag: AUTO,"));
 }
 
+static void fill(CliCmd& cmd, const char* s)
+{
+  std::strncpy(cmd.buff, s, sizeof(cmd.buff) - 1);
+  cmd.index = std::strlen(cmd.buff);
+}
+
+void test_cli_parse_empty()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  cli.parse(cmd);
+  TEST_ASSERT_NULL(cmd.args[0]);
+}
+
+void test_cli_parse_single()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  fill(cmd, "help");
+  cli.parse(cmd);
+  TEST_ASSERT_EQUAL_STRING("help", cmd.args[0]);
+  TEST_ASSERT_NULL(cmd.args[1]);
+}
+
+void test_cli_parse_multiple_args()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  fill(cmd, "set mixer_type QUADX");
+  cli.parse(cmd);
+  TEST_ASSERT_EQUAL_STRING("set", cmd.args[0]);
+  TEST_ASSERT_EQUAL_STRING("mixer_type", cmd.args[1]);
+  TEST_ASSERT_EQUAL_STRING("QUADX", cmd.args[2]);
+  TEST_ASSERT_NULL(cmd.args[3]);
+}
+
+void test_cli_parse_whitespace()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  fill(cmd, "  get \t  mixer_type\t ");
+  cli.parse(cmd);
+  TEST_ASSERT_EQUAL_STRING("get", cmd.args[0]);
+  TEST_ASSERT_EQUAL_STRING("mixer_type", cmd.args[1]);
+  TEST_ASSERT_NULL(cmd.args[2]);
+}
+
+void test_cli_parse_comment()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  fill(cmd, "get foo # bar baz");
+  cli.parse(cmd);
+  TEST_ASSERT_EQUAL_STRING("get", cmd.args[0]);
+  TEST_ASSERT_EQUAL_STRING("foo", cmd.args[1]);
+  TEST_ASSERT_NULL(cmd.args[2]);
+}
+
+void test_cli_parse_comment_only()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  fill(cmd, "# comment");
+  cli.parse(cmd);
+  TEST_ASSERT_NULL(cmd.args[0]);
+}
+
+void test_cli_parse_max_args()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  fill(cmd, "a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13");
+  cli.parse(cmd);
+  for (size_t i = 0; i < Espfc::CLI_ARGS_SIZE; ++i)
+  {
+    TEST_ASSERT_NOT_NULL(cmd.args[i]);
+    TEST_ASSERT_EQUAL_STRING(("a" + std::to_string(i)).c_str(), cmd.args[i]);
+  }
+}
+
+void test_cli_backspace_removes_last_char()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  cli.process('#', cmd, printer);
+  for (char c : std::string("helx"))
+  {
+    cli.process(c, cmd, printer);
+  }
+
+  TEST_ASSERT_FALSE(cli.process('\b', cmd, printer));
+  TEST_ASSERT_EQUAL(3, cmd.index);
+  TEST_ASSERT_EQUAL_STRING("hel", cmd.buff);
+  TEST_ASSERT_EQUAL(0, cmd.buff[3]);
+}
+
+void test_cli_backspace_empty_buffer()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  cli.process('#', cmd, printer);
+  cli.process('\b', cmd, printer);
+  cli.process('\b', cmd, printer);
+
+  TEST_ASSERT_EQUAL(0, cmd.index);
+  TEST_ASSERT_EQUAL(0, cmd.buff[0]);
+}
+
+void test_cli_backspace_multiple()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  cli.process('#', cmd, printer);
+  for (char c : std::string("abc\b\b\b\b"))
+  {
+    cli.process(c, cmd, printer);
+  }
+
+  TEST_ASSERT_EQUAL(0, cmd.index);
+  TEST_ASSERT_EQUAL_STRING("", cmd.buff);
+
+  cli.process('x', cmd, printer);
+  TEST_ASSERT_EQUAL(1, cmd.index);
+  TEST_ASSERT_EQUAL_STRING("x", cmd.buff);
+}
+
+void test_cli_backspace_then_execute()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  cli.process('#', cmd, printer);
+  stream.flush();
+  for (char c : std::string("helpx\b\n"))
+  {
+    cli.process(c, cmd, printer);
+  }
+
+  auto result = stream.str();
+  TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("# help"));
+  TEST_ASSERT_NOT_EQUAL(std::string::npos, result.find("available commands"));
+  TEST_ASSERT_EQUAL(0, cmd.index);
+  TEST_ASSERT_EQUAL(0, cmd.buff[0]);
+}
+
+void test_cli_backspace_inactive()
+{
+  Model model;
+  Cli cli{model};
+  CliCmd cmd;
+
+  TEST_ASSERT_FALSE(cli.process('\b', cmd, printer));
+  TEST_ASSERT_FALSE(cli._active);
+  TEST_ASSERT_FALSE(cli._interactive);
+  TEST_ASSERT_EQUAL(0, cmd.index);
+  TEST_ASSERT_EQUAL(0, cmd.buff[0]);
+  TEST_ASSERT_EQUAL(0, stream.str().length());
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
@@ -317,5 +497,17 @@ int main(int argc, char** argv)
   RUN_TEST(test_cli_set_mixer_type);
   RUN_TEST(test_cli_bf_get_mag_calibration);
   RUN_TEST(test_cli_bf_sensor_hardware);
+  RUN_TEST(test_cli_parse_empty);
+  RUN_TEST(test_cli_parse_single);
+  RUN_TEST(test_cli_parse_multiple_args);
+  RUN_TEST(test_cli_parse_whitespace);
+  RUN_TEST(test_cli_parse_comment);
+  RUN_TEST(test_cli_parse_comment_only);
+  RUN_TEST(test_cli_parse_max_args);
+  RUN_TEST(test_cli_backspace_removes_last_char);
+  RUN_TEST(test_cli_backspace_empty_buffer);
+  RUN_TEST(test_cli_backspace_multiple);
+  RUN_TEST(test_cli_backspace_then_execute);
+  RUN_TEST(test_cli_backspace_inactive);
   return UNITY_END();
 }

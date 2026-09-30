@@ -912,9 +912,9 @@ bool Cli::process(const char c, CliCmd& cmd, Stream::Printer& stream)
   }
 
   // handle backspace
-  if (c == '\b' && cmd.index)
+  if (c == '\b')
   {
-    cmd.buff[--cmd.index] = '\0';
+    if (cmd.index) cmd.buff[--cmd.index] = '\0';
     return false;
   }
 
