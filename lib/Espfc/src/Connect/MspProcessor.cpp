@@ -1,6 +1,5 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hal/Board.hpp"
-#include "Hal/Platform.hpp"
 #include "Hardware.h"
 #include "Model.h"
 #include "ModelConfig.h"

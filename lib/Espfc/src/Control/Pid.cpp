@@ -19,7 +19,7 @@ void Pid::begin()
   dt = 1.f / rate;
 }
 
-void Pid::resetIterm()
+void FAST_CODE_ATTR Pid::resetIterm()
 {
   iTerm = iReset;
 }

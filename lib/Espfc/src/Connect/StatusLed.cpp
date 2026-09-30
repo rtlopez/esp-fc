@@ -1,4 +1,5 @@
 #include "StatusLed.hpp"
+#include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Platform.hpp"
 #include "Hal/Time.hpp"
@@ -67,7 +68,7 @@ void StatusLed::setStatus(LedStatus newStatus, bool force)
   _write(_state);
 }
 
-void StatusLed::update()
+void FAST_CODE_ATTR StatusLed::update()
 {
   if (_pin == -1 || !_pattern) return;
 

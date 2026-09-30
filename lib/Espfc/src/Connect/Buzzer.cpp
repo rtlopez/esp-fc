@@ -1,4 +1,5 @@
 #include "Buzzer.hpp"
+#include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
 
@@ -19,7 +20,7 @@ int Buzzer::begin()
   return 1;
 }
 
-int Buzzer::update()
+int FAST_CODE_ATTR Buzzer::update()
 {
   //_model.state.debug[0] = _e;
   //_model.state.debug[1] = _status;

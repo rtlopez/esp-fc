@@ -15,6 +15,32 @@
 #define TIMER_WAIT_EDGE 240UL
 #define TIMER_WAIT_COMP 90UL
 
+// using map() in isr cause crash
+static long IRAM_ATTR _map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  const long in_range = in_max - in_min;
+  if(in_range == 0) return out_min;
+  const long out_range = out_max - out_min;
+  const long delta = x - in_min;
+  return (delta * out_range) / in_range + out_min;
+}
+
+// std::sort instantiations would be placed in flash, unsafe in IRAM ISR
+static void IRAM_ATTR _sortSlots(EscDriverEsp32c3::Slot* slots, size_t count)
+{
+  for(size_t i = 1; i < count; i++)
+  {
+    const EscDriverEsp32c3::Slot key = slots[i];
+    size_t j = i;
+    while(j > 0 && key < slots[j - 1])
+    {
+      slots[j] = slots[j - 1];
+      j--;
+    }
+    slots[j] = key;
+  }
+}
+
 void EscDriverEsp32c3::_isr_init(EscDriverTimer timer, void * driver)
 {
   timer_group_t group = (timer_group_t)timer;
@@ -66,7 +92,7 @@ void EscDriverEsp32c3::_isr_end(EscDriverTimer timer, void* p)
   timer_disable_intr((timer_group_t)timer, ESC_TIMER_IDX);
 }
 
-int IRAM_ATTR EscDriverEsp32c3::attach(size_t channel, int pin, int pulse)
+int EscDriverEsp32c3::attach(size_t channel, int pin, int pulse)
 {
   if(channel < 0 || channel >= ESC_CHANNEL_COUNT) return 0;
   _slots[channel].pin = pin;
@@ -149,8 +175,8 @@ bool IRAM_ATTR EscDriverEsp32c3::handle(void * p)
 void IRAM_ATTR EscDriverEsp32c3::commit()
 {
   Slot sorted[ESC_CHANNEL_COUNT];
-  std::copy(_slots, _slots + ESC_CHANNEL_COUNT, sorted);
-  std::sort(sorted, sorted + ESC_CHANNEL_COUNT);
+  for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++) sorted[i] = _slots[i];
+  _sortSlots(sorted, ESC_CHANNEL_COUNT);
 
   Slot * end = sorted + ESC_CHANNEL_COUNT;
 
@@ -225,16 +251,16 @@ uint32_t IRAM_ATTR EscDriverEsp32c3::usToTicks(uint32_t us)
   switch(_protocol)
   {
     case ESC_PROTOCOL_ONESHOT125:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 125), usToTicksReal(_timer, 250));
+      ticks = _map(us, 1000, 2000, usToTicksReal(_timer, 125), usToTicksReal(_timer, 250));
       break;
     case ESC_PROTOCOL_ONESHOT42:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 42), usToTicksReal(_timer, 84));
+      ticks = _map(us, 1000, 2000, usToTicksReal(_timer, 42), usToTicksReal(_timer, 84));
       break;
     case ESC_PROTOCOL_MULTISHOT:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 5), usToTicksReal(_timer, 25));
+      ticks = _map(us, 1000, 2000, usToTicksReal(_timer, 5), usToTicksReal(_timer, 25));
       break;
     case ESC_PROTOCOL_BRUSHED:
-      ticks = map(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
+      ticks = _map(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
       break;
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:

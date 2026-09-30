@@ -45,7 +45,7 @@ Gpio::PinStatus FAST_CODE_ATTR Gpio::digitalRead(uint8_t pin)
   return Gpio::Low;
 }
 
-void FAST_CODE_ATTR Gpio::pinMode(uint8_t pin, Gpio::PinMode mode)
+void Gpio::pinMode(uint8_t pin, Gpio::PinMode mode)
 {
   switch (mode)
   {

@@ -74,6 +74,8 @@ static inline HardwareSerial& getPort(int index)
 
 namespace Espfc::Hal {
 
+static_assert(SERIAL_TX_BUF_LEN == SOC_UART_FIFO_LEN * 4);
+
 SerialUart* getSerialUart(int index)
 {
   switch (index)
@@ -185,6 +187,9 @@ SerialUsb* getSerialUsb()
 
 void SerialUsb::begin(const SerialDeviceConfig& conf)
 {
+#if defined(ARDUINO_USB_MODE) && ARDUINO_USB_MODE
+  Serial.setTxBufferSize(SERIAL_TX_BUF_LEN);
+#endif
   Serial.begin(conf.baud);
 }
 
@@ -272,8 +277,8 @@ void FAST_CODE_ATTR SerialUsb::completeTx()
 #endif
 }
 
-#endif
+#endif // ARDUINO_USB_CDC_ON_BOOT
 
 } // namespace Espfc::Hal
 
-#endif
+#endif // ESP32

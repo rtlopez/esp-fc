@@ -6,13 +6,13 @@
 namespace Espfc::Hal {
 
 #if defined(ESP32)
-static constexpr size_t SERIAL_TX_BUF_LEN = 0xff;
+static constexpr size_t SERIAL_TX_BUF_LEN = 0x200;
 #elif defined(ESP8266)
-static constexpr size_t SERIAL_TX_BUF_LEN = 0x80;
+static constexpr size_t SERIAL_TX_BUF_LEN = 0x080;
 #elif defined(ARCH_RP2040)
-static constexpr size_t SERIAL_TX_BUF_LEN = 256;
+static constexpr size_t SERIAL_TX_BUF_LEN = 0x100;
 #elif defined(UNIT_TEST)
-static constexpr size_t SERIAL_TX_BUF_LEN = 0xff;
+static constexpr size_t SERIAL_TX_BUF_LEN = 0x0ff;
 #else
 #error "Unsupported platform!"
 #endif

@@ -392,7 +392,7 @@ float inline Mixer::erpmToRpm(float erpm)
   return erpmToHz(erpm) * EscDriver::SECONDS_PER_MINUTE;
 }
 
-bool Mixer::_stop(void)
+bool FAST_CODE_ATTR Mixer::_stop(void)
 {
   if (!_model.isModeActive(MODE_ARMED)) return true;
   if (_model.isFeatureActive(FEATURE_MOTOR_STOP) && _model.isThrottleLow()) return true;
