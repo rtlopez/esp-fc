@@ -1,17 +1,17 @@
-#ifndef _ESPFC_MODEL_H_
-#define _ESPFC_MODEL_H_
+#pragma once
 
+#include "Event.hpp"
+#include "ModelConfig.h"
+#include "ModelState.h"
+#include "Stream/ReadWritable.hpp"
+#include "Utils/Logger.hpp"
+#include "Utils/Math.hpp"
+#include "Utils/Storage.hpp"
+#include <EscDriver.h>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <tuple>
-#include <EscDriver.h>
-#include "ModelConfig.h"
-#include "ModelState.h"
-#include "Stream/ReadWritable.hpp"
-#include "Utils/Storage.hpp"
-#include "Utils/Logger.hpp"
-#include "Utils/Math.hpp"
 
 namespace Espfc {
 
@@ -27,606 +27,643 @@ enum ModelChangeEvent
 
 class Model
 {
-  public:
-    Model()
-    {
-      initialize();
-    }
+public:
+  Model(): config{}, state{}
+  {
+    // initialize();
+  }
 
-    void initialize()
-    {
-      config = ModelConfig();
-      #ifdef UNIT_TEST
-      state = ModelState(); // FIXME: causes board wdt reset
-      #endif
-      //config.brobot();
-    }
+  void initialize()
+  {
+    config = {};
+    // #ifdef UNIT_TEST
 
-    bool isModeActive(FlightMode mode) const
-    {
-      return state.mode.mask & (1 << mode);
-    }
+    state = {}; // FIXME: causes board wdt reset
 
-    bool hasChanged(FlightMode mode) const
-    {
-      return (state.mode.mask & (1 << mode)) != (state.mode.maskPrev & (1 << mode));
-    }
+    // #endif
+    //  config.brobot();
+  }
 
-    void clearMode(FlightMode mode)
-    {
-      state.mode.maskPrev |= state.mode.mask & (1 << mode);
-      state.mode.mask &= ~(1 << mode);
-    }
+  bool isModeActive(FlightMode mode) const
+  {
+    return state.mode.mask & (1 << mode);
+  }
 
-    void updateModes(uint32_t mask)
-    {
-      state.mode.maskPrev = state.mode.mask;
-      state.mode.mask = mask;
-    }
+  bool hasChanged(FlightMode mode) const
+  {
+    return (state.mode.mask & (1 << mode)) != (state.mode.maskPrev & (1 << mode));
+  }
 
-    bool isSwitchActive(FlightMode mode) const
-    {
-      return state.mode.maskSwitch & (1 << mode);
-    }
+  void clearMode(FlightMode mode)
+  {
+    state.mode.maskPrev |= state.mode.mask & (1 << mode);
+    state.mode.mask &= ~(1 << mode);
+  }
 
-    void updateSwitchActive(uint32_t mask)
-    {
-      state.mode.maskSwitch = mask;
-    }
+  void updateModes(uint32_t mask)
+  {
+    state.mode.maskPrev = state.mode.mask;
+    state.mode.mask = mask;
+  }
 
-    void disarm(DisarmReason r)
-    {
-      state.mode.disarmReason = r;
-      clearMode(MODE_ARMED);
-      clearMode(MODE_AIRMODE);
-      state.appQueue.push(Event(EVENT_DISARM));
-    }
+  bool isSwitchActive(FlightMode mode) const
+  {
+    return state.mode.maskSwitch & (1 << mode);
+  }
 
-    bool isFeatureActive(Feature feature) const
-    {
-      return config.featureMask & feature;
-    }
+  void updateSwitchActive(uint32_t mask)
+  {
+    state.mode.maskSwitch = mask;
+  }
 
-    bool isAirModeActive() const
-    {
-      return isModeActive(MODE_AIRMODE);// || isFeatureActive(FEATURE_AIRMODE);
-    }
+  void disarm(DisarmReason r)
+  {
+    state.mode.disarmReason = r;
+    clearMode(MODE_ARMED);
+    clearMode(MODE_AIRMODE);
+    appQueue.push(Event(EVENT_DISARM));
+  }
 
-    bool isThrottleLow() const
-    {
-      return state.input.us[AXIS_THRUST] < config.input.minCheck;
-    }
+  bool isFeatureActive(Feature feature) const
+  {
+    return config.featureMask & feature;
+  }
 
-    bool blackboxEnabled() const
-    {
-      // serial or flash
-      return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH);
-    }
+  bool isAirModeActive() const
+  {
+    return isModeActive(MODE_AIRMODE); // || isFeatureActive(FEATURE_AIRMODE);
+  }
 
-    bool gyroActive() const /* IRAM_ATTR */
-    {
-      return state.gyro.present && config.gyro.dev != GYRO_NONE;
-    }
+  bool isThrottleLow() const
+  {
+    return state.input.us[AXIS_THRUST] < config.input.minCheck;
+  }
 
-    bool gpsActive() const /* IRAM_ATTR */
-    {
-      return state.gps.present;
-    }
+  bool blackboxEnabled() const
+  {
+    // serial or flash
+    return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH);
+  }
 
-    bool accelActive() const
-    {
-      return state.accel.present && config.accel.dev != GYRO_NONE;
-    }
+  bool gyroActive() const /* IRAM_ATTR */
+  {
+    return state.gyro.present && config.gyro.dev != GYRO_NONE;
+  }
 
-    bool magActive() const
-    {
-      return state.mag.present && config.mag.dev != MAG_NONE;
-    }
+  bool gpsActive() const /* IRAM_ATTR */
+  {
+    return state.gps.present;
+  }
 
-    bool baroActive() const
-    {
-      return state.baro.present && config.baro.dev != BARO_NONE;
-    }
+  bool accelActive() const
+  {
+    return state.accel.present && config.accel.dev != GYRO_NONE;
+  }
 
-    bool calibrationActive() const
-    {
-      return state.accel.calibrationState != CALIBRATION_IDLE || state.gyro.calibrationState != CALIBRATION_IDLE || state.mag.calibrationState != CALIBRATION_IDLE;
-    }
+  bool magActive() const
+  {
+    return state.mag.present && config.mag.dev != MAG_NONE;
+  }
 
-    void calibrateGyro()
-    {
-      state.gyro.calibrationState = CALIBRATION_START;
-      if(accelActive())
-      {
-        state.accel.calibrationState = CALIBRATION_START;
-      }
-    }
+  bool baroActive() const
+  {
+    return state.baro.present && config.baro.dev != BARO_NONE;
+  }
 
-    void calibrateMag()
-    {
-      state.mag.calibrationState = CALIBRATION_START;
-    }
+  bool calibrationActive() const
+  {
+    return state.accel.calibrationState != CALIBRATION_IDLE || state.gyro.calibrationState != CALIBRATION_IDLE ||
+           state.mag.calibrationState != CALIBRATION_IDLE;
+  }
 
-    void finishCalibration()
+  void calibrateGyro()
+  {
+    state.gyro.calibrationState = CALIBRATION_START;
+    if (accelActive())
     {
-      if(state.gyro.calibrationState == CALIBRATION_SAVE)
-      {
-        //save();
-        state.buzzer.push(BUZZER_GYRO_CALIBRATED);
-        logger.info().log("GYRO BIAS").log(Utils::toDeg(state.gyro.bias.x)).log(Utils::toDeg(state.gyro.bias.y)).logln(Utils::toDeg(state.gyro.bias.z));
-      }
-      if(state.accel.calibrationState == CALIBRATION_SAVE)
-      {
-        save();
-        logger.info().log("ACCEL BIAS").log(state.accel.bias.x).log(state.accel.bias.y).logln(state.accel.bias.z);
-      }
-      if(state.mag.calibrationState == CALIBRATION_SAVE)
-      {
-        save();
-        logger.info().log("MAG BIAS").log(state.mag.calibrationOffset.x).log(state.mag.calibrationOffset.y).logln(state.mag.calibrationOffset.z);
-        logger.info().log("MAG SCALE").log(state.mag.calibrationScale.x).log(state.mag.calibrationScale.y).logln(state.mag.calibrationScale.z);
-      }
+      state.accel.calibrationState = CALIBRATION_START;
     }
+  }
 
-    bool armingDisabled() const /* IRAM_ATTR */
+  void calibrateMag()
+  {
+    state.mag.calibrationState = CALIBRATION_START;
+  }
+
+  void finishCalibration()
+  {
+    if (state.gyro.calibrationState == CALIBRATION_SAVE)
     {
+      // save();
+      state.buzzer.push(BUZZER_GYRO_CALIBRATED);
+      logger.info()
+          .log("GYRO BIAS")
+          .log(Utils::toDeg(state.gyro.bias.x))
+          .log(Utils::toDeg(state.gyro.bias.y))
+          .logln(Utils::toDeg(state.gyro.bias.z));
+    }
+    if (state.accel.calibrationState == CALIBRATION_SAVE)
+    {
+      save();
+      logger.info().log("ACCEL BIAS").log(state.accel.bias.x).log(state.accel.bias.y).logln(state.accel.bias.z);
+    }
+    if (state.mag.calibrationState == CALIBRATION_SAVE)
+    {
+      save();
+      logger.info()
+          .log("MAG BIAS")
+          .log(state.mag.calibrationOffset.x)
+          .log(state.mag.calibrationOffset.y)
+          .logln(state.mag.calibrationOffset.z);
+      logger.info()
+          .log("MAG SCALE")
+          .log(state.mag.calibrationScale.x)
+          .log(state.mag.calibrationScale.y)
+          .logln(state.mag.calibrationScale.z);
+    }
+  }
+
+  bool armingDisabled() const /* IRAM_ATTR */
+  {
 #if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
-      return false;
+    return false;
 #warning "Danger macro used ESPFC_DEV_PRESET_UNSAFE_ARMING"
 #else
-      return state.mode.armingDisabledFlags != 0;
+    return state.mode.armingDisabledFlags != 0;
 #endif
-    }
+  }
 
-    void setArmingDisabled(ArmingDisabledFlags flag, bool value)
-    {
-      if(value) state.mode.armingDisabledFlags |= flag;
-      else state.mode.armingDisabledFlags &= ~flag;
-    }
+  void setArmingDisabled(ArmingDisabledFlags flag, bool value)
+  {
+    if (value)
+      state.mode.armingDisabledFlags |= flag;
+    else
+      state.mode.armingDisabledFlags &= ~flag;
+  }
 
-    bool getArmingDisabled(ArmingDisabledFlags flag)
-    {
-      return state.mode.armingDisabledFlags & flag;
-    }
+  bool getArmingDisabled(ArmingDisabledFlags flag)
+  {
+    return state.mode.armingDisabledFlags & flag;
+  }
 
-    void setOutputSaturated(bool val)
+  void setOutputSaturated(bool val)
+  {
+    state.output.saturated = val;
+    for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
     {
-      state.output.saturated = val;
-      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
+      state.innerPid[i].outputSaturated = val;
+      state.outerPid[i].outputSaturated = val;
+    }
+  }
+
+  bool areMotorsRunning() const
+  {
+    size_t count = state.currentMixer.count;
+    for (size_t i = 0; i < count; i++)
+    {
+      if (config.output.channel[i].servo) continue;
+      if (state.output.disarmed[i] != config.output.minCommand) return true;
+      // if(state.output.us[i] != config.output.minCommand) return true;
+    }
+    return false;
+  }
+
+  void inline setDebug(DebugMode mode, size_t index, int16_t value)
+  {
+    if (index >= 8) return;
+    if (config.debug.mode != mode) return;
+    state.debug[index] = value;
+  }
+
+  void setGpsHome(bool force = false)
+  {
+    if (force || (state.gps.fix && state.gps.numSats >= config.gps.minSats))
+    {
+      if (!state.gps.homeSet || !config.gps.setHomeOnce)
       {
-        state.innerPid[i].outputSaturated = val;
-        state.outerPid[i].outputSaturated = val;
+        state.gps.location.home = state.gps.location.raw;
+        state.gps.homeSet = true;
       }
     }
+  }
 
-    bool areMotorsRunning() const
+  Stream::ReadWritable* getSerialStream(SerialFunction sf)
+  {
+    auto serialIdx = getSerialIndex(sf);
+    if (serialIdx >= 0 && serialIdx < SERIAL_UART_COUNT) return state.serial[serialIdx].stream;
+    return nullptr;
+  }
+
+  int getSerialIndex(SerialFunction sf)
+  {
+    for (size_t i = 0; i < SERIAL_UART_COUNT; i++)
     {
-      size_t count = state.currentMixer.count;
-      for(size_t i = 0; i < count; i++)
-      {
-        if(config.output.channel[i].servo) continue;
-        if(state.output.disarmed[i] != config.output.minCommand) return true;
-        //if(state.output.us[i] != config.output.minCommand) return true;
-      }
-      return false;
+      if (config.serial[i].functionMask & sf) return i;
     }
+    return -1;
+  }
 
-    void inline setDebug(DebugMode mode, size_t index, int16_t value)
+  int getSerialIndexById(SerialPortId id)
+  {
+    switch (id)
     {
-      if(index >= 8) return;
-      if(config.debug.mode != mode) return;
-      state.debug[index] = value;
-    }
-
-    void setGpsHome(bool force = false)
-    {
-      if(force || (state.gps.fix && state.gps.numSats >= config.gps.minSats))
-      {
-        if(!state.gps.homeSet || !config.gps.setHomeOnce)
-        {
-          state.gps.location.home = state.gps.location.raw;
-          state.gps.homeSet = true;
-        }
-      }
-    }
-
-    Stream::ReadWritable * getSerialStream(SerialFunction sf)
-    {
-      auto serialIdx = getSerialIndex(sf);
-      if(serialIdx >= 0 && serialIdx < SERIAL_UART_COUNT) return state.serial[serialIdx].stream;
-      return nullptr;
-    }
-
-    int getSerialIndex(SerialFunction sf)
-    {
-      for (size_t i = 0; i < SERIAL_UART_COUNT; i++)
-      {
-        if(config.serial[i].functionMask & sf) return i;
-      }
-      return -1;
-    }
-
-    int getSerialIndexById(SerialPortId id)
-    {
-      switch(id)
-      {
 #ifdef ESPFC_SERIAL_0
-        case SERIAL_ID_UART_1: return SERIAL_UART_0;
+      case SERIAL_ID_UART_1:
+        return SERIAL_UART_0;
 #endif
 #ifdef ESPFC_SERIAL_1
-        case SERIAL_ID_UART_2: return SERIAL_UART_1;
+      case SERIAL_ID_UART_2:
+        return SERIAL_UART_1;
 #endif
 #ifdef ESPFC_SERIAL_2
-        case SERIAL_ID_UART_3: return SERIAL_UART_2;
+      case SERIAL_ID_UART_3:
+        return SERIAL_UART_2;
 #endif
 #ifdef ESPFC_SERIAL_USB
-        case SERIAL_ID_USB_VCP: return SERIAL_USB;
+      case SERIAL_ID_USB_VCP:
+        return SERIAL_USB;
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0
-        case SERIAL_ID_SOFTSERIAL_1: return SERIAL_SOFT_0;
+      case SERIAL_ID_SOFTSERIAL_1:
+        return SERIAL_SOFT_0;
 #endif
-        default: break;
-      }
-      return -1;
+      default:
+        break;
     }
+    return -1;
+  }
 
-    uint16_t getRssi() const
+  uint16_t getRssi() const
+  {
+    size_t channel = config.input.rssiChannel;
+    if (channel < 4 || channel > state.input.channelCount) return 0;
+    float value = state.input.ch[channel - 1];
+    return std::clamp<uint16_t>(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0, 1023);
+  }
+
+  int load()
+  {
+    logger.begin();
+    _storage.begin();
+    logger.info().log("F_CPU").logln(F_CPU);
+    _storageResult = _storage.load(config);
+    logStorageResult();
+    postLoad();
+    return 1;
+  }
+
+  void save()
+  {
+    preSave();
+    _storageResult = _storage.save(config);
+    logStorageResult();
+  }
+
+  void reload()
+  {
+    begin();
+  }
+
+  void setRebootRequired()
+  {
+    state.rebootRequired = true;
+    setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, true);
+  }
+
+  bool getRebootRequired() const
+  {
+    return state.rebootRequired;
+  }
+
+  void calculateSimplifiedPids(const SimplifiedTuningConfig& s, PidConfig out[3]) const
+  {
+    // ESP-FC compile-time PID defaults for roll/pitch/yaw (no D-Max on this target)
+    static const PidConfig def[3] = {
+        {45, 80, 30, 110},
+        {47, 84, 34, 115},
+        {45, 80, 0, 110},
+    };
+    if (s.pidsMode == SIMPLIFIED_TUNING_OFF) return;
+    const float master = s.masterMultiplier * 0.01f;
+    const float pi = s.piGain * 0.01f;
+    const float d = s.dGain * 0.01f;
+    const float ff = s.ffGain * 0.01f;
+    const float ig = s.iGain * 0.01f;
+    for (int axis = FC_PID_ROLL; axis <= std::clamp<int>(s.pidsMode, FC_PID_ROLL, FC_PID_YAW); axis++)
     {
-      size_t channel = config.input.rssiChannel;
-      if(channel < 4 || channel > state.input.channelCount) return 0;
-      float value = state.input.ch[channel - 1];
-      return std::clamp<uint16_t>(lrintf(Utils::map(value, -1.0f, 1.0f, 0.0f, 1023.0f)), 0, 1023);
+      const float pitchD = (axis == FC_PID_PITCH) ? s.rollPitchRatio * 0.01f : 1.0f;
+      const float pitchPi = (axis == FC_PID_PITCH) ? s.pitchPiGain * 0.01f : 1.0f;
+      out[axis].P = std::clamp<long>(lrintf(def[axis].P * master * pi * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
+      out[axis].I = std::clamp<long>(lrintf(def[axis].I * master * pi * ig * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
+      out[axis].D = std::clamp<long>(lrintf(def[axis].D * master * d * pitchD), 0L, SIMPLIFIED_PID_GAIN_MAX);
+      out[axis].F = std::clamp<long>(lrintf(def[axis].F * master * pitchPi * ff), 0L, SIMPLIFIED_F_GAIN_MAX);
     }
+  }
 
-    int load()
+  void calculateSimplifiedDtermFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin,
+                                       int16_t& dynMax) const
+  {
+    if (dynMin)
     {
-      logger.begin();
-      _storage.begin();
-      logger.info().log("F_CPU").logln(F_CPU);
-      _storageResult = _storage.load(config);
-      logStorageResult();
-      postLoad();
-      return 1;
+      dynMin = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      dynMax = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
     }
+    if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+    if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_DTERM_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+  }
 
-    void save()
+  void calculateSimplifiedGyroFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin,
+                                      int16_t& dynMax) const
+  {
+    if (dynMin)
     {
-      preSave();
-      _storageResult = _storage.save(config);
-      logStorageResult();
+      dynMin = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+      dynMax = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
     }
+    if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
+    if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+  }
 
-    void reload()
+  std::tuple<bool, bool, bool> validateSimplifiedTuning() const
+  {
+    const auto& s = config.simplifiedTuning;
+
+    const auto& pids = config.pid;
+    PidConfig tmp[3] = {pids[0], pids[1], pids[2]};
+
+    calculateSimplifiedPids(s, tmp);
+    bool pidOk = tmp[0].P == pids[0].P && tmp[0].I == pids[0].I && tmp[0].D == pids[0].D && tmp[0].F == pids[0].F &&
+                 tmp[1].P == pids[1].P && tmp[1].I == pids[1].I && tmp[1].D == pids[1].D && tmp[1].F == pids[1].F &&
+                 tmp[2].P == pids[2].P && tmp[2].I == pids[2].I && tmp[2].D == pids[2].D && tmp[2].F == pids[2].F;
+
+    const auto& gyro = config.gyro;
+    int16_t glpf1 = gyro.filter.freq;
+    int16_t glpf2 = gyro.filter2.freq;
+    int16_t gmin = gyro.dynLpfFilter.cutoff;
+    int16_t gmax = gyro.dynLpfFilter.freq;
+    if (s.gyroFilter) calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
+    bool gyroOk = glpf1 == gyro.filter.freq && glpf2 == gyro.filter2.freq && gmin == gyro.dynLpfFilter.cutoff &&
+                  gmax == gyro.dynLpfFilter.freq;
+
+    const auto& dterm = config.dterm;
+    int16_t dlpf1 = dterm.filter.freq;
+    int16_t dlpf2 = dterm.filter2.freq;
+    int16_t dmin = dterm.dynLpfFilter.cutoff;
+    int16_t dmax = dterm.dynLpfFilter.freq;
+    if (s.dtermFilter) calculateSimplifiedDtermFilters(s.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
+    bool dtermOk = dlpf1 == dterm.filter.freq && dlpf2 == dterm.filter2.freq && dmin == dterm.dynLpfFilter.cutoff &&
+                   dmax == dterm.dynLpfFilter.freq;
+
+    return std::make_tuple(pidOk, gyroOk, dtermOk);
+  }
+
+  void reset()
+  {
+    initialize();
+    // save();
+    reload();
+  }
+
+  void sanitize()
+  {
+    // for spi gyro allow full speed mode
+    if (state.gyro.dev && state.gyro.dev->getBus()->isSPI())
     {
-      begin();
+      state.gyro.rate = Utils::alignToClock(state.gyro.clock, ESPFC_GYRO_SPI_RATE_MAX);
     }
-
-    void setRebootRequired()
+    else
     {
-      state.rebootRequired = true;
-      setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, true);
-    }
-
-    bool getRebootRequired() const
-    {
-      return state.rebootRequired;
-    }
-
-    void calculateSimplifiedPids(const SimplifiedTuningConfig& s, PidConfig out[3]) const
-    {
-      // ESP-FC compile-time PID defaults for roll/pitch/yaw (no D-Max on this target)
-      static const PidConfig def[3] = {
-        { 45, 80, 30, 110 },
-        { 47, 84, 34, 115 },
-        { 45, 80,  0, 110 },
-      };
-      if (s.pidsMode == SIMPLIFIED_TUNING_OFF) return;
-      const float master = s.masterMultiplier * 0.01f;
-      const float pi = s.piGain * 0.01f;
-      const float d = s.dGain * 0.01f;
-      const float ff = s.ffGain * 0.01f;
-      const float ig = s.iGain * 0.01f;
-      for (int axis = FC_PID_ROLL; axis <= std::clamp<int>(s.pidsMode, FC_PID_ROLL, FC_PID_YAW); axis++)
+      state.gyro.rate = Utils::alignToClock(state.gyro.clock, ESPFC_GYRO_I2C_RATE_MAX);
+      // first usage
+      if (_storageResult == STORAGE_ERR_BAD_MAGIC || _storageResult == STORAGE_ERR_BAD_SIZE ||
+          _storageResult == STORAGE_ERR_BAD_VERSION)
       {
-        const float pitchD = (axis == FC_PID_PITCH) ? s.rollPitchRatio * 0.01f : 1.0f;
-        const float pitchPi = (axis == FC_PID_PITCH) ? s.pitchPiGain * 0.01f : 1.0f;
-        out[axis].P = std::clamp<long>(lrintf(def[axis].P * master * pi * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
-        out[axis].I = std::clamp<long>(lrintf(def[axis].I * master * pi * ig * pitchPi), 0L, SIMPLIFIED_PID_GAIN_MAX);
-        out[axis].D = std::clamp<long>(lrintf(def[axis].D * master * d * pitchD), 0L, SIMPLIFIED_PID_GAIN_MAX);
-        out[axis].F = std::clamp<long>(lrintf(def[axis].F * master * pitchPi * ff), 0L, SIMPLIFIED_F_GAIN_MAX);
+        config.loopSync = 1;
       }
     }
 
-    void calculateSimplifiedDtermFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    int loopSyncMax = 1;
+    // if(config.mag.dev != MAG_NONE || config.baro.dev != BARO_NONE) loopSyncMax /= 2;
+
+    config.loopSync = std::max((int)config.loopSync, loopSyncMax);
+    state.loopRate = state.gyro.rate / config.loopSync;
+
+    config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
+
+    switch (config.output.protocol)
     {
-      if (dynMin)
-      {
-        dynMin = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-        dynMax = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-      }
-      if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_DTERM_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-      if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_DTERM_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
+      case ESC_PROTOCOL_BRUSHED:
+        config.output.async = true;
+        break;
+      case ESC_PROTOCOL_DSHOT150:
+      case ESC_PROTOCOL_DSHOT300:
+      case ESC_PROTOCOL_DSHOT600:
+      case ESC_PROTOCOL_PROSHOT:
+        config.output.async = false;
+        break;
     }
 
-    void calculateSimplifiedGyroFilters(uint8_t mult, int16_t& lpf1, int16_t& lpf2, int16_t& dynMin, int16_t& dynMax) const
+    if (config.output.async)
     {
-      if (dynMin)
+      // for async limit pwm rate
+      switch (config.output.protocol)
       {
-        dynMin = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-        dynMax = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MAX_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-      }
-      if (lpf1) lpf1 = std::clamp<int>(SIMPLIFIED_GYRO_LPF1_DYN_MIN_HZ * mult / 100, 0, SIMPLIFIED_DYN_LPF_MAX_HZ);
-      if (lpf2) lpf2 = std::clamp<int>(SIMPLIFIED_GYRO_LPF2_HZ * mult / 100, 0, SIMPLIFIED_LPF_MAX_HZ);
-    }
-
-    std::tuple<bool, bool, bool> validateSimplifiedTuning() const
-    {
-      const auto& s = config.simplifiedTuning;
-      
-      const auto& pids = config.pid;
-      PidConfig tmp[3] = {pids[0], pids[1], pids[2]};
-
-      calculateSimplifiedPids(s, tmp);
-      bool pidOk = tmp[0].P == pids[0].P && tmp[0].I == pids[0].I &&
-                   tmp[0].D == pids[0].D && tmp[0].F == pids[0].F &&
-                   tmp[1].P == pids[1].P && tmp[1].I == pids[1].I &&
-                   tmp[1].D == pids[1].D && tmp[1].F == pids[1].F &&
-                   tmp[2].P == pids[2].P && tmp[2].I == pids[2].I &&
-                   tmp[2].D == pids[2].D && tmp[2].F == pids[2].F;
-
-      const auto& gyro = config.gyro;
-      int16_t glpf1 = gyro.filter.freq;
-      int16_t glpf2 = gyro.filter2.freq;
-      int16_t gmin = gyro.dynLpfFilter.cutoff;
-      int16_t gmax = gyro.dynLpfFilter.freq;
-      if (s.gyroFilter) calculateSimplifiedGyroFilters(s.gyroFilterMultiplier, glpf1, glpf2, gmin, gmax);
-      bool gyroOk = glpf1 == gyro.filter.freq && glpf2 == gyro.filter2.freq &&
-                    gmin == gyro.dynLpfFilter.cutoff && gmax == gyro.dynLpfFilter.freq;
-
-      const auto& dterm = config.dterm;
-      int16_t dlpf1 = dterm.filter.freq;
-      int16_t dlpf2 = dterm.filter2.freq;
-      int16_t dmin = dterm.dynLpfFilter.cutoff;
-      int16_t dmax = dterm.dynLpfFilter.freq;
-      if (s.dtermFilter) calculateSimplifiedDtermFilters(s.dtermFilterMultiplier, dlpf1, dlpf2, dmin, dmax);
-      bool dtermOk = dlpf1 == dterm.filter.freq && dlpf2 == dterm.filter2.freq &&
-                     dmin == dterm.dynLpfFilter.cutoff && dmax == dterm.dynLpfFilter.freq;
-
-      return std::make_tuple(pidOk, gyroOk, dtermOk);
-    }
-
-    void reset()
-    {
-      initialize();
-      //save();
-      reload();
-    }
-
-    void sanitize()
-    {
-      // for spi gyro allow full speed mode
-      if (state.gyro.dev && state.gyro.dev->getBus()->isSPI())
-      {
-        state.gyro.rate = Utils::alignToClock(state.gyro.clock, ESPFC_GYRO_SPI_RATE_MAX);
-      }
-      else
-      {
-        state.gyro.rate = Utils::alignToClock(state.gyro.clock, ESPFC_GYRO_I2C_RATE_MAX);
-        // first usage
-        if(_storageResult == STORAGE_ERR_BAD_MAGIC || _storageResult == STORAGE_ERR_BAD_SIZE || _storageResult == STORAGE_ERR_BAD_VERSION)
-        {
-          config.loopSync = 1;
-        }
-      }
-
-      int loopSyncMax = 1;
-      //if(config.mag.dev != MAG_NONE || config.baro.dev != BARO_NONE) loopSyncMax /= 2;
-
-      config.loopSync = std::max((int)config.loopSync, loopSyncMax);
-      state.loopRate = state.gyro.rate / config.loopSync;
-
-      config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
-
-      switch(config.output.protocol)
-      {
+        case ESC_PROTOCOL_PWM:
+          config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 480);
+          break;
+        case ESC_PROTOCOL_ONESHOT125:
+          config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
+          break;
+        case ESC_PROTOCOL_ONESHOT42:
+          config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 4000);
+          break;
         case ESC_PROTOCOL_BRUSHED:
-          config.output.async = true;
+        case ESC_PROTOCOL_MULTISHOT:
+          config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 8000);
           break;
-        case ESC_PROTOCOL_DSHOT150:
-        case ESC_PROTOCOL_DSHOT300:
-        case ESC_PROTOCOL_DSHOT600:
-        case ESC_PROTOCOL_PROSHOT:
-          config.output.async = false;
-          break;
-      }
-
-      if(config.output.async)
-      {
-        // for async limit pwm rate
-        switch(config.output.protocol)
-        {
-          case ESC_PROTOCOL_PWM:
-            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 480);
-            break;
-          case ESC_PROTOCOL_ONESHOT125:
-            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
-            break;
-          case ESC_PROTOCOL_ONESHOT42:
-            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 4000);
-            break;
-          case ESC_PROTOCOL_BRUSHED:
-          case ESC_PROTOCOL_MULTISHOT:
-            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 8000);
-            break;
-          default:
-            config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
-            break;
-        }
-      }
-      else
-      {
-        // for synced and standard PWM limit loop rate and pwm pulse width
-        if(config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
-        {
-          config.loopSync = std::max(config.loopSync, (int8_t)((state.gyro.rate + 499) / 500)); // align loop rate to lower than 500Hz
-          state.loopRate = state.gyro.rate / config.loopSync;
-          if(state.loopRate > 480 && config.output.maxThrottle > 1940)
-          {
-            config.output.maxThrottle = 1940;
-          }
-        }
-        // for onshot125 limit loop rate to 2kHz
-        if(config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
-        {
-          config.loopSync = std::max(config.loopSync, (int8_t)((state.gyro.rate + 1999) / 2000)); // align loop rate to lower than 2000Hz
-          state.loopRate = state.gyro.rate / config.loopSync;
-        }
-      }
-
-      // sanitize throttle and motor limits
-      if(config.output.throttleLimitType < 0 || config.output.throttleLimitType >= THROTTLE_LIMIT_TYPE_MAX) {
-        config.output.throttleLimitType = THROTTLE_LIMIT_TYPE_NONE;
-      }
-
-      if(config.output.throttleLimitPercent < 1 || config.output.throttleLimitPercent > 100) {
-        config.output.throttleLimitPercent = 100;
-      }
-
-      if(config.output.motorLimit < 1 || config.output.motorLimit > 100) {
-        config.output.motorLimit = 100;
-      }
-
-      // configure serial ports
-      constexpr uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_BLACKBOX | 
-        SERIAL_FUNCTION_GPS | SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT | SERIAL_FUNCTION_TELEMETRY_IBUS | SERIAL_FUNCTION_VTX_SMARTAUDIO;
-      uint32_t featureAllowMask =  FEATURE_RX_PPM | FEATURE_RX_SERIAL | FEATURE_MOTOR_STOP | FEATURE_SOFTSERIAL | FEATURE_GPS |
-        FEATURE_TELEMETRY | FEATURE_RX_SPI;// | FEATURE_AIRMODE;
-
-      config.featureMask &= featureAllowMask;
-
-      for(int i = 0; i < SERIAL_UART_COUNT; i++)
-      {
-        config.serial[i].functionMask &= serialFunctionAllowedMask;
-      }
-
-      if (config.fusion.mode >= FUSION_MAX)
-      {
-        config.fusion.mode = FUSION_MAHONY;
-      }
-
-      // only few beeper modes allowed
-      config.buzzer.beeperMask &=
-        1 << (BUZZER_GYRO_CALIBRATED - 1) |
-        1 << (BUZZER_SYSTEM_INIT - 1) |
-        1 << (BUZZER_RX_LOST - 1) |
-        1 << (BUZZER_RX_SET - 1) |
-        1 << (BUZZER_DISARMING - 1) |
-        1 << (BUZZER_ARMING - 1) |
-        1 << (BUZZER_BAT_LOW - 1);
-
-        if(config.gyro.dynamicFilter.count > DYN_NOTCH_COUNT_MAX)
-        {
-          config.gyro.dynamicFilter.count = DYN_NOTCH_COUNT_MAX;
-        }
-    }
-
-    void begin()
-    {
-      sanitize();
-
-      // init timers
-      // sample rate = clock / ( divider + 1)
-      state.gyro.timer.setRate(state.gyro.rate);
-      int accelRate = Utils::alignToClock(state.gyro.timer.rate, 500);
-      state.accel.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / accelRate);
-      state.loopTimer.setRate(state.gyro.timer.rate, config.loopSync);
-      state.mixer.timer.setRate(state.loopTimer.rate, config.mixerSync);
-      int inputRate = Utils::alignToClock(state.gyro.timer.rate, 1000);
-      state.input.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / inputRate);
-      state.actuatorTimer.setRate(50);
-      state.gyro.dynamicFilterTimer.setRate(50);
-      state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
-      state.stats.timer.setRate(3);
-      if(magActive())
-      {
-        state.mag.timer.setRate(state.mag.rate);
-      }
-          
-      // ensure disarmed pulses
-      for(size_t i = 0; i < OUTPUT_CHANNELS; i++)
-      {
-        state.output.disarmed[i] = config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
-      }
-
-      state.buzzer.beeperMask = config.buzzer.beeperMask;
-
-      state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
-
-      // override temporary
-      //state.telemetryTimer.setRate(100);
-    }
-
-    void postLoad()
-    {
-      // load current sensor calibration
-      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
-      {
-        state.gyro.bias.set(i, config.gyro.bias[i] / 1000.0f);
-        state.accel.bias.set(i, config.accel.bias[i] / 1000.0f);
-        state.mag.calibrationOffset.set(i, config.mag.offset[i] / 10.0f);
-        state.mag.calibrationScale.set(i, config.mag.scale[i] / 1000.0f);
-      }
-    }
-
-    void preSave()
-    {
-      // store current sensor calibration
-      for(size_t i = 0; i < AXIS_COUNT_RPY; i++)
-      {
-        config.gyro.bias[i] = lrintf(state.gyro.bias[i] * 1000.0f);
-        config.accel.bias[i] = lrintf(state.accel.bias[i] * 1000.0f);
-        config.mag.offset[i] = lrintf(state.mag.calibrationOffset[i] * 10.0f);
-        config.mag.scale[i] = lrintf(state.mag.calibrationScale[i] * 1000.0f);
-      }
-    }
-
-    ModelState state;
-    ModelConfig config;
-    Utils::Logger logger;
-
-    void logStorageResult()
-    {
-      switch(_storageResult)
-      {
-        case STORAGE_LOAD_SUCCESS:    logger.info().logln("EEPROM load ok"); break;
-        case STORAGE_SAVE_SUCCESS:    logger.info().logln("EEPROM save ok"); break;
-        case STORAGE_SAVE_ERROR:      logger.err().logln("EEPROM save failed"); break;
-        case STORAGE_ERR_BAD_MAGIC:   logger.err().logln("EEPROM wrong magic"); break;
-        case STORAGE_ERR_BAD_VERSION: logger.err().logln("EEPROM wrong version"); break;
-        case STORAGE_ERR_BAD_SIZE:    logger.err().logln("EEPROM wrong size"); break;
-        case STORAGE_NONE:
         default:
-          logger.err().logln("EEPROM uninitialized"); break;
+          config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
+          break;
+      }
+    }
+    else
+    {
+      // for synced and standard PWM limit loop rate and pwm pulse width
+      if (config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
+      {
+        config.loopSync =
+            std::max(config.loopSync, (int8_t)((state.gyro.rate + 499) / 500)); // align loop rate to lower than 500Hz
+        state.loopRate = state.gyro.rate / config.loopSync;
+        if (state.loopRate > 480 && config.output.maxThrottle > 1940)
+        {
+          config.output.maxThrottle = 1940;
+        }
+      }
+      // for onshot125 limit loop rate to 2kHz
+      if (config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
+      {
+        config.loopSync = std::max(config.loopSync,
+                                   (int8_t)((state.gyro.rate + 1999) / 2000)); // align loop rate to lower than 2000Hz
+        state.loopRate = state.gyro.rate / config.loopSync;
       }
     }
 
-    void notifyConfigChange(ModelChangeEvent event)
+    // sanitize throttle and motor limits
+    if (config.output.throttleLimitType < 0 || config.output.throttleLimitType >= THROTTLE_LIMIT_TYPE_MAX)
     {
-      if (_onConfigChange) _onConfigChange(event);
+      config.output.throttleLimitType = THROTTLE_LIMIT_TYPE_NONE;
     }
 
-    void setConfigChangeListener(std::function<void(ModelChangeEvent)> listener)
+    if (config.output.throttleLimitPercent < 1 || config.output.throttleLimitPercent > 100)
     {
-      _onConfigChange = listener;
+      config.output.throttleLimitPercent = 100;
     }
 
-  private:
-    Utils::Storage _storage;
-    StorageResult _storageResult;
+    if (config.output.motorLimit < 1 || config.output.motorLimit > 100)
+    {
+      config.output.motorLimit = 100;
+    }
 
-    std::function<void(ModelChangeEvent)> _onConfigChange{};
+    // configure serial ports
+    constexpr uint32_t serialFunctionAllowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL |
+                                                   SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_GPS |
+                                                   SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT |
+                                                   SERIAL_FUNCTION_TELEMETRY_IBUS | SERIAL_FUNCTION_VTX_SMARTAUDIO;
+    uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_RX_SERIAL | FEATURE_MOTOR_STOP | FEATURE_SOFTSERIAL |
+                                FEATURE_GPS | FEATURE_TELEMETRY | FEATURE_RX_SPI; // | FEATURE_AIRMODE;
+
+    config.featureMask &= featureAllowMask;
+
+    for (int i = 0; i < SERIAL_UART_COUNT; i++)
+    {
+      config.serial[i].functionMask &= serialFunctionAllowedMask;
+    }
+
+    if (config.fusion.mode >= FUSION_MAX)
+    {
+      config.fusion.mode = FUSION_MAHONY;
+    }
+
+    // only few beeper modes allowed
+    config.buzzer.beeperMask &= 1 << (BUZZER_GYRO_CALIBRATED - 1) | 1 << (BUZZER_SYSTEM_INIT - 1) |
+                                1 << (BUZZER_RX_LOST - 1) | 1 << (BUZZER_RX_SET - 1) | 1 << (BUZZER_DISARMING - 1) |
+                                1 << (BUZZER_ARMING - 1) | 1 << (BUZZER_BAT_LOW - 1);
+
+    if (config.gyro.dynamicFilter.count > DYN_NOTCH_COUNT_MAX)
+    {
+      config.gyro.dynamicFilter.count = DYN_NOTCH_COUNT_MAX;
+    }
+  }
+
+  void begin()
+  {
+    sanitize();
+
+    // init timers
+    // sample rate = clock / ( divider + 1)
+    state.gyro.timer.setRate(state.gyro.rate);
+    int accelRate = Utils::alignToClock(state.gyro.timer.rate, 500);
+    state.accel.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / accelRate);
+    state.loopTimer.setRate(state.gyro.timer.rate, config.loopSync);
+    state.mixer.timer.setRate(state.loopTimer.rate, config.mixerSync);
+    int inputRate = Utils::alignToClock(state.gyro.timer.rate, 1000);
+    state.input.timer.setRate(state.gyro.timer.rate, state.gyro.timer.rate / inputRate);
+    state.actuatorTimer.setRate(50);
+    state.gyro.dynamicFilterTimer.setRate(50);
+    state.telemetryTimer.setInterval(config.telemetryInterval * 1000);
+    state.stats.timer.setRate(3);
+    if (magActive())
+    {
+      state.mag.timer.setRate(state.mag.rate);
+    }
+
+    // ensure disarmed pulses
+    for (size_t i = 0; i < OUTPUT_CHANNELS; i++)
+    {
+      state.output.disarmed[i] =
+          config.output.channel[i].servo ? config.output.channel[i].neutral : config.output.minCommand; // ROBOT
+    }
+
+    state.buzzer.beeperMask = config.buzzer.beeperMask;
+
+    state.customMixer = MixerConfig(config.customMixerCount, config.customMixes);
+
+    // override temporary
+    // state.telemetryTimer.setRate(100);
+  }
+
+  void postLoad()
+  {
+    // load current sensor calibration
+    for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+    {
+      state.gyro.bias.set(i, config.gyro.bias[i] / 1000.0f);
+      state.accel.bias.set(i, config.accel.bias[i] / 1000.0f);
+      state.mag.calibrationOffset.set(i, config.mag.offset[i] / 10.0f);
+      state.mag.calibrationScale.set(i, config.mag.scale[i] / 1000.0f);
+    }
+  }
+
+  void preSave()
+  {
+    // store current sensor calibration
+    for (size_t i = 0; i < AXIS_COUNT_RPY; i++)
+    {
+      config.gyro.bias[i] = lrintf(state.gyro.bias[i] * 1000.0f);
+      config.accel.bias[i] = lrintf(state.accel.bias[i] * 1000.0f);
+      config.mag.offset[i] = lrintf(state.mag.calibrationOffset[i] * 10.0f);
+      config.mag.scale[i] = lrintf(state.mag.calibrationScale[i] * 1000.0f);
+    }
+  }
+
+  ModelConfig config;
+  ModelState state;
+  Utils::Logger logger;
+  EventQueue appQueue;
+
+  void logStorageResult()
+  {
+    switch (_storageResult)
+    {
+      case STORAGE_LOAD_SUCCESS:
+        logger.info().logln("EEPROM load ok");
+        break;
+      case STORAGE_SAVE_SUCCESS:
+        logger.info().logln("EEPROM save ok");
+        break;
+      case STORAGE_SAVE_ERROR:
+        logger.err().logln("EEPROM save failed");
+        break;
+      case STORAGE_ERR_BAD_MAGIC:
+        logger.err().logln("EEPROM wrong magic");
+        break;
+      case STORAGE_ERR_BAD_VERSION:
+        logger.err().logln("EEPROM wrong version");
+        break;
+      case STORAGE_ERR_BAD_SIZE:
+        logger.err().logln("EEPROM wrong size");
+        break;
+      case STORAGE_NONE:
+      default:
+        logger.err().logln("EEPROM uninitialized");
+        break;
+    }
+  }
+
+  void notifyConfigChange(ModelChangeEvent event)
+  {
+    if (_onConfigChange) _onConfigChange(event);
+  }
+
+  void setConfigChangeListener(std::function<void(ModelChangeEvent)> listener)
+  {
+    _onConfigChange = listener;
+  }
+
+private:
+  Utils::Storage _storage;
+  StorageResult _storageResult;
+  std::function<void(ModelChangeEvent)> _onConfigChange{};
 };
 
-}
-
-#endif
+} // namespace Espfc

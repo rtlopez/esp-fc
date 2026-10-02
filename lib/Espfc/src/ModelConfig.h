@@ -1,44 +1,46 @@
-#ifndef _ESPFC_MODEL_CONFIG_H_
-#define _ESPFC_MODEL_CONFIG_H_
+#pragma once
 
-#include "Target/Target.h"
-#include <EscDriver.h>
-#include "Utils/Filter.h"
-#include "Hal/BusDevice.hpp"
-#include "Device/GyroDevice.hpp"
-#include "Device/MagDevice.hpp"
-#include "Device/BaroDevice.hpp"
-#include "Device/Input/InputPPM.hpp"
-#include "Output/Mixers.h"
 #include "Control/Pid.h"
+#include "Device/BaroDevice.hpp"
+#include "Device/GyroDevice.hpp"
+#include "Device/Input/InputPPM.hpp"
+#include "Device/MagDevice.hpp"
+#include "Hal/BusDevice.hpp"
+#include "Output/Mixers.h"
+#include "Target/Target.h"
+#include "Utils/Filter.h"
+#include <EscDriver.h>
 
 namespace Espfc {
 
-enum GyroDlpf {
+enum GyroDlpf
+{
   GYRO_DLPF_256 = 0x00,
   GYRO_DLPF_188 = 0x01,
-  GYRO_DLPF_98  = 0x02,
-  GYRO_DLPF_42  = 0x03,
-  GYRO_DLPF_20  = 0x04,
-  GYRO_DLPF_10  = 0x05,
-  GYRO_DLPF_5   = 0x06,
-  GYRO_DLPF_EX  = 0x07,
+  GYRO_DLPF_98 = 0x02,
+  GYRO_DLPF_42 = 0x03,
+  GYRO_DLPF_20 = 0x04,
+  GYRO_DLPF_10 = 0x05,
+  GYRO_DLPF_5 = 0x06,
+  GYRO_DLPF_EX = 0x07,
 };
 
-enum SensorAlign {
-  ALIGN_DEFAULT        = 0,
-  ALIGN_CW0_DEG        = 1,
-  ALIGN_CW90_DEG       = 2,
-  ALIGN_CW180_DEG      = 3,
-  ALIGN_CW270_DEG      = 4,
-  ALIGN_CW0_DEG_FLIP   = 5,
-  ALIGN_CW90_DEG_FLIP  = 6,
+enum SensorAlign
+{
+  ALIGN_DEFAULT = 0,
+  ALIGN_CW0_DEG = 1,
+  ALIGN_CW90_DEG = 2,
+  ALIGN_CW180_DEG = 3,
+  ALIGN_CW270_DEG = 4,
+  ALIGN_CW0_DEG_FLIP = 5,
+  ALIGN_CW90_DEG_FLIP = 6,
   ALIGN_CW180_DEG_FLIP = 7,
   ALIGN_CW270_DEG_FLIP = 8,
-  ALIGN_CUSTOM         = 9,
+  ALIGN_CUSTOM = 9,
 };
 
-enum FusionMode {
+enum FusionMode
+{
   FUSION_NONE,
   FUSION_MADGWICK,
   FUSION_MAHONY,
@@ -53,20 +55,21 @@ struct FusionConfig
   uint8_t gainI = 5;
   uint8_t useMag = 0;
 
-  static const char * getModeName(FusionMode mode)
+  static const char* getModeName(FusionMode mode)
   {
-    if(mode >= FUSION_MAX) return "?";
+    if (mode >= FUSION_MAX) return "?";
     return getModeNames()[mode];
   }
 
-  static const char ** getModeNames()
+  static const char** getModeNames()
   {
-    static const char* modeChoices[] = { "NONE", "MADGWICK", "MAHONY", "RTQF", NULL };
+    static const char* modeChoices[] = {"NONE", "MADGWICK", "MAHONY", "RTQF", NULL};
     return modeChoices;
   }
 };
 
-enum FlightMode {
+enum FlightMode
+{
   MODE_ARMED,
   MODE_AIRMODE,
   MODE_ANGLE,
@@ -78,32 +81,35 @@ enum FlightMode {
   MODE_COUNT,
 };
 
-enum ScalerDimension {
-  ACT_INNER_P     = 1 << 0,  // 1
-  ACT_INNER_I     = 1 << 1,  // 2
-  ACT_INNER_D     = 1 << 2,  // 4
-  ACT_INNER_F     = 1 << 3,  // 8
-  ACT_OUTER_P     = 1 << 4,  // 16
-  ACT_OUTER_I     = 1 << 5,  // 32
-  ACT_OUTER_D     = 1 << 6,  // 64
-  ACT_OUTER_F     = 1 << 7,  // 128
-  ACT_AXIS_ROLL   = 1 << 8,  // 256
-  ACT_AXIS_PITCH  = 1 << 9,  // 512
-  ACT_AXIS_YAW    = 1 << 10, // 1024
+enum ScalerDimension
+{
+  ACT_INNER_P = 1 << 0,      // 1
+  ACT_INNER_I = 1 << 1,      // 2
+  ACT_INNER_D = 1 << 2,      // 4
+  ACT_INNER_F = 1 << 3,      // 8
+  ACT_OUTER_P = 1 << 4,      // 16
+  ACT_OUTER_I = 1 << 5,      // 32
+  ACT_OUTER_D = 1 << 6,      // 64
+  ACT_OUTER_F = 1 << 7,      // 128
+  ACT_AXIS_ROLL = 1 << 8,    // 256
+  ACT_AXIS_PITCH = 1 << 9,   // 512
+  ACT_AXIS_YAW = 1 << 10,    // 1024
   ACT_AXIS_THRUST = 1 << 11, // 2048
   ACT_GYRO_THRUST = 1 << 12, // 4096
 };
 
 constexpr size_t SCALER_COUNT = 3;
 
-struct ScalerConfig {
+struct ScalerConfig
+{
   uint32_t dimension = 0;
   int16_t minScale = 20;
   int16_t maxScale = 400;
   int8_t channel = 0;
 };
 
-enum DebugMode {
+enum DebugMode
+{
   DEBUG_NONE,
   DEBUG_CYCLETIME,
   DEBUG_BATTERY,
@@ -210,11 +216,12 @@ enum DebugMode {
   DEBUG_COUNT,
 };
 
-enum Axis {
-  AXIS_ROLL,    // x
-  AXIS_PITCH,   // y
-  AXIS_YAW,     // z
-  AXIS_THRUST,  // throttle channel index
+enum Axis
+{
+  AXIS_ROLL,   // x
+  AXIS_PITCH,  // y
+  AXIS_YAW,    // z
+  AXIS_THRUST, // throttle channel index
   AXIS_AUX_1,
   AXIS_AUX_2,
   AXIS_AUX_3,
@@ -228,25 +235,26 @@ enum Axis {
   AXIS_AUX_11,
   AXIS_AUX_12,
   AXIS_COUNT,
-  AXIS_COUNT_RP = AXIS_YAW,      // RP axis count
-  AXIS_COUNT_RPY = AXIS_THRUST,  // RPY axis count
-  AXIS_COUNT_RPYT = AXIS_AUX_1,  // RPYT axis count
+  AXIS_COUNT_RP = AXIS_YAW,     // RP axis count
+  AXIS_COUNT_RPY = AXIS_THRUST, // RPY axis count
+  AXIS_COUNT_RPYT = AXIS_AUX_1, // RPYT axis count
 };
 
-enum Feature {
-  FEATURE_RX_PPM     = 1 << 0,
-  FEATURE_RX_SERIAL  = 1 << 3,
+enum Feature
+{
+  FEATURE_RX_PPM = 1 << 0,
+  FEATURE_RX_SERIAL = 1 << 3,
   FEATURE_MOTOR_STOP = 1 << 4,
   FEATURE_SOFTSERIAL = 1 << 6,
-  FEATURE_GPS        = 1 << 7,
-  FEATURE_TELEMETRY  = 1 << 10,
-  FEATURE_AIRMODE    = 1 << 22,
-  FEATURE_RX_SPI     = 1 << 25,
+  FEATURE_GPS = 1 << 7,
+  FEATURE_TELEMETRY = 1 << 10,
+  FEATURE_AIRMODE = 1 << 22,
+  FEATURE_RX_SPI = 1 << 25,
   // FEATURE_DYNAMIC_FILTER = 1 << 29, (removed)
 };
 
-constexpr size_t MODEL_NAME_LEN  = 16;
-constexpr size_t INPUT_CHANNELS  = AXIS_COUNT;
+constexpr size_t MODEL_NAME_LEN = 16;
+constexpr size_t INPUT_CHANNELS = AXIS_COUNT;
 constexpr size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
 static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
 
@@ -419,7 +427,8 @@ enum SerialPort
   SERIAL_UART_COUNT
 };
 
-enum PinFunction {
+enum PinFunction
+{
 #ifdef ESPFC_INPUT
   PIN_INPUT_RX,
 #endif
@@ -499,32 +508,33 @@ struct SerialPortConfig
 
 constexpr size_t BUZZER_MAX_EVENTS = 8;
 
-enum BuzzerEvent {
-  BUZZER_SILENCE = 0,             // Silence, see beeperSilence()
+enum BuzzerEvent
+{
+  BUZZER_SILENCE = 0, // Silence, see beeperSilence()
   BUZZER_GYRO_CALIBRATED,
-  BUZZER_RX_LOST,                 // Beeps when TX is turned off or signal lost (repeat until TX is okay)
-  BUZZER_RX_LOST_LANDING,         // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
-  BUZZER_DISARMING,               // Beep when disarming the board
-  BUZZER_ARMING,                  // Beep when arming the board
-  BUZZER_ARMING_GPS_FIX,          // Beep a special tone when arming the board and GPS has fix
-  BUZZER_BAT_CRIT_LOW,            // Longer warning beeps when battery is critically low (repeats)
-  BUZZER_BAT_LOW,                 // Warning beeps when battery is getting low (repeats)
-  BUZZER_GPS_STATUS,              // FIXME **** Disable beeper when connected to USB ****
-  BUZZER_RX_SET,                  // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
-  BUZZER_ACC_CALIBRATION,         // ACC inflight calibration completed confirmation
-  BUZZER_ACC_CALIBRATION_FAIL,    // ACC inflight calibration failed
-  BUZZER_READY_BEEP,              // Ring a tone when GPS is locked and ready
-  BUZZER_MULTI_BEEPS,             // Internal value used by 'beeperConfirmationBeeps()'.
-  BUZZER_DISARM_REPEAT,           // Beeps sounded while stick held in disarm position
-  BUZZER_ARMED,                   // Warning beeps when board is armed (repeats until board is disarmed or throttle is increased)
-  BUZZER_SYSTEM_INIT,             // Initialisation beeps when board is powered on
-  BUZZER_USB,                     // Some boards have beeper powered USB connected
-  BUZZER_BLACKBOX_ERASE,          // Beep when blackbox erase completes
-  BUZZER_CRASH_FLIP_MODE,         // Crash flip mode is active
-  BUZZER_CAM_CONNECTION_OPEN,     // When the 5 key simulation stated
-  BUZZER_CAM_CONNECTION_CLOSE,    // When the 5 key simulation stop
-  BUZZER_ALL,                     // Turn ON or OFF all beeper conditions
-  BUZZER_PREFERENCE,              // Save preferred beeper configuration
+  BUZZER_RX_LOST,         // Beeps when TX is turned off or signal lost (repeat until TX is okay)
+  BUZZER_RX_LOST_LANDING, // Beeps SOS when armed and TX is turned off or signal lost (autolanding/autodisarm)
+  BUZZER_DISARMING,       // Beep when disarming the board
+  BUZZER_ARMING,          // Beep when arming the board
+  BUZZER_ARMING_GPS_FIX,  // Beep a special tone when arming the board and GPS has fix
+  BUZZER_BAT_CRIT_LOW,    // Longer warning beeps when battery is critically low (repeats)
+  BUZZER_BAT_LOW,         // Warning beeps when battery is getting low (repeats)
+  BUZZER_GPS_STATUS,      // FIXME **** Disable beeper when connected to USB ****
+  BUZZER_RX_SET, // Beeps when aux channel is set for beep or beep sequence how many satellites has found if GPS enabled
+  BUZZER_ACC_CALIBRATION,      // ACC inflight calibration completed confirmation
+  BUZZER_ACC_CALIBRATION_FAIL, // ACC inflight calibration failed
+  BUZZER_READY_BEEP,           // Ring a tone when GPS is locked and ready
+  BUZZER_MULTI_BEEPS,          // Internal value used by 'beeperConfirmationBeeps()'.
+  BUZZER_DISARM_REPEAT,        // Beeps sounded while stick held in disarm position
+  BUZZER_ARMED,          // Warning beeps when board is armed (repeats until board is disarmed or throttle is increased)
+  BUZZER_SYSTEM_INIT,    // Initialisation beeps when board is powered on
+  BUZZER_USB,            // Some boards have beeper powered USB connected
+  BUZZER_BLACKBOX_ERASE, // Beep when blackbox erase completes
+  BUZZER_CRASH_FLIP_MODE,      // Crash flip mode is active
+  BUZZER_CAM_CONNECTION_OPEN,  // When the 5 key simulation stated
+  BUZZER_CAM_CONNECTION_CLOSE, // When the 5 key simulation stop
+  BUZZER_ALL,                  // Turn ON or OFF all beeper conditions
+  BUZZER_PREFERENCE,           // Save preferred beeper configuration
   // BUZZER_ALL and BUZZER_PREFERENCE must remain at the bottom of this enum
 };
 
@@ -534,7 +544,8 @@ struct BuzzerConfig
   int32_t beeperMask;
 };
 
-enum PidIndex {
+enum PidIndex
+{
   FC_PID_ROLL,
   FC_PID_PITCH,
   FC_PID_YAW,
@@ -548,7 +559,8 @@ enum PidIndex {
   FC_PID_ITEM_COUNT,
 };
 
-enum BlacboxLogField { // no more than 32, sync with flightLogFieldSelect_e
+enum BlacboxLogField
+{ // no more than 32, sync with flightLogFieldSelect_e
   BLACKBOX_FIELD_PID = 0,
   BLACKBOX_FIELD_RC_COMMANDS,
   BLACKBOX_FIELD_SETPOINT,
@@ -569,7 +581,8 @@ enum BlacboxLogField { // no more than 32, sync with flightLogFieldSelect_e
   BLACKBOX_FIELD_COUNT,
 };
 
-enum BlackboxLogDevice {
+enum BlackboxLogDevice
+{
   BLACKBOX_DEV_NONE = 0,
   BLACKBOX_DEV_FLASH = 1,
   BLACKBOX_DEV_SDCARD = 2,
@@ -615,10 +628,10 @@ struct InputConfig
   FilterConfig filterThrottle{FILTER_PT3, 0};   // autoFactor if freq=0
   FilterConfig filterDerivative{FILTER_PT3, 0}; // autoFactor if freq=0
 
-  uint8_t expo[3] = { 0, 0, 0 };
-  uint8_t rate[3] = { 20, 20, 30 };
-  uint8_t superRate[3] = { 40, 40,  36 };
-  int16_t rateLimit[3] = { 1998, 1998, 1998 };
+  uint8_t expo[3] = {0, 0, 0};
+  uint8_t rate[3] = {20, 20, 30};
+  uint8_t superRate[3] = {40, 40, 36};
+  int16_t rateLimit[3] = {1998, 1998, 1998};
   int8_t rateType = 3;
 
   uint8_t rssiChannel = 0;
@@ -655,50 +668,53 @@ struct OutputConfig
   OutputChannelConfig channel[ESPFC_OUTPUT_COUNT];
 };
 
-enum DisarmReason {
-  DISARM_REASON_ARMING_DISABLED   = 0,
-  DISARM_REASON_FAILSAFE          = 1,
-  DISARM_REASON_THROTTLE_TIMEOUT  = 2,
-  DISARM_REASON_STICKS            = 3,
-  DISARM_REASON_SWITCH            = 4,
-  DISARM_REASON_CRASH_PROTECTION  = 5,
-  DISARM_REASON_RUNAWAY_TAKEOFF   = 6,
-  DISARM_REASON_GPS_RESCUE        = 7,
-  DISARM_REASON_SERIAL_COMMAND    = 8,
-  DISARM_REASON_SYSTEM            = 255,
+enum DisarmReason
+{
+  DISARM_REASON_ARMING_DISABLED = 0,
+  DISARM_REASON_FAILSAFE = 1,
+  DISARM_REASON_THROTTLE_TIMEOUT = 2,
+  DISARM_REASON_STICKS = 3,
+  DISARM_REASON_SWITCH = 4,
+  DISARM_REASON_CRASH_PROTECTION = 5,
+  DISARM_REASON_RUNAWAY_TAKEOFF = 6,
+  DISARM_REASON_GPS_RESCUE = 7,
+  DISARM_REASON_SERIAL_COMMAND = 8,
+  DISARM_REASON_SYSTEM = 255,
 };
 
-enum ArmingDisabledFlags {
-  ARMING_DISABLED_NO_GYRO         = (1 << 0),
-  ARMING_DISABLED_FAILSAFE        = (1 << 1),
-  ARMING_DISABLED_RX_FAILSAFE     = (1 << 2),
+enum ArmingDisabledFlags
+{
+  ARMING_DISABLED_NO_GYRO = (1 << 0),
+  ARMING_DISABLED_FAILSAFE = (1 << 1),
+  ARMING_DISABLED_RX_FAILSAFE = (1 << 2),
   ARMING_DISABLED_BAD_RX_RECOVERY = (1 << 3),
-  ARMING_DISABLED_BOXFAILSAFE     = (1 << 4),
+  ARMING_DISABLED_BOXFAILSAFE = (1 << 4),
   ARMING_DISABLED_RUNAWAY_TAKEOFF = (1 << 5),
-  ARMING_DISABLED_CRASH_DETECTED  = (1 << 6),
-  ARMING_DISABLED_THROTTLE        = (1 << 7),
-  ARMING_DISABLED_ANGLE           = (1 << 8),
+  ARMING_DISABLED_CRASH_DETECTED = (1 << 6),
+  ARMING_DISABLED_THROTTLE = (1 << 7),
+  ARMING_DISABLED_ANGLE = (1 << 8),
   ARMING_DISABLED_BOOT_GRACE_TIME = (1 << 9),
-  ARMING_DISABLED_NOPREARM        = (1 << 10),
-  ARMING_DISABLED_LOAD            = (1 << 11),
-  ARMING_DISABLED_CALIBRATING     = (1 << 12),
-  ARMING_DISABLED_CLI             = (1 << 13),
-  ARMING_DISABLED_CMS_MENU        = (1 << 14),
-  ARMING_DISABLED_BST             = (1 << 15),
-  ARMING_DISABLED_MSP             = (1 << 16),
-  ARMING_DISABLED_PARALYZE        = (1 << 17),
-  ARMING_DISABLED_GPS             = (1 << 18),
-  ARMING_DISABLED_RESC            = (1 << 19),
-  ARMING_DISABLED_RPMFILTER       = (1 << 20),
+  ARMING_DISABLED_NOPREARM = (1 << 10),
+  ARMING_DISABLED_LOAD = (1 << 11),
+  ARMING_DISABLED_CALIBRATING = (1 << 12),
+  ARMING_DISABLED_CLI = (1 << 13),
+  ARMING_DISABLED_CMS_MENU = (1 << 14),
+  ARMING_DISABLED_BST = (1 << 15),
+  ARMING_DISABLED_MSP = (1 << 16),
+  ARMING_DISABLED_PARALYZE = (1 << 17),
+  ARMING_DISABLED_GPS = (1 << 18),
+  ARMING_DISABLED_RESC = (1 << 19),
+  ARMING_DISABLED_RPMFILTER = (1 << 20),
   ARMING_DISABLED_REBOOT_REQUIRED = (1 << 21),
-  ARMING_DISABLED_DSHOT_BITBANG   = (1 << 22),
+  ARMING_DISABLED_DSHOT_BITBANG = (1 << 22),
   ARMING_DISABLED_ACC_CALIBRATION = (1 << 23),
-  ARMING_DISABLED_MOTOR_PROTOCOL  = (1 << 24),
-  ARMING_DISABLED_CRASHFLIP       = (1 << 25),
-  ARMING_DISABLED_ALTHOLD         = (1 << 26),
-  ARMING_DISABLED_POSHOLD         = (1 << 27),
-  ARMING_DISABLED_AUTOPILOT       = (1 << 28),
-  ARMING_DISABLED_ARM_SWITCH      = (1 << 29), // Needs to be the last element, since it's always activated if one of the others is active when arming
+  ARMING_DISABLED_MOTOR_PROTOCOL = (1 << 24),
+  ARMING_DISABLED_CRASHFLIP = (1 << 25),
+  ARMING_DISABLED_ALTHOLD = (1 << 26),
+  ARMING_DISABLED_POSHOLD = (1 << 27),
+  ARMING_DISABLED_AUTOPILOT = (1 << 28),
+  ARMING_DISABLED_ARM_SWITCH =
+      (1 << 29), // Needs to be the last element, since it's always activated if one of the others is active when arming
 };
 
 static constexpr size_t ARMING_DISABLED_FLAGS_COUNT = 30;
@@ -775,7 +791,7 @@ struct GyroConfig
   int8_t dev = GYRO_AUTO;
   int8_t dlpf = GYRO_DLPF_256;
   int8_t align = ALIGN_DEFAULT;
-  int16_t bias[3] = { 0, 0, 0 };
+  int16_t bias[3] = {0, 0, 0};
   FilterConfig filter{FILTER_PT1, 150};
   FilterConfig filter2{FILTER_PT1, 400};
   FilterConfig dynLpfFilter{FILTER_PT1, 400, 150};
@@ -792,8 +808,8 @@ struct AccelConfig
 {
   int8_t bus = Hal::BUS_AUTO;
   int8_t dev = GYRO_AUTO;
-  int16_t bias[3] = { 0, 0, 0 };
-  int16_t trim[2] = { 0, 0 };
+  int16_t bias[3] = {0, 0, 0};
+  int16_t trim[2] = {0, 0};
   FilterConfig filter{FILTER_BIQUAD, 15};
 };
 
@@ -809,8 +825,8 @@ struct MagConfig
   int8_t bus = Hal::BUS_AUTO;
   int8_t dev = MAG_NONE;
   int8_t align = ALIGN_DEFAULT;
-  int16_t offset[3] = { 0, 0, 0 };
-  int16_t scale[3] = { 1000, 1000, 1000 };
+  int16_t offset[3] = {0, 0, 0};
+  int16_t scale[3] = {1000, 1000, 1000};
   FilterConfig filter{FILTER_BIQUAD, 10};
   int16_t declination = 0;
 };
@@ -877,14 +893,14 @@ struct GpsConfig
   uint8_t setHomeOnce = 1;
 
   // GNSS Constellation Configuration (M10 multi-band support)
-  uint8_t gnssMode = 0;          // 0=Auto, 1=GPS only, 2=GPS+GLO, 3=GPS+GAL, 4=GPS+BDS, 5=All
-  uint8_t enableDualBand = 1;    // Enable L1+L5 dual-band on M10 (0=L1 only, 1=Auto/M10 dual-band)
-  uint8_t enableGPS = 1;         // Enable GPS constellation
-  uint8_t enableGLONASS = 0;     // Enable GLONASS constellation
-  uint8_t enableGalileo = 1;     // Enable Galileo constellation
-  uint8_t enableBeiDou = 0;      // Enable BeiDou constellation
-  uint8_t enableQZSS = 1;        // Enable QZSS (Asia-Pacific)
-  uint8_t enableSBAS = 1;        // Enable SBAS (WAAS/EGNOS)
+  uint8_t gnssMode = 0;       // 0=Auto, 1=GPS only, 2=GPS+GLO, 3=GPS+GAL, 4=GPS+BDS, 5=All
+  uint8_t enableDualBand = 1; // Enable L1+L5 dual-band on M10 (0=L1 only, 1=Auto/M10 dual-band)
+  uint8_t enableGPS = 1;      // Enable GPS constellation
+  uint8_t enableGLONASS = 0;  // Enable GLONASS constellation
+  uint8_t enableGalileo = 1;  // Enable Galileo constellation
+  uint8_t enableBeiDou = 0;   // Enable BeiDou constellation
+  uint8_t enableQZSS = 1;     // Enable QZSS (Asia-Pacific)
+  uint8_t enableSBAS = 1;     // Enable SBAS (WAAS/EGNOS)
 };
 
 struct LedConfig
@@ -898,11 +914,11 @@ struct ArmingConfig
   uint8_t smallAngle = 25;
 };
 
-enum SimplifiedTuningMode: uint8_t
+enum SimplifiedTuningMode : uint8_t
 {
   SIMPLIFIED_TUNING_OFF = 0,
-  SIMPLIFIED_TUNING_RP = FC_PID_PITCH,  // roll + pitch
-  SIMPLIFIED_TUNING_RPY = FC_PID_YAW,   // roll + pitch + yaw
+  SIMPLIFIED_TUNING_RP = FC_PID_PITCH, // roll + pitch
+  SIMPLIFIED_TUNING_RPY = FC_PID_YAW,  // roll + pitch + yaw
 };
 
 // Betaflight simplified-tuning slider baselines and limits
@@ -925,7 +941,7 @@ struct SimplifiedTuningConfig
   uint8_t iGain = 100;
   uint8_t dGain = 80;
   uint8_t piGain = 100;
-  uint8_t dMaxGain = 0;  // unused, ESP-FC has no D-Max
+  uint8_t dMaxGain = 0; // unused, ESP-FC has no D-Max
   uint8_t ffGain = 80;
   uint8_t pitchPiGain = 100;
   uint8_t dtermFilter = 1;
@@ -937,46 +953,50 @@ struct SimplifiedTuningConfig
 // persistent data
 class ModelConfig
 {
-  public:
-    // inputs and sensors
-    GyroConfig gyro;
-    AccelConfig accel;
-    BaroConfig baro;
-    MagConfig mag;
-    InputConfig input;
-    FailsafeConfig failsafe;
-    FusionConfig fusion;
-    VBatConfig vbat;
-    IBatConfig ibat;
-    VtxConfig vtx;
-    GpsConfig gps;
-    ArmingConfig arming;
+public:
+  // inputs and sensors
+  GyroConfig gyro;
+  AccelConfig accel;
+  BaroConfig baro;
+  MagConfig mag;
+  InputConfig input;
+  FailsafeConfig failsafe;
+  FusionConfig fusion;
+  VBatConfig vbat;
+  IBatConfig ibat;
+  VtxConfig vtx;
+  GpsConfig gps;
+  ArmingConfig arming;
 
-    ActuatorCondition conditions[ACTUATOR_CONDITIONS];
-    ScalerConfig scaler[SCALER_COUNT];
+  ActuatorCondition conditions[ACTUATOR_CONDITIONS];
+  ScalerConfig scaler[SCALER_COUNT];
 
-    // pid controller
-    PidConfig pid[FC_PID_ITEM_COUNT] = {
-      [FC_PID_ROLL]  = { .P = 45, .I = 80, .D = 24, .F = 88 },  // ROLL
-      [FC_PID_PITCH] = { .P = 47, .I = 84, .D = 27, .F = 92 },  // PITCH
-      [FC_PID_YAW]   = { .P = 45, .I = 80, .D =  0, .F = 88 },  // YAW
-      [FC_PID_LEVEL] = { .P = 45, .I =  0, .D =  0, .F =  0 },  // ANGLE/LEVEL
-      [FC_PID_MAG]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // MAG
-      [FC_PID_ALT]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // ALTHOLD POS
-      [FC_PID_VEL]   = { .P = 80, .I = 60, .D = 40, .F = 20 },  // ALTHOLD VEL
-      [FC_PID_POS]   = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_P * 100, POSHOLD_I * 100,
-      [FC_PID_POSR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // POSHOLD_RATE_P * 10, POSHOLD_RATE_I * 100, POSHOLD_RATE_D * 1000,
-      [FC_PID_NAVR]  = { .P =  0, .I =  0, .D =  0, .F =  0 },  // NAV_P * 10, NAV_I * 100, NAV_D * 1000
-    };
-    YawConfig yaw;
-    LevelConfig level;
-    DtermConfig dterm;
-    ItermConfig iterm;
-    AltHoldConfig altHold;
-    ControllerConfig controller;
-    SimplifiedTuningConfig simplifiedTuning;
-    // hardware
-    int8_t pin[PIN_COUNT] = {
+  // clang-format off
+  // pid controller
+  PidConfig pid[FC_PID_ITEM_COUNT] = {
+      [FC_PID_ROLL]  = {.P = 45, .I = 80, .D = 24, .F = 88}, // ROLL
+      [FC_PID_PITCH] = {.P = 47, .I = 84, .D = 27, .F = 92}, // PITCH
+      [FC_PID_YAW]   = {.P = 45, .I = 80, .D = 0,  .F = 88}, // YAW
+      [FC_PID_LEVEL] = {.P = 45, .I = 0,  .D = 0,  .F = 0},  // ANGLE/LEVEL
+      [FC_PID_MAG]   = {.P = 0,  .I = 0,  .D = 0,  .F = 0},  // MAG
+      [FC_PID_ALT]   = {.P = 0,  .I = 0,  .D = 0,  .F = 0},  // ALTHOLD POS
+      [FC_PID_VEL]   = {.P = 80, .I = 60, .D = 40, .F = 20}, // ALTHOLD VEL
+      [FC_PID_POS]   = {.P = 0,  .I = 0,  .D = 0,  .F = 0},  // POSHOLD
+      [FC_PID_POSR]  = {.P = 0,  .I = 0,  .D = 0,  .F = 0},  // POSHOLD_RATE
+      [FC_PID_NAVR]  = {.P = 0,  .I = 0,  .D = 0,  .F = 0},  // NAV
+  };
+  // clang-format on
+
+  YawConfig yaw;
+  LevelConfig level;
+  DtermConfig dterm;
+  ItermConfig iterm;
+  AltHoldConfig altHold;
+  ControllerConfig controller;
+  SimplifiedTuningConfig simplifiedTuning;
+  // hardware
+  // clang-format off
+  int8_t pin[PIN_COUNT] = {
 #ifdef ESPFC_INPUT
       [PIN_INPUT_RX] = ESPFC_INPUT_PIN,
 #endif
@@ -1029,173 +1049,187 @@ class ModelConfig
       [PIN_SPI_CS1] = ESPFC_SPI_CS_BARO,
       [PIN_SPI_CS2] = -1,
 #endif
-    };
-    SerialPortConfig serial[SERIAL_UART_COUNT] = {
+  };
+  SerialPortConfig serial[SERIAL_UART_COUNT] = {
 #ifdef ESPFC_SERIAL_USB
-      [SERIAL_USB]    = { .id = SERIAL_ID_USB_VCP, .functionMask = ESPFC_SERIAL_USB_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
+      [SERIAL_USB] = {.id = SERIAL_ID_USB_VCP,
+                      .functionMask = ESPFC_SERIAL_USB_FN,
+                      .baud = SERIAL_SPEED_115200,
+                      .blackboxBaud = SERIAL_SPEED_NONE},
 #endif
 #ifdef ESPFC_SERIAL_0
-      [SERIAL_UART_0] = { .id = SERIAL_ID_UART_1, .functionMask = ESPFC_SERIAL_0_FN, .baud = ESPFC_SERIAL_0_BAUD, .blackboxBaud = ESPFC_SERIAL_0_BBAUD },
+      [SERIAL_UART_0] = {.id = SERIAL_ID_UART_1,
+                         .functionMask = ESPFC_SERIAL_0_FN,
+                         .baud = ESPFC_SERIAL_0_BAUD,
+                         .blackboxBaud = ESPFC_SERIAL_0_BBAUD},
 #endif
 #ifdef ESPFC_SERIAL_1
-      [SERIAL_UART_1] = { .id = SERIAL_ID_UART_2, .functionMask = ESPFC_SERIAL_1_FN, .baud = ESPFC_SERIAL_1_BAUD, .blackboxBaud = ESPFC_SERIAL_1_BBAUD },
+      [SERIAL_UART_1] = {.id = SERIAL_ID_UART_2,
+                         .functionMask = ESPFC_SERIAL_1_FN,
+                         .baud = ESPFC_SERIAL_1_BAUD,
+                         .blackboxBaud = ESPFC_SERIAL_1_BBAUD},
 #endif
 #ifdef ESPFC_SERIAL_2
-      [SERIAL_UART_2] = { .id = SERIAL_ID_UART_3, .functionMask = ESPFC_SERIAL_2_FN, .baud = ESPFC_SERIAL_2_BAUD, .blackboxBaud = ESPFC_SERIAL_2_BBAUD },
+      [SERIAL_UART_2] = {.id = SERIAL_ID_UART_3,
+                         .functionMask = ESPFC_SERIAL_2_FN,
+                         .baud = ESPFC_SERIAL_2_BAUD,
+                         .blackboxBaud = ESPFC_SERIAL_2_BBAUD},
 #endif
 #ifdef ESPFC_SERIAL_SOFT_0
-      [SERIAL_SOFT_0] = { .id = SERIAL_ID_SOFTSERIAL_1, .functionMask = ESPFC_SERIAL_SOFT_0_FN, .baud = SERIAL_SPEED_115200, .blackboxBaud = SERIAL_SPEED_NONE },
+      [SERIAL_SOFT_0] = {.id = SERIAL_ID_SOFTSERIAL_1,
+                         .functionMask = ESPFC_SERIAL_SOFT_0_FN,
+                         .baud = SERIAL_SPEED_115200,
+                         .blackboxBaud = SERIAL_SPEED_NONE},
 #endif
-    };
+  };
+  // clang-format on
 
-    LedConfig led;
-    BuzzerConfig buzzer;
-    WirelessConfig wireless;
+  LedConfig led;
+  BuzzerConfig buzzer;
+  WirelessConfig wireless;
 
-    // mixer and outputs
-    int8_t customMixerCount = 0;
-    MixerEntry customMixes[MIXER_RULE_MAX];
-    MixerConfiguration mixer;
-    OutputConfig output;
-    BlackboxConfig blackbox;
-    DebugConfig debug;
+  // mixer and outputs
+  int8_t customMixerCount = 0;
+  MixerEntry customMixes[MIXER_RULE_MAX];
+  MixerConfiguration mixer;
+  OutputConfig output;
+  BlackboxConfig blackbox;
+  DebugConfig debug;
 
-    // not classified yet
-    int16_t i2cSpeed = 800;
-    int8_t loopSync = 8; // MPU 1000Hz
-    int8_t mixerSync = 1;
-    int32_t featureMask = ESPFC_FEATURE_MASK;
-    bool telemetry = 0;
-    int32_t telemetryInterval = 1000;
-    uint8_t rescueConfigDelay = 30;
-    int16_t boardAlignment[3] = {0, 0, 0};
-    char modelName[MODEL_NAME_LEN + 1];
+  // not classified yet
+  int16_t i2cSpeed = 800;
+  int8_t loopSync = 8; // MPU 1000Hz
+  int8_t mixerSync = 1;
+  int32_t featureMask = ESPFC_FEATURE_MASK;
+  bool telemetry = 0;
+  int32_t telemetryInterval = 1000;
+  uint8_t rescueConfigDelay = 30;
+  int16_t boardAlignment[3] = {0, 0, 0};
+  char modelName[MODEL_NAME_LEN + 1];
 
-    ModelConfig()
+  ModelConfig()
+  {
+    for (size_t i = 0; i < INPUT_CHANNELS; i++)
     {
-      for(size_t i = 0; i < INPUT_CHANNELS; i++)
-      {
-        input.channel[i].map = i;
-        input.channel[i].neutral = input.midRc;
-        input.channel[i].fsMode = i <= AXIS_THRUST ? 0 : 1; // auto, hold, set
-        input.channel[i].fsValue = i != AXIS_THRUST ? input.midRc : 1000;
-      }
-      // swap yaw and throttle for AETR
-      input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
-      input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
-
-      // PID controller config (BF default)
-      //pid[FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
-      //pid[FC_PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
-      //pid[FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
-      //pid[FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
-
-      wireless.ssid[0] = 0;
-      wireless.pass[0] = 0;
-      modelName[0] = 0;
-
-      // only local development settings
-      devPreset();
+      input.channel[i].map = i;
+      input.channel[i].neutral = input.midRc;
+      input.channel[i].fsMode = i <= AXIS_THRUST ? 0 : 1; // auto, hold, set
+      input.channel[i].fsValue = i != AXIS_THRUST ? input.midRc : 1000;
     }
+    // swap yaw and throttle for AETR
+    input.channel[2].map = 3; // replace input 2 with rx channel 3, yaw
+    input.channel[3].map = 2; // replace input 3 with rx channel 2, throttle
 
-    void devPreset()
-    {
+    // PID controller config (BF default)
+    // pid[FC_PID_ROLL]  = { .P = 42, .I = 85, .D = 30, .F = 90 };
+    // pid[FC_PID_PITCH] = { .P = 46, .I = 90, .D = 32, .F = 95 };
+    // pid[FC_PID_YAW]   = { .P = 45, .I = 90, .D =  0, .F = 90 };
+    // pid[FC_PID_LEVEL] = { .P = 55, .I =  0, .D =  0, .F = 0 };
+
+    wireless.ssid[0] = 0;
+    wireless.pass[0] = 0;
+    modelName[0] = 0;
+
+    // only local development settings
+    devPreset();
+  }
+
+  void devPreset()
+  {
 #ifdef ESPFC_DEV_PRESET_BLACKBOX_SERIAL
-      blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
-      debug.mode = DEBUG_GYRO_SAMPLE;
-      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].functionMask |= SERIAL_FUNCTION_BLACKBOX;
-      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].blackboxBaud = SERIAL_SPEED_250000;
-      serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].baud = SERIAL_SPEED_250000;
+    blackbox.dev = BLACKBOX_DEV_SERIAL; // serial
+    debug.mode = DEBUG_GYRO_SAMPLE;
+    serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].functionMask |= SERIAL_FUNCTION_BLACKBOX;
+    serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].blackboxBaud = SERIAL_SPEED_250000;
+    serial[ESPFC_DEV_PRESET_BLACKBOX_SERIAL].baud = SERIAL_SPEED_250000;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_BLACKBOX_FLASH
-      blackbox.dev = BLACKBOX_DEV_FLASH; // flash
-      debug.mode = DEBUG_GYRO_SAMPLE;
-      blackbox.pDenom = 1; // 500Hz
+    blackbox.dev = BLACKBOX_DEV_FLASH; // flash
+    debug.mode = DEBUG_GYRO_SAMPLE;
+    blackbox.pDenom = 1; // 500Hz
 #endif
 
 #ifdef ESPFC_DEV_PRESET_MODES
-      conditions[0].id = MODE_ARMED;
-      conditions[0].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[0].min = 1300;
-      conditions[0].max = 2100;
-      conditions[0].logicMode = 0;
-      conditions[0].linkId = 0;
+    conditions[0].id = MODE_ARMED;
+    conditions[0].ch = AXIS_AUX_1 + 0; // aux1
+    conditions[0].min = 1300;
+    conditions[0].max = 2100;
+    conditions[0].logicMode = 0;
+    conditions[0].linkId = 0;
 
-      conditions[1].id = MODE_AIRMODE;
-      conditions[1].ch = AXIS_AUX_1 + 0; // aux1
-      conditions[1].min = 1300;
-      conditions[1].max = 2100;
-      conditions[1].logicMode = 0;
-      conditions[1].linkId = 0;
+    conditions[1].id = MODE_AIRMODE;
+    conditions[1].ch = AXIS_AUX_1 + 0; // aux1
+    conditions[1].min = 1300;
+    conditions[1].max = 2100;
+    conditions[1].logicMode = 0;
+    conditions[1].linkId = 0;
 
-      conditions[2].id = MODE_ANGLE;
-      conditions[2].ch = AXIS_AUX_1 + 1; // aux2
-      conditions[2].min = 1300;
-      conditions[2].max = 2100;
-      conditions[2].logicMode = 0;
-      conditions[2].linkId = 0;
+    conditions[2].id = MODE_ANGLE;
+    conditions[2].ch = AXIS_AUX_1 + 1; // aux2
+    conditions[2].min = 1300;
+    conditions[2].max = 2100;
+    conditions[2].logicMode = 0;
+    conditions[2].linkId = 0;
 
-      conditions[3].id = MODE_ALTHOLD;
-      conditions[3].ch = AXIS_AUX_1 + 1; // aux2
-      conditions[3].min = 1700;
-      conditions[3].max = 2100;
-      conditions[3].logicMode = 0;
-      conditions[3].linkId = 0;
+    conditions[3].id = MODE_ALTHOLD;
+    conditions[3].ch = AXIS_AUX_1 + 1; // aux2
+    conditions[3].min = 1700;
+    conditions[3].max = 2100;
+    conditions[3].logicMode = 0;
+    conditions[3].linkId = 0;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_SCALER
-      scaler[0].dimension = (ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
-      scaler[0].channel = AXIS_AUX_1 + 1;
-      scaler[1].dimension = (ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
-      scaler[1].channel = AXIS_AUX_1 + 2;
-      scaler[2].dimension = (ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
-      scaler[2].channel = AXIS_AUX_1 + 3;
+    scaler[0].dimension = (ACT_INNER_P | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+    scaler[0].channel = AXIS_AUX_1 + 1;
+    scaler[1].dimension = (ACT_INNER_I | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+    scaler[1].channel = AXIS_AUX_1 + 2;
+    scaler[2].dimension = (ACT_INNER_D | ACT_AXIS_ROLL | ACT_AXIS_PITCH);
+    scaler[2].channel = AXIS_AUX_1 + 3;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_DSHOT
-      output.protocol = ESC_PROTOCOL_DSHOT300;
+    output.protocol = ESC_PROTOCOL_DSHOT300;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_BRUSHED
-      output.protocol = ESC_PROTOCOL_BRUSHED;
-      output.async = true;
-      output.rate = 3000;
+    output.protocol = ESC_PROTOCOL_BRUSHED;
+    output.async = true;
+    output.rate = 3000;
 #endif
-    }
+  }
 
-    void brobot()
-    {
-      mixer.type = FC_MIXER_GIMBAL;
+  void brobot()
+  {
+    mixer.type = FC_MIXER_GIMBAL;
 
-      pin[PIN_OUTPUT_0] = 14;    // D5 // ROBOT
-      pin[PIN_OUTPUT_1] = 12;    // D6 // ROBOT
-      pin[PIN_OUTPUT_2] = 15;    // D8 // ROBOT
-      pin[PIN_OUTPUT_3] = 0;     // D3 // ROBOT
+    pin[PIN_OUTPUT_0] = 14; // D5 // ROBOT
+    pin[PIN_OUTPUT_1] = 12; // D6 // ROBOT
+    pin[PIN_OUTPUT_2] = 15; // D8 // ROBOT
+    pin[PIN_OUTPUT_3] = 0;  // D3 // ROBOT
 
-      //fusionMode = FUSION_SIMPLE;    // ROBOT
-      //fusionMode = FUSION_COMPLEMENTARY; // ROBOT
-      //accelFilter.freq = 30;        // ROBOT
+    // fusionMode = FUSION_SIMPLE;    // ROBOT
+    // fusionMode = FUSION_COMPLEMENTARY; // ROBOT
+    // accelFilter.freq = 30;        // ROBOT
 
-      iterm.lowThrottleZeroIterm = false; // ROBOT
-      iterm.limit = 10; // ROBOT
-      level.angleLimit = 10;       // deg // ROBOT
+    iterm.lowThrottleZeroIterm = false; // ROBOT
+    iterm.limit = 10;                   // ROBOT
+    level.angleLimit = 10;              // deg // ROBOT
 
-      output.protocol = ESC_PROTOCOL_PWM; // ROBOT
-      output.rate = 100;    // ROBOT
-      output.async = true;  // ROBOT
+    output.protocol = ESC_PROTOCOL_PWM; // ROBOT
+    output.rate = 100;                  // ROBOT
+    output.async = true;                // ROBOT
 
-      output.channel[0].servo = true;   // ROBOT
-      output.channel[1].servo = true;   // ROBOT
-      output.channel[0].reverse = true; // ROBOT
+    output.channel[0].servo = true;   // ROBOT
+    output.channel[1].servo = true;   // ROBOT
+    output.channel[0].reverse = true; // ROBOT
 
-      scaler[0].dimension = (ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
-      //scaler[1].dimension = (ACT_INNER_P | ACT_AXIS_YAW); // ROBOT
-      scaler[1].dimension = (ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
-      scaler[2].dimension = (ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
-    }
+    scaler[0].dimension = (ACT_INNER_P | ACT_AXIS_PITCH); // ROBOT
+    // scaler[1].dimension = (ACT_INNER_P | ACT_AXIS_YAW); // ROBOT
+    scaler[1].dimension = (ACT_INNER_I | ACT_AXIS_PITCH); // ROBOT
+    scaler[2].dimension = (ACT_INNER_D | ACT_AXIS_PITCH); // ROBOT
+  }
 };
 
-}
-
-#endif
+} // namespace Espfc
