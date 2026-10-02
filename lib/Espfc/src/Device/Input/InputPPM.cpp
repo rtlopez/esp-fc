@@ -12,6 +12,7 @@ void InputPPM::begin(int8_t pin, int mode)
     Hal::Gpio::detachInterrupt(_pin);
     _pin = -1;
   }
+  _read_count = _write_count.load(std::memory_order_relaxed);
   if (pin != -1)
   {
     _pin = pin;
@@ -28,12 +29,10 @@ void InputPPM::begin(int8_t pin, int mode)
 
 InputStatus FAST_CODE_ATTR InputPPM::update()
 {
-  if (_new_data.load(std::memory_order_acquire))
-  {
-    _new_data.store(false, std::memory_order_relaxed);
-    return INPUT_RECEIVED;
-  }
-  return INPUT_IDLE;
+  auto writeCount = _write_count.load(std::memory_order_acquire);
+  if (writeCount == _read_count) return INPUT_IDLE;
+  _read_count = writeCount;
+  return INPUT_RECEIVED;
 }
 
 uint16_t FAST_CODE_ATTR InputPPM::get(uint8_t i) const
@@ -79,7 +78,9 @@ void ISR_CODE_ATTR InputPPM::handle()
   }
   if (_channel == 3)
   {
-    _new_data.store(true, std::memory_order_release); // increase responsivnes for sticks channels
+    // report after throttle channel to increase responsiveness
+    // we cannot use fetch_add() as not all architectures support it fully
+    _write_count.store(_write_count.load(std::memory_order_relaxed) + 1, std::memory_order_release);
   }
   _channel++;
 }

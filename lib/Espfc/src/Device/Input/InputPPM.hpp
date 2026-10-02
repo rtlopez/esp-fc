@@ -33,7 +33,8 @@ private:
   static void handle_isr(void* args);
 
   std::atomic<int> _channels[CHANNELS]{};
-  std::atomic<bool> _new_data{false};
+  std::atomic<size_t> _write_count{0};
+  size_t _read_count = 0;
   uint32_t _last_tick = 0;
   uint8_t _channel = 0;
   int8_t _pin = -1;
