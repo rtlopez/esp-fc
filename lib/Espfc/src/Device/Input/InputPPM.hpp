@@ -2,6 +2,7 @@
 
 #include "Device/InputDevice.hpp"
 #include "Hal/Gpio.hpp"
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 
@@ -31,11 +32,11 @@ private:
   void handle();
   static void handle_isr(void* args);
 
-  // TODO: migrate to std::atomic<int>
-  volatile uint16_t _channels[CHANNELS] = {0};
-  volatile uint32_t _last_tick = 0;
-  volatile uint8_t _channel = 0;
-  volatile bool _new_data = false;
+  std::atomic<int> _channels[CHANNELS]{};
+  std::atomic<size_t> _write_count{0};
+  size_t _read_count = 0;
+  uint32_t _last_tick = 0;
+  uint8_t _channel = 0;
   int8_t _pin = -1;
 };
 
