@@ -1,25 +1,18 @@
-#include "Hal/Platform.hpp"
-#include <Arduino.h>
-#include <EEPROM.h>
-#include <EscDriver.h>
-#include <EspWire.h>
 #include <Espfc.h>
-#include <Gps.hpp>
 #include <Hal/FastCode.hpp>
 #include <Hal/Platform.hpp>
 #include <Hal/Task.hpp>
-#include <Kalman.hpp>
-#include <Madgwick.hpp>
-#include <Mahony.hpp>
-#include <SPI.h>
-#include <Wire.h>
-#include <blackbox/blackbox.h>
-#include <printf.h>
-#if defined(ESPFC_HAL_ESPNOW)
-#include <EspNowRcLink/Receiver.h>
-#endif
+
 #ifdef ESP32
 void IRAM_ATTR serialEventRun(void) {}
+#endif
+
+#if defined(ESP8266) || defined(ARCH_RP2040)
+// esp8266 and pico expect C-style linkage
+extern "C" void setup();
+extern "C" void loop();
+extern "C" void setup1();
+extern "C" void loop1();
 #endif
 
 Espfc::Espfc espfc;

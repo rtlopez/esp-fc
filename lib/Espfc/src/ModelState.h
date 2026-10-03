@@ -1,20 +1,18 @@
-#ifndef _ESPFC_MODEL_STATE_H_
-#define _ESPFC_MODEL_STATE_H_
+#pragma once
 
-#include <helper_3dmath.hpp>
 #include <Kalman.hpp>
+#include <helper_3dmath.hpp>
 
-#include "ModelConfig.h"
-#include "Control/Pid.h"
-#include "Utils/Filter.h"
-#include "Utils/Timer.h"
-#include "Utils/Stats.h"
 #include "Connect/Msp.hpp"
 #include "Connect/StatusLed.hpp"
-#include "Stream/ReadWritable.hpp"
-#include "Event.hpp"
+#include "Control/Pid.h"
 #include "Hal/HwTimer.hpp"
+#include "ModelConfig.h"
+#include "Stream/ReadWritable.hpp"
+#include "Utils/Filter.h"
 #include "Utils/SeqLockWrapper.hpp"
+#include "Utils/Stats.h"
+#include "Utils/Timer.h"
 
 namespace Espfc {
 
@@ -25,93 +23,95 @@ constexpr size_t CLI_ARGS_SIZE = 12;
 struct CliCmd
 {
   CliCmd(): args{}, buff{}, index{0} {}
-  const char * args[CLI_ARGS_SIZE];
+  const char* args[CLI_ARGS_SIZE];
   char buff[CLI_BUFF_SIZE];
   size_t index;
 };
 
 class SerialPortState
 {
-  public:
-    Connect::MspMessage mspRequest;
-    Connect::MspResponse mspResponse;
-    CliCmd cliCmd;
-    Stream::ReadWritable * stream;
+public:
+  Connect::MspMessage mspRequest;
+  Connect::MspResponse mspResponse;
+  CliCmd cliCmd;
+  Stream::ReadWritable* stream;
 };
 
 class BuzzerState
 {
-  public:
-    BuzzerState(): idx(0) {}
+public:
+  BuzzerState(): idx(0) {}
 
-    void play(BuzzerEvent e) // play continously, repeat while condition is true
+  void play(BuzzerEvent e) // play continously, repeat while condition is true
+  {
+    if (!empty()) return;
+    push(e);
+  }
+
+  void push(BuzzerEvent e) // play once
+  {
+    if (full()) return;
+    if (beeperMask & (1 << (e - 1)))
     {
-      if(!empty()) return;
-      push(e);
+      events[idx++] = e;
     }
+  }
 
-    void push(BuzzerEvent e) // play once
-    {
-      if(full()) return;
-      if(beeperMask & (1 << (e - 1)))
-      {
-        events[idx++] = e;
-      }
-    }
+  BuzzerEvent pop()
+  {
+    if (empty()) return BUZZER_SILENCE;
+    return events[--idx];
+  }
 
-    BuzzerEvent pop()
-    {
-      if(empty()) return BUZZER_SILENCE;
-      return events[--idx];
-    }
+  bool empty() const
+  {
+    return idx == 0;
+  }
 
-    bool empty() const
-    {
-      return idx == 0;
-    }
+  bool full() const
+  {
+    return idx >= BUZZER_MAX_EVENTS;
+  }
 
-    bool full() const
-    {
-      return idx >= BUZZER_MAX_EVENTS;
-    }
-
-    Utils::Timer timer;
-    BuzzerEvent events[BUZZER_MAX_EVENTS];
-    size_t idx;
-    int32_t beeperMask;
+  Utils::Timer timer;
+  BuzzerEvent events[BUZZER_MAX_EVENTS];
+  size_t idx;
+  int32_t beeperMask;
 };
 
 class BatteryState
 {
-  public:
-    bool warn(int vbatCellWarning) const
-    {
-      if(voltage < 2.0) return false; // no battery connected
-      return !samples && cellVoltage < vbatCellWarning * 0.01f;
-    }
+public:
+  bool warn(int vbatCellWarning) const
+  {
+    if (voltage < 2.0) return false; // no battery connected
+    return !samples && cellVoltage < vbatCellWarning * 0.01f;
+  }
 
-    int16_t rawVoltage;
-    int16_t rawCurrent;
-    float voltage;
-    float voltageUnfiltered;
-    float current;
-    float currentUnfiltered;
-    float cellVoltage;
-    float percentage;
-    int8_t cells;
-    int8_t samples;
-    Utils::Timer timer;
+  int16_t rawVoltage;
+  int16_t rawCurrent;
+  float voltage;
+  float voltageUnfiltered;
+  float current;
+  float currentUnfiltered;
+  float cellVoltage;
+  float percentage;
+  int8_t cells;
+  int8_t samples;
+  Utils::Timer timer;
 };
 
-enum CalibrationState {
-  CALIBRATION_IDLE   = 0,
-  CALIBRATION_START  = 1,
+enum CalibrationState
+{
+  CALIBRATION_IDLE = 0,
+  CALIBRATION_START = 1,
   CALIBRATION_UPDATE = 2,
-  CALIBRATION_APPLY  = 3,
-  CALIBRATION_SAVE   = 4,
+  CALIBRATION_APPLY = 3,
+  CALIBRATION_SAVE = 4,
 };
 
-enum FailsafePhase {
+enum FailsafePhase
+{
   FC_FAILSAFE_IDLE = 0,
   FC_FAILSAFE_RX_LOSS_DETECTED,
   FC_FAILSAFE_LANDING,
@@ -122,15 +122,16 @@ enum FailsafePhase {
 
 class FailsafeState
 {
-  public:
-    FailsafePhase phase;
-    uint32_t timeout;
+public:
+  FailsafePhase phase;
+  uint32_t timeout;
 };
 
 constexpr float ACCEL_G = 9.80665f;
 constexpr float ACCEL_G_INV = 1.f / ACCEL_G;
 
-enum RescueConfigMode {
+enum RescueConfigMode
+{
   RESCUE_CONFIG_PENDING,
   RESCUE_CONFIG_ACTIVE,
   RESCUE_CONFIG_DISABLED,
@@ -201,8 +202,8 @@ struct MixerState
   float maxThrottle;
   bool digitalOutput;
 
-  EscDriver * escMotor;
-  EscDriver * escServo;
+  EscDriver* escMotor;
+  EscDriver* escServo;
 };
 
 struct MagState
@@ -276,7 +277,7 @@ struct GyroState
 
   Utils::Timer timer;
   Utils::Timer dynamicFilterTimer;
-  Hal::HwTimer hwTimer;
+  Hal::HwTimer hwTimer{0};
 };
 
 struct AccelState
@@ -323,9 +324,21 @@ struct ModeState
   RescueConfigMode rescueConfigMode;
   bool airmodeAllowed;
   uint32_t button;
-  bool isSingleClickActive() const { return button & (1 << 0); }
-  bool isDoubleClickActive() const { return button & (1 << 1); }
-  bool isLongClickActive()   const { return button & (1 << 2); }
+
+  bool isSingleClickActive() const
+  {
+    return button & (1 << 0);
+  }
+
+  bool isDoubleClickActive() const
+  {
+    return button & (1 << 1);
+  }
+
+  bool isLongClickActive() const
+  {
+    return button & (1 << 2);
+  }
 };
 
 struct AltitudeState
@@ -365,8 +378,8 @@ struct GpsSupportState
 template<typename T>
 struct GpsCoordinate
 {
-  T lat = T{}; // deg * 1e7
-  T lon = T{}; // deg * 1e7
+  T lat = T{};    // deg * 1e7
+  T lon = T{};    // deg * 1e7
   T height = T{}; // mm (1e3)
 };
 
@@ -379,12 +392,12 @@ struct GpsPosition
 template<typename T>
 struct GpsSpeed
 {
-  T north = T{}; // mm/s (1e3)
-  T east = T{}; // mm/s (1e3)
-  T down = T{}; // mm/s (1e3)
+  T north = T{};       // mm/s (1e3)
+  T east = T{};        // mm/s (1e3)
+  T down = T{};        // mm/s (1e3)
   T groundSpeed = T{}; // mm/s (1e3)
-  T heading = T{}; // deg * 1e5
-  T speed3d = T{}; // mm/s (1e3)
+  T heading = T{};     // deg * 1e5
+  T speed3d = T{};     // mm/s (1e3)
 };
 
 struct GpsVelocity
@@ -395,10 +408,10 @@ struct GpsVelocity
 struct GpsAccuracy
 {
   uint32_t horizontal = 0; // mm (1e3)
-  uint32_t vertical = 0; // mm (1e3)
-  uint32_t speed = 0; // mm/s (1e3)
-  uint32_t heading = 0; // deg * 1e5
-  uint32_t pDop = 0; // (1e2)
+  uint32_t vertical = 0;   // mm (1e3)
+  uint32_t speed = 0;      // mm/s (1e3)
+  uint32_t heading = 0;    // deg * 1e5
+  uint32_t pDop = 0;       // (1e2)
 };
 
 struct GpsSatelite
@@ -406,41 +419,45 @@ struct GpsSatelite
   uint8_t gnssId = 0;
   uint8_t id = 0;
   uint8_t cno = 0;
-  union {
+  union
+  {
     uint32_t value;
-    struct {
-      uint8_t qualityInd: 3; // quality indicatopr: 0-no signal, 1-searching, 2-aquired, 3-unstable, 4-code locked, 5,6,7-code and carrier locked
-      uint8_t svUsed: 1; // used for navigation
-      uint8_t health: 2; // signal health 0-unknown, 1-healthy, 2-unhealty
-      uint8_t difCorr: 1; // differential correction available for this SV
-      uint8_t smoothed: 1; // carrier smotthed pseudorange used
-      uint8_t orbitSource: 3; // orbit source: 0-no inform, 1-ephemeris, 2-almanac, 3-assistnow offline, 4-assistnow autonomous, 5,6,7-other
-      uint8_t ephAvail: 1; // ephemeris available
-      uint8_t elmAvail: 1; // almanac available
-      uint8_t enoAvail: 1; // assistnow offline available
-      uint8_t eopAvail: 1; // assistnow autonomous available
-      uint8_t reserved: 1;
-      uint8_t sbasCorrUsed: 1; // SBAS corrections used
-      uint8_t rtcmCorrUsed: 1; // RTCM corrections used
-      uint8_t slasCorrUsed: 1; // SLAS corrections used
-      uint8_t spartnCorrUsed: 1; // SPARTN corrections used
-      uint8_t prCorrUsed: 1; // Pseudorange corrections used
-      uint8_t crCorrUsed: 1; // Carrier range corrections used
-      uint8_t doCorrUsed: 1; // Range rate (Doppler) corrections used
-      uint8_t clasCorrUsed: 1; // CLAS corrections used
+    struct
+    {
+      uint8_t qualityInd : 3;  // quality indicatopr: 0-no signal, 1-searching, 2-aquired, 3-unstable, 4-code locked,
+                               // 5,6,7-code and carrier locked
+      uint8_t svUsed : 1;      // used for navigation
+      uint8_t health : 2;      // signal health 0-unknown, 1-healthy, 2-unhealty
+      uint8_t difCorr : 1;     // differential correction available for this SV
+      uint8_t smoothed : 1;    // carrier smotthed pseudorange used
+      uint8_t orbitSource : 3; // orbit source: 0-no inform, 1-ephemeris, 2-almanac, 3-assistnow offline, 4-assistnow
+                               // autonomous, 5,6,7-other
+      uint8_t ephAvail : 1;    // ephemeris available
+      uint8_t elmAvail : 1;    // almanac available
+      uint8_t enoAvail : 1;    // assistnow offline available
+      uint8_t eopAvail : 1;    // assistnow autonomous available
+      uint8_t reserved : 1;
+      uint8_t sbasCorrUsed : 1;   // SBAS corrections used
+      uint8_t rtcmCorrUsed : 1;   // RTCM corrections used
+      uint8_t slasCorrUsed : 1;   // SLAS corrections used
+      uint8_t spartnCorrUsed : 1; // SPARTN corrections used
+      uint8_t prCorrUsed : 1;     // Pseudorange corrections used
+      uint8_t crCorrUsed : 1;     // Carrier range corrections used
+      uint8_t doCorrUsed : 1;     // Range rate (Doppler) corrections used
+      uint8_t clasCorrUsed : 1;   // CLAS corrections used
     };
-  } quality = { .value = 0 };
+  } quality = {.value = 0};
 };
 
 struct GpsDateTime
 {
-  uint16_t year; // full year
-  uint8_t month; // 1-12
-  uint8_t day; // 1-31
-  uint8_t hour; // 0-23
+  uint16_t year;  // full year
+  uint8_t month;  // 1-12
+  uint8_t day;    // 1-31
+  uint8_t hour;   // 0-23
   uint8_t minute; // 0-59
   uint8_t second; // 0-59
-  uint16_t msec; // 0-999
+  uint16_t msec;  // 0-999
 };
 
 static constexpr size_t SAT_MAX = 32u;
@@ -466,7 +483,11 @@ struct GpsState
   GpsSatelite svinfo[SAT_MAX];
   float distanceToHome = 0;
   float directionToHome = 0;
-  bool isHomeValid() const { return homeSet && fix && fixType >= 2; }
+
+  bool isHomeValid() const
+  {
+    return homeSet && fix && fixType >= 2;
+  }
 };
 
 // runtime data
@@ -520,10 +541,7 @@ struct ModelState
   SerialPortState serial[SERIAL_UART_COUNT];
   Utils::Timer serialTimer;
 
-  EventQueue appQueue;
   bool rebootRequired = false;
 };
 
-}
-
-#endif
+} // namespace Espfc

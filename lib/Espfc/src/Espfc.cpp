@@ -16,7 +16,7 @@ int Espfc::load()
 {
   PIN_DEBUG_INIT();
   _model.load();
-  _model.state.appQueue.begin();
+  _model.appQueue.begin();
   return 1;
 }
 
@@ -108,7 +108,7 @@ int FAST_CODE_ATTR Espfc::updateOther()
   if constexpr (Hal::MULTI_CORE)
   {
     Event e;
-    if (!_model.state.appQueue.pop(e))
+    if (!_model.appQueue.pop(e))
     {
       return 0;
     }

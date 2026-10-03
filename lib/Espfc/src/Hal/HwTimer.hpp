@@ -11,6 +11,7 @@ public:
   // Return true when a higher priority task was woken and a context switch is required on ISR exit.
   using Callback = bool (*)(void* arg);
 
+  // TODO: operator= which stops the timer
   constexpr explicit HwTimer(uint8_t id = 0): _callback(nullptr), _arg(nullptr), _interval(0), _id(id), _running(false)
   {
   }

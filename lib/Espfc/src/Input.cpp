@@ -3,7 +3,6 @@
 #include "Hal/FastCode.hpp"
 #include "Hal/Platform.hpp"
 #include "Hal/Time.hpp"
-#include "ModelConfig.h"
 #include "Utils/Filter.h"
 #include "Utils/Math.hpp"
 
