@@ -1,4 +1,4 @@
-#if defined(ARCH_RP2040)
+#if defined(ARCH_RP2040) && defined(__FREERTOS)
 
 #include "Hal/Task.hpp"
 #include <FreeRTOS.h>
