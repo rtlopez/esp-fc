@@ -4,7 +4,6 @@
 #include "Hal/Platform.hpp"
 #include "Hal/Wifi.hpp"
 #include "Hardware.h"
-#include "ModelConfig.h"
 #include "Utils/Filter.h"
 #include "msp/msp_protocol.h"
 #include <algorithm>
@@ -1552,7 +1551,7 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
   }
   else if (std::strcmp(cmd.args[0], "defaults") == 0)
   {
-    _model.reset();
+    _model.resetToDefaults();
   }
   else if (std::strcmp(cmd.args[0], "motors") == 0)
   {

@@ -28,21 +28,7 @@ enum ModelChangeEvent
 class Model
 {
 public:
-  Model(): config{}, state{}
-  {
-    // initialize();
-  }
-
-  void initialize()
-  {
-    config = {};
-    // #ifdef UNIT_TEST
-
-    state = {}; // FIXME: causes board wdt reset
-
-    // #endif
-    //  config.brobot();
-  }
+  Model(): config{}, state{} {}
 
   bool isModeActive(FlightMode mode) const
   {
@@ -417,11 +403,12 @@ public:
     return std::make_tuple(pidOk, gyroOk, dtermOk);
   }
 
-  void reset()
+  /// @brief Reset configuration to default values
+  /// @note This does not save the configuration to storage, call save to persist the changes and reboot to apply
+  void resetToDefaults()
   {
-    initialize();
-    // save();
-    reload();
+    config = {};
+    setRebootRequired();
   }
 
   void sanitize()

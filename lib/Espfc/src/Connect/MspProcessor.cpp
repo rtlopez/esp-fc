@@ -2,7 +2,6 @@
 #include "Hal/Board.hpp"
 #include "Hardware.h"
 #include "Model.h"
-#include "ModelConfig.h"
 #include "Stream/Printer.hpp"
 #include <algorithm>
 #include <cstring>
@@ -1986,7 +1985,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
     case MSP_RESET_CONF:
       if (!_model.isModeActive(MODE_ARMED))
       {
-        _model.reset();
+        _model.resetToDefaults();
         _model.save();
         _postCommand = [this]() { processRestart(); };
         r.writeU8(1); // success
