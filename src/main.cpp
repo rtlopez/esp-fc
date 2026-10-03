@@ -8,6 +8,7 @@ void IRAM_ATTR serialEventRun(void) {}
 #endif
 
 #if defined(ESP8266) || defined(ARCH_RP2040)
+// esp8266 and pico expect C-style linkage
 extern "C" void setup();
 extern "C" void loop();
 extern "C" void setup1();

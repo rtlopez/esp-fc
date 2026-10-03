@@ -408,6 +408,7 @@ public:
   void resetToDefaults()
   {
     config = {};
+    postLoad(); // prevent preserving calibration data
     setRebootRequired();
   }
 
