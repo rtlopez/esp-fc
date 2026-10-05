@@ -6,35 +6,25 @@
 
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 #include "Utils/FFTAnalyzer.hpp"
-#include "dsps_fft4r.h"
-#include "dsps_wind_hann.h"
-#include "esp_heap_caps.h"
 #include <algorithm>
 
 namespace Espfc::Utils {
 
 template<size_t SAMPLES>
 FFTAnalyzer<SAMPLES>::FFTAnalyzer()
-    : _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0), _in(nullptr), _out(nullptr), _win(nullptr)
+    : _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0)
 {
 }
 
 template<size_t SAMPLES>
-FFTAnalyzer<SAMPLES>::~FFTAnalyzer()
-{
-  if (_in) heap_caps_free(_in);
-  if (_out) heap_caps_free(_out);
-  if (_win) heap_caps_free(_win);
-}
+FFTAnalyzer<SAMPLES>::~FFTAnalyzer() = default;
 
 template<size_t SAMPLES>
 int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config, size_t axis)
 {
-  if (!_in) _in = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
-  if (!_out) _out = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
-  if (!_win) _win = static_cast<float*>(heap_caps_aligned_alloc(16u, SAMPLES * sizeof(float), MALLOC_CAP_DEFAULT));
-
-  if (!_in || !_out || !_win) std::abort();
+  if (!_in) _in = Hal::Dsp::allocFloats(SAMPLES);
+  if (!_out) _out = Hal::Dsp::allocFloats(SAMPLES);
+  if (!_win) _win = Hal::Dsp::allocFloats(SAMPLES);
 
   int16_t nyquistLimit = rate / 2;
   _rate = rate;
@@ -49,10 +39,10 @@ int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config,
   _end = std::min(BINS - 1, (size_t)(_freq_max / _bin_width)) - 1;
 
   // init fft tables
-  dsps_fft4r_init_fc32(nullptr, BINS);
+  _dsp.init(SAMPLES);
 
   // Generate hann window
-  dsps_wind_hann_f32(_win, SAMPLES);
+  _dsp.windowHann(_win.get(), SAMPLES);
 
   clearPeaks();
 
@@ -89,14 +79,8 @@ int FFTAnalyzer<SAMPLES>::update(float v)
         _out[j] = _in[j] * _win[j]; // real
       }
 
-      // FFT Radix-4
-      dsps_fft4r_fc32(_out, BINS);
-
-      // Bit reverse
-      dsps_bit_rev4r_fc32(_out, BINS);
-
-      // Convert one complex vector with length SAMPLES/2 to one real spectrum vector with length SAMPLES/2
-      dsps_cplx2real_fc32(_out, BINS);
+      // Forward real FFT -> interleaved complex spectrum
+      _dsp.realForward(_out.get());
 
       _phase = PHASE_PEAKS;
       return 0;
@@ -112,7 +96,7 @@ int FFTAnalyzer<SAMPLES>::update(float v)
 
       clearPeaks();
 
-      Utils::peakDetect(_out, _begin, _end, _bin_width, peaks, _peak_count);
+      Utils::peakDetect(_out.get(), _begin, _end, _bin_width, peaks, _peak_count);
 
       // sort peaks by freq
       Utils::peakSort(peaks, _peak_count);
