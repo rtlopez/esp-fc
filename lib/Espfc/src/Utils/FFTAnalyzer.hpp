@@ -2,6 +2,7 @@
 
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 
+#include "Hal/Dsp/Fft.hpp"
 #include "Utils/Filter.h"
 #include "Utils/Math.hpp"
 #include <cstddef>
@@ -50,9 +51,10 @@ private:
   size_t _end;
   float _bin_width;
 
-  float* _in;
-  float* _out;
-  float* _win;
+  Hal::Dsp::Fft _dsp;
+  Hal::Dsp::FloatBuffer _in;
+  Hal::Dsp::FloatBuffer _out;
+  Hal::Dsp::FloatBuffer _win;
 };
 
 } // namespace Espfc::Utils
