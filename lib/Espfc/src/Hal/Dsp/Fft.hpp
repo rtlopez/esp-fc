@@ -29,6 +29,7 @@ public:
 
 private:
   size_t _size = 0;
+  FloatBuffer _scratch; // out-of-place backends (e.g. CMSIS-DSP) only
 };
 
 } // namespace Espfc::Hal::Dsp
