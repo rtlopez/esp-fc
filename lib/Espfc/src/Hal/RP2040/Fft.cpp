@@ -1,12 +1,52 @@
 #if defined(ARCH_RP2350)
 
 #include "Hal/Dsp/Fft.hpp"
-#include "arm_math.h"
+#include <arm_math.h>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 
 namespace Espfc::Hal::Dsp {
+
+namespace {
+
+// RFFT config is immutable per length (only const twiddle/bit-rev pointers), so every axis
+// sharing a length reuses one instance. Mirrors the ESP32 backend's global twiddle tables.
+struct RfftEntry
+{
+  uint16_t len;
+  bool ready;
+  arm_rfft_fast_instance_f32 inst;
+};
+
+RfftEntry g_rfft[2] = {};
+
+const arm_rfft_fast_instance_f32* rfftFind(uint16_t len)
+{
+  for (auto& e : g_rfft)
+  {
+    if (e.ready && e.len == len) return &e.inst;
+  }
+  return nullptr;
+}
+
+const arm_rfft_fast_instance_f32* rfftEnsure(uint16_t len)
+{
+  if (const arm_rfft_fast_instance_f32* inst = rfftFind(len)) return inst;
+  for (auto& e : g_rfft)
+  {
+    if (!e.ready)
+    {
+      if (arm_rfft_fast_init_f32(&e.inst, len) != ARM_MATH_SUCCESS) return nullptr;
+      e.len = len;
+      e.ready = true;
+      return &e.inst;
+    }
+  }
+  return nullptr;
+}
+
+} // namespace
 
 void AlignedDeleter::operator()(float* ptr) const noexcept
 {
@@ -22,10 +62,13 @@ FloatBuffer allocFloats(size_t count)
 
 bool Fft::init(size_t size)
 {
-  _size = size;
-  if (!_scratch) _scratch = allocFloats(size);
-  arm_rfft_fast_instance_f32 inst;
-  return arm_rfft_fast_init_f32(&inst, static_cast<uint16_t>(size)) == ARM_MATH_SUCCESS;
+  // reallocate only if size has changed
+  if (_size != size)
+  {
+    _size = size;
+    _scratch = allocFloats(size);
+  }
+  return rfftEnsure(static_cast<uint16_t>(size)) != nullptr;
 }
 
 void Fft::windowHann(float* dst, size_t size)
@@ -41,9 +84,8 @@ void Fft::windowHann(float* dst, size_t size)
 void Fft::realForward(float* data)
 {
   // arm_rfft_fast_f32 is out-of-place; transform into scratch then restore in-place contract.
-  arm_rfft_fast_instance_f32 inst;
-  arm_rfft_fast_init_f32(&inst, static_cast<uint16_t>(_size));
-  arm_rfft_fast_f32(&inst, data, _scratch.get(), 0);
+  const auto* inst = rfftFind(static_cast<uint16_t>(_size));
+  arm_rfft_fast_f32(inst, data, _scratch.get(), 0);
   std::memcpy(data, _scratch.get(), _size * sizeof(float));
 }
 
