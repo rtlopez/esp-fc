@@ -17,7 +17,6 @@ enum FFTPhase
   PHASE_PEAKS
 };
 
-template<size_t SAMPLES>
 class FFTAnalyzer
 {
 public:
@@ -38,6 +37,7 @@ public:
 private:
   void clearPeaks();
 
+  static constexpr size_t SAMPLES = 128;
   static constexpr size_t BINS = SAMPLES >> 1;
 
   int16_t _rate;

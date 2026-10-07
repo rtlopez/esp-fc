@@ -5,9 +5,6 @@
 #include "Hal/Time.hpp"
 #include "Utils/FilterHelper.h"
 #include "Utils/Sma.ipp"
-#ifdef ESPFC_HAL_DSP
-#include "Utils/FFTAnalyzer.ipp"
-#endif
 
 namespace Espfc::Sensor {
 
