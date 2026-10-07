@@ -19,7 +19,7 @@ struct RfftEntry
   arm_rfft_fast_instance_f32 inst;
 };
 
-RfftEntry g_rfft[2] = {};
+RfftEntry g_rfft[6] = {};
 
 const arm_rfft_fast_instance_f32* rfftFind(uint16_t len)
 {

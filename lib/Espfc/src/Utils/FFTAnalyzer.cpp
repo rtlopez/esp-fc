@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Hal/Platform.hpp"
 
 #ifdef ESPFC_HAL_DSP
@@ -7,20 +5,15 @@
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 #include "Utils/FFTAnalyzer.hpp"
 #include <algorithm>
+#include <cmath>
 
 namespace Espfc::Utils {
 
-template<size_t SAMPLES>
-FFTAnalyzer<SAMPLES>::FFTAnalyzer()
-    : _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0)
-{
-}
+FFTAnalyzer::FFTAnalyzer(): _idx(0), _phase(PHASE_COLLECT), _begin(0), _end(0) {}
 
-template<size_t SAMPLES>
-FFTAnalyzer<SAMPLES>::~FFTAnalyzer() = default;
+FFTAnalyzer::~FFTAnalyzer() = default;
 
-template<size_t SAMPLES>
-int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config, size_t axis)
+int FFTAnalyzer::begin(int16_t rate, const DynamicFilterConfig& config, size_t axis)
 {
   if (!_in) _in = Hal::Dsp::allocFloats(SAMPLES);
   if (!_out) _out = Hal::Dsp::allocFloats(SAMPLES);
@@ -50,14 +43,12 @@ int FFTAnalyzer<SAMPLES>::begin(int16_t rate, const DynamicFilterConfig& config,
   {
     _in[i] = 0;
   }
-  // std::fill(_in, _in + SAMPLES, 0);
 
   return 1;
 }
 
-template<size_t SAMPLES>
 // calculate fft and find noise peaks
-int FFTAnalyzer<SAMPLES>::update(float v)
+int FFTAnalyzer::update(float v)
 {
   _in[_idx] = v;
 
@@ -90,8 +81,8 @@ int FFTAnalyzer<SAMPLES>::update(float v)
       for (size_t j = 0; j < BINS; j++)
       {
         size_t k = j * 2;
-        //_out[j] = _out[k] * _out[k] + _out[k + 1] * _out[k + 1];
-        _out[j] = sqrt(_out[k] * _out[k] + _out[k + 1] * _out[k + 1]);
+        _out[j] = std::sqrt(_out[k] * _out[k] + _out[k + 1] * _out[k + 1]); // amplitude
+        //_out[j] = _out[k] * _out[k] + _out[k + 1] * _out[k + 1]; or power
       }
 
       clearPeaks();
@@ -110,14 +101,12 @@ int FFTAnalyzer<SAMPLES>::update(float v)
   }
 }
 
-template<size_t SAMPLES>
-void FFTAnalyzer<SAMPLES>::clearPeaks()
+void FFTAnalyzer::clearPeaks()
 {
   for (size_t i = 0; i < PEAKS_MAX; i++)
   {
     peaks[i] = {};
   }
-  // std::fill(peaks, peaks + PEAKS_MAX, Peak());
 }
 
 } // namespace Espfc::Utils
