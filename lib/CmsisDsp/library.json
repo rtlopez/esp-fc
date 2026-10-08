@@ -11,6 +11,7 @@
       "+<Source/TransformFunctions/arm_cfft_init_f32.c>",
       "+<Source/TransformFunctions/arm_cfft_radix8_f32.c>",
       "+<Source/TransformFunctions/arm_bitreversal2.c>",
+      "+<Source/ComplexMathFunctions/arm_cmplx_mag_f32.c>",
       "+<Source/CommonTables/arm_common_tables.c>",
       "+<Source/CommonTables/arm_const_structs.c>"
     ],

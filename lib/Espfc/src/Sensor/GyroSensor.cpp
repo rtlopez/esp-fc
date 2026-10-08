@@ -283,10 +283,11 @@ void FAST_CODE_ATTR GyroSensor::dynNotchFilterUpdate()
         }
         if (_model.config.debug.mode == DEBUG_FFT_FREQ && i == _model.config.debug.axis)
         {
-          _model.state.debug[0] = lrintf(_fft[i].peaks[0].freq);
-          _model.state.debug[1] = lrintf(_fft[i].peaks[1].freq);
-          _model.state.debug[2] = lrintf(_fft[i].peaks[2].freq);
-          _model.state.debug[3] = lrintf(_fft[i].peaks[3].freq);
+          _model.state.debug[0] = lrintf(_model.state.gyro.dynNotch[i]);
+          for (size_t p = 0; p < 4; p++)
+          {
+            _model.state.debug[p + 1] = lrintf(_fft[i].peaks[p].freq);
+          }
         }
         if (_dyn_notch_enabled && status)
         {

@@ -20,13 +20,15 @@ FloatBuffer allocFloats(size_t count);
 // Contract: size is the number of real input samples (power of two).
 // realForward() is in-place: size reals become size floats holding size/2
 // interleaved complex bins (bin k at [2*k] = Re, [2*k + 1] = Im).
-// arm CMSIS-DSP backend in data[1] returns nyquist real value, take into account when calculating DC magnitude.
+// CMSIS-DSP backend pack the nyquist real value in data[1], take into account when calculating DC magnitude.
+// magnitude() converts realForward() output into size/2 bin magnitudes (dst[0] = |DC|), dst may alias src.
 class Fft
 {
 public:
   bool init(size_t size);
   void windowHann(float* dst, size_t size);
   void realForward(float* data);
+  void magnitude(const float* src, float* dst);
 
 private:
   size_t _size = 0;

@@ -1,6 +1,7 @@
 #if defined(ESP32)
 
 #include "Hal/Dsp/Fft.hpp"
+#include <cmath>
 #include <cstdlib>
 #include <dsps_fft2r.h>
 #include <dsps_fft4r.h>
@@ -64,6 +65,17 @@ void Fft::realForward(float* data)
     dsps_bit_rev_fc32(data, bins);
   }
   dsps_cplx2real_fc32(data, bins);
+}
+
+void Fft::magnitude(const float* src, float* dst)
+{
+  const size_t bins = _size >> 1;
+  for (size_t i = 0; i < bins; i++)
+  {
+    const float re = src[2 * i];
+    const float im = src[2 * i + 1];
+    dst[i] = std::sqrt(re * re + im * im);
+  }
 }
 
 } // namespace Espfc::Hal::Dsp
