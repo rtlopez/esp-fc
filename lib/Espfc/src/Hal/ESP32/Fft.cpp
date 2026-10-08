@@ -2,11 +2,21 @@
 
 #include "Hal/Dsp/Fft.hpp"
 #include <cstdlib>
+#include <dsps_fft2r.h>
 #include <dsps_fft4r.h>
 #include <dsps_wind_hann.h>
 #include <esp_heap_caps.h>
 
 namespace Espfc::Hal::Dsp {
+
+namespace {
+
+inline bool isPowerOfFour(size_t n)
+{
+  return n != 0 && (n & (n - 1)) == 0 && (n & 0x55555555UL) != 0;
+}
+
+} // namespace
 
 void AlignedDeleter::operator()(float* ptr) const noexcept
 {
@@ -23,7 +33,16 @@ FloatBuffer allocFloats(size_t count)
 bool Fft::init(size_t size)
 {
   _size = size;
-  return dsps_fft4r_init_fc32(nullptr, size >> 1) == ESP_OK;
+  const size_t bins = size >> 1;
+
+  // cplx2real relies on the radix-4 twiddle table, so it must always be initialised.
+  if (dsps_fft4r_init_fc32(nullptr, bins) != ESP_OK) return false;
+
+  _radix4 = isPowerOfFour(bins);
+  if (_radix4) return true;
+
+  // bins is a power of two but not a power of four -> fall back to radix-2.
+  return dsps_fft2r_init_fc32(nullptr, bins) == ESP_OK;
 }
 
 void Fft::windowHann(float* dst, size_t size)
@@ -33,10 +52,17 @@ void Fft::windowHann(float* dst, size_t size)
 
 void Fft::realForward(float* data)
 {
-  // FFT Radix-4
   const size_t bins = _size >> 1;
-  dsps_fft4r_fc32(data, bins);
-  dsps_bit_rev4r_fc32(data, bins);
+  if (_radix4)
+  {
+    dsps_fft4r_fc32(data, bins);
+    dsps_bit_rev4r_fc32(data, bins);
+  }
+  else
+  {
+    dsps_fft2r_fc32(data, bins);
+    dsps_bit_rev_fc32(data, bins);
+  }
   dsps_cplx2real_fc32(data, bins);
 }
 
