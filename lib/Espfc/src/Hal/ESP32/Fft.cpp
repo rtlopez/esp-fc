@@ -70,7 +70,8 @@ void Fft::realForward(float* data)
 void Fft::magnitude(const float* src, float* dst)
 {
   const size_t bins = _size >> 1;
-  for (size_t i = 0; i < bins; i++)
+  dst[0] = std::fabs(src[0]);
+  for (size_t i = 1; i < bins; i++)
   {
     const float re = src[2 * i];
     const float im = src[2 * i + 1];
