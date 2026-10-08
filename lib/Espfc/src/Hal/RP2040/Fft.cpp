@@ -89,6 +89,13 @@ void Fft::realForward(float* data)
   std::memcpy(data, _scratch.get(), _size * sizeof(float));
 }
 
+void Fft::magnitude(const float* src, float* dst)
+{
+  const size_t bins = _size >> 1;
+  dst[0] = std::fabs(src[0]);
+  arm_cmplx_mag_f32(src + 2, dst + 1, bins - 1);
+}
+
 } // namespace Espfc::Hal::Dsp
 
 #endif

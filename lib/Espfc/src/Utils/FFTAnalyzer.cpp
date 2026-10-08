@@ -78,12 +78,7 @@ int FFTAnalyzer::update(float v)
 
     case PHASE_PEAKS: // 12us + 22us sqrt()
       // calculate magnitude
-      for (size_t j = 0; j < BINS; j++)
-      {
-        size_t k = j * 2;
-        _out[j] = std::sqrt(_out[k] * _out[k] + _out[k + 1] * _out[k + 1]); // amplitude
-        //_out[j] = _out[k] * _out[k] + _out[k + 1] * _out[k + 1]; or power
-      }
+      _dsp.magnitude(_out.get(), _out.get());
 
       clearPeaks();
 
