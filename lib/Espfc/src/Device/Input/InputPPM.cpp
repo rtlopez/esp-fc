@@ -2,10 +2,11 @@
 #include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
+#include "Debug_Espfc.h"
 
 namespace Espfc::Device::Input {
 
-void InputPPM::begin(int8_t pin, int mode)
+void InputPPM::begin(int8_t pin, PPMInvert invert)
 {
   if (_pin != -1)
   {
@@ -23,7 +24,7 @@ void InputPPM::begin(int8_t pin, int mode)
       _channels[i].store(i == 2 ? 1000 : 1500, std::memory_order_relaxed); // throttle
     }
     Hal::Gpio::pinMode(_pin, Hal::Gpio::Input);
-    Hal::Gpio::attachInterrupt(_pin, InputPPM::handle_isr, this, static_cast<Hal::Gpio::InterruptMode>(mode));
+    Hal::Gpio::attachInterrupt(_pin, InputPPM::handle_isr, this, invert == PPM_MODE_INVERTED ? Hal::Gpio::Falling : Hal::Gpio::Rising);
   }
 }
 
@@ -42,11 +43,13 @@ uint16_t FAST_CODE_ATTR InputPPM::get(uint8_t i) const
 
 void FAST_CODE_ATTR InputPPM::get(uint16_t* data, size_t len) const
 {
+  PIN_DEBUG(1);
   const auto* src = _channels;
   while (len--)
   {
     *data++ = (src++)->load(std::memory_order_relaxed);
   }
+  PIN_DEBUG(0);
 }
 
 size_t InputPPM::getChannelCount() const
@@ -61,6 +64,7 @@ bool InputPPM::needAverage() const
 
 void ISR_CODE_ATTR InputPPM::handle()
 {
+  PIN_DEBUG(1);
   uint32_t now = micros();
   uint32_t width = now - _last_tick;
 
@@ -69,6 +73,7 @@ void ISR_CODE_ATTR InputPPM::handle()
   if (width > 3000) // sync
   {
     _channel = 0;
+    PIN_DEBUG(0);
     return;
   }
 
@@ -76,13 +81,16 @@ void ISR_CODE_ATTR InputPPM::handle()
   {
     _channels[_channel].store(static_cast<int>(width), std::memory_order_relaxed);
   }
+
   if (_channel == 3)
   {
     // report after throttle channel to increase responsiveness
     // we cannot use fetch_add() as not all architectures support it fully
     _write_count.store(_write_count.load(std::memory_order_relaxed) + 1, std::memory_order_release);
   }
+
   _channel++;
+  PIN_DEBUG(0);
 }
 
 void ISR_CODE_ATTR InputPPM::handle_isr(void* args)

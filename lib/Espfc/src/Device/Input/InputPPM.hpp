@@ -8,10 +8,10 @@
 
 namespace Espfc {
 
-enum PPMMode
+enum PPMInvert
 {
-  PPM_MODE_NORMAL = Hal::Gpio::Rising,   // RISING edge
-  PPM_MODE_INVERTED = Hal::Gpio::Falling // FALLING edge
+  PPM_MODE_NORMAL = 0,  // RISING edge
+  PPM_MODE_INVERTED = 1 // FALLING edge
 };
 
 namespace Device::Input {
@@ -19,7 +19,7 @@ namespace Device::Input {
 class InputPPM : public InputDevice
 {
 public:
-  void begin(int8_t pin, int mode = PPM_MODE_NORMAL);
+  void begin(int8_t pin, PPMInvert invert = PPM_MODE_NORMAL);
   InputStatus update() override;
   uint16_t get(uint8_t i) const override;
   void get(uint16_t* data, size_t len) const override;
