@@ -701,6 +701,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
 #endif
 #ifdef ESPFC_INPUT
       Param("pin_input_rx", &c.pin[PIN_INPUT_RX]),
+      Param("pin_input_rx_invert", &c.input.ppmInvert),
 #endif
       Param("pin_output_0", &c.pin[PIN_OUTPUT_0]),
       Param("pin_output_1", &c.pin[PIN_OUTPUT_1]),

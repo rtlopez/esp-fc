@@ -376,8 +376,8 @@ Device::InputDevice* Input::getInputDevice()
   }
   else if (_model.isFeatureActive(FEATURE_RX_PPM) && _model.config.pin[PIN_INPUT_RX] != -1)
   {
-    _ppm.begin(_model.config.pin[PIN_INPUT_RX], _model.config.input.ppmMode);
-    _model.logger.info().log("RX PPM").log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmMode);
+    _ppm.begin(_model.config.pin[PIN_INPUT_RX], static_cast<PPMInvert>(_model.config.input.ppmInvert));
+    _model.logger.info().log("RX PPM").log(_model.config.pin[PIN_INPUT_RX]).logln(_model.config.input.ppmInvert);
     return &_ppm;
   }
 #if defined(ESPFC_HAL_ESPNOW)
