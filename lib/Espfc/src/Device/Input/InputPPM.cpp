@@ -2,7 +2,7 @@
 #include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
 #include "Hal/Time.hpp"
-#include "Debug_Espfc.h"
+// #include "Debug_Espfc.h"
 
 namespace Espfc::Device::Input {
 
@@ -43,13 +43,13 @@ uint16_t FAST_CODE_ATTR InputPPM::get(uint8_t i) const
 
 void FAST_CODE_ATTR InputPPM::get(uint16_t* data, size_t len) const
 {
-  PIN_DEBUG(1);
+  // PIN_DEBUG(1);
   const auto* src = _channels;
   while (len--)
   {
     *data++ = (src++)->load(std::memory_order_relaxed);
   }
-  PIN_DEBUG(0);
+  // PIN_DEBUG(0);
 }
 
 size_t InputPPM::getChannelCount() const
@@ -64,7 +64,7 @@ bool InputPPM::needAverage() const
 
 void ISR_CODE_ATTR InputPPM::handle()
 {
-  PIN_DEBUG(1);
+  // PIN_DEBUG(1);
   uint32_t now = micros();
   uint32_t width = now - _last_tick;
 
@@ -73,9 +73,21 @@ void ISR_CODE_ATTR InputPPM::handle()
   if (width > 3000) // sync
   {
     _channel = 0;
-    PIN_DEBUG(0);
+    // PIN_DEBUG(0);
     return;
   }
+
+  if (width < 500)
+  {
+    // too short - ignore
+    return;
+  }
+
+  // if (width > 2500)
+  // {
+  //   PIN_DEBUG(1);
+  //   PIN_DEBUG(0);
+  // }
 
   if (_channel < CHANNELS) // ignore exceding channels
   {
@@ -90,7 +102,7 @@ void ISR_CODE_ATTR InputPPM::handle()
   }
 
   _channel++;
-  PIN_DEBUG(0);
+  // PIN_DEBUG(0);
 }
 
 void ISR_CODE_ATTR InputPPM::handle_isr(void* args)
