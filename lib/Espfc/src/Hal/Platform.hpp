@@ -8,6 +8,10 @@
 #define ESPFC_HAL_CORE_COUNT 2
 #endif
 
+#if defined(ARDUINO_USB_CDC_ON_BOOT) || defined(ARCH_RP2040)
+#define ESPFC_HAL_USB_CDC
+#endif
+
 #if defined(ESP32)
 #define ESPFC_HAL_LED_WS2812
 #define ESPFC_HAL_ESPNOW

@@ -31,7 +31,7 @@ static constexpr uint32_t SERIAL_UART_NB_STOP_BIT_1 = 0B00010000;
 static constexpr uint32_t SERIAL_UART_NB_STOP_BIT_15 = 0B00100000;
 static constexpr uint32_t SERIAL_UART_NB_STOP_BIT_2 = 0B00110000;
 
-#if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+#if defined(ESPFC_HAL_USB_CDC) // Serial used for USB CDC
 static Espfc::Hal::SerialUsb usb;
 #endif
 
@@ -65,7 +65,7 @@ static inline HardwareSerial& getPort(int index)
       return Serial2;
 #endif
   }
-#if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
+#if defined(ESPFC_HAL_USB_CDC) // Serial used for USB CDC
   return Serial0;
 #else
   return Serial;
@@ -178,7 +178,7 @@ bool FAST_CODE_ATTR SerialUart::isTxFifoEmpty()
   return getPort(_index).availableForWrite() >= 0xff;
 }
 
-#if ARDUINO_USB_CDC_ON_BOOT
+#if defined(ESPFC_HAL_USB_CDC)
 
 SerialUsb* getSerialUsb()
 {
@@ -277,7 +277,7 @@ void FAST_CODE_ATTR SerialUsb::completeTx()
 #endif
 }
 
-#endif // ARDUINO_USB_CDC_ON_BOOT
+#endif // defined(ESPFC_HAL_USB_CDC)
 
 } // namespace Espfc::Hal
 

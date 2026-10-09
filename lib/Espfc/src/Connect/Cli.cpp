@@ -1013,19 +1013,6 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     s.println(status.channel);
   }
 #endif
-#if defined(ESPFC_HAL_FREE_RTOS)
-  else if (std::strcmp(cmd.args[0], "tasks") == 0)
-  {
-    printVersion(s);
-    s.println();
-
-    size_t numTasks = uxTaskGetNumberOfTasks();
-
-    s.print("num tasks: ");
-    s.print(numTasks);
-    s.println();
-  }
-#endif
   else if (std::strcmp(cmd.args[0], "devinfo") == 0)
   {
     printVersion(s);
@@ -1321,32 +1308,6 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     _model.save();
     s.println("# Saved, type reboot to apply changes");
     s.println();
-  }
-  else if (std::strcmp(cmd.args[0], "eeprom") == 0)
-  {
-    /*
-    int start = 0;
-    if(cmd.args[1])
-    {
-      start = std::max(String(cmd.args[1]).toInt(), 0L);
-    }
-
-    for(int i = start; i < start + 32; ++i)
-    {
-      uint8_t v = EEPROM.read(i);
-      if(v <= 0xf) s.print('0');
-      s.print(v, HEX);
-      s.print(' ');
-    }
-    s.println();
-
-    for(int i = start; i < start + 32; ++i)
-    {
-      s.print((int8_t)EEPROM.read(i));
-      s.print(' ');
-    }
-    s.println();
-    */
   }
   else if (std::strcmp(cmd.args[0], "scaler") == 0)
   {

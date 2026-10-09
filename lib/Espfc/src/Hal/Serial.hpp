@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Hal/Platform.hpp"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -65,7 +67,7 @@ private:
 
 SerialUart* getSerialUart(int index);
 
-#if ARDUINO_USB_CDC_ON_BOOT || ARCH_RP2040
+#if defined(ESPFC_HAL_USB_CDC)
 
 class SerialUsb
 {
@@ -87,6 +89,6 @@ public:
 
 SerialUsb* getSerialUsb();
 
-#endif
+#endif // defined(ESPFC_HAL_USB_CDC)
 
 } // namespace Espfc::Hal
