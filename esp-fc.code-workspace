@@ -5,10 +5,19 @@
 		}
 	],
 	"settings": {
+		"C_Cpp.intelliSenseEngine": "disabled",
+		"clangd.arguments": [
+			"--background-index",
+			"--clang-tidy",
+			"--completion-style=detailed",
+			"--header-insertion=never",
+			"--query-driver=**/.platformio/packages/toolchain-*/bin/*"
+		]
 	},
 	"extensions": {
 		"recommendations": [
-			"platformio.platformio-ide"
+			"platformio.platformio-ide",
+			"llvm-vs-code-extensions.vscode-clangd"
 		]
 	}
 }

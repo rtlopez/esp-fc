@@ -1,0 +1,21 @@
+{
+  "name": "CmsisDsp",
+  "version": "1.18.0",
+  "license": "Apache-2.0",
+  "build": {
+    "srcFilter": [
+      "-<*>",
+      "+<Source/TransformFunctions/arm_rfft_fast_f32.c>",
+      "+<Source/TransformFunctions/arm_rfft_fast_init_f32.c>",
+      "+<Source/TransformFunctions/arm_cfft_f32.c>",
+      "+<Source/TransformFunctions/arm_cfft_init_f32.c>",
+      "+<Source/TransformFunctions/arm_cfft_radix8_f32.c>",
+      "+<Source/TransformFunctions/arm_bitreversal2.c>",
+      "+<Source/CommonTables/arm_common_tables.c>",
+      "+<Source/CommonTables/arm_const_structs.c>"
+    ],
+    "includeDir": "Include",
+    "flags": ["-I PrivateInclude"]
+  }
+}
+

@@ -24,10 +24,10 @@ CompileFlags:
     - -I.pio/libdeps/native/Unity/src
     - -I.pio/libdeps/native/ArduinoFake/src
 
-Diagnostics:
+# Diagnostics:
   # clangd's bundled clang cannot resolve toolchain/newlib headers like
   # <machine/endian.h>; suppress the resulting false positive.
-  Suppress:
-    - pp_file_not_found
-    - missing_template_arg_list_after_template_kw
+#  Suppress:
+#    - pp_file_not_found
+#    - missing_template_arg_list_after_template_kw
 

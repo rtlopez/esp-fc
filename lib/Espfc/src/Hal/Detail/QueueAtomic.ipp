@@ -1,5 +1,8 @@
 #pragma once
 
+#include "QueueAtomic.hpp"
+#include <cstddef>
+
 namespace Espfc::Hal::Detail {
 
 template<typename T, size_t Capacity, typename Index>
