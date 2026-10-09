@@ -22,6 +22,10 @@
 #define ESPFC_HAL_MULTI_CORE_RP2040
 #endif
 
+#if defined(ARCH_RP2350)
+#define ESPFC_HAL_DSP
+#endif
+
 namespace Espfc::Hal {
 
 inline constexpr size_t CORE_COUNT = ESPFC_HAL_CORE_COUNT;

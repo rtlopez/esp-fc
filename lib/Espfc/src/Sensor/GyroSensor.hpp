@@ -51,7 +51,7 @@ private:
   Device::GyroDevice* _gyro;
 
 #ifdef ESPFC_HAL_DSP
-  Utils::FFTAnalyzer<128> _fft[3];
+  Utils::FFTAnalyzer _fft[3];
 #else
   Utils::FreqAnalyzer _freqAnalyzer[3];
 #endif

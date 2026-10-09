@@ -2,6 +2,7 @@
 
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 
+#include "Hal/Dsp/Fft.hpp"
 #include "Utils/Filter.h"
 #include "Utils/Math.hpp"
 #include <cstddef>
@@ -16,7 +17,6 @@ enum FFTPhase
   PHASE_PEAKS
 };
 
-template<size_t SAMPLES>
 class FFTAnalyzer
 {
 public:
@@ -37,6 +37,7 @@ public:
 private:
   void clearPeaks();
 
+  static constexpr size_t SAMPLES = 128;
   static constexpr size_t BINS = SAMPLES >> 1;
 
   int16_t _rate;
@@ -50,9 +51,10 @@ private:
   size_t _end;
   float _bin_width;
 
-  float* _in;
-  float* _out;
-  float* _win;
+  Hal::Dsp::Fft _dsp;
+  Hal::Dsp::FloatBuffer _in;
+  Hal::Dsp::FloatBuffer _out;
+  Hal::Dsp::FloatBuffer _win;
 };
 
 } // namespace Espfc::Utils
