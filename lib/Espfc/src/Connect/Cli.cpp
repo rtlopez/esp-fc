@@ -18,11 +18,6 @@
 #include "Hal/Flash.hpp"
 #endif
 
-#ifdef ESPFC_HAL_FREE_RTOS
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#endif
-
 namespace {
 
 static std::optional<int> toNumber(const char* str)

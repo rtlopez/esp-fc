@@ -3,13 +3,6 @@
 #include <cmath>
 #include <cstdint>
 
-#ifdef ESP32
-#include <esp_attr.h>
-#define FAST_CODE_IMU_ATTR IRAM_ATTR
-#else
-#define FAST_CODE_IMU_ATTR
-#endif
-
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 inline float invSqrt(float x)

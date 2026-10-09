@@ -24,10 +24,15 @@
 #define ESPFC_HAL_FREE_RTOS
 #endif
 #define ESPFC_HAL_MULTI_CORE_RP2040
+#define ESPFC_HAL_C_LINKAGE_ENTRY
 #endif
 
 #if defined(ARCH_RP2350)
 #define ESPFC_HAL_DSP
+#endif
+
+#if defined(ESP8266)
+#define ESPFC_HAL_C_LINKAGE_ENTRY
 #endif
 
 namespace Espfc::Hal {
