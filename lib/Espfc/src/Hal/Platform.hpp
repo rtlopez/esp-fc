@@ -32,6 +32,7 @@
 #endif
 
 #if defined(ESP8266)
+#define ESPFC_HAL_ESPNOW
 #define ESPFC_HAL_C_LINKAGE_ENTRY
 #endif
 
