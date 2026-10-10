@@ -1,6 +1,8 @@
 #pragma once
 
-#if defined(ESP32) || defined(ESP8266)
+#include "Hal/Platform.hpp"
+
+#if defined(ESPFC_HAL_ESPNOW)
 
 #include "Device/InputDevice.hpp"
 #include <EspNowRcLink/Receiver.h>

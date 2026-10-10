@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <Arduino.h>
+#include <Hal/Time.hpp>
 
 struct MultiButtonConfig {
   int debounceDecay;     // ms

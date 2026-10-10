@@ -91,12 +91,12 @@ public:
     return (config.blackbox.dev == BLACKBOX_DEV_SERIAL || config.blackbox.dev == BLACKBOX_DEV_FLASH);
   }
 
-  bool gyroActive() const /* IRAM_ATTR */
+  bool gyroActive() const
   {
     return state.gyro.present && config.gyro.dev != GYRO_NONE;
   }
 
-  bool gpsActive() const /* IRAM_ATTR */
+  bool gpsActive() const
   {
     return state.gps.present;
   }
@@ -169,7 +169,7 @@ public:
     }
   }
 
-  bool armingDisabled() const /* IRAM_ATTR */
+  bool armingDisabled() const
   {
 #if defined(ESPFC_DEV_PRESET_UNSAFE_ARMING)
     return false;

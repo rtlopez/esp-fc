@@ -13,6 +13,10 @@ static_assert(!Espfc::Hal::MULTI_CORE, "sdkconfig is unicore, build with -DESPFC
 static_assert(Espfc::Hal::CORE_COUNT == SOC_CPU_CORES_NUM, "Hal::CORE_COUNT does not match SoC core count");
 #endif
 
+// drop serialEvent handling - default implementation is on flash and cause jitter
+// replace it with empty IRAM implementation to save few cycles
+void IRAM_ATTR serialEventRun(void) {}
+
 namespace Espfc::Hal {
 
 uint32_t Board::getId0()
