@@ -132,7 +132,7 @@ bool SerialUart::isTxFifoEmpty()
   return getPort(_index).availableForWrite() >= 0xff;
 }
 
-#if ARDUINO_USB_CDC_ON_BOOT
+#if defined(ESPFC_HAL_USB_CDC)
 
 SerialUsb* getSerialUsb()
 {
@@ -193,7 +193,7 @@ bool SerialUsb::isTxFifoEmpty()
   return true;
 }
 
-#endif
+#endif // defined(ESPFC_HAL_USB_CDC)
 
 } // namespace Espfc::Hal
 

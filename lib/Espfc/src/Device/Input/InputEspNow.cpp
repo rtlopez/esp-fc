@@ -1,6 +1,7 @@
-#if defined(ESP32) || defined(ESP8266)
-
 #include "Device/Input/InputEspNow.hpp"
+
+#if defined(ESPFC_HAL_ESPNOW)
+
 #include "Hal/FastCode.hpp"
 
 namespace Espfc::Device::Input {

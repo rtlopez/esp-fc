@@ -32,7 +32,7 @@ public:
 
 private:
   size_t _size = 0;
-  bool _radix4 = true; // radix-4 backend selected, false selects radix-2 fallback
+  bool _radix4 = true;  // radix-4 backend selected, false selects radix-2 fallback
   FloatBuffer _scratch; // out-of-place backends (e.g. CMSIS-DSP) only
 };
 

@@ -3,11 +3,7 @@
 #include <Hal/Platform.hpp>
 #include <Hal/Task.hpp>
 
-#ifdef ESP32
-void IRAM_ATTR serialEventRun(void) {}
-#endif
-
-#if defined(ESP8266) || defined(ARCH_RP2040)
+#if defined(ESPFC_HAL_C_LINKAGE_ENTRY)
 // esp8266 and pico expect C-style linkage
 extern "C" void setup();
 extern "C" void loop();

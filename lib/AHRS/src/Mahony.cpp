@@ -163,7 +163,7 @@ void Mahony::update(float gx, float gy, float gz, float ax, float ay, float az, 
 //-------------------------------------------------------------------------------------------
 // IMU algorithm update
 
-void FAST_CODE_IMU_ATTR Mahony::update(float gx, float gy, float gz, float ax, float ay, float az)
+void Mahony::update(float gx, float gy, float gz, float ax, float ay, float az)
 {
   float recipNorm;
   float halfvx, halfvy, halfvz;
