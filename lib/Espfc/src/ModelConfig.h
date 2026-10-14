@@ -9,7 +9,7 @@
 #include "Output/Mixers.h"
 #include "Target/Target.h"
 #include "Utils/Filter.h"
-#include <EscDriver.h>
+#include <EscDriver.hpp>
 
 namespace Espfc {
 
