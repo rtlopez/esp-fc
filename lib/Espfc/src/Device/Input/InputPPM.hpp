@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Device/InputDevice.hpp"
-#include "Hal/Gpio.hpp"
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -10,8 +9,8 @@ namespace Espfc {
 
 enum PPMInvert
 {
-  PPM_MODE_NORMAL = 0,  // RISING edge
-  PPM_MODE_INVERTED = 1 // FALLING edge
+  PPM_MODE_NORMAL = 0,   // RISING edge
+  PPM_MODE_INVERTED = 1, // FALLING edge
 };
 
 namespace Device::Input {

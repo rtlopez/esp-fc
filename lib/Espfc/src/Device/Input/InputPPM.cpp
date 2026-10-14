@@ -24,7 +24,8 @@ void InputPPM::begin(int8_t pin, PPMInvert invert)
       _channels[i].store(i == 2 ? 1000 : 1500, std::memory_order_relaxed); // throttle
     }
     Hal::Gpio::pinMode(_pin, Hal::Gpio::Input);
-    Hal::Gpio::attachInterrupt(_pin, InputPPM::handle_isr, this, invert == PPM_MODE_INVERTED ? Hal::Gpio::Falling : Hal::Gpio::Rising);
+    Hal::Gpio::attachInterrupt(_pin, InputPPM::handle_isr, this,
+                               invert == PPM_MODE_INVERTED ? Hal::Gpio::Falling : Hal::Gpio::Rising);
   }
 }
 
