@@ -1,5 +1,5 @@
 #include <ArduinoFake.h>
-#include <EscDriver.h>
+#include <EscDriver.hpp>
 #include <unity.h>
 
 void test_esc_dshot_encode()
