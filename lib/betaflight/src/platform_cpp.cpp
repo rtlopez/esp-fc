@@ -1,5 +1,5 @@
 #include "platform.h"
-#include <EscDriver.h>
+#include <EscDriver.hpp>
 #include <Hal/Gpio.hpp>
 #include <Stream/ReadWritable.hpp>
 #include <Hal/FastCode.hpp>
