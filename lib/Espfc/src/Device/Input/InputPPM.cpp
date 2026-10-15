@@ -69,18 +69,18 @@ void ISR_CODE_ATTR InputPPM::handle()
   uint32_t now = micros();
   uint32_t width = now - _last_tick;
 
+  if (width < 500)
+  {
+    // too short - ignore, keep timestamp of the last accepted edge
+    return;
+  }
+
   _last_tick = now;
 
   if (width > 3000) // sync
   {
     _channel = 0;
     // PIN_DEBUG(0);
-    return;
-  }
-
-  if (width < 500)
-  {
-    // too short - ignore
     return;
   }
 
