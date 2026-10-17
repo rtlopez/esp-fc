@@ -93,7 +93,8 @@ const uint8_t* Crsf::encodeMspData(CrsfMessage& msg, uint8_t origin, uint8_t ver
                                    const uint8_t* begin, const uint8_t* end)
 {
   if (end < begin) end = begin;
-  auto fragmentEnd = std::min(begin + CRSF_MSP_CHUNK_SIZE_MAX, end);
+  const size_t fragmentLen = std::min<size_t>(CRSF_MSP_CHUNK_SIZE_MAX, end - begin);
+  const uint8_t* fragmentEnd = begin + fragmentLen;
 
   uint8_t status = 0;
   status |= (seq & CRSF_MSP_STATUS_SEQ_MASK);                // sequence number
@@ -104,7 +105,7 @@ const uint8_t* Crsf::encodeMspData(CrsfMessage& msg, uint8_t origin, uint8_t ver
   msg.writeU8(origin);
   msg.writeU8(Rc::CRSF_ADDRESS_FLIGHT_CONTROLLER);
   msg.writeU8(status);
-  msg.write(begin, fragmentEnd - begin);
+  msg.write(begin, fragmentLen);
   msg.finalize();
 
   return fragmentEnd;
