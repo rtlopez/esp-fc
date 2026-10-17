@@ -10,7 +10,9 @@ namespace Espfc::Rc {
 // clang-format off
 enum { CRSF_SYNC_BYTE = 0xC8 };
 enum { CRSF_FRAME_SIZE_MAX = 64 }; // 62 bytes frame plus 2 bytes frame header(<length><type>)
-enum { CRSF_PAYLOAD_SIZE_MAX = CRSF_FRAME_SIZE_MAX - 6 };
+enum { CRSF_PAYLOAD_SIZE_MAX = CRSF_FRAME_SIZE_MAX - 4 }; // without <sync><length><type> and <crc>
+enum { CRSF_MSP_OVERHEAD = 5 }; // <type><dst><origin><status> and <crc>
+enum { CRSF_MSP_CHUNK_SIZE_MAX = CRSF_PAYLOAD_SIZE_MAX - 3 }; // without <dst><origin><status>
 // clang-format on
 
 enum
@@ -138,6 +140,7 @@ struct CrsfMessage
 
   void writeU8(uint8_t v)
   {
+    if (size - 2 >= CRSF_PAYLOAD_SIZE_MAX) return;
     payload[size++ - 2] = v;
   }
 
@@ -179,6 +182,8 @@ struct CrsfMessage
     return Utils::crc8_dvb_s2(crc, payload, size - 2); // size includes type and crc
   }
 } __attribute__((__packed__));
+
+static_assert(sizeof(CrsfMessage) == CRSF_FRAME_SIZE_MAX, "CrsfMessage must fit the largest CRSF frame");
 
 class Crsf
 {

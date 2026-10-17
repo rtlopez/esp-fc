@@ -174,6 +174,7 @@ void FAST_CODE_ATTR InputCRSF::applyLinkStats(const CrsfMessage& msg)
 
 void FAST_CODE_ATTR InputCRSF::applyChannels(const CrsfMessage& msg)
 {
+  if (msg.size < sizeof(CrsfData) + 2) return;
   const auto* data = reinterpret_cast<const CrsfData*>(msg.payload);
   Crsf::decodeRcDataShift8(_channels, data);
   // Crsf::decodeRcData(_channels, frame);

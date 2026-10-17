@@ -282,7 +282,11 @@ void Cli::Param::write(OutputChannelConfig& och, const char** args) const
 
 void Cli::Param::write(InputChannelConfig& ich, const char** args) const
 {
-  if (args[2]) ich.map = toNumber(args[2]).value_or(ich.map);
+  if (args[2])
+  {
+    const auto map = toNumber(args[2]).value_or(ich.map);
+    if (map >= 0 && (size_t)map < INPUT_CHANNELS) ich.map = map;
+  }
   if (args[3]) ich.min = toNumber(args[3]).value_or(ich.min);
   if (args[4]) ich.neutral = toNumber(args[4]).value_or(ich.neutral);
   if (args[5]) ich.max = toNumber(args[5]).value_or(ich.max);

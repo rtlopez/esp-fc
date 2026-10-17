@@ -837,7 +837,8 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
     case MSP_SET_RX_MAP:
       for (size_t i = 0; i < 8; i++)
       {
-        _model.config.input.channel[i].map = m.readU8();
+        const uint8_t map = m.readU8();
+        if (map < INPUT_CHANNELS) _model.config.input.channel[i].map = map;
       }
       break;
 

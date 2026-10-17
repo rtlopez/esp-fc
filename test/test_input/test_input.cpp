@@ -618,6 +618,223 @@ void test_csrf_decode_msp_v1_fragmented()
   TEST_ASSERT_EQUAL_UINT8(src, origin);
 }
 
+struct GuardedCrsfMessage
+{
+  CrsfMessage frame;
+  uint8_t guard[4];
+} __attribute__((__packed__));
+
+static bool guardIntact(const GuardedCrsfMessage& m)
+{
+  for (size_t i = 0; i < sizeof(m.guard); i++)
+  {
+    if (m.guard[i] != 0xAA) return false;
+  }
+  return true;
+}
+
+void test_crsf_message_fits_max_frame()
+{
+  TEST_ASSERT_EQUAL(CRSF_FRAME_SIZE_MAX, sizeof(CrsfMessage));
+  TEST_ASSERT_EQUAL(57, CRSF_MSP_CHUNK_SIZE_MAX);
+}
+
+void test_input_crsf_parse_max_frame()
+{
+  CrsfMessage src;
+  src.prepare(CRSF_FRAMETYPE_MSP_REQ);
+  src.writeU8(CRSF_ADDRESS_FLIGHT_CONTROLLER);
+  src.writeU8(CRSF_ADDRESS_RADIO_TRANSMITTER);
+  src.writeU8((1 << 5) | (1 << 4));
+  for (size_t i = 0; i < CRSF_MSP_CHUNK_SIZE_MAX; i++)
+  {
+    src.writeU8(i);
+  }
+  src.finalize();
+  TEST_ASSERT_EQUAL_UINT8(CRSF_FRAME_SIZE_MAX - 2, src.size);
+
+  InputCRSF input;
+  GuardedCrsfMessage dst;
+  memset(&dst, 0xAA, sizeof(dst));
+
+  When(Method(ArduinoFake(), micros)).Return(0);
+  input.begin(nullptr, nullptr);
+
+  const uint8_t* data = reinterpret_cast<const uint8_t*>(&src);
+  for (size_t i = 0; i < src.size + 2u; i++)
+  {
+    input.parse(dst.frame, data[i]);
+  }
+
+  TEST_ASSERT_TRUE(guardIntact(dst));
+  TEST_ASSERT_EQUAL_UINT8(src.size, dst.frame.size);
+  TEST_ASSERT_EQUAL_UINT8(src.crc(), dst.frame.crc());
+  TEST_ASSERT_EQUAL_UINT8(src.crc(), dst.frame.payload[dst.frame.size - 2]);
+}
+
+void test_crsf_encode_msp_max_chunk()
+{
+  GuardedCrsfMessage dst;
+  memset(&dst, 0xAA, sizeof(dst));
+
+  uint8_t data[100];
+  for (size_t i = 0; i < sizeof(data); i++)
+  {
+    data[i] = i;
+  }
+  const uint8_t* end = data + sizeof(data);
+
+  const uint8_t* next = Crsf::encodeMspData(dst.frame, CRSF_ADDRESS_RADIO_TRANSMITTER, 1, 0, true, data, end);
+
+  TEST_ASSERT_TRUE(guardIntact(dst));
+  TEST_ASSERT_EQUAL_PTR(data + CRSF_MSP_CHUNK_SIZE_MAX, next);
+  TEST_ASSERT_EQUAL_UINT8(CRSF_FRAME_SIZE_MAX - 2, dst.frame.size);
+  TEST_ASSERT_EQUAL_UINT8(dst.frame.crc(), dst.frame.payload[dst.frame.size - 2]);
+
+  // invalid range must not produce negative length
+  next = Crsf::encodeMspData(dst.frame, CRSF_ADDRESS_RADIO_TRANSMITTER, 1, 0, true, end, data);
+  TEST_ASSERT_TRUE(guardIntact(dst));
+  TEST_ASSERT_EQUAL_PTR(end, next);
+  TEST_ASSERT_EQUAL_UINT8(5, dst.frame.size);
+}
+
+static CrsfMessage makeMspFrame(uint8_t status, const uint8_t* data, size_t len)
+{
+  CrsfMessage frame;
+  memset(&frame, 0, sizeof(frame));
+  frame.prepare(CRSF_FRAMETYPE_MSP_REQ);
+  frame.writeU8(CRSF_ADDRESS_FLIGHT_CONTROLLER);
+  frame.writeU8(CRSF_ADDRESS_RADIO_TRANSMITTER);
+  frame.writeU8(status);
+  frame.write(data, len);
+  frame.finalize();
+  return frame;
+}
+
+void test_crsf_decode_msp_too_short_frame()
+{
+  Connect::MspMessage m;
+  uint8_t origin = 0;
+
+  CrsfMessage frame;
+  memset(&frame, 0, sizeof(frame));
+  frame.prepare(CRSF_FRAMETYPE_MSP_REQ);
+  frame.writeU8(CRSF_ADDRESS_FLIGHT_CONTROLLER);
+  frame.finalize();
+
+  TEST_ASSERT_EQUAL_INT(0, Crsf::decodeMsp(frame, m, origin));
+  TEST_ASSERT_FALSE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(0, m.received);
+}
+
+void test_crsf_decode_msp_v1_truncated_header()
+{
+  // header claims 255 bytes, but frame has no room for msp header
+  const uint8_t data[] = {0xff};
+  CrsfMessage frame = makeMspFrame((1 << 5) | (1 << 4), data, sizeof(data));
+
+  Connect::MspMessage m;
+  uint8_t origin = 0;
+
+  TEST_ASSERT_EQUAL_INT(0, Crsf::decodeMsp(frame, m, origin));
+  TEST_ASSERT_FALSE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(0, m.received);
+  TEST_ASSERT_EQUAL_UINT16(0, m.expected);
+}
+
+void test_crsf_decode_msp_v2_truncated_header()
+{
+  // v2 header: flags, cmd(lo, hi), size(lo, hi) = 0xffff, truncated
+  const uint8_t data[] = {0x00, 0x70, 0x00};
+  CrsfMessage frame = makeMspFrame((2 << 5) | (1 << 4), data, sizeof(data));
+
+  Connect::MspMessage m;
+  uint8_t origin = 0;
+
+  TEST_ASSERT_EQUAL_INT(0, Crsf::decodeMsp(frame, m, origin));
+  TEST_ASSERT_FALSE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(0, m.received);
+  TEST_ASSERT_EQUAL_UINT16(0, m.expected);
+}
+
+void test_crsf_decode_msp_v2_size_too_large()
+{
+  const uint8_t data[] = {0x00, 0x70, 0x00, 0xff, 0xff, 1, 2, 3};
+  CrsfMessage frame = makeMspFrame((2 << 5) | (1 << 4), data, sizeof(data));
+
+  Connect::MspMessage m;
+  uint8_t origin = 0;
+
+  TEST_ASSERT_EQUAL_INT(0, Crsf::decodeMsp(frame, m, origin));
+  TEST_ASSERT_FALSE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(0, m.received);
+  TEST_ASSERT_EQUAL_UINT16(0, m.expected);
+}
+
+void test_crsf_decode_msp_continuation_too_short_frame()
+{
+  // v1 header: size=32, cmd=1, then first 10 bytes of payload
+  uint8_t data[12] = {32, MSP_API_VERSION};
+  CrsfMessage frame1 = makeMspFrame((1 << 5) | (1 << 4) | 0x00, data, sizeof(data));
+
+  Connect::MspMessage m;
+  uint8_t origin = 0;
+
+  Crsf::decodeMsp(frame1, m, origin);
+  TEST_ASSERT_FALSE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(10, m.received);
+  TEST_ASSERT_EQUAL_UINT16(32, m.expected);
+
+  // continuation frame without room for status byte and data
+  CrsfMessage frame2;
+  memset(&frame2, 0, sizeof(frame2));
+  frame2.prepare(CRSF_FRAMETYPE_MSP_REQ);
+  frame2.writeU8(CRSF_ADDRESS_FLIGHT_CONTROLLER);
+  frame2.writeU8(CRSF_ADDRESS_RADIO_TRANSMITTER);
+  frame2.finalize();
+  frame2.payload[2] = (1 << 5) | 0x01; // status in place of crc, sequence matches
+
+  TEST_ASSERT_EQUAL_INT(0, Crsf::decodeMsp(frame2, m, origin));
+  TEST_ASSERT_FALSE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(0, m.received);
+}
+
+void test_crsf_decode_msp_continuation_after_complete()
+{
+  const uint8_t data[] = {0, MSP_API_VERSION};
+  CrsfMessage frame1 = makeMspFrame((1 << 5) | (1 << 4) | 0x00, data, sizeof(data));
+
+  Connect::MspMessage m;
+  uint8_t origin = 0;
+
+  TEST_ASSERT_EQUAL_INT(1, Crsf::decodeMsp(frame1, m, origin));
+
+  const uint8_t extra[] = {1, 2, 3};
+  CrsfMessage frame2 = makeMspFrame((1 << 5) | 0x01, extra, sizeof(extra));
+
+  TEST_ASSERT_EQUAL_INT(0, Crsf::decodeMsp(frame2, m, origin));
+  TEST_ASSERT_FALSE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(0, m.received);
+}
+
+void test_input_crsf_rc_short_frame_ignored()
+{
+  InputCRSF input;
+  CrsfMessage frame;
+  memset(&frame, 0, sizeof(frame));
+
+  When(Method(ArduinoFake(), micros)).Return(0);
+  input.begin(nullptr, nullptr);
+
+  const uint8_t data[] = {0xC8, 0x02, 0x16, 0xD3};
+  for (size_t i = 0; i < sizeof(data); i++)
+  {
+    input.parse(frame, data[i]);
+  }
+
+  TEST_ASSERT_EQUAL_UINT16(0, input.get(0));
+}
+
 void test_input_ibus_rc_valid()
 {
   InputIBUS input;
@@ -704,6 +921,16 @@ int main(int argc, char** argv)
   RUN_TEST(test_crsf_encode_msp_v2);
   RUN_TEST(test_crsf_decode_msp_v1);
   RUN_TEST(test_csrf_decode_msp_v1_fragmented);
+  RUN_TEST(test_crsf_message_fits_max_frame);
+  RUN_TEST(test_input_crsf_parse_max_frame);
+  RUN_TEST(test_crsf_encode_msp_max_chunk);
+  RUN_TEST(test_crsf_decode_msp_too_short_frame);
+  RUN_TEST(test_crsf_decode_msp_v1_truncated_header);
+  RUN_TEST(test_crsf_decode_msp_v2_truncated_header);
+  RUN_TEST(test_crsf_decode_msp_v2_size_too_large);
+  RUN_TEST(test_crsf_decode_msp_continuation_too_short_frame);
+  RUN_TEST(test_crsf_decode_msp_continuation_after_complete);
+  RUN_TEST(test_input_crsf_rc_short_frame_ignored);
   RUN_TEST(test_input_ibus_rc_valid);
 
   return UNITY_END();
