@@ -203,6 +203,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       // 1.46
       // build info flags
       r.writeU16(4097); // USE_SERIALRX_CRSF
+      r.writeU16(4100); // USE_SERIALRX_IBUS
       r.writeU16(4102); // USE_PPM
       r.writeU16(4103); // USE_SERIALRX_SBUS
 
