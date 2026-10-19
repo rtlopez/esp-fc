@@ -25,6 +25,13 @@ void Gpio::attachInterrupt(uint8_t pin, InterruptHandler handler, void* arg, Int
 
 void Gpio::detachInterrupt(uint8_t pin) {}
 
+bool Gpio::attachCaptureInterrupt(uint8_t pin, CaptureHandler handler, void* arg, InterruptMode mode)
+{
+  return false;
+}
+
+void Gpio::detachCaptureInterrupt(uint8_t pin) {}
+
 } // namespace Espfc::Hal
 
 #endif

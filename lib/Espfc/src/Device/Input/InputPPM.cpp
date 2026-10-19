@@ -1,8 +1,6 @@
 #include "Device/Input/InputPPM.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
-#include "Hal/Time.hpp"
-// #include "Debug_Espfc.h"
 
 namespace Espfc::Device::Input {
 
@@ -10,7 +8,7 @@ void InputPPM::begin(int8_t pin, PPMInvert invert)
 {
   if (_pin != -1)
   {
-    Hal::Gpio::detachInterrupt(_pin);
+    Hal::Gpio::detachCaptureInterrupt(_pin);
     _pin = -1;
   }
   _read_count = _write_count.load(std::memory_order_relaxed);
@@ -18,14 +16,16 @@ void InputPPM::begin(int8_t pin, PPMInvert invert)
   {
     _pin = pin;
     _channel = 0;
-    _last_tick = micros();
     for (size_t i = 0; i < CHANNELS; i++)
     {
       _channels[i].store(i == 2 ? 1000 : 1500, std::memory_order_relaxed); // throttle
     }
     Hal::Gpio::pinMode(_pin, Hal::Gpio::Input);
-    Hal::Gpio::attachInterrupt(_pin, InputPPM::handle_isr, this,
-                               invert == PPM_MODE_INVERTED ? Hal::Gpio::Falling : Hal::Gpio::Rising);
+    if (!Hal::Gpio::attachCaptureInterrupt(_pin, InputPPM::handle_isr, this,
+                                           invert == PPM_MODE_INVERTED ? Hal::Gpio::Falling : Hal::Gpio::Rising))
+    {
+      _pin = -1;
+    }
   }
 }
 
@@ -44,13 +44,11 @@ uint16_t FAST_CODE_ATTR InputPPM::get(uint8_t i) const
 
 void FAST_CODE_ATTR InputPPM::get(uint16_t* data, size_t len) const
 {
-  // PIN_DEBUG(1);
   const auto* src = _channels;
   while (len--)
   {
     *data++ = (src++)->load(std::memory_order_relaxed);
   }
-  // PIN_DEBUG(0);
 }
 
 size_t InputPPM::getChannelCount() const
@@ -63,32 +61,13 @@ bool InputPPM::needAverage() const
   return true;
 }
 
-void ISR_CODE_ATTR InputPPM::handle()
+void ISR_CODE_ATTR InputPPM::handle(uint32_t width)
 {
-  // PIN_DEBUG(1);
-  uint32_t now = micros();
-  uint32_t width = now - _last_tick;
-
-  if (width < 500)
-  {
-    // too short - ignore, keep timestamp of the last accepted edge
-    return;
-  }
-
-  _last_tick = now;
-
   if (width > 3000) // sync
   {
     _channel = 0;
-    // PIN_DEBUG(0);
     return;
   }
-
-  // if (width > 2500)
-  // {
-  //   PIN_DEBUG(1);
-  //   PIN_DEBUG(0);
-  // }
 
   if (_channel < CHANNELS) // ignore exceding channels
   {
@@ -103,12 +82,11 @@ void ISR_CODE_ATTR InputPPM::handle()
   }
 
   _channel++;
-  // PIN_DEBUG(0);
 }
 
-void ISR_CODE_ATTR InputPPM::handle_isr(void* args)
+void ISR_CODE_ATTR InputPPM::handle_isr(void* args, uint32_t width)
 {
-  if (args) static_cast<InputPPM*>(args)->handle();
+  if (args) static_cast<InputPPM*>(args)->handle(width);
 }
 
 } // namespace Espfc::Device::Input

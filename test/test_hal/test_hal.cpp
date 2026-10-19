@@ -60,6 +60,15 @@ void test_hal_gpio_interrupt()
   TEST_ASSERT_EQUAL_INT(0, context);
 }
 
+void test_hal_gpio_capture_interrupt()
+{
+  int context = 0;
+  Hal::Gpio::attachCaptureInterrupt(
+      1, [](void* arg, uint32_t) { *static_cast<int*>(arg) = 1; }, &context, Hal::Gpio::Rising);
+  Hal::Gpio::detachCaptureInterrupt(1);
+  TEST_ASSERT_EQUAL_INT(0, context);
+}
+
 void test_hal_hw_timer()
 {
   int context = 0;
@@ -256,6 +265,7 @@ int main(int argc, char** argv)
   RUN_TEST(test_hal_board_reset_reason);
   RUN_TEST(test_hal_unexpected_reset);
   RUN_TEST(test_hal_gpio_interrupt);
+  RUN_TEST(test_hal_gpio_capture_interrupt);
   RUN_TEST(test_hal_hw_timer);
   RUN_TEST(test_hal_task);
   RUN_TEST(test_hal_adc_read);
