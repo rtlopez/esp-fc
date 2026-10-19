@@ -27,6 +27,7 @@ public:
 
 private:
   static constexpr size_t CHANNELS = 16;
+  static constexpr uint32_t MIN_WIDTH = 800;
 
   void handle(uint32_t width);
   static void handle_isr(void* args, uint32_t width);
@@ -34,6 +35,7 @@ private:
   std::atomic<int> _channels[CHANNELS]{};
   std::atomic<size_t> _write_count{0};
   size_t _read_count = 0;
+  uint32_t _glitch = 0;
   uint8_t _channel = 0;
   int8_t _pin = -1;
 };

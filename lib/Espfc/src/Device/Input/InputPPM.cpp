@@ -16,6 +16,7 @@ void InputPPM::begin(int8_t pin, PPMInvert invert)
   {
     _pin = pin;
     _channel = 0;
+    _glitch = 0;
     for (size_t i = 0; i < CHANNELS; i++)
     {
       _channels[i].store(i == 2 ? 1000 : 1500, std::memory_order_relaxed); // throttle
@@ -63,6 +64,15 @@ bool InputPPM::needAverage() const
 
 void ISR_CODE_ATTR InputPPM::handle(uint32_t width)
 {
+  // glitch filter - accumulate small widths
+  width += _glitch;
+  if (width < MIN_WIDTH)
+  {
+    _glitch = width;
+    return;
+  }
+  _glitch = 0;
+
   if (width > 3000) // sync
   {
     _channel = 0;
