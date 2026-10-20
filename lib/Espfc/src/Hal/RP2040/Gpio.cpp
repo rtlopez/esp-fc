@@ -1,6 +1,7 @@
 #if defined(ARCH_RP2040)
 
 #include "Hal/Gpio.hpp"
+#include "Hal/Detail/GpioCapture.hpp"
 #include "Hal/FastCode.hpp"
 #include <Arduino.h>
 #include <hardware/gpio.h>
@@ -62,6 +63,16 @@ void Gpio::attachInterrupt(uint8_t pin, InterruptHandler handler, void* arg, Int
 void Gpio::detachInterrupt(uint8_t pin)
 {
   ::detachInterrupt(pin);
+}
+
+bool Gpio::attachCaptureInterrupt(uint8_t pin, CaptureHandler handler, void* arg, InterruptMode mode)
+{
+  return Detail::captureAttachFallback(pin, handler, arg, mode);
+}
+
+void Gpio::detachCaptureInterrupt(uint8_t pin)
+{
+  Detail::captureDetachFallback(pin);
 }
 
 } // namespace Espfc::Hal

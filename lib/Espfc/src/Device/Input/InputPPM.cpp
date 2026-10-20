@@ -1,15 +1,14 @@
 #include "Device/Input/InputPPM.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Gpio.hpp"
-#include "Hal/Time.hpp"
 
 namespace Espfc::Device::Input {
 
-void InputPPM::begin(int8_t pin, int mode)
+void InputPPM::begin(int8_t pin, PPMInvert invert)
 {
   if (_pin != -1)
   {
-    Hal::Gpio::detachInterrupt(_pin);
+    Hal::Gpio::detachCaptureInterrupt(_pin);
     _pin = -1;
   }
   _read_count = _write_count.load(std::memory_order_relaxed);
@@ -17,13 +16,17 @@ void InputPPM::begin(int8_t pin, int mode)
   {
     _pin = pin;
     _channel = 0;
-    _last_tick = micros();
+    _glitch = 0;
     for (size_t i = 0; i < CHANNELS; i++)
     {
       _channels[i].store(i == 2 ? 1000 : 1500, std::memory_order_relaxed); // throttle
     }
     Hal::Gpio::pinMode(_pin, Hal::Gpio::Input);
-    Hal::Gpio::attachInterrupt(_pin, InputPPM::handle_isr, this, static_cast<Hal::Gpio::InterruptMode>(mode));
+    if (!Hal::Gpio::attachCaptureInterrupt(_pin, InputPPM::handle_isr, this,
+                                           invert == PPM_MODE_INVERTED ? Hal::Gpio::Falling : Hal::Gpio::Rising))
+    {
+      _pin = -1;
+    }
   }
 }
 
@@ -59,12 +62,16 @@ bool InputPPM::needAverage() const
   return true;
 }
 
-void ISR_CODE_ATTR InputPPM::handle()
+void ISR_CODE_ATTR InputPPM::handle(uint32_t width)
 {
-  uint32_t now = micros();
-  uint32_t width = now - _last_tick;
-
-  _last_tick = now;
+  // glitch filter - accumulate small widths
+  width += _glitch;
+  if (width < MIN_WIDTH)
+  {
+    _glitch = width;
+    return;
+  }
+  _glitch = 0;
 
   if (width > 3000) // sync
   {
@@ -76,18 +83,20 @@ void ISR_CODE_ATTR InputPPM::handle()
   {
     _channels[_channel].store(static_cast<int>(width), std::memory_order_relaxed);
   }
+
   if (_channel == 3)
   {
     // report after throttle channel to increase responsiveness
     // we cannot use fetch_add() as not all architectures support it fully
     _write_count.store(_write_count.load(std::memory_order_relaxed) + 1, std::memory_order_release);
   }
+
   _channel++;
 }
 
-void ISR_CODE_ATTR InputPPM::handle_isr(void* args)
+void ISR_CODE_ATTR InputPPM::handle_isr(void* args, uint32_t width)
 {
-  if (args) static_cast<InputPPM*>(args)->handle();
+  if (args) static_cast<InputPPM*>(args)->handle(width);
 }
 
 } // namespace Espfc::Device::Input
