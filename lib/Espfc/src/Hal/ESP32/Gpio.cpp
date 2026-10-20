@@ -74,6 +74,7 @@ bool Gpio::attachCaptureInterrupt(uint8_t pin, CaptureHandler handler, void* arg
 {
   if (mode == Change) return false;
 
+  if (Detail::captureFind(pin)) detachCaptureInterrupt(pin);
   auto* s = Detail::captureAcquire(pin, handler, arg);
   if (!s) return false;
 
