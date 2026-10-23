@@ -5,6 +5,25 @@
 		}
 	],
 	"settings": {
+		"editor.formatOnSave": false,
+		"files.associations": {
+			"**/lib/betaflight/**/*.c": "c",
+			"**/lib/betaflight/**/*.h": "c",
+			"**/lib/CmsisDsp/**/*.h": "c",
+			"**/lib/CmsisDsp/**/*.c": "c",
+			"**/lib/MultiButton/**/*.h": "c",
+			"**/lib/MultiButton/**/*.c": "c",
+			"**/lib/printf/*.h": "c",
+			"**/lib/printf/*.c": "c"
+		},
+		"[python]": {
+			"editor.defaultFormatter": "charliermarsh.ruff",
+			"editor.formatOnSave": true
+		},
+		"[cpp]": {
+			"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+			"editor.formatOnSave": true
+		},
 		"C_Cpp.intelliSenseEngine": "disabled",
 		"clangd.arguments": [
 			"--background-index",
@@ -17,7 +36,8 @@
 	"extensions": {
 		"recommendations": [
 			"platformio.platformio-ide",
-			"llvm-vs-code-extensions.vscode-clangd"
+			"llvm-vs-code-extensions.vscode-clangd",
+			"charliermarsh.ruff"
 		]
 	}
 }
