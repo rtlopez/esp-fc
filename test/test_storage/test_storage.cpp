@@ -1,6 +1,6 @@
 // not used directly, but required so that the library dependency finder resolves include paths
 // for lib/betaflight, same reason as in test_msp
-#include <EscDriver.h>
+#include <EscDriver.hpp>
 #include <Gps.hpp>
 #include <platform.h>
 
