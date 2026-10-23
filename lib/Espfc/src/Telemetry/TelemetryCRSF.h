@@ -80,6 +80,7 @@ public:
   int sendMsp(Stream::ReadWritable& s, Connect::MspResponse resp, uint8_t origin)
   {
     size_t size = resp.serialize(_buff, sizeof(_buff));
+    if (size < 4) return 0;
     const uint8_t* beg = _buff + 3;        // skip msp header
     const uint8_t* end = _buff + size - 1; // skip crc
     uint8_t version = resp.version == Connect::MSP_V1 ? 1 : 2;

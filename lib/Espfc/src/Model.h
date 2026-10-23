@@ -541,6 +541,12 @@ public:
     {
       config.gyro.dynamicFilter.count = DYN_NOTCH_COUNT_MAX;
     }
+
+    for (size_t i = 0; i < INPUT_CHANNELS; i++)
+    {
+      const int8_t map = config.input.channel[i].map;
+      if (map < 0 || (size_t)map >= INPUT_CHANNELS) config.input.channel[i].map = i;
+    }
   }
 
   void begin()

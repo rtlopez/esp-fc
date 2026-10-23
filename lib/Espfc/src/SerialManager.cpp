@@ -236,11 +236,14 @@ void SerialManager::processMsp(SerialPortState& ss)
     bool consumed = _msp.parse(*c, ss.mspRequest);
     if (consumed)
     {
-      if (ss.mspRequest.isReady() && ss.mspRequest.isCmd())
+      if (ss.mspRequest.isReady())
       {
-        _msp.processCommand(ss.mspRequest, ss.mspResponse, *ss.stream);
-        _msp.sendResponse(ss.mspResponse, *ss.stream);
-        _msp.postCommand();
+        if (ss.mspRequest.isCmd())
+        {
+          _msp.processCommand(ss.mspRequest, ss.mspResponse, *ss.stream);
+          _msp.sendResponse(ss.mspResponse, *ss.stream);
+          _msp.postCommand();
+        }
         ss.mspRequest = {};
         ss.mspResponse = {};
       }

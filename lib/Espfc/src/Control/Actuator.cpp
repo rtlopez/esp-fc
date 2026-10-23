@@ -19,6 +19,7 @@ int Actuator::begin()
     const auto& c = _model.config.conditions[i];
     if (c.min >= c.max) continue;                          // inactive
     if (c.ch < AXIS_AUX_1 || c.ch >= AXIS_COUNT) continue; // invalid channel
+    if (c.id >= MODE_COUNT) continue;
     _model.state.mode.maskPresent |= 1 << c.id;
   }
   _model.state.mode.airmodeAllowed = false;
@@ -127,6 +128,7 @@ void Actuator::updateModeMask()
     int16_t max = c->max;                              // * 25 + 900;
     size_t ch = c->ch;                                 // + AXIS_AUX_1;
     if (ch < AXIS_AUX_1 || ch >= AXIS_COUNT) continue; // invalid channel
+    if (c->id >= MODE_COUNT) continue;
 
     int16_t val = _model.state.input.us[ch];
     if (val > min && val < max)

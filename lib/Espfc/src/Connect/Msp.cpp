@@ -30,11 +30,12 @@ int MspMessage::remain() const
 
 void MspMessage::advance(size_t size)
 {
-  read += size;
+  read = std::min<size_t>(read + size, received);
 }
 
 uint8_t MspMessage::readU8()
 {
+  if (read >= received) return 0;
   return buffer[read++];
 }
 
@@ -58,6 +59,8 @@ uint32_t MspMessage::readU32()
 
 uint16_t MspMessage::append(const uint8_t* data, size_t len)
 {
+  if (received >= MSP_BUF_SIZE) return received;
+  len = std::min(len, MSP_BUF_SIZE - received);
   std::copy(data, data + len, buffer + received);
   received += len;
   return received;
@@ -72,7 +75,7 @@ int MspResponse::remain() const
 
 void MspResponse::advance(size_t size)
 {
-  len += size;
+  len = std::min(len + size, MSP_BUF_OUT_SIZE);
 }
 
 void MspResponse::writeData(const char* v, int size)
@@ -97,6 +100,7 @@ void MspResponse::writePString(const char* v)
 
 void MspResponse::writeU8(uint8_t v)
 {
+  if (len >= MSP_BUF_OUT_SIZE) return;
   data[len++] = v;
 }
 

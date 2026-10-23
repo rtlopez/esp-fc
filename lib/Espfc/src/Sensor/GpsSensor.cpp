@@ -1,6 +1,7 @@
 #include "Sensor/GpsSensor.hpp"
 #include "Hal/Time.hpp"
 #include <Gps.hpp>
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <tuple>
@@ -739,7 +740,7 @@ void GpsSensor::handleNavPvt() const
 void GpsSensor::handleNavSat() const
 {
   const auto& m = *_ubxMsg.getAs<Gps::UbxNavSat>();
-  _model.state.gps.numCh = m.numSvs;
+  _model.state.gps.numCh = std::min<size_t>(m.numSvs, SAT_MAX);
   for (uint8_t i = 0; i < SAT_MAX; i++)
   {
     if (i < m.numSvs)
