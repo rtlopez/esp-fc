@@ -9,7 +9,7 @@ Once you download and install [Betaflight configurator](https://github.com/betaf
 2. Enable `Show all serial devices`
 3. Disable `Auto-Connect`
 
-![Options](/docs/images/bfc/bfc_options.png)
+![Options](./images/bfc/bfc_options.png)
 
 Then select your device from list and click connect.
 
@@ -21,9 +21,9 @@ Then select your device from list and click connect.
 
 ## Configure wiring
 
-Go to the `CLI` tab and type `get pin`. This command will show what pins are associated to specified functions. If you wiring is diferrent, you can make some adjustments here. For more details, see [Pin Functions CLI Reference](/docs/cli.md#pin-functions)
+Go to the `CLI` tab and type `get pin`. This command will show what pins are associated to specified functions. If you wiring is diferrent, you can make some adjustments here. For more details, see [Pin Functions CLI Reference](./cli.md#pin-functions)
 
-![CLI Pins](/docs/images/bfc/bfc_cli_pins.png)
+![CLI Pins](./images/bfc/bfc_cli_pins.png)
 
 ## Gyro calibration
 
@@ -32,7 +32,7 @@ Go to `Setup tab`, make sure that your model is in horizontal steady state posit
 > [!CAUTION]
 > Ensure that model in preview moves exactly in the same way as yours. If it is not the case, go to the `Configuration` tab, and configure `Board orientation` or `Sensor Alignment`
 
-![Sensor Alignment](/docs/images/bfc/bfc_configuration.png)
+![Sensor Alignment](./images/bfc/bfc_configuration.png)
 
 ## System configuration
 
@@ -44,7 +44,7 @@ If you want to use Serial based receiver (SBUS,IBUS,CRSF), you need to allocate 
 
 Then go to the `Receiver` tab, and select `Receiver mode` and `Serial Receiver Provider`.
 
-To use ESP-NOW receiver, choose "SPI Rx (e.g. built-in Rx)" receiver mode in Receiver tab. You need compatible transmitter module. Read more about [ESP-FC Wireless Functions](/docs/wireless.md)
+To use ESP-NOW receiver, choose "SPI Rx (e.g. built-in Rx)" receiver mode in Receiver tab. You need compatible transmitter module. Read more about [ESP-FC Wireless Functions](./wireless.md)
 
 ## Motor setup
 
@@ -180,11 +180,11 @@ Add range works only, no add link
 
 ### Adjustments
 
-Not implemented, for replacement you can use [pid scaler CLI](/docs/cli.md#scaler-configuration)
+Not implemented, for replacement you can use [pid scaler CLI](./cli.md#scaler-configuration)
 
 ### Servos
 
-Not Implemented, for replacemnt you can use [output cli](/docs/cli.md#output-channel-config) to change output protocol and rate.
+Not Implemented, for replacemnt you can use [output cli](./cli.md#output-channel-config) to change output protocol and rate.
 
 ### Motors
 
