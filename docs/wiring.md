@@ -30,11 +30,12 @@ Tu unmap pin function use -1 as pin number
 | SAO/SDO/ADO | `pin_spi_0_miso` | 19    | 13       |
 | NCS         | `pin_spi_cs_0`   |  5    |  8       |
 | CSB*        | `pin_spi_cs_1`   | 13    |  7       |
+| -           | `pin_spi_cs_2`   | -     | -        |
 
-**Note:** `CSB` is required for barometer on 10-DOF MPU-9250 modules
+**Note:** `CSB` is required for barometer on some 10-DOF, ex. MPU-9250 module
 
 > [!TIP]
-> For better performance preffer SPI
+> For better performance preffer SPI wiring
 
 ## Default Servo/Motor output mapping
 
@@ -44,6 +45,9 @@ Tu unmap pin function use -1 as pin number
 | 2      | `pin_output_1` | 25    | 40       |
 | 3      | `pin_output_2` | 4     | 41       |
 | 4      | `pin_output_3` | 12    | 42       |
+
+> [!NOTE]
+> ESP32 supports up to 8 outputs (`pin_output_4` - `pin_output_7`), they are unmapped (-1) by default.
 
 ## Default Uart/Serial pin mapping
 
@@ -58,8 +62,8 @@ Tu unmap pin function use -1 as pin number
 
 ## Default Analog pin mapping
 
-| Uart    | CLI name          | ESP32 | ESP32-S3 |
-|--------:|-------------------|------:|---------:|
+| Uart    | CLI name             | ESP32 | ESP32-S3 |
+|--------:|----------------------|------:|---------:|
 | Voltage | `pin_input_adc_vbat` |  36   | 1        |
 | Current | `pin_input_adc_ibat` |  39   | 4        |
 
@@ -72,12 +76,23 @@ Tu unmap pin function use -1 as pin number
 |--------:|----------------|------:|---------:|
 | PPM     | `pin_input_rx` |  35   | 6        |
 
+Use `pin_input_rx_invert` to select the PPM edge: `0` - rising edge (default), `1` - falling edge.
+
 ## Other pin functions
 
 | CLI name            | ESP32 | ESP32-S3 | Comment       |
 |---------------------|------:|---------:|---------------|
-| `pin_buzzer`        |  0    | 5        | Status buzzer |
-| `pin_led`           |  26   | -        | Status led    |
+| `pin_button`        |  0    | -        | Button        |
+| `pin_buzzer`        |  26   | 5        | Status buzzer |
+| `pin_led`           |  2    | -        | Status led    |
+
+Additional options:
+
+| CLI name            | Default  | Comment                                      |
+|---------------------|---------:|----------------------------------------------|
+| `pin_buzzer_invert` | 1        | Invert buzzer output level                   |
+| `pin_led_invert`    | 0        | Invert status led output level               |
+| `pin_led_type`      | `SIMPLE` | Status led type: `SIMPLE` or `STRIP`         |
 
 ## Example ESP32 SPI MPU-6500/MPU-9250 gyro
 

@@ -60,8 +60,8 @@ Tu unmap pin function use -1 as pin number
 
 | Uart    | CLI name          | ESP32 | ESP32-S3 |
 |--------:|-------------------|------:|---------:|
-| Voltage | `pin_input_adc_vbat` |  36   | 1        |
-| Current | `pin_input_adc_ibat` |  39   | 4        |
+| Voltage | `pin_input_adc_0` |  36   | 1        |
+| Current | `pin_input_adc_1` |  39   | 4        |
 
 > [!NOTE]
 > On ESP32 choose only pins assigned to ADC1 channels
@@ -77,7 +77,6 @@ Tu unmap pin function use -1 as pin number
 | CLI name            | ESP32 | ESP32-S3 | Comment       |
 |---------------------|------:|---------:|---------------|
 | `pin_buzzer`        |  0    | 5        | Status buzzer |
-| `pin_led`           |  26   | -        | Status led    |
 
 ## Example ESP32 SPI MPU-6500/MPU-9250 gyro
 
