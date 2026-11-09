@@ -10,7 +10,7 @@ ESP-FC supports u-blox M8, M9, F9, and M10 GPS modules via UART.
 
 ## Configure Serial Port
 
-In the `Ports` tab, Disable MSP function and enable GPS on the UART connected to your GPS module. Set baud rate to `115200` or `230400` for 25Hz update rate.
+In the `Ports` tab, disable the MSP function and enable GPS on the UART connected to your GPS module. Set the baud rate to `115200`, or `230400` for a 25Hz update rate.
 
 ## Enable GPS Feature
 
@@ -45,7 +45,7 @@ reboot
 
 Some modules support multiple GNSS constellations and dual-band (L1+L5) for better accuracy. Configure via CLI:
 
-## Quick Preset Modes
+### Quick Preset Modes
 
 ```
 # Mode 0: Auto (use individual constellation flags) - DEFAULT
@@ -71,9 +71,9 @@ reboot
 ```
 
 > [!NOTE]
-> Some modules are not capable to track all constellations at the same time. In this case module initialization may fail.
+> Some modules are not capable of tracking all constellations at the same time. In this case module initialization may fail.
 
-## Dual-Band Configuration
+### Dual-Band Configuration
 
 ```
 # Enable L1+L5 dual-band on M9 (better multipath rejection)
@@ -88,11 +88,11 @@ reboot
 
 > [!NOTE]
 > M8/M10 modules always use L1 single-band. The `gps_enable_dual_band` setting only affects M9 modules.
-> If module do not support it, this option has no effect.
+> If the module does not support it, this option has no effect.
 
-## Individual Constellation Control
+### Individual Constellation Control
 
-When `gps_gnss_mode 0`, you can enable/disable each constellation individually:
+When `gps_gnss_mode` is `0`, you can enable/disable each constellation individually:
 
 ```
 set gps_enable_gps 1         # GPS (USA)
@@ -132,7 +132,7 @@ GPS NAV5                     # Navigation mode: Airborne
 ## Troubleshooting
 
 ### No GPS Fix
-1. Check antenna has clear sky view (away from carbon fiber, metal)
+1. Check that the antenna has a clear view of the sky (away from carbon fiber and metal)
 2. Enable more constellations: `set gps_gnss_mode 5`
 3. Wait 2-3 minutes for initial fix (TTFF - Time To First Fix)
 4. Verify baud rate matches GPS module (115200 or 230400)
@@ -144,14 +144,14 @@ GPS NAV5                     # Navigation mode: Airborne
 4. Check boot logs for `GPS ERROR` or `GPS DET` messages
 
 ### Low Satellite Count
-1. Move to open area with clear sky view
+1. Move to an open area with a clear view of the sky
 2. Enable all constellations: `set gps_gnss_mode 5`
 3. Check antenna connection
 4. Wait longer for satellites to be acquired
 
-#### Slow Fix Time
+### Slow Fix Time
 
 1. Enable more constellations: `set gps_gnss_mode 5`
 2. Ensure SBAS is enabled: `set gps_enable_sbas 1`
-3. Check for clear sky view (no buildings, trees blocking)
+3. Ensure a clear view of the sky (no buildings or trees blocking)
 4. First fix always takes longer (cold start), subsequent fixes are faster

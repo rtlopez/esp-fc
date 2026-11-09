@@ -1,15 +1,15 @@
 # ESP-FC wiring examples and PIN mapping
 
-ESP32 MCUs allows to remap pins, so the wiring is not final and you can remap intputs and outputs to your needs. To change pin function go to the CLI and use `get pin` command to check current assignment. For example, to set first output to pin 1 use command
+ESP32 MCUs allow pin remapping, so the wiring is not final and you can remap inputs and outputs to your needs. To change a pin function, go to the CLI and use the `get pin` command to check the current assignment. For example, to set the first output to pin 1, use the command:
 
 `set pin_output_0 1`
 
-Tu unmap pin function use -1 as pin number
+To unmap a pin function, use `-1` as the pin number:
 
 `set pin_output_3 -1`
 
 > [!NOTE]
-> There are still some limitations in remapping. Not all pins can be used with all functions. Some pins are input only, others are strapping pins and may prevent from booting if used incorrectly. please consult MCU documentation for available options. Default layout is proven to work.
+> There are still some limitations in remapping. Not all pins can be used with all functions. Some pins are input only, others are strapping pins and may prevent the board from booting if used incorrectly. Please consult the MCU documentation for available options. The default layout is proven to work.
 
 ## Default I2C pin mapping for gyro modules
 
@@ -19,9 +19,9 @@ Tu unmap pin function use -1 as pin number
 | SDA/SDI    | `pin_i2c_sda`    | 21    | 9        |
 
 > [!NOTE]
-> I2C driver accepts only pins from 1 to 31
+> The I2C driver accepts only pins 1 to 31.
 
-## Default SPI pin mapping gyro modules
+## Default SPI pin mapping for gyro modules
 
 | Module Pin  | CLI Name         | ESP32 | ESP32-S3 |
 |-------------|------------------|------:|---------:|
@@ -32,10 +32,10 @@ Tu unmap pin function use -1 as pin number
 | CSB*        | `pin_spi_cs_1`   | 13    |  7       |
 | -           | `pin_spi_cs_2`   | -     | -        |
 
-**Note:** `CSB` is required for barometer on some 10-DOF, ex. MPU-9250 module
+**Note:** `CSB` is required for the barometer on some 10-DOF modules, e.g. MPU-9250.
 
 > [!TIP]
-> For better performance preffer SPI wiring
+> For better performance, prefer SPI wiring.
 
 ## Default Servo/Motor output mapping
 
@@ -47,11 +47,11 @@ Tu unmap pin function use -1 as pin number
 | 4      | `pin_output_3` | 12    | 42       |
 
 > [!NOTE]
-> ESP32 supports up to 8 outputs (`pin_output_4` - `pin_output_7`), they are unmapped (-1) by default.
+> ESP32 supports up to 8 outputs (`pin_output_4` - `pin_output_7`); they are unmapped (-1) by default.
 
-## Default Uart/Serial pin mapping
+## Default UART/Serial pin mapping
 
-| Uart | CLI name          | ESP32 | ESP32-S3 |
+| UART | CLI name          | ESP32 | ESP32-S3 |
 |-----:|-------------------|------:|---------:|
 | RX 1 | `pin_serial_0_rx` |  3    | 44       |
 | TX 1 | `pin_serial_0_tx` |  1    | 43       |
@@ -62,19 +62,19 @@ Tu unmap pin function use -1 as pin number
 
 ## Default Analog pin mapping
 
-| Uart    | CLI name             | ESP32 | ESP32-S3 |
-|--------:|----------------------|------:|---------:|
-| Voltage | `pin_input_adc_vbat` |  36   | 1        |
-| Current | `pin_input_adc_ibat` |  39   | 4        |
+| Function | CLI name             | ESP32 | ESP32-S3 |
+|---------:|----------------------|------:|---------:|
+| Voltage  | `pin_input_adc_vbat` |  36   | 1        |
+| Current  | `pin_input_adc_ibat` |  39   | 4        |
 
 > [!NOTE]
-> On ESP32 choose only pins assigned to ADC1 channels
+> On ESP32, choose only pins assigned to ADC1 channels.
 
 ## Default PPM receiver pin mapping
 
-| Uart    | CLI name       | ESP32 | ESP32-S3 |
-|--------:|----------------|------:|---------:|
-| PPM     | `pin_input_rx` |  35   | 6        |
+| Function | CLI name       | ESP32 | ESP32-S3 |
+|---------:|----------------|------:|---------:|
+| PPM      | `pin_input_rx` |  35   | 6        |
 
 Use `pin_input_rx_invert` to select the PPM edge: `0` - rising edge (default), `1` - falling edge.
 
@@ -84,15 +84,15 @@ Use `pin_input_rx_invert` to select the PPM edge: `0` - rising edge (default), `
 |---------------------|------:|---------:|---------------|
 | `pin_button`        |  0    | -        | Button        |
 | `pin_buzzer`        |  26   | 5        | Status buzzer |
-| `pin_led`           |  2    | -        | Status led    |
+| `pin_led`           |  2    | -        | Status LED    |
 
 Additional options:
 
 | CLI name            | Default  | Comment                                      |
 |---------------------|---------:|----------------------------------------------|
 | `pin_buzzer_invert` | 1        | Invert buzzer output level                   |
-| `pin_led_invert`    | 0        | Invert status led output level               |
-| `pin_led_type`      | `SIMPLE` | Status led type: `SIMPLE` or `STRIP`         |
+| `pin_led_invert`    | 0        | Invert status LED output level               |
+| `pin_led_type`      | `SIMPLE` | Status LED type: `SIMPLE` or `STRIP`         |
 
 ## Example ESP32 SPI MPU-6500/MPU-9250 gyro
 

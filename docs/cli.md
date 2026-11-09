@@ -49,7 +49,7 @@ STATUS:
       uptime: 6.4
 ```
 
-### Statisticss
+### Statistics
 
 Ensure that total CPU usage doesn't exceed 60-70%
 ```
@@ -92,15 +92,15 @@ serial:   6us,    6us/i,   0.6%,   962 Hz
  - **reboot** - reboot board
 
 > [!IMPORTANT]
-> if you change any parameter, remember to apply `save` and `reboot`. Without that some changes might not take effect.
+> If you change any parameter, remember to apply `save` and `reboot`. Without that some changes might not take effect.
 
 ## Configuration parameters
 
  - **dump** - dump all parameters
- - **get parameter_name** - get paramter value, list matching patameters with current values
- - **set paramter value1 [value2] [value3]** - set parameter to new value (some parameters store multiple values, ex. input)
+ - **get parameter_name** - get parameter value, list matching parameters with current values
+ - **set parameter value1 [value2] [value3]** - set parameter to new value (some parameters store multiple values, e.g. input)
 
-Many parameters have similar name and meaning like Betaflight.
+Many parameters have similar names and meanings to those in Betaflight.
 
 ### Configuration examples
 
@@ -139,17 +139,17 @@ set pin_output_0 0
 > [!NOTE]
 > You don't need to use `=` character for assignment
 
-Setting milti-argument values
+Setting multi-argument values
 ```
 set output_0 S R
 ```
-Note that you don't have to enter all values, you can ommit last values if they are not changed.
+Note that you don't have to enter all values; you can omit trailing values if they do not change.
 
 ## Specific parameters reference
 
 ### Pin functions
 
-Default pin assignments for ESP32-S3 is listed below
+Default pin assignments for ESP32-S3 are listed below:
 ```
 set pin_input_rx 6
 set pin_output_0 39
@@ -196,8 +196,8 @@ set input_{channel} {map} {min} {neutral} {max} {fs_mode} {fs_value}
  - `{channel}`: raw rc channel (0-index)
  - `{map}`: map raw channel to input channel (0-index)
  - `{min/neutral/max}`: same as `rxrange` to adjust radio endpoints, scale rx input range to 1000/1500/2000, enter your min/mid/max values transmitted by radio.
- - `{fs_mode}`: fail safe mode, can be A: auto, H: hold, S: set
- - `{fs_value}`: value to use when fsMode is S(set)
+ - `{fs_mode}`: failsafe mode, can be A: auto, H: hold, S: set
+ - `{fs_value}`: value to use when `{fs_mode}` is set
 
 ### Output channel config
 ```
@@ -216,10 +216,10 @@ set mode_0 0 4 1300 2100 0 0
 ```
  - `{index}`: mode activator index
  - `{id}`: mode Id
- - `{channel}`: observed input channel (0-index, must be greather than 3)
+ - `{channel}`: observed input channel (0-index, must be greater than 3)
  - `{min/max}`: activation range, if both are set to 900, it means inactive
- - `{logic_mode}`: NOT IMPLEMENTED, used by configurator but ignored by firmare
- - `{link_id}` - NOT IMPLEMENTED, used by configurator but ignored by firmare
+ - `{logic_mode}`: NOT IMPLEMENTED, used by configurator but ignored by firmware
+ - `{link_id}`: NOT IMPLEMENTED, used by configurator but ignored by firmware
 
 Mode IDs:
  - 0: arming
@@ -245,7 +245,7 @@ Serial Functions:
 
 ### Scaler configuration
 
-It's diferrent version of inflight adjustments, allow to control few parameters with rc channel, ex. by potentiomenters.
+It's a different version of in-flight adjustments; it allows you to control a few parameters with an RC channel, e.g. using potentiometers.
 
 ```
 set scaler_0 769 5 20 400
@@ -253,8 +253,8 @@ set scaler_{index} {dimensions} {channel} {min_scale} {max_scale}
 ```
 
  - `{index}`: scaler instance (0-3)
- - `{dimensions}`: combination of dimentions
- - `{channel}`: observed iput channel (0-index, must be greather than 3)
+ - `{dimensions}`: combination of dimensions
+ - `{channel}`: observed input channel (0-index, must be greater than 3)
  - `{min_scale/max_scale}`: min and max scale in percent
 
 Scaler Dimensions:
@@ -270,21 +270,21 @@ Scaler Dimensions:
  - 512: Pitch Axis
  - 1024: Yaw Axis
 
-**Note 1**: To apply scaling you need to combine at least one PID component and Axis. You can also control multiple parameters by single channels. For example to control inner P and D on Pitch and Roll axes you need to use value 771 as dimentions (1 + 2 + 256 + 521),
+**Note 1**: To apply scaling you need to combine at least one PID component and Axis. You can also control multiple parameters with a single channel. For example, to control inner P and D on the Pitch and Roll axes, you need to use the value 773 as dimensions (1 + 4 + 256 + 512).
 
-**Note 2**: the scale is not uniform, in neutral position it is always 100 percent to represent original config value, if minimum is negative, then neutral position represents 0.
+**Note 2**: The scale is not uniform, in neutral position it is always 100 percent to represent original config value, if minimum is negative, then neutral position represents 0.
 
 **Note 3**: inner loop is main loop for acro mode, outer loop refers to level mode.
 
 ### Mixer
 
-There are few predefined mixers that can be used out-of-the box. You can choose it by setting paramter `mixer_type`
+There are a few predefined mixers that can be used out of the box. You can choose one by setting the parameter `mixer_type`.
 
 ```
 set mixer_type QUADX
 ```
 
-Currently allowed are only:
+Currently, only the following are supported:
  - QUADX (default)
  - QUAD1234 (untested)
  - TRI (untested)
@@ -333,7 +333,7 @@ set mix_{index} {src} {dst} {rate}
  - `{rate}`: mix rate in percent
 
 > [!IMPORTANT]
-> You need to add a termination rule at the end, to inform mixer to stop processing. In this case set `src` argument to 0. When mixer encounters such a rule, it stops processing and ignore next rules. You can add maximum 64 rules.
+> You need to add a termination rule at the end, to inform mixer to stop processing. In this case set `src` argument to 0. When mixer encounters such a rule, it stops processing and ignores subsequent rules. You can add a maximum of 64 rules.
 
 Mixer Sources:
  - 0: null for termination rule
@@ -351,7 +351,7 @@ Mixer Sources:
 
 ## All supported parameters
 
-Use `dump` command to backup all your settings. You can then load you configuration in CLI tab. Below you can find full list of parameters.
+Use `dump` command to backup all your settings. You can then load your configuration in the CLI tab. Below you can find full list of parameters.
 
 ```
 set feature_gps 0
