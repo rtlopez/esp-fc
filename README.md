@@ -1,6 +1,6 @@
 # ESP-FC Flight Controller
 
-The mini, DIY, Low cost, ESP32 based, high performance flight controller for hobbyists.
+ESP-FC is an open-source flight controller firmware for hobbyists who want to build their own drone electronics. It runs on inexpensive and widely available ESP32 and ESP32-S3 boards, works with common SPI/I2C gyro modules, and is compatible with Betaflight Configurator and Blackbox Explorer. Thanks to built-in WiFi and ESP-NOW support, it can be configured wirelessly and even used without a separate radio receiver.
 
 # Features
 
@@ -28,13 +28,12 @@ In this repository you can find firmware code that allows you to build your own 
 > [!IMPORTANT]
 > Before you begin, **read the following documentation carefully first!**.
 
+ * [Wiring Guide](/docs/wiring.md)
  * [Setup Guide](/docs/setup.md)
- * [Wiring](/docs/wiring.md)
- * [CLI Commands](/docs/cli.md)
- * [WIFI and ESP-NOW Receiver](/docs/wireless.md)
+ * [Full Documentation](/docs/README.md)
 
 > [!NOTE]
-> Documentation for v0.2 releases is available in [docs/v0.2](/docs/v0.2/) directory.
+> Documentation for v0.2 line is available in [docs/v0.2](/docs/v0.2/) directory.
 
 Join our **[Discord Channel](https://discord.gg/jhyPPM5UEH)** to get help
 
@@ -46,6 +45,7 @@ Hardware:
 * ESP32 or ESP32-S3 board
 * MPU9250 SPI or MPU6050 I2C gyro (GY-88, GY-91, GY-521 or similar)
 * PDB with 5V BEC
+* RC receiver (PPM, SBUS, IBUS or CRSF)
 * Buzzer and some electronic components (optional).
 
 Software:

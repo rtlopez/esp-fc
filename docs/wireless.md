@@ -2,6 +2,20 @@
 
 Espressif modules have a built-in WiFi module that can be used for configuration and control.
 
+## ESP-NOW control
+
+ESP-NOW is a proprietary wireless communication protocol defined by Espressif, which enables the direct, quick and low-power control of smart devices, without the need of a router. 
+
+As there are no real transmitters usng this protocol on the market, you have to build your own transmitting module first. If you alredy own RC transmitter with JR bay, you can use another ESP32 module. In this case follow [espnow-rclink-tx](https://github.com/rtlopez/espnow-rclink-tx) instructions.
+
+In ESP-FC you have to choose `SPI Rx (e.g. built-in Rx)` as Receiver mode in Receiver tab.
+
+![ESP-FC ESP-NOW Reciever](/docs/images/espfc_receiver.png)
+
+Transmitter and receiver binds automatically after power up, you don't need to do anything. Recomended startup procedure is:
+1. turn on transmitter first
+2. next power up receiver/flight controller
+
 ## WiFi configuration
 
 > [!NOTE]
@@ -19,7 +33,8 @@ set wifi_ssid MY-HOME-NET
 set wifi_pass MY-HOME-PASS
 ```
 > [!NOTE]
-> Network name and pass must not contains spaces.
+> - Network name and pass must not contains spaces.
+> - ESP-NOW may not work if connected to home network.
 
 then you can check status of connection by typing `wifi` in CLI tab.
 ```
@@ -31,16 +46,3 @@ AP MAC: 32:30:F9:6E:10:74
 ```
 In this mode you need to discover IP address granted by DHCP. In line `ST IP4` is the address that you need to use in configurator. If there is `0.0.0.0`, that means that FC was not able to connect to home network.
 
-## ESP-NOW control
-
-ESP-NOW is a proprietary wireless communication protocol defined by Espressif, which enables the direct, quick and low-power control of smart devices, without the need of a router. 
-
-As there are no real transmitters usng this protocol on the market, you have to build your own transmitting module first. If you alredy own RC transmitter with JR bay, you can use another ESP32 module. In this case follow [espnow-rclink-tx](https://github.com/rtlopez/espnow-rclink-tx) instructions.
-
-In ESP-FC you have to choose `SPI Rx (e.g. built-in Rx)` as Receiver mode in Receiver tab.
-
-![ESP-FC ESP-NOW Reciever](/docs/images/espfc_receiver.png)
-
-Transmitter and receiver binds automatically after power up, you don't need to do anything. Recomended startup procedure is:
-1. turn on transmitter first
-2. next power up receiver/flight controller

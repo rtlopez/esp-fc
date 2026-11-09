@@ -16,7 +16,7 @@ At first time you may need to click `--- I can't find my device ---` to see all 
 
 > [!NOTE]
 > On Linux systems you might need to add your user to the `dialout` group to access the serial port: 
-> ```bash
+> ```
 > sudo usermod -aG dialout $USER
 > ```
 > then log out and log in again.
@@ -42,7 +42,7 @@ Go to `Sensors` tab, Ensure that model in preview moves exactly in the same way 
 
 After adjustment make sure that your model is in horizontal steady state position. Then click **"Calibrate"** button in Accelerometer section and wait few seconds. Do not move the model during calibration process.
 
-> [!WARNING]
+> [!CAUTION]
 > Board Alignment is crucial for proper calibration and flight performance. Incorrect alignment will lead to uncontrolled spinning.
 
 ## System configuration

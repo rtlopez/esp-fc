@@ -101,9 +101,3 @@ Additional options:
 ## Example ESP32 I2C MPU-6050 gyro
 
 ![ESP-FC ESP32 I2C Wiring](./images/esp-fc-esp32_i2c_wiring.png)
-
-## Example ESP8266 I2C MPU-6050 gyro
-
-ESP8266 has limited ability to remap pins, use `get pin` command to list available options.
-
-![ESP-FC ESP8266 I2C Wiring](./images/espfc_wemos_d1_mini_wiring.png)
