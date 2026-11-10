@@ -10,7 +10,7 @@ As there are no real transmitters using this protocol on the market, you have to
 
 In ESP-FC, you have to choose `SPI Rx (e.g. built-in Rx)` as the Receiver mode in the Receiver tab.
 
-![ESP-FC ESP-NOW Receiver](/docs/images/espfc_receiver.png)
+![ESP-FC ESP-NOW Receiver](/docs/images/bfc/bfc2_espnow_receiver.png)
 
 Transmitter and receiver bind automatically after power up; you don't need to do anything. The recommended startup procedure is:
 1. turn on the transmitter first
@@ -18,10 +18,13 @@ Transmitter and receiver bind automatically after power up; you don't need to do
 
 ## WiFi configuration
 
+> [!IMPORTANT]
+> This method no longer works on latest online betaflight-configurator. This is browser limitation.
+
 > [!NOTE]
 > To be able to configure the device using a WiFi connection, you need to enable the `SOFTSERIAL` function. WiFi can only be used to configure the device. While WiFi is active, it is not possible to arm the controller, and a reboot is required.
 
-![Enable WiFi](/docs/images/espfc_wifi_ap_enable.png)
+![Enable WiFi](/docs/images/bfc/bfc2_espnow_configuration.png)
 
 WiFi starts its own access point if the board does not detect a receiver signal for at least 30 seconds (i.e. it stays in failsafe mode since boot). The name of this AP is `ESP-FC` and it is an open network. After connecting to this AP, choose `Manual Selection` and enter `tcp://192.168.4.1:1111`.
 

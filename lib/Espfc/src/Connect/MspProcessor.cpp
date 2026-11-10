@@ -210,6 +210,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       r.writeU16(16412); // USE_GPS
       r.writeU16(16415); // USE_MAG
       r.writeU16(16422); // USE_ALTHOLD
+      r.writeU16(16423); // USE_SOFTSERIAL
 
       r.writeU16(8230); // USE_BRUSHED
       r.writeU16(8231); // USE_DSHOT
