@@ -1,7 +1,7 @@
 #include "Control/Actuator.h"
 #include "Control/Controller.h"
 #include "Model.h"
-#include "Output/Mixer.h"
+#include "Output/Mixer.hpp"
 #include "Utils/Timer.h"
 #include <ArduinoFake.h>
 #include <Gps.hpp>

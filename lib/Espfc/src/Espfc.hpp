@@ -7,7 +7,7 @@
 #include "Hardware.h"
 #include "Input.h"
 #include "Model.h"
-#include "Output/Mixer.h"
+#include "Output/Mixer.hpp"
 #include "SensorManager.h"
 #include "SerialManager.h"
 #include "TelemetryManager.h"

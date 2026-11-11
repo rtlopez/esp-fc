@@ -6,7 +6,7 @@
 #include "Device/Input/InputPPM.hpp"
 #include "Device/MagDevice.hpp"
 #include "Hal/BusDevice.hpp"
-#include "Output/Mixers.h"
+#include "Output/Mixers.hpp"
 #include "Target/Target.h"
 #include "Utils/Filter.h"
 #include <EscDriver.hpp>
