@@ -18,16 +18,16 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include <Arduino.h>
 #include "esp_twi.h"
+#include <Arduino.h>
 #if defined(ESP32C3)
-  #include <soc/cpu.h>
+#include <soc/cpu.h>
 #endif
 
 uint16_t esp_twi_dcount = 18;
 static unsigned char esp_twi_sda, esp_twi_scl;
 static uint32_t esp_twi_clockStretchLimit;
-
+// clang-format off
 #if defined(ESP8266)
   #define SDA_LOW()   (GPES = (1 << esp_twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
   #define SDA_HIGH()  (GPEC = (1 << esp_twi_sda)) //Disable SDA (becomes input and since it has pullup it will go high)
@@ -68,6 +68,7 @@ static uint32_t esp_twi_clockStretchLimit;
 #else
   #error "Unsupported platform"
 #endif
+// clang-format on
 
 #ifndef FCPU80
 #define FCPU80 80000000L
@@ -97,7 +98,9 @@ static uint32_t esp_twi_clockStretchLimit;
 #define TWI_PIN_MAX 15
 #endif
 
-static unsigned int esp_twi_getDelay(unsigned int freq){
+static unsigned int esp_twi_getDelay(unsigned int freq)
+{
+  // clang-format off
 #if F_CPU == FCPU80
   if(freq < 100000) return  19;     // 100KHz
   else if(freq < 200000) return 8;  // 200KHz
@@ -153,18 +156,22 @@ static unsigned int esp_twi_getDelay(unsigned int freq){
   else return 0;                     // 700KHz
 #endif
 #endif
+  // clang-format on
 }
 
-void esp_twi_setClock(unsigned int freq){
+void esp_twi_setClock(unsigned int freq)
+{
   esp_twi_dcount = esp_twi_getDelay(freq);
 }
 
-void esp_twi_setClockStretchLimit(uint32_t limit){
+void esp_twi_setClockStretchLimit(uint32_t limit)
+{
   esp_twi_clockStretchLimit = limit * TWI_CLOCK_STRETCH_MULTIPLIER;
 }
 
-void esp_twi_init(unsigned char sda, unsigned char scl){
-  if(sda > TWI_PIN_MAX || scl > TWI_PIN_MAX) return;
+void esp_twi_init(unsigned char sda, unsigned char scl)
+{
+  if (sda > TWI_PIN_MAX || scl > TWI_PIN_MAX) return;
   esp_twi_sda = sda;
   esp_twi_scl = scl;
   pinMode(esp_twi_sda, INPUT_PULLUP);
@@ -173,7 +180,8 @@ void esp_twi_init(unsigned char sda, unsigned char scl){
   esp_twi_setClockStretchLimit(230); // default value is 230 uS
 }
 
-void esp_twi_stop(void){
+void esp_twi_stop(void)
+{
   pinMode(esp_twi_sda, INPUT);
   pinMode(esp_twi_scl, INPUT);
 }
@@ -184,7 +192,7 @@ static inline IRAM_ATTR unsigned int _getCycleCount()
   return esp_cpu_get_ccount();
 #elif defined(ESP32) || defined(ESP8266)
   unsigned int ccount = 0;
-  __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+  __asm__ __volatile__("esync; rsr %0,ccount" : "=a"(ccount));
   return ccount;
 #elif defined(ARCH_RP2040)
   return rp2040.getCycleCount();
@@ -197,18 +205,21 @@ static inline IRAM_ATTR void esp_twi_delay(unsigned int v)
 {
   unsigned int end;
   int maxCount = 200;
-  switch(v)
+  switch (v)
   {
-    case 0: break;
+    case 0:
+      break;
     default:
       end = _getCycleCount() + (v << 3); // * 8
-      while(_getCycleCount() <= end) {
-        if(--maxCount == 0) break; // counter wrap protection
+      while (_getCycleCount() <= end)
+      {
+        if (--maxCount == 0) break; // counter wrap protection
       }
   }
 }
 
-static IRAM_ATTR bool esp_twi_write_start(void) {
+static IRAM_ATTR bool esp_twi_write_start(void)
+{
   SCL_HIGH();
   SDA_HIGH();
   if (SDA_READ() == 0) return false;
@@ -218,76 +229,103 @@ static IRAM_ATTR bool esp_twi_write_start(void) {
   return true;
 }
 
-static IRAM_ATTR bool esp_twi_write_stop(void){
+static IRAM_ATTR bool esp_twi_write_stop(void)
+{
   uint32_t i = 0;
   SCL_LOW();
   SDA_LOW();
   esp_twi_delay(esp_twi_dcount);
   SCL_HIGH();
-  while (SCL_READ() == 0 && (i++) < esp_twi_clockStretchLimit); // Clock stretching
+  // Clock stretching
+  while (SCL_READ() == 0 && (i++) < esp_twi_clockStretchLimit)
+    ;
   esp_twi_delay(esp_twi_dcount);
   SDA_HIGH();
   esp_twi_delay(esp_twi_dcount);
   return true;
 }
 
-static IRAM_ATTR bool esp_twi_write_bit(bool bit) {
+static IRAM_ATTR bool esp_twi_write_bit(bool bit)
+{
   uint32_t i = 0;
   SCL_LOW();
-  if (bit) SDA_HIGH();
-  else SDA_LOW();
-  esp_twi_delay(esp_twi_dcount); //esp_twi_delay(esp_twi_dcount+1);
+  if (bit)
+  {
+    SDA_HIGH();
+  }
+  else
+  {
+    SDA_LOW();
+  }
+  esp_twi_delay(esp_twi_dcount); // esp_twi_delay(esp_twi_dcount+1);
   SCL_HIGH();
-  while (SCL_READ() == 0 && (i++) < esp_twi_clockStretchLimit);// Clock stretching
+  // Clock stretching
+  while (SCL_READ() == 0 && (i++) < esp_twi_clockStretchLimit)
+    ;
   esp_twi_delay(esp_twi_dcount);
   return true;
 }
 
-static IRAM_ATTR bool esp_twi_read_bit(void) {
+static IRAM_ATTR bool esp_twi_read_bit(void)
+{
   uint32_t i = 0;
   SCL_LOW();
   SDA_HIGH();
-  esp_twi_delay(esp_twi_dcount); //esp_twi_delay(esp_twi_dcount+2);
+  esp_twi_delay(esp_twi_dcount); // esp_twi_delay(esp_twi_dcount+2);
   SCL_HIGH();
-  while (SCL_READ() == 0 && (i++) < esp_twi_clockStretchLimit);// Clock stretching
+  // Clock stretching
+  while (SCL_READ() == 0 && (i++) < esp_twi_clockStretchLimit)
+    ;
   bool bit = SDA_READ();
   esp_twi_delay(esp_twi_dcount);
   return bit;
 }
 
-static IRAM_ATTR bool esp_twi_write_byte(unsigned char byte) {
+static IRAM_ATTR bool esp_twi_write_byte(unsigned char byte)
+{
   unsigned char bit;
-  for (bit = 0; bit < 8; bit++) {
+  for (bit = 0; bit < 8; bit++)
+  {
     esp_twi_write_bit(byte & 0x80);
     byte <<= 1;
   }
-  return !esp_twi_read_bit();//NACK/ACK
+  return !esp_twi_read_bit(); // NACK/ACK
 }
 
-static IRAM_ATTR unsigned char esp_twi_read_byte(bool nack) {
+static IRAM_ATTR unsigned char esp_twi_read_byte(bool nack)
+{
   unsigned char byte = 0;
   unsigned char bit;
-  for (bit = 0; bit < 8; bit++) byte = (byte << 1) | esp_twi_read_bit();
+  for (bit = 0; bit < 8; bit++)
+  {
+    byte = (byte << 1) | esp_twi_read_bit();
+  }
   esp_twi_write_bit(nack);
   return byte;
 }
 
-unsigned char IRAM_ATTR esp_twi_writeTo(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop){
-  unsigned int i;
-  if(!esp_twi_write_start()) return 4;//line busy
-  if(!esp_twi_write_byte(((address << 1) | 0) & 0xFF)) {
+unsigned char IRAM_ATTR esp_twi_writeTo(unsigned char address, unsigned char* buf, unsigned int len,
+                                        unsigned char sendStop)
+{
+  unsigned int i = 0;
+  if (!esp_twi_write_start()) return 4; // line busy
+  if (!esp_twi_write_byte(((address << 1) | 0) & 0xFF))
+  {
     if (sendStop) esp_twi_write_stop();
-    return 2; //received NACK on transmit of address
+    return 2; // received NACK on transmit of address
   }
-  for(i=0; i<len; i++) {
-    if(!esp_twi_write_byte(buf[i])) {
+  for (i = 0; i < len; i++)
+  {
+    if (!esp_twi_write_byte(buf[i]))
+    {
       if (sendStop) esp_twi_write_stop();
-      return 3;//received NACK on transmit of data
+      return 3; // received NACK on transmit of data
     }
   }
-  if(sendStop) esp_twi_write_stop();
+  if (sendStop) esp_twi_write_stop();
   i = 0;
-  while(SDA_READ() == 0 && (i++) < 10){
+  while (SDA_READ() == 0 && (i++) < 10)
+  {
     SCL_LOW();
     esp_twi_delay(esp_twi_dcount);
     SCL_HIGH();
@@ -296,18 +334,25 @@ unsigned char IRAM_ATTR esp_twi_writeTo(unsigned char address, unsigned char * b
   return 0;
 }
 
-unsigned char IRAM_ATTR esp_twi_readFrom(unsigned char address, unsigned char* buf, unsigned int len, unsigned char sendStop){
-  unsigned int i;
-  if(!esp_twi_write_start()) return 4;//line busy
-  if(!esp_twi_write_byte(((address << 1) | 1) & 0xFF)) {
+unsigned char IRAM_ATTR esp_twi_readFrom(unsigned char address, unsigned char* buf, unsigned int len,
+                                         unsigned char sendStop)
+{
+  unsigned int i = 0;
+  if (!esp_twi_write_start()) return 4; // line busy
+  if (!esp_twi_write_byte(((address << 1) | 1) & 0xFF))
+  {
     if (sendStop) esp_twi_write_stop();
-    return 2;//received NACK on transmit of address
+    return 2; // received NACK on transmit of address
   }
-  for(i=0; i<(len-1); i++) buf[i] = esp_twi_read_byte(false);
-  buf[len-1] = esp_twi_read_byte(true);
-  if(sendStop) esp_twi_write_stop();
+  for (i = 0; i < (len - 1); i++)
+  {
+    buf[i] = esp_twi_read_byte(false);
+  }
+  buf[len - 1] = esp_twi_read_byte(true);
+  if (sendStop) esp_twi_write_stop();
   i = 0;
-  while(SDA_READ() == 0 && (i++) < 10){
+  while (SDA_READ() == 0 && (i++) < 10)
+  {
     SCL_LOW();
     esp_twi_delay(esp_twi_dcount);
     SCL_HIGH();
@@ -316,17 +361,32 @@ unsigned char IRAM_ATTR esp_twi_readFrom(unsigned char address, unsigned char* b
   return 0;
 }
 
-uint8_t esp_twi_status(){
-    if (SCL_READ()==0)     return I2C_SCL_HELD_LOW;       		//SCL held low by another device, no procedure available to recover
-    int clockCount = 20;
+uint8_t esp_twi_status()
+{
+  // SCL held low by another device, no procedure available to recover
+  if (SCL_READ() == 0) return I2C_SCL_HELD_LOW;
 
-    while (SDA_READ()==0 && clockCount>0){                      //if SDA low, read the bits slaves have to sent to a max
-        esp_twi_read_bit();
-        if (SCL_READ()==0) return I2C_SCL_HELD_LOW_AFTER_READ;  //I2C bus error. SCL held low beyond slave clock stretch time
+  int clockCount = 20;
+
+  // if SDA low, read the bits slaves have to sent to a max
+  while (SDA_READ() == 0 && clockCount > 0)
+  {
+    esp_twi_read_bit();
+    if (SCL_READ() == 0)
+    {
+      return I2C_SCL_HELD_LOW_AFTER_READ; // I2C bus error. SCL held low beyond slave clock stretch time
     }
+  }
 
-    if (SDA_READ()==0)     return I2C_SDA_HELD_LOW;       		//I2C bus error. SDA line held low by slave/another_master after n bits.
+  if (SDA_READ() == 0)
+  {
+    return I2C_SDA_HELD_LOW; // I2C bus error. SDA line held low by slave/another_master after n bits.
+  }
 
-    if(!esp_twi_write_start()) return I2C_SDA_HELD_LOW_AFTER_INIT;  //line busy. SDA again held low by another device. 2nd master?
-    else                   return I2C_OK;       				//all ok
+  if (!esp_twi_write_start())
+  {
+    return I2C_SDA_HELD_LOW_AFTER_INIT; // line busy. SDA again held low by another device. 2nd master?
+  }
+
+  return I2C_OK; // all ok
 }

@@ -58,7 +58,7 @@ public:
   {
     return {q0, q1, q2, q3};
   }
-  
+
   const VectorFloat getEuler()
   {
     if (!anglesComputed)

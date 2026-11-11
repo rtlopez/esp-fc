@@ -63,9 +63,9 @@ public:
   const VectorFloat getEuler()
   {
     if (!anglesComputed)
-		{
-			computeAngles();
-		}
+    {
+      computeAngles();
+    }
     return {roll, pitch, yaw};
   }
 };
