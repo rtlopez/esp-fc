@@ -3,7 +3,7 @@
 #include "Hal/BusI2C.hpp"
 #include "Hal/FastCode.hpp"
 #include <Arduino.h>
-#include <EspWire.h>
+#include <EspWire.hpp>
 
 namespace {
 

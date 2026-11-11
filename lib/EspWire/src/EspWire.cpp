@@ -21,8 +21,8 @@
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
 */
 
-#include "EspWire.h"
-#include "esp_twi.h"
+#include "EspWire.hpp"
+#include "esp_twi.hpp"
 
 // Initialize Class Variables //////////////////////////////////////////////////
 
