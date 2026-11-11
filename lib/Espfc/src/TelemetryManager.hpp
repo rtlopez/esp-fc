@@ -4,8 +4,8 @@
 #include "Connect/MspProcessor.hpp"
 #include "Model.h"
 #include "Stream/ReadWritable.hpp"
-#include "Telemetry/TelemetryCRSF.h"
-#include "Telemetry/TelemetryText.h"
+#include "Telemetry/TelemetryCRSF.hpp"
+#include "Telemetry/TelemetryText.hpp"
 
 namespace Espfc {
 

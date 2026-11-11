@@ -2,7 +2,7 @@
 
 #include "Device/InputDevice.hpp"
 #include "Rc/Crsf.h"
-#include "TelemetryManager.h"
+#include "TelemetryManager.hpp"
 
 // https://github.com/CapnBry/CRServoF/blob/master/lib/CrsfSerial/crsf_protocol.h
 // https://github.com/AlessioMorale/crsf_parser/tree/master

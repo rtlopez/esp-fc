@@ -7,7 +7,7 @@
 #include "Output/OutputIBUS.hpp"
 #include "Sensor/GpsSensor.hpp"
 #include "Stream/ReadWritable.hpp"
-#include "TelemetryManager.h"
+#include "TelemetryManager.hpp"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 #include "Wireless.h"
 #endif

@@ -10,7 +10,7 @@
 #include "Output/Mixer.hpp"
 #include "SensorManager.h"
 #include "SerialManager.h"
-#include "TelemetryManager.h"
+#include "TelemetryManager.hpp"
 
 namespace Espfc {
 

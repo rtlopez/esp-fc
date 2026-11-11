@@ -7,7 +7,7 @@
 #include "Device/InputDevice.hpp"
 #include "Hal/Platform.hpp"
 #include "Model.h"
-#include "TelemetryManager.h"
+#include "TelemetryManager.hpp"
 #if defined(ESPFC_HAL_ESPNOW)
 #include "Device/Input/InputEspNow.hpp"
 #endif

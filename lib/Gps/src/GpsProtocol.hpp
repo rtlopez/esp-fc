@@ -113,7 +113,9 @@ public:
 
   uint16_t msgId = 0;
   uint16_t length = 0;
-  uint8_t payload[512] = {0};
+  static constexpr size_t PAYLOAD_SIZE = 512;
+
+  uint8_t payload[PAYLOAD_SIZE] = {0};
   uint16_t crc = 0;
 
   UbxState status{UBX_STATE_IDLE};
@@ -218,7 +220,9 @@ enum NmeaState : uint8_t
 class NmeaMessage
 {
 public:
-  char payload[512] = {0};
+  static constexpr size_t PAYLOAD_SIZE = 512;
+
+  char payload[PAYLOAD_SIZE] = {0};
 
   size_t length = 0;
   NmeaState status{NMEA_STATE_IDLE};

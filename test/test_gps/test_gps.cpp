@@ -221,13 +221,29 @@ void test_ubx_parse_bad_checksum()
 
 void test_ubx_parse_length_too_big()
 {
-  const uint8_t header[] = {0xB5, 0x62, 0x01, 0x07, 0xFF, 0x01};
+  const uint8_t header[] = {0xB5, 0x62, 0x01, 0x07, 0x01, 0x02};
   Gps::UbxParser parser;
   Gps::UbxMessage m;
 
   ubxFeed(parser, m, header, sizeof(header));
 
   TEST_ASSERT_TRUE(m.isIdle());
+}
+
+void test_ubx_parse_max_payload()
+{
+  static uint8_t payload[512];
+  static uint8_t frame[512 + 8];
+  for (size_t i = 0; i < sizeof(payload); i++) payload[i] = i & 0xff;
+  const size_t len = ubxBuildFrame(frame, Gps::UBX_NAV, 0x35, payload, sizeof(payload));
+  Gps::UbxParser parser;
+  Gps::UbxMessage m;
+
+  ubxFeed(parser, m, frame, len);
+
+  TEST_ASSERT_TRUE(m.isReady());
+  TEST_ASSERT_EQUAL_UINT16(512, m.written);
+  TEST_ASSERT_EQUAL_HEX8(payload[511], m.payload[511]);
 }
 
 void test_ubx_parse_recover_after_bad_checksum()
@@ -393,6 +409,7 @@ int main()
   RUN_TEST(test_ubx_parse_bad_sync1);
   RUN_TEST(test_ubx_parse_bad_checksum);
   RUN_TEST(test_ubx_parse_length_too_big);
+  RUN_TEST(test_ubx_parse_max_payload);
   RUN_TEST(test_ubx_parse_recover_after_bad_checksum);
   RUN_TEST(test_ubx_parse_consecutive_frames);
 

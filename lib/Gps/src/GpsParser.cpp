@@ -52,7 +52,7 @@ void UbxParser::parse(uint8_t c, UbxMessage& m)
       {
         m.status = UBX_STATE_CRC0;
       }
-      else if (m.length >= 511)
+      else if (m.length > UbxMessage::PAYLOAD_SIZE)
       {
         m.status = UBX_STATE_IDLE;
       }
@@ -63,7 +63,7 @@ void UbxParser::parse(uint8_t c, UbxMessage& m)
       break;
 
     case UBX_STATE_PAYLOAD:
-      if (m.written < 511)
+      if (m.written < UbxMessage::PAYLOAD_SIZE)
       {
         m.payload[m.written] = c;
         m.written++;
@@ -118,7 +118,7 @@ void NmeaParser::parse(uint8_t c, NmeaMessage& m)
       }
       else
       {
-        if (m.length < 511)
+        if (m.length < NmeaMessage::PAYLOAD_SIZE - 1)
         {
           m.payload[m.length++] = c;
           m.payload[m.length] = '\0';
