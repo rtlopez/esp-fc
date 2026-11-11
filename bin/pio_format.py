@@ -21,8 +21,15 @@ def run_clang_format_base(check_only=False):
 
     # 2. Define directories and extensions to process
     proj_dir = env.get("PROJECT_DIR")
-    source_dirs = ["src", "lib/Espfc/src"]
-    extensions = (".cpp", ".c", ".h", ".hpp", ".ipp")
+    source_dirs = [
+        "src",
+        "lib/Espfc/src",
+        "lib/EscDriver/src",
+        "lib/AHRS",
+        "lib/Gps",
+        "lib/EspWire",
+    ]
+    extensions = (".cpp", ".hpp", ".ipp")
 
     files_to_format = []
     for d in source_dirs:
@@ -64,6 +71,10 @@ def run_clang_format_base(check_only=False):
             print("\n[CLANG-FORMAT] Issues detected:")
             print(result.stderr)
             if check_only:
+                print(
+                    "[CLANG-FORMAT] Please run `pio run -e esp32 -t format` to fix formatting issues.",
+                    flush=True,
+                )
                 # In CI mode, we want to stop the pipeline
                 sys.exit(1)
         else:
