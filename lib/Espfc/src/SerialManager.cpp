@@ -1,5 +1,5 @@
 #include "SerialManager.h"
-#include "Debug_Espfc.h"
+#include "Debug_Espfc.hpp"
 #include "Device/SerialDeviceAdapter.h"
 #include "Hal/FastCode.hpp"
 #include "Stream/Printer.hpp"

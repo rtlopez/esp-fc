@@ -10,6 +10,8 @@ void UbxParser::parse(uint8_t c, UbxMessage& m)
     case UBX_STATE_IDLE:
       if (c == UBX_SYNC0)
       {
+        m.length = 0;
+        m.written = 0;
         m.status = UBX_STATE_SYNC;
       }
       else
@@ -97,7 +99,12 @@ void NmeaParser::parse(uint8_t c, NmeaMessage& m)
   {
     case NMEA_STATE_READY:
     case NMEA_STATE_IDLE:
-      if (c == '$') m.status = NMEA_STATE_PAYLOAD;
+      if (c == '$')
+      {
+        m.length = 0;
+        m.payload[0] = '\0';
+        m.status = NMEA_STATE_PAYLOAD;
+      }
       break;
 
     case NMEA_STATE_PAYLOAD:

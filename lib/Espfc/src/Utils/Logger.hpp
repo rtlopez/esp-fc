@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <memory>
 
-#include "Debug_Espfc.h"
+#include "Debug_Espfc.hpp"
 #include "Stream/BufferWritable.hpp"
 #include "Stream/Printer.hpp"
 
