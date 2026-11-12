@@ -5,14 +5,14 @@
 
 #include "Connect/Msp.hpp"
 #include "Connect/StatusLed.hpp"
-#include "Control/Pid.h"
+#include "Control/Pid.hpp"
 #include "Hal/HwTimer.hpp"
-#include "ModelConfig.h"
+#include "ModelConfig.hpp"
 #include "Stream/ReadWritable.hpp"
-#include "Utils/Filter.h"
+#include "Utils/Filter.hpp"
 #include "Utils/SeqLockWrapper.hpp"
-#include "Utils/Stats.h"
-#include "Utils/Timer.h"
+#include "Utils/Stats.hpp"
+#include "Utils/Timer.hpp"
 
 namespace Espfc {
 

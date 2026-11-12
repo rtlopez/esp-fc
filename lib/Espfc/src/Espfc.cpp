@@ -1,5 +1,5 @@
-#include "Espfc.h"
-#include "Debug_Espfc.h"
+#include "Espfc.hpp"
+#include "Debug_Espfc.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Platform.hpp"
 #include "Hal/Time.hpp"

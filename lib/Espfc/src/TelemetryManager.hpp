@@ -2,10 +2,10 @@
 
 #include "Connect/Msp.hpp"
 #include "Connect/MspProcessor.hpp"
-#include "Model.h"
+#include "Model.hpp"
 #include "Stream/ReadWritable.hpp"
-#include "Telemetry/TelemetryCRSF.h"
-#include "Telemetry/TelemetryText.h"
+#include "Telemetry/TelemetryCRSF.hpp"
+#include "Telemetry/TelemetryText.hpp"
 
 namespace Espfc {
 

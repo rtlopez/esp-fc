@@ -1,4 +1,4 @@
-#include "Control/Controller.h"
+#include "Control/Controller.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
 #include "Utils/Math.hpp"

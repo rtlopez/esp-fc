@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Model.h"
-#include "Utils/Filter.h"
+#include "Model.hpp"
+#include "Utils/Filter.hpp"
 #include <Complementary.hpp>
 
 namespace Espfc::Control {

@@ -4,7 +4,7 @@
 
 #include "Hal/FastCode.hpp"
 #include "Hal/Flash.hpp"
-#include "Utils/RingBuf.h"
+#include "Utils/RingBuf.hpp"
 
 static constexpr uint32_t FLASHFS_ERASED_VAL = 0xffffffff;
 

@@ -21,8 +21,8 @@
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
 */
 
-#include "esp_twi.h"
-#include "EspWire.h"
+#include "EspWire.hpp"
+#include "esp_twi.hpp"
 
 // Initialize Class Variables //////////////////////////////////////////////////
 
@@ -44,28 +44,32 @@ static int default_scl_pin = SCL;
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-EspTwoWire::EspTwoWire(){}
+EspTwoWire::EspTwoWire() {}
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-void EspTwoWire::begin(int sda, int scl, uint32_t frequency){
+void EspTwoWire::begin(int sda, int scl, uint32_t frequency)
+{
   default_sda_pin = sda;
   default_scl_pin = scl;
   esp_twi_init(sda, scl);
-  if(frequency) setClock(frequency);
+  if (frequency) setClock(frequency);
   flush();
 }
 
-void EspTwoWire::pins(int sda, int scl){
+void EspTwoWire::pins(int sda, int scl)
+{
   default_sda_pin = sda;
   default_scl_pin = scl;
 }
 
-void EspTwoWire::begin(void){
+void EspTwoWire::begin(void)
+{
   begin(default_sda_pin, default_scl_pin);
 }
 
-void EspTwoWire::begin(uint8_t address){
+void EspTwoWire::begin(uint8_t address)
+{
   (void)address;
   // esp_twi_setAddress(address);
   // esp_twi_attachSlaveTxEvent(onRequestService);
@@ -73,24 +77,30 @@ void EspTwoWire::begin(uint8_t address){
   begin();
 }
 
-uint8_t EspTwoWire::status(){
-	return esp_twi_status();
+uint8_t EspTwoWire::status()
+{
+  return esp_twi_status();
 }
 
-void EspTwoWire::begin(int address){
+void EspTwoWire::begin(int address)
+{
   begin((uint8_t)address);
 }
 
-void EspTwoWire::setClock(uint32_t frequency){
+void EspTwoWire::setClock(uint32_t frequency)
+{
   esp_twi_setClock(frequency);
 }
 
-void EspTwoWire::setClockStretchLimit(uint32_t limit){
+void EspTwoWire::setClockStretchLimit(uint32_t limit)
+{
   esp_twi_setClockStretchLimit(limit);
 }
 
-size_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, size_t size, bool sendStop){
-  if(size > ESPWIRE_BUFFER_LENGTH){
+size_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
+{
+  if (size > ESPWIRE_BUFFER_LENGTH)
+  {
     size = ESPWIRE_BUFFER_LENGTH;
   }
   size_t read = (esp_twi_readFrom(address, rxBuffer, size, sendStop) == 0) ? size : 0;
@@ -99,34 +109,41 @@ size_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, size_t size, bool send
   return read;
 }
 
-uint8_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop){
+uint8_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop)
+{
   return requestFrom(address, static_cast<size_t>(quantity), static_cast<bool>(sendStop));
 }
 
-uint8_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, uint8_t quantity){
+uint8_t IRAM_ATTR EspTwoWire::requestFrom(uint8_t address, uint8_t quantity)
+{
   return requestFrom(address, static_cast<size_t>(quantity), true);
 }
 
-uint8_t EspTwoWire::requestFrom(int address, int quantity){
+uint8_t EspTwoWire::requestFrom(int address, int quantity)
+{
   return requestFrom(static_cast<uint8_t>(address), static_cast<size_t>(quantity), true);
 }
 
-uint8_t EspTwoWire::requestFrom(int address, int quantity, int sendStop){
+uint8_t EspTwoWire::requestFrom(int address, int quantity, int sendStop)
+{
   return requestFrom(static_cast<uint8_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
 }
 
-void IRAM_ATTR EspTwoWire::beginTransmission(uint8_t address){
+void IRAM_ATTR EspTwoWire::beginTransmission(uint8_t address)
+{
   transmitting = 1;
   txAddress = address;
   txBufferIndex = 0;
   txBufferLength = 0;
 }
 
-void IRAM_ATTR EspTwoWire::beginTransmission(int address){
+void IRAM_ATTR EspTwoWire::beginTransmission(int address)
+{
   beginTransmission((uint8_t)address);
 }
 
-uint8_t IRAM_ATTR EspTwoWire::endTransmission(uint8_t sendStop){
+uint8_t IRAM_ATTR EspTwoWire::endTransmission(uint8_t sendStop)
+{
   int8_t ret = esp_twi_writeTo(txAddress, txBuffer, txBufferLength, sendStop);
   txBufferIndex = 0;
   txBufferLength = 0;
@@ -134,68 +151,86 @@ uint8_t IRAM_ATTR EspTwoWire::endTransmission(uint8_t sendStop){
   return ret;
 }
 
-uint8_t IRAM_ATTR EspTwoWire::endTransmission(void){
+uint8_t IRAM_ATTR EspTwoWire::endTransmission(void)
+{
   return endTransmission(true);
 }
 
-size_t IRAM_ATTR EspTwoWire::write(uint8_t data){
-  if(transmitting){
-    if(txBufferLength >= ESPWIRE_BUFFER_LENGTH){
+size_t IRAM_ATTR EspTwoWire::write(uint8_t data)
+{
+  if (transmitting)
+  {
+    if (txBufferLength >= ESPWIRE_BUFFER_LENGTH)
+    {
       setWriteError();
       return 0;
     }
     txBuffer[txBufferIndex] = data;
     ++txBufferIndex;
     txBufferLength = txBufferIndex;
-  } else {
+  }
+  else
+  {
     // i2c_slave_transmit(&data, 1);
   }
   return 1;
 }
 
-size_t IRAM_ATTR EspTwoWire::write(const uint8_t *data, size_t quantity){
-  if(transmitting){
-    for(size_t i = 0; i < quantity; ++i){
-      if(!write(data[i])) return i;
+size_t IRAM_ATTR EspTwoWire::write(const uint8_t* data, size_t quantity)
+{
+  if (transmitting)
+  {
+    for (size_t i = 0; i < quantity; ++i)
+    {
+      if (!write(data[i])) return i;
     }
-  }else{
+  }
+  else
+  {
     // i2c_slave_transmit(data, quantity);
   }
   return quantity;
 }
 
-int EspTwoWire::available(void){
+int EspTwoWire::available(void)
+{
   int result = rxBufferLength - rxBufferIndex;
 
-  if (!result) {
-    // yielding here will not make more data "available",
-    // but it will prevent the system from going into WDT reset
-    #if !defined(UNIT_TEST) && !defined(ARCH_RP2040)
+  if (!result)
+  {
+// yielding here will not make more data "available",
+// but it will prevent the system from going into WDT reset
+#if !defined(UNIT_TEST) && !defined(ARCH_RP2040)
     optimistic_yield(1000);
-    #endif
+#endif
   }
 
   return result;
 }
 
-int EspTwoWire::read(void){
+int EspTwoWire::read(void)
+{
   int value = -1;
-  if(rxBufferIndex < rxBufferLength){
+  if (rxBufferIndex < rxBufferLength)
+  {
     value = rxBuffer[rxBufferIndex];
     ++rxBufferIndex;
   }
   return value;
 }
 
-int EspTwoWire::peek(void){
+int EspTwoWire::peek(void)
+{
   int value = -1;
-  if(rxBufferIndex < rxBufferLength){
+  if (rxBufferIndex < rxBufferLength)
+  {
     value = rxBuffer[rxBufferIndex];
   }
   return value;
 }
 
-void EspTwoWire::flush(void){
+void EspTwoWire::flush(void)
+{
   rxBufferIndex = 0;
   rxBufferLength = 0;
   txBufferIndex = 0;
@@ -228,7 +263,8 @@ void EspTwoWire::onReceiveService(uint8_t* inBytes, int numBytes)
   // user_onReceive(numBytes);
 }
 
-void EspTwoWire::onRequestService(void){
+void EspTwoWire::onRequestService(void)
+{
   // // don't bother if user hasn't registered a callback
   // if(!user_onRequest){
   //   return;
@@ -241,14 +277,16 @@ void EspTwoWire::onRequestService(void){
   // user_onRequest();
 }
 
-void EspTwoWire::onReceive( void (*function)(int) ){
+void EspTwoWire::onReceive(void (*function)(int))
+{
   (void)function;
-  //user_onReceive = function;
+  // user_onReceive = function;
 }
 
-void EspTwoWire::onRequest( void (*function)(void) ){
+void EspTwoWire::onRequest(void (*function)(void))
+{
   (void)function;
-  //user_onRequest = function;
+  // user_onRequest = function;
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////

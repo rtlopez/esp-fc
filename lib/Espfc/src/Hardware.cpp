@@ -1,4 +1,4 @@
-#include "Hardware.h"
+#include "Hardware.hpp"
 #include "Device/Baro/BaroBMP085.hpp"
 #include "Device/Baro/BaroBMP280.hpp"
 #include "Device/Baro/BaroSPL06.hpp"

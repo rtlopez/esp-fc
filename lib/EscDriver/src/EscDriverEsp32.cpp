@@ -1,13 +1,12 @@
 #if defined(ESP32) && !defined(ESP32C3)
 
 #include "EscDriverEsp32.hpp"
-#include <algorithm>
-#include <driver/gpio.h>
-// #include "Debug_Espfc.h"
 #include "esp_rom_gpio.h"
 #include "hal/gpio_ll.h"
 #include "hal/rmt_ll.h"
 #include "soc/rmt_periph.h"
+#include <algorithm>
+#include <driver/gpio.h>
 
 static constexpr size_t DURATION_CLOCK = 25;      // [ns] doubled value to increase precision
 #define TO_INTERVAL_US(v) (1 * 1000 * 1000 / (v)) // [us]

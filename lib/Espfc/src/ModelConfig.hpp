@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Control/Pid.h"
+#include "Control/Pid.hpp"
 #include "Device/BaroDevice.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Device/Input/InputPPM.hpp"
 #include "Device/MagDevice.hpp"
 #include "Hal/BusDevice.hpp"
-#include "Output/Mixers.h"
+#include "Output/Mixers.hpp"
 #include "Target/Target.h"
-#include "Utils/Filter.h"
+#include "Utils/Filter.hpp"
 #include <EscDriver.hpp>
 
 namespace Espfc {

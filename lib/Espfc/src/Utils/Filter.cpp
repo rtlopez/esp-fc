@@ -1,4 +1,4 @@
-#include "Utils/Filter.h"
+#include "Utils/Filter.hpp"
 #include "Hal/FastCode.hpp"
 #include <algorithm>
 #include <cmath>

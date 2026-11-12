@@ -1,10 +1,9 @@
 #include "Connect/Cli.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Hal/Board.hpp"
-#include "Hal/Platform.hpp"
 #include "Hal/Wifi.hpp"
-#include "Hardware.h"
-#include "Utils/Filter.h"
+#include "Hardware.hpp"
+#include "Utils/Filter.hpp"
 #include "msp/msp_protocol.h"
 #include <algorithm>
 #include <charconv>

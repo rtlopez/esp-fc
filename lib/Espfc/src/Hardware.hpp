@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Model.h"
+#include "Model.hpp"
 #if defined(ESPFC_I2C_0)
 #include "Hal/BusI2C.hpp"
 #endif

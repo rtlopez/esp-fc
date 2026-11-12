@@ -1,4 +1,4 @@
-#include "Utils/Timer.h"
+#include "Utils/Timer.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
 

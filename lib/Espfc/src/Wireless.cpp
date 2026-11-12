@@ -1,4 +1,4 @@
-#include "Wireless.h"
+#include "Wireless.hpp"
 #include "Hal/Platform.hpp"
 #include <cstdio>
 

@@ -2,7 +2,7 @@
 
 #include "Device/GyroDevice.hpp"
 #include "Hal/Platform.hpp"
-#include "Model.h"
+#include "Model.hpp"
 #include "Sensor/BaseSensor.hpp"
 #include "Utils/Sma.hpp"
 #ifdef ESPFC_HAL_DSP

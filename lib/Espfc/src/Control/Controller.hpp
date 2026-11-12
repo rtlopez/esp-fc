@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Control/Rates.h"
-#include "Model.h"
+#include "Control/Rates.hpp"
+#include "Model.hpp"
 
 namespace Espfc::Control {
 

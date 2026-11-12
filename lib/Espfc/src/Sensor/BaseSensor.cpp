@@ -1,6 +1,6 @@
 #include "Sensor/BaseSensor.hpp"
 #include "Hal/FastCode.hpp"
-#include "ModelConfig.h"
+#include "ModelConfig.hpp"
 
 namespace Espfc::Sensor {
 

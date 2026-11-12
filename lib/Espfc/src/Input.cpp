@@ -1,9 +1,9 @@
 
-#include "Input.h"
+#include "Input.hpp"
 #include "Hal/FastCode.hpp"
 #include "Hal/Platform.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/Filter.h"
+#include "Utils/Filter.hpp"
 #include "Utils/Math.hpp"
 
 namespace Espfc {

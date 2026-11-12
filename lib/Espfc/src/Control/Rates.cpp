@@ -1,4 +1,4 @@
-#include "Rates.h"
+#include "Rates.hpp"
 #include "Hal/FastCode.hpp"
 
 namespace Espfc::Control {

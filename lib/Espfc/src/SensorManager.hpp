@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Control/Altitude.hpp"
-#include "Control/Fusion.h"
+#include "Control/Fusion.hpp"
 #include "Device/Input/InputButton.hpp"
-#include "Model.h"
+#include "Model.hpp"
 #include "Sensor/AccelSensor.hpp"
 #include "Sensor/BaroSensor.hpp"
 #include "Sensor/GyroSensor.hpp"

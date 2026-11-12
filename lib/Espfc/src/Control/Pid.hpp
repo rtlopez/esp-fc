@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Utils/Filter.h"
+#include "Utils/Filter.hpp"
 #include "Utils/Math.hpp"
 #include <cstdint>
 

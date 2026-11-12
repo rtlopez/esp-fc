@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Model.h"
+#include "Model.hpp"
 #include <platform.h>
 extern "C" {
 #include <blackbox/blackbox.h>

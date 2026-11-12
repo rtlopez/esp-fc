@@ -3,13 +3,13 @@
 #include "Connect/Cli.hpp"
 #include "Connect/MspProcessor.hpp"
 #include "Connect/Vtx.hpp"
-#include "Model.h"
+#include "Model.hpp"
 #include "Output/OutputIBUS.hpp"
 #include "Sensor/GpsSensor.hpp"
 #include "Stream/ReadWritable.hpp"
-#include "TelemetryManager.h"
+#include "TelemetryManager.hpp"
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
-#include "Wireless.h"
+#include "Wireless.hpp"
 #endif
 
 namespace Espfc {

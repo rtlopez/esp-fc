@@ -2,7 +2,7 @@
 
 #include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
-#include "ModelConfig.h"
+#include "ModelConfig.hpp"
 
 #define MPU6050_ADDRESS_FIRST 0x68  // address pin low (GND), default for InvenSense evaluation board
 #define MPU6050_ADDRESS_SECOND 0x69 // address pin high (VCC)
