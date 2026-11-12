@@ -1,4 +1,4 @@
-#include "Utils/Stats.h"
+#include "Utils/Stats.hpp"
 
 #include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"

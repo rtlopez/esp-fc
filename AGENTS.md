@@ -14,7 +14,7 @@ Guidelines for AI agents working on **Esp-FC**. Keep changes small, tested and p
 
 - `src/main.cpp` – thin entry point, all logic lives in libraries.
 - `lib/Espfc/src/` – main firmware library:
-  - `Model.h`, `ModelConfig.h`, `ModelState.h` – central state and persisted settings.
+  - `Model.hpp`, `ModelConfig.hpp`, `ModelState.hpp` – central state and persisted settings.
   - `Control/`, `Sensor/`, `Input*`, `Output/`, `Rc/`, `Telemetry/`, `Blackbox/`, `Stream/` – feature modules.
   - `Device/` – device drivers, `Hal/` – platform abstraction, `Target/` – board/target definitions.
   - `Utils/` – filters, math, logger, storage, timing helpers.
@@ -31,7 +31,7 @@ Guidelines for AI agents working on **Esp-FC**. Keep changes small, tested and p
 ## Implementing a feature
 
 1. Locate the right module; prefer extending existing abstractions over adding new layers.
-2. If the feature needs user settings, add them to `ModelConfig.h` (and defaults/reset paths) and wire them through `Model`.
+2. If the feature needs user settings, add them to `ModelConfig.hpp` (and defaults/reset paths) and wire them through `Model`.
 3. Keep platform-specific code in `Hal/` or `Target/`; feature code stays portable.
 4. Wire up CLI / MSP / Blackbox / telemetry only when the feature actually needs it.
 5. Add or extend unit tests for the new behaviour.

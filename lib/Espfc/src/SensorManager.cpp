@@ -1,4 +1,4 @@
-#include "SensorManager.h"
+#include "SensorManager.hpp"
 #include "Hal/FastCode.hpp"
 
 namespace Espfc {

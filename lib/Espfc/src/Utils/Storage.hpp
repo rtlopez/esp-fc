@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Hal/ConfigStorage.hpp"
-#include "ModelConfig.h"
+#include "ModelConfig.hpp"
 
 namespace Espfc {
 

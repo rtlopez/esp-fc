@@ -1,6 +1,6 @@
-#include "SerialManager.h"
+#include "SerialManager.hpp"
 #include "Debug_Espfc.hpp"
-#include "Device/SerialDeviceAdapter.h"
+#include "Device/SerialDeviceAdapter.hpp"
 #include "Hal/FastCode.hpp"
 #include "Stream/Printer.hpp"
 #if defined(ESPFC_SERIAL_USB_REENUMERATE) && defined(ESPFC_SERIAL_USB)

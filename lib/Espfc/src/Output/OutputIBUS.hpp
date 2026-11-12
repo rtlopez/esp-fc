@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Stream/ReadWritable.hpp"
-#include "Utils/Timer.h"
+#include "Utils/Timer.hpp"
 
 namespace Espfc::Output {
 

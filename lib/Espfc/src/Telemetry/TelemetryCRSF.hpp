@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Model.h"
-#include "Rc/Crsf.h"
+#include "Model.hpp"
+#include "Rc/Crsf.hpp"
 #include "Stream/ReadWritable.hpp"
 
 namespace Espfc {

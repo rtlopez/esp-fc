@@ -2,7 +2,7 @@
 
 #include "BaseSensor.hpp"
 #include "Device/MagDevice.hpp"
-#include "Model.h"
+#include "Model.hpp"
 
 namespace Espfc::Sensor {
 

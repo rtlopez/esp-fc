@@ -3,7 +3,7 @@
 // https://github.com/espressif/esp-dsp/blob/5f2bfe1f3ee7c9b024350557445b32baf6407a08/examples/fft4real/main/dsps_fft4real_main.c
 
 #include "Hal/Dsp/Fft.hpp"
-#include "Utils/Filter.h"
+#include "Utils/Filter.hpp"
 #include "Utils/Math.hpp"
 #include <cstddef>
 #include <cstdint>

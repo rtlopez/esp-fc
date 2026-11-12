@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ModelConfig.h"
+#include "ModelConfig.hpp"
 #include <algorithm>
 
 namespace Espfc {

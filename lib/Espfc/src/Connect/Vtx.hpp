@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Model.h"
-#include "Utils/Timer.h"
+#include "Model.hpp"
+#include "Utils/Timer.hpp"
 
 namespace Espfc::Connect {
 

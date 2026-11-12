@@ -3,7 +3,7 @@
 #include "Hal/FastCode.hpp"
 #include "Hal/Platform.hpp"
 #include "Hal/Time.hpp"
-#include "Utils/FilterHelper.h"
+#include "Utils/FilterHelper.hpp"
 #include "Utils/Sma.ipp"
 
 namespace Espfc::Sensor {

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Event.hpp"
-#include "ModelConfig.h"
-#include "ModelState.h"
+#include "ModelConfig.hpp"
+#include "ModelState.hpp"
 #include "Stream/ReadWritable.hpp"
 #include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"

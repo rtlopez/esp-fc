@@ -1,4 +1,4 @@
-#include "Control/Actuator.h"
+#include "Control/Actuator.hpp"
 #include "Hal/Time.hpp"
 #include "Utils/Math.hpp"
 #include <algorithm>

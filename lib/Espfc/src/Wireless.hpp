@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Device/SerialDeviceAdapter.h"
+#include "Device/SerialDeviceAdapter.hpp"
 #include "Hal/Wifi.hpp"
-#include "Model.h"
+#include "Model.hpp"
 
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
 

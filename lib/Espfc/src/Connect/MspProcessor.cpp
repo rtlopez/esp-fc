@@ -1,7 +1,7 @@
 #include "Connect/MspProcessor.hpp"
 #include "Hal/Board.hpp"
-#include "Hardware.h"
-#include "Model.h"
+#include "Hardware.hpp"
+#include "Model.hpp"
 #include "Stream/Printer.hpp"
 #include <algorithm>
 #include <cstring>

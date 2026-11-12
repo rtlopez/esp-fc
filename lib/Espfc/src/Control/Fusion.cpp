@@ -1,4 +1,4 @@
-#include "Control/Fusion.h"
+#include "Control/Fusion.hpp"
 #include "Hal/FastCode.hpp"
 
 namespace Espfc::Control {

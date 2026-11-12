@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Device/InputDevice.hpp"
-#include "Rc/Crsf.h"
+#include "Rc/Crsf.hpp"
 #include "TelemetryManager.hpp"
 
 // https://github.com/CapnBry/CRServoF/blob/master/lib/CrsfSerial/crsf_protocol.h

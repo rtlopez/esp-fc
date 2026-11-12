@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BlackboxSerialBuffer.h"
-#include "Model.h"
+#include "BlackboxSerialBuffer.hpp"
+#include "Model.hpp"
 #include "Stream/ReadWritable.hpp"
 
 namespace Espfc::Blackbox {

@@ -1,8 +1,8 @@
-#include "Control/Actuator.h"
-#include "Control/Controller.h"
-#include "Model.h"
+#include "Control/Actuator.hpp"
+#include "Control/Controller.hpp"
+#include "Model.hpp"
 #include "Output/Mixer.hpp"
-#include "Utils/Timer.h"
+#include "Utils/Timer.hpp"
 #include <ArduinoFake.h>
 #include <Gps.hpp>
 #include <unity.h>

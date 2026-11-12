@@ -2,7 +2,7 @@
 
 #include "Connect/Msp.hpp"
 #include "Connect/MspParser.hpp"
-#include "Model.h"
+#include "Model.hpp"
 #include "Stream/ReadWritable.hpp"
 #include <functional>
 
