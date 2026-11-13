@@ -295,7 +295,7 @@ public:
   {
     return true;
   }
-  void begin(const Espfc::Hal::SerialDeviceConfig& config) override {}
+  void begin(const Hal::SerialDeviceConfig& config) override {}
   void updateBaudRate(int baud) override {}
 
   uint8_t _last = 0;

@@ -24,6 +24,7 @@ def run_clang_format_base(check_only=False):
     source_dirs = [
         "src",
         "lib/Espfc/src",
+        "lib/Hal",
         "lib/EscDriver/src",
         "lib/AHRS",
         "lib/Gps",

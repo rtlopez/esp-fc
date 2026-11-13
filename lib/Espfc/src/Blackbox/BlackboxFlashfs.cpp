@@ -24,7 +24,7 @@ const FlashfsRuntime* flashfsGetRuntime()
 
 static uint32_t FAST_CODE_ATTR flashfsJournalAddress(size_t index, bool getEnd = false)
 {
-  uint32_t journalBase = Espfc::Hal::Flash::getSize(flashfs.partition) - FLASHFS_JOURNAL_SIZE;
+  uint32_t journalBase = Hal::Flash::getSize(flashfs.partition) - FLASHFS_JOURNAL_SIZE;
   return journalBase + (index * sizeof(FlashfsJournalItem)) + (getEnd * sizeof(uint32_t));
 }
 
@@ -96,7 +96,7 @@ void flashfsJournalFix(FlashfsJournalItem* data, size_t num)
 
 int flashfsInit(void)
 {
-  flashfs.partition = Espfc::Hal::Flash::findPartition();
+  flashfs.partition = Hal::Flash::findPartition();
   if (!flashfs.partition) return 0;
 
   flashfs.buffer = (void*)&buff;
@@ -153,7 +153,7 @@ void FAST_CODE_ATTR flashfsWriteByte(uint8_t byte)
     return;
   }
 
-  if ((flashfs.address + size) % Espfc::Hal::Flash::getSectorSize() == 0)
+  if ((flashfs.address + size) % Hal::Flash::getSectorSize() == 0)
   {
     flashfsFlushAsync(true);
     return;
@@ -178,12 +178,12 @@ void FAST_CODE_ATTR flashfsWrite(const uint8_t* data, unsigned int len, bool syn
 
 void FAST_CODE_ATTR flashfsWriteAbs(uint32_t address, const uint8_t* data, unsigned int len)
 {
-  Espfc::Hal::Flash::write(flashfs.partition, address, data, len);
+  Hal::Flash::write(flashfs.partition, address, data, len);
 }
 
 int flashfsReadAbs(uint32_t address, uint8_t* data, unsigned int len)
 {
-  return Espfc::Hal::Flash::read(flashfs.partition, address, data, len);
+  return Hal::Flash::read(flashfs.partition, address, data, len);
 }
 
 bool FAST_CODE_ATTR flashfsIsSupported(void)
@@ -203,7 +203,7 @@ bool FAST_CODE_ATTR flashfsIsEOF(void)
 
 void flashfsEraseCompletely(void)
 {
-  Espfc::Hal::Flash::erase(flashfs.partition, 0, Espfc::Hal::Flash::getSize(flashfs.partition));
+  Hal::Flash::erase(flashfs.partition, 0, Hal::Flash::getSize(flashfs.partition));
   flashfsInit();
 }
 
@@ -226,7 +226,7 @@ uint32_t FAST_CODE_ATTR flashfsGetWriteBufferSize(void)
 
 uint32_t FAST_CODE_ATTR flashfsGetSize(void)
 {
-  const uint32_t size = Espfc::Hal::Flash::getSize(flashfs.partition);
+  const uint32_t size = Hal::Flash::getSize(flashfs.partition);
   return size ? size - FLASHFS_JOURNAL_SIZE : 0;
 }
 
@@ -237,7 +237,7 @@ uint32_t flashfsGetOffset(void)
 
 uint32_t flashfsGetSectors(void)
 {
-  return flashfsGetSize() / Espfc::Hal::Flash::getSectorSize();
+  return flashfsGetSize() / Hal::Flash::getSectorSize();
 }
 
 #endif
