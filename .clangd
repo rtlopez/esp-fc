@@ -18,6 +18,7 @@ CompileFlags:
     - -Ilib/EscDriver/src
     - -Ilib/Espfc/src
     - -Ilib/EspWire/src
+    - -Ilib/Hal/include
     - -Ilib/Gps/src
     - -Ilib/MultiButton/src
     - -Ilib/printf/src

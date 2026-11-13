@@ -1,0 +1,17 @@
+#include "Hal/BusDevice.hpp"
+
+namespace Hal {
+
+const char** BusDevice::getNames()
+{
+  static const char* busDevChoices[] = {"NONE", "AUTO", "I2C", "SPI", "SLV", nullptr};
+  return busDevChoices;
+}
+
+const char* BusDevice::getName(BusType type)
+{
+  if (type >= BUS_MAX) return "?";
+  return getNames()[type];
+}
+
+} // namespace Hal

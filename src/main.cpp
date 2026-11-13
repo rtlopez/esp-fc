@@ -17,7 +17,7 @@ Espfc::Espfc espfc;
 #if defined(ESPFC_HAL_FREE_RTOS)
 
 // RTOS multicore, gyro loop is triggered by the hardware timer interrupt
-using Espfc::Hal::Task;
+using Hal::Task;
 
 Task::Handle gyroTaskHandle = nullptr;
 

@@ -1604,7 +1604,17 @@ void Cli::execute(CliCmd& cmd, Stream::Printer& s)
     }
     else if (std::strcmp(cmd.args[1], "partitions") == 0)
     {
-      Hal::Flash::printPartitions(s);
+      Hal::FlashPartitionInfo partitions[16];
+      const size_t count = Hal::Flash::getPartitions(partitions, 16);
+      s.println("ESP32 Partition table:");
+      s.println("| Type | Sub |  Offset  |   Size   |       Label      |");
+      s.println("| ---- | --- | -------- | -------- | ---------------- |");
+      for (size_t i = 0; i < count; i++)
+      {
+        const auto& p = partitions[i];
+        s.printf("|  %02x  | %02x  | 0x%06X | 0x%06X | %-16s |", p.type, p.subtype, p.address, p.size, p.label);
+        s.println();
+      }
     }
     else if (std::strcmp(cmd.args[1], "journal") == 0)
     {
