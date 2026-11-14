@@ -1,9 +1,5 @@
 #include <unity.h>
 
-// not used directly, but required so that the library dependency finder gives lib/betaflight
-// the Espfc include path, same reason as in test_msp
-#include <platform.h>
-
 #include <Hal/Adc.hpp>
 #include <Hal/Board.hpp>
 #include <Hal/Gpio.hpp>
@@ -11,8 +7,6 @@
 #include <Hal/Queue.hpp>
 #include <Hal/Task.hpp>
 #include <type_traits>
-
-using namespace Espfc;
 
 void test_hal_board_id()
 {

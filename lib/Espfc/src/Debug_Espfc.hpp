@@ -5,8 +5,8 @@
 #ifdef ESPFC_DEBUG_PIN
 #include "Hal/Gpio.hpp"
 #define PIN_DEBUG(v)                                                                                                   \
-  ::Espfc::Hal::Gpio::digitalWrite(ESPFC_DEBUG_PIN, v ? ::Espfc::Hal::Gpio::High : ::Espfc::Hal::Gpio::Low)
-#define PIN_DEBUG_INIT() ::Espfc::Hal::Gpio::pinMode(ESPFC_DEBUG_PIN, ::Espfc::Hal::Gpio::Output)
+  ::Hal::Gpio::digitalWrite(ESPFC_DEBUG_PIN, v ? ::Hal::Gpio::High : ::Hal::Gpio::Low)
+#define PIN_DEBUG_INIT() ::Hal::Gpio::pinMode(ESPFC_DEBUG_PIN, ::Hal::Gpio::Output)
 #else
 #define PIN_DEBUG(v)
 #define PIN_DEBUG_INIT()

@@ -7,30 +7,30 @@
 
 int IORead(IO_t pin)
 {
-    return Espfc::Hal::Gpio::digitalRead(pin);
+    return Hal::Gpio::digitalRead(pin);
 }
 
 void IOConfigGPIO(IO_t pin, uint8_t mode)
 {
     switch(mode) {
         case IOCFG_IPU:
-            Espfc::Hal::Gpio::pinMode(pin, Espfc::Hal::Gpio::InputPullup);
+            Hal::Gpio::pinMode(pin, Hal::Gpio::InputPullup);
             break;
         case IOCFG_OUT_PP:
         case IOCFG_AF_PP:
-            Espfc::Hal::Gpio::pinMode(pin, Espfc::Hal::Gpio::Output);
+            Hal::Gpio::pinMode(pin, Hal::Gpio::Output);
             break;
     }
 }
 
 void IOHi(IO_t pin)
 {
-    Espfc::Hal::Gpio::digitalWrite(pin, Espfc::Hal::Gpio::High);
+    Hal::Gpio::digitalWrite(pin, Hal::Gpio::High);
 }
 
 void IOLo(IO_t pin)
 {
-    Espfc::Hal::Gpio::digitalWrite(pin, Espfc::Hal::Gpio::Low);
+    Hal::Gpio::digitalWrite(pin, Hal::Gpio::Low);
 }
 
 static serialPort_t _sp[2] = {{

@@ -8,19 +8,19 @@
 #endif
 
 #ifdef ESPFC_SERIAL_0
-static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUart> _uart0(*Espfc::Hal::getSerialUart(0));
+static Espfc::Device::SerialDeviceAdapter<Hal::SerialUart> _uart0(*Hal::getSerialUart(0));
 #endif
 
 #ifdef ESPFC_SERIAL_1
-static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUart> _uart1(*Espfc::Hal::getSerialUart(1));
+static Espfc::Device::SerialDeviceAdapter<Hal::SerialUart> _uart1(*Hal::getSerialUart(1));
 #endif
 
 #ifdef ESPFC_SERIAL_2
-static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUart> _uart2(*Espfc::Hal::getSerialUart(2));
+static Espfc::Device::SerialDeviceAdapter<Hal::SerialUart> _uart2(*Hal::getSerialUart(2));
 #endif
 
 #ifdef ESPFC_SERIAL_USB
-static Espfc::Device::SerialDeviceAdapter<Espfc::Hal::SerialUsb> _usb(*Espfc::Hal::getSerialUsb());
+static Espfc::Device::SerialDeviceAdapter<Hal::SerialUsb> _usb(*Hal::getSerialUsb());
 #endif
 
 namespace Espfc {
