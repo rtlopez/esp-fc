@@ -1,5 +1,6 @@
 #include <ArduinoFake.h>
 #include <Hal/EscDriver.hpp>
+#include <iterator>
 #include <unity.h>
 
 using namespace Hal;
@@ -110,9 +111,9 @@ void test_esc_extract_telemetry_gcr_synth()
       make_item(100, 0, 200, 1), make_item(200, 0, 100, 1), make_item(100, 0, 0, 0),
   };
   uint32_t bit_len = 100;
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(100, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(28, data_len);
+  TEST_ASSERT_EQUAL_UINT32(7, data_len);
   uint32_t exp = 0b011010011101101100101;
   TEST_ASSERT_EQUAL_HEX32(0xD3B65, exp);
   TEST_ASSERT_EQUAL_HEX32(exp, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
@@ -127,9 +128,9 @@ void test_esc_extract_telemetry_gcr_synth_idle()
       make_item(200, 0, 100, 1), make_item(100, 0, 100, 1), make_item(100, 0, 100, 1), make_item(300, 0, 0, 1),
   };
   uint32_t bit_len = 100;
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(100, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(32, data_len);
+  TEST_ASSERT_EQUAL_UINT32(8, data_len);
   uint32_t gcr = 0b001010010100101010001;
   TEST_ASSERT_EQUAL_HEX32(0x52951, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
@@ -159,9 +160,9 @@ void test_esc_extract_telemetry_dshot300_sample()
       make_item(379, 0, 599, 1), make_item(177, 0, 163, 1), make_item(173, 0, 0, 1),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(213, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(24, data_len);
+  TEST_ASSERT_EQUAL_UINT32(6, data_len);
   uint32_t gcr = 0b001110111011001110101; // +1
   TEST_ASSERT_EQUAL_HEX32(0x77675, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
@@ -191,10 +192,10 @@ void test_esc_extract_telemetry_dshot300_running()
       make_item(373, 0, 379, 1), make_item(380, 0, 608, 1), make_item(164, 0, 0, 0),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   uint32_t gcr = 0b011010100100110011101; // +1
   TEST_ASSERT_EQUAL_UINT32(213, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(28, data_len);
+  TEST_ASSERT_EQUAL_UINT32(7, data_len);
   TEST_ASSERT_EQUAL_HEX32(0xD499D, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
 
@@ -223,9 +224,9 @@ void test_esc_extract_telemetry_dshot300_idle()
       make_item(371, 0, 172, 1), make_item(174, 0, 162, 1), make_item(172, 0, 172, 1), make_item(606, 0, 0, 1),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(213, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(32, data_len);
+  TEST_ASSERT_EQUAL_UINT32(8, data_len);
   uint32_t gcr = 0b001010010100101010001; // +1
   TEST_ASSERT_EQUAL_HEX32(0x52951, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));

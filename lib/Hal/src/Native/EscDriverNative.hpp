@@ -48,7 +48,10 @@ public:
 private:
   void reset()
   {
-    for (auto& p : _pins) p = -1;
+    for (auto& p : _pins)
+    {
+      p = -1;
+    }
   }
 
   int _pins[EscDriver::CHANNEL_COUNT];

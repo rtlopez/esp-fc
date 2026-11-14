@@ -274,10 +274,10 @@ void EscDriverImpl::dshotWriteDMA()
 
     // Trigger only once for slice
     dma_channel_configure(_slots[i].pwm_dma_chan, &_slots[i].dma_config,
-                          &pwm_hw->slice[slice].cc, // Write to PWM counter compare
-                          _dma_buffer[slice],       // Read values from dshot buffer
-                          EscDriver::DSHOT_BIT_COUNT + 1,      // 16+1 values to copy
-                          true                      // Start immediately.
+                          &pwm_hw->slice[slice].cc,       // Write to PWM counter compare
+                          _dma_buffer[slice],             // Read values from dshot buffer
+                          EscDriver::DSHOT_BIT_COUNT + 1, // 16+1 values to copy
+                          true                            // Start immediately.
     );
   }
 }
