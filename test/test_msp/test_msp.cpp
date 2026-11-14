@@ -1,7 +1,6 @@
 #include "Connect/Msp.hpp"
 #include "Connect/MspParser.hpp"
 #include "msp/msp_protocol.h"
-#include <EscDriver.hpp>
 #include <Gps.hpp>
 #include <Hal/Gpio.hpp>
 #include <helper_3dmath.hpp>

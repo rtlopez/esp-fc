@@ -9,7 +9,7 @@
 #include "Output/Mixers.hpp"
 #include "Target/Target.h"
 #include "Utils/Filter.hpp"
-#include <EscDriver.hpp>
+#include <Hal/EscDriver.hpp>
 
 namespace Espfc {
 
@@ -255,8 +255,8 @@ enum Feature
 
 constexpr size_t MODEL_NAME_LEN = 16;
 constexpr size_t INPUT_CHANNELS = AXIS_COUNT;
-constexpr size_t OUTPUT_CHANNELS = ESC_CHANNEL_COUNT;
-static_assert(ESC_CHANNEL_COUNT == ESPFC_OUTPUT_COUNT, "ESC_CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
+constexpr size_t OUTPUT_CHANNELS = Hal::EscDriver::CHANNEL_COUNT;
+static_assert(OUTPUT_CHANNELS == ESPFC_OUTPUT_COUNT, "EscDriver::CHANNEL_COUNT and ESPFC_OUTPUT_COUNT must be equal");
 
 constexpr size_t RPM_FILTER_MOTOR_MAX = 4;
 constexpr size_t RPM_FILTER_HARMONICS_COUNT = 3;
@@ -650,7 +650,7 @@ struct OutputChannelConfig
 
 struct OutputConfig
 {
-  int8_t protocol = ESC_PROTOCOL_DISABLED;
+  int8_t protocol = Hal::ESC_PROTOCOL_DISABLED;
   int8_t async = false;
   int8_t dshotTelemetry = false;
   int8_t motorPoles = 14;
@@ -1190,11 +1190,11 @@ public:
 #endif
 
 #ifdef ESPFC_DEV_PRESET_DSHOT
-    output.protocol = ESC_PROTOCOL_DSHOT300;
+    output.protocol = Hal::ESC_PROTOCOL_DSHOT300;
 #endif
 
 #ifdef ESPFC_DEV_PRESET_BRUSHED
-    output.protocol = ESC_PROTOCOL_BRUSHED;
+    output.protocol = Hal::ESC_PROTOCOL_BRUSHED;
     output.async = true;
     output.rate = 3000;
 #endif
@@ -1217,9 +1217,9 @@ public:
     iterm.limit = 10;                   // ROBOT
     level.angleLimit = 10;              // deg // ROBOT
 
-    output.protocol = ESC_PROTOCOL_PWM; // ROBOT
-    output.rate = 100;                  // ROBOT
-    output.async = true;                // ROBOT
+    output.protocol = Hal::ESC_PROTOCOL_PWM; // ROBOT
+    output.rate = 100;                       // ROBOT
+    output.async = true;                     // ROBOT
 
     output.channel[0].servo = true;   // ROBOT
     output.channel[1].servo = true;   // ROBOT

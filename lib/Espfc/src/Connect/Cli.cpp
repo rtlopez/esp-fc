@@ -356,7 +356,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   const char** magDevChoices = Device::MagDevice::getNames();
 
   const char** fusionModeChoices = FusionConfig::getModeNames();
-  static const char* const* protocolChoices = EscDriver::getProtocolNames();
+  static const char* const* protocolChoices = Hal::EscDriver::getProtocolNames();
 
   // clang-format off
   static const char* gyroDlpfChoices[]   = { "256Hz", "188Hz", "98Hz", "42Hz", "20Hz", "10Hz", "5Hz", "EXPERIMENTAL", nullptr };

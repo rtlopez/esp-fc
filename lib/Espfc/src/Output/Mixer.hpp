@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Model.hpp"
-#include <EscDriver.hpp>
+#include <Hal/EscDriver.hpp>
 
 namespace Espfc::Output {
 
@@ -23,11 +23,11 @@ public:
 
 private:
   Model& _model;
-  EscDriver* _motor;
-  EscDriver* _servo;
+  Hal::EscDriver* _motor;
+  Hal::EscDriver* _servo;
 
-  EscDriver escMotor;
-  EscDriver escServo;
+  Hal::EscDriver escMotor;
+  Hal::EscDriver escServo;
   uint32_t _statsCounter;
   uint32_t _statsCounterMax;
   float _erpmToHz;

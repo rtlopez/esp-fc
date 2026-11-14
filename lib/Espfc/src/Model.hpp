@@ -7,7 +7,7 @@
 #include "Utils/Logger.hpp"
 #include "Utils/Math.hpp"
 #include "Utils/Storage.hpp"
-#include <EscDriver.hpp>
+#include <Hal/EscDriver.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -436,17 +436,17 @@ public:
     config.loopSync = std::max((int)config.loopSync, loopSyncMax);
     state.loopRate = state.gyro.rate / config.loopSync;
 
-    config.output.protocol = ESC_PROTOCOL_SANITIZE(config.output.protocol);
+    config.output.protocol = Hal::EscDriver::sanitizeProtocol(config.output.protocol);
 
     switch (config.output.protocol)
     {
-      case ESC_PROTOCOL_BRUSHED:
+      case Hal::ESC_PROTOCOL_BRUSHED:
         config.output.async = true;
         break;
-      case ESC_PROTOCOL_DSHOT150:
-      case ESC_PROTOCOL_DSHOT300:
-      case ESC_PROTOCOL_DSHOT600:
-      case ESC_PROTOCOL_PROSHOT:
+      case Hal::ESC_PROTOCOL_DSHOT150:
+      case Hal::ESC_PROTOCOL_DSHOT300:
+      case Hal::ESC_PROTOCOL_DSHOT600:
+      case Hal::ESC_PROTOCOL_PROSHOT:
         config.output.async = false;
         break;
     }
@@ -456,17 +456,17 @@ public:
       // for async limit pwm rate
       switch (config.output.protocol)
       {
-        case ESC_PROTOCOL_PWM:
+        case Hal::ESC_PROTOCOL_PWM:
           config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 480);
           break;
-        case ESC_PROTOCOL_ONESHOT125:
+        case Hal::ESC_PROTOCOL_ONESHOT125:
           config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 2000);
           break;
-        case ESC_PROTOCOL_ONESHOT42:
+        case Hal::ESC_PROTOCOL_ONESHOT42:
           config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 4000);
           break;
-        case ESC_PROTOCOL_BRUSHED:
-        case ESC_PROTOCOL_MULTISHOT:
+        case Hal::ESC_PROTOCOL_BRUSHED:
+        case Hal::ESC_PROTOCOL_MULTISHOT:
           config.output.rate = std::clamp<int16_t>(config.output.rate, 50, 8000);
           break;
         default:
@@ -477,7 +477,7 @@ public:
     else
     {
       // for synced and standard PWM limit loop rate and pwm pulse width
-      if (config.output.protocol == ESC_PROTOCOL_PWM && state.loopRate > 500)
+      if (config.output.protocol == Hal::ESC_PROTOCOL_PWM && state.loopRate > 500)
       {
         config.loopSync =
             std::max(config.loopSync, (int8_t)((state.gyro.rate + 499) / 500)); // align loop rate to lower than 500Hz
@@ -488,7 +488,7 @@ public:
         }
       }
       // for onshot125 limit loop rate to 2kHz
-      if (config.output.protocol == ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
+      if (config.output.protocol == Hal::ESC_PROTOCOL_ONESHOT125 && state.loopRate > 2000)
       {
         config.loopSync = std::max(config.loopSync,
                                    (int8_t)((state.gyro.rate + 1999) / 2000)); // align loop rate to lower than 2000Hz
