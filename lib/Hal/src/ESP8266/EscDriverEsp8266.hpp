@@ -1,16 +1,21 @@
 #pragma once
 
-#if defined(ESP32C3)
+#if defined(ESP8266)
 
-#include "EscDriver.hpp"
+#include "Hal/EscDriver.hpp"
+#include <cstddef>
+#include <cstdint>
+
+namespace Hal::Detail {
 
 enum EscDriverTimer
 {
   ESC_DRIVER_TIMER0,
   ESC_DRIVER_TIMER1,
+  ESC_DRIVER_TIMER2
 };
 
-class EscDriverEsp32c3 : public EscDriverBase
+class EscDriverImpl
 {
 public:
   class Slot
@@ -21,11 +26,11 @@ public:
     int pulse;
     bool operator<(const Slot& rhs) const
     {
-      if (!active())
-        return false;
-      else if (!rhs.active())
-        return true;
+      // clang-format off
+      if (!active()) return false;
+      else if (!rhs.active()) return true;
       return this->pulse < rhs.pulse;
+      // clang-format on
     }
     inline bool active() const
     {
@@ -49,16 +54,16 @@ public:
 
   using mask_t = uint32_t;
 
-  EscDriverEsp32c3();
+  EscDriverImpl();
 
-  int begin(const EscConfig& conf);
+  bool begin(const EscConfig& conf);
   void end();
-  int attach(size_t channel, int pin, int pulse);
-  int write(size_t channel, int pulse);
+  bool attach(size_t channel, int pin, int pulse);
+  void write(size_t channel, int pulse);
   void apply();
   int pin(size_t channel) const;
   uint32_t telemetry(size_t channel) const;
-  static bool handle(void* p);
+  static void handle(void* p, void* x);
 
 private:
   void commit();
@@ -68,8 +73,10 @@ private:
   void dshotWrite();
 
   static void _isr_init(EscDriverTimer timer, void* driver);
+  static void _isr_begin(EscDriverTimer timer);
   static bool _isr_wait(EscDriverTimer timer, const uint32_t ticks);
   static void _isr_start(EscDriverTimer timer);
+  static void _isr_reboot(void* p);
   static void _isr_end(EscDriverTimer timer, void* p);
 
   volatile bool _busy;
@@ -82,16 +89,16 @@ private:
   int32_t _intervalMax; // for brushed
 
   int _dh;
+  int _dm;
   int _dl;
 
-  Slot _slots[ESC_CHANNEL_COUNT];
-  Item _items[ESC_CHANNEL_COUNT * 2];
+  Slot _slots[EscDriver::CHANNEL_COUNT];
+  Item _items[EscDriver::CHANNEL_COUNT * 2];
 
   volatile Item* _it;
   const Item* _end;
-
-  mask_t dshotSetMask[DSHOT_BIT_COUNT];
-  mask_t dshotClrMask[DSHOT_BIT_COUNT * 2];
 };
 
-#endif // ESP32C3
+} // namespace Hal::Detail
+
+#endif // ESP8266

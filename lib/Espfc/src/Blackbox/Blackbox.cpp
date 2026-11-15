@@ -324,7 +324,7 @@ void FAST_CODE_ATTR Blackbox::updateData()
       continue;
     }
     const auto mv = std::clamp<int16_t>(_model.state.output.us[i], 1000, 2000);
-    motor[i] = _model.state.mixer.digitalOutput ? PWM_TO_DSHOT(mv) : mv;
+    motor[i] = _model.state.mixer.digitalOutput ? Hal::EscDriver::pwmToDshot(mv) : mv;
   }
   if (_model.config.debug.mode != DEBUG_NONE && _model.config.debug.mode != DEBUG_BLACKBOX_OUTPUT)
   {

@@ -185,7 +185,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
         {
           problems |= 1 << 0; // acc calibration required
         }
-        if (_model.config.output.protocol == ESC_PROTOCOL_DISABLED)
+        if (_model.config.output.protocol == Hal::ESC_PROTOCOL_DISABLED)
         {
           problems |= 1 << 1; // no motor protocol
         }

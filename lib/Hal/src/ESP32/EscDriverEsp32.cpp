@@ -1,6 +1,7 @@
 #if defined(ESP32) && !defined(ESP32C3)
 
-#include "EscDriverEsp32.hpp"
+#include "ESP32/EscDriverEsp32.hpp"
+#include "Detail/EscDriverUtils.hpp"
 #include "esp_rom_gpio.h"
 #include "hal/gpio_ll.h"
 #include "hal/rmt_ll.h"
@@ -30,6 +31,7 @@ IRAM_ATTR static esp_err_t _rmt_fill_tx_items(rmt_channel_t channel, const rmt_i
   rmt_ll_rx_set_mem_owner(&RMT, channel, RMT_MEM_OWNER_TX);
   return ESP_OK;
 }
+
 IRAM_ATTR static esp_err_t _rmt_tx_start(rmt_channel_t channel, bool tx_idx_rst)
 {
   if (tx_idx_rst)
@@ -55,32 +57,26 @@ static void IRAM_ATTR _rmt_rx_zero_mem(rmt_channel_t channel, size_t len)
   }
 }
 
-// using map() in isr cause crash
-static long IRAM_ATTR _map(long x, long in_min, long in_max, long out_min, long out_max)
-{
-  const long in_range = in_max - in_min;
-  if (in_range == 0) return out_min;
-  const long out_range = out_max - out_min;
-  const long delta = x - in_min;
-  return (delta * out_range) / in_range + out_min;
-}
+namespace Hal::Detail {
 
-bool EscDriverEsp32::_tx_end_installed = false;
+static_assert(EscDriver::CHANNEL_COUNT <= RMT_CHANNEL_MAX, "Too many esc channels");
 
-EscDriverEsp32* EscDriverEsp32::instances[] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+bool EscDriverImpl::_tx_end_installed = false;
 
-EscDriverEsp32::EscDriverEsp32()
+EscDriverImpl* EscDriverImpl::instances[RMT_CHANNEL_MAX] = {};
+
+EscDriverImpl::EscDriverImpl()
     : _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _digital(false), _dshot_tlm(false), _channel_mask(0)
 {
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; i++)
   {
     _channel[i].pin = gpio_num_t(-1);
   }
 }
 
-void EscDriverEsp32::end()
+void EscDriverImpl::end()
 {
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; i++)
   {
     if (!_channel[i].attached()) continue;
     if (_protocol == ESC_PROTOCOL_DISABLED) continue;
@@ -90,52 +86,47 @@ void EscDriverEsp32::end()
   _protocol = ESC_PROTOCOL_DISABLED;
 }
 
-int EscDriverEsp32::begin(const EscConfig& conf)
+bool EscDriverImpl::begin(const EscConfig& conf)
 {
-  _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
+  _protocol = EscDriver::sanitizeProtocol(conf.protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
   _rate = std::clamp(conf.rate, 50, 8000);
   _interval = TO_INTERVAL_US(_rate);
   _digital = isDigital(_protocol);
   _dshot_tlm = conf.dshotTelemetry && (_protocol == ESC_PROTOCOL_DSHOT300 || _protocol == ESC_PROTOCOL_DSHOT600);
 
-  return 1;
+  return true;
 }
 
-int EscDriverEsp32::attach(size_t channel, int pin, int pulse)
+bool EscDriverImpl::attach(size_t channel, int pin, int pulse)
 {
-  if (channel >= ESC_CHANNEL_COUNT) return 0;
   initChannel(channel, (gpio_num_t)pin, pulse);
-  return 1;
+  return true;
 }
 
-int IRAM_ATTR EscDriverEsp32::write(size_t channel, int pulse)
+void IRAM_ATTR EscDriverImpl::write(size_t channel, int pulse)
 {
-  if (channel >= ESC_CHANNEL_COUNT) return 0;
   _channel[channel].pulse = pulse;
-  return 1;
 }
 
-void IRAM_ATTR EscDriverEsp32::apply()
+void IRAM_ATTR EscDriverImpl::apply()
 {
   if (_protocol == ESC_PROTOCOL_DISABLED) return;
   if (_async) return;
   transmitAll();
 }
 
-int EscDriverEsp32::pin(size_t channel) const
+int EscDriverImpl::pin(size_t channel) const
 {
-  if (channel >= ESC_CHANNEL_COUNT) return -1;
   return _channel[channel].pin;
 }
 
-uint32_t IRAM_ATTR EscDriverEsp32::telemetry(size_t channel) const
+uint32_t IRAM_ATTR EscDriverImpl::telemetry(size_t channel) const
 {
-  if (channel >= ESC_CHANNEL_COUNT) return 0;
   return _channel[channel].telemetryValue;
 }
 
-void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
+void EscDriverImpl::initChannel(int i, gpio_num_t pin, int pulse)
 {
   if (pin == -1) return;
 
@@ -225,19 +216,19 @@ void EscDriverEsp32::initChannel(int i, gpio_num_t pin, int pulse)
   }
 }
 
-void IRAM_ATTR EscDriverEsp32::modeTx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverImpl::modeTx(rmt_channel_t channel)
 {
   disableRx(channel);
   enableTx(channel);
 }
 
-void IRAM_ATTR EscDriverEsp32::modeRx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverImpl::modeRx(rmt_channel_t channel)
 {
   disableTx(channel);
   enableRx(channel);
 }
 
-void IRAM_ATTR EscDriverEsp32::enableTx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverImpl::enableTx(rmt_channel_t channel)
 {
   const Slot& slot = _channel[(size_t)channel];
   gpio_num_t gpio_num = (gpio_num_t)slot.pin;
@@ -249,12 +240,12 @@ void IRAM_ATTR EscDriverEsp32::enableTx(rmt_channel_t channel)
   rmt_ll_enable_tx_end_interrupt(&RMT, channel, true);
 }
 
-void IRAM_ATTR EscDriverEsp32::disableTx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverImpl::disableTx(rmt_channel_t channel)
 {
   rmt_ll_tx_stop(&RMT, channel);
 }
 
-void IRAM_ATTR EscDriverEsp32::enableRx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverImpl::enableRx(rmt_channel_t channel)
 {
   // NOTE: time critical function, execution time must not exceed 5-6us
   const Slot& slot = _channel[(size_t)channel];
@@ -274,7 +265,7 @@ void IRAM_ATTR EscDriverEsp32::enableRx(rmt_channel_t channel)
   rmt_ll_rx_enable(&RMT, channel, true);
 }
 
-void IRAM_ATTR EscDriverEsp32::disableRx(rmt_channel_t channel)
+void IRAM_ATTR EscDriverImpl::disableRx(rmt_channel_t channel)
 {
   // rmt_channel_t rx_ch = (rmt_channel_t)RMT_ENCODE_RX_CHANNEL(channel);
 
@@ -283,7 +274,7 @@ void IRAM_ATTR EscDriverEsp32::disableRx(rmt_channel_t channel)
   rmt_ll_rx_enable(&RMT, channel, false);
 }
 
-void IRAM_ATTR EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void* arg)
+void IRAM_ATTR EscDriverImpl::txDoneCallback(rmt_channel_t channel, void* arg)
 {
   auto instance = instances[channel];
   if (!instance) return;
@@ -297,7 +288,7 @@ void IRAM_ATTR EscDriverEsp32::txDoneCallback(rmt_channel_t channel, void* arg)
   }
 }
 
-void IRAM_ATTR EscDriverEsp32::transmitOne(uint32_t i)
+void IRAM_ATTR EscDriverImpl::transmitOne(uint32_t i)
 {
   if (!_channel[i].attached()) return;
   if (_digital)
@@ -311,10 +302,10 @@ void IRAM_ATTR EscDriverEsp32::transmitOne(uint32_t i)
   transmitCommand(i);
 }
 
-void IRAM_ATTR EscDriverEsp32::transmitAll()
+void IRAM_ATTR EscDriverImpl::transmitAll()
 {
   readTelemetry();
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; i++)
   {
     if (!_channel[i].attached()) continue;
     if (_digital)
@@ -326,16 +317,16 @@ void IRAM_ATTR EscDriverEsp32::transmitAll()
       writeAnalogCommand(i, _channel[i].pulse);
     }
   }
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; i++)
   {
     if (!_channel[i].attached()) continue;
     transmitCommand(i);
   }
 }
 
-void IRAM_ATTR EscDriverEsp32::readTelemetry()
+void IRAM_ATTR EscDriverImpl::readTelemetry()
 {
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; i++)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; i++)
   {
     if (!_digital || !_dshot_tlm) continue;
     if (!_channel[i].attached()) continue;
@@ -349,7 +340,7 @@ void IRAM_ATTR EscDriverEsp32::readTelemetry()
     rmt_item32_t* data = (rmt_item32_t*)xRingbufferReceive(rb, &rmt_len, 0);
     if (data)
     {
-      uint32_t value = extractTelemetryGcr((uint32_t*)data, rmt_len >> 2, _channel[i].dshot_tlm_bit_len);
+      uint32_t value = EscDriver::extractTelemetryGcr((uint32_t*)data, rmt_len >> 2, _channel[i].dshot_tlm_bit_len);
 
       vRingbufferReturnItem(rb, (void*)data);
 
@@ -358,7 +349,7 @@ void IRAM_ATTR EscDriverEsp32::readTelemetry()
   }
 }
 
-void IRAM_ATTR EscDriverEsp32::writeAnalogCommand(uint32_t channel, int32_t pulse)
+void IRAM_ATTR EscDriverImpl::writeAnalogCommand(uint32_t channel, int32_t pulse)
 {
   Slot& slot = _channel[channel];
   int minPulse = 800;
@@ -369,7 +360,7 @@ void IRAM_ATTR EscDriverEsp32::writeAnalogCommand(uint32_t channel, int32_t puls
     maxPulse = 2000;
   }
   pulse = std::clamp(pulse, minPulse, maxPulse);
-  int duration = _map(pulse, 1000, 2000, slot.pulse_min, slot.pulse_max);
+  int duration = escMap(pulse, 1000, 2000, slot.pulse_min, slot.pulse_max);
 
   int count = 2;
   if (_async)
@@ -389,7 +380,7 @@ void IRAM_ATTR EscDriverEsp32::writeAnalogCommand(uint32_t channel, int32_t puls
   _rmt_fill_tx_items((rmt_channel_t)channel, _channel[channel].items, count, 0);
 }
 
-void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse)
+void IRAM_ATTR EscDriverImpl::writeDshotCommand(uint32_t channel, int32_t pulse)
 {
   if (_digital && _dshot_tlm)
   {
@@ -398,26 +389,26 @@ void IRAM_ATTR EscDriverEsp32::writeDshotCommand(uint32_t channel, int32_t pulse
 
   pulse = std::clamp(pulse, 0, 2000);
   // scale to dshot commands (0 or 48-2047)
-  int value = dshotConvert(pulse);
-  uint16_t frame = dshotEncode(value, _dshot_tlm);
+  int value = EscDriver::dshotConvert(pulse);
+  uint16_t frame = EscDriver::dshotEncode(value, _dshot_tlm);
 
   Slot& slot = _channel[channel];
-  for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+  for (size_t i = 0; i < EscDriver::DSHOT_BIT_COUNT; i++)
   {
-    int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
+    int val = (frame >> (EscDriver::DSHOT_BIT_COUNT - 1 - i)) & 0x01;
     slot.setDshotBit(i, val, _dshot_tlm);
   }
-  slot.setTerminate(DSHOT_BIT_COUNT, _dshot_tlm);
+  slot.setTerminate(EscDriver::DSHOT_BIT_COUNT, _dshot_tlm);
 
   _rmt_fill_tx_items((rmt_channel_t)channel, slot.items, Slot::ITEM_COUNT, 0);
 }
 
-void IRAM_ATTR EscDriverEsp32::transmitCommand(uint32_t channel)
+void IRAM_ATTR EscDriverImpl::transmitCommand(uint32_t channel)
 {
   _rmt_tx_start((rmt_channel_t)channel, true);
 }
 
-uint32_t EscDriverEsp32::getClockDivider() const
+uint32_t EscDriverImpl::getClockDivider() const
 {
   switch (_protocol)
   {
@@ -436,7 +427,7 @@ uint32_t EscDriverEsp32::getClockDivider() const
   }
 }
 
-uint32_t EscDriverEsp32::getPulseMin() const
+uint32_t EscDriverImpl::getPulseMin() const
 {
   switch (_protocol)
   {
@@ -458,7 +449,7 @@ uint32_t EscDriverEsp32::getPulseMin() const
   }
 }
 
-uint32_t EscDriverEsp32::getPulseMax() const
+uint32_t EscDriverImpl::getPulseMax() const
 {
   switch (_protocol)
   {
@@ -480,14 +471,14 @@ uint32_t EscDriverEsp32::getPulseMax() const
   }
 }
 
-uint32_t EscDriverEsp32::nsToTicks(uint32_t ns) const
+uint32_t EscDriverImpl::nsToTicks(uint32_t ns) const
 {
   int div = getClockDivider();
   // multiply by 2 as DURATION_CLOCK is aleredy doubled, and round to nearest integer
   return (ns * 2 + ((div * DURATION_CLOCK) >> 1)) / div / DURATION_CLOCK;
 }
 
-uint16_t EscDriverEsp32::getDshotPulse(uint32_t width) const
+uint16_t EscDriverImpl::getDshotPulse(uint32_t width) const
 {
   switch (_protocol)
   {
@@ -507,7 +498,7 @@ uint16_t EscDriverEsp32::getDshotPulse(uint32_t width) const
   }
 }
 
-bool EscDriverEsp32::isDigital(EscProtocol protocol) const
+bool EscDriverImpl::isDigital(EscProtocol protocol) const
 {
   switch (protocol)
   {
@@ -519,5 +510,7 @@ bool EscDriverEsp32::isDigital(EscProtocol protocol) const
       return false;
   }
 }
+
+} // namespace Hal::Detail
 
 #endif

@@ -1,5 +1,5 @@
 #include "platform.h"
-#include <EscDriver.hpp>
+#include <Hal/EscDriver.hpp>
 #include <Hal/Gpio.hpp>
 #include <Stream/ReadWritable.hpp>
 #include <Hal/FastCode.hpp>
@@ -139,11 +139,11 @@ pwmOutputPort_t * pwmGetMotors(void)
     return motors;
 }
 
-static EscDriver * escDriver;
+static Hal::EscDriver * escDriver;
 
 void motorInitEscDevice(void * driver)
 {
-    escDriver = static_cast<EscDriver *>(driver);
+    escDriver = static_cast<Hal::EscDriver *>(driver);
     memset(&motors, 0, sizeof(pwmOutputPort_t));
     if(!driver) return;
 

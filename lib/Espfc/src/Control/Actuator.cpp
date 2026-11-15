@@ -93,7 +93,7 @@ void Actuator::updateArmingDisabled()
   _model.setArmingDisabled(ARMING_DISABLED_RX_FAILSAFE, _model.state.input.rxLoss || _model.state.input.rxFailSafe);
   _model.setArmingDisabled(ARMING_DISABLED_THROTTLE, !_model.isThrottleLow());
   _model.setArmingDisabled(ARMING_DISABLED_CALIBRATING, _model.calibrationActive());
-  _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == ESC_PROTOCOL_DISABLED);
+  _model.setArmingDisabled(ARMING_DISABLED_MOTOR_PROTOCOL, _model.config.output.protocol == Hal::ESC_PROTOCOL_DISABLED);
   _model.setArmingDisabled(ARMING_DISABLED_REBOOT_REQUIRED, _model.state.mode.rescueConfigMode == RESCUE_CONFIG_ACTIVE);
 
   // Check small angle - prevent arming if tilted beyond configured angle

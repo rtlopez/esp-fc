@@ -1,25 +1,89 @@
-#include "EscDriverBase.hpp"
-#include <Hal/FastCode.hpp>
+#include "Hal/EscDriver.hpp"
+#include "Hal/FastCode.hpp"
 
-const char* const* EscDriverBase::getProtocolNames()
+#if defined(ESP32C3)
+#include "ESP32/EscDriverEsp32c3.hpp"
+#elif defined(ESP32)
+#include "ESP32/EscDriverEsp32.hpp"
+#elif defined(ESP8266)
+#include "ESP8266/EscDriverEsp8266.hpp"
+#elif defined(ARCH_RP2040)
+#include "RP2040/EscDriverRP2040.hpp"
+#elif defined(UNIT_TEST)
+#include "Native/EscDriverNative.hpp"
+#else
+#error "Unsupported platform"
+#endif
+
+namespace Hal {
+
+namespace {
+
+Detail::EscDriverImpl escDriverImpls[ESC_ROLE_COUNT];
+
+} // namespace
+
+bool EscDriver::begin(const EscConfig& conf)
+{
+  if (conf.role >= ESC_ROLE_COUNT) return false;
+  _impl = &escDriverImpls[conf.role];
+  return _impl->begin(conf);
+}
+
+void EscDriver::end()
+{
+  if (_impl) _impl->end();
+}
+
+bool EscDriver::attach(size_t channel, int pin, int pulse)
+{
+  if (!_impl || channel >= CHANNEL_COUNT || pin < 0) return false;
+  return _impl->attach(channel, pin, pulse);
+}
+
+bool ISR_CODE_ATTR EscDriver::write(size_t channel, int pulse)
+{
+  if (!_impl || channel >= CHANNEL_COUNT) return false;
+  _impl->write(channel, pulse);
+  return true;
+}
+
+void ISR_CODE_ATTR EscDriver::apply()
+{
+  if (_impl) _impl->apply();
+}
+
+int EscDriver::pin(size_t channel) const
+{
+  if (!_impl || channel >= CHANNEL_COUNT) return -1;
+  return _impl->pin(channel);
+}
+
+uint32_t ISR_CODE_ATTR EscDriver::telemetry(size_t channel) const
+{
+  if (!_impl || channel >= CHANNEL_COUNT) return 0;
+  return _impl->telemetry(channel);
+}
+
+const char* const* EscDriver::getProtocolNames()
 {
   static const char* const protocols[] = {"PWM",      "ONESHOT125", "ONESHOT42",   "MULTISHOT", "BRUSHED", "DSHOT150",
                                           "DSHOT300", "DSHOT600",   "PROSHOT1000", "DISABLED",  nullptr};
   return protocols;
 }
 
-const char* const EscDriverBase::getProtocolName(EscProtocol protocol)
+const char* EscDriver::getProtocolName(EscProtocol protocol)
 {
-  if (protocol >= ESC_PROTOCOL_COUNT) return "?";
+  if (protocol < 0 || protocol >= ESC_PROTOCOL_COUNT) return "?";
   return getProtocolNames()[protocol];
 }
 
-uint16_t ISR_CODE_ATTR EscDriverBase::dshotConvert(uint16_t pulse)
+uint16_t ISR_CODE_ATTR EscDriver::dshotConvert(uint16_t pulse)
 {
-  return pulse > 1000 ? PWM_TO_DSHOT(pulse) : 0;
+  return pulse > 1000 ? pwmToDshot(pulse) : 0;
 }
 
-uint16_t ISR_CODE_ATTR EscDriverBase::dshotEncode(uint16_t value, bool inverted)
+uint16_t ISR_CODE_ATTR EscDriver::dshotEncode(uint16_t value, bool inverted)
 {
   value <<= 1;
 
@@ -40,12 +104,12 @@ uint16_t ISR_CODE_ATTR EscDriverBase::dshotEncode(uint16_t value, bool inverted)
   return (value << 4) | csum;
 }
 
-uint32_t FAST_CODE_ATTR EscDriverBase::durationToBitLen(uint32_t duration, uint32_t len)
+uint32_t FAST_CODE_ATTR EscDriver::durationToBitLen(uint32_t duration, uint32_t len)
 {
   return (duration + (len >> 1)) / len;
 }
 
-uint32_t FAST_CODE_ATTR EscDriverBase::pushBits(uint32_t value, uint32_t bitVal, size_t bitLen)
+uint32_t FAST_CODE_ATTR EscDriver::pushBits(uint32_t value, uint32_t bitVal, size_t bitLen)
 {
   while (bitLen--)
   {
@@ -61,7 +125,7 @@ uint32_t FAST_CODE_ATTR EscDriverBase::pushBits(uint32_t value, uint32_t bitVal,
  * @param bitLen duration of single bit
  * @return uint32_t raw gcr value
  */
-uint32_t FAST_CODE_ATTR EscDriverBase::extractTelemetryGcr(uint32_t* data, size_t len, uint32_t bitLen)
+uint32_t FAST_CODE_ATTR EscDriver::extractTelemetryGcr(uint32_t* data, size_t len, uint32_t bitLen)
 {
   int bitCount = 0;
   uint32_t value = 0;
@@ -97,12 +161,12 @@ uint32_t FAST_CODE_ATTR EscDriverBase::extractTelemetryGcr(uint32_t* data, size_
   return value;
 }
 
-float FAST_CODE_ATTR EscDriverBase::getErpmToHzRatio(int poles)
+float FAST_CODE_ATTR EscDriver::getErpmToHzRatio(int poles)
 {
   return ERPM_PER_LSB / SECONDS_PER_MINUTE / (poles / 2.0f);
 }
 
-uint32_t FAST_CODE_ATTR EscDriverBase::convertToErpm(uint32_t value)
+uint32_t FAST_CODE_ATTR EscDriver::convertToErpm(uint32_t value)
 {
   if (!value) return 0;
 
@@ -115,7 +179,7 @@ uint32_t FAST_CODE_ATTR EscDriverBase::convertToErpm(uint32_t value)
   return (1000000 * 60 / 100 + value / 2) / value;
 }
 
-uint32_t FAST_CODE_ATTR EscDriverBase::convertToValue(uint32_t value)
+uint32_t FAST_CODE_ATTR EscDriver::convertToValue(uint32_t value)
 {
   // eRPM range
   if (value == 0x0fff)
@@ -127,7 +191,7 @@ uint32_t FAST_CODE_ATTR EscDriverBase::convertToValue(uint32_t value)
   return (value & 0x01ff) << ((value & 0xfe00) >> 9);
 }
 
-uint32_t FAST_CODE_ATTR EscDriverBase::gcrToRawValue(uint32_t value)
+uint32_t FAST_CODE_ATTR EscDriver::gcrToRawValue(uint32_t value)
 {
   value = value ^ (value >> 1); // extract gcr
 
@@ -156,3 +220,5 @@ uint32_t FAST_CODE_ATTR EscDriverBase::gcrToRawValue(uint32_t value)
 
   return value;
 }
+
+} // namespace Hal

@@ -2,10 +2,12 @@
 
 #if defined(ESP32) && !defined(ESP32C3)
 
-#include "EscDriver.hpp"
+#include "Hal/EscDriver.hpp"
 #include <driver/rmt.h>
 
-class EscDriverEsp32 : public EscDriverBase
+namespace Hal::Detail {
+
+class EscDriverImpl
 {
 public:
   class Slot
@@ -58,7 +60,7 @@ public:
       return (int)pin != -1;
     }
 
-    static constexpr size_t ITEM_COUNT = DSHOT_BIT_COUNT + 1;
+    static constexpr size_t ITEM_COUNT = EscDriver::DSHOT_BIT_COUNT + 1;
     static constexpr int32_t DURATION_MAX = 0x7fff; // max in 15 bits
 
     rmt_item32_t items[ITEM_COUNT];
@@ -81,11 +83,11 @@ public:
     uint16_t rx_sig;
   };
 
-  EscDriverEsp32();
-  int begin(const EscConfig& conf);
+  EscDriverImpl();
+  bool begin(const EscConfig& conf);
   void end();
-  int attach(size_t channel, int pin, int pulse);
-  int write(size_t channel, int pulse);
+  bool attach(size_t channel, int pin, int pulse);
+  void write(size_t channel, int pulse);
   void apply();
   int pin(size_t channel) const;
   uint32_t telemetry(size_t channel) const;
@@ -112,7 +114,7 @@ private:
   uint16_t getDshotPulse(uint32_t width) const;
   bool isDigital(EscProtocol protocol) const;
 
-  Slot _channel[ESC_CHANNEL_COUNT];
+  Slot _channel[EscDriver::CHANNEL_COUNT];
   EscProtocol _protocol;
   int32_t _async;
   int32_t _rate;
@@ -122,7 +124,9 @@ private:
   uint32_t _channel_mask;
 
   static bool _tx_end_installed;
-  static EscDriverEsp32* instances[];
+  static EscDriverImpl* instances[RMT_CHANNEL_MAX];
 };
+
+} // namespace Hal::Detail
 
 #endif

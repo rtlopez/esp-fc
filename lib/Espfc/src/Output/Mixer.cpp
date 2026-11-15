@@ -11,9 +11,9 @@ Mixer::Mixer(Model& model): _model(model), _motor(nullptr), _servo(nullptr) {}
 
 int Mixer::begin()
 {
-  EscConfig motorConf = {
-      .timer = ESC_DRIVER_MOTOR_TIMER,
-      .protocol = (EscProtocol)_model.config.output.protocol,
+  Hal::EscConfig motorConf = {
+      .role = Hal::ESC_ROLE_MOTOR,
+      .protocol = (Hal::EscProtocol)_model.config.output.protocol,
       .rate = _model.config.output.rate,
       .async = !!_model.config.output.async,
       .dshotTelemetry = !!_model.config.output.dshotTelemetry,
@@ -22,17 +22,16 @@ int Mixer::begin()
   _model.state.mixer.escMotor = _motor = &escMotor;
   _model.logger.info()
       .log("MOTOR")
-      .log(EscDriver::getProtocolName((EscProtocol)_model.config.output.protocol))
+      .log(Hal::EscDriver::getProtocolName((Hal::EscProtocol)_model.config.output.protocol))
       .log(_model.config.output.async)
       .log(_model.config.output.rate)
-      .log(_model.config.output.dshotTelemetry)
-      .logln(ESC_DRIVER_MOTOR_TIMER);
+      .logln(_model.config.output.dshotTelemetry);
 
   if (_model.config.output.servoRate)
   {
-    EscConfig servoConf = {
-        .timer = ESC_DRIVER_SERVO_TIMER,
-        .protocol = ESC_PROTOCOL_PWM,
+    Hal::EscConfig servoConf = {
+        .role = Hal::ESC_ROLE_SERVO,
+        .protocol = Hal::ESC_PROTOCOL_PWM,
         .rate = _model.config.output.servoRate,
         .async = true,
         .dshotTelemetry = false,
@@ -41,12 +40,11 @@ int Mixer::begin()
     _model.state.mixer.escServo = _servo = &escServo;
     _model.logger.info()
         .log("SERVO")
-        .log(EscDriver::getProtocolName(ESC_PROTOCOL_PWM))
+        .log(Hal::EscDriver::getProtocolName(Hal::ESC_PROTOCOL_PWM))
         .log(true)
-        .logln(_model.config.output.servoRate)
-        .logln(ESC_DRIVER_SERVO_TIMER);
+        .logln(_model.config.output.servoRate);
   }
-  _erpmToHz = EscDriver::getErpmToHzRatio(_model.config.output.motorPoles);
+  _erpmToHz = Hal::EscDriver::getErpmToHzRatio(_model.config.output.motorPoles);
   _statsCounterMax = _model.state.mixer.timer.rate / 2;
   _statsCounter = 0;
 
@@ -80,7 +78,7 @@ int Mixer::begin()
 
   _model.state.mixer.minThrottle = _model.config.output.minCommand + _model.config.output.motorIdle * 0.1f;
   _model.state.mixer.maxThrottle = _model.config.output.maxThrottle;
-  _model.state.mixer.digitalOutput = _model.config.output.protocol >= ESC_PROTOCOL_DSHOT150;
+  _model.state.mixer.digitalOutput = _model.config.output.protocol >= Hal::ESC_PROTOCOL_DSHOT150;
   if (_model.state.mixer.digitalOutput)
   {
     // pwm to dshot mapping: (pwm - 1000) * 2 + 47
@@ -305,11 +303,11 @@ void FAST_CODE_ATTR Mixer::readTelemetry()
   {
     if (_model.config.output.channel[i].servo) continue;
     uint32_t value = _motor->telemetry(i);
-    value = EscDriver::gcrToRawValue(value);
+    value = Hal::EscDriver::gcrToRawValue(value);
 
     _model.state.output.telemetry.errorsCount[i]++;
 
-    if (value == EscDriver::INVALID_TELEMETRY_VALUE)
+    if (value == Hal::EscDriver::INVALID_TELEMETRY_VALUE)
     {
       _model.state.output.telemetry.errorsSum[i]++;
       continue;
@@ -347,8 +345,8 @@ void FAST_CODE_ATTR Mixer::readTelemetry()
         _model.state.output.telemetry.events[i] = value & 0x00ff;
         break;
       default:
-        value = EscDriver::convertToValue(value);
-        _model.state.output.telemetry.erpm[i] = EscDriver::convertToErpm(value);
+        value = Hal::EscDriver::convertToValue(value);
+        _model.state.output.telemetry.erpm[i] = Hal::EscDriver::convertToErpm(value);
         _model.state.output.telemetry.rpm[i] = erpmToRpm(_model.state.output.telemetry.erpm[i]);
         _model.setDebug(DEBUG_DSHOT_RPM_TELEMETRY, i, _model.state.output.telemetry.erpm[i]);
         break;
@@ -389,7 +387,7 @@ float inline Mixer::erpmToHz(float erpm)
 
 float inline Mixer::erpmToRpm(float erpm)
 {
-  return erpmToHz(erpm) * EscDriver::SECONDS_PER_MINUTE;
+  return erpmToHz(erpm) * Hal::EscDriver::SECONDS_PER_MINUTE;
 }
 
 bool FAST_CODE_ATTR Mixer::_stop(void)

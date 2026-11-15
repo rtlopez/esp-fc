@@ -1,6 +1,9 @@
 #include <ArduinoFake.h>
-#include <EscDriver.hpp>
+#include <Hal/EscDriver.hpp>
+#include <iterator>
 #include <unity.h>
+
+using namespace Hal;
 
 void test_esc_dshot_encode()
 {
@@ -37,6 +40,10 @@ void test_esc_dshot_convert()
   TEST_ASSERT_EQUAL_UINT16(49, EscDriver::dshotConvert(1001));
   TEST_ASSERT_EQUAL_UINT16(1047, EscDriver::dshotConvert(1500));
   TEST_ASSERT_EQUAL_UINT16(2047, EscDriver::dshotConvert(2000));
+
+  TEST_ASSERT_EQUAL_INT(47, EscDriver::pwmToDshot(1000));
+  TEST_ASSERT_EQUAL_INT(1047, EscDriver::pwmToDshot(1500));
+  TEST_ASSERT_EQUAL_INT(2047, EscDriver::pwmToDshot(2000));
 }
 
 void test_esc_gcr_to_raw_value()
@@ -104,9 +111,9 @@ void test_esc_extract_telemetry_gcr_synth()
       make_item(100, 0, 200, 1), make_item(200, 0, 100, 1), make_item(100, 0, 0, 0),
   };
   uint32_t bit_len = 100;
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(100, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(28, data_len);
+  TEST_ASSERT_EQUAL_UINT32(7, data_len);
   uint32_t exp = 0b011010011101101100101;
   TEST_ASSERT_EQUAL_HEX32(0xD3B65, exp);
   TEST_ASSERT_EQUAL_HEX32(exp, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
@@ -121,9 +128,9 @@ void test_esc_extract_telemetry_gcr_synth_idle()
       make_item(200, 0, 100, 1), make_item(100, 0, 100, 1), make_item(100, 0, 100, 1), make_item(300, 0, 0, 1),
   };
   uint32_t bit_len = 100;
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(100, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(32, data_len);
+  TEST_ASSERT_EQUAL_UINT32(8, data_len);
   uint32_t gcr = 0b001010010100101010001;
   TEST_ASSERT_EQUAL_HEX32(0x52951, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
@@ -153,9 +160,9 @@ void test_esc_extract_telemetry_dshot300_sample()
       make_item(379, 0, 599, 1), make_item(177, 0, 163, 1), make_item(173, 0, 0, 1),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(213, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(24, data_len);
+  TEST_ASSERT_EQUAL_UINT32(6, data_len);
   uint32_t gcr = 0b001110111011001110101; // +1
   TEST_ASSERT_EQUAL_HEX32(0x77675, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
@@ -185,10 +192,10 @@ void test_esc_extract_telemetry_dshot300_running()
       make_item(373, 0, 379, 1), make_item(380, 0, 608, 1), make_item(164, 0, 0, 0),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   uint32_t gcr = 0b011010100100110011101; // +1
   TEST_ASSERT_EQUAL_UINT32(213, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(28, data_len);
+  TEST_ASSERT_EQUAL_UINT32(7, data_len);
   TEST_ASSERT_EQUAL_HEX32(0xD499D, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
 
@@ -217,9 +224,9 @@ void test_esc_extract_telemetry_dshot300_idle()
       make_item(371, 0, 172, 1), make_item(174, 0, 162, 1), make_item(172, 0, 172, 1), make_item(606, 0, 0, 1),
   };
   uint32_t bit_len = 2667 / (1000.0 / 80);
-  uint32_t data_len = sizeof(data);
+  uint32_t data_len = std::size(data);
   TEST_ASSERT_EQUAL_UINT32(213, bit_len);
-  TEST_ASSERT_EQUAL_UINT32(32, data_len);
+  TEST_ASSERT_EQUAL_UINT32(8, data_len);
   uint32_t gcr = 0b001010010100101010001; // +1
   TEST_ASSERT_EQUAL_HEX32(0x52951, gcr);
   TEST_ASSERT_EQUAL_HEX32(gcr, EscDriver::extractTelemetryGcr(data, data_len, bit_len));
@@ -240,6 +247,82 @@ void test_esc_extract_telemetry_dshot300_idle()
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, rpm);
 }
 
+void test_esc_sanitize_protocol()
+{
+  TEST_ASSERT_EQUAL(ESC_PROTOCOL_PWM, EscDriver::sanitizeProtocol(ESC_PROTOCOL_PWM));
+  TEST_ASSERT_EQUAL(ESC_PROTOCOL_BRUSHED, EscDriver::sanitizeProtocol(ESC_PROTOCOL_BRUSHED));
+  TEST_ASSERT_EQUAL(ESC_PROTOCOL_DSHOT600, EscDriver::sanitizeProtocol(ESC_PROTOCOL_DSHOT600));
+  TEST_ASSERT_EQUAL(ESC_PROTOCOL_DSHOT600, EscDriver::sanitizeProtocol(ESC_PROTOCOL_PROSHOT));
+  TEST_ASSERT_EQUAL(ESC_PROTOCOL_DISABLED, EscDriver::sanitizeProtocol(ESC_PROTOCOL_DISABLED));
+  TEST_ASSERT_EQUAL(ESC_PROTOCOL_DSHOT600, EscDriver::sanitizeProtocol(ESC_PROTOCOL_COUNT));
+  TEST_ASSERT_EQUAL(ESC_PROTOCOL_DISABLED, EscDriver::sanitizeProtocol(-1));
+}
+
+void test_esc_protocol_name()
+{
+  TEST_ASSERT_EQUAL_STRING("PWM", EscDriver::getProtocolName(ESC_PROTOCOL_PWM));
+  TEST_ASSERT_EQUAL_STRING("DSHOT300", EscDriver::getProtocolName(ESC_PROTOCOL_DSHOT300));
+  TEST_ASSERT_EQUAL_STRING("DISABLED", EscDriver::getProtocolName(ESC_PROTOCOL_DISABLED));
+  TEST_ASSERT_EQUAL_STRING("?", EscDriver::getProtocolName(ESC_PROTOCOL_COUNT));
+  TEST_ASSERT_NULL(EscDriver::getProtocolNames()[ESC_PROTOCOL_COUNT]);
+}
+
+void test_esc_driver_not_started()
+{
+  EscDriver driver;
+  TEST_ASSERT_FALSE(driver.attach(0, 1, 1000));
+  TEST_ASSERT_FALSE(driver.write(0, 1000));
+  TEST_ASSERT_EQUAL_INT(-1, driver.pin(0));
+  TEST_ASSERT_EQUAL_UINT32(0, driver.telemetry(0));
+  driver.apply();
+  driver.end();
+}
+
+void test_esc_driver_invalid_role()
+{
+  EscDriver driver;
+  TEST_ASSERT_FALSE(driver.begin({.role = ESC_ROLE_COUNT, .protocol = ESC_PROTOCOL_PWM, .rate = 50}));
+  TEST_ASSERT_FALSE(driver.attach(0, 1, 1000));
+}
+
+void test_esc_driver_attach()
+{
+  EscDriver driver;
+  TEST_ASSERT_TRUE(driver.begin({.role = ESC_ROLE_MOTOR, .protocol = ESC_PROTOCOL_DSHOT300, .rate = 2000}));
+
+  TEST_ASSERT_TRUE(driver.attach(0, 5, 1000));
+  TEST_ASSERT_TRUE(driver.attach(EscDriver::CHANNEL_COUNT - 1, 7, 1000));
+  TEST_ASSERT_FALSE(driver.attach(1, -1, 1000));
+  TEST_ASSERT_FALSE(driver.attach(EscDriver::CHANNEL_COUNT, 9, 1000));
+
+  TEST_ASSERT_EQUAL_INT(5, driver.pin(0));
+  TEST_ASSERT_EQUAL_INT(-1, driver.pin(1));
+  TEST_ASSERT_EQUAL_INT(7, driver.pin(EscDriver::CHANNEL_COUNT - 1));
+  TEST_ASSERT_EQUAL_INT(-1, driver.pin(EscDriver::CHANNEL_COUNT));
+
+  TEST_ASSERT_TRUE(driver.write(0, 1500));
+  TEST_ASSERT_FALSE(driver.write(EscDriver::CHANNEL_COUNT, 1500));
+  TEST_ASSERT_EQUAL_UINT32(0, driver.telemetry(EscDriver::CHANNEL_COUNT));
+  driver.apply();
+  driver.end();
+}
+
+void test_esc_driver_roles_are_independent()
+{
+  EscDriver motor;
+  EscDriver servo;
+  TEST_ASSERT_TRUE(motor.begin({.role = ESC_ROLE_MOTOR, .protocol = ESC_PROTOCOL_DSHOT300, .rate = 2000}));
+  TEST_ASSERT_TRUE(servo.begin({.role = ESC_ROLE_SERVO, .protocol = ESC_PROTOCOL_PWM, .rate = 50, .async = true}));
+
+  TEST_ASSERT_TRUE(motor.attach(0, 3, 1000));
+  TEST_ASSERT_TRUE(servo.attach(1, 4, 1500));
+
+  TEST_ASSERT_EQUAL_INT(3, motor.pin(0));
+  TEST_ASSERT_EQUAL_INT(-1, motor.pin(1));
+  TEST_ASSERT_EQUAL_INT(-1, servo.pin(0));
+  TEST_ASSERT_EQUAL_INT(4, servo.pin(1));
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
@@ -255,6 +338,12 @@ int main(int argc, char** argv)
   RUN_TEST(test_esc_extract_telemetry_dshot300_sample);
   RUN_TEST(test_esc_extract_telemetry_dshot300_running);
   RUN_TEST(test_esc_extract_telemetry_dshot300_idle);
+  RUN_TEST(test_esc_sanitize_protocol);
+  RUN_TEST(test_esc_protocol_name);
+  RUN_TEST(test_esc_driver_not_started);
+  RUN_TEST(test_esc_driver_invalid_role);
+  RUN_TEST(test_esc_driver_attach);
+  RUN_TEST(test_esc_driver_roles_are_independent);
 
   return UNITY_END();
 }

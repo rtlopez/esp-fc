@@ -1,7 +1,8 @@
 #if defined(ARCH_RP2040)
 
-#include "EscDriverRP2040.hpp"
-#include <Hal/FastCode.hpp>
+#include "RP2040/EscDriverRP2040.hpp"
+#include "Detail/EscDriverUtils.hpp"
+#include "Hal/FastCode.hpp"
 #include <algorithm>
 #include <hardware/dma.h>
 #include <hardware/gpio.h>
@@ -12,24 +13,16 @@
 // #define DSHOT150_T1H 5000u
 // #define DSHOT150_T   6666u
 
-static long FAST_CODE_ATTR _map(long x, long in_min, long in_max, long out_min, long out_max)
-{
-  const long in_range = in_max - in_min;
-  if (in_range == 0) return out_min;
-  const long out_range = out_max - out_min;
-  const long delta = x - in_min;
-  return (delta * out_range) / in_range + out_min;
-}
-
 // real
 #define DSHOT150_T0H 2333u
 #define DSHOT150_T1H 4666u
 #define DSHOT150_T 6666u
 
-int FAST_CODE_ATTR EscDriverRP2040::attach(size_t channel, int pin, int pulse)
+namespace Hal::Detail {
+
+bool EscDriverImpl::attach(size_t channel, int pin, int pulse)
 {
-  if (channel >= ESC_CHANNEL_COUNT) return 0;
-  if (pin > 28) return 0;
+  if (pin > 28) return false;
 
   _slots[channel].pin = pin;
   _slots[channel].pulse = usToTicks(pulse);
@@ -65,7 +58,7 @@ int FAST_CODE_ATTR EscDriverRP2040::attach(size_t channel, int pin, int pulse)
       pwm_init(_slots[channel].slice, &config, true); /// start PWM
 
       // DMA is allocated for slice on diferrent slot already.
-      if (isSliceDriven(_slots[channel].slice)) return 1;
+      if (isSliceDriven(_slots[channel].slice)) return true;
 
       // Setup DMA channel to drive the PWM
       _slots[channel].drive = true;
@@ -85,66 +78,63 @@ int FAST_CODE_ATTR EscDriverRP2040::attach(size_t channel, int pin, int pulse)
     default:
       break;
   }
-  return 1;
+  return true;
 }
 
-int EscDriverRP2040::pin(size_t channel) const
+int EscDriverImpl::pin(size_t channel) const
 {
-  if (channel >= ESC_CHANNEL_COUNT) return -1;
   return _slots[channel].pin;
 }
 
-uint32_t EscDriverRP2040::telemetry(size_t channel) const
+uint32_t FAST_CODE_ATTR EscDriverImpl::telemetry(size_t channel) const
 {
   return 0;
 }
 
-bool EscDriverRP2040::isSliceDriven(int slice)
+bool EscDriverImpl::isSliceDriven(int slice)
 {
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
   {
     if (_slots[i].active() && _slots[i].slice == slice && _slots[i].drive) return true;
   }
   return false;
 }
 
-int FAST_CODE_ATTR EscDriverRP2040::write(size_t channel, int pulse)
+void FAST_CODE_ATTR EscDriverImpl::write(size_t channel, int pulse)
 {
-  if (channel >= ESC_CHANNEL_COUNT) return 0;
   _slots[channel].pulse = usToTicks(pulse);
-  return 1;
 }
 
-void FAST_CODE_ATTR EscDriverRP2040::apply()
+void FAST_CODE_ATTR EscDriverImpl::apply()
 {
   if (_protocol >= ESC_PROTOCOL_DSHOT150 && _protocol <= ESC_PROTOCOL_DSHOT600)
   {
     dshotWriteDMA();
     return;
   }
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
   {
     if (!_slots[i].active()) continue;
     pwm_set_chan_level(_slots[i].slice, _slots[i].channel, _slots[i].pulse);
   }
 }
 
-uint32_t FAST_CODE_ATTR EscDriverRP2040::usToTicks(uint32_t us)
+uint32_t FAST_CODE_ATTR EscDriverImpl::usToTicks(uint32_t us)
 {
   uint32_t ticks = 0;
   switch (_protocol)
   {
     case ESC_PROTOCOL_ONESHOT125:
-      ticks = _map(us, 1000, 2000, usToTicksReal(125), usToTicksReal(250));
+      ticks = escMap(us, 1000, 2000, usToTicksReal(125), usToTicksReal(250));
       break;
     case ESC_PROTOCOL_ONESHOT42:
-      ticks = _map(us, 1000, 2000, usToTicksReal(42), usToTicksReal(84));
+      ticks = escMap(us, 1000, 2000, usToTicksReal(42), usToTicksReal(84));
       break;
     case ESC_PROTOCOL_MULTISHOT:
-      ticks = _map(us, 1000, 2000, usToTicksReal(5), usToTicksReal(25));
+      ticks = escMap(us, 1000, 2000, usToTicksReal(5), usToTicksReal(25));
       break;
     case ESC_PROTOCOL_BRUSHED:
-      ticks = _map(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval);
+      ticks = escMap(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval);
       break;
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:
@@ -158,13 +148,13 @@ uint32_t FAST_CODE_ATTR EscDriverRP2040::usToTicks(uint32_t us)
   return ticks;
 }
 
-uint32_t FAST_CODE_ATTR EscDriverRP2040::usToTicksReal(uint32_t us)
+uint32_t FAST_CODE_ATTR EscDriverImpl::usToTicksReal(uint32_t us)
 {
   uint64_t t = (uint64_t)us * (F_CPU / _divider);
   return t / 1000000ul;
 }
 
-uint32_t EscDriverRP2040::nsToDshotTicks(uint32_t ns)
+uint32_t EscDriverImpl::nsToDshotTicks(uint32_t ns)
 {
   const uint32_t k = 128u;
   uint64_t d = 1000000000ull * k / F_CPU;
@@ -172,18 +162,17 @@ uint32_t EscDriverRP2040::nsToDshotTicks(uint32_t ns)
   return t;
 }
 
-EscDriverRP2040::EscDriverRP2040()
-    : _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _timer(ESC_DRIVER_TIMER1), _divider(F_CPU / 3 / 1000000ul),
+EscDriverImpl::EscDriverImpl()
+    : _protocol(ESC_PROTOCOL_PWM), _async(true), _rate(50), _divider(F_CPU / 3 / 1000000ul),
       _interval(usToTicksReal(1000000uL / _rate))
 {
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
     _slots[i] = Slot();
 }
 
-int EscDriverRP2040::begin(const EscConfig& conf)
+bool EscDriverImpl::begin(const EscConfig& conf)
 {
-  _timer = (EscDriverTimer)conf.timer;
-  _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
+  _protocol = EscDriver::sanitizeProtocol(conf.protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
   _rate = std::clamp(conf.rate, 50, 8000);
   _interval = usToTicksReal(1000000ul / _rate);
@@ -216,12 +205,12 @@ int EscDriverRP2040::begin(const EscConfig& conf)
 
   clearDmaBuffer();
 
-  return 1;
+  return true;
 }
 
-void EscDriverRP2040::end()
+void EscDriverImpl::end()
 {
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
   {
     if (!_slots[i].active()) continue;
     const uint pin = _slots[i].pin;
@@ -231,36 +220,36 @@ void EscDriverRP2040::end()
   }
 }
 
-void EscDriverRP2040::clearDmaBuffer()
+void EscDriverImpl::clearDmaBuffer()
 {
   for (size_t i = 0; i < NUM_PWM_SLICES; ++i)
   {
-    for (size_t j = 0; j < DSHOT_BIT_COUNT + 1; j++)
+    for (size_t j = 0; j < EscDriver::DSHOT_BIT_COUNT + 1; j++)
     {
       _dma_buffer[i][j] = 0;
     }
   }
 }
 
-void EscDriverRP2040::dshotWriteDMA()
+void EscDriverImpl::dshotWriteDMA()
 {
   clearDmaBuffer();
 
   // fill dma buffer
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
   {
     if (!_slots[i].active()) continue;
 
     uint16_t pulse = std::clamp<int>(_slots[i].pulse, 0, 2000);
-    uint16_t value = dshotConvert(pulse);
-    uint16_t frame = dshotEncode(value);
+    uint16_t value = EscDriver::dshotConvert(pulse);
+    uint16_t frame = EscDriver::dshotEncode(value);
 
     int slice = _slots[i].slice;
     int channel = _slots[i].channel;
 
-    for (size_t j = 0; j < DSHOT_BIT_COUNT; j++)
+    for (size_t j = 0; j < EscDriver::DSHOT_BIT_COUNT; j++)
     {
-      const bool b = (frame >> (DSHOT_BIT_COUNT - 1 - j)) & 0x01;
+      const bool b = (frame >> (EscDriver::DSHOT_BIT_COUNT - 1 - j)) & 0x01;
       uint32_t v = (b ? _dh : _dl) & 0xffff;
       if (channel)
       {
@@ -276,7 +265,7 @@ void EscDriverRP2040::dshotWriteDMA()
   }
 
   // transfer DMA buffer to PWM
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
   {
     if (!_slots[i].active()) continue;
     if (!_slots[i].drive) continue;
@@ -285,12 +274,14 @@ void EscDriverRP2040::dshotWriteDMA()
 
     // Trigger only once for slice
     dma_channel_configure(_slots[i].pwm_dma_chan, &_slots[i].dma_config,
-                          &pwm_hw->slice[slice].cc, // Write to PWM counter compare
-                          _dma_buffer[slice],       // Read values from dshot buffer
-                          DSHOT_BIT_COUNT + 1,      // 16+1 values to copy
-                          true                      // Start immediately.
+                          &pwm_hw->slice[slice].cc,       // Write to PWM counter compare
+                          _dma_buffer[slice],             // Read values from dshot buffer
+                          EscDriver::DSHOT_BIT_COUNT + 1, // 16+1 values to copy
+                          true                            // Start immediately.
     );
   }
 }
+
+} // namespace Hal::Detail
 
 #endif // ARCH_RP2040

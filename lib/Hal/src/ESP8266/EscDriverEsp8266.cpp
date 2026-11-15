@@ -1,11 +1,20 @@
 #if defined(ESP8266)
 
-#include "EscDriverEsp8266.hpp"
+#include "ESP8266/EscDriverEsp8266.hpp"
+#include "Detail/EscDriverUtils.hpp"
+#include "Hal/Gpio.hpp"
 #include <Arduino.h>
 #include <algorithm>
 #include <user_interface.h>
 
-void EscDriverEsp8266::_isr_init(EscDriverTimer timer, void* driver)
+#define ETS_FRC_TIMER2_INUM 10
+
+#define DELTA_TICKS_MAX ((APB_CLK_FREQ / 1000000L) * 50000L)
+#define DELTA_TICKS_MIN 5
+
+namespace Hal::Detail {
+
+void EscDriverImpl::_isr_init(EscDriverTimer timer, void* driver)
 {
   switch (timer)
   {
@@ -14,7 +23,7 @@ void EscDriverEsp8266::_isr_init(EscDriverTimer timer, void* driver)
       ETS_INTR_DISABLE(ETS_FRC_TIMER2_INUM);
       T2C = 0;
       T2I = 0;
-      ets_isr_attach(ETS_FRC_TIMER2_INUM, EscDriverEsp8266::handle, driver);
+      ets_isr_attach(ETS_FRC_TIMER2_INUM, EscDriverImpl::handle, driver);
       ETS_INTR_ENABLE(ETS_FRC_TIMER2_INUM);
       T2C = (1 << TCTE) | (TIM_DIV1 << TCPD) | (TIM_EDGE << TCIT) | (TIM_SINGLE << TCAR);
       T2I = 0;
@@ -25,7 +34,7 @@ void EscDriverEsp8266::_isr_init(EscDriverTimer timer, void* driver)
       ETS_INTR_DISABLE(ETS_FRC_TIMER1_INUM);
       T1C = 0;
       T1I = 0;
-      ets_isr_attach(ETS_FRC_TIMER1_INUM, EscDriverEsp8266::handle, driver);
+      ets_isr_attach(ETS_FRC_TIMER1_INUM, EscDriverImpl::handle, driver);
       ETS_INTR_ENABLE(ETS_FRC_TIMER1_INUM);
       T1C = (1 << TCTE) | (TIM_DIV1 << TCPD) | (TIM_EDGE << TCIT) | (TIM_SINGLE << TCAR);
       T1I = 0;
@@ -34,14 +43,14 @@ void EscDriverEsp8266::_isr_init(EscDriverTimer timer, void* driver)
     case ESC_DRIVER_TIMER0:
       ETS_INTR_LOCK();
       ETS_INTR_DISABLE(ETS_CCOMPARE0_INUM);
-      ets_isr_attach(ETS_CCOMPARE0_INUM, EscDriverEsp8266::handle, driver);
+      ets_isr_attach(ETS_CCOMPARE0_INUM, EscDriverImpl::handle, driver);
       ETS_INTR_ENABLE(ETS_CCOMPARE0_INUM);
       ETS_INTR_UNLOCK();
       break;
   }
 }
 
-void IRAM_ATTR EscDriverEsp8266::_isr_begin(EscDriverTimer timer)
+void IRAM_ATTR EscDriverImpl::_isr_begin(EscDriverTimer timer)
 {
   switch (timer)
   {
@@ -63,7 +72,7 @@ void IRAM_ATTR EscDriverEsp8266::_isr_begin(EscDriverTimer timer)
 #define TIMER1_WAIT_EDGE 140UL
 #define TIMER1_WAIT_COMP 115UL
 
-bool IRAM_ATTR EscDriverEsp8266::_isr_wait(EscDriverTimer timer, const uint32_t ticks)
+bool IRAM_ATTR EscDriverImpl::_isr_wait(EscDriverTimer timer, const uint32_t ticks)
 {
   switch (timer)
   {
@@ -111,7 +120,7 @@ bool IRAM_ATTR EscDriverEsp8266::_isr_wait(EscDriverTimer timer, const uint32_t 
 }
 
 // run as soon as possible
-void IRAM_ATTR EscDriverEsp8266::_isr_start(EscDriverTimer timer)
+void IRAM_ATTR EscDriverImpl::_isr_start(EscDriverTimer timer)
 {
   switch (timer)
   {
@@ -130,13 +139,13 @@ void IRAM_ATTR EscDriverEsp8266::_isr_start(EscDriverTimer timer)
   }
 }
 
-void IRAM_ATTR EscDriverEsp8266::_isr_reboot(void* p)
+void IRAM_ATTR EscDriverImpl::_isr_reboot(void* p)
 {
-  auto* d = static_cast<EscDriverEsp8266*>(p);
+  auto* d = static_cast<EscDriverImpl*>(p);
   _isr_begin(d->_timer);
 }
 
-void EscDriverEsp8266::_isr_end(EscDriverTimer timer, void* p)
+void EscDriverImpl::_isr_end(EscDriverTimer timer, void* p)
 {
   switch (timer)
   {
@@ -160,35 +169,31 @@ void EscDriverEsp8266::_isr_end(EscDriverTimer timer, void* p)
   }
 }
 
-int IRAM_ATTR EscDriverEsp8266::attach(size_t channel, int pin, int pulse)
+bool EscDriverImpl::attach(size_t channel, int pin, int pulse)
 {
-  if (channel >= ESC_CHANNEL_COUNT) return 0;
   _slots[channel].pin = pin;
   _slots[channel].pulse = usToTicks(pulse);
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, LOW);
-  return 1;
+  Gpio::pinMode(pin, Gpio::Output);
+  Gpio::digitalWrite(pin, Gpio::Low);
+  return true;
 }
 
-int EscDriverEsp8266::pin(size_t channel) const
+int EscDriverImpl::pin(size_t channel) const
 {
-  if (channel >= ESC_CHANNEL_COUNT) return -1;
   return _slots[channel].pin;
 }
 
-uint32_t EscDriverEsp8266::telemetry(size_t channel) const
+uint32_t EscDriverImpl::telemetry(size_t channel) const
 {
   return 0;
 }
 
-int IRAM_ATTR EscDriverEsp8266::write(size_t channel, int pulse)
+void IRAM_ATTR EscDriverImpl::write(size_t channel, int pulse)
 {
-  if (channel >= ESC_CHANNEL_COUNT) return 0;
   _slots[channel].pulse = usToTicks(pulse);
-  return 1;
 }
 
-void IRAM_ATTR EscDriverEsp8266::apply()
+void IRAM_ATTR EscDriverImpl::apply()
 {
   if (_protocol == ESC_PROTOCOL_DISABLED) return;
   if (_protocol >= ESC_PROTOCOL_DSHOT150)
@@ -200,10 +205,10 @@ void IRAM_ATTR EscDriverEsp8266::apply()
   _isr_start(_timer);
 }
 
-void IRAM_ATTR EscDriverEsp8266::handle(void* p, void* x)
+void IRAM_ATTR EscDriverImpl::handle(void* p, void* x)
 {
   // Time critical section
-  auto* instance = static_cast<EscDriverEsp8266*>(p);
+  auto* instance = static_cast<EscDriverImpl*>(p);
   _isr_begin(instance->_timer);
 
   // instance->_it = NULL;
@@ -242,16 +247,16 @@ void IRAM_ATTR EscDriverEsp8266::handle(void* p, void* x)
   }
 }
 
-void IRAM_ATTR EscDriverEsp8266::commit()
+void IRAM_ATTR EscDriverImpl::commit()
 {
-  Slot sorted[ESC_CHANNEL_COUNT];
-  std::copy(_slots, _slots + ESC_CHANNEL_COUNT, sorted);
-  std::sort(sorted, sorted + ESC_CHANNEL_COUNT);
+  Slot sorted[EscDriver::CHANNEL_COUNT];
+  std::copy(_slots, _slots + EscDriver::CHANNEL_COUNT, sorted);
+  std::sort(sorted, sorted + EscDriver::CHANNEL_COUNT);
 
-  Slot* end = sorted + ESC_CHANNEL_COUNT;
+  Slot* end = sorted + EscDriver::CHANNEL_COUNT;
   Slot* last = NULL;
 
-  for (Item* it = _items; it != _items + ESC_CHANNEL_COUNT * 2; ++it)
+  for (Item* it = _items; it != _items + EscDriver::CHANNEL_COUNT * 2; ++it)
     *it = Item();
   Item* item = _items;
 
@@ -308,7 +313,7 @@ void IRAM_ATTR EscDriverEsp8266::commit()
   }
 }
 
-uint32_t IRAM_ATTR EscDriverEsp8266::usToTicksReal(EscDriverTimer timer, uint32_t us)
+uint32_t IRAM_ATTR EscDriverImpl::usToTicksReal(EscDriverTimer timer, uint32_t us)
 {
   switch (timer)
   {
@@ -319,7 +324,7 @@ uint32_t IRAM_ATTR EscDriverEsp8266::usToTicksReal(EscDriverTimer timer, uint32_
   }
 }
 
-int32_t IRAM_ATTR EscDriverEsp8266::minTicks(EscDriverTimer timer)
+int32_t IRAM_ATTR EscDriverImpl::minTicks(EscDriverTimer timer)
 {
   switch (timer)
   {
@@ -330,22 +335,22 @@ int32_t IRAM_ATTR EscDriverEsp8266::minTicks(EscDriverTimer timer)
   }
 }
 
-uint32_t IRAM_ATTR EscDriverEsp8266::usToTicks(uint32_t us)
+uint32_t IRAM_ATTR EscDriverImpl::usToTicks(uint32_t us)
 {
   uint32_t ticks = 0;
   switch (_protocol)
   {
     case ESC_PROTOCOL_ONESHOT125:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 125), usToTicksReal(_timer, 250));
+      ticks = escMap(us, 1000, 2000, usToTicksReal(_timer, 125), usToTicksReal(_timer, 250));
       break;
     case ESC_PROTOCOL_ONESHOT42:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 42), usToTicksReal(_timer, 84));
+      ticks = escMap(us, 1000, 2000, usToTicksReal(_timer, 42), usToTicksReal(_timer, 84));
       break;
     case ESC_PROTOCOL_MULTISHOT:
-      ticks = map(us, 1000, 2000, usToTicksReal(_timer, 5), usToTicksReal(_timer, 25));
+      ticks = escMap(us, 1000, 2000, usToTicksReal(_timer, 5), usToTicksReal(_timer, 25));
       break;
     case ESC_PROTOCOL_BRUSHED:
-      ticks = map(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
+      ticks = escMap(std::clamp<uint32_t>(us, 1000, 2000), 1000, 2000, 0, _interval); // strange behaviour at bonduaries
       break;
     case ESC_PROTOCOL_DSHOT150:
     case ESC_PROTOCOL_DSHOT300:
@@ -359,26 +364,26 @@ uint32_t IRAM_ATTR EscDriverEsp8266::usToTicks(uint32_t us)
   return ticks;
 }
 
-EscDriverEsp8266::EscDriverEsp8266()
+EscDriverImpl::EscDriverImpl()
     : _busy(false), _async(true), _protocol(ESC_PROTOCOL_PWM), _rate(50), _timer(ESC_DRIVER_TIMER1),
-      _interval(usToTicksReal(_timer, 1000000L / _rate)), _it(NULL), _end(_items + ESC_CHANNEL_COUNT * 2)
+      _interval(usToTicksReal(_timer, 1000000L / _rate)), _it(NULL), _end(_items + EscDriver::CHANNEL_COUNT * 2)
 {
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
   {
     _slots[i] = {};
   }
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT * 2; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT * 2; ++i)
   {
     _items[i] = {};
   }
 }
 
-int EscDriverEsp8266::begin(const EscConfig& conf)
+bool EscDriverImpl::begin(const EscConfig& conf)
 {
-  _protocol = ESC_PROTOCOL_SANITIZE(conf.protocol);
+  _protocol = EscDriver::sanitizeProtocol(conf.protocol);
   _async = _protocol == ESC_PROTOCOL_BRUSHED ? true : conf.async; // force async for brushed
   _rate = std::clamp(conf.rate, 50, 8000);
-  _timer = (EscDriverTimer)conf.timer;
+  _timer = conf.role == ESC_ROLE_SERVO ? ESC_DRIVER_TIMER2 : ESC_DRIVER_TIMER1;
   _interval = usToTicksReal(_timer, 1000000L / _rate) /* - 400*/; // small compensation to keep frequency
   _intervalMin = _interval / 500;          // do not generate brushed pulses if duty < ~0.2%  (1002)
   _intervalMax = _interval - _intervalMin; // set brushed output hi if duty > ~99.8% (1998)
@@ -407,20 +412,20 @@ int EscDriverEsp8266::begin(const EscConfig& conf)
       _isr_init(_timer, this);
       if (_async) _isr_start(_timer);
   }
-  return 1;
+  return true;
 }
 
-void EscDriverEsp8266::end()
+void EscDriverImpl::end()
 {
   if (_protocol < ESC_PROTOCOL_DSHOT150) // analog
   {
     _isr_end(_timer, this);
   }
   _protocol = ESC_PROTOCOL_DISABLED;
-  for (size_t i = 0; i < ESC_CHANNEL_COUNT; ++i)
+  for (size_t i = 0; i < EscDriver::CHANNEL_COUNT; ++i)
   {
     if (_slots[i].pin == -1) continue;
-    digitalWrite(_slots[i].pin, LOW);
+    Gpio::digitalWrite(_slots[i].pin, Gpio::Low);
   }
 }
 
@@ -432,26 +437,26 @@ static IRAM_ATTR void dshotDelay(int delay)
   }
 }
 
-void IRAM_ATTR EscDriverEsp8266::dshotWrite()
+void IRAM_ATTR EscDriverImpl::dshotWrite()
 {
   // zero mask arrays
-  mask_t smask[DSHOT_BIT_COUNT];
-  mask_t cmask[DSHOT_BIT_COUNT];
-  std::fill_n(smask, DSHOT_BIT_COUNT, 0);
-  std::fill_n(cmask, DSHOT_BIT_COUNT, 0);
+  mask_t smask[EscDriver::DSHOT_BIT_COUNT];
+  mask_t cmask[EscDriver::DSHOT_BIT_COUNT];
+  std::fill_n(smask, EscDriver::DSHOT_BIT_COUNT, 0);
+  std::fill_n(cmask, EscDriver::DSHOT_BIT_COUNT, 0);
 
   // compute bits
-  for (size_t c = 0; c < ESC_CHANNEL_COUNT; c++)
+  for (size_t c = 0; c < EscDriver::CHANNEL_COUNT; c++)
   {
     if (_slots[c].pin > 15 || _slots[c].pin < 0) continue;
     mask_t mask = (1U << _slots[c].pin);
     int pulse = std::clamp(_slots[c].pulse, 0, 2000);
     // scale to dshot commands (0 or 48-2047)
-    int value = dshotConvert(pulse);
-    uint16_t frame = dshotEncode(value);
-    for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+    int value = EscDriver::dshotConvert(pulse);
+    uint16_t frame = EscDriver::dshotEncode(value);
+    for (size_t i = 0; i < EscDriver::DSHOT_BIT_COUNT; i++)
     {
-      int val = (frame >> (DSHOT_BIT_COUNT - 1 - i)) & 0x01;
+      int val = (frame >> (EscDriver::DSHOT_BIT_COUNT - 1 - i)) & 0x01;
       smask[i] |= mask;
       cmask[i] |= val ? 0 : mask;
     }
@@ -460,7 +465,7 @@ void IRAM_ATTR EscDriverEsp8266::dshotWrite()
   // write output
   mask_t* sm = smask;
   mask_t* cm = cmask;
-  for (size_t i = 0; i < DSHOT_BIT_COUNT; i++)
+  for (size_t i = 0; i < EscDriver::DSHOT_BIT_COUNT; i++)
   {
     // clang-format off
     GPOS = *sm; dshotDelay(_dh);
@@ -471,5 +476,7 @@ void IRAM_ATTR EscDriverEsp8266::dshotWrite()
     cm++;
   }
 }
+
+} // namespace Hal::Detail
 
 #endif // ESP8266

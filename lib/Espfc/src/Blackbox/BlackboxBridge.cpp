@@ -83,12 +83,12 @@ float FAST_CODE_ATTR mixerGetThrottle(void)
 
 int16_t FAST_CODE_ATTR getMotorOutputLow()
 {
-  return _model_ptr->state.mixer.digitalOutput ? PWM_TO_DSHOT(1000) : 1000;
+  return _model_ptr->state.mixer.digitalOutput ? Hal::EscDriver::pwmToDshot(1000) : 1000;
 }
 
 int16_t FAST_CODE_ATTR getMotorOutputHigh()
 {
-  return _model_ptr->state.mixer.digitalOutput ? PWM_TO_DSHOT(2000) : 2000;
+  return _model_ptr->state.mixer.digitalOutput ? Hal::EscDriver::pwmToDshot(2000) : 2000;
 }
 
 bool FAST_CODE_ATTR areMotorsRunning(void)

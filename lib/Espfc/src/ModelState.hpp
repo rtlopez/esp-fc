@@ -202,8 +202,8 @@ struct MixerState
   float maxThrottle;
   bool digitalOutput;
 
-  EscDriver* escMotor;
-  EscDriver* escServo;
+  Hal::EscDriver* escMotor;
+  Hal::EscDriver* escServo;
 };
 
 struct MagState

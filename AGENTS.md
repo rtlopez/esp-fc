@@ -21,7 +21,7 @@ Guidelines for AI agents working on **Esp-FC**. Keep changes small, tested and p
 - `lib/Hal/` – platform abstraction library, `namespace Hal`:
   - `include/Hal/` – public headers, include as `<Hal/X.hpp>`.
   - `src/` – sources and private headers, never include them from outside `lib/Hal`.
-- `lib/AHRS`, `lib/EscDriver`, `lib/Gps`, `lib/betaflight`, ... – supporting libraries.
+- `lib/AHRS`, `lib/Gps`, `lib/betaflight`, ... – supporting libraries.
 - `test/test_<area>/test_<area>.cpp` – unit tests.
 - `bin/` – helper scripts, `docs/` – user and dev docs.
 
