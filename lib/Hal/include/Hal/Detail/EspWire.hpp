@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-  EspTwoWire.h - TWI/I2C library for Arduino & Wiring
+  EspTwoWire.hpp - TWI/I2C library for Arduino & Wiring
   Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
 
   This library is free software; you can redistribute it and/or
@@ -21,39 +23,13 @@
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
 */
 
-#ifndef EspTwoWire_h
-#define EspTwoWire_h
-
-#include <Arduino.h>
+#include <cstddef>
 #include <cstdint>
 
-#define ESPWIRE_BUFFER_LENGTH 64
-
-class EspTwoWire : public Stream
+class EspTwoWire
 {
-private:
-  static uint8_t rxBuffer[];
-  static uint8_t rxBufferIndex;
-  static uint8_t rxBufferLength;
-
-  static uint8_t txAddress;
-  static uint8_t txBuffer[];
-  static uint8_t txBufferIndex;
-  static uint8_t txBufferLength;
-
-  static uint8_t transmitting;
-  static void (*user_onRequest)(void);
-  static void (*user_onReceive)(int);
-  static void onRequestService(void);
-  static void onReceiveService(uint8_t*, int);
-
 public:
-  EspTwoWire();
   void begin(int sda, int scl, uint32_t frequency = 0);
-  void pins(int sda, int scl) __attribute__((deprecated)); // use begin(sda, scl) in new code
-  void begin();
-  void begin(uint8_t);
-  void begin(int);
   void setClock(uint32_t);
   void setClockStretchLimit(uint32_t);
   void beginTransmission(uint8_t);
@@ -68,14 +44,12 @@ public:
   uint8_t requestFrom(int, int);
   uint8_t requestFrom(int, int, int);
 
-  virtual size_t write(uint8_t);
-  virtual size_t write(const uint8_t*, size_t);
-  virtual int available(void);
-  virtual int read(void);
-  virtual int peek(void);
-  virtual void flush();
-  void onReceive(void (*)(int));
-  void onRequest(void (*)(void));
+  size_t write(uint8_t);
+  size_t write(const uint8_t*, size_t);
+  int available(void);
+  int read(void);
+  int peek(void);
+  void flush();
 
   inline size_t write(unsigned long n)
   {
@@ -97,11 +71,21 @@ public:
     return write((uint8_t)n);
   }
 
-  using Print::write;
+private:
+  static constexpr size_t ESPWIRE_BUFFER_LENGTH = 64;
+
+  uint8_t rxBuffer[ESPWIRE_BUFFER_LENGTH]{};
+  size_t rxBufferIndex = 0;
+  size_t rxBufferLength = 0;
+
+  uint8_t txAddress = 0;
+  uint8_t txBuffer[ESPWIRE_BUFFER_LENGTH]{};
+  size_t txBufferIndex = 0;
+  size_t txBufferLength = 0;
+
+  uint8_t transmitting = 0;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_TWOWIRE)
 extern EspTwoWire EspWire;
-#endif
-
 #endif

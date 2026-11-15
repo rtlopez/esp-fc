@@ -3,7 +3,7 @@
 #include "Hal/BusI2C.hpp"
 #include "Hal/FastCode.hpp"
 #include <Arduino.h>
-#include <EspWire.hpp>
+#include <Hal/Detail/EspWire.hpp>
 
 namespace {
 
@@ -46,7 +46,6 @@ int BusI2C::begin(int sda, int scl, uint32_t speed)
 
   auto& dev = getI2C(_index);
   dev.begin(sda, scl, speed);
-  dev.setTimeout(50);
 
   return 1;
 }

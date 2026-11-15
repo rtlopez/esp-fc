@@ -18,6 +18,8 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+#if defined(ESP32) || defined(ESP8266)
+
 #include "esp_twi.hpp"
 #include <Arduino.h>
 #if defined(ESP32C3)
@@ -390,3 +392,5 @@ uint8_t esp_twi_status()
 
   return I2C_OK; // all ok
 }
+
+#endif

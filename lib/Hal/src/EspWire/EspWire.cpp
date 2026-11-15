@@ -21,70 +21,28 @@
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
 */
 
-#include "EspWire.hpp"
+#if defined(ESP32) || defined(ESP8266)
+
+#include "Hal/Detail/EspWire.hpp"
 #include "esp_twi.hpp"
+#include <Arduino.h>
 
 // Initialize Class Variables //////////////////////////////////////////////////
 
-uint8_t EspTwoWire::rxBuffer[ESPWIRE_BUFFER_LENGTH];
-uint8_t EspTwoWire::rxBufferIndex = 0;
-uint8_t EspTwoWire::rxBufferLength = 0;
-
-uint8_t EspTwoWire::txAddress = 0;
-uint8_t EspTwoWire::txBuffer[ESPWIRE_BUFFER_LENGTH];
-uint8_t EspTwoWire::txBufferIndex = 0;
-uint8_t EspTwoWire::txBufferLength = 0;
-
-uint8_t EspTwoWire::transmitting = 0;
-void (*EspTwoWire::user_onRequest)(void);
-void (*EspTwoWire::user_onReceive)(int);
-
-static int default_sda_pin = SDA;
-static int default_scl_pin = SCL;
-
 // Constructors ////////////////////////////////////////////////////////////////
-
-EspTwoWire::EspTwoWire() {}
 
 // Public Methods //////////////////////////////////////////////////////////////
 
 void EspTwoWire::begin(int sda, int scl, uint32_t frequency)
 {
-  default_sda_pin = sda;
-  default_scl_pin = scl;
   esp_twi_init(sda, scl);
   if (frequency) setClock(frequency);
   flush();
 }
 
-void EspTwoWire::pins(int sda, int scl)
-{
-  default_sda_pin = sda;
-  default_scl_pin = scl;
-}
-
-void EspTwoWire::begin(void)
-{
-  begin(default_sda_pin, default_scl_pin);
-}
-
-void EspTwoWire::begin(uint8_t address)
-{
-  (void)address;
-  // esp_twi_setAddress(address);
-  // esp_twi_attachSlaveTxEvent(onRequestService);
-  // esp_twi_attachSlaveRxEvent(onReceiveService);
-  begin();
-}
-
 uint8_t EspTwoWire::status()
 {
   return esp_twi_status();
-}
-
-void EspTwoWire::begin(int address)
-{
-  begin((uint8_t)address);
 }
 
 void EspTwoWire::setClock(uint32_t frequency)
@@ -162,7 +120,6 @@ size_t IRAM_ATTR EspTwoWire::write(uint8_t data)
   {
     if (txBufferLength >= ESPWIRE_BUFFER_LENGTH)
     {
-      setWriteError();
       return 0;
     }
     txBuffer[txBufferIndex] = data;
@@ -237,60 +194,10 @@ void EspTwoWire::flush(void)
   txBufferLength = 0;
 }
 
-void EspTwoWire::onReceiveService(uint8_t* inBytes, int numBytes)
-{
-  (void)inBytes;
-  (void)numBytes;
-  // don't bother if user hasn't registered a callback
-  // if(!user_onReceive){
-  //   return;
-  // }
-  // // don't bother if rx buffer is in use by a master requestFrom() op
-  // // i know this drops data, but it allows for slight stupidity
-  // // meaning, they may not have read all the master requestFrom() data yet
-  // if(rxBufferIndex < rxBufferLength){
-  //   return;
-  // }
-  // // copy twi rx buffer into local read buffer
-  // // this enables new reads to happen in parallel
-  // for(uint8_t i = 0; i < numBytes; ++i){
-  //   rxBuffer[i] = inBytes[i];
-  // }
-  // // set rx iterator vars
-  // rxBufferIndex = 0;
-  // rxBufferLength = numBytes;
-  // // alert user program
-  // user_onReceive(numBytes);
-}
-
-void EspTwoWire::onRequestService(void)
-{
-  // // don't bother if user hasn't registered a callback
-  // if(!user_onRequest){
-  //   return;
-  // }
-  // // reset tx buffer iterator vars
-  // // !!! this will kill any pending pre-master sendTo() activity
-  // txBufferIndex = 0;
-  // txBufferLength = 0;
-  // // alert user program
-  // user_onRequest();
-}
-
-void EspTwoWire::onReceive(void (*function)(int))
-{
-  (void)function;
-  // user_onReceive = function;
-}
-
-void EspTwoWire::onRequest(void (*function)(void))
-{
-  (void)function;
-  // user_onRequest = function;
-}
-
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_TWOWIRE)
 EspTwoWire EspWire;
+#endif
+
 #endif

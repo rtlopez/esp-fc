@@ -2,12 +2,12 @@
 
 #include "Hal/BusI2C.hpp"
 #include <Arduino.h>
-#include <EspWire.hpp>
+#include <Hal/Detail/EspWire.hpp>
 
 namespace {
 
 static EspTwoWire i2c0;
-static EspTwoWire i2c1;
+static EspTwoWire i2c1; // DO NOT USE second I2C, esp_twi functions aren't re-entrant
 
 EspTwoWire& getI2C(size_t index)
 {
@@ -55,7 +55,6 @@ int BusI2C::begin(int sda, int scl, uint32_t speed)
 
   auto& dev = getI2C(_index);
   dev.begin(sda, scl, speed);
-  dev.setTimeout(50);
 
   return 1;
 }
