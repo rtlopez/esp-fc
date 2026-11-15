@@ -86,7 +86,7 @@ int EscDriverImpl::pin(size_t channel) const
   return _slots[channel].pin;
 }
 
-uint32_t EscDriverImpl::telemetry(size_t channel) const
+uint32_t FAST_CODE_ATTR EscDriverImpl::telemetry(size_t channel) const
 {
   return 0;
 }
