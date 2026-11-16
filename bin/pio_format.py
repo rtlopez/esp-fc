@@ -27,7 +27,6 @@ def run_clang_format_base(check_only=False):
         "lib/Hal",
         "lib/AHRS",
         "lib/Gps",
-        "lib/EspWire",
     ]
     extensions = (".cpp", ".hpp", ".ipp")
 

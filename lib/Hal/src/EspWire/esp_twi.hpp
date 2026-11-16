@@ -1,5 +1,7 @@
+#pragma once
+
 /*
-  twi.h - Software I2C library for esp8266
+  esp_twi.hpp - Software I2C library for esp32/esp8266
 
   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
@@ -18,8 +20,6 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#ifndef ESP_TWI_H
-#define ESP_TWI_H
 
 #include <cstdint>
 
@@ -43,6 +43,4 @@ uint8_t esp_twi_status();
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

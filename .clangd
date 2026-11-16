@@ -16,7 +16,6 @@ CompileFlags:
     - -Ilib/AHRS/src
     - -Ilib/betaflight/src
     - -Ilib/Espfc/src
-    - -Ilib/EspWire/src
     - -Ilib/Hal/include
     - -Ilib/Gps/src
     - -Ilib/MultiButton/src
@@ -30,4 +29,3 @@ CompileFlags:
 #  Suppress:
 #    - pp_file_not_found
 #    - missing_template_arg_list_after_template_kw
-
