@@ -18,6 +18,7 @@ enum GyroDeviceType : uint8_t
   GYRO_ICM20602 = 7,
   GYRO_BMI160 = 8,
   GYRO_ICM42688 = 9,
+  GYRO_ICM42670P = 10,
   GYRO_MAX
 };
 
