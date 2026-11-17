@@ -10,7 +10,7 @@ namespace Espfc::Connect {
 class VtxSmartAudio
 {
 public:
-  static constexpr size_t FRAME_SIZE = 6;
+  static constexpr size_t FRAME_SIZE = 7;
   static constexpr uint8_t BANDS = 5;
   static constexpr uint8_t CHANNELS = 8;
 
@@ -20,8 +20,9 @@ public:
   int update();
   int update(uint32_t now);
 
-  static void encodeChannel(uint8_t* frame, uint8_t band, uint8_t channel);
-  static void encodePower(uint8_t* frame, uint8_t power);
+  static size_t encodeChannel(uint8_t* frame, uint8_t band, uint8_t channel);
+  static size_t encodePower(uint8_t* frame, uint8_t power);
+  static size_t encodeFrequency(uint8_t* frame, uint16_t frequency);
 
 private:
   enum class Command : uint8_t
@@ -31,7 +32,7 @@ private:
     COUNT,
   };
 
-  void send(const uint8_t* frame);
+  void send(const uint8_t* frame, size_t len);
   void sendChannel();
   void sendPower();
 

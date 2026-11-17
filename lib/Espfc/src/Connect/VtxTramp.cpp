@@ -42,10 +42,13 @@ int VtxTramp::update(uint32_t now)
   const auto& c = _model.config.vtx;
   switch (_next)
   {
-    case Command::FREQUENCY:
-      send('F', frequency(c.band, c.channel));
+    case Command::FREQUENCY: {
+      uint16_t f = vtxDirectFrequency(c);
+      if (!f && c.band) f = frequency(c.band, c.channel);
+      if (f) send('F', f);
       _next = Command::POWER;
       break;
+    }
     case Command::POWER:
       send('P', power(c.lowPowerDisarm && !_model.isModeActive(MODE_ARMED) ? 1 : c.power));
       _next = Command::PIT_MODE;

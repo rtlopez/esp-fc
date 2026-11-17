@@ -1,4 +1,5 @@
 #include "Connect/MspProcessor.hpp"
+#include "Connect/Vtx.hpp"
 #include "Hal/Board.hpp"
 #include "Hardware.hpp"
 #include "Model.hpp"
@@ -1817,21 +1818,21 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       }
       else
       {
-        r.writeU8(_model.state.vtx.type);            // vtx type
-        r.writeU8(_model.config.vtx.band);           // band
-        r.writeU8(_model.config.vtx.channel);        // channel
-        r.writeU8(_model.config.vtx.power);          // power
-        r.writeU8(_model.config.vtx.pitMode);        // status (1 means pit mode)
-        r.writeU16(0);                               // freq
-        r.writeU8(1);                                // ready
-        r.writeU8(_model.config.vtx.lowPowerDisarm); // low power disarm
+        r.writeU8(_model.state.vtx.type);                                     // vtx type
+        r.writeU8(_model.config.vtx.band);                                    // band (0 means frequency)
+        r.writeU8(_model.config.vtx.channel);                                 // channel
+        r.writeU8(_model.config.vtx.power);                                   // power
+        r.writeU8(_model.config.vtx.pitMode);                                 // status (1 means pit mode)
+        r.writeU16(_model.config.vtx.band ? 0 : _model.config.vtx.frequency); // freq
+        r.writeU8(1);                                                         // ready
+        r.writeU8(_model.config.vtx.lowPowerDisarm);                          // low power disarm
       }
       // 1.42
-      r.writeU16(0); // pit mode freq
-      r.writeU8(0);  // vtx table available (no)
-      r.writeU8(0);  // vtx table bands
-      r.writeU8(0);  // vtx table channels
-      r.writeU8(0);  // vtx power levels
+      r.writeU16(_model.config.vtx.pitModeFrequency); // pit mode freq
+      r.writeU8(0);                                   // vtx table available (no)
+      r.writeU8(0);                                   // vtx table bands
+      r.writeU8(0);                                   // vtx table channels
+      r.writeU8(0);                                   // vtx power levels
       break;
 
     case MSP_SET_VTX_CONFIG: {
@@ -1841,6 +1842,12 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
         // Value is band and channel
         _model.config.vtx.band = (freq / 8) + 1;
         _model.config.vtx.channel = (freq % 8) + 1;
+      }
+      else if (freq <= VTX_MAX_FREQUENCY_MHZ)
+      {
+        // Value is frequency in MHz
+        _model.config.vtx.band = 0;
+        _model.config.vtx.frequency = freq;
       }
 
       if (m.remain() >= 2)
@@ -1857,7 +1864,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       // API version 1.42 - this parameter kept separate since clients may already be supplying
       if (m.remain() >= 2)
       {
-        /*const uint16_t pitModeFreq = */ m.readU16();
+        _model.config.vtx.pitModeFrequency = std::min<uint16_t>(m.readU16(), VTX_MAX_FREQUENCY_MHZ);
       }
 
       // API version 1.42 - extensions for non-encoded versions of the band, channel or frequency
@@ -1867,7 +1874,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
         // away from the flawed encoded combined method originally implemented.
         _model.config.vtx.band = m.readU8();
         _model.config.vtx.channel = m.readU8();
-        /*uint16_t newFreq = */ m.readU16();
+        const uint16_t newFreq = m.readU16();
+        if (!_model.config.vtx.band)
+        {
+          _model.config.vtx.frequency = std::min<uint16_t>(newFreq, VTX_MAX_FREQUENCY_MHZ);
+        }
       }
     }
     break;
