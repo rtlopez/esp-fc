@@ -9,6 +9,11 @@ class GyroICM20602 : public GyroMPU6050
 public:
   GyroDeviceType getType() const override;
 
+  bool hasAuxI2C() const override
+  {
+    return false;
+  }
+
   void setDLPFMode(uint8_t mode) override;
 
   bool testConnection() override;

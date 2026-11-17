@@ -18,6 +18,7 @@ enum GyroDeviceType : uint8_t
   GYRO_ICM20602 = 7,
   GYRO_BMI160 = 8,
   GYRO_ICM42688 = 9,
+  GYRO_ICM42670P = 10,
   GYRO_MAX
 };
 
@@ -41,6 +42,11 @@ public:
   virtual void setRate(int rate) = 0;
 
   virtual bool testConnection() = 0;
+
+  virtual bool hasAuxI2C() const
+  {
+    return false;
+  }
 
   static const char** getNames();
   static const char* getName(DeviceType type);

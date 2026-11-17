@@ -1,5 +1,11 @@
 #include "Device/Baro/BaroBMP280.hpp"
+#include "Device/Gyro/GyroBMI160.hpp"
+#include "Device/Gyro/GyroICM20602.hpp"
+#include "Device/Gyro/GyroICM42670P.hpp"
 #include "Device/Gyro/GyroICM42688.hpp"
+#include "Device/Gyro/GyroLSM6DSO.hpp"
+#include "Device/Gyro/GyroMPU6500.hpp"
+#include "Device/Gyro/GyroMPU9250.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Device/Mag/MagHMC5883L.hpp"
 #include <ArduinoFake.h>
@@ -215,7 +221,8 @@ void test_get_rate()
 void test_enum_values()
 {
   static_assert(GYRO_ICM42688 == 9, "GYRO_ICM42688 must equal 9 (append-only rule)");
-  static_assert(GYRO_MAX == 10, "GYRO_MAX must equal 10 after ICM42688 addition");
+  static_assert(GYRO_ICM42670P == 10, "GYRO_ICM42670P must equal 10 (append-only rule)");
+  static_assert(GYRO_MAX == 11, "GYRO_MAX must equal 11 after ICM42670P addition");
   TEST_PASS();
 }
 
@@ -223,6 +230,76 @@ void test_name_table()
 {
   const char* name = GyroDevice::getName(GYRO_ICM42688);
   TEST_ASSERT_EQUAL_STRING("ICM42688", name);
+}
+
+void test_icm42670p_whoami()
+{
+  MockBusDevice bus;
+  bus.readRegs[0x75] = 0x67;
+  GyroICM42670P dev;
+  dev.setBus(&bus, 0x68);
+  TEST_ASSERT_TRUE(dev.testConnection());
+  TEST_ASSERT_EQUAL_HEX8(0x67, dev.getChipId().value());
+  bus.readRegs[0x75] = 0x47;
+  TEST_ASSERT_FALSE(dev.testConnection());
+}
+
+void test_icm42670p_begin_configures()
+{
+  MockBusDevice bus;
+  bus.readRegs[0x75] = 0x67;
+  GyroICM42670P dev;
+  fakeit::When(Method(ArduinoFake(), delay)).AlwaysReturn();
+  TEST_ASSERT_EQUAL_INT(1, dev.begin(&bus));
+  TEST_ASSERT_EQUAL_HEX8(0x0F, bus.writeRegs[0x1F]);
+  TEST_ASSERT_EQUAL_HEX8(0x05, bus.writeRegs[0x20]);
+  TEST_ASSERT_EQUAL_HEX8(0x05, bus.writeRegs[0x21]);
+  TEST_ASSERT_EQUAL_INT(1600, dev.getRate());
+  TEST_ASSERT_EQUAL_INT(GYRO_ICM42670P, dev.getType());
+}
+
+void test_icm42670p_begin_fails_without_device()
+{
+  MockBusDevice bus;
+  GyroICM42670P dev;
+  TEST_ASSERT_EQUAL_INT(0, dev.begin(&bus));
+  TEST_ASSERT_EQUAL_INT(0, bus.writeCalls);
+}
+
+void test_icm42670p_read_decoding()
+{
+  MockBusDevice bus;
+  bus.readRegs[0x11] = 0x01;
+  bus.readRegs[0x13] = 0x02;
+  bus.readRegs[0x15] = 0x03;
+  bus.readRegs[0x0B] = 0xFF;
+  bus.readRegs[0x0C] = 0xFE;
+  GyroICM42670P dev;
+  dev.setBus(&bus, 0x68);
+  VectorInt16 g, a;
+  dev.readGyro(g);
+  dev.readAccel(a);
+  TEST_ASSERT_EQUAL_INT16(256, g.x);
+  TEST_ASSERT_EQUAL_INT16(512, g.y);
+  TEST_ASSERT_EQUAL_INT16(768, g.z);
+  TEST_ASSERT_EQUAL_INT16(-2, a.x);
+}
+
+void test_icm42670p_name()
+{
+  TEST_ASSERT_EQUAL_STRING("ICM42670P", GyroDevice::getName(GYRO_ICM42670P));
+}
+
+void test_aux_i2c_support()
+{
+  TEST_ASSERT_TRUE(GyroMPU6050().hasAuxI2C());
+  TEST_ASSERT_TRUE(GyroMPU6500().hasAuxI2C());
+  TEST_ASSERT_TRUE(GyroMPU9250().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroICM20602().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroICM42688().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroICM42670P().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroBMI160().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroLSM6DSO().hasAuxI2C());
 }
 
 int main(int argc, char** argv)
@@ -243,5 +320,11 @@ int main(int argc, char** argv)
   RUN_TEST(test_get_rate);
   RUN_TEST(test_enum_values);
   RUN_TEST(test_name_table);
+  RUN_TEST(test_icm42670p_whoami);
+  RUN_TEST(test_icm42670p_begin_configures);
+  RUN_TEST(test_icm42670p_begin_fails_without_device);
+  RUN_TEST(test_icm42670p_read_decoding);
+  RUN_TEST(test_icm42670p_name);
+  RUN_TEST(test_aux_i2c_support);
   return UNITY_END();
 }

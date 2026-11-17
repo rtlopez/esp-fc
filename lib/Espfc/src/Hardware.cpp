@@ -5,6 +5,7 @@
 #include "Device/BaroDevice.hpp"
 #include "Device/Gyro/GyroBMI160.hpp"
 #include "Device/Gyro/GyroICM20602.hpp"
+#include "Device/Gyro/GyroICM42670P.hpp"
 #include "Device/Gyro/GyroICM42688.hpp"
 #include "Device/Gyro/GyroLSM6DSO.hpp"
 #include "Device/Gyro/GyroMPU6050.hpp"
@@ -28,6 +29,7 @@ static Espfc::Device::Gyro::GyroMPU9250 mpu9250;
 static Espfc::Device::Gyro::GyroLSM6DSO lsm6dso;
 static Espfc::Device::Gyro::GyroICM20602 icm20602;
 static Espfc::Device::Gyro::GyroICM42688 icm42688;
+static Espfc::Device::Gyro::GyroICM42670P icm42670p;
 static Espfc::Device::Gyro::GyroBMI160 bmi160;
 static Espfc::Device::Mag::MagHMC5883L hmc5883l;
 static Espfc::Device::Mag::MagQMC5883L qmc5883l;
@@ -115,7 +117,8 @@ void Hardware::detectGyro()
     if (!detectedGyro && detectDevice(icm42688, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm42688;
     if (!detectedGyro && detectDevice(bmi160, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
     if (!detectedGyro && detectDevice(lsm6dso, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
-    if (detectedGyro) gyroSlaveBus.begin(_spiBus, detectedGyro->getAddress());
+    if (!detectedGyro && detectDevice(icm42670p, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm42670p;
+    if (detectedGyro && detectedGyro->hasAuxI2C()) gyroSlaveBus.begin(_spiBus, detectedGyro->getAddress());
   }
 #endif
 #if defined(ESPFC_I2C_0)
@@ -127,7 +130,8 @@ void Hardware::detectGyro()
     if (!detectedGyro && detectDevice(bmi160, _i2cBus)) detectedGyro = &bmi160;
     if (!detectedGyro && detectDevice(mpu6050, _i2cBus)) detectedGyro = &mpu6050;
     if (!detectedGyro && detectDevice(lsm6dso, _i2cBus)) detectedGyro = &lsm6dso;
-    if (detectedGyro) gyroSlaveBus.begin(_i2cBus, detectedGyro->getAddress());
+    if (!detectedGyro && detectDevice(icm42670p, _i2cBus)) detectedGyro = &icm42670p;
+    if (detectedGyro && detectedGyro->hasAuxI2C()) gyroSlaveBus.begin(_i2cBus, detectedGyro->getAddress());
   }
 #endif
   if (!detectedGyro) return;
