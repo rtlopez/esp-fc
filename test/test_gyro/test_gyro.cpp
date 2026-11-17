@@ -1,6 +1,11 @@
 #include "Device/Baro/BaroBMP280.hpp"
+#include "Device/Gyro/GyroBMI160.hpp"
+#include "Device/Gyro/GyroICM20602.hpp"
 #include "Device/Gyro/GyroICM42670P.hpp"
 #include "Device/Gyro/GyroICM42688.hpp"
+#include "Device/Gyro/GyroLSM6DSO.hpp"
+#include "Device/Gyro/GyroMPU6500.hpp"
+#include "Device/Gyro/GyroMPU9250.hpp"
 #include "Device/GyroDevice.hpp"
 #include "Device/Mag/MagHMC5883L.hpp"
 #include <ArduinoFake.h>
@@ -285,6 +290,18 @@ void test_icm42670p_name()
   TEST_ASSERT_EQUAL_STRING("ICM42670P", GyroDevice::getName(GYRO_ICM42670P));
 }
 
+void test_aux_i2c_support()
+{
+  TEST_ASSERT_TRUE(GyroMPU6050().hasAuxI2C());
+  TEST_ASSERT_TRUE(GyroMPU6500().hasAuxI2C());
+  TEST_ASSERT_TRUE(GyroMPU9250().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroICM20602().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroICM42688().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroICM42670P().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroBMI160().hasAuxI2C());
+  TEST_ASSERT_FALSE(GyroLSM6DSO().hasAuxI2C());
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
@@ -308,5 +325,6 @@ int main(int argc, char** argv)
   RUN_TEST(test_icm42670p_begin_fails_without_device);
   RUN_TEST(test_icm42670p_read_decoding);
   RUN_TEST(test_icm42670p_name);
+  RUN_TEST(test_aux_i2c_support);
   return UNITY_END();
 }

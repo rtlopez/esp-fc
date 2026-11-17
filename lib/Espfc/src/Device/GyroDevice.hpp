@@ -43,6 +43,11 @@ public:
 
   virtual bool testConnection() = 0;
 
+  virtual bool hasAuxI2C() const
+  {
+    return false;
+  }
+
   static const char** getNames();
   static const char* getName(DeviceType type);
 };

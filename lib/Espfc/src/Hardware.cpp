@@ -118,7 +118,7 @@ void Hardware::detectGyro()
     if (!detectedGyro && detectDevice(bmi160, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
     if (!detectedGyro && detectDevice(lsm6dso, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
     if (!detectedGyro && detectDevice(icm42670p, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm42670p;
-    if (detectedGyro) gyroSlaveBus.begin(_spiBus, detectedGyro->getAddress());
+    if (detectedGyro && detectedGyro->hasAuxI2C()) gyroSlaveBus.begin(_spiBus, detectedGyro->getAddress());
   }
 #endif
 #if defined(ESPFC_I2C_0)
@@ -131,7 +131,7 @@ void Hardware::detectGyro()
     if (!detectedGyro && detectDevice(mpu6050, _i2cBus)) detectedGyro = &mpu6050;
     if (!detectedGyro && detectDevice(lsm6dso, _i2cBus)) detectedGyro = &lsm6dso;
     if (!detectedGyro && detectDevice(icm42670p, _i2cBus)) detectedGyro = &icm42670p;
-    if (detectedGyro) gyroSlaveBus.begin(_i2cBus, detectedGyro->getAddress());
+    if (detectedGyro && detectedGyro->hasAuxI2C()) gyroSlaveBus.begin(_i2cBus, detectedGyro->getAddress());
   }
 #endif
   if (!detectedGyro) return;

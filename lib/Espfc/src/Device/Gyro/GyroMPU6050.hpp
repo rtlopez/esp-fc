@@ -17,6 +17,11 @@ public:
 
   GyroDeviceType getType() const override;
 
+  bool hasAuxI2C() const override
+  {
+    return true;
+  }
+
   int readGyro(VectorInt16& v) override;
   int readAccel(VectorInt16& v) override;
 
