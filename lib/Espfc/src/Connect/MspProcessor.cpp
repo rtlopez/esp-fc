@@ -207,15 +207,16 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       r.writeU16(4102); // USE_PPM
       r.writeU16(4103); // USE_SERIALRX_SBUS
 
-      r.writeU16(16412); // USE_GPS
-      r.writeU16(16415); // USE_MAG
-      r.writeU16(16422); // USE_ALTHOLD
-
       r.writeU16(8230); // USE_BRUSHED
       r.writeU16(8231); // USE_DSHOT
       r.writeU16(8232); // USE_MULTISHOT
       r.writeU16(8233); // USE_ONESHOT
       r.writeU16(8235); // USE_PWM_OUTPUT
+
+      r.writeU16(16412); // USE_GPS
+      r.writeU16(16415); // USE_MAG
+      r.writeU16(16421); // USE_VTX
+      r.writeU16(16422); // USE_ALTHOLD
       break;
 
     case MSP_UID:
@@ -1816,11 +1817,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       }
       else
       {
-        r.writeU8(3 /* SMARTAUDIO */);               // vtx type unknown
+        r.writeU8(_model.state.vtx.type);            // vtx type
         r.writeU8(_model.config.vtx.band);           // band
         r.writeU8(_model.config.vtx.channel);        // channel
         r.writeU8(_model.config.vtx.power);          // power
-        r.writeU8(0);                                // status (looks like 1 means pit mode :shrug:)
+        r.writeU8(_model.config.vtx.pitMode);        // status (1 means pit mode)
         r.writeU16(0);                               // freq
         r.writeU8(1);                                // ready
         r.writeU8(_model.config.vtx.lowPowerDisarm); // low power disarm
@@ -1838,14 +1839,14 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       if (freq <= VTXCOMMON_MSP_BANDCHAN_CHKVAL)
       {
         // Value is band and channel
-        // const uint8_t newBand = (freq / 8) + 1;
-        // const uint8_t newChannel = (freq % 8) + 1;
+        _model.config.vtx.band = (freq / 8) + 1;
+        _model.config.vtx.channel = (freq % 8) + 1;
       }
 
       if (m.remain() >= 2)
       {
         _model.config.vtx.power = m.readU8();
-        /*const uint8_t newPitmode = */ m.readU8();
+        _model.config.vtx.pitMode = m.readU8() ? 1 : 0;
       }
 
       if (m.remain())

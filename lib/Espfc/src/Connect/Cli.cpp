@@ -565,6 +565,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("vtx_channel", &c.vtx.channel),
       Param("vtx_band", &c.vtx.band),
       Param("vtx_low_power_disarm", &c.vtx.lowPowerDisarm),
+      Param("vtx_pit_mode", &c.vtx.pitMode),
 
 #ifdef ESPFC_SERIAL_0
       Param("serial_0", &c.serial[SERIAL_UART_0]),

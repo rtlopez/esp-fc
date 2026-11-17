@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Model.hpp"
-#include "Utils/Timer.hpp"
-
 namespace Espfc::Connect {
 
 enum VtxDeviceType
@@ -14,34 +11,6 @@ enum VtxDeviceType
   VTXDEV_TRAMP = 4,
   VTXDEV_MSP = 5,
   VTXDEV_UNKNOWN = 0xFF,
-};
-
-enum State
-{
-  INACTIVE,
-  INIT,
-  SET_POWER,
-  SET_CHANNEL,
-  IDLE,
-};
-
-class Vtx
-{
-public:
-  Vtx(Model& model): _serial(nullptr), _model(model) {}
-
-  int begin(Stream::ReadWritable* serial);
-  int update();
-  int setChannel();
-  int setPower();
-  Connect::VtxDeviceType type;
-
-private:
-  Stream::ReadWritable* _serial;
-  Model& _model;
-  State _state = State::INACTIVE;
-  bool _armed = false;
-  Utils::Timer _timer;
 };
 
 } // namespace Espfc::Connect

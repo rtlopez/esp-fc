@@ -350,6 +350,7 @@ struct AltitudeState
 struct VtxState
 {
   uint8_t active = false;
+  uint8_t type = 0;
 };
 
 enum GpsDeviceVersion

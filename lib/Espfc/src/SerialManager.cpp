@@ -26,7 +26,8 @@ static Espfc::Device::SerialDeviceAdapter<Hal::SerialUsb> _usb(*Hal::getSerialUs
 namespace Espfc {
 
 SerialManager::SerialManager(Model& model, TelemetryManager& telemetry)
-    : _model(model), _current(0), _msp(model), _cli(model), _vtx(model), _telemetry(telemetry), _gps(model)
+    : _model(model), _current(0), _msp(model), _cli(model), _vtxSmartAudio(model), _vtxTramp(model),
+      _telemetry(telemetry), _gps(model)
 #ifdef ESPFC_SERIAL_SOFT_0_WIFI
       ,
       _wireless(model)
@@ -118,6 +119,13 @@ int SerialManager::begin()
       sdc.stop_bits = Hal::SDC_SERIAL_STOP_BITS_2;
       sdc.data_bits = 8;
     }
+    else if (spc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      sdc.baud = 9600;
+      sdc.parity = Hal::SDC_SERIAL_PARITY_NONE;
+      sdc.stop_bits = Hal::SDC_SERIAL_STOP_BITS_1;
+      sdc.data_bits = 8;
+    }
 
     if (!sdc.baud)
     {
@@ -137,7 +145,11 @@ int SerialManager::begin()
     }
     if (spc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
     {
-      _vtx.begin(port);
+      _vtxSmartAudio.begin(port);
+    }
+    if (spc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      _vtxTramp.begin(port);
     }
     if (spc.functionMask & SERIAL_FUNCTION_GPS)
     {
@@ -190,7 +202,12 @@ int FAST_CODE_ATTR SerialManager::update()
     }
     if (sc.functionMask & SERIAL_FUNCTION_VTX_SMARTAUDIO)
     {
-      _vtx.update();
+      _vtxSmartAudio.update();
+      processed = true;
+    }
+    if (sc.functionMask & SERIAL_FUNCTION_VTX_TRAMP)
+    {
+      _vtxTramp.update();
       processed = true;
     }
     if (sc.functionMask & SERIAL_FUNCTION_GPS)
