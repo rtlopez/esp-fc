@@ -1,6 +1,7 @@
 #include "VtxSmartAudio.hpp"
 #include "Hal/Time.hpp"
 #include "Utils/Crc.hpp"
+#include "Vtx.hpp"
 #include <algorithm>
 
 namespace Espfc::Connect {

@@ -1,5 +1,6 @@
 #include "VtxTramp.hpp"
 #include "Hal/Time.hpp"
+#include "Vtx.hpp"
 #include <algorithm>
 
 namespace Espfc::Connect {

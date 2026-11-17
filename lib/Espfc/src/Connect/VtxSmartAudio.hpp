@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Connect/Vtx.hpp"
 #include "Model.hpp"
+#include "Stream/ReadWritable.hpp"
 #include "Utils/Timer.hpp"
 
 namespace Espfc::Connect {
