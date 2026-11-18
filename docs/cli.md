@@ -482,6 +482,7 @@ set vtx_low_power_disarm 0
 set vtx_pit_mode 0
 set vtx_freq 0
 set vtx_pit_mode_freq 0
+set vtx_smartaudio_version V2
 set serial_0 1 115200 0
 set serial_1 1 115200 0
 set serial_2 64 115200 0

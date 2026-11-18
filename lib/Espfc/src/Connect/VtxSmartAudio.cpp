@@ -13,6 +13,15 @@ constexpr uint8_t SYNC_BYTE = 0x00;
 constexpr uint8_t CMD_SET_POWER = 0x05;
 constexpr uint8_t CMD_SET_CHANNEL = 0x07;
 constexpr uint8_t CMD_SET_FREQUENCY = 0x09;
+constexpr uint8_t CMD_SET_MODE = 0x0B;
+
+constexpr uint8_t MODE_CLEAR_PIT_MODE = 0x04;
+constexpr uint8_t MODE_UNLOCK = 0x08;
+constexpr uint8_t POWER_DBM_FLAG = 0x80;
+constexpr uint16_t FREQUENCY_SET_PIT_FLAG = 0x8000;
+
+constexpr uint8_t POWER_DAC_V1[VtxSmartAudio::POWERS] = {7, 16, 25, 40};   // 25, 200, 500, 800 mW
+constexpr uint8_t POWER_DBM_V21[VtxSmartAudio::POWERS] = {14, 23, 27, 29}; // 25, 200, 500, 800 mW
 
 size_t encode(uint8_t* frame, uint8_t cmd, const uint8_t* payload, uint8_t len)
 {
@@ -57,8 +66,16 @@ int VtxSmartAudio::update(uint32_t now)
       sendChannel();
       _next = Command::POWER;
       break;
-    default:
+    case Command::POWER:
       sendPower();
+      _next = Command::MODE;
+      break;
+    case Command::MODE:
+      sendMode();
+      _next = Command::PIT_FREQUENCY;
+      break;
+    default:
+      sendPitModeFrequency();
       _next = Command::CHANNEL;
       break;
   }
@@ -72,15 +89,39 @@ size_t VtxSmartAudio::encodeChannel(uint8_t* frame, uint8_t band, uint8_t channe
   return encode(frame, CMD_SET_CHANNEL, b * CHANNELS + c);
 }
 
-size_t VtxSmartAudio::encodePower(uint8_t* frame, uint8_t power)
+size_t VtxSmartAudio::encodePower(uint8_t* frame, uint8_t power, int8_t version)
 {
-  return encode(frame, CMD_SET_POWER, power > 0 ? power - 1 : 0);
+  const uint8_t index = std::clamp<uint8_t>(power, 1, POWERS) - 1;
+  switch (version)
+  {
+    case VTX_SMARTAUDIO_V1:
+      return encode(frame, CMD_SET_POWER, POWER_DAC_V1[index]);
+    case VTX_SMARTAUDIO_V21:
+      return encode(frame, CMD_SET_POWER, POWER_DBM_V21[index] | POWER_DBM_FLAG);
+    default:
+      return encode(frame, CMD_SET_POWER, index);
+  }
+}
+
+size_t VtxSmartAudio::encodePitModePower(uint8_t* frame)
+{
+  return encode(frame, CMD_SET_POWER, 0 | POWER_DBM_FLAG);
+}
+
+size_t VtxSmartAudio::encodeClearPitMode(uint8_t* frame)
+{
+  return encode(frame, CMD_SET_MODE, MODE_CLEAR_PIT_MODE | MODE_UNLOCK);
 }
 
 size_t VtxSmartAudio::encodeFrequency(uint8_t* frame, uint16_t frequency)
 {
   const uint8_t payload[2] = {static_cast<uint8_t>(frequency >> 8), static_cast<uint8_t>(frequency & 0xFF)};
   return encode(frame, CMD_SET_FREQUENCY, payload, 2);
+}
+
+size_t VtxSmartAudio::encodePitModeFrequency(uint8_t* frame, uint16_t frequency)
+{
+  return encodeFrequency(frame, frequency | FREQUENCY_SET_PIT_FLAG);
 }
 
 void VtxSmartAudio::send(const uint8_t* frame, size_t len)
@@ -93,18 +134,40 @@ void VtxSmartAudio::send(const uint8_t* frame, size_t len)
 void VtxSmartAudio::sendChannel()
 {
   const auto& c = _model.config.vtx;
-  const uint16_t f = vtxDirectFrequency(c);
+  const uint16_t f = c.smartAudioVersion == VTX_SMARTAUDIO_V1 ? vtxDirectFrequency(c) : vtxBaseFrequency(c);
   if (!f && !c.band) return;
-  uint8_t frame[FRAME_SIZE];
+  uint8_t frame[FRAME_SIZE] = {};
   send(frame, f ? encodeFrequency(frame, f) : encodeChannel(frame, c.band, c.channel));
 }
 
 void VtxSmartAudio::sendPower()
 {
   const auto& c = _model.config.vtx;
+  uint8_t frame[FRAME_SIZE] = {};
+  if (c.pitMode && c.smartAudioVersion == VTX_SMARTAUDIO_V21)
+  {
+    send(frame, encodePitModePower(frame));
+    return;
+  }
   const bool low = c.lowPowerDisarm && !_model.isModeActive(MODE_ARMED);
-  uint8_t frame[FRAME_SIZE];
-  send(frame, encodePower(frame, low ? 1 : c.power));
+  send(frame, encodePower(frame, low ? 1 : c.power, c.smartAudioVersion));
+}
+
+void VtxSmartAudio::sendMode()
+{
+  const auto& c = _model.config.vtx;
+  if (c.pitMode || c.smartAudioVersion == VTX_SMARTAUDIO_V1) return;
+  uint8_t frame[FRAME_SIZE] = {};
+  send(frame, encodeClearPitMode(frame));
+}
+
+void VtxSmartAudio::sendPitModeFrequency()
+{
+  const auto& c = _model.config.vtx;
+  const uint16_t f = vtxClampFrequency(c.pitModeFrequency);
+  if (!f || c.smartAudioVersion == VTX_SMARTAUDIO_V1) return;
+  uint8_t frame[FRAME_SIZE] = {};
+  send(frame, encodePitModeFrequency(frame, f));
 }
 
 } // namespace Espfc::Connect

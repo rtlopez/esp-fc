@@ -412,6 +412,19 @@ public:
     setRebootRequired();
   }
 
+  static int32_t sanitizeSerialFunctionMask(int32_t mask)
+  {
+    constexpr int32_t allowedMask = SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_BLACKBOX |
+                                    SERIAL_FUNCTION_GPS | SERIAL_FUNCTION_TELEMETRY_FRSKY |
+                                    SERIAL_FUNCTION_TELEMETRY_HOTT | SERIAL_FUNCTION_TELEMETRY_IBUS |
+                                    SERIAL_FUNCTION_VTX_SMARTAUDIO | SERIAL_FUNCTION_VTX_TRAMP;
+    mask &= allowedMask;
+    // vtx requires dedicated port with its own baud rate and frame format
+    if (mask & SERIAL_FUNCTION_VTX_SMARTAUDIO) return SERIAL_FUNCTION_VTX_SMARTAUDIO;
+    if (mask & SERIAL_FUNCTION_VTX_TRAMP) return SERIAL_FUNCTION_VTX_TRAMP;
+    return mask;
+  }
+
   void sanitize()
   {
     // for spi gyro allow full speed mode
@@ -512,11 +525,6 @@ public:
       config.output.motorLimit = 100;
     }
 
-    // configure serial ports
-    constexpr uint32_t serialFunctionAllowedMask =
-        SERIAL_FUNCTION_MSP | SERIAL_FUNCTION_RX_SERIAL | SERIAL_FUNCTION_BLACKBOX | SERIAL_FUNCTION_GPS |
-        SERIAL_FUNCTION_TELEMETRY_FRSKY | SERIAL_FUNCTION_TELEMETRY_HOTT | SERIAL_FUNCTION_TELEMETRY_IBUS |
-        SERIAL_FUNCTION_VTX_SMARTAUDIO | SERIAL_FUNCTION_VTX_TRAMP;
     uint32_t featureAllowMask = FEATURE_RX_PPM | FEATURE_RX_SERIAL | FEATURE_MOTOR_STOP | FEATURE_SOFTSERIAL |
                                 FEATURE_GPS | FEATURE_TELEMETRY | FEATURE_RX_SPI; // | FEATURE_AIRMODE;
 
@@ -524,7 +532,7 @@ public:
 
     for (int i = 0; i < SERIAL_UART_COUNT; i++)
     {
-      config.serial[i].functionMask &= serialFunctionAllowedMask;
+      config.serial[i].functionMask = sanitizeSerialFunctionMask(config.serial[i].functionMask);
     }
 
     if (config.fusion.mode >= FUSION_MAX)

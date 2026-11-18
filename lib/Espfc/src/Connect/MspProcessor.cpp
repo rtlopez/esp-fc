@@ -1837,13 +1837,13 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
 
     case MSP_SET_VTX_CONFIG: {
       uint16_t freq = m.readU16();
-      if (freq <= VTXCOMMON_MSP_BANDCHAN_CHKVAL)
+      if (freq < VTX_BAND_COUNT * VTX_CHANNEL_COUNT)
       {
         // Value is band and channel
         _model.config.vtx.band = (freq / 8) + 1;
         _model.config.vtx.channel = (freq % 8) + 1;
       }
-      else if (freq <= VTX_MAX_FREQUENCY_MHZ)
+      else if (freq > VTXCOMMON_MSP_BANDCHAN_CHKVAL && vtxIsValidFrequency(freq))
       {
         // Value is frequency in MHz
         _model.config.vtx.band = 0;
@@ -1864,7 +1864,11 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       // API version 1.42 - this parameter kept separate since clients may already be supplying
       if (m.remain() >= 2)
       {
-        _model.config.vtx.pitModeFrequency = std::min<uint16_t>(m.readU16(), VTX_MAX_FREQUENCY_MHZ);
+        const uint16_t pitFreq = m.readU16();
+        if (vtxIsValidFrequency(pitFreq))
+        {
+          _model.config.vtx.pitModeFrequency = pitFreq;
+        }
       }
 
       // API version 1.42 - extensions for non-encoded versions of the band, channel or frequency
@@ -1872,12 +1876,18 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       {
         // Added standalone values for band, channel and frequency to move
         // away from the flawed encoded combined method originally implemented.
-        _model.config.vtx.band = m.readU8();
-        _model.config.vtx.channel = m.readU8();
+        const uint8_t newBand = m.readU8();
+        const uint8_t newChannel = m.readU8();
         const uint16_t newFreq = m.readU16();
-        if (!_model.config.vtx.band)
+        if (newBand == 0 && vtxIsValidFrequency(newFreq))
         {
-          _model.config.vtx.frequency = std::min<uint16_t>(newFreq, VTX_MAX_FREQUENCY_MHZ);
+          _model.config.vtx.band = 0;
+          _model.config.vtx.frequency = newFreq;
+        }
+        else if (newBand > 0 && newBand <= VTX_BAND_COUNT && newChannel > 0 && newChannel <= VTX_CHANNEL_COUNT)
+        {
+          _model.config.vtx.band = newBand;
+          _model.config.vtx.channel = newChannel;
         }
       }
     }

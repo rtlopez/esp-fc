@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Connect/Vtx.hpp"
 #include "Model.hpp"
 #include "Stream/ReadWritable.hpp"
 #include "Utils/Timer.hpp"
@@ -11,8 +12,8 @@ class VtxTramp
 {
 public:
   static constexpr size_t FRAME_SIZE = 16;
-  static constexpr uint8_t BANDS = 5;
-  static constexpr uint8_t CHANNELS = 8;
+  static constexpr uint8_t BANDS = VTX_BAND_COUNT;
+  static constexpr uint8_t CHANNELS = VTX_CHANNEL_COUNT;
   static constexpr uint8_t POWERS = 5;
 
   VtxTramp(Model& model): _model(model) {}

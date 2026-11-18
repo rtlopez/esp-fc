@@ -393,6 +393,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
   static const char* blackboxModeChoices[] = { "NORMAL", "TEST", "ALWAYS", nullptr };
   static const char* ledTypeChoices[] = { "SIMPLE", "STRIP", nullptr };
   static const char* simplifiedTunigModeChoices[] = { "OFF", "RP", "RPY", nullptr };
+  static const char* vtxSmartAudioVersionChoices[] = { "V1", "V2", "V21", nullptr };
   static const char* tpaModeChoices[] = { "PD", "D", nullptr };
 
   size_t i = 0;
@@ -568,6 +569,7 @@ const Cli::Param* Cli::initialize(ModelConfig& c)
       Param("vtx_pit_mode", &c.vtx.pitMode),
       Param("vtx_freq", &c.vtx.frequency),
       Param("vtx_pit_mode_freq", &c.vtx.pitModeFrequency),
+      Param("vtx_smartaudio_version", &c.vtx.smartAudioVersion, vtxSmartAudioVersionChoices),
 
 #ifdef ESPFC_SERIAL_0
       Param("serial_0", &c.serial[SERIAL_UART_0]),
