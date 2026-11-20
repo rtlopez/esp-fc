@@ -2,7 +2,8 @@
 
 #include "Connect/Cli.hpp"
 #include "Connect/MspProcessor.hpp"
-#include "Connect/Vtx.hpp"
+#include "Connect/VtxSmartAudio.hpp"
+#include "Connect/VtxTramp.hpp"
 #include "Model.hpp"
 #include "Output/OutputIBUS.hpp"
 #include "Sensor/GpsSensor.hpp"
@@ -38,7 +39,8 @@ private:
 
   Connect::MspProcessor _msp;
   Connect::Cli _cli;
-  Connect::Vtx _vtx;
+  Connect::VtxSmartAudio _vtxSmartAudio;
+  Connect::VtxTramp _vtxTramp;
   TelemetryManager& _telemetry;
   Output::OutputIBUS _ibus;
   Sensor::GpsSensor _gps;

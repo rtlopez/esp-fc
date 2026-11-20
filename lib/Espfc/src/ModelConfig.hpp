@@ -879,12 +879,23 @@ struct ControllerConfig
   int16_t tpaBreakpoint = 1650;
 };
 
+enum VtxSmartAudioVersion : int8_t
+{
+  VTX_SMARTAUDIO_V1,
+  VTX_SMARTAUDIO_V2,
+  VTX_SMARTAUDIO_V21,
+};
+
 struct VtxConfig
 {
   uint8_t channel = 0x8;
   uint8_t band = 0x1;
   uint8_t power = 0;
   uint8_t lowPowerDisarm = 0;
+  uint8_t pitMode = 0;
+  int16_t frequency = 0;
+  int16_t pitModeFrequency = 0;
+  int8_t smartAudioVersion = VTX_SMARTAUDIO_V2;
 };
 
 struct GpsConfig

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Model.hpp"
-#include "Utils/Timer.hpp"
+#include "ModelConfig.hpp"
+#include <algorithm>
 
 namespace Espfc::Connect {
 
@@ -16,32 +16,32 @@ enum VtxDeviceType
   VTXDEV_UNKNOWN = 0xFF,
 };
 
-enum State
+constexpr uint8_t VTX_BAND_COUNT = 5;
+constexpr uint8_t VTX_CHANNEL_COUNT = 8;
+constexpr int VTX_MIN_FREQUENCY_MHZ = 5000;
+constexpr int VTX_MAX_FREQUENCY_MHZ = 5999;
+
+// Zero means unset.
+inline bool vtxIsValidFrequency(int f)
 {
-  INACTIVE,
-  INIT,
-  SET_POWER,
-  SET_CHANNEL,
-  IDLE,
-};
+  return f == 0 || (f >= VTX_MIN_FREQUENCY_MHZ && f <= VTX_MAX_FREQUENCY_MHZ);
+}
 
-class Vtx
+inline uint16_t vtxClampFrequency(int f)
 {
-public:
-  Vtx(Model& model): _serial(nullptr), _model(model) {}
+  return f > 0 ? std::clamp(f, VTX_MIN_FREQUENCY_MHZ, VTX_MAX_FREQUENCY_MHZ) : 0;
+}
 
-  int begin(Stream::ReadWritable* serial);
-  int update();
-  int setChannel();
-  int setPower();
-  Connect::VtxDeviceType type;
+// Frequency in MHz configured directly (band 0), 0 when band and channel should be used.
+inline uint16_t vtxBaseFrequency(const VtxConfig& c)
+{
+  return c.band == 0 ? vtxClampFrequency(c.frequency) : 0;
+}
 
-private:
-  Stream::ReadWritable* _serial;
-  Model& _model;
-  State _state = State::INACTIVE;
-  bool _armed = false;
-  Utils::Timer _timer;
-};
+// Like vtxBaseFrequency, but tuned to pit mode frequency when pit mode is active.
+inline uint16_t vtxDirectFrequency(const VtxConfig& c)
+{
+  return (c.pitMode && c.pitModeFrequency) ? vtxClampFrequency(c.pitModeFrequency) : vtxBaseFrequency(c);
+}
 
 } // namespace Espfc::Connect
