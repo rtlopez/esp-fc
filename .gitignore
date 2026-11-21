@@ -44,3 +44,4 @@ __pycache__
 # sonar reports
 /coverage.xml
 /test-report.xml
+/coverage/
