@@ -41,3 +41,6 @@
 .cache/
 compile_commands.json
 __pycache__
+# sonar reports
+/coverage.xml
+/test-report.xml
