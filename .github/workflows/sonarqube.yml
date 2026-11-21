@@ -24,6 +24,20 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+      - name: Install tools
+        if: ${{ env.SONAR_TOKEN != '' }}
+        run: |
+          pipx install platformio
+          pipx install gcovr
+      - name: Generate compilation database
+        if: ${{ env.SONAR_TOKEN != '' }}
+        run: pio run -e coverage -t compiledb
+      - name: Run unit tests with coverage
+        if: ${{ env.SONAR_TOKEN != '' }}
+        run: |
+          pio test -e coverage --junit-output-path .pio/junit.xml
+          python3 bin/junit_to_sonar.py .pio/junit.xml test-report.xml coverage
+          gcovr --root . --filter 'lib/' --exclude 'lib/CmsisDsp/' --exclude 'lib/betaflight/' --sonarqube coverage.xml .pio/build/coverage
       - name: SonarQube Scan
         if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
