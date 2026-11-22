@@ -5,7 +5,7 @@ services:
       context: docker
     hostname: espfc
     network_mode: "host"
-    user: "1000:1000"
+    user: "1000:1000" # update to your uid:gid
     #devices:
     #  - "/dev/ttyUSB0:/dev/ttyUSB0"
     #  - "/dev/ttyACM0:/dev/ttyACM0"

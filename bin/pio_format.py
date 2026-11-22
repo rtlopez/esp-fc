@@ -11,7 +11,7 @@ env = DefaultEnvironment()
 
 def run_clang_format_base(check_only=False):
     # 1. Look for the binary in system PATH (handles .exe on Windows automatically)
-    executable = shutil.which("clang-format-20") or shutil.which("clang-format")
+    executable = shutil.which("clang-format-22") or shutil.which("clang-format-20") or shutil.which("clang-format")
 
     if not executable:
         print("\n[CLANG-FORMAT] ERROR: 'clang-format' not found in PATH.")
