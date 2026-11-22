@@ -71,7 +71,6 @@ MixerConfig Mixers::getMixer(MixerType mixer, const MixerConfig& custom)
     default:
       return {0, mixesEmpty};
   }
-  return {0, mixesEmpty};
 }
 
 } // namespace Espfc::Output
