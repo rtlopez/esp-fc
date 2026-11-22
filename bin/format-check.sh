@@ -8,12 +8,14 @@ fi
 
 ROOT_DIR="${1:-.}"
 
-if command -v clang-format-20 >/dev/null 2>&1; then
+if command -v clang-format-22 >/dev/null 2>&1; then
+    CLANG_FORMAT="clang-format-22"
+elif command -v clang-format-20 >/dev/null 2>&1; then
     CLANG_FORMAT="clang-format-20"
 elif command -v clang-format >/dev/null 2>&1; then
     CLANG_FORMAT="clang-format"
 else
-    echo "Error: neither clang-format-20 nor clang-format was found in PATH" >&2
+    echo "Error: none of clang-format-22, clang-format-20 or clang-format was found in PATH" >&2
     exit 1
 fi
 
