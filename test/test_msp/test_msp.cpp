@@ -1,11 +1,15 @@
 #include "Connect/Msp.hpp"
 #include "Connect/MspParser.hpp"
+#include "Connect/MspProcessor.hpp"
+#include "MockSerialStream.hpp"
 #include "msp/msp_protocol.h"
+#include "msp/msp_protocol_v2_common.h"
 #include <Gps.hpp>
 #include <Hal/Gpio.hpp>
 #include <helper_3dmath.hpp>
 #include <printf.h>
 #include <unity.h>
+#include <vector>
 
 using namespace Espfc;
 using namespace Espfc::Connect;
@@ -161,9 +165,81 @@ void test_msp_response_write_bounds()
   TEST_ASSERT_EQUAL_UINT16(MSP_BUF_OUT_SIZE, resp.len);
 }
 
+static int processMsp(Model& model, uint16_t cmd, const std::vector<uint8_t>& payload)
+{
+  MspProcessor msp(model);
+  MspMessage m;
+  m.cmd = cmd;
+  m.append(payload.data(), payload.size());
+  MspResponse r;
+  MockSerialStream serial;
+  msp.processCommand(m, r, serial);
+  return r.result;
+}
+
+void test_msp_set_cf_serial_config_known_port()
+{
+  Model model;
+  const uint8_t baud = SERIAL_SPEED_INDEX_115200;
+  processMsp(model, MSP_SET_CF_SERIAL_CONFIG, {SERIAL_ID_UART_1, SERIAL_FUNCTION_GPS, 0, baud, 0, 0, baud});
+
+  TEST_ASSERT_EQUAL_UINT32(SERIAL_FUNCTION_GPS, model.config.serial[SERIAL_UART_0].functionMask);
+  TEST_ASSERT_EQUAL_INT(SERIAL_SPEED_115200, model.config.serial[SERIAL_UART_0].baud);
+  TEST_ASSERT_EQUAL_INT(SERIAL_SPEED_115200, model.config.serial[SERIAL_UART_0].blackboxBaud);
+}
+
+void test_msp_set_cf_serial_config_unknown_port_is_skipped()
+{
+  Model model;
+  const auto before = model.config.serial[SERIAL_UART_0];
+  const uint8_t baud = SERIAL_SPEED_INDEX_115200;
+  const std::vector<uint8_t> unknown = {SERIAL_ID_UART_2, SERIAL_FUNCTION_GPS, 0, baud, 0, 0, baud};
+  const std::vector<uint8_t> known = {SERIAL_ID_UART_1, SERIAL_FUNCTION_GPS, 0, baud, 0, 0, baud};
+  std::vector<uint8_t> payload = unknown;
+  payload.insert(payload.end(), known.begin(), known.end());
+  processMsp(model, MSP_SET_CF_SERIAL_CONFIG, payload);
+
+  TEST_ASSERT_EQUAL_UINT32(SERIAL_FUNCTION_GPS, model.config.serial[SERIAL_UART_0].functionMask);
+  TEST_ASSERT_NOT_EQUAL_UINT32(before.functionMask, model.config.serial[SERIAL_UART_0].functionMask);
+}
+
+void test_msp_set_cf_serial_config_invalid_size()
+{
+  Model model;
+  const auto before = model.config.serial[SERIAL_UART_0];
+  const int result = processMsp(model, MSP_SET_CF_SERIAL_CONFIG, {SERIAL_ID_UART_1, SERIAL_FUNCTION_GPS, 0});
+
+  TEST_ASSERT_EQUAL_INT(-1, result);
+  TEST_ASSERT_EQUAL_UINT32(before.functionMask, model.config.serial[SERIAL_UART_0].functionMask);
+}
+
+void test_msp2_set_serial_config_known_and_unknown_port()
+{
+  Model model;
+  const uint8_t baud = SERIAL_SPEED_INDEX_115200;
+  processMsp(model, MSP2_COMMON_SET_SERIAL_CONFIG,
+             {2, SERIAL_ID_UART_2, SERIAL_FUNCTION_GPS, 0, 0, 0, baud, 0, 0, baud, SERIAL_ID_UART_1,
+              SERIAL_FUNCTION_GPS, 0, 0, 0, baud, 0, 0, baud});
+
+  TEST_ASSERT_EQUAL_UINT32(SERIAL_FUNCTION_GPS, model.config.serial[SERIAL_UART_0].functionMask);
+  TEST_ASSERT_EQUAL_INT(SERIAL_SPEED_115200, model.config.serial[SERIAL_UART_0].baud);
+}
+
+void test_msp2_set_serial_config_invalid_size()
+{
+  Model model;
+  const int result = processMsp(model, MSP2_COMMON_SET_SERIAL_CONFIG, {1, SERIAL_ID_UART_1, 0});
+  TEST_ASSERT_EQUAL_INT(-1, result);
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
+  RUN_TEST(test_msp_set_cf_serial_config_known_port);
+  RUN_TEST(test_msp_set_cf_serial_config_unknown_port_is_skipped);
+  RUN_TEST(test_msp_set_cf_serial_config_invalid_size);
+  RUN_TEST(test_msp2_set_serial_config_known_and_unknown_port);
+  RUN_TEST(test_msp2_set_serial_config_invalid_size);
   RUN_TEST(test_msp_message_append_bounds);
   RUN_TEST(test_msp_message_read_bounds);
   RUN_TEST(test_msp_response_write_bounds);

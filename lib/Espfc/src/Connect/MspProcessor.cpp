@@ -689,7 +689,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       {
         int id = m.readU8();
         int k = _model.getSerialIndexById((SerialPortId)id);
-        if (k == -1)
+        if (k < 0 || k >= SERIAL_UART_COUNT)
         {
           m.advance(packetSize - 1);
           continue;
@@ -718,7 +718,7 @@ void MspProcessor::processCommand(MspMessage& m, MspResponse& r, Stream::ReadWri
       {
         int id = m.readU8();
         int k = _model.getSerialIndexById((SerialPortId)id);
-        if (k == -1)
+        if (k < 0 || k >= SERIAL_UART_COUNT)
         {
           m.advance(packetSize - 1);
           continue;
