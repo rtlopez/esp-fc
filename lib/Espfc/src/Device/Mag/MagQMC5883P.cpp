@@ -1,54 +1,54 @@
 #include "MagQMC5883P.hpp"
 #include "Hal/Time.hpp"
 
-#define QMC5883P_ADDRESS 0x2C
-#define QMC5883P_DEFAULT_ADDRESS 0x2C
-#define QMC5883P_CHIP_ID 0x80
-
-#define QMC5883P_REG_CHIPID 0x00
-#define QMC5883P_REG_XOUT_LSB 0x01
-#define QMC5883P_REG_XOUT_MSB 0x02
-#define QMC5883P_REG_YOUT_LSB 0x03
-#define QMC5883P_REG_YOUT_MSB 0x04
-#define QMC5883P_REG_ZOUT_LSB 0x05
-#define QMC5883P_REG_ZOUT_MSB 0x06
-#define QMC5883P_REG_STATUS 0x09
-#define QMC5883P_REG_CONTROL1 0x0A
-#define QMC5883P_REG_CONTROL2 0x0B
-
-#define QMC5883P_MODE_SUSPEND 0x00
-#define QMC5883P_MODE_NORMAL 0x01
-#define QMC5883P_MODE_SINGLE 0x02
-#define QMC5883P_MODE_CONTINUOUS 0x03
-
-#define QMC5883P_ODR_10HZ 0x00
-#define QMC5883P_ODR_50HZ 0x01
-#define QMC5883P_ODR_100HZ 0x02
-#define QMC5883P_ODR_200HZ 0x03
-
-#define QMC5883P_OSR_8 0x00
-#define QMC5883P_OSR_4 0x01
-#define QMC5883P_OSR_2 0x02
-#define QMC5883P_OSR_1 0x03
-
-#define QMC5883P_DSR_1 0x00
-#define QMC5883P_DSR_2 0x01
-#define QMC5883P_DSR_4 0x02
-#define QMC5883P_DSR_8 0x03
-
-#define QMC5883P_RANGE_30G 0x00
-#define QMC5883P_RANGE_12G 0x01
-#define QMC5883P_RANGE_8G 0x02
-#define QMC5883P_RANGE_2G 0x03
-
-#define QMC5883P_SETRESET_ON 0x00
-#define QMC5883P_SETRESET_SETONLY 0x01
-#define QMC5883P_SETRESET_OFF 0x02
-
-#define QMC5883P_CONTROL2_RESET_BIT 7
-#define QMC5883P_RESET_DELAY_MS 50
-
 namespace Espfc::Device::Mag {
+
+constexpr uint8_t QMC5883P_ADDRESS = 0x2C;
+constexpr uint8_t QMC5883P_DEFAULT_ADDRESS = 0x2C;
+constexpr uint8_t QMC5883P_CHIP_ID = 0x80;
+
+constexpr uint8_t QMC5883P_REG_CHIPID = 0x00;
+constexpr uint8_t QMC5883P_REG_XOUT_LSB = 0x01;
+constexpr uint8_t QMC5883P_REG_XOUT_MSB = 0x02;
+constexpr uint8_t QMC5883P_REG_YOUT_LSB = 0x03;
+constexpr uint8_t QMC5883P_REG_YOUT_MSB = 0x04;
+constexpr uint8_t QMC5883P_REG_ZOUT_LSB = 0x05;
+constexpr uint8_t QMC5883P_REG_ZOUT_MSB = 0x06;
+constexpr uint8_t QMC5883P_REG_STATUS = 0x09;
+constexpr uint8_t QMC5883P_REG_CONTROL1 = 0x0A;
+constexpr uint8_t QMC5883P_REG_CONTROL2 = 0x0B;
+
+constexpr uint8_t QMC5883P_MODE_SUSPEND = 0x00;
+constexpr uint8_t QMC5883P_MODE_NORMAL = 0x01;
+constexpr uint8_t QMC5883P_MODE_SINGLE = 0x02;
+constexpr uint8_t QMC5883P_MODE_CONTINUOUS = 0x03;
+
+constexpr uint8_t QMC5883P_ODR_10HZ = 0x00;
+constexpr uint8_t QMC5883P_ODR_50HZ = 0x01;
+constexpr uint8_t QMC5883P_ODR_100HZ = 0x02;
+constexpr uint8_t QMC5883P_ODR_200HZ = 0x03;
+
+constexpr uint8_t QMC5883P_OSR_8 = 0x00;
+constexpr uint8_t QMC5883P_OSR_4 = 0x01;
+constexpr uint8_t QMC5883P_OSR_2 = 0x02;
+constexpr uint8_t QMC5883P_OSR_1 = 0x03;
+
+constexpr uint8_t QMC5883P_DSR_1 = 0x00;
+constexpr uint8_t QMC5883P_DSR_2 = 0x01;
+constexpr uint8_t QMC5883P_DSR_4 = 0x02;
+constexpr uint8_t QMC5883P_DSR_8 = 0x03;
+
+constexpr uint8_t QMC5883P_RANGE_30G = 0x00;
+constexpr uint8_t QMC5883P_RANGE_12G = 0x01;
+constexpr uint8_t QMC5883P_RANGE_8G = 0x02;
+constexpr uint8_t QMC5883P_RANGE_2G = 0x03;
+
+constexpr uint8_t QMC5883P_SETRESET_ON = 0x00;
+constexpr uint8_t QMC5883P_SETRESET_SETONLY = 0x01;
+constexpr uint8_t QMC5883P_SETRESET_OFF = 0x02;
+
+constexpr uint8_t QMC5883P_CONTROL2_RESET_BIT = 7;
+constexpr uint8_t QMC5883P_RESET_DELAY_MS = 50;
 
 MagQMC5883P::MagQMC5883P(): _currentRange{QMC5883P_RANGE_8G}, _currentOdr{QMC5883P_ODR_100HZ} {}
 

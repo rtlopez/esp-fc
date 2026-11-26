@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Hal/Bits.hpp"
 #include <cstdint>
 #include <functional>
 
@@ -49,84 +48,6 @@ public:
   bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data)
   {
     return write(devAddr, regAddr, 1, &data);
-  }
-
-  int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t* data)
-  {
-    uint8_t b;
-    uint8_t count = readByte(devAddr, regAddr, &b);
-    *data = getBit(b, bitNum);
-    return count;
-  }
-
-  int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t* data)
-  {
-    uint8_t count, b;
-    if ((count = readByte(devAddr, regAddr, &b)) != 0)
-    {
-      *data = getBitsMsb(b, bitStart, length);
-    }
-    return count;
-  }
-
-  int8_t readBitsLsb(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t* data)
-  {
-    uint8_t count, b;
-    if ((count = readByte(devAddr, regAddr, &b)) != 0)
-    {
-      *data = getBitsLsb(b, bitStart, length);
-    }
-    return count;
-  }
-
-  bool writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t data)
-  {
-    uint8_t b;
-    readByte(devAddr, regAddr, &b);
-    b = setBit(b, bitNum, data);
-    return writeByte(devAddr, regAddr, b);
-  }
-
-  bool writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data)
-  {
-    uint8_t b = 0;
-    if (readByte(devAddr, regAddr, &b) != 0)
-    {
-      b = setBitsMsb(b, bitStart, length, data);
-      return writeByte(devAddr, regAddr, b);
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  bool writeBitsLsb(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data)
-  {
-    uint8_t b = 0;
-    if (readByte(devAddr, regAddr, &b) != 0)
-    {
-      b = setBitsLsb(b, bitStart, length, data);
-      return writeByte(devAddr, regAddr, b);
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  bool writeMask(uint8_t devAddr, uint8_t regAddr, uint8_t mask, uint8_t data)
-  {
-    uint8_t b = 0;
-    if (readByte(devAddr, regAddr, &b) != 0)
-    {
-      b = setMasked(b, mask, data);
-      return writeByte(devAddr, regAddr, b);
-    }
-    else
-    {
-      return false;
-    }
   }
 
   static const char** getNames();

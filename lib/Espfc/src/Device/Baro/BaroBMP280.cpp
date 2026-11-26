@@ -1,38 +1,38 @@
 #include "BaroBMP280.hpp"
 #include "Hal/Time.hpp"
 
-#define BMP280_ADDRESS_FIRST 0x76
-#define BMP280_ADDRESS_SECOND 0x77
-#define BMP280_WHOAMI_ID 0x58
-
-#define BMP280_WHOAMI_REG 0xD0
-#define BMP280_VERSION_REG 0xD1
-#define BMP280_RESET_REG 0xE0
-#define BMP280_RESET_VAL 0xB6
-
-#define BMP280_CALIB_REG 0x88
-#define BMP280_CAL26_REG 0xE1 // R calibration stored in 0xE1-0xF0
-
-#define BMP280_STATUS_REG 0xF3
-#define BMP280_CONTROL_REG 0xF4
-#define BMP280_CONFIG_REG 0xF5
-#define BMP280_PRESSURE_REG 0xF7
-#define BMP280_TEMPERATURE_REG 0xFA
-
-#define BMP280_MODE_NORMAL 0x03
-
-#define BMP280_FILTER_OFF 0x00
-#define BMP280_FILTER_X2 0x01
-#define BMP280_FILTER_X4 0x02
-#define BMP280_FILTER_X8 0x03
-#define BMP280_FILTER_X16 0x04
-
-#define BMP280_SAMPLING_X1 1
-#define BMP280_SAMPLING_X2 2
-#define BMP280_SAMPLING_X4 3
-#define BMP280_SAMPLING_X8 4
-
 namespace Espfc::Device::Baro {
+
+constexpr uint8_t BMP280_ADDRESS_FIRST = 0x76;
+constexpr uint8_t BMP280_ADDRESS_SECOND = 0x77;
+constexpr uint8_t BMP280_WHOAMI_ID = 0x58;
+
+constexpr uint8_t BMP280_WHOAMI_REG = 0xD0;
+constexpr uint8_t BMP280_VERSION_REG = 0xD1;
+constexpr uint8_t BMP280_RESET_REG = 0xE0;
+constexpr uint8_t BMP280_RESET_VAL = 0xB6;
+
+constexpr uint8_t BMP280_CALIB_REG = 0x88;
+constexpr uint8_t BMP280_CAL26_REG = 0xE1; // R calibration stored in 0xE1-0xF0
+
+constexpr uint8_t BMP280_STATUS_REG = 0xF3;
+constexpr uint8_t BMP280_CONTROL_REG = 0xF4;
+constexpr uint8_t BMP280_CONFIG_REG = 0xF5;
+constexpr uint8_t BMP280_PRESSURE_REG = 0xF7;
+constexpr uint8_t BMP280_TEMPERATURE_REG = 0xFA;
+
+constexpr uint8_t BMP280_MODE_NORMAL = 0x03;
+
+constexpr uint8_t BMP280_FILTER_OFF = 0x00;
+constexpr uint8_t BMP280_FILTER_X2 = 0x01;
+constexpr uint8_t BMP280_FILTER_X4 = 0x02;
+constexpr uint8_t BMP280_FILTER_X8 = 0x03;
+constexpr uint8_t BMP280_FILTER_X16 = 0x04;
+
+constexpr uint8_t BMP280_SAMPLING_X1 = 1;
+constexpr uint8_t BMP280_SAMPLING_X2 = 2;
+constexpr uint8_t BMP280_SAMPLING_X4 = 3;
+constexpr uint8_t BMP280_SAMPLING_X8 = 4;
 
 int BaroBMP280::begin(Hal::BusDevice* bus)
 {

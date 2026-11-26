@@ -3,69 +3,69 @@
 #include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
 
-#define BMI160_ADDRESS_FIRST 0x69
-#define BMI160_ADDRESS_SECOND 0x68
-#define BMI160_RA_CHIP_ID 0x00
-#define BMI160_CHIP_ID_DEFAULT_VALUE 0xD1
-
-#define BMI160_RA_GYRO_X_L 0x0C
-#define BMI160_RA_GYRO_X_H 0x0D
-#define BMI160_RA_GYRO_Y_L 0x0E
-#define BMI160_RA_GYRO_Y_H 0x0F
-#define BMI160_RA_GYRO_Z_L 0x10
-#define BMI160_RA_GYRO_Z_H 0x11
-#define BMI160_RA_ACCEL_X_L 0x12
-#define BMI160_RA_ACCEL_X_H 0x13
-#define BMI160_RA_ACCEL_Y_L 0x14
-#define BMI160_RA_ACCEL_Y_H 0x15
-#define BMI160_RA_ACCEL_Z_L 0x16
-#define BMI160_RA_ACCEL_Z_H 0x17
-
-#define BMI160_ACCEL_RATE_SEL_BIT 0
-#define BMI160_ACCEL_RATE_SEL_LEN 4
-
-#define BMI160_RA_ACCEL_CONF 0X40
-#define BMI160_RA_ACCEL_RANGE 0X41
-
-#define BMI160_GYRO_RATE_SEL_BIT 0
-#define BMI160_GYRO_RATE_SEL_LEN 4
-
-#define BMI160_RA_GYRO_CONF 0X42
-#define BMI160_RA_GYRO_RANGE 0X43
-
-#define BMI160_ACC_OFFSET_EN 6
-#define BMI160_ACC_OFFSET_LEN 1
-#define BMI160_GYR_OFFSET_EN 7
-#define BMI160_GYR_OFFSET_LEN 1
-
-#define BMI160_RA_OFFSET_0 0x71
-#define BMI160_RA_OFFSET_1 0x72
-#define BMI160_RA_OFFSET_2 0x73
-#define BMI160_RA_OFFSET_3 0x74
-#define BMI160_RA_OFFSET_4 0x75
-#define BMI160_RA_OFFSET_5 0x76
-#define BMI160_RA_OFFSET_6 0x77
-
-#define BMI160_REG_INT_EN1 0x51
-#define BMI160_INT_EN1_DRDY 0x10
-#define BMI160_REG_INT_OUT_CTRL 0x53
-#define BMI160_INT_OUT_CTRL_INT1_CONFIG 0x0A
-#define BMI160_REG_INT_MAP1 0x56
-#define BMI160_REG_INT_MAP1_INT1_DRDY 0x80
-
-#define BMI160_CMD_START_FOC 0x03
-#define BMI160_CMD_ACC_MODE_NORMAL 0x11
-#define BMI160_CMD_GYR_MODE_NORMAL 0x15
-#define BMI160_CMD_FIFO_FLUSH 0xB0
-#define BMI160_CMD_INT_RESET 0xB1
-#define BMI160_CMD_STEP_CNT_CLR 0xB2
-#define BMI160_CMD_SOFT_RESET 0xB6
-#define BMI160_CMD_SPI_MODE 0x7F
-#define BMI160_RESULT_OK 0x1
-
-#define BMI160_RA_CMD 0x7E
-
 namespace Espfc::Device::Gyro {
+
+constexpr uint8_t BMI160_ADDRESS_FIRST = 0x69;
+constexpr uint8_t BMI160_ADDRESS_SECOND = 0x68;
+constexpr uint8_t BMI160_RA_CHIP_ID = 0x00;
+constexpr uint8_t BMI160_CHIP_ID_DEFAULT_VALUE = 0xD1;
+
+constexpr uint8_t BMI160_RA_GYRO_X_L = 0x0C;
+constexpr uint8_t BMI160_RA_GYRO_X_H = 0x0D;
+constexpr uint8_t BMI160_RA_GYRO_Y_L = 0x0E;
+constexpr uint8_t BMI160_RA_GYRO_Y_H = 0x0F;
+constexpr uint8_t BMI160_RA_GYRO_Z_L = 0x10;
+constexpr uint8_t BMI160_RA_GYRO_Z_H = 0x11;
+constexpr uint8_t BMI160_RA_ACCEL_X_L = 0x12;
+constexpr uint8_t BMI160_RA_ACCEL_X_H = 0x13;
+constexpr uint8_t BMI160_RA_ACCEL_Y_L = 0x14;
+constexpr uint8_t BMI160_RA_ACCEL_Y_H = 0x15;
+constexpr uint8_t BMI160_RA_ACCEL_Z_L = 0x16;
+constexpr uint8_t BMI160_RA_ACCEL_Z_H = 0x17;
+
+constexpr uint8_t BMI160_ACCEL_RATE_SEL_BIT = 0;
+constexpr uint8_t BMI160_ACCEL_RATE_SEL_LEN = 4;
+
+constexpr uint8_t BMI160_RA_ACCEL_CONF = 0X40;
+constexpr uint8_t BMI160_RA_ACCEL_RANGE = 0X41;
+
+constexpr uint8_t BMI160_GYRO_RATE_SEL_BIT = 0;
+constexpr uint8_t BMI160_GYRO_RATE_SEL_LEN = 4;
+
+constexpr uint8_t BMI160_RA_GYRO_CONF = 0X42;
+constexpr uint8_t BMI160_RA_GYRO_RANGE = 0X43;
+
+constexpr uint8_t BMI160_ACC_OFFSET_EN = 6;
+constexpr uint8_t BMI160_ACC_OFFSET_LEN = 1;
+constexpr uint8_t BMI160_GYR_OFFSET_EN = 7;
+constexpr uint8_t BMI160_GYR_OFFSET_LEN = 1;
+
+constexpr uint8_t BMI160_RA_OFFSET_0 = 0x71;
+constexpr uint8_t BMI160_RA_OFFSET_1 = 0x72;
+constexpr uint8_t BMI160_RA_OFFSET_2 = 0x73;
+constexpr uint8_t BMI160_RA_OFFSET_3 = 0x74;
+constexpr uint8_t BMI160_RA_OFFSET_4 = 0x75;
+constexpr uint8_t BMI160_RA_OFFSET_5 = 0x76;
+constexpr uint8_t BMI160_RA_OFFSET_6 = 0x77;
+
+constexpr uint8_t BMI160_REG_INT_EN1 = 0x51;
+constexpr uint8_t BMI160_INT_EN1_DRDY = 0x10;
+constexpr uint8_t BMI160_REG_INT_OUT_CTRL = 0x53;
+constexpr uint8_t BMI160_INT_OUT_CTRL_INT1_CONFIG = 0x0A;
+constexpr uint8_t BMI160_REG_INT_MAP1 = 0x56;
+constexpr uint8_t BMI160_REG_INT_MAP1_INT1_DRDY = 0x80;
+
+constexpr uint8_t BMI160_CMD_START_FOC = 0x03;
+constexpr uint8_t BMI160_CMD_ACC_MODE_NORMAL = 0x11;
+constexpr uint8_t BMI160_CMD_GYR_MODE_NORMAL = 0x15;
+constexpr uint8_t BMI160_CMD_FIFO_FLUSH = 0xB0;
+constexpr uint8_t BMI160_CMD_INT_RESET = 0xB1;
+constexpr uint8_t BMI160_CMD_STEP_CNT_CLR = 0xB2;
+constexpr uint8_t BMI160_CMD_SOFT_RESET = 0xB6;
+constexpr uint8_t BMI160_CMD_SPI_MODE = 0x7F;
+constexpr uint8_t BMI160_RESULT_OK = 0x1;
+
+constexpr uint8_t BMI160_RA_CMD = 0x7E;
 
 namespace {
 

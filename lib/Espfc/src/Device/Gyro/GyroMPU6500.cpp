@@ -1,11 +1,11 @@
 #include "GyroMPU6500.hpp"
 
-#define MPU6050_RA_WHO_AM_I 0x75
-#define MPU6500_ACCEL_CONF2 0x1D
-#define MPU6500_WHOAMI_DEFAULT_VALUE 0x70
-#define MPU6500_WHOAMI_ALT_VALUE 0x75
-
 namespace Espfc::Device::Gyro {
+
+constexpr uint8_t MPU6050_RA_WHO_AM_I = 0x75;
+constexpr uint8_t MPU6500_ACCEL_CONF2 = 0x1D;
+constexpr uint8_t MPU6500_WHOAMI_DEFAULT_VALUE = 0x70;
+constexpr uint8_t MPU6500_WHOAMI_ALT_VALUE = 0x75;
 
 GyroDeviceType GyroMPU6500::getType() const
 {

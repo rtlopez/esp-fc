@@ -1,21 +1,21 @@
 #include "MagAK8963.hpp"
 #include "Hal/Time.hpp"
 
-#define AK8963_ADDRESS_FIRST 0x0C  // this device only has one address
-#define AK8963_ADDRESS_SECOND 0x0D // 0x0E and 0x0F also possible
-#define AK8963_HXL 0x03
-#define AK8963_CNTL1 0x0A
-#define AK8963_PWR_DOWN 0x00
-#define AK8963_CNT_MEAS1 0x12
-#define AK8963_CNT_MEAS2 0x16
-#define AK8963_FUSE_ROM 0x0F
-#define AK8963_CNTL2 0x0B
-#define AK8963_RESET 0x01
-#define AK8963_ASA 0x10
-#define AK8963_WHO_AM_I 0x00
-#define AK8963_INIT_DELAY 20
-
 namespace Espfc::Device::Mag {
+
+constexpr uint8_t AK8963_ADDRESS_FIRST = 0x0C;  // this device only has one address
+constexpr uint8_t AK8963_ADDRESS_SECOND = 0x0D; // 0x0E and 0x0F also possible
+constexpr uint8_t AK8963_HXL = 0x03;
+constexpr uint8_t AK8963_CNTL1 = 0x0A;
+constexpr uint8_t AK8963_PWR_DOWN = 0x00;
+constexpr uint8_t AK8963_CNT_MEAS1 = 0x12;
+constexpr uint8_t AK8963_CNT_MEAS2 = 0x16;
+constexpr uint8_t AK8963_FUSE_ROM = 0x0F;
+constexpr uint8_t AK8963_CNTL2 = 0x0B;
+constexpr uint8_t AK8963_RESET = 0x01;
+constexpr uint8_t AK8963_ASA = 0x10;
+constexpr uint8_t AK8963_WHO_AM_I = 0x00;
+constexpr uint8_t AK8963_INIT_DELAY = 20;
 
 int MagAK8963::begin(Hal::BusDevice* bus)
 {

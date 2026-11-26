@@ -2,10 +2,9 @@ name: platformio
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ master, develop, 'release-*' ]
     tags: [ 'v*' ]
   pull_request:
-    branches: [ '*' ]
 
 jobs:
   test:
