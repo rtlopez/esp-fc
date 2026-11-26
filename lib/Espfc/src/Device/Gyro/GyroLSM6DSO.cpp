@@ -37,6 +37,7 @@
 #define LSM6DSO_VAL_CTRL2_G_ODR6664 0x0A  // gyro 6664hz output data rate
 #define LSM6DSO_VAL_CTRL2_G_ODR3332 0x09  // gyro 3332hz output data rate
 #define LSM6DSO_VAL_CTRL2_G_2000DPS 0x03  // gyro 2000dps scale
+#define LSM6DSO_VAL_CTRL3_C_SW_RESET 0x01 // (bit 0) software reset
 #define LSM6DSO_VAL_CTRL3_C_BDU                                                                                        \
   0x40 // (bit 6) output registers are not updated until MSB and LSB have been read (prevents MSB from being updated
        // while burst reading LSB/MSB)
@@ -53,13 +54,6 @@
 #define LSM6DSO_VAL_CTRL6_C_FTYPE_609HZ 0x03  // (bits 2:0) gyro LPF1 cutoff 609.0hz
 #define LSM6DSO_VAL_CTRL9_XL_I3C_DISABLE 0x02 // (bit 1) disable I3C interface
 
-// masks
-#define LSM6DSO_MASK_CTRL3_C 0x7C       // 0b01111100
-#define LSM6DSO_MASK_CTRL3_C_RESET 0x01 // 0b00000001
-#define LSM6DSO_MASK_CTRL4_C 0x06       // 0b00000110
-#define LSM6DSO_MASK_CTRL6_C 0x17       // 0b00010111
-#define LSM6DSO_MASK_CTRL9_XL 0x02      // 0b00000010
-
 namespace Espfc::Device::Gyro {
 
 int GyroLSM6DSO::begin(Hal::BusDevice* bus)
@@ -74,7 +68,7 @@ int GyroLSM6DSO::begin(Hal::BusDevice* bus, uint8_t addr)
   if (!testConnection()) return 0;
 
   // reset device
-  _bus->writeMask(_addr, LSM6DSO_REG_CTRL3_C, LSM6DSO_MASK_CTRL3_C_RESET, 1);
+  _bus->writeByte(_addr, LSM6DSO_REG_CTRL3_C, LSM6DSO_VAL_CTRL3_C_SW_RESET);
   delay(100);
 
   // Accel, 833hz ODR, 16G scale, use LPF1 output
@@ -89,19 +83,18 @@ int GyroLSM6DSO::begin(Hal::BusDevice* bus, uint8_t addr)
 
   // latch LSB/MSB during reads; set interrupt pins active high; set interrupt pins push/pull; set 4-wire SPI; enable
   // auto-increment burst reads
-  _bus->writeMask(_addr, LSM6DSO_REG_CTRL3_C, LSM6DSO_MASK_CTRL3_C,
-                  (LSM6DSO_VAL_CTRL3_C_BDU | LSM6DSO_VAL_CTRL3_C_H_LACTIVE | LSM6DSO_VAL_CTRL3_C_PP_OD |
-                   LSM6DSO_VAL_CTRL3_C_SIM | LSM6DSO_VAL_CTRL3_C_IF_INC));
+  _bus->writeByte(_addr, LSM6DSO_REG_CTRL3_C,
+                  LSM6DSO_VAL_CTRL3_C_BDU | LSM6DSO_VAL_CTRL3_C_H_LACTIVE | LSM6DSO_VAL_CTRL3_C_PP_OD |
+                      LSM6DSO_VAL_CTRL3_C_SIM | LSM6DSO_VAL_CTRL3_C_IF_INC);
 
   // enable accelerometer high performane mode; set gyro LPF1 cutoff to 335.5hz
-  _bus->writeMask(_addr, LSM6DSO_REG_CTRL4_C, LSM6DSO_MASK_CTRL4_C, (LSM6DSO_VAL_CTRL4_C_LPF1_SEL_G));
+  _bus->writeByte(_addr, LSM6DSO_REG_CTRL4_C, LSM6DSO_VAL_CTRL4_C_LPF1_SEL_G);
 
   // enable gyro LPF1
-  _bus->writeMask(_addr, LSM6DSO_REG_CTRL6_C, LSM6DSO_MASK_CTRL6_C,
-                  (LSM6DSO_VAL_CTRL6_C_XL_HM_MODE | LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ));
+  _bus->writeByte(_addr, LSM6DSO_REG_CTRL6_C, LSM6DSO_VAL_CTRL6_C_XL_HM_MODE | LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ);
 
   // disable I3C interface
-  _bus->writeMask(_addr, LSM6DSO_REG_CTRL9_XL, LSM6DSO_MASK_CTRL9_XL, LSM6DSO_VAL_CTRL9_XL_I3C_DISABLE);
+  _bus->writeByte(_addr, LSM6DSO_REG_CTRL9_XL, LSM6DSO_VAL_CTRL9_XL_I3C_DISABLE);
 
   return 1;
 }

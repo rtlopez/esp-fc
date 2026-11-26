@@ -18,15 +18,6 @@ public:
   const VectorFloat convert(const VectorInt16& v) const final;
 
   bool testConnection() final;
-
-private:
-  void setSampleAveraging(uint8_t averaging);
-  void setSampleRate(uint8_t rate);
-  void setMode(uint8_t mode);
-  void setGain(uint8_t gain);
-
-private:
-  uint8_t _mode;
 };
 
 } // namespace Espfc::Device::Mag

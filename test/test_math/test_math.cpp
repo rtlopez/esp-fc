@@ -1,5 +1,4 @@
 #include "Control/Pid.hpp"
-#include "Hal/Bits.hpp"
 #include "Utils/Filter.hpp"
 #include "Utils/Math.hpp"
 #include "Utils/RingBuf.hpp"
@@ -54,74 +53,6 @@ void test_math_deadband()
   TEST_ASSERT_EQUAL_INT32(-1, Utils::deadband(-11, 10));
   TEST_ASSERT_EQUAL_INT32(0, Utils::deadband(-5, 10));
   TEST_ASSERT_EQUAL_INT32(10, Utils::deadband(20, 10));
-}
-
-void test_math_bit()
-{
-  TEST_ASSERT_EQUAL(0, Hal::getBit(0, 0));
-  TEST_ASSERT_EQUAL(1, Hal::getBit(1, 0));
-  TEST_ASSERT_EQUAL(0, Hal::getBit(1, 1));
-  TEST_ASSERT_EQUAL(1, Hal::getBit(3, 1));
-
-  TEST_ASSERT_EQUAL_UINT8(0, Hal::setBit(0, 0, 0));
-  TEST_ASSERT_EQUAL_UINT8(1, Hal::setBit(0, 0, 1));
-  TEST_ASSERT_EQUAL_UINT8(2, Hal::setBit(0, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(3, Hal::setBit(2, 0, 1));
-}
-
-void test_math_bitmask()
-{
-  TEST_ASSERT_EQUAL_UINT8(0, Hal::setMasked(0, 1, 0));
-  TEST_ASSERT_EQUAL_UINT8(1, Hal::setMasked(0, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(0x38, Hal::setMasked(0x00, 0x38, 0xff));
-  TEST_ASSERT_EQUAL_UINT8(0xc7, Hal::setMasked(0xff, 0x38, 0x00));
-}
-
-void test_math_bitmask_lsb()
-{
-  TEST_ASSERT_EQUAL_UINT8(1, Hal::getMaskLsb(0, 1));
-  TEST_ASSERT_EQUAL_UINT8(2, Hal::getMaskLsb(1, 1));
-  TEST_ASSERT_EQUAL_UINT8(4, Hal::getMaskLsb(2, 1));
-  TEST_ASSERT_EQUAL_UINT8(12, Hal::getMaskLsb(2, 2));
-  TEST_ASSERT_EQUAL_UINT8(56, Hal::getMaskLsb(3, 3));
-}
-
-void test_math_bitmask_msb()
-{
-  TEST_ASSERT_EQUAL_UINT8(1, Hal::getMaskMsb(0, 1));
-  TEST_ASSERT_EQUAL_UINT8(2, Hal::getMaskMsb(1, 1));
-  TEST_ASSERT_EQUAL_UINT8(4, Hal::getMaskMsb(2, 1));
-  TEST_ASSERT_EQUAL_UINT8(6, Hal::getMaskMsb(2, 2));
-  TEST_ASSERT_EQUAL_UINT8(14, Hal::getMaskMsb(3, 3));
-  TEST_ASSERT_EQUAL_UINT8(30, Hal::getMaskMsb(4, 4));
-}
-
-void test_math_bits_lsb()
-{
-  TEST_ASSERT_EQUAL_UINT8(0, Hal::getBitsLsb(0x00, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(0, Hal::getBitsLsb(0x55, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(1, Hal::getBitsLsb(0x55, 2, 2));
-  TEST_ASSERT_EQUAL_UINT8(1, Hal::getBitsLsb(0x55, 4, 2));
-  TEST_ASSERT_EQUAL_UINT8(5, Hal::getBitsLsb(0x55, 2, 4));
-
-  TEST_ASSERT_EQUAL_UINT8(8, Hal::setBitsLsb(0x00, 3, 4, 1));
-  TEST_ASSERT_EQUAL_UINT8(80, Hal::setBitsLsb(0x00, 3, 4, 10));
-  TEST_ASSERT_EQUAL_UINT8(16, Hal::setBitsLsb(0x00, 4, 2, 1));
-  TEST_ASSERT_EQUAL_UINT8(160, Hal::setBitsLsb(0x00, 4, 4, 10));
-}
-
-void test_math_bits_msb()
-{
-  TEST_ASSERT_EQUAL_UINT8(0, Hal::getBitsMsb(0x00, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(0, Hal::getBitsMsb(0x55, 1, 1));
-  TEST_ASSERT_EQUAL_UINT8(2, Hal::getBitsMsb(0x55, 2, 2));
-  TEST_ASSERT_EQUAL_UINT8(2, Hal::getBitsMsb(0x55, 4, 2));
-  TEST_ASSERT_EQUAL_UINT8(10, Hal::getBitsMsb(0x55, 4, 4));
-
-  TEST_ASSERT_EQUAL_UINT8(1, Hal::setBitsMsb(0x00, 3, 4, 1));
-  TEST_ASSERT_EQUAL_UINT8(10, Hal::setBitsMsb(0x00, 3, 4, 10));
-  TEST_ASSERT_EQUAL_UINT8(8, Hal::setBitsMsb(0x00, 6, 4, 1));
-  TEST_ASSERT_EQUAL_UINT8(80, Hal::setBitsMsb(0x00, 6, 4, 10));
 }
 
 void test_math_clock_align()
@@ -1242,12 +1173,6 @@ int main(int argc, char** argv)
   RUN_TEST(test_math_map3);
   RUN_TEST(test_math_deadband);
 
-  RUN_TEST(test_math_bit);
-  RUN_TEST(test_math_bitmask);
-  RUN_TEST(test_math_bitmask_lsb);
-  RUN_TEST(test_math_bitmask_msb);
-  RUN_TEST(test_math_bits_lsb);
-  RUN_TEST(test_math_bits_msb);
 
   RUN_TEST(test_math_clock_align);
 

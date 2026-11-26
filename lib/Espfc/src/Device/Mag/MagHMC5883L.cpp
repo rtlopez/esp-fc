@@ -17,12 +17,9 @@
 #define HMC5883L_RA_ID_B 0x0B
 #define HMC5883L_RA_ID_C 0x0C
 
-#define HMC5883L_CRA_AVERAGE_BIT 6
-#define HMC5883L_CRA_AVERAGE_LENGTH 2
-#define HMC5883L_CRA_RATE_BIT 4
-#define HMC5883L_CRA_RATE_LENGTH 3
-#define HMC5883L_CRA_BIAS_BIT 1
-#define HMC5883L_CRA_BIAS_LENGTH 2
+#define HMC5883L_CRA_AVERAGE_SHIFT 5
+#define HMC5883L_CRA_RATE_SHIFT 2
+#define HMC5883L_CRA_BIAS_SHIFT 0
 
 #define HMC5883L_AVERAGING_1 0x00
 #define HMC5883L_AVERAGING_2 0x01
@@ -41,8 +38,7 @@
 #define HMC5883L_BIAS_POSITIVE 0x01
 #define HMC5883L_BIAS_NEGATIVE 0x02
 
-#define HMC5883L_CRB_GAIN_BIT 7
-#define HMC5883L_CRB_GAIN_LENGTH 3
+#define HMC5883L_CRB_GAIN_SHIFT 5
 
 #define HMC5883L_GAIN_1370 0x00
 #define HMC5883L_GAIN_1090 0x01
@@ -53,8 +49,7 @@
 #define HMC5883L_GAIN_330 0x06
 #define HMC5883L_GAIN_220 0x07
 
-#define HMC5883L_MODEREG_BIT 1
-#define HMC5883L_MODEREG_LENGTH 2
+#define HMC5883L_MODEREG_SHIFT 0
 
 #define HMC5883L_MODE_CONTINUOUS 0x00
 #define HMC5883L_MODE_SINGLE 0x01
@@ -76,10 +71,14 @@ int MagHMC5883L::begin(Hal::BusDevice* bus, uint8_t addr)
 
   if (!testConnection()) return 0;
 
-  setMode(HMC5883L_MODE_CONTINUOUS);
-  setSampleAveraging(HMC5883L_AVERAGING_1);
-  setSampleRate(HMC5883L_RATE_75);
-  setGain(HMC5883L_GAIN_1090);
+  _bus->writeByte(_addr, HMC5883L_RA_MODE, HMC5883L_MODE_CONTINUOUS << HMC5883L_MODEREG_SHIFT);
+
+  const uint8_t configA = (HMC5883L_AVERAGING_1 << HMC5883L_CRA_AVERAGE_SHIFT) |
+                          (HMC5883L_RATE_75 << HMC5883L_CRA_RATE_SHIFT) |
+                          (HMC5883L_BIAS_NORMAL << HMC5883L_CRA_BIAS_SHIFT);
+  _bus->writeByte(_addr, HMC5883L_RA_CONFIG_A, configA);
+
+  _bus->writeByte(_addr, HMC5883L_RA_CONFIG_B, HMC5883L_GAIN_1090 << HMC5883L_CRB_GAIN_SHIFT);
 
   uint8_t buffer[6];
   _bus->read(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
@@ -91,11 +90,6 @@ int MagHMC5883L::readMag(VectorInt16& v)
 {
   uint8_t buffer[6] = {};
   auto result = _bus->readFast(_addr, HMC5883L_RA_DATAX_H, 6, buffer);
-  if (_mode == HMC5883L_MODE_SINGLE)
-  {
-    _bus->writeByte(_addr, HMC5883L_RA_MODE,
-                    HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
-  }
 
   if (result == 6)
   {
@@ -121,37 +115,6 @@ int MagHMC5883L::getRate() const
 MagDeviceType MagHMC5883L::getType() const
 {
   return MAG_HMC5883L;
-}
-
-void MagHMC5883L::setSampleAveraging(uint8_t averaging)
-{
-  uint8_t res =
-      _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_AVERAGE_BIT, HMC5883L_CRA_AVERAGE_LENGTH, averaging);
-  // D("hmc5883l:avg", averaging, res);
-  (void)res;
-}
-
-void MagHMC5883L::setSampleRate(uint8_t rate)
-{
-  uint8_t res = _bus->writeBits(_addr, HMC5883L_RA_CONFIG_A, HMC5883L_CRA_RATE_BIT, HMC5883L_CRA_RATE_LENGTH, rate);
-  // D("hmc5883l:rate", rate, res);
-  (void)res;
-}
-
-void MagHMC5883L::setMode(uint8_t mode)
-{
-  _mode = mode; // track to tell if we have to clear bit 7 after a read
-  uint8_t res = _bus->writeByte(_addr, HMC5883L_RA_MODE, mode << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
-  // D("hmc5883l:mode", mode, res);
-  (void)res;
-}
-
-void MagHMC5883L::setGain(uint8_t gain)
-{
-  uint8_t res =
-      _bus->writeByte(_addr, HMC5883L_RA_CONFIG_B, gain << (HMC5883L_CRB_GAIN_BIT - HMC5883L_CRB_GAIN_LENGTH + 1));
-  // D("hmc5883l:gain", gain, res);
-  (void)res;
 }
 
 bool MagHMC5883L::testConnection()
