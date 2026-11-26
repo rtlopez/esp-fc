@@ -1,10 +1,10 @@
 #include "GyroICM20602.hpp"
 
-#define MPU6050_RA_WHO_AM_I 0x75
-#define ICM20602_RA_ACCEL2_CONFIG 0x1D
-#define ICM20602_WHOAMI_DEFAULT_VALUE 0x12
-
 namespace Espfc::Device::Gyro {
+
+constexpr uint8_t MPU6050_RA_WHO_AM_I = 0x75;
+constexpr uint8_t ICM20602_RA_ACCEL2_CONFIG = 0x1D;
+constexpr uint8_t ICM20602_WHOAMI_DEFAULT_VALUE = 0x12;
 
 GyroDeviceType GyroICM20602::getType() const
 {

@@ -2,22 +2,22 @@
 #include "Hal/Time.hpp"
 #include <cmath>
 
-#define BMP085_DEFAULT_ADDRESS 0x77
-#define BMP085_WHOAMI_ID 0x55
-
-#define BMP085_CALIB_REG 0xAA
-#define BMP085_WHOAMI_REG 0xD0
-#define BMP085_RESET_REG 0xE0
-#define BMP085_CONTROL_REG 0xF4
-#define BMP085_MEASUREMENT_REG 0xF6
-
-#define BMP085_MEASURE_T 0x2E  // temperature measurent
-#define BMP085_MEASURE_P0 0x34 // pressure measurement no oversampling
-#define BMP085_MEASURE_P1 0x74 // pressure measurement oversampling x2
-#define BMP085_MEASURE_P2 0xB4 // pressure measurement oversampling x4
-#define BMP085_MEASURE_P3 0xF4 // pressure measurement oversampling x8
-
 namespace Espfc::Device::Baro {
+
+constexpr uint8_t BMP085_DEFAULT_ADDRESS = 0x77;
+constexpr uint8_t BMP085_WHOAMI_ID = 0x55;
+
+constexpr uint8_t BMP085_CALIB_REG = 0xAA;
+constexpr uint8_t BMP085_WHOAMI_REG = 0xD0;
+constexpr uint8_t BMP085_RESET_REG = 0xE0;
+constexpr uint8_t BMP085_CONTROL_REG = 0xF4;
+constexpr uint8_t BMP085_MEASUREMENT_REG = 0xF6;
+
+constexpr uint8_t BMP085_MEASURE_T = 0x2E;  // temperature measurent
+constexpr uint8_t BMP085_MEASURE_P0 = 0x34; // pressure measurement no oversampling
+constexpr uint8_t BMP085_MEASURE_P1 = 0x74; // pressure measurement oversampling x2
+constexpr uint8_t BMP085_MEASURE_P2 = 0xB4; // pressure measurement oversampling x4
+constexpr uint8_t BMP085_MEASURE_P3 = 0xF4; // pressure measurement oversampling x8
 
 int BaroBMP085::begin(Hal::BusDevice* bus)
 {

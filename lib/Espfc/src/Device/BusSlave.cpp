@@ -2,14 +2,14 @@
 #include "Hal/FastCode.hpp"
 #include "Hal/Time.hpp"
 
-#define MPU6050_I2C_SLV0_ADDR 0x25
-#define MPU6050_I2C_SLV0_REG 0x26
-#define MPU6050_I2C_SLV0_DO 0x63
-#define MPU6050_I2C_SLV0_CTRL 0x27
-#define MPU6050_I2C_SLV0_EN 0x80
-#define MPU6050_EXT_SENS_DATA_00 0x49
-
 namespace Espfc::Device {
+
+constexpr uint8_t MPU6050_I2C_SLV0_ADDR = 0x25;
+constexpr uint8_t MPU6050_I2C_SLV0_REG = 0x26;
+constexpr uint8_t MPU6050_I2C_SLV0_DO = 0x63;
+constexpr uint8_t MPU6050_I2C_SLV0_CTRL = 0x27;
+constexpr uint8_t MPU6050_I2C_SLV0_EN = 0x80;
+constexpr uint8_t MPU6050_EXT_SENS_DATA_00 = 0x49;
 
 BusSlave::BusSlave() {}
 

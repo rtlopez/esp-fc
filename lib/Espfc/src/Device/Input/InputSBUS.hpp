@@ -37,8 +37,8 @@ struct SbusData
   uint8_t endByte;
 } __attribute__((__packed__));
 
-#define SBUS_FLAG_SIGNAL_LOSS (1 << 2)
-#define SBUS_FLAG_FAILSAFE_ACTIVE (1 << 3)
+constexpr uint8_t SBUS_FLAG_SIGNAL_LOSS = (1 << 2);
+constexpr uint8_t SBUS_FLAG_FAILSAFE_ACTIVE = (1 << 3);
 
 class InputSBUS : public InputDevice
 {

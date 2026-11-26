@@ -1,48 +1,48 @@
 #include "MagQMC5883L.hpp"
 
-#define QMC5883L_ADDRESS 0x0D // this device only has one address
-#define QMC5883L_DEFAULT_ADDRESS 0x0D
-
-#define QMC5883L_RA_CONFIG_A 0x09
-#define QMC5883L_RA_CONFIG_B 0x0A
-#define QMC5883L_RA_MODE 0x09
-
-#define QMC5883L_RA_STATUS 0x06
-
-#define QMC5883L_RA_DATAX_H 0x01
-#define QMC5883L_RA_DATAX_L 0x00
-#define QMC5883L_RA_DATAZ_H 0x05
-#define QMC5883L_RA_DATAZ_L 0x04
-#define QMC5883L_RA_DATAY_H 0x03
-#define QMC5883L_RA_DATAY_L 0x02
-
-#define QMC5883L_RA_TEMP_L 0x07
-#define QMC5883L_RA_TEMP_H 0x08
-
-#define QMC5883L_RA_RST_TIME 0x0B
-#define QMC5883L_RA_RSV 0x0C
-#define QMC5883L_RA_CHIPID 0x0D
-
-#define QMC5883L_RATE_10 0x00
-#define QMC5883L_RATE_50 0x01
-#define QMC5883L_RATE_100 0x02
-#define QMC5883L_RATE_200 0x03
-
-#define QMC5883L_RANGE_2G 0x00
-#define QMC5883L_RANGE_8G 0x01
-
-#define QMC5883L_OSR_512 0x00
-#define QMC5883L_OSR_256 0x01
-#define QMC5883L_OSR_128 0x02
-#define QMC5883L_OSR_64 0x03
-
-#define QMC5883L_MODE_CONTINUOUS 0x01
-#define QMC5883L_MODE_IDLE 0x00
-
-#define QMC5883L_STATUS_LOCK_BIT 1
-#define QMC5883L_STATUS_READY_BIT 0
-
 namespace Espfc::Device::Mag {
+
+constexpr uint8_t QMC5883L_ADDRESS = 0x0D; // this device only has one address
+constexpr uint8_t QMC5883L_DEFAULT_ADDRESS = 0x0D;
+
+constexpr uint8_t QMC5883L_RA_CONFIG_A = 0x09;
+constexpr uint8_t QMC5883L_RA_CONFIG_B = 0x0A;
+constexpr uint8_t QMC5883L_RA_MODE = 0x09;
+
+constexpr uint8_t QMC5883L_RA_STATUS = 0x06;
+
+constexpr uint8_t QMC5883L_RA_DATAX_H = 0x01;
+constexpr uint8_t QMC5883L_RA_DATAX_L = 0x00;
+constexpr uint8_t QMC5883L_RA_DATAZ_H = 0x05;
+constexpr uint8_t QMC5883L_RA_DATAZ_L = 0x04;
+constexpr uint8_t QMC5883L_RA_DATAY_H = 0x03;
+constexpr uint8_t QMC5883L_RA_DATAY_L = 0x02;
+
+constexpr uint8_t QMC5883L_RA_TEMP_L = 0x07;
+constexpr uint8_t QMC5883L_RA_TEMP_H = 0x08;
+
+constexpr uint8_t QMC5883L_RA_RST_TIME = 0x0B;
+constexpr uint8_t QMC5883L_RA_RSV = 0x0C;
+constexpr uint8_t QMC5883L_RA_CHIPID = 0x0D;
+
+constexpr uint8_t QMC5883L_RATE_10 = 0x00;
+constexpr uint8_t QMC5883L_RATE_50 = 0x01;
+constexpr uint8_t QMC5883L_RATE_100 = 0x02;
+constexpr uint8_t QMC5883L_RATE_200 = 0x03;
+
+constexpr uint8_t QMC5883L_RANGE_2G = 0x00;
+constexpr uint8_t QMC5883L_RANGE_8G = 0x01;
+
+constexpr uint8_t QMC5883L_OSR_512 = 0x00;
+constexpr uint8_t QMC5883L_OSR_256 = 0x01;
+constexpr uint8_t QMC5883L_OSR_128 = 0x02;
+constexpr uint8_t QMC5883L_OSR_64 = 0x03;
+
+constexpr uint8_t QMC5883L_MODE_CONTINUOUS = 0x01;
+constexpr uint8_t QMC5883L_MODE_IDLE = 0x00;
+
+constexpr uint8_t QMC5883L_STATUS_LOCK_BIT = 1;
+constexpr uint8_t QMC5883L_STATUS_READY_BIT = 0;
 
 int MagQMC5883L::begin(Hal::BusDevice* bus)
 {
