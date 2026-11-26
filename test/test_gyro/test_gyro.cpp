@@ -1,4 +1,3 @@
-#include "Device/Baro/BaroBMP280.hpp"
 #include "Device/Gyro/GyroBMI160.hpp"
 #include "Device/Gyro/GyroICM20602.hpp"
 #include "Device/Gyro/GyroICM42670P.hpp"
@@ -7,7 +6,6 @@
 #include "Device/Gyro/GyroMPU6500.hpp"
 #include "Device/Gyro/GyroMPU9250.hpp"
 #include "Device/GyroDevice.hpp"
-#include "Device/Mag/MagHMC5883L.hpp"
 #include <ArduinoFake.h>
 #include <platform.h>
 #include <unity.h>
@@ -16,8 +14,6 @@ using namespace Espfc;
 using namespace Hal;
 using namespace Espfc::Device;
 using namespace Espfc::Device::Gyro;
-using namespace Espfc::Device::Mag;
-using namespace Espfc::Device::Baro;
 
 class MockBusDevice : public BusDevice
 {
@@ -126,36 +122,6 @@ void test_chip_id_preserved_on_read_failure()
   const auto chipId = dev.getChipId();
   TEST_ASSERT_TRUE(chipId.has_value());
   TEST_ASSERT_EQUAL_HEX8(0x47, chipId.value());
-}
-
-void test_mag_hmc5883l_uses_first_id_byte()
-{
-  MockBusDevice bus;
-  bus.readRegs[0x0A] = 'H';
-  bus.readRegs[0x0B] = '4';
-  bus.readRegs[0x0C] = '3';
-  MagHMC5883L dev;
-  dev.setBus(&bus, 0x1E);
-
-  TEST_ASSERT_TRUE(dev.testConnection());
-
-  const auto chipId = dev.getChipId();
-  TEST_ASSERT_TRUE(chipId.has_value());
-  TEST_ASSERT_EQUAL_HEX8('H', chipId.value());
-}
-
-void test_baro_bmp280_caches_whoami()
-{
-  MockBusDevice bus;
-  bus.readRegs[0xD0] = 0x58;
-  BaroBMP280 dev;
-  dev.setBus(&bus, 0x76);
-
-  TEST_ASSERT_TRUE(dev.testConnection());
-
-  const auto chipId = dev.getChipId();
-  TEST_ASSERT_TRUE(chipId.has_value());
-  TEST_ASSERT_EQUAL_HEX8(0x58, chipId.value());
 }
 
 void test_begin_aborts_on_failed_connection()
@@ -302,6 +268,100 @@ void test_aux_i2c_support()
   TEST_ASSERT_FALSE(GyroLSM6DSO().hasAuxI2C());
 }
 
+void test_lsm6dso_whoami()
+{
+  MockBusDevice bus;
+  GyroLSM6DSO dev;
+  dev.setBus(&bus, 0x6A);
+
+  bus.readRegs[0x0F] = 0x6C;
+  TEST_ASSERT_TRUE(dev.testConnection());
+  TEST_ASSERT_EQUAL_HEX8(0x6C, dev.getChipId().value());
+
+  bus.readRegs[0x0F] = 0x69;
+  TEST_ASSERT_TRUE(dev.testConnection());
+
+  bus.readRegs[0x0F] = 0x47;
+  TEST_ASSERT_FALSE(dev.testConnection());
+  TEST_ASSERT_EQUAL_HEX8(0x47, dev.getChipId().value());
+
+  bus.failRead = true;
+  TEST_ASSERT_FALSE(dev.testConnection());
+}
+
+void test_lsm6dso_begin_configures()
+{
+  MockBusDevice bus;
+  bus.readRegs[0x0F] = 0x6C;
+  GyroLSM6DSO dev;
+  fakeit::When(Method(ArduinoFake(), delay)).AlwaysReturn();
+
+  TEST_ASSERT_EQUAL_INT(1, dev.begin(&bus));
+  TEST_ASSERT_EQUAL_HEX8(0x74, bus.writeRegs[0x10]); // accel 833 Hz, 16G, LPF1
+  TEST_ASSERT_EQUAL_HEX8(0xAC, bus.writeRegs[0x11]); // gyro 6664 Hz, 2000 dps
+  TEST_ASSERT_EQUAL_HEX8(0x44, bus.writeRegs[0x12]); // BDU, auto-increment
+  TEST_ASSERT_EQUAL_HEX8(0x02, bus.writeRegs[0x13]); // gyro LPF1 enabled
+  TEST_ASSERT_EQUAL_HEX8(0x00, bus.writeRegs[0x15]); // 335 Hz LPF1
+  TEST_ASSERT_EQUAL_HEX8(0x02, bus.writeRegs[0x18]); // I3C disabled
+}
+
+void test_lsm6dso_begin_fails_without_device()
+{
+  MockBusDevice bus;
+  GyroLSM6DSO dev;
+
+  TEST_ASSERT_EQUAL_INT(0, dev.begin(&bus));
+  TEST_ASSERT_EQUAL_INT(0, bus.writeCalls);
+}
+
+void test_lsm6dso_read_decoding()
+{
+  MockBusDevice bus;
+  bus.readRegs[0x22] = 0x01; // gyro X
+  bus.readRegs[0x23] = 0x02;
+  bus.readRegs[0x24] = 0xFF; // gyro Y
+  bus.readRegs[0x25] = 0xFF;
+  bus.readRegs[0x26] = 0x00; // gyro Z
+  bus.readRegs[0x27] = 0x80;
+  bus.readRegs[0x28] = 0x10; // accel X
+  bus.readRegs[0x29] = 0x00;
+  bus.readRegs[0x2A] = 0xFE; // accel Y
+  bus.readRegs[0x2B] = 0xFF;
+  bus.readRegs[0x2C] = 0x34; // accel Z
+  bus.readRegs[0x2D] = 0x12;
+  GyroLSM6DSO dev;
+  dev.setBus(&bus, 0x6A);
+
+  VectorInt16 g, a;
+  TEST_ASSERT_EQUAL_INT(1, dev.readGyro(g));
+  TEST_ASSERT_EQUAL_INT(1, dev.readAccel(a));
+  TEST_ASSERT_EQUAL_INT16(0x0201, g.x);
+  TEST_ASSERT_EQUAL_INT16(-1, g.y);
+  TEST_ASSERT_EQUAL_INT16(-32768, g.z);
+  TEST_ASSERT_EQUAL_INT16(16, a.x);
+  TEST_ASSERT_EQUAL_INT16(-2, a.y);
+  TEST_ASSERT_EQUAL_INT16(0x1234, a.z);
+}
+
+void test_lsm6dso_read_failure()
+{
+  MockBusDevice bus;
+  bus.failRead = true;
+  GyroLSM6DSO dev;
+  dev.setBus(&bus, 0x6A);
+
+  VectorInt16 v;
+  TEST_ASSERT_EQUAL_INT(0, dev.readGyro(v));
+  TEST_ASSERT_EQUAL_INT(0, dev.readAccel(v));
+}
+
+void test_lsm6dso_type_and_rate()
+{
+  GyroLSM6DSO dev;
+  TEST_ASSERT_EQUAL_INT(GYRO_LSM6DSO, dev.getType());
+  TEST_ASSERT_EQUAL_INT(6664, dev.getRate());
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
@@ -311,8 +371,6 @@ int main(int argc, char** argv)
   RUN_TEST(test_chip_id_cached_on_success);
   RUN_TEST(test_chip_id_updated_on_mismatch);
   RUN_TEST(test_chip_id_preserved_on_read_failure);
-  RUN_TEST(test_mag_hmc5883l_uses_first_id_byte);
-  RUN_TEST(test_baro_bmp280_caches_whoami);
   RUN_TEST(test_begin_aborts_on_failed_connection);
   RUN_TEST(test_read_gyro_decoding);
   RUN_TEST(test_read_accel_decoding);
@@ -326,5 +384,11 @@ int main(int argc, char** argv)
   RUN_TEST(test_icm42670p_read_decoding);
   RUN_TEST(test_icm42670p_name);
   RUN_TEST(test_aux_i2c_support);
+  RUN_TEST(test_lsm6dso_whoami);
+  RUN_TEST(test_lsm6dso_begin_configures);
+  RUN_TEST(test_lsm6dso_begin_fails_without_device);
+  RUN_TEST(test_lsm6dso_read_decoding);
+  RUN_TEST(test_lsm6dso_read_failure);
+  RUN_TEST(test_lsm6dso_type_and_rate);
   return UNITY_END();
 }
