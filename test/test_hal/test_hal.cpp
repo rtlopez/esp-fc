@@ -5,6 +5,7 @@
 #include <Hal/Gpio.hpp>
 #include <Hal/HwTimer.hpp>
 #include <Hal/Queue.hpp>
+#include <Hal/Serial.hpp>
 #include <Hal/Task.hpp>
 #include <type_traits>
 
@@ -250,6 +251,35 @@ void test_hal_queue_selection()
   TEST_PASS();
 }
 
+void test_hal_serial_uart_lookup()
+{
+  Hal::SerialUart* uart = Hal::getSerialUart(0);
+  TEST_ASSERT_NOT_NULL(uart);
+  TEST_ASSERT_EQUAL_PTR(uart, Hal::getSerialUart(0));
+  TEST_ASSERT_NULL(Hal::getSerialUart(1));
+  TEST_ASSERT_NULL(Hal::getSerialUart(-1));
+}
+
+void test_hal_serial_uart_is_null_device()
+{
+  Hal::SerialUart* uart = Hal::getSerialUart(0);
+  uint8_t buf[4] = {};
+  const uint8_t data[3] = {1, 2, 3};
+
+  uart->begin(Hal::SerialDeviceConfig{});
+  uart->updateBaudRate(9600);
+
+  TEST_ASSERT_EQUAL_INT(0, uart->available());
+  TEST_ASSERT_EQUAL_INT(-1, uart->read());
+  TEST_ASSERT_EQUAL_INT(-1, uart->peek());
+  TEST_ASSERT_EQUAL_size_t(0, uart->readMany(buf, sizeof(buf)));
+  TEST_ASSERT_EQUAL_size_t(1, uart->write(0x55));
+  TEST_ASSERT_EQUAL_size_t(sizeof(data), uart->write(data, sizeof(data)));
+  TEST_ASSERT_EQUAL_INT(Hal::SERIAL_TX_BUF_LEN, uart->availableForWrite());
+  TEST_ASSERT_TRUE(uart->isTxFifoEmpty());
+  uart->flush();
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
@@ -269,6 +299,8 @@ int main(int argc, char** argv)
   RUN_TEST(test_hal_queue_atomic_atomic_index_wrap);
   RUN_TEST(test_hal_queue_null);
   RUN_TEST(test_hal_queue_selection);
+  RUN_TEST(test_hal_serial_uart_lookup);
+  RUN_TEST(test_hal_serial_uart_is_null_device);
 
   return UNITY_END();
 }
