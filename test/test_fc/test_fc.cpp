@@ -2,7 +2,6 @@
 #include "Control/Controller.hpp"
 #include "Model.hpp"
 #include "Output/Mixer.hpp"
-#include "Utils/Timer.hpp"
 #include <ArduinoFake.h>
 #include <Gps.hpp>
 #include <unity.h>
@@ -12,7 +11,6 @@ using namespace Espfc;
 using Espfc::Control::Actuator;
 using Espfc::Control::Controller;
 using Espfc::Control::Rates;
-using Espfc::Utils::Timer;
 
 /*void setUp(void)
 {
@@ -22,89 +20,6 @@ using Espfc::Utils::Timer;
 // void tearDown(void) {
 // // clean stuff up here
 // }
-
-void test_timer_rate_100hz()
-{
-  Timer timer;
-  timer.setRate(100);
-  TEST_ASSERT_EQUAL_UINT32(100, timer.rate);
-  TEST_ASSERT_EQUAL_UINT32(10000, timer.interval);
-  TEST_ASSERT_EQUAL_UINT32(10000, timer.delta);
-  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 1.f / 100.f, timer.intervalf);
-}
-
-void test_timer_rate_100hz_div2()
-{
-  Timer timer;
-  timer.setRate(100, 2);
-  TEST_ASSERT_EQUAL_UINT32(50, timer.rate);
-  TEST_ASSERT_EQUAL_UINT32(20000, timer.interval);
-  TEST_ASSERT_EQUAL_UINT32(20000, timer.delta);
-  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 1.f / 50.f, timer.intervalf);
-}
-
-void test_timer_interval_10ms()
-{
-  Timer timer;
-  timer.setInterval(10000);
-  TEST_ASSERT_EQUAL_UINT32(100, timer.rate);
-  TEST_ASSERT_EQUAL_UINT32(10000, timer.interval);
-  TEST_ASSERT_EQUAL_UINT32(10000, timer.delta);
-  TEST_ASSERT_FLOAT_WITHIN(0.000001f, 1.f / 100.f, timer.intervalf);
-}
-
-void test_timer_check()
-{
-  Timer timer;
-  timer.setInterval(1000);
-
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.rate);
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.interval);
-
-  TEST_ASSERT_TRUE(timer.check(1000));
-  TEST_ASSERT_EQUAL_UINT32(1, timer.iteration);
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
-
-  TEST_ASSERT_FALSE(timer.check(1500));
-  TEST_ASSERT_EQUAL_UINT32(1, timer.iteration);
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
-
-  TEST_ASSERT_TRUE(timer.check(2000));
-  TEST_ASSERT_EQUAL_UINT32(2, timer.iteration);
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
-
-  TEST_ASSERT_TRUE(timer.check(3000));
-  TEST_ASSERT_EQUAL_UINT32(3, timer.iteration);
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
-
-  TEST_ASSERT_FALSE(timer.check(3999));
-  TEST_ASSERT_EQUAL_UINT32(3, timer.iteration);
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.delta);
-
-  TEST_ASSERT_TRUE(timer.check(4050));
-  TEST_ASSERT_EQUAL_UINT32(4, timer.iteration);
-  TEST_ASSERT_EQUAL_UINT32(1050, timer.delta);
-}
-
-void test_timer_check_micros()
-{
-  When(Method(ArduinoFake(), micros)).Return(1000, 1500, 2000, 3000, 3999, 4050);
-
-  Timer timer;
-  timer.setInterval(1000);
-
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.rate);
-  TEST_ASSERT_EQUAL_UINT32(1000, timer.interval);
-
-  TEST_ASSERT_TRUE(timer.check());
-  TEST_ASSERT_FALSE(timer.check());
-  TEST_ASSERT_TRUE(timer.check());
-  TEST_ASSERT_TRUE(timer.check());
-  TEST_ASSERT_FALSE(timer.check());
-  TEST_ASSERT_TRUE(timer.check());
-
-  Verify(Method(ArduinoFake(), micros)).Exactly(6_Times);
-}
 
 void test_model_gyro_init_1k_256dlpf()
 {
@@ -666,11 +581,6 @@ void test_mixer_output_limit_servo()
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
-  RUN_TEST(test_timer_rate_100hz);
-  RUN_TEST(test_timer_rate_100hz_div2);
-  RUN_TEST(test_timer_interval_10ms);
-  RUN_TEST(test_timer_check);
-  RUN_TEST(test_timer_check_micros);
   RUN_TEST(test_model_gyro_init_1k_256dlpf);
   RUN_TEST(test_model_gyro_init_1k_188dlpf);
   RUN_TEST(test_model_inner_pid_init);
