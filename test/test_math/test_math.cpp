@@ -31,6 +31,40 @@ void test_math_map()
   TEST_ASSERT_FLOAT_WITHIN(.001f, -1.f, Utils::map(-100.0f, -100.0f, 100.0f, -1.0f, 1.0f));
 }
 
+void test_math_mapi()
+{
+  TEST_ASSERT_EQUAL_INT(0, Utils::mapi(0, -100, 100, -1000, 1000));
+  TEST_ASSERT_EQUAL_INT(1000, Utils::mapi(100, -100, 100, -1000, 1000));
+  TEST_ASSERT_EQUAL_INT(-1000, Utils::mapi(-100, -100, 100, -1000, 1000));
+  TEST_ASSERT_EQUAL_INT(200, Utils::mapi(20, -100, 100, -1000, 1000));
+  TEST_ASSERT_EQUAL_INT(1500, Utils::mapi(50, 0, 100, 1000, 2000));
+  TEST_ASSERT_EQUAL_INT(1500, Utils::mapi(50, 0, 100, 2000, 1000));
+}
+
+void test_math_two_pi()
+{
+  TEST_ASSERT_FLOAT_WITHIN(1e-5f, 6.28318530718f, Utils::twoPi());
+  TEST_ASSERT_EQUAL_FLOAT(2.0f * Utils::pi(), Utils::twoPi());
+}
+
+void test_math_to_big_endian()
+{
+  TEST_ASSERT_EQUAL_HEX16(0x3412, Utils::toBigEndian16(0x1234));
+  TEST_ASSERT_EQUAL_HEX32(0x78563412, Utils::toBigEndian32(0x12345678));
+
+  const uint16_t v16 = Utils::toBigEndian16(0xA1B2);
+  const uint8_t* p16 = reinterpret_cast<const uint8_t*>(&v16);
+  TEST_ASSERT_EQUAL_HEX8(0xA1, p16[0]);
+  TEST_ASSERT_EQUAL_HEX8(0xB2, p16[1]);
+
+  const uint32_t v32 = Utils::toBigEndian32(0xA1B2C3D4);
+  const uint8_t* p32 = reinterpret_cast<const uint8_t*>(&v32);
+  TEST_ASSERT_EQUAL_HEX8(0xA1, p32[0]);
+  TEST_ASSERT_EQUAL_HEX8(0xB2, p32[1]);
+  TEST_ASSERT_EQUAL_HEX8(0xC3, p32[2]);
+  TEST_ASSERT_EQUAL_HEX8(0xD4, p32[3]);
+}
+
 void test_math_map3()
 {
   TEST_ASSERT_FLOAT_WITHIN(1.f, 0.f, Utils::map3(0.0f, -100.0f, 0.0f, 100.0f, -1000.0f, 0.0f, 1000.0f));
@@ -1170,6 +1204,9 @@ int main(int argc, char** argv)
   UNITY_BEGIN();
 
   RUN_TEST(test_math_map);
+  RUN_TEST(test_math_mapi);
+  RUN_TEST(test_math_two_pi);
+  RUN_TEST(test_math_to_big_endian);
   RUN_TEST(test_math_map3);
   RUN_TEST(test_math_deadband);
 

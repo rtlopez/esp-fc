@@ -22,9 +22,18 @@ void test_baro_bmp280_caches_whoami()
   TEST_ASSERT_EQUAL_HEX8(0x58, chipId.value());
 }
 
+void test_baro_device_get_name()
+{
+  using Espfc::Device::BaroDevice;
+  TEST_ASSERT_EQUAL_STRING("AUTO", BaroDevice::getName(BARO_DEFAULT));
+  TEST_ASSERT_EQUAL_STRING("NONE", BaroDevice::getName(BARO_NONE));
+  TEST_ASSERT_EQUAL_STRING("?", BaroDevice::getName(BARO_MAX));
+}
+
 int main(int argc, char** argv)
 {
   UNITY_BEGIN();
   RUN_TEST(test_baro_bmp280_caches_whoami);
+  RUN_TEST(test_baro_device_get_name);
   return UNITY_END();
 }

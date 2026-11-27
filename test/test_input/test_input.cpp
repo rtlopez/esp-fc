@@ -344,6 +344,22 @@ void test_crsf_encode_tlm()
   TEST_ASSERT_EQUAL_UINT8(0x90, crc);
 }
 
+void test_crsf_message_write_u16_u32_string()
+{
+  CrsfMessage frame;
+  memset(&frame, 0, sizeof(frame));
+
+  frame.prepare(CRSF_FRAMETYPE_DEVICE_INFO);
+  frame.writeU16(0x1234);
+  frame.writeU32(0xA1B2C3D4);
+  frame.writeString("ab");
+  frame.writeString("cd", true);
+
+  const uint8_t expected[] = {0x34, 0x12, 0xD4, 0xC3, 0xB2, 0xA1, 'a', 'b', 'c', 'd', 0};
+  TEST_ASSERT_EQUAL_UINT8(sizeof(expected) + 2, frame.size);
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, frame.payload, sizeof(expected));
+}
+
 void test_crsf_encode_msp_v1()
 {
   CrsfMessage frame;
@@ -916,6 +932,7 @@ int main(int argc, char** argv)
   RUN_TEST(test_crsf_decode_rc_shift8);
   // RUN_TEST(test_crsf_decode_rc_shift32);
   RUN_TEST(test_crsf_encode_tlm);
+  RUN_TEST(test_crsf_message_write_u16_u32_string);
   RUN_TEST(test_crsf_encode_msp_v1);
   RUN_TEST(test_crsf_encode_msp_v1_fragmented);
   RUN_TEST(test_crsf_encode_msp_v2);

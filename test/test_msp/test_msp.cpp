@@ -8,6 +8,7 @@
 #include <Hal/Gpio.hpp>
 #include <helper_3dmath.hpp>
 #include <printf.h>
+#include <cstring>
 #include <unity.h>
 #include <vector>
 
@@ -165,6 +166,81 @@ void test_msp_response_write_bounds()
   TEST_ASSERT_EQUAL_UINT16(MSP_BUF_OUT_SIZE, resp.len);
 }
 
+void test_msp_message_is_idle()
+{
+  MspMessage msg;
+  TEST_ASSERT_TRUE(msg.isIdle());
+
+  msg.state = MSP_STATE_HEADER_START;
+  TEST_ASSERT_FALSE(msg.isIdle());
+
+  msg.state = MSP_STATE_RECEIVED;
+  TEST_ASSERT_FALSE(msg.isIdle());
+}
+
+void test_msp_response_write_u16_u32()
+{
+  MspResponse resp;
+  resp.writeU16(0x1234);
+  resp.writeU32(0xA1B2C3D4);
+  TEST_ASSERT_EQUAL_UINT16(6, resp.len);
+  const uint8_t expected[] = {0x34, 0x12, 0xD4, 0xC3, 0xB2, 0xA1};
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, resp.data, sizeof(expected));
+}
+
+void test_msp_response_write_data()
+{
+  MspResponse resp;
+  resp.writeData("abcd", 3);
+  TEST_ASSERT_EQUAL_UINT16(3, resp.len);
+  TEST_ASSERT_EQUAL_UINT8_ARRAY("abc", resp.data, 3);
+
+  resp.writeData("x", 0);
+  resp.writeData("x", -1);
+  TEST_ASSERT_EQUAL_UINT16(3, resp.len);
+}
+
+void test_msp_response_write_string()
+{
+  MspResponse resp;
+  resp.writeString("hello");
+  TEST_ASSERT_EQUAL_UINT16(5, resp.len);
+  TEST_ASSERT_EQUAL_UINT8_ARRAY("hello", resp.data, 5);
+
+  MspResponse empty;
+  empty.writeString("");
+  TEST_ASSERT_EQUAL_UINT16(0, empty.len);
+
+  MspResponse longResp;
+  char longStr[301];
+  memset(longStr, 'z', 300);
+  longStr[300] = '\0';
+  longResp.writeString(longStr);
+  TEST_ASSERT_EQUAL_UINT16(168, longResp.len);
+}
+
+void test_msp_response_write_pstring()
+{
+  MspResponse resp;
+  resp.writePString("hello");
+  TEST_ASSERT_EQUAL_UINT16(6, resp.len);
+  TEST_ASSERT_EQUAL_UINT8(5, resp.data[0]);
+  TEST_ASSERT_EQUAL_UINT8_ARRAY("hello", resp.data + 1, 5);
+
+  MspResponse empty;
+  empty.writePString("");
+  TEST_ASSERT_EQUAL_UINT16(1, empty.len);
+  TEST_ASSERT_EQUAL_UINT8(0, empty.data[0]);
+
+  MspResponse longResp;
+  char longStr[301];
+  memset(longStr, 'z', 300);
+  longStr[300] = '\0';
+  longResp.writePString(longStr);
+  TEST_ASSERT_EQUAL_UINT16(169, longResp.len);
+  TEST_ASSERT_EQUAL_UINT8(168, longResp.data[0]);
+}
+
 static int processMsp(Model& model, uint16_t cmd, const std::vector<uint8_t>& payload)
 {
   MspProcessor msp(model);
@@ -243,6 +319,11 @@ int main(int argc, char** argv)
   RUN_TEST(test_msp_message_append_bounds);
   RUN_TEST(test_msp_message_read_bounds);
   RUN_TEST(test_msp_response_write_bounds);
+  RUN_TEST(test_msp_message_is_idle);
+  RUN_TEST(test_msp_response_write_u16_u32);
+  RUN_TEST(test_msp_response_write_data);
+  RUN_TEST(test_msp_response_write_string);
+  RUN_TEST(test_msp_response_write_pstring);
   RUN_TEST(test_msp_v1_parse_header);
   RUN_TEST(test_msp_v1_parse_no_payload);
   RUN_TEST(test_msp_v1_parse_payload);
