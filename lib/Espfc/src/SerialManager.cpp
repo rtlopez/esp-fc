@@ -182,6 +182,8 @@ int SerialManager::reload(ModelChangeEvent event)
 
 int FAST_CODE_ATTR SerialManager::update()
 {
+  if (_current >= SERIAL_UART_COUNT) return 0;
+
   const SerialPortConfig& sc = _model.config.serial[_current];
   SerialPortState& ss = _model.state.serial[_current];
 

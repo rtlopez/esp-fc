@@ -2,7 +2,7 @@
 #include "Connect/MspProcessor.hpp"
 #include "Connect/VtxSmartAudio.hpp"
 #include "Connect/VtxTramp.hpp"
-#include "Stream/ReadWritable.hpp"
+#include "MockSerialStream.hpp"
 #include "Utils/Crc.hpp"
 #include <ArduinoFake.h>
 #include <platform.h>
@@ -12,51 +12,6 @@
 
 using namespace Espfc;
 using namespace Espfc::Connect;
-
-class TestSerial : public Stream::ReadWritable
-{
-public:
-  void begin(const Hal::SerialDeviceConfig&) override {}
-  void updateBaudRate(int) override {}
-  int available() override
-  {
-    return 0;
-  }
-  int read() override
-  {
-    return -1;
-  }
-  size_t readMany(uint8_t*, size_t) override
-  {
-    return 0;
-  }
-  int peek() override
-  {
-    return -1;
-  }
-  size_t write(uint8_t c) override
-  {
-    data.push_back(c);
-    return 1;
-  }
-  size_t write(const uint8_t* d, size_t len) override
-  {
-    data.insert(data.end(), d, d + len);
-    return len;
-  }
-  int availableForWrite() override
-  {
-    return space;
-  }
-  void flush() override {}
-  bool isTxFifoEmpty() override
-  {
-    return true;
-  }
-
-  std::vector<uint8_t> data;
-  int space = 1024;
-};
 
 void test_vtx_tramp_encode()
 {
@@ -85,7 +40,7 @@ void test_vtx_tramp_tables()
 void test_vtx_tramp_update_cycle()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxTramp vtx(model);
   model.config.vtx.band = 4;
   model.config.vtx.channel = 2;
@@ -117,7 +72,7 @@ void test_vtx_tramp_update_cycle()
 void test_vtx_tramp_low_power_disarm()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxTramp vtx(model);
   model.config.vtx.power = 5;
   model.config.vtx.lowPowerDisarm = 1;
@@ -131,7 +86,7 @@ void test_vtx_tramp_low_power_disarm()
 void test_vtx_tramp_tx_full_skips_frame()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxTramp vtx(model);
   vtx.begin(&serial);
   serial.space = 4;
@@ -203,7 +158,7 @@ void test_vtx_smartaudio_encode_pit_mode_frequency()
   TEST_ASSERT_EQUAL_UINT8(Utils::crc8_dvb_s2(0, f, 6), f[6]);
 }
 
-static void runSmartAudioCycle(Model& model, TestSerial& serial)
+static void runSmartAudioCycle(Model& model, MockSerialStream& serial)
 {
   VtxSmartAudio vtx(model);
   vtx.begin(&serial);
@@ -216,7 +171,7 @@ static void runSmartAudioCycle(Model& model, TestSerial& serial)
 void test_vtx_smartaudio_v2_exits_pit_mode()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   model.config.vtx.pitModeFrequency = 5584;
   runSmartAudioCycle(model, serial);
   // channel(7), power(7), mode(7), pit freq(8)
@@ -230,7 +185,7 @@ void test_vtx_smartaudio_v2_exits_pit_mode()
 void test_vtx_smartaudio_v2_pit_mode_on_skips_clear()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   model.config.vtx.pitMode = 1;
   model.config.vtx.pitModeFrequency = 5584;
   runSmartAudioCycle(model, serial);
@@ -244,7 +199,7 @@ void test_vtx_smartaudio_v2_pit_mode_on_skips_clear()
 void test_vtx_smartaudio_v21_pit_mode_power()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   model.config.vtx.smartAudioVersion = VTX_SMARTAUDIO_V21;
   model.config.vtx.pitMode = 1;
   runSmartAudioCycle(model, serial);
@@ -257,7 +212,7 @@ void test_vtx_smartaudio_v21_pit_mode_power()
 void test_vtx_smartaudio_v1_tunes_pit_mode_frequency()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   model.config.vtx.smartAudioVersion = VTX_SMARTAUDIO_V1;
   model.config.vtx.pitMode = 1;
   model.config.vtx.pitModeFrequency = 5584;
@@ -278,7 +233,7 @@ static void processMsp(Model& model, const std::vector<uint8_t>& payload)
   m.cmd = MSP_SET_VTX_CONFIG;
   m.append(payload.data(), payload.size());
   Connect::MspResponse r;
-  TestSerial serial;
+  MockSerialStream serial;
   msp.processCommand(m, r, serial);
 }
 
@@ -362,7 +317,7 @@ void test_vtx_direct_frequency()
 void test_vtx_tramp_frequency_mode()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxTramp vtx(model);
   model.config.vtx.band = 0;
   model.config.vtx.frequency = 5801;
@@ -377,7 +332,7 @@ void test_vtx_tramp_frequency_mode()
 void test_vtx_tramp_frequency_unset_skips()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxTramp vtx(model);
   model.config.vtx.band = 0;
   vtx.begin(&serial);
@@ -388,7 +343,7 @@ void test_vtx_tramp_frequency_unset_skips()
 void test_vtx_tramp_pit_mode_frequency()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxTramp vtx(model);
   model.config.vtx.pitMode = 1;
   model.config.vtx.pitModeFrequency = 5584;
@@ -415,7 +370,7 @@ void test_vtx_smartaudio_encode_frequency()
 void test_vtx_smartaudio_frequency_mode()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxSmartAudio vtx(model);
   model.config.vtx.band = 0;
   model.config.vtx.frequency = 5800;
@@ -428,7 +383,7 @@ void test_vtx_smartaudio_frequency_mode()
 void test_vtx_smartaudio_update_cycle()
 {
   Model model;
-  TestSerial serial;
+  MockSerialStream serial;
   VtxSmartAudio vtx(model);
   model.config.vtx.band = 1;
   model.config.vtx.channel = 8;
